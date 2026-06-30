@@ -1,0 +1,3 @@
+# SWAG2MCP
+
+TODO:
