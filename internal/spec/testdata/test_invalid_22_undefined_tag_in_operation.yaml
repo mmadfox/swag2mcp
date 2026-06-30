@@ -1,0 +1,14 @@
+openapi: 3.0.3
+info:
+  title: Undefined Tag
+  version: 1.0.0
+tags:
+  - name: Items
+paths:
+  /items:
+    get:
+      tags:
+        - NonExistentTag  
+      responses:
+        '200':
+          description: OK

@@ -1,0 +1,22 @@
+openapi: 3.0.3
+info:
+  title: Multi-Version API
+  version: 2.0.0
+tags:
+  - name: v1
+    description: Legacy API
+  - name: v2
+    description: Current API
+  - name: Users
+paths:
+  /users:
+    get:
+      summary: Get users
+      description: Доступен в обеих версиях
+      tags:
+        - v1
+        - v2
+        - Users
+      responses:
+        '200':
+          description: OK

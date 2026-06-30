@@ -1,0 +1,32 @@
+openapi: 3.0.3
+info:
+  title: Many Tags
+  version: 1.0.0
+tags:
+  - name: Tag1
+  - name: Tag2
+  - name: Tag3
+  - name: Tag4
+  - name: Tag5
+  - name: Tag6
+  - name: Tag7
+  - name: Tag8
+  - name: Tag9
+  - name: Tag10
+paths:
+  /test:
+    get:
+      tags:
+        - Tag1
+        - Tag2
+        - Tag3
+        - Tag4
+        - Tag5
+        - Tag6
+        - Tag7
+        - Tag8
+        - Tag9
+        - Tag10
+      responses:
+        '200':
+          description: OK

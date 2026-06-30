@@ -1,0 +1,38 @@
+openapi: 3.0.3
+info:
+  title: Slash Hierarchy
+  version: 1.0.0
+tags:
+  - name: Catalog
+  - name: Catalog / Categories
+  - name: Catalog / Categories / Subcategories
+  - name: Catalog / Products
+  - name: Catalog / Products / Variants
+  - name: Users
+  - name: Users / Profiles
+  - name: Users / Profiles / Avatars
+paths:
+  /categories:
+    get:
+      tags: [Catalog / Categories]
+      responses: { '200': { description: OK } }
+  /categories/{id}/subs:
+    get:
+      tags: [Catalog / Categories / Subcategories]
+      responses: { '200': { description: OK } }
+  /products:
+    get:
+      tags: [Catalog / Products]
+      responses: { '200': { description: OK } }
+  /products/{id}/variants:
+    get:
+      tags: [Catalog / Products / Variants]
+      responses: { '200': { description: OK } }
+  /users/profiles:
+    get:
+      tags: [Users / Profiles]
+      responses: { '200': { description: OK } }
+  /users/profiles/{id}/avatar:
+    get:
+      tags: [Users / Profiles / Avatars]
+      responses: { '200': { description: OK } }

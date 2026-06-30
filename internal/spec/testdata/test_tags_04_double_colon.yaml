@@ -1,0 +1,28 @@
+openapi: 3.0.3
+info:
+  title: Double Colon Hierarchy
+  version: 1.0.0
+tags:
+  - name: Admin
+  - name: Admin::Users
+  - name: Admin::Users::Permissions
+  - name: Admin::Settings
+  - name: Public
+  - name: Public::Docs
+paths:
+  /admin/users:
+    get:
+      tags: [Admin::Users]
+      responses: { '200': { description: OK } }
+  /admin/users/{id}/perms:
+    get:
+      tags: [Admin::Users::Permissions]
+      responses: { '200': { description: OK } }
+  /admin/settings:
+    get:
+      tags: [Admin::Settings]
+      responses: { '200': { description: OK } }
+  /public/docs:
+    get:
+      tags: [Public::Docs]
+      responses: { '200': { description: OK } }

@@ -1,0 +1,25 @@
+openapi: 3.0.3
+info:
+  title: Role-Based Tags
+  version: 1.0.0
+tags:
+  - name: Public
+    description: Публичное API
+  - name: Admin
+    description: Админское API
+  - name: Users
+    description: Пользователи
+paths:
+  /users:
+    get:
+      summary: Список пользователей
+      description: |
+        - Public: видит только имя и аватар
+        - Admin: видит все поля включая email, телефон
+      tags:
+        - Public
+        - Admin
+        - Users
+      responses:
+        '200':
+          description: OK

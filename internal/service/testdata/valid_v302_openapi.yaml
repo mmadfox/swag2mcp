@@ -1,0 +1,65 @@
+openapi: 3.0.2
+info:
+  title: OpenAPI 3.0.2 Example
+  version: 1.0.0
+  description: Улучшения discriminator и encoding
+servers:
+  - url: https://api.example.com/v1
+paths:
+  /pets:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Cat'
+                  - $ref: '#/components/schemas/Dog'
+                discriminator:  
+                  propertyName: petType
+                  mapping:
+                    cat: '#/components/schemas/Cat'
+                    dog: '#/components/schemas/Dog'
+  /upload:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                metadata:
+                  type: string
+            encoding:          
+              metadata:
+                contentType: application/json
+      responses:
+        '200':
+          description: OK
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        petType:
+          type: string
+      required: [petType]
+    Cat:
+      allOf:
+        - $ref: '#/components/schemas/Pet'
+        - type: object
+          properties:
+            meowVolume:
+              type: integer
+    Dog:
+      allOf:
+        - $ref: '#/components/schemas/Pet'
+        - type: object
+          properties:
+            barkVolume:
+              type: integer

@@ -1,0 +1,21 @@
+openapi: 3.0.3
+info:
+  title: Flat Tags
+  version: 1.0.0
+tags:
+  - name: Users
+  - name: Items
+  - name: Orders
+paths:
+  /users:
+    get:
+      tags: [Users]
+      responses: { '200': { description: OK } }
+  /items:
+    get:
+      tags: [Items]
+      responses: { '200': { description: OK } }
+  /orders:
+    get:
+      tags: [Orders]
+      responses: { '200': { description: OK } }

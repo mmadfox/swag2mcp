@@ -1,0 +1,24 @@
+openapi: 3.0.3
+info:
+  title: Mixed Separators
+  version: 1.0.0
+tags:
+  - name: API
+  - name: API / v1
+  - name: API / v1.users
+  - name: API::v2
+  - name: API::v2.users
+  - name: API-v3-users
+paths:
+  /v1/users:
+    get:
+      tags: [API / v1.users]
+      responses: { '200': { description: OK } }
+  /v2/users:
+    get:
+      tags: [API::v2.users]
+      responses: { '200': { description: OK } }
+  /v3/users:
+    get:
+      tags: [API-v3-users]
+      responses: { '200': { description: OK } }

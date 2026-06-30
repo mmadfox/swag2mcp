@@ -1,0 +1,14 @@
+openapi: 3.0.3
+info:
+  title: Null Values
+  version: 1.0.0
+  description: null
+tags: null
+paths:
+  /items:
+    get:
+      summary: null
+      tags: null
+      responses:
+        '200':
+          description: OK

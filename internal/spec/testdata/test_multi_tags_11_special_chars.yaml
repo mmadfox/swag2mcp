@@ -1,0 +1,20 @@
+openapi: 3.0.3
+info:
+  title: Special Characters
+  version: 1.0.0
+tags:
+  - name: "Tag With Spaces"
+  - name: "Tag/With/Slashes"
+  - name: "Tag::With::Colons"
+  - name: "Tag-With-Dashes"
+  - name: "Tag_With_Underscores"
+paths:
+  /test:
+    get:
+      tags:
+        - "Tag With Spaces"
+        - "Tag/With/Slashes"
+        - "Tag::With::Colons"
+      responses:
+        '200':
+          description: OK

@@ -1,0 +1,17 @@
+openapi: 3.0.3
+info:
+  title: Broken Hierarchy
+  version: 1.0.0
+tags:
+  - name: A / B / C / D  
+  - name: X /  / Z        
+  - name: / leading       
+  - name: trailing /      
+  - name: A / B
+  - name: A / B           
+  - name: a / b           
+paths:
+  /test:
+    get:
+      tags: [A / B / C / D, X /  / Z, / leading, trailing /]
+      responses: { '200': { description: OK } }

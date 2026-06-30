@@ -1,0 +1,5 @@
+openapi: v3.0.3
+info:
+  title: Prefixed
+  version: 1.0.0
+paths: {}

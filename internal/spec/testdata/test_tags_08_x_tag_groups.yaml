@@ -1,0 +1,43 @@
+openapi: 3.0.3
+info:
+  title: x-tag-groups
+  version: 1.0.0
+tags:
+  - name: Users
+  - name: User Profiles
+  - name: Items
+  - name: Item Variants
+  - name: Orders
+x-tag-groups:
+  - name: User Management
+    tags:
+      - Users
+      - User Profiles
+  - name: Catalog
+    tags:
+      - Items
+      - Item Variants
+  - name: Sales
+    tags:
+      - Orders
+paths:
+  /users:
+    get:
+      tags: [Users]
+      responses: { '200': { description: OK } }
+  /users/profiles:
+    get:
+      tags: [User Profiles]
+      responses: { '200': { description: OK } }
+  /items:
+    get:
+      tags: [Items]
+      responses: { '200': { description: OK } }
+  /items/variants:
+    get:
+      tags: [Item Variants]
+      responses: { '200': { description: OK } }
+  /orders:
+    get:
+      tags: [Orders]
+      responses: { '200': { description: OK } }

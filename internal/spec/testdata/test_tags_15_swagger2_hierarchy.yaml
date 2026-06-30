@@ -1,0 +1,21 @@
+swagger: "2.0"
+info:
+  title: Swagger 2.0 Hierarchy
+  version: 1.0.0
+tags:
+  - name: API
+  - name: API / Users
+  - name: API / Users / Admin
+paths:
+  /users:
+    get:
+      tags: [API / Users]
+      responses:
+        200:
+          description: OK
+  /users/admin:
+    get:
+      tags: [API / Users / Admin]
+      responses:
+        200:
+          description: OK

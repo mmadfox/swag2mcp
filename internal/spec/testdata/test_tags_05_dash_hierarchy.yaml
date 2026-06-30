@@ -1,0 +1,24 @@
+openapi: 3.0.3
+info:
+  title: Dash Hierarchy
+  version: 1.0.0
+tags:
+  - name: aws
+  - name: aws-s3
+  - name: aws-s3-buckets
+  - name: aws-s3-objects
+  - name: aws-ec2
+  - name: aws-ec2-instances
+paths:
+  /s3/buckets:
+    get:
+      tags: [aws-s3-buckets]
+      responses: { '200': { description: OK } }
+  /s3/buckets/{name}/objects:
+    get:
+      tags: [aws-s3-objects]
+      responses: { '200': { description: OK } }
+  /ec2/instances:
+    get:
+      tags: [aws-ec2-instances]
+      responses: { '200': { description: OK } }

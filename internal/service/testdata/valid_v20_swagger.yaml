@@ -1,0 +1,106 @@
+swagger: "2.0"
+info:
+  title: Swagger 2.0 Full Example
+  version: 1.0.0
+  description: Полный пример Swagger 2.0 со всеми специфичными полями
+  termsOfService: http://example.com/terms/
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: Apache 2.0
+host: api.example.com
+basePath: /v1
+schemes:
+  - https
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+tags:
+  - name: Users
+    description: Операции с пользователями
+  - name: Files
+    description: Загрузка файлов
+paths:
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Список пользователей
+      parameters:
+        - name: limit
+          in: query
+          type: integer
+          default: 10
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+    post:
+      tags:
+        - Users
+      summary: Создать пользователя
+      parameters:
+        - name: body
+          in: body         
+          required: true
+          schema:
+            $ref: '#/definitions/User'
+      responses:
+        201:
+          description: Created
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          type: string
+          required: true
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/User'
+  /files/upload:
+    post:
+      tags:
+        - Files
+      consumes:
+        - multipart/form-data  
+      parameters:
+        - name: file
+          in: formData          
+          type: file           
+          required: true
+      responses:
+        200:
+          description: OK
+definitions:                   
+  User:
+    type: object
+    required:
+      - name
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      email:
+        type: string
+        format: email
+securityDefinitions:           
+  api_key:
+    type: apiKey
+    name: api_key
+    in: header
+  basic_auth:
+    type: basic
+security:
+  - api_key: []

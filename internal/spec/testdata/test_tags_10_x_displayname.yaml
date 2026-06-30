@@ -1,0 +1,30 @@
+openapi: 3.0.3
+info:
+  title: x-displayName (Redoc)
+  version: 1.0.0
+tags:
+  - name: users_root
+    x-displayName: "👥 Пользователи"
+  - name: users_admin
+    x-displayName: "🛡️ Админы"
+  - name: catalog_root
+    x-displayName: "📦 Каталог"
+  - name: catalog_items
+    x-displayName: "🏷️ Товары"
+paths:
+  /users:
+    get:
+      tags: [users_root]
+      responses: { '200': { description: OK } }
+  /users/admin:
+    get:
+      tags: [users_admin]
+      responses: { '200': { description: OK } }
+  /catalog:
+    get:
+      tags: [catalog_root]
+      responses: { '200': { description: OK } }
+  /catalog/items:
+    get:
+      tags: [catalog_items]
+      responses: { '200': { description: OK } }

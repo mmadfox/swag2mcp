@@ -1,0 +1,10 @@
+specs:
+  - domain: example-domain-1
+    llm_title: Some title here for LLM model
+    llm_instruction: |
+      Some instruction here for LLM model
+
+    collections:
+      - llm_title: Some collection
+        llm_instruction: Some collection instruction
+        location: TODO

@@ -1,0 +1,16 @@
+openapi: 3.0.3
+info:
+  title: Duplicate Tags
+  version: 1.0.0
+tags:
+  - name: Users
+paths:
+  /users:
+    get:
+      tags:
+        - Users
+        - Users  
+        - users 
+      responses:
+        '200':
+          description: OK
