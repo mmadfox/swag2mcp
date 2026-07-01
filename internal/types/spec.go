@@ -20,6 +20,13 @@ type Spec struct {
 	}
 }
 
+func (s *Spec) InitAuthenticator() error {
+	if s.Auth == nil {
+		return nil
+	}
+	return s.Auth.New()
+}
+
 type Collection struct {
 	ID             string            `json:"id"`
 	SpecID         string            `json:"specId"`

@@ -13,6 +13,10 @@ type OAuth2PasswordAuthClient struct {
 }
 
 func (c *OAuth2PasswordAuthClient) New() error {
+	c.Username = resolveEnv(c.Username)
+	c.Password = resolveEnv(c.Password)
+	c.ClientID = resolveEnv(c.ClientID)
+	c.ClientSecret = resolveEnv(c.ClientSecret)
 	return nil
 }
 

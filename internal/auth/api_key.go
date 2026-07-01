@@ -1,6 +1,8 @@
 package auth
 
-import "net/http"
+import (
+	"net/http"
+)
 
 // APIKeyAuthClient holds an API key and describes where to place it in the request.
 type APIKeyAuthClient struct {

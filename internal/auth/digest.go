@@ -9,6 +9,8 @@ type DigestAuthClient struct {
 }
 
 func (c *DigestAuthClient) New() error {
+	c.Username = resolveEnv(c.Username)
+	c.Password = resolveEnv(c.Password)
 	return nil
 }
 

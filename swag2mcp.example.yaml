@@ -2,7 +2,7 @@ workspace_dir: /some/path/to/workspace
 
 specs:
   - domain: train-booking
-    disabled: true
+    disable: true
     base_url: https://api.trains-railway.com
     headers:
       X-Request-ID: generated-request-id
@@ -24,7 +24,7 @@ specs:
     collections:
       - llm_title: Train Schedules and Availability
         location: /some/path/to/spec/train-schedules.json
-        disabled: true
+        disable: true
       - llm_title: Booking and Reservations
         location: /some/path/to/spec/train-bookings.json
       - llm_title: Passenger Services

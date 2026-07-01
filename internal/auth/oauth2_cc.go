@@ -11,6 +11,8 @@ type OAuth2ClientCredentialsAuthClient struct {
 }
 
 func (c *OAuth2ClientCredentialsAuthClient) New() error {
+	c.ClientID = resolveEnv(c.ClientID)
+	c.ClientSecret = resolveEnv(c.ClientSecret)
 	return nil
 }
 

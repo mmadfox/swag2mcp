@@ -18,8 +18,8 @@ func TestAuth_UnmarshalYAML_none(t *testing.T) {
 	if a.Client == nil {
 		t.Fatal("Client is nil")
 	}
-	if _, ok := a.Client.(*auth.NoAuthClient); !ok {
-		t.Fatalf("expected *auth.NoAuthClient, got %T", a.Client)
+	if _, ok := a.Client.(auth.NoAuthClient); !ok {
+		t.Fatalf("expected auth.NoAuthClient, got %T", a.Client)
 	}
 }
 
@@ -33,8 +33,8 @@ func TestAuth_UnmarshalYAML_none_empty(t *testing.T) {
 	if a.Client == nil {
 		t.Fatal("Client is nil")
 	}
-	if _, ok := a.Client.(*auth.NoAuthClient); !ok {
-		t.Fatalf("expected *auth.NoAuthClient, got %T", a.Client)
+	if _, ok := a.Client.(auth.NoAuthClient); !ok {
+		t.Fatalf("expected auth.NoAuthClient, got %T", a.Client)
 	}
 }
 

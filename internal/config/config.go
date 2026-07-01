@@ -75,6 +75,12 @@ func (c *Config) Validate(f *Filter) error {
 			return fmt.Errorf("failed to validate spec-%d: %w", specIndex, err)
 		}
 
+		if spec.Auth.Client != nil {
+			if verr := spec.Auth.Client.Validate(); verr != nil {
+				return fmt.Errorf("spec: %s, failed to validate auth client: %w", spec.Domain, verr)
+			}
+		}
+
 		for _, collection := range spec.Collections {
 			if collection.Disable {
 				continue

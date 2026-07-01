@@ -22,27 +22,18 @@ type BootstrapRequest struct {
 //
 //nolint:gocognit,funlen
 func (s *Service) Bootstrap(_ context.Context, r BootstrapRequest) error {
-	conf, loadErr := config.Load(r.ConfFilepath)
-	if loadErr != nil {
-		return loadErr
-	}
-
 	filter := config.NewFilter(r.Tags)
-	if err := conf.Validate(filter); err != nil {
-		return err
+	conf, err := s.loadAndValidateConfig(r.ConfFilepath, filter)
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
 	}
 
 	s.makeWorkspaceDir(conf.WorkspaceDir)
 
 	for spec := range conf.Iterate(filter) {
-		specInfo := &types.Spec{
-			ID:             id.Domain(spec.Domain),
-			Domain:         spec.Domain,
-			LLMTitle:       spec.LLMTitle,
-			LLMInstruction: spec.LLMInstruction,
-			BaseURL:        spec.BaseURL,
-			Headers:        spec.Headers,
-			Auth:           spec.Auth.Client,
+		specInfo, serr := s.specFromConfig(spec)
+		if serr != nil {
+			return serr
 		}
 
 		allTags := make(map[string]*types.Tag)               // per spec
@@ -68,21 +59,19 @@ func (s *Service) Bootstrap(_ context.Context, r BootstrapRequest) error {
 
 			localPath := col.Location
 			if s.cache != nil {
-				var err error
-				localPath, err = s.cache.Resolve(col.Location)
-				if err != nil {
+				if localPath, err = s.cache.Resolve(col.Location); err != nil {
 					return fmt.Errorf("collection %q: %w", col.Location, err)
 				}
 			}
 
-			data, err := os.ReadFile(localPath)
-			if err != nil {
-				return fmt.Errorf("collection %q: read file: %w", col.Location, err)
+			data, readErr := os.ReadFile(localPath)
+			if readErr != nil {
+				return fmt.Errorf("collection %q: read file: %w", col.Location, readErr)
 			}
 
-			specDoc, err := specparser.Parse(data)
+			specDoc, parseErr := specparser.Parse(data)
 			if err != nil {
-				return fmt.Errorf("collection %q: parse spec: %w", col.Location, err)
+				return fmt.Errorf("collection %q: parse spec: %w", col.Location, parseErr)
 			}
 			if len(colInfo.LLMTitle) == 0 && len(specDoc.Title) > 0 {
 				colInfo.LLMTitle = specDoc.Title
@@ -139,12 +128,43 @@ func (s *Service) Bootstrap(_ context.Context, r BootstrapRequest) error {
 			}
 		}
 
-		if err := s.indexSpec(specInfo, allCollections, allTags, allEndpoints); err != nil {
-			return err
+		if indexErr := s.indexSpec(specInfo, allCollections, allTags, allEndpoints); indexErr != nil {
+			return indexErr
 		}
 	}
 
 	return nil
+}
+
+func (s *Service) specFromConfig(spec *config.Spec) (*types.Spec, error) {
+	specInfo := &types.Spec{
+		ID:             id.Domain(spec.Domain),
+		Domain:         spec.Domain,
+		LLMTitle:       spec.LLMTitle,
+		LLMInstruction: spec.LLMInstruction,
+		BaseURL:        spec.BaseURL,
+		Headers:        spec.Headers,
+		Auth:           spec.Auth.Client,
+	}
+
+	if err := specInfo.InitAuthenticator(); err != nil {
+		return nil, fmt.Errorf("spec %s, failed to initialize authenticator: %w", spec.Domain, err)
+	}
+
+	return specInfo, nil
+}
+
+func (s *Service) loadAndValidateConfig(filepath string, filter *config.Filter) (*config.Config, error) {
+	conf, loadErr := config.Load(filepath)
+	if loadErr != nil {
+		return nil, loadErr
+	}
+
+	if err := conf.Validate(filter); err != nil {
+		return nil, err
+	}
+
+	return conf, nil
 }
 
 func (s *Service) makeWorkspaceDir(workspaceDir string) {

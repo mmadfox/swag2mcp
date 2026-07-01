@@ -9,6 +9,8 @@ type BasicAuthClient struct {
 }
 
 func (c *BasicAuthClient) New() error {
+	c.Username = resolveEnv(c.Username)
+	c.Password = resolveEnv(c.Password)
 	return nil
 }
 

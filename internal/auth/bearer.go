@@ -8,6 +8,7 @@ type BearerTokenAuthClient struct {
 }
 
 func (c *BearerTokenAuthClient) New() error {
+	c.Token = resolveEnv(c.Token)
 	return nil
 }
 
