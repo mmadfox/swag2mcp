@@ -10,7 +10,7 @@ import (
 const DefaultWorkspaceDir = ".swag2mcp"
 
 type Config struct {
-	WorkspaceDir string `yaml:"workspace_dir,omitempty"`
+	WorkspaceDir string `yaml:"workspace_dir,omitempty" validate:"required"`
 	Specs        []Spec `yaml:"specs"`
 }
 
@@ -23,6 +23,7 @@ type Spec struct {
 	Tags           []string          `yaml:"tags,omitempty"`
 	BaseURL        string            `yaml:"base_url" validate:"required,url"`
 	Headers        map[string]string `yaml:"headers,omitempty"`
+	AuthType       string            `yaml:"auth_type,omitempty"`
 }
 
 type Collection struct {

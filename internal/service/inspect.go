@@ -8,10 +8,12 @@ import (
 )
 
 type (
+	// InspectRequest represents a request to inspect an endpoint.
 	InspectRequest struct {
 		EndpointID string `json:"endpointId" validate:"required,md5" jsonschema:"required,The 32-character MD5 hash ID of the endpoint to inspect"`
 	}
 
+	// InspectResponse represents a response to inspect an endpoint.
 	InspectResponse struct {
 		ID           string            `json:"id" jsonschema:"required,Unique identifier for the endpoint"`
 		TagID        string            `json:"tagId" jsonschema:"required,Unique identifier for the tag"`

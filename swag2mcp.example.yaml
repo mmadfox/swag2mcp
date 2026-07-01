@@ -1,3 +1,5 @@
+workspace_dir: /some/path/to/workspace
+
 specs:
   - domain: train-booking
     base_url: https://api.trains-railway.com
@@ -11,6 +13,11 @@ specs:
       This API provides comprehensive functionality for booking train tickets,
       managing reservations, and viewing train schedules across the national railway network.
       Use this for passenger travel planning and ticket purchase operations.
+
+    auth_type: oauth2
+    auth:
+      password: $(SOME_ENV)
+      username: $(SOME_ENV)
 
     collections:
       - llm_title: Train Schedules and Availability
