@@ -182,11 +182,12 @@ func (idx *Index) indexEndpoints(endpoints []*types.Endpoint) error {
 func (idx *Index) index(endpoints []*types.Endpoint) error {
 	batch := bluge.NewBatch()
 	for _, ep := range endpoints {
+		summary := ep.SummaryOrFallback()
 		doc := bluge.NewDocument(ep.ID).
 			AddField(bluge.NewKeywordField("method", ep.Name).StoreValue()).
 			AddField(bluge.NewKeywordField("tag", ep.Tag).StoreValue()).
 			AddField(bluge.NewTextField("path", ep.Path).StoreValue()).
-			AddField(bluge.NewTextField("summary", ep.SummaryOrFallback()).StoreValue()).
+			AddField(bluge.NewTextField("summary", summary).StoreValue()).
 			AddField(bluge.NewTextField("_all", fmt.Sprintf("%s %s %s %s", ep.Name, ep.Path, ep.Tag, ep.SummaryOrFallback())))
 
 		batch.Update(bluge.Identifier(ep.ID), doc)

@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"sort"
 )
 
 type (
@@ -13,7 +15,7 @@ type (
 
 	// SearchResponse represents a response to search endpoints.
 	SearchResponse struct {
-		Endpoints []EndpointItem `json:"endpoints" jsonschema:"required,List of endpoints matching the search query"`
+		Endpoints []EndpointSearchItem `json:"endpoints" jsonschema:"required,List of endpoints matching the search query"`
 	}
 )
 
@@ -29,20 +31,45 @@ func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse
 	}
 
 	resp := SearchResponse{
-		Endpoints: make([]EndpointItem, 0, len(endpoints)),
+		Endpoints: make([]EndpointSearchItem, 0, len(endpoints)),
 	}
 	for _, ep := range endpoints {
-		resp.Endpoints = append(resp.Endpoints, EndpointItem{
-			ID:           ep.ID,
-			TagID:        ep.TagID,
-			CollectionID: ep.CollectionID,
-			SpecID:       ep.SpecID,
-			Method:       ep.Name,
-			Path:         ep.Path,
-			Summary:      ep.SummaryOrFallback(),
-			Deprecated:   ep.Operation != nil && ep.Operation.Deprecated,
+		spec, err := s.index.SpecByID(ep.SpecID)
+		if err != nil {
+			return SearchResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", ep.SpecID), err)
+		}
+		collection, err := s.index.CollectionByID(ep.CollectionID)
+		if err != nil {
+			return SearchResponse{}, NewNotFoundError(fmt.Sprintf("collection %q not found", ep.CollectionID), err)
+		}
+		tag, err := s.index.TagByID(ep.TagID)
+		if err != nil {
+			return SearchResponse{}, NewNotFoundError(fmt.Sprintf("tag %q not found", ep.TagID), err)
+		}
+		resp.Endpoints = append(resp.Endpoints, EndpointSearchItem{
+			ID:              ep.ID,
+			TagID:           ep.TagID,
+			TagName:         tag.Name,
+			CollectionID:    ep.CollectionID,
+			CollectionTitle: collection.Title,
+			SpecID:          ep.SpecID,
+			SpecDomain:      spec.Domain,
+			Method:          ep.Name,
+			Path:            ep.Path,
+			Summary:         ep.SummaryOrFallback(),
 		})
 	}
+
+	sort.Slice(resp.Endpoints, func(i, j int) bool {
+		a, b := resp.Endpoints[i], resp.Endpoints[j]
+		if a.SpecID != b.SpecID {
+			return a.SpecID < b.SpecID
+		}
+		if a.CollectionID != b.CollectionID {
+			return a.CollectionID < b.CollectionID
+		}
+		return a.TagID < b.TagID
+	})
 
 	return resp, nil
 }

@@ -12,15 +12,40 @@ type ToolInfo struct {
 }
 
 // EndpointItem represents an endpoint in the spec.
-type EndpointItem struct {
-	ID           string `json:"id" jsonschema:"required,Unique identifier for the endpoint"`
-	TagID        string `json:"tagId" jsonschema:"required,Unique identifier for the tag"`
-	CollectionID string `json:"collectionId" jsonschema:"required,Unique identifier for the collection"`
-	SpecID       string `json:"specId" jsonschema:"required,Unique identifier for the spec"`
-	Method       string `json:"method" jsonschema:"required,HTTP method (GET, POST, etc.)"`
-	Path         string `json:"path" jsonschema:"required,API path"`
-	Summary      string `json:"summary" jsonschema:"required,Human-readable summary of the endpoint"`
-	Deprecated   bool   `json:"deprecated" jsonschema:"required,Whether the endpoint is deprecated"`
+type EndpointSearchItem struct {
+	ID              string `json:"id" jsonschema:"required,Unique identifier for the endpoint"`
+	TagID           string `json:"tagId" jsonschema:"required,Unique identifier for the tag"`
+	TagName         string `json:"tagName" jsonschema:"required,Human-readable name of the tag"`
+	CollectionID    string `json:"collectionId" jsonschema:"required,Unique identifier for the collection"`
+	CollectionTitle string `json:"collectionTitle" jsonschema:"required,Human-readable title of the collection"`
+	SpecID          string `json:"specId" jsonschema:"required,Unique identifier for the spec"`
+	SpecDomain      string `json:"specDomain" jsonschema:"required,Domain or category of the spec"`
+	Method          string `json:"method" jsonschema:"required,HTTP method (GET, POST, etc.)"`
+	Path            string `json:"path" jsonschema:"required,API path"`
+	Summary         string `json:"summary" jsonschema:"required,Human-readable summary of the endpoint"`
+}
+
+type EndpointTagItem struct {
+	ID      string `json:"id" jsonschema:"required,Unique identifier for the endpoint"`
+	Method  string `json:"method" jsonschema:"required,HTTP method (GET, POST, etc.)"`
+	Path    string `json:"path" jsonschema:"required,API path"`
+	Summary string `json:"summary" jsonschema:"required,Human-readable summary of the endpoint"`
+}
+
+type EndpointCollectionItem struct {
+	ID      string `json:"id" jsonschema:"required,Unique identifier for the endpoint"`
+	TagID   string `json:"tagId" jsonschema:"required,Unique identifier for the tag"`
+	TagName string `json:"tagName" jsonschema:"required,Human-readable name of the tag"`
+	Method  string `json:"method" jsonschema:"required,HTTP method (GET, POST, etc.)"`
+	Path    string `json:"path" jsonschema:"required,API path"`
+	Summary string `json:"summary" jsonschema:"required,Human-readable summary of the endpoint"`
+}
+
+type Endpoint struct {
+	ID      string `json:"id" jsonschema:"required,Unique identifier for the endpoint"`
+	Method  string `json:"method" jsonschema:"required,HTTP method (GET, POST, etc.)"`
+	Path    string `json:"path" jsonschema:"required,API path"`
+	Summary string `json:"summary" jsonschema:"required,Human-readable summary of the endpoint"`
 }
 
 // Spec is a specification like Openapi or Swagger.

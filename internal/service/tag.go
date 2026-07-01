@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
 )
 
 type (
@@ -80,6 +81,10 @@ func (s *Service) TagsByCollection(_ context.Context, req TagsByCollectionReques
 		})
 	}
 
+	sort.Slice(resp.Tags, func(i, j int) bool {
+		return resp.Tags[i].ID < resp.Tags[j].ID
+	})
+
 	return resp, nil
 }
 
@@ -126,6 +131,10 @@ func (s *Service) TagsBySpec(_ context.Context, req TagsBySpecRequest) (TagsBySp
 			CountMethods: t.Stats.Methods,
 		})
 	}
+
+	sort.Slice(resp.Tags, func(i, j int) bool {
+		return resp.Tags[i].ID < resp.Tags[j].ID
+	})
 
 	return resp, nil
 }

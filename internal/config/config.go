@@ -21,8 +21,8 @@ type Spec struct {
 	Collections    []Collection      `yaml:"collections" validate:"required,min=1,max=30"`
 	Disable        bool              `yaml:"disable"`
 	Tags           []string          `yaml:"tags,omitempty"`
+	BaseURL        string            `yaml:"base_url" validate:"required,url"`
 	Headers        map[string]string `yaml:"headers,omitempty"`
-	// TODO: baseURL
 }
 
 type Collection struct {
@@ -32,6 +32,7 @@ type Collection struct {
 	Location       string            `yaml:"location" json:"location" validate:"required,min=5,max=250"`
 	Disable        bool              `yaml:"disable" json:"disable"`
 	Headers        map[string]string `yaml:"headers,omitempty"`
+	BaseURL        string            `yaml:"base_url" validate:"omitempty,url"`
 }
 
 func (c *Config) SetDefaults() error {

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
 )
 
 type (
@@ -61,6 +62,10 @@ func (s *Service) CollectionsBySpec(_ context.Context, req CollectionsRequest) (
 			CountMethods: c.Stats.Methods,
 		})
 	}
+
+	sort.Slice(resp.Collections, func(i, j int) bool {
+		return resp.Collections[i].ID < resp.Collections[j].ID
+	})
 
 	return resp, nil
 }

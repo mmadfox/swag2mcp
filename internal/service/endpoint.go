@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
 )
 
 type (
@@ -13,7 +14,10 @@ type (
 
 	// EndpointsByTagResponse represents a response to list all endpoints for a given tag.
 	EndpointsByTagResponse struct {
-		Endpoints []EndpointItem `json:"endpoints" jsonschema:"required,List of endpoints associated with the tag"`
+		Spec       Spec              `json:"spec" jsonschema:"required,Specification"`
+		Collection Collection        `json:"collection" jsonschema:"required,Collection"`
+		Tag        TagListItem       `json:"tag" jsonschema:"required,Tag"`
+		Endpoints  []EndpointTagItem `json:"endpoints" jsonschema:"required,List of endpoints associated with the tag"`
 	}
 
 	// EndpointsByCollectionRequest represents a request to list all endpoints for a given collection.
@@ -23,7 +27,9 @@ type (
 
 	// EndpointsByCollectionResponse represents a response to list all endpoints for a given collection.
 	EndpointsByCollectionResponse struct {
-		Endpoints []EndpointItem `json:"endpoints" jsonschema:"required,List of endpoints associated with the collection"`
+		Spec       Spec                     `json:"spec" jsonschema:"required,Specification"`
+		Collection Collection               `json:"collection" jsonschema:"required,Collection"`
+		Endpoints  []EndpointCollectionItem `json:"endpoints" jsonschema:"required,List of endpoints associated with the collection"`
 	}
 
 	// EndpointsBySpecRequest represents a request to list all endpoints for a given spec.
@@ -33,7 +39,7 @@ type (
 
 	// EndpointsBySpecResponse represents a response to list all endpoints for a given spec.
 	EndpointsBySpecResponse struct {
-		Endpoints []EndpointItem `json:"endpoints" jsonschema:"required,List of endpoints associated with the spec"`
+		Endpoints []EndpointSearchItem `json:"endpoints" jsonschema:"required,List of endpoints associated with the spec"`
 	}
 
 	// EndpointByIDRequest represents a request to get an endpoint by its ID.
@@ -43,7 +49,10 @@ type (
 
 	// EndpointByIDResponse represents a response to get an endpoint by its ID.
 	EndpointByIDResponse struct {
-		Endpoint EndpointItem `json:"endpoint" jsonschema:"required,"`
+		Spec       Spec        `json:"spec" jsonschema:"required,Specification"`
+		Collection Collection  `json:"collection" jsonschema:"required,Collection"`
+		Tag        TagListItem `json:"tag" jsonschema:"required,Tag"`
+		Endpoint   Endpoint    `json:"endpoint" jsonschema:"required,"`
 	}
 )
 
@@ -53,26 +62,55 @@ func (s *Service) EndpointsByTag(_ context.Context, req EndpointsByTagRequest) (
 		return EndpointsByTagResponse{}, NewValidationError("tagId must be a 32-character lowercase hex string (MD5 format)", err)
 	}
 
+	tag, err := s.index.TagByID(req.TagID)
+	if err != nil {
+		return EndpointsByTagResponse{}, NewNotFoundError(fmt.Sprintf("tag %q not found", req.TagID), err)
+	}
+
+	collection, err := s.index.CollectionByID(tag.CollectionID)
+	if err != nil {
+		return EndpointsByTagResponse{}, NewNotFoundError(fmt.Sprintf("collection %q not found", tag.CollectionID), err)
+	}
+
+	spec, err := s.index.SpecByID(collection.SpecID)
+	if err != nil {
+		return EndpointsByTagResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", collection.SpecID), err)
+	}
+
 	endpoints, err := s.index.EndpointsByTag(req.TagID)
 	if err != nil {
 		return EndpointsByTagResponse{}, NewNotFoundError(fmt.Sprintf("tag %q not found", req.TagID), err)
 	}
 
 	resp := EndpointsByTagResponse{
-		Endpoints: make([]EndpointItem, 0, len(endpoints)),
+		Spec: Spec{
+			ID:     spec.ID,
+			Domain: spec.Domain,
+		},
+		Collection: Collection{
+			ID:           collection.ID,
+			Title:        collection.Title,
+			CountMethods: collection.Stats.Methods,
+		},
+		Tag: TagListItem{
+			ID:           tag.ID,
+			Title:        tag.Name,
+			CountMethods: tag.Stats.Methods,
+		},
+		Endpoints: make([]EndpointTagItem, 0, len(endpoints)),
 	}
 	for _, ep := range endpoints {
-		resp.Endpoints = append(resp.Endpoints, EndpointItem{
-			ID:           ep.ID,
-			TagID:        ep.TagID,
-			CollectionID: ep.CollectionID,
-			SpecID:       ep.SpecID,
-			Method:       ep.Name,
-			Path:         ep.Path,
-			Summary:      ep.SummaryOrFallback(),
-			Deprecated:   ep.Operation != nil && ep.Operation.Deprecated,
+		resp.Endpoints = append(resp.Endpoints, EndpointTagItem{
+			ID:      ep.ID,
+			Method:  ep.Name,
+			Path:    ep.Path,
+			Summary: ep.SummaryOrFallback(),
 		})
 	}
+
+	sort.Slice(resp.Endpoints, func(i, j int) bool {
+		return resp.Endpoints[i].Method < resp.Endpoints[j].Method
+	})
 
 	return resp, nil
 }
@@ -83,26 +121,51 @@ func (s *Service) EndpointsByCollection(_ context.Context, req EndpointsByCollec
 		return EndpointsByCollectionResponse{}, NewValidationError("collectionId must be a 32-character lowercase hex string (MD5 format)", err)
 	}
 
+	collection, err := s.index.CollectionByID(req.CollectionID)
+	if err != nil {
+		return EndpointsByCollectionResponse{}, NewNotFoundError(fmt.Sprintf("collection %q not found", req.CollectionID), err)
+	}
+
+	spec, err := s.index.SpecByID(collection.SpecID)
+	if err != nil {
+		return EndpointsByCollectionResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", collection.SpecID), err)
+	}
+
 	endpoints, err := s.index.EndpointByCollection(req.CollectionID)
 	if err != nil {
 		return EndpointsByCollectionResponse{}, NewNotFoundError(fmt.Sprintf("collection %q not found", req.CollectionID), err)
 	}
 
 	resp := EndpointsByCollectionResponse{
-		Endpoints: make([]EndpointItem, 0, len(endpoints)),
+		Spec: Spec{
+			ID:     spec.ID,
+			Domain: spec.Domain,
+		},
+		Collection: Collection{
+			ID:           collection.ID,
+			Title:        collection.Title,
+			CountMethods: collection.Stats.Methods,
+		},
+		Endpoints: make([]EndpointCollectionItem, 0, len(endpoints)),
 	}
 	for _, ep := range endpoints {
-		resp.Endpoints = append(resp.Endpoints, EndpointItem{
-			ID:           ep.ID,
-			TagID:        ep.TagID,
-			CollectionID: ep.CollectionID,
-			SpecID:       ep.SpecID,
-			Method:       ep.Name,
-			Path:         ep.Path,
-			Summary:      ep.SummaryOrFallback(),
-			Deprecated:   ep.Operation != nil && ep.Operation.Deprecated,
+		tag, err := s.index.TagByID(ep.TagID)
+		if err != nil {
+			return EndpointsByCollectionResponse{}, NewNotFoundError(fmt.Sprintf("tag %q not found", ep.TagID), err)
+		}
+		resp.Endpoints = append(resp.Endpoints, EndpointCollectionItem{
+			ID:      ep.ID,
+			TagID:   ep.TagID,
+			TagName: tag.Name,
+			Method:  ep.Name,
+			Path:    ep.Path,
+			Summary: ep.SummaryOrFallback(),
 		})
 	}
+
+	sort.Slice(resp.Endpoints, func(i, j int) bool {
+		return resp.Endpoints[i].TagID < resp.Endpoints[j].TagID
+	})
 
 	return resp, nil
 }
@@ -119,20 +182,45 @@ func (s *Service) EndpointsBySpec(_ context.Context, req EndpointsBySpecRequest)
 	}
 
 	resp := EndpointsBySpecResponse{
-		Endpoints: make([]EndpointItem, 0, len(endpoints)),
+		Endpoints: make([]EndpointSearchItem, 0, len(endpoints)),
 	}
 	for _, ep := range endpoints {
-		resp.Endpoints = append(resp.Endpoints, EndpointItem{
-			ID:           ep.ID,
-			TagID:        ep.TagID,
-			CollectionID: ep.CollectionID,
-			SpecID:       ep.SpecID,
-			Method:       ep.Name,
-			Path:         ep.Path,
-			Summary:      ep.SummaryOrFallback(),
-			Deprecated:   ep.Operation != nil && ep.Operation.Deprecated,
+		spec, err := s.index.SpecByID(ep.SpecID)
+		if err != nil {
+			return EndpointsBySpecResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", ep.SpecID), err)
+		}
+		collection, err := s.index.CollectionByID(ep.CollectionID)
+		if err != nil {
+			return EndpointsBySpecResponse{}, NewNotFoundError(fmt.Sprintf("collection %q not found", ep.CollectionID), err)
+		}
+		tag, err := s.index.TagByID(ep.TagID)
+		if err != nil {
+			return EndpointsBySpecResponse{}, NewNotFoundError(fmt.Sprintf("tag %q not found", ep.TagID), err)
+		}
+		resp.Endpoints = append(resp.Endpoints, EndpointSearchItem{
+			ID:              ep.ID,
+			TagID:           ep.TagID,
+			TagName:         tag.Name,
+			CollectionID:    ep.CollectionID,
+			CollectionTitle: collection.Title,
+			SpecID:          ep.SpecID,
+			SpecDomain:      spec.Domain,
+			Method:          ep.Name,
+			Path:            ep.Path,
+			Summary:         ep.SummaryOrFallback(),
 		})
 	}
+
+	sort.Slice(resp.Endpoints, func(i, j int) bool {
+		a, b := resp.Endpoints[i], resp.Endpoints[j]
+		if a.SpecID != b.SpecID {
+			return a.SpecID < b.SpecID
+		}
+		if a.CollectionID != b.CollectionID {
+			return a.CollectionID < b.CollectionID
+		}
+		return a.TagID < b.TagID
+	})
 
 	return resp, nil
 }
@@ -148,16 +236,39 @@ func (s *Service) EndpointByID(_ context.Context, req EndpointByIDRequest) (Endp
 		return EndpointByIDResponse{}, NewNotFoundError(fmt.Sprintf("endpoint %q not found", req.ID), err)
 	}
 
+	spec, err := s.index.SpecByID(ep.SpecID)
+	if err != nil {
+		return EndpointByIDResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", ep.SpecID), err)
+	}
+	collection, err := s.index.CollectionByID(ep.CollectionID)
+	if err != nil {
+		return EndpointByIDResponse{}, NewNotFoundError(fmt.Sprintf("collection %q not found", ep.CollectionID), err)
+	}
+	tag, err := s.index.TagByID(ep.TagID)
+	if err != nil {
+		return EndpointByIDResponse{}, NewNotFoundError(fmt.Sprintf("tag %q not found", ep.TagID), err)
+	}
+
 	resp := EndpointByIDResponse{
-		Endpoint: EndpointItem{
-			ID:           ep.ID,
-			TagID:        ep.TagID,
-			CollectionID: ep.CollectionID,
-			SpecID:       ep.SpecID,
-			Method:       ep.Name,
-			Path:         ep.Path,
-			Summary:      ep.SummaryOrFallback(),
-			Deprecated:   ep.Operation != nil && ep.Operation.Deprecated,
+		Spec: Spec{
+			ID:     spec.ID,
+			Domain: spec.Domain,
+		},
+		Collection: Collection{
+			ID:           collection.ID,
+			Title:        collection.Title,
+			CountMethods: collection.Stats.Methods,
+		},
+		Tag: TagListItem{
+			ID:           tag.ID,
+			Title:        tag.Name,
+			CountMethods: tag.Stats.Methods,
+		},
+		Endpoint: Endpoint{
+			ID:      ep.ID,
+			Method:  ep.Name,
+			Path:    ep.Path,
+			Summary: ep.SummaryOrFallback(),
 		},
 	}
 

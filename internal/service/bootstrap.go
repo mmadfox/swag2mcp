@@ -38,6 +38,8 @@ func (s *Service) Bootstrap(ctx context.Context, r BootstrapRequest) error {
 			Domain:         spec.Domain,
 			LLMTitle:       spec.LLMTitle,
 			LLMInstruction: spec.LLMInstruction,
+			BaseURL:        spec.BaseURL,
+			Headers:        spec.Headers,
 		}
 
 		allTags := make(map[string]*types.Tag)               // per spec
@@ -54,6 +56,8 @@ func (s *Service) Bootstrap(ctx context.Context, r BootstrapRequest) error {
 				SpecID:         specInfo.ID,
 				LLMTitle:       col.LLMTitle,
 				LLMInstruction: col.LLMInstruction,
+				BaseURL:        col.BaseURL,
+				Headers:        col.Headers,
 			}
 			allCollections[colInfo.ID] = colInfo
 

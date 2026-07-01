@@ -164,7 +164,7 @@ func loadToolFromEmbed(filename string) (Tool, error) {
 	}, nil
 }
 
-// makeAvaliablesSpecs generates a string of available specs.
+// makeAvaliablesSpecs generates a structured, readable string of available specs and their collections.
 func (s *Service) makeAvaliablesSpecs() string {
 	var sb strings.Builder
 	specs := s.index.AllSpecs()
@@ -174,11 +174,10 @@ func (s *Service) makeAvaliablesSpecs() string {
 
 	const maxCollectionPerSpec = 10
 
-	sb.WriteString("\n# Available specs12\n")
-	for specIndex, spec := range specs {
-		if specIndex == 0 {
-			sb.WriteString("\n---\n")
-		}
+	sb.WriteString("\n# Available specs\n")
+	for _, spec := range specs {
+		sb.WriteString("\n---\n")
+
 		sb.WriteString("specID: ")
 		sb.WriteString(spec.ID)
 		sb.WriteString("\n")
@@ -193,43 +192,40 @@ func (s *Service) makeAvaliablesSpecs() string {
 
 		if len(spec.LLMInstruction) > 0 {
 			sb.WriteString("instruction: ")
-			sb.WriteString(spec.LLMInstruction)
+			sb.WriteString(strings.ReplaceAll(spec.LLMInstruction, "\n", " ")) // Normalize to single line
 			sb.WriteString("\n")
 		}
 
 		collections, err := s.index.CollectionsBySpec(spec.ID)
 		if err != nil {
-			sb.WriteString("\n**No available collections**\n")
+			sb.WriteString("\n **No available collections**")
 			continue
 		}
 
-		/*
-			| CollectionID | Title | Description |
-			|--------------|-------|-------------|
-		*/
-
 		var hasMoreCollections bool
-		sb.WriteString("\n**Available collections**\n")
 		if len(collections) > maxCollectionPerSpec {
 			collections = collections[:maxCollectionPerSpec]
 			hasMoreCollections = true
 		}
 
-		sb.WriteString("\n| CollectionID | Title |\n")
+		sb.WriteString("\n**Available collections:**")
 		for _, collection := range collections {
-			sb.WriteString("|")
+			sb.WriteString("\n collectionID: ")
 			sb.WriteString(collection.ID)
-			sb.WriteString("|")
+			sb.WriteString("\n title: ")
 			sb.WriteString(collection.LLMTitle)
-			sb.WriteString("|")
-			sb.WriteString(collection.LLMInstruction)
-			sb.WriteString("|\n")
-		}
-		if hasMoreCollections {
-			sb.WriteString("**more than 10 collections are available for this spec; use the `collection_by_spec` tool to retrieve the full list.**\n")
+
+			if len(collection.LLMInstruction) > 0 {
+				sb.WriteString("\n instruction: ")
+				sb.WriteString(strings.ReplaceAll(collection.LLMInstruction, "\n", " "))
+			}
+
+			sb.WriteString("\n")
 		}
 
-		sb.WriteString("\n---\n")
+		if hasMoreCollections {
+			sb.WriteString("\n **more than 10 collections are available for this spec; use the `collection_by_spec` tool to retrieve the full list.** \n")
+		}
 	}
 
 	return sb.String()
