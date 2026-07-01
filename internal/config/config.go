@@ -24,7 +24,7 @@ type Spec struct {
 	Tags           []string          `yaml:"tags,omitempty"`
 	BaseURL        string            `yaml:"base_url"                  validate:"required,url"`
 	Headers        map[string]string `yaml:"headers,omitempty"`
-	AuthType       string            `yaml:"auth_type,omitempty"`
+	Auth           Auth              `yaml:"auth,omitempty"`
 }
 
 type Collection struct {

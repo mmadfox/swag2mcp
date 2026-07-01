@@ -2,6 +2,7 @@ workspace_dir: /some/path/to/workspace
 
 specs:
   - domain: train-booking
+    disabled: true
     base_url: https://api.trains-railway.com
     headers:
       X-Request-ID: generated-request-id
@@ -14,14 +15,16 @@ specs:
       managing reservations, and viewing train schedules across the national railway network.
       Use this for passenger travel planning and ticket purchase operations.
 
-    auth_type: oauth2
     auth:
-      password: $(SOME_ENV)
-      username: $(SOME_ENV)
+      type: oauth2
+      config:
+        password: $(SOME_ENV)
+        username: $(SOME_ENV)
 
     collections:
       - llm_title: Train Schedules and Availability
         location: /some/path/to/spec/train-schedules.json
+        disabled: true
       - llm_title: Booking and Reservations
         location: /some/path/to/spec/train-bookings.json
       - llm_title: Passenger Services
