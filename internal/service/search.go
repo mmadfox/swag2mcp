@@ -21,6 +21,36 @@ type (
 	}
 )
 
+// Search returns endpoints matching the query.
+func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse, error) {
+	if err := s.validateRequest(req); err != nil {
+		return SearchResponse{}, NewValidationError("query is required and limit must be between 1 and 50", err)
+	}
+
+	endpoints, err := s.index.Search(ctx, req.Query, req.Limit)
+	if err != nil {
+		return SearchResponse{}, NewNotFoundError("search failed", err)
+	}
+
+	items, itemsErr := s.mapEndpointsToSearchItems(endpoints)
+	if itemsErr != nil {
+		return SearchResponse{}, itemsErr
+	}
+
+	sort.Slice(items, func(i, j int) bool {
+		a, b := items[i], items[j]
+		if a.SpecID != b.SpecID {
+			return a.SpecID < b.SpecID
+		}
+		if a.CollectionID != b.CollectionID {
+			return a.CollectionID < b.CollectionID
+		}
+		return a.TagID < b.TagID
+	})
+
+	return SearchResponse{Endpoints: items}, nil
+}
+
 // mapEndpointsToSearchItems maps raw endpoints to EndpointSearchItem with resolved spec/collection/tag.
 func (s *Service) mapEndpointsToSearchItems(endpoints []*types.Endpoint) ([]EndpointSearchItem, error) {
 	items := make([]EndpointSearchItem, 0, len(endpoints))
@@ -51,34 +81,4 @@ func (s *Service) mapEndpointsToSearchItems(endpoints []*types.Endpoint) ([]Endp
 		})
 	}
 	return items, nil
-}
-
-// Search returns endpoints matching the query.
-func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse, error) {
-	if err := s.validateRequest(req); err != nil {
-		return SearchResponse{}, NewValidationError("query is required and limit must be between 1 and 50", err)
-	}
-
-	endpoints, err := s.index.Search(ctx, req.Query, req.Limit)
-	if err != nil {
-		return SearchResponse{}, NewNotFoundError("search failed", err)
-	}
-
-	items, itemsErr := s.mapEndpointsToSearchItems(endpoints)
-	if itemsErr != nil {
-		return SearchResponse{}, itemsErr
-	}
-
-	sort.Slice(items, func(i, j int) bool {
-		a, b := items[i], items[j]
-		if a.SpecID != b.SpecID {
-			return a.SpecID < b.SpecID
-		}
-		if a.CollectionID != b.CollectionID {
-			return a.CollectionID < b.CollectionID
-		}
-		return a.TagID < b.TagID
-	})
-
-	return SearchResponse{Endpoints: items}, nil
 }
