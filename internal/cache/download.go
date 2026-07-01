@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +12,8 @@ import (
 	"time"
 )
 
+const defaultHTTPTimeout = 30 * time.Second
+
 type httpClient struct {
 	cli *http.Client
 }
@@ -17,13 +21,13 @@ type httpClient struct {
 func defaultHTTPClient() *httpClient {
 	return &httpClient{
 		cli: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: defaultHTTPTimeout,
 		},
 	}
 }
 
 func (h *httpClient) Get(specURL string) ([]byte, error) {
-	req, err := http.NewRequest(http.MethodGet, specURL, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, specURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
 	}
@@ -44,7 +48,7 @@ func (h *httpClient) Get(specURL string) ([]byte, error) {
 	}
 
 	if len(data) == 0 {
-		return nil, fmt.Errorf("empty response body")
+		return nil, errors.New("empty response body")
 	}
 
 	return data, nil
@@ -67,4 +71,3 @@ func fileURIToPath(rawURL string) (string, error) {
 	}
 	return filepath.FromSlash(p), nil
 }
-

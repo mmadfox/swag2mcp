@@ -8,10 +8,6 @@ type LLMError struct {
 	Original string `json:"original,omitempty"`
 }
 
-func (e *LLMError) Error() string {
-	return e.Message
-}
-
 func NewValidationError(msg string, err error) *LLMError {
 	return &LLMError{
 		Code:     "validation_failed",
@@ -26,6 +22,10 @@ func NewNotFoundError(msg string, err error) *LLMError {
 		Message:  msg,
 		Original: formatError(err),
 	}
+}
+
+func (e *LLMError) Error() string {
+	return e.Message
 }
 
 func formatError(err error) string {

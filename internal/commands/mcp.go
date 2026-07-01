@@ -21,30 +21,29 @@ func newMCPCmd(version string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mcp [mcp-flags]",
 		Short: "Start the swag2mcp server in headless mode",
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			// set up logging if we have a logfile
 			var logWriter io.Writer
 			if len(opts.Logfile) > 0 {
-				f, err := os.Create(opts.Logfile)
-				if err != nil {
-					return fmt.Errorf("opening logfile: %v", err)
+				f, logErr := os.Create(opts.Logfile)
+				if logErr != nil {
+					return fmt.Errorf("opening logfile: %w", logErr)
 				}
 				defer f.Close()
 				logWriter = f
 			}
 
 			// initialize service
-			svc, err := service.New()
-			if err != nil {
-				return fmt.Errorf("failed to create service: %w", err)
+			svc, svcErr := service.New()
+			if svcErr != nil {
+				return fmt.Errorf("failed to create service: %w", svcErr)
 			}
 
 			// bootstrap service with config
-			err = svc.Bootstrap(cmd.Context(), service.BootstrapRequest{
+			if bootErr := svc.Bootstrap(cmd.Context(), service.BootstrapRequest{
 				ConfFilepath: opts.ConfigFile,
-			})
-			if err != nil {
-				return fmt.Errorf("failed to bootstrap service: %w", err)
+			}); bootErr != nil {
+				return fmt.Errorf("failed to bootstrap service: %w", bootErr)
 			}
 
 			// create mcp server options

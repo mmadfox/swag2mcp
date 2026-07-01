@@ -18,16 +18,16 @@ This command creates:
 - Workspace directory (default: ~/.swag2mcp)
 - Configuration file (swag2mcp.yaml)
 - Subdirectories for storing responses and cache`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			home, err := os.UserHomeDir()
-			if err != nil {
-				return fmt.Errorf("cannot determine home directory: %w", err)
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			home, homeErr := os.UserHomeDir()
+			if homeErr != nil {
+				return fmt.Errorf("cannot determine home directory: %w", homeErr)
 			}
 
 			workspaceDir := filepath.Join(home, ".swag2mcp")
 
 			// Create workspace directory
-			if err := os.MkdirAll(workspaceDir, 0755); err != nil {
+			if err := os.MkdirAll(workspaceDir, 0750); err != nil {
 				return fmt.Errorf("failed to create workspace directory %q: %w", workspaceDir, err)
 			}
 
@@ -35,28 +35,28 @@ This command creates:
 			subdirs := []string{"responses", "cache", "specs"}
 			for _, subdir := range subdirs {
 				dir := filepath.Join(workspaceDir, subdir)
-				if err := os.MkdirAll(dir, 0755); err != nil {
-					return fmt.Errorf("failed to create subdirectory %q: %w", dir, err)
+				if mkErr := os.MkdirAll(dir, 0750); mkErr != nil {
+					return fmt.Errorf("failed to create subdirectory %q: %w", dir, mkErr)
 				}
 			}
 
 			// Create default config file
 			configPath := filepath.Join(workspaceDir, "swag2mcp.yaml")
-			if _, err := os.Stat(configPath); err == nil {
+			if _, statErr := os.Stat(configPath); statErr == nil {
 				// File exists
-				fmt.Printf("Configuration file already exists at %s\n", configPath)
+				cmd.Printf("Configuration file already exists at %s\n", configPath)
 				return nil
 			}
 
 			configContent := `collections: []
 `
-			if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
-				return fmt.Errorf("failed to write config file %q: %w", configPath, err)
+			if writeErr := os.WriteFile(configPath, []byte(configContent), 0600); writeErr != nil {
+				return fmt.Errorf("failed to write config file %q: %w", configPath, writeErr)
 			}
 
-			fmt.Printf("Workspace initialized at %s\n", workspaceDir)
-			fmt.Printf("Configuration created at %s\n", configPath)
-			fmt.Printf("Subdirectories created: %v\n", subdirs)
+			cmd.Printf("Workspace initialized at %s\n", workspaceDir)
+			cmd.Printf("Configuration created at %s\n", configPath)
+			cmd.Printf("Subdirectories created: %v\n", subdirs)
 
 			return nil
 		},

@@ -2,6 +2,7 @@ package spec
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -50,14 +51,14 @@ func openapi3PathItemToOps(path string, item *openapi3.PathItem) []*PathItem {
 		op     *openapi3.Operation
 	}
 	entries := []entry{
-		{"GET", item.Get},
-		{"POST", item.Post},
-		{"PUT", item.Put},
-		{"DELETE", item.Delete},
-		{"PATCH", item.Patch},
-		{"HEAD", item.Head},
-		{"OPTIONS", item.Options},
-		{"TRACE", item.Trace},
+		{http.MethodGet, item.Get},
+		{http.MethodPost, item.Post},
+		{http.MethodPut, item.Put},
+		{http.MethodDelete, item.Delete},
+		{http.MethodPatch, item.Patch},
+		{http.MethodHead, item.Head},
+		{http.MethodOptions, item.Options},
+		{http.MethodTrace, item.Trace},
 	}
 	for _, e := range entries {
 		if e.op == nil {
@@ -138,6 +139,8 @@ func openapi3ContentToContent(content openapi3.Content) map[string]*MediaType {
 	return out
 }
 
+//
+//nolint:gocognit
 func schemaRefToSchema(sref *openapi3.SchemaRef) *Schema {
 	if sref == nil || sref.Value == nil {
 		return nil

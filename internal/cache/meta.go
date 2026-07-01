@@ -23,8 +23,8 @@ func readMeta(path string) (fileMeta, error) {
 		return fileMeta{}, err
 	}
 	var m fileMeta
-	if err := json.Unmarshal(data, &m); err != nil {
-		return fileMeta{}, err
+	if uErr := json.Unmarshal(data, &m); uErr != nil {
+		return fileMeta{}, uErr
 	}
 	return m, nil
 }
@@ -34,5 +34,5 @@ func writeMeta(path string, m fileMeta) error {
 	if err != nil {
 		return fmt.Errorf("marshal meta: %w", err)
 	}
-	return os.WriteFile(path, data, 0644)
+	return os.WriteFile(path, data, 0600)
 }

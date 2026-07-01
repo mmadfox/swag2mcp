@@ -2,19 +2,26 @@ package config
 
 import (
 	"regexp"
+	"sync"
 
 	"github.com/go-playground/validator/v10"
 )
 
 var (
-	configValidator *validator.Validate
-	// domainRegex for domain validation in config
+	configValidator   *validator.Validate //nolint:gochecknoglobals // lazily initialized
+	configValidatorMu sync.Mutex          //nolint:gochecknoglobals // guards validator init
+	// domainRegex is for domain validation in config.
 	domainRegex      = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,60}$`)
 	titleRegex       = regexp.MustCompile(`^[\p{L}\p{N} #*_` + "`" + `~>\[\]()|.,!?;:'"\\-]+$`)
 	instructionRegex = regexp.MustCompile(`^[\p{L}\p{N}\s#*_` + "`" + `~>\[\]()|.,!?;:'"\\-]+$`)
 )
 
-func init() {
+func getValidator() *validator.Validate {
+	configValidatorMu.Lock()
+	defer configValidatorMu.Unlock()
+	if configValidator != nil {
+		return configValidator
+	}
 	configValidator = validator.New(
 		validator.WithRequiredStructEnabled(),
 	)
@@ -27,6 +34,7 @@ func init() {
 	if err := configValidator.RegisterValidation("instruction_format", instructionFormatValidation); err != nil {
 		panic(err)
 	}
+	return configValidator
 }
 
 func domainFormatValidation(fl validator.FieldLevel) bool {

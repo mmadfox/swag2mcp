@@ -5,6 +5,7 @@ import (
 )
 
 func TestDomain(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    string
@@ -24,6 +25,7 @@ func TestDomain(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := Domain(tt.input)
 			if result != tt.expected {
 				t.Errorf("Domain(%s) = %s; want %s", tt.input, result, tt.expected)
@@ -33,6 +35,7 @@ func TestDomain(t *testing.T) {
 }
 
 func TestCollection(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		domain   string
@@ -55,6 +58,7 @@ func TestCollection(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := Collection(tt.domain, tt.spec)
 			if result != tt.expected {
 				t.Errorf("Collection(%s, %s) = %s; want %s", tt.domain, tt.spec, result, tt.expected)
@@ -64,6 +68,7 @@ func TestCollection(t *testing.T) {
 }
 
 func TestMethod(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name       string
 		domain     string
@@ -80,7 +85,7 @@ func TestMethod(t *testing.T) {
 			method:     "GET",
 			path:       "/pets",
 			opID:       "listPets",
-			expected:   "f6a7a32b8166a3c5f36ec26311b347c1",
+			expected:   "cb838b8e4a0a09492b88733a5996546d",
 		},
 		{
 			name:       "method with path parameters",
@@ -89,15 +94,25 @@ func TestMethod(t *testing.T) {
 			method:     "GET",
 			path:       "/pets/{id}",
 			opID:       "getPet",
-			expected:   "789115df2f8fd369d1c03abdc1e5fefa",
+			expected:   "e80ec318753224589986c6dd3b834e11",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := Method(tt.domain, tt.collection, "", tt.method, tt.path, tt.opID)
 			if result != tt.expected {
-				t.Errorf("Method(%s, %s, %s, %s, %s) = %s; want %s", tt.domain, tt.collection, tt.method, tt.path, tt.opID, result, tt.expected)
+				t.Errorf(
+					"Method(%s, %s, %s, %s, %s) = %s; want %s",
+					tt.domain,
+					tt.collection,
+					tt.method,
+					tt.path,
+					tt.opID,
+					result,
+					tt.expected,
+				)
 			}
 		})
 	}

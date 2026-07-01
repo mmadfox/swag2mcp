@@ -1,6 +1,7 @@
 package spec
 
 import (
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -8,9 +9,10 @@ import (
 )
 
 func TestParse_validSpecs(t *testing.T) {
-	entries, err := os.ReadDir("testdata")
-	if err != nil {
-		t.Fatal(err)
+	t.Parallel()
+	entries, dirErr := os.ReadDir("testdata")
+	if dirErr != nil {
+		t.Fatal(dirErr)
 	}
 
 	for _, e := range entries {
@@ -27,6 +29,7 @@ func TestParse_validSpecs(t *testing.T) {
 		}
 
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			data, err := os.ReadFile(filepath.Join("testdata", name))
 			if err != nil {
 				t.Fatal(err)
@@ -45,6 +48,7 @@ func TestParse_validSpecs(t *testing.T) {
 }
 
 func TestParse_invalidSpecs_structural(t *testing.T) {
+	t.Parallel()
 	// These files are structurally malformed and should fail to parse.
 	files := []string{
 		"invalid_v_empty.yaml",
@@ -53,6 +57,7 @@ func TestParse_invalidSpecs_structural(t *testing.T) {
 
 	for _, file := range files {
 		t.Run(file, func(t *testing.T) {
+			t.Parallel()
 			data, err := os.ReadFile(filepath.Join("testdata", file))
 			if err != nil {
 				t.Fatal(err)
@@ -66,6 +71,7 @@ func TestParse_invalidSpecs_structural(t *testing.T) {
 }
 
 func TestParse_invalidSpecs_semantic(t *testing.T) {
+	t.Parallel()
 	// These files are structurally valid YAML/JSON but semantically invalid.
 	// Our parser is lenient and only parses, so they should succeed.
 	files := []string{
@@ -82,6 +88,7 @@ func TestParse_invalidSpecs_semantic(t *testing.T) {
 
 	for _, file := range files {
 		t.Run(file, func(t *testing.T) {
+			t.Parallel()
 			data, err := os.ReadFile(filepath.Join("testdata", file))
 			if err != nil {
 				t.Fatal(err)
@@ -95,6 +102,7 @@ func TestParse_invalidSpecs_semantic(t *testing.T) {
 }
 
 func TestParse_versionDetection(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		file    string
@@ -111,6 +119,7 @@ func TestParse_versionDetection(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			data, err := os.ReadFile(filepath.Join("testdata", tt.file))
 			if err != nil {
 				t.Fatal(err)
@@ -129,6 +138,7 @@ func TestParse_versionDetection(t *testing.T) {
 }
 
 func TestParse_swaggerHost(t *testing.T) {
+	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "valid_v20_swagger.yaml"))
 	if err != nil {
 		t.Fatal(err)
@@ -149,6 +159,7 @@ func TestParse_swaggerHost(t *testing.T) {
 }
 
 func TestParse_openapiServers(t *testing.T) {
+	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "valid_v300_openapi.yaml"))
 	if err != nil {
 		t.Fatal(err)
@@ -165,6 +176,7 @@ func TestParse_openapiServers(t *testing.T) {
 }
 
 func TestParse_operationMetadata(t *testing.T) {
+	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "valid_v20_swagger.yaml"))
 	if err != nil {
 		t.Fatal(err)
@@ -177,7 +189,7 @@ func TestParse_operationMetadata(t *testing.T) {
 
 	var found bool
 	for _, pi := range doc.PathItems {
-		if pi.Path == "/users" && pi.Method == "GET" {
+		if pi.Path == "/users" && pi.Method == http.MethodGet {
 			found = true
 			op := pi.Operation
 			if op.Summary != "Список пользователей" {
@@ -201,6 +213,7 @@ func TestParse_operationMetadata(t *testing.T) {
 }
 
 func TestParse_requestBody(t *testing.T) {
+	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "valid_v20_swagger.yaml"))
 	if err != nil {
 		t.Fatal(err)
@@ -213,7 +226,7 @@ func TestParse_requestBody(t *testing.T) {
 
 	var found bool
 	for _, pi := range doc.PathItems {
-		if pi.Path == "/users" && pi.Method == "POST" {
+		if pi.Path == "/users" && pi.Method == http.MethodPost {
 			found = true
 			op := pi.Operation
 			if op.RequestBody == nil {
@@ -234,6 +247,7 @@ func TestParse_requestBody(t *testing.T) {
 }
 
 func TestParse_responses(t *testing.T) {
+	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "valid_v20_swagger.yaml"))
 	if err != nil {
 		t.Fatal(err)
@@ -246,7 +260,7 @@ func TestParse_responses(t *testing.T) {
 
 	var found bool
 	for _, pi := range doc.PathItems {
-		if pi.Path == "/users" && pi.Method == "GET" {
+		if pi.Path == "/users" && pi.Method == http.MethodGet {
 			found = true
 			op := pi.Operation
 			if len(op.Responses) == 0 {
@@ -268,6 +282,7 @@ func TestParse_responses(t *testing.T) {
 }
 
 func TestParse_tagHierarchies(t *testing.T) {
+	t.Parallel()
 	files := []string{
 		"test_tags_01_flat.yaml",
 		"test_tags_02_slash_hierarchy.yaml",
@@ -280,6 +295,7 @@ func TestParse_tagHierarchies(t *testing.T) {
 
 	for _, file := range files {
 		t.Run(file, func(t *testing.T) {
+			t.Parallel()
 			data, err := os.ReadFile(filepath.Join("testdata", file))
 			if err != nil {
 				t.Fatal(err)
@@ -296,6 +312,7 @@ func TestParse_tagHierarchies(t *testing.T) {
 }
 
 func TestParse_multiTags(t *testing.T) {
+	t.Parallel()
 	files := []string{
 		"test_multi_tags_01_cross_domain.yaml",
 		"test_multi_tags_02_roles.yaml",
@@ -308,6 +325,7 @@ func TestParse_multiTags(t *testing.T) {
 
 	for _, file := range files {
 		t.Run(file, func(t *testing.T) {
+			t.Parallel()
 			data, err := os.ReadFile(filepath.Join("testdata", file))
 			if err != nil {
 				t.Fatal(err)
@@ -324,6 +342,7 @@ func TestParse_multiTags(t *testing.T) {
 }
 
 func TestParse_emptyDoc(t *testing.T) {
+	t.Parallel()
 	_, err := Parse([]byte{})
 	if err == nil {
 		t.Error("expected error for empty document")
@@ -331,6 +350,7 @@ func TestParse_emptyDoc(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		file    string
 		wantPre string
@@ -346,6 +366,7 @@ func TestVersion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.file, func(t *testing.T) {
+			t.Parallel()
 			data, err := os.ReadFile(filepath.Join("testdata", tt.file))
 			if err != nil {
 				t.Fatal(err)
@@ -362,6 +383,7 @@ func TestVersion(t *testing.T) {
 }
 
 func TestParse_swaggerFileUpload(t *testing.T) {
+	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "valid_v20_swagger.yaml"))
 	if err != nil {
 		t.Fatal(err)
@@ -374,7 +396,7 @@ func TestParse_swaggerFileUpload(t *testing.T) {
 
 	var found bool
 	for _, pi := range doc.PathItems {
-		if pi.Path == "/files/upload" && pi.Method == "POST" {
+		if pi.Path == "/files/upload" && pi.Method == http.MethodPost {
 			found = true
 			op := pi.Operation
 			if len(op.Parameters) == 0 {
@@ -394,7 +416,10 @@ func TestParse_swaggerFileUpload(t *testing.T) {
 	}
 }
 
+//
+//nolint:gocognit
 func TestParse_postmanCollection(t *testing.T) {
+	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "postman_petstore.json"))
 	if err != nil {
 		t.Fatal(err)
@@ -422,7 +447,7 @@ func TestParse_postmanCollection(t *testing.T) {
 		switch pi.Path {
 		case "/v1/pets":
 			switch pi.Method {
-			case "GET":
+			case http.MethodGet:
 				listPets = true
 				op := pi.Operation
 				if op.Summary != "List all pets" {
@@ -441,7 +466,7 @@ func TestParse_postmanCollection(t *testing.T) {
 				if !hasLimit {
 					t.Error("expected limit query param")
 				}
-			case "POST":
+			case http.MethodPost:
 				createPet = true
 				op := pi.Operation
 				if op.RequestBody == nil {
@@ -483,6 +508,7 @@ func TestParse_postmanCollection(t *testing.T) {
 }
 
 func TestParse_postmanHeaders(t *testing.T) {
+	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "postman_petstore.json"))
 	if err != nil {
 		t.Fatal(err)
@@ -494,7 +520,7 @@ func TestParse_postmanHeaders(t *testing.T) {
 	}
 
 	for _, pi := range doc.PathItems {
-		if pi.Path == "/v1/pets" && pi.Method == "GET" {
+		if pi.Path == "/v1/pets" && pi.Method == http.MethodGet {
 			op := pi.Operation
 			var hasAuth bool
 			for _, p := range op.Parameters {
@@ -511,6 +537,7 @@ func TestParse_postmanHeaders(t *testing.T) {
 }
 
 func TestParse_isPostman(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		data []byte
@@ -518,7 +545,9 @@ func TestParse_isPostman(t *testing.T) {
 	}{
 		{
 			name: "postman collection",
-			data: []byte(`{"info":{"schema":"https://schema.getpostman.com/collection/v2.1.0/collection.json"},"item":[{"name":"test","request":{"method":"GET","url":"http://example.com"}}]}`),
+			data: []byte(
+				`{"info":{"schema":"https://schema.getpostman.com/collection/v2.1.0/collection.json"},"item":[{"name":"test","request":{"method":"GET","url":"http://example.com"}}]}`,
+			),
 			want: true,
 		},
 		{
@@ -540,6 +569,7 @@ func TestParse_isPostman(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := isPostman(tt.data)
 			if got != tt.want {
 				t.Errorf("isPostman = %v, want %v", got, tt.want)

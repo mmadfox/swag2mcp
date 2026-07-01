@@ -14,9 +14,9 @@ type (
 
 	// TagsByCollectionResponse represents a response to list all tags for a given collection.
 	TagsByCollectionResponse struct {
-		Spec       Spec          `json:"spec" jsonschema:"required,Specification"`
+		Spec       Spec          `json:"spec"       jsonschema:"required,Specification"`
 		Collection Collection    `json:"collection" jsonschema:"required,Collection"`
-		Tags       []TagListItem `json:"tags" jsonschema:"required,List of tags associated with the collection"`
+		Tags       []TagListItem `json:"tags"       jsonschema:"required,List of tags associated with the collection"`
 	}
 
 	// TagByIDRequest represents a request to get a tag by its ID.
@@ -43,12 +43,18 @@ type (
 // TagsByCollection returns a list of all available tags for a given collection.
 func (s *Service) TagsByCollection(_ context.Context, req TagsByCollectionRequest) (TagsByCollectionResponse, error) {
 	if err := s.validateRequest(req); err != nil {
-		return TagsByCollectionResponse{}, NewValidationError("collectionId must be a 32-character lowercase hex string (MD5 format)", err)
+		return TagsByCollectionResponse{}, NewValidationError(
+			"collectionId must be a 32-character lowercase hex string (MD5 format)",
+			err,
+		)
 	}
 
 	collection, err := s.index.CollectionByID(req.CollectionID)
 	if err != nil {
-		return TagsByCollectionResponse{}, NewNotFoundError(fmt.Sprintf("collection %q not found", req.CollectionID), err)
+		return TagsByCollectionResponse{}, NewNotFoundError(
+			fmt.Sprintf("collection %q not found", req.CollectionID),
+			err,
+		)
 	}
 
 	spec, err := s.index.SpecByID(collection.SpecID)
@@ -58,7 +64,10 @@ func (s *Service) TagsByCollection(_ context.Context, req TagsByCollectionReques
 
 	tags, err := s.index.TagsByCollection(req.CollectionID)
 	if err != nil {
-		return TagsByCollectionResponse{}, NewNotFoundError(fmt.Sprintf("collection %q not found", req.CollectionID), err)
+		return TagsByCollectionResponse{}, NewNotFoundError(
+			fmt.Sprintf("collection %q not found", req.CollectionID),
+			err,
+		)
 	}
 
 	resp := TagsByCollectionResponse{
@@ -91,7 +100,10 @@ func (s *Service) TagsByCollection(_ context.Context, req TagsByCollectionReques
 // TagByID returns a tag by its ID.
 func (s *Service) TagByID(_ context.Context, req TagByIDRequest) (TagByIDResponse, error) {
 	if err := s.validateRequest(req); err != nil {
-		return TagByIDResponse{}, NewValidationError("tagId must be a 32-character lowercase hex string (MD5 format)", err)
+		return TagByIDResponse{}, NewValidationError(
+			"tagId must be a 32-character lowercase hex string (MD5 format)",
+			err,
+		)
 	}
 
 	tag, err := s.index.TagByID(req.ID)
@@ -113,7 +125,10 @@ func (s *Service) TagByID(_ context.Context, req TagByIDRequest) (TagByIDRespons
 // TagsBySpec returns a list of all available tags for a given spec.
 func (s *Service) TagsBySpec(_ context.Context, req TagsBySpecRequest) (TagsBySpecResponse, error) {
 	if err := s.validateRequest(req); err != nil {
-		return TagsBySpecResponse{}, NewValidationError("specId must be a 32-character lowercase hex string (MD5 format)", err)
+		return TagsBySpecResponse{}, NewValidationError(
+			"specId must be a 32-character lowercase hex string (MD5 format)",
+			err,
+		)
 	}
 
 	tags, err := s.index.TagsBySpec(req.SpecID)

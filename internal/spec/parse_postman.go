@@ -2,9 +2,19 @@ package spec
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
+)
+
+const (
+	mediaTypeJSON = "application/json"
+	paramTypeStr  = "string"
+	paramTypeFile = "file"
+	paramTypeObj  = "object"
+	paramInQuery  = "query"
 )
 
 type postmanCollection struct {
@@ -102,7 +112,7 @@ func parsePostman(data []byte) (*Doc, error) {
 	}
 
 	if len(doc.PathItems) == 0 {
-		return nil, fmt.Errorf("postman collection has no requests")
+		return nil, errors.New("postman collection has no requests")
 	}
 
 	return doc, nil
@@ -111,14 +121,11 @@ func parsePostman(data []byte) (*Doc, error) {
 func flattenPostmanItems(folderNames []string, items []postmanItem, doc *Doc) error {
 	for _, item := range items {
 		if item.Request != nil {
-			pi, err := postmanItemToPathItem(item, folderNames)
-			if err != nil {
-				continue
-			}
+			pi := postmanItemToPathItem(item, folderNames)
 			doc.PathItems = append(doc.PathItems, pi)
 		}
 		if len(item.Item) > 0 {
-			names := append(folderNames, item.Name)
+			names := append(folderNames, item.Name) //nolint:gocritic // intentional: avoid aliasing parent slice
 			if err := flattenPostmanItems(names, item.Item, doc); err != nil {
 				return err
 			}
@@ -127,12 +134,12 @@ func flattenPostmanItems(folderNames []string, items []postmanItem, doc *Doc) er
 	return nil
 }
 
-func postmanItemToPathItem(item postmanItem, folderNames []string) (*PathItem, error) {
+func postmanItemToPathItem(item postmanItem, folderNames []string) *PathItem {
 	req := item.Request
 
 	method := strings.ToUpper(req.Method)
 	if method == "" {
-		method = "GET"
+		method = http.MethodGet
 	}
 
 	apiPath := extractPostmanPath(req.URL)
@@ -162,7 +169,7 @@ func postmanItemToPathItem(item postmanItem, folderNames []string) (*PathItem, e
 		Path:      apiPath,
 		Method:    method,
 		Operation: op,
-	}, nil
+	}
 }
 
 func extractPostmanPath(rawURL json.RawMessage) string {
@@ -243,7 +250,7 @@ func appendPostmanURLParams(rawURL json.RawMessage, op *Operation) {
 			Name:     v.Key,
 			In:       "path",
 			Required: true,
-			Schema:   &Schema{Type: "string"},
+			Schema:   &Schema{Type: paramTypeStr},
 		})
 	}
 
@@ -253,9 +260,9 @@ func appendPostmanURLParams(rawURL json.RawMessage, op *Operation) {
 		}
 		param := &Parameter{
 			Name:        q.Key,
-			In:          "query",
+			In:          paramInQuery,
 			Description: q.Description,
-			Schema:      &Schema{Type: "string"},
+			Schema:      &Schema{Type: paramTypeStr},
 		}
 		op.Parameters = append(op.Parameters, param)
 	}
@@ -270,7 +277,7 @@ func appendPostmanHeaders(headers []postmanHeader, op *Operation) {
 			Name:        h.Key,
 			In:          "header",
 			Description: h.Description,
-			Schema:      &Schema{Type: "string", Default: h.Value},
+			Schema:      &Schema{Type: paramTypeStr, Default: h.Value},
 		})
 	}
 }
@@ -281,7 +288,7 @@ func appendPostmanBody(body *postmanBody, op *Operation, method string) {
 	}
 
 	switch method {
-	case "GET", "HEAD", "DELETE", "OPTIONS":
+	case http.MethodGet, http.MethodHead, http.MethodDelete, http.MethodOptions:
 		return
 	}
 
@@ -294,7 +301,7 @@ func appendPostmanBody(body *postmanBody, op *Operation, method string) {
 		ct := guessPostmanContentType(body)
 		rb.Content[ct] = &MediaType{
 			Schema: &Schema{
-				Type:        "string",
+				Type:        paramTypeStr,
 				Description: body.Raw,
 				Example:     body.Raw,
 			},
@@ -306,7 +313,7 @@ func appendPostmanBody(body *postmanBody, op *Operation, method string) {
 			if f.Disabled {
 				continue
 			}
-			props[f.Key] = &Schema{Type: "string", Default: f.Value}
+			props[f.Key] = &Schema{Type: paramTypeStr, Default: f.Value}
 		}
 		rb.Content["application/x-www-form-urlencoded"] = &MediaType{
 			Schema: &Schema{
@@ -321,8 +328,8 @@ func appendPostmanBody(body *postmanBody, op *Operation, method string) {
 			if f.Disabled {
 				continue
 			}
-			typ := "string"
-			if f.Type == "file" {
+			typ := paramTypeStr
+			if f.Type == paramTypeFile {
 				typ = "file"
 			}
 			props[f.Key] = &Schema{Type: typ, Default: f.Value}
@@ -337,7 +344,7 @@ func appendPostmanBody(body *postmanBody, op *Operation, method string) {
 	case "graphql":
 		rb.Content["application/json"] = &MediaType{
 			Schema: &Schema{
-				Type:        "object",
+				Type:        paramTypeObj,
 				Description: "GraphQL query",
 			},
 		}
@@ -368,11 +375,11 @@ func sanitizePostmanTag(name string) string {
 
 func guessPostmanContentType(body *postmanBody) string {
 	if body == nil || body.Raw == "" {
-		return "application/json"
+		return mediaTypeJSON
 	}
 	raw := strings.TrimSpace(body.Raw)
 	if strings.HasPrefix(raw, "{") || strings.HasPrefix(raw, "[") {
-		return "application/json"
+		return mediaTypeJSON
 	}
 	if strings.HasPrefix(raw, "<") {
 		return "application/xml"

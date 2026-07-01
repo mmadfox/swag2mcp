@@ -2,8 +2,10 @@ package cache
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
+	"errors"
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,7 +45,7 @@ func (c *Cache) SetWorkspaceDir(dir string) {
 // For remote URLs the file is downloaded (or served from cache if TTL is still valid).
 func (c *Cache) Resolve(location string) (string, error) {
 	if location == "" {
-		return "", fmt.Errorf("empty location")
+		return "", errors.New("empty location")
 	}
 
 	isURL := strings.HasPrefix(location, "https://") || strings.HasPrefix(location, "http://")
@@ -91,7 +93,7 @@ func expandTilde(path string) string {
 }
 
 func (c *Cache) resolveURL(url string) (string, error) {
-	if err := os.MkdirAll(c.dir, 0755); err != nil {
+	if err := os.MkdirAll(c.dir, 0750); err != nil {
 		return "", fmt.Errorf("create cache dir: %w", err)
 	}
 
@@ -100,22 +102,21 @@ func (c *Cache) resolveURL(url string) (string, error) {
 	metaPath := filepath.Join(c.dir, hash+".meta")
 
 	// Check existing cache
-	meta, err := readMeta(metaPath)
-	if err == nil && !meta.IsExpired() {
-		_, err := os.Stat(specPath)
-		if err == nil {
+	meta, readErr := readMeta(metaPath)
+	if readErr == nil && !meta.IsExpired() {
+		if _, statErr := os.Stat(specPath); statErr == nil {
 			return specPath, nil
 		}
 	}
 
 	// Download
-	data, err := c.cli.Get(url)
-	if err != nil {
-		return "", fmt.Errorf("download %s: %w", url, err)
+	data, getErr := c.cli.Get(url)
+	if getErr != nil {
+		return "", fmt.Errorf("download %s: %w", url, getErr)
 	}
 
-	if err := os.WriteFile(specPath, data, 0644); err != nil {
-		return "", fmt.Errorf("write cache file: %w", err)
+	if writeErr := os.WriteFile(specPath, data, 0600); writeErr != nil {
+		return "", fmt.Errorf("write cache file: %w", writeErr)
 	}
 
 	ttl := randomTTL()
@@ -124,8 +125,8 @@ func (c *Cache) resolveURL(url string) (string, error) {
 		CachedAt: time.Now(),
 		TTLSec:   int(ttl.Seconds()),
 	}
-	if err := writeMeta(metaPath, meta); err != nil {
-		return "", fmt.Errorf("write meta file: %w", err)
+	if metaErr := writeMeta(metaPath, meta); metaErr != nil {
+		return "", fmt.Errorf("write meta file: %w", metaErr)
 	}
 
 	return specPath, nil
@@ -133,10 +134,10 @@ func (c *Cache) resolveURL(url string) (string, error) {
 
 func cacheKey(rawURL string) string {
 	h := sha256.Sum256([]byte(rawURL))
-	return fmt.Sprintf("%x", h[:16])
+	return hex.EncodeToString(h[:16])
 }
 
 func randomTTL() time.Duration {
-	n := rand.Int63n(int64(MaxTTL - MinTTL))
+	n := rand.Int64N(int64(MaxTTL - MinTTL))
 	return MinTTL + time.Duration(n)
 }

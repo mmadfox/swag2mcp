@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -36,27 +37,34 @@ func Load(confFilepath string) (*Config, error) {
 func loadPath(filepathSpec string) (*Config, error) {
 	filepathSpec = expandTilde(filepathSpec)
 
-	data, err := os.ReadFile(filepathSpec)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read config file '%s': %w", filepathSpec, err)
+	data, readErr := os.ReadFile(filepathSpec)
+	if readErr != nil {
+		return nil, fmt.Errorf("failed to read config file '%s': %w", filepathSpec, readErr)
 	}
 
 	var cfg Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("failed to parse config file '%s': %w", filepathSpec, err)
+	if parseErr := yaml.Unmarshal(data, &cfg); parseErr != nil {
+		return nil, fmt.Errorf("failed to parse config file '%s': %w", filepathSpec, parseErr)
 	}
 
-	if err := cfg.SetDefaults(); err != nil {
-		return nil, fmt.Errorf("failed to set defaults: %w", err)
+	if defaultErr := cfg.SetDefaults(); defaultErr != nil {
+		return nil, fmt.Errorf("failed to set defaults: %w", defaultErr)
 	}
 
 	return &cfg, nil
 }
 
 func loadFromHTTPURL(urlStr string) (*Config, error) {
-	resp, err := http.Get(urlStr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to GET from URL '%s': %w", urlStr, err)
+	if _, parseErr := url.Parse(urlStr); parseErr != nil {
+		return nil, fmt.Errorf("invalid URL '%s': %w", urlStr, parseErr)
+	}
+	req, reqErr := http.NewRequestWithContext(context.Background(), http.MethodGet, urlStr, nil)
+	if reqErr != nil {
+		return nil, fmt.Errorf("failed to create request: %w", reqErr)
+	}
+	resp, getErr := http.DefaultClient.Do(req)
+	if getErr != nil {
+		return nil, fmt.Errorf("failed to GET from URL '%s': %w", urlStr, getErr)
 	}
 	defer resp.Body.Close()
 
@@ -64,18 +72,18 @@ func loadFromHTTPURL(urlStr string) (*Config, error) {
 		return nil, fmt.Errorf("unexpected HTTP status %d for URL '%s'", resp.StatusCode, urlStr)
 	}
 
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read HTTP response body: %w", err)
+	data, readErr := io.ReadAll(resp.Body)
+	if readErr != nil {
+		return nil, fmt.Errorf("failed to read HTTP response body: %w", readErr)
 	}
 
 	var cfg Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("failed to parse YAML from URL '%s': %w", urlStr, err)
+	if parseErr := yaml.Unmarshal(data, &cfg); parseErr != nil {
+		return nil, fmt.Errorf("failed to parse YAML from URL '%s': %w", urlStr, parseErr)
 	}
 
-	if err := cfg.SetDefaults(); err != nil {
-		return nil, fmt.Errorf("failed to set defaults: %w", err)
+	if defaultErr := cfg.SetDefaults(); defaultErr != nil {
+		return nil, fmt.Errorf("failed to set defaults: %w", defaultErr)
 	}
 
 	return &cfg, nil
@@ -109,18 +117,18 @@ func loadFromAbsolutePath(path string) (*Config, error) {
 		return nil, fmt.Errorf("path must be absolute: %s", path)
 	}
 
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read config file at absolute path '%s': %w", path, err)
+	data, readErr := os.ReadFile(path)
+	if readErr != nil {
+		return nil, fmt.Errorf("failed to read config file at absolute path '%s': %w", path, readErr)
 	}
 
 	var cfg Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("failed to parse config file at absolute path '%s': %w", path, err)
+	if parseErr := yaml.Unmarshal(data, &cfg); parseErr != nil {
+		return nil, fmt.Errorf("failed to parse config file at absolute path '%s': %w", path, parseErr)
 	}
 
-	if err := cfg.SetDefaults(); err != nil {
-		return nil, fmt.Errorf("failed to set defaults: %w", err)
+	if defaultErr := cfg.SetDefaults(); defaultErr != nil {
+		return nil, fmt.Errorf("failed to set defaults: %w", defaultErr)
 	}
 
 	return &cfg, nil

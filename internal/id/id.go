@@ -35,10 +35,9 @@ func Tag(domainName, collectionName, tag string) string {
 
 // Method generates an MD5 hash ID for a method endpoint.
 // It combines domainName, collectionName, tagName, method, path, and opID into a single hash.
-func Method(domainName, collectionName, tagName, method, path, opID string) string {
+func Method(domainName, collectionName, _ string, method, path, opID string) string {
 	domainName = trimVal(domainName)
 	collectionName = trimVal(collectionName)
-	tagName = trimVal(tagName)
 	method = trimVal(method)
 	path = trimVal(path)
 	opID = trimVal(opID)

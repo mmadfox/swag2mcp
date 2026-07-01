@@ -13,7 +13,7 @@ type (
 
 	// SpecByIDResponse is the response for SpecByID.
 	SpecByIDResponse struct {
-		Spec        Spec             `json:"spec" jsonschema:"required,Specification"`
+		Spec        Spec             `json:"spec"        jsonschema:"required,Specification"`
 		Collections []CollectionItem `json:"collections" jsonschema:"required,List of collections associated with the spec"`
 	}
 
@@ -43,7 +43,10 @@ func (s *Service) Specs(_ context.Context) (SpecsResponse, error) {
 // SpecByID returns a specification by its ID.
 func (s *Service) SpecByID(_ context.Context, req SpecByIDRequest) (SpecByIDResponse, error) {
 	if err := s.validateRequest(req); err != nil {
-		return SpecByIDResponse{}, NewValidationError("specId must be a 32-character lowercase hex string (MD5 format)", err)
+		return SpecByIDResponse{}, NewValidationError(
+			"specId must be a 32-character lowercase hex string (MD5 format)",
+			err,
+		)
 	}
 
 	var resp SpecByIDResponse

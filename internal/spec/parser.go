@@ -2,6 +2,7 @@ package spec
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -10,7 +11,7 @@ import (
 
 func toJSON(data []byte) ([]byte, error) {
 	if len(data) == 0 {
-		return nil, fmt.Errorf("empty document")
+		return nil, errors.New("empty document")
 	}
 	// Fast path: already JSON
 	trimmed := strings.TrimLeft(string(data), " \t\r\n")
@@ -53,7 +54,7 @@ func Parse(data []byte) (*Doc, error) {
 	}
 
 	switch {
-	case version == "2.0":
+	case version == specVersion20:
 		return parseV2(jsonData)
 	case strings.HasPrefix(version, "3."):
 		jsonData = preprocessV3(jsonData)
@@ -71,7 +72,7 @@ func cleanupYAML(v any) any {
 			vv[k] = cleanupYAML(val)
 		}
 		return vv
-	case map[interface{}]interface{}:
+	case map[any]any:
 		m := make(map[string]any, len(vv))
 		for k, val := range vv {
 			key := fmt.Sprint(k)
@@ -107,14 +108,8 @@ func fixItems(v any) {
 	switch node := v.(type) {
 	case map[string]any:
 		if items, ok := node["items"]; ok {
-			if b, ok := items.(bool); ok {
-				if !b {
-					// items: false -> items: {} (empty schema = no items restriction)
-					node["items"] = map[string]any{}
-				} else {
-					// items: true -> items: {} (any items allowed)
-					node["items"] = map[string]any{}
-				}
+			if _, isBool := items.(bool); isBool {
+				node["items"] = map[string]any{}
 			}
 		}
 		for _, val := range node {
@@ -144,6 +139,6 @@ func detectVersion(data []byte) (string, error) {
 	case v.OpenAPI != "":
 		return v.OpenAPI, nil
 	default:
-		return "", fmt.Errorf("cannot detect spec version: missing 'swagger' or 'openapi' field")
+		return "", errors.New("cannot detect spec version: missing 'swagger' or 'openapi' field")
 	}
 }

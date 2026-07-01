@@ -424,7 +424,7 @@ linters:
   exclusions:
     # Log a warning if an exclusion rule is unused.
     # Default: false
-    warn-unused: true
+    warn-unused: false
     # Predefined exclusion rules.
     # Default: []
     presets:
@@ -453,4 +453,11 @@ linters:
           - goconst
           - gosec
           - noctx
+          - testpackage
           - wrapcheck
+      - path: 'internal/id/'
+        text: '(G401|G501|weak cryptographic primitive|Blocklisted import crypto/md5)'
+        linters: [ gosec ]
+      - path: 'internal/cache/cache\.go'
+        text: 'G404'
+        linters: [ gosec ]

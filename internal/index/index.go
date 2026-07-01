@@ -2,6 +2,7 @@ package index
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"iter"
 	"sync"
@@ -12,7 +13,9 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/types"
 )
 
-// Cursor represents a position in the index.
+const initialSpecsCapacity = 8
+
+// EndpointCursor represents a position in the index.
 type EndpointCursor struct {
 	Spec       *types.Spec
 	Tag        *types.Tag
@@ -69,7 +72,7 @@ func New() (*Index, error) {
 		endpointsBySpec:       make(map[string][]*types.Endpoint),
 		endpointsByCollection: make(map[string][]*types.Endpoint),
 		endpointByID:          make(map[string]*types.Endpoint),
-		allSpecs:              make([]*types.Spec, 0, 8),
+		allSpecs:              make([]*types.Spec, 0, initialSpecsCapacity),
 	}, nil
 }
 
@@ -208,7 +211,7 @@ func (idx *Index) AllSpecs() []*types.Spec {
 	return idx.allSpecs
 }
 
-// GetSpec returns a spec by its ID.
+// SpecByID returns a spec by its ID.
 func (idx *Index) SpecByID(specID string) (*types.Spec, error) {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
@@ -304,7 +307,7 @@ func (idx *Index) EndpointsBySpec(specID string) ([]*types.Endpoint, error) {
 	return endpoints, nil
 }
 
-// EndpointsByCollection returns all endpoints for a given collection ID.
+// EndpointByCollection returns all endpoints for a given collection ID.
 func (idx *Index) EndpointByCollection(collectionID string) ([]*types.Endpoint, error) {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
@@ -392,9 +395,11 @@ func (idx *Index) IterateByCollections() iter.Seq[*CollectionCursor] {
 }
 
 // Search returns endpoints matching the query.
+//
+//nolint:gocognit
 func (idx *Index) Search(ctx context.Context, q string, limit int) ([]*types.Endpoint, error) {
 	if len(q) == 0 {
-		return nil, fmt.Errorf("query string is required")
+		return nil, errors.New("query string is required")
 	}
 
 	if limit <= 0 || limit > 20 {
@@ -420,7 +425,7 @@ func (idx *Index) Search(ctx context.Context, q string, limit int) ([]*types.End
 			return nil, fmt.Errorf("bluge reader: %w", err)
 		}
 		if !idx.blugeReader.CompareAndSwap(nil, r) {
-			r.Close()
+			_ = r.Close()
 		}
 		reader = idx.blugeReader.Load()
 	}

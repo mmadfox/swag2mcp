@@ -2,6 +2,7 @@ package service
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -42,19 +43,19 @@ const (
 //go:embed definitions/*.md
 var toolDefsFS embed.FS
 
-// Tool represents a single MCP tool definition
+// Tool represents a single MCP tool definition.
 type Tool struct {
-	Name        string `json:"name" jsonschema:"required,Unique identifier for the tool"`
+	Name        string `json:"name"        jsonschema:"required,Unique identifier for the tool"`
 	Description string `json:"description" jsonschema:"required,Detailed description of what the tool does, when to use it, and what arguments it expects"`
 }
 
-// ToolDefinitions represents the complete set of MCP tools with their descriptions
+// ToolDefinitions represents the complete set of MCP tools with their descriptions.
 type ToolDefinitions struct {
 	Instruction string `json:"instruction" jsonschema:"required,Instruction for the LLM about when to use each tool"`
-	Tools       []Tool `json:"tools" jsonschema:"required,List of available MCP tools with their detailed descriptions"`
+	Tools       []Tool `json:"tools"       jsonschema:"required,List of available MCP tools with their detailed descriptions"`
 }
 
-// MakeToolDefinitions loads tool descriptions from embedded markdown files
+// MakeToolDefinitions loads tool descriptions from embedded markdown files.
 func (s *Service) MakeToolDefinitions() (ToolDefinitions, error) {
 	entries, err := toolDefsFS.ReadDir("definitions")
 	if err != nil {
@@ -78,11 +79,11 @@ func (s *Service) MakeToolDefinitions() (ToolDefinitions, error) {
 			continue
 		}
 
-		tool, err := loadToolFromEmbed(entry.Name())
-		if err != nil {
-			return ToolDefinitions{}, fmt.Errorf("failed to load tool from %s: %w", entry.Name(), err)
+		loadedTool, loadErr := loadToolFromEmbed(entry.Name())
+		if loadErr != nil {
+			return ToolDefinitions{}, fmt.Errorf("failed to load tool from %s: %w", entry.Name(), loadErr)
 		}
-		tools = append(tools, tool)
+		tools = append(tools, loadedTool)
 	}
 
 	availableSpecs := s.makeAvaliablesSpecs()
@@ -97,7 +98,7 @@ func (s *Service) MakeToolDefinitions() (ToolDefinitions, error) {
 	}, nil
 }
 
-// loadInstructionFromEmbed loads the instruction.md file from embed.FS
+// loadInstructionFromEmbed loads the instruction.md file from [embed.FS].
 func loadInstructionFromEmbed() (string, error) {
 	content, err := toolDefsFS.ReadFile("definitions/instruction.md")
 	if err != nil {
@@ -107,7 +108,7 @@ func loadInstructionFromEmbed() (string, error) {
 	return strings.TrimSpace(string(content)), nil
 }
 
-// loadToolFromEmbed parses a markdown file from embed.FS and returns a Tool
+// loadToolFromEmbed parses a markdown file from [embed.FS] and returns a Tool.
 func loadToolFromEmbed(filename string) (Tool, error) {
 	content, err := toolDefsFS.ReadFile("definitions/" + filename)
 	if err != nil {
@@ -116,7 +117,7 @@ func loadToolFromEmbed(filename string) (Tool, error) {
 
 	lines := strings.Split(string(content), "\n")
 	if len(lines) < 3 || lines[0] != "---" {
-		return Tool{}, fmt.Errorf("invalid markdown format: missing frontmatter delimiter")
+		return Tool{}, errors.New("invalid markdown format: missing frontmatter delimiter")
 	}
 
 	// Find the end of frontmatter
@@ -129,20 +130,20 @@ func loadToolFromEmbed(filename string) (Tool, error) {
 	}
 
 	if frontmatterEnd == -1 {
-		return Tool{}, fmt.Errorf("invalid markdown format: missing closing frontmatter delimiter")
+		return Tool{}, errors.New("invalid markdown format: missing closing frontmatter delimiter")
 	}
 
 	// Extract name from frontmatter
 	var name string
 	for i := 1; i < frontmatterEnd; i++ {
-		if strings.HasPrefix(lines[i], "name:") {
-			name = strings.TrimSpace(strings.TrimPrefix(lines[i], "name:"))
+		if after, ok := strings.CutPrefix(lines[i], "name:"); ok {
+			name = strings.TrimSpace(after)
 			break
 		}
 	}
 
 	if name == "" {
-		return Tool{}, fmt.Errorf("invalid markdown format: missing name in frontmatter")
+		return Tool{}, errors.New("invalid markdown format: missing name in frontmatter")
 	}
 
 	// Extract description (everything after frontmatter)
@@ -224,7 +225,9 @@ func (s *Service) makeAvaliablesSpecs() string {
 		}
 
 		if hasMoreCollections {
-			sb.WriteString("\n **more than 10 collections are available for this spec; use the `collection_by_spec` tool to retrieve the full list.** \n")
+			sb.WriteString(
+				"\n **more than 10 collections are available for this spec; use the `collection_by_spec` tool to retrieve the full list.** \n",
+			)
 		}
 	}
 

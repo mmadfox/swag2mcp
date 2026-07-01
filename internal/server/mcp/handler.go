@@ -16,7 +16,10 @@ type svc interface {
 	TagsBySpec(_ context.Context, req service.TagsBySpecRequest) (service.TagsBySpecResponse, error)
 	TagByID(_ context.Context, req service.TagByIDRequest) (service.TagByIDResponse, error)
 	EndpointsByTag(_ context.Context, req service.EndpointsByTagRequest) (service.EndpointsByTagResponse, error)
-	EndpointsByCollection(_ context.Context, req service.EndpointsByCollectionRequest) (service.EndpointsByCollectionResponse, error)
+	EndpointsByCollection(
+		_ context.Context,
+		req service.EndpointsByCollectionRequest,
+	) (service.EndpointsByCollectionResponse, error)
 	EndpointsBySpec(_ context.Context, req service.EndpointsBySpecRequest) (service.EndpointsBySpecResponse, error)
 	EndpointByID(_ context.Context, req service.EndpointByIDRequest) (service.EndpointByIDResponse, error)
 	Search(ctx context.Context, req service.SearchRequest) (service.SearchResponse, error)
@@ -30,7 +33,11 @@ type handler struct {
 }
 
 // handleSpecByID handles the spec_by_id tool call.
-func (h *handler) handleSpecByID(ctx context.Context, _ *sdkmcp.CallToolRequest, req service.SpecByIDRequest) (*sdkmcp.CallToolResult, any, error) {
+func (h *handler) handleSpecByID(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.SpecByIDRequest,
+) (*sdkmcp.CallToolResult, any, error) {
 	spec, err := h.service.SpecByID(ctx, req)
 	if err != nil {
 		return nil, nil, err
@@ -41,7 +48,11 @@ func (h *handler) handleSpecByID(ctx context.Context, _ *sdkmcp.CallToolRequest,
 }
 
 // handleSpecList handles the spec_list tool call.
-func (h *handler) handleSpecList(ctx context.Context, _ *sdkmcp.CallToolRequest, _ any) (*sdkmcp.CallToolResult, any, error) {
+func (h *handler) handleSpecList(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	_ any,
+) (*sdkmcp.CallToolResult, any, error) {
 	specs, err := h.service.Specs(ctx)
 	if err != nil {
 		return nil, nil, err
@@ -52,7 +63,11 @@ func (h *handler) handleSpecList(ctx context.Context, _ *sdkmcp.CallToolRequest,
 }
 
 // handleCollectionByID handles the collection_by_id tool call.
-func (h *handler) handleCollectionByID(ctx context.Context, _ *sdkmcp.CallToolRequest, req service.CollectionByIDRequest) (*sdkmcp.CallToolResult, any, error) {
+func (h *handler) handleCollectionByID(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.CollectionByIDRequest,
+) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.CollectionByID(ctx, req)
 	if err != nil {
 		return nil, nil, err
@@ -63,7 +78,11 @@ func (h *handler) handleCollectionByID(ctx context.Context, _ *sdkmcp.CallToolRe
 }
 
 // handleCollectionBySpec handles the collection_by_spec tool call.
-func (h *handler) handleCollectionBySpec(ctx context.Context, _ *sdkmcp.CallToolRequest, req service.CollectionsRequest) (*sdkmcp.CallToolResult, any, error) {
+func (h *handler) handleCollectionBySpec(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.CollectionsRequest,
+) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.CollectionsBySpec(ctx, req)
 	if err != nil {
 		return nil, nil, err
@@ -74,7 +93,11 @@ func (h *handler) handleCollectionBySpec(ctx context.Context, _ *sdkmcp.CallTool
 }
 
 // handleTagsByCollection handles the tag_by_collection tool call.
-func (h *handler) handleTagsByCollection(ctx context.Context, _ *sdkmcp.CallToolRequest, req service.TagsByCollectionRequest) (*sdkmcp.CallToolResult, any, error) {
+func (h *handler) handleTagsByCollection(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.TagsByCollectionRequest,
+) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.TagsByCollection(ctx, req)
 	if err != nil {
 		return nil, nil, err
@@ -85,7 +108,11 @@ func (h *handler) handleTagsByCollection(ctx context.Context, _ *sdkmcp.CallTool
 }
 
 // handleTagsBySpec handles the tag_by_spec tool call.
-func (h *handler) handleTagsBySpec(ctx context.Context, _ *sdkmcp.CallToolRequest, req service.TagsBySpecRequest) (*sdkmcp.CallToolResult, any, error) {
+func (h *handler) handleTagsBySpec(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.TagsBySpecRequest,
+) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.TagsBySpec(ctx, req)
 	if err != nil {
 		return nil, nil, err
@@ -96,7 +123,11 @@ func (h *handler) handleTagsBySpec(ctx context.Context, _ *sdkmcp.CallToolReques
 }
 
 // handleTagByID handles the tag_by_id tool call.
-func (h *handler) handleTagByID(ctx context.Context, _ *sdkmcp.CallToolRequest, req service.TagByIDRequest) (*sdkmcp.CallToolResult, any, error) {
+func (h *handler) handleTagByID(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.TagByIDRequest,
+) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.TagByID(ctx, req)
 	if err != nil {
 		return nil, nil, err
@@ -107,7 +138,11 @@ func (h *handler) handleTagByID(ctx context.Context, _ *sdkmcp.CallToolRequest, 
 }
 
 // handleEndpointByID handles the endpoint_by_id tool call.
-func (h *handler) handleEndpointByID(ctx context.Context, _ *sdkmcp.CallToolRequest, req service.EndpointByIDRequest) (*sdkmcp.CallToolResult, any, error) {
+func (h *handler) handleEndpointByID(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.EndpointByIDRequest,
+) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.EndpointByID(ctx, req)
 	if err != nil {
 		return nil, nil, err
@@ -118,7 +153,11 @@ func (h *handler) handleEndpointByID(ctx context.Context, _ *sdkmcp.CallToolRequ
 }
 
 // handleEndpointsByTag handles the endpoint_by_tag tool call.
-func (h *handler) handleEndpointsByTag(ctx context.Context, _ *sdkmcp.CallToolRequest, req service.EndpointsByTagRequest) (*sdkmcp.CallToolResult, any, error) {
+func (h *handler) handleEndpointsByTag(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.EndpointsByTagRequest,
+) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.EndpointsByTag(ctx, req)
 	if err != nil {
 		return nil, nil, err
@@ -129,7 +168,11 @@ func (h *handler) handleEndpointsByTag(ctx context.Context, _ *sdkmcp.CallToolRe
 }
 
 // handleEndpointsByCollection handles the endpoint_by_collection tool call.
-func (h *handler) handleEndpointsByCollection(ctx context.Context, _ *sdkmcp.CallToolRequest, req service.EndpointsByCollectionRequest) (*sdkmcp.CallToolResult, any, error) {
+func (h *handler) handleEndpointsByCollection(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.EndpointsByCollectionRequest,
+) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.EndpointsByCollection(ctx, req)
 	if err != nil {
 		return nil, nil, err
@@ -140,7 +183,11 @@ func (h *handler) handleEndpointsByCollection(ctx context.Context, _ *sdkmcp.Cal
 }
 
 // handleEndpointsBySpec handles the endpoint_by_spec tool call.
-func (h *handler) handleEndpointsBySpec(ctx context.Context, _ *sdkmcp.CallToolRequest, req service.EndpointsBySpecRequest) (*sdkmcp.CallToolResult, any, error) {
+func (h *handler) handleEndpointsBySpec(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.EndpointsBySpecRequest,
+) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.EndpointsBySpec(ctx, req)
 	if err != nil {
 		return nil, nil, err
@@ -151,7 +198,11 @@ func (h *handler) handleEndpointsBySpec(ctx context.Context, _ *sdkmcp.CallToolR
 }
 
 // handleSearch handles the search tool call.
-func (h *handler) handleSearch(ctx context.Context, _ *sdkmcp.CallToolRequest, req service.SearchRequest) (*sdkmcp.CallToolResult, any, error) {
+func (h *handler) handleSearch(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.SearchRequest,
+) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.Search(ctx, req)
 	if err != nil {
 		return nil, nil, err
@@ -162,7 +213,11 @@ func (h *handler) handleSearch(ctx context.Context, _ *sdkmcp.CallToolRequest, r
 }
 
 // handleInspect handles the inspect tool call.
-func (h *handler) handleInspect(ctx context.Context, _ *sdkmcp.CallToolRequest, req service.InspectRequest) (*sdkmcp.CallToolResult, any, error) {
+func (h *handler) handleInspect(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.InspectRequest,
+) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.Inspect(ctx, req)
 	if err != nil {
 		return nil, nil, err
@@ -173,7 +228,11 @@ func (h *handler) handleInspect(ctx context.Context, _ *sdkmcp.CallToolRequest, 
 }
 
 // handleInvoke handles the invoke tool call.
-func (h *handler) handleInvoke(ctx context.Context, _ *sdkmcp.CallToolRequest, req service.InvokeRequest) (*sdkmcp.CallToolResult, any, error) {
+func (h *handler) handleInvoke(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.InvokeRequest,
+) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.Invoke(ctx, req)
 	if err != nil {
 		return nil, nil, err

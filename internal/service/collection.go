@@ -14,7 +14,7 @@ type (
 
 	// CollectionsResponse represents a response to list all collections for a given spec.
 	CollectionsResponse struct {
-		Spec        Spec             `json:"spec" jsonschema:"required,Specification"`
+		Spec        Spec             `json:"spec"        jsonschema:"required,Specification"`
 		Collections []CollectionItem `json:"collections" jsonschema:"List of collections associated with the spec,required"`
 	}
 
@@ -25,16 +25,19 @@ type (
 
 	// CollectionByIDResponse represents a response to get a collection by its ID.
 	CollectionByIDResponse struct {
-		Spec       Spec          `json:"spec" jsonschema:"required,Specification"`
+		Spec       Spec          `json:"spec"       jsonschema:"required,Specification"`
 		Collection Collection    `json:"collection" jsonschema:"required,Collection"`
-		Tags       []TagListItem `json:"tags" jsonschema:"List of tags associated with the collection,required"`
+		Tags       []TagListItem `json:"tags"       jsonschema:"List of tags associated with the collection,required"`
 	}
 )
 
 // CollectionsBySpec returns a list of all available collections for a given spec.
 func (s *Service) CollectionsBySpec(_ context.Context, req CollectionsRequest) (CollectionsResponse, error) {
 	if err := s.validateRequest(req); err != nil {
-		return CollectionsResponse{}, NewValidationError("specId must be a 32-character lowercase hex string (MD5 format)", err)
+		return CollectionsResponse{}, NewValidationError(
+			"specId must be a 32-character lowercase hex string (MD5 format)",
+			err,
+		)
 	}
 
 	spec, err := s.index.SpecByID(req.SpecID)
@@ -73,7 +76,10 @@ func (s *Service) CollectionsBySpec(_ context.Context, req CollectionsRequest) (
 // CollectionByID returns a collection by its ID.
 func (s *Service) CollectionByID(_ context.Context, req CollectionByIDRequest) (CollectionByIDResponse, error) {
 	if err := s.validateRequest(req); err != nil {
-		return CollectionByIDResponse{}, NewValidationError("specId must be a 32-character lowercase hex string (MD5 format)", err)
+		return CollectionByIDResponse{}, NewValidationError(
+			"specId must be a 32-character lowercase hex string (MD5 format)",
+			err,
+		)
 	}
 
 	var resp CollectionByIDResponse

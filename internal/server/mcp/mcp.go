@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
@@ -17,9 +18,11 @@ type Options struct {
 }
 
 // Serve starts the MCP server.
+//
+//nolint:funlen
 func Serve(ctx context.Context, opts Options) error {
 	if opts.Service == nil {
-		return fmt.Errorf("service is required")
+		return errors.New("service is required")
 	}
 
 	defs, err := opts.Service.MakeToolDefinitions()

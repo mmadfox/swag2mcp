@@ -11,6 +11,7 @@ import (
 )
 
 func TestResolve_localPath(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	specFile := filepath.Join(dir, "spec.yaml")
 	if err := os.WriteFile(specFile, []byte("hello"), 0644); err != nil {
@@ -29,6 +30,7 @@ func TestResolve_localPath(t *testing.T) {
 }
 
 func TestResolve_fileURL(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	specFile := filepath.Join(dir, "spec.yaml")
 	if err := os.WriteFile(specFile, []byte("hello"), 0644); err != nil {
@@ -47,6 +49,7 @@ func TestResolve_fileURL(t *testing.T) {
 }
 
 func TestResolve_emptyLocation(t *testing.T) {
+	t.Parallel()
 	c := New(t.TempDir())
 	_, err := c.Resolve("")
 	if err == nil {
@@ -55,7 +58,8 @@ func TestResolve_emptyLocation(t *testing.T) {
 }
 
 func TestResolve_downloadAndCache(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	t.Parallel()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("openapi: 3.0.0"))
 	}))
@@ -78,14 +82,15 @@ func TestResolve_downloadAndCache(t *testing.T) {
 
 	// Meta file should exist
 	metaPath := got[:len(got)-len(".spec")] + ".meta"
-	if _, err := os.Stat(metaPath); err != nil {
-		t.Errorf("meta file not found: %v", err)
+	if _, statErr := os.Stat(metaPath); statErr != nil {
+		t.Errorf("meta file not found: %v", statErr)
 	}
 }
 
 func TestResolve_serveFromCache(t *testing.T) {
+	t.Parallel()
 	var callCount int
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		callCount++
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("openapi: 3.0.0"))
@@ -120,8 +125,9 @@ func TestResolve_serveFromCache(t *testing.T) {
 }
 
 func TestResolve_reDownloadAfterExpiry(t *testing.T) {
+	t.Parallel()
 	var callCount int
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		callCount++
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("openapi: 3.0.0"))
@@ -142,12 +148,12 @@ func TestResolve_reDownloadAfterExpiry(t *testing.T) {
 	// Manually expire the meta
 	hash := cacheKey(srv.URL)
 	metaPath := filepath.Join(c.dir, hash+".meta")
-	if err := writeMeta(metaPath, fileMeta{
+	if mErr := writeMeta(metaPath, fileMeta{
 		URL:      srv.URL,
 		CachedAt: time.Now().Add(-2 * MaxTTL),
 		TTLSec:   60,
-	}); err != nil {
-		t.Fatal(err)
+	}); mErr != nil {
+		t.Fatal(mErr)
 	}
 
 	// Second call — should re-download
@@ -161,6 +167,7 @@ func TestResolve_reDownloadAfterExpiry(t *testing.T) {
 }
 
 func TestResolve_downloadError(t *testing.T) {
+	t.Parallel()
 	c := New(t.TempDir())
 	_, err := c.Resolve("https://nonexistent.example.com/spec")
 	if err == nil {
@@ -169,7 +176,8 @@ func TestResolve_downloadError(t *testing.T) {
 }
 
 func TestResolve_non200Status(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	t.Parallel()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
 	defer srv.Close()
@@ -182,7 +190,8 @@ func TestResolve_non200Status(t *testing.T) {
 }
 
 func TestResolve_cacheDirCreated(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	t.Parallel()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("data"))
 	}))
@@ -197,12 +206,13 @@ func TestResolve_cacheDirCreated(t *testing.T) {
 	}
 
 	cacheDir := filepath.Join(baseDir, CacheDirName)
-	if _, err := os.Stat(cacheDir); err != nil {
-		t.Errorf("cache dir not created: %v", err)
+	if _, statErr := os.Stat(cacheDir); statErr != nil {
+		t.Errorf("cache dir not created: %v", statErr)
 	}
 }
 
 func TestNew(t *testing.T) {
+	t.Parallel()
 	c := New("/tmp/swag2mcp")
 	expected := filepath.Join("/tmp/swag2mcp", CacheDirName)
 	if c.dir != expected {
@@ -211,6 +221,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestCacheKey(t *testing.T) {
+	t.Parallel()
 	k1 := cacheKey("https://example.com/spec.yaml")
 	k2 := cacheKey("https://example.com/spec.yaml")
 	k3 := cacheKey("https://example.com/other.yaml")
@@ -227,6 +238,7 @@ func TestCacheKey(t *testing.T) {
 }
 
 func TestMeta(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	metaPath := filepath.Join(dir, "test.meta")
 
@@ -253,6 +265,7 @@ func TestMeta(t *testing.T) {
 }
 
 func TestMeta_expired(t *testing.T) {
+	t.Parallel()
 	m := fileMeta{
 		CachedAt: time.Now().Add(-2 * time.Hour),
 		TTLSec:   3600, // 1 hour
@@ -271,6 +284,7 @@ func TestMeta_expired(t *testing.T) {
 }
 
 func TestMeta_readNotFound(t *testing.T) {
+	t.Parallel()
 	_, err := readMeta("/nonexistent/path")
 	if err == nil {
 		t.Fatal("expected error for non-existent meta")
@@ -278,31 +292,34 @@ func TestMeta_readNotFound(t *testing.T) {
 }
 
 func TestFileURIToPath(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Run("windows path", func(t *testing.T) {
-			got, err := fileURIToPath("file:///C:/Users/user/spec.yaml")
-			if err != nil {
-				t.Fatal(err)
-			}
-			want := `C:\Users\user\spec.yaml`
-			if got != want {
-				t.Errorf("got %q, want %q", got, want)
-			}
-		})
-	} else {
-		t.Run("unix path", func(t *testing.T) {
-			got, err := fileURIToPath("file:///home/user/spec.yaml")
-			if err != nil {
-				t.Fatal(err)
-			}
-			want := "/home/user/spec.yaml"
-			if got != want {
-				t.Errorf("got %q, want %q", got, want)
-			}
-		})
-	}
-
+	t.Parallel()
+	t.Run("unix path", func(t *testing.T) {
+		t.Parallel()
+		got, err := fileURIToPath("file:///home/user/spec.yaml")
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := "/home/user/spec.yaml"
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
+	t.Run("windows path", func(t *testing.T) {
+		t.Parallel()
+		if runtime.GOOS != "windows" {
+			t.Skip("skipping windows test on non-windows")
+		}
+		got, err := fileURIToPath("file:///C:/Users/user/spec.yaml")
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := `C:\Users\user\spec.yaml`
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
 	t.Run("bad scheme", func(t *testing.T) {
+		t.Parallel()
 		_, err := fileURIToPath("https://example.com/spec")
 		if err == nil {
 			t.Fatal("expected error for non-file scheme")
@@ -311,6 +328,7 @@ func TestFileURIToPath(t *testing.T) {
 }
 
 func TestFileURIToPath_badScheme(t *testing.T) {
+	t.Parallel()
 	_, err := fileURIToPath("https://example.com/spec")
 	if err == nil {
 		t.Fatal("expected error for non-file scheme")

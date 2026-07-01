@@ -17,10 +17,12 @@ type BootstrapRequest struct {
 	Tags         []string
 }
 
-func (s *Service) Bootstrap(ctx context.Context, r BootstrapRequest) error {
-	conf, err := config.Load(r.ConfFilepath)
-	if err != nil {
-		return err
+//
+//nolint:gocognit,funlen
+func (s *Service) Bootstrap(_ context.Context, r BootstrapRequest) error {
+	conf, loadErr := config.Load(r.ConfFilepath)
+	if loadErr != nil {
+		return loadErr
 	}
 
 	filter := config.NewFilter(r.Tags)
@@ -28,9 +30,7 @@ func (s *Service) Bootstrap(ctx context.Context, r BootstrapRequest) error {
 		return err
 	}
 
-	if err := s.makeWorkspaceDir(conf.WorkspaceDir); err != nil {
-		return fmt.Errorf("failed to make workspace dir: %w", err)
-	}
+	s.makeWorkspaceDir(conf.WorkspaceDir)
 
 	for spec := range conf.Iterate(filter) {
 		specInfo := &types.Spec{
@@ -144,10 +144,9 @@ func (s *Service) Bootstrap(ctx context.Context, r BootstrapRequest) error {
 	return nil
 }
 
-func (s *Service) makeWorkspaceDir(workspaceDir string) error {
+func (s *Service) makeWorkspaceDir(workspaceDir string) {
 	s.cache.SetWorkspaceDir(workspaceDir)
 	// TODO: make all dirs
-	return nil
 }
 
 func (s *Service) indexSpec(

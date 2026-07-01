@@ -2,10 +2,13 @@ package spec
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/go-openapi/spec"
 )
+
+const specVersion20 = "2.0"
 
 func parseV2(data []byte) (*Doc, error) {
 	var swag spec.Swagger
@@ -19,7 +22,7 @@ func parseV2(data []byte) (*Doc, error) {
 	}
 
 	doc := &Doc{
-		Version:     "2.0",
+		Version:     specVersion20,
 		Title:       swag.Info.Title,
 		Description: swag.Info.Description,
 		VersionStr:  swag.Info.Version,
@@ -49,13 +52,13 @@ func pathItemToOps(path string, item spec.PathItem) []*PathItem {
 		op     *spec.Operation
 	}
 	entries := []entry{
-		{"GET", item.Get},
-		{"POST", item.Post},
-		{"PUT", item.Put},
-		{"DELETE", item.Delete},
-		{"PATCH", item.Patch},
-		{"HEAD", item.Head},
-		{"OPTIONS", item.Options},
+		{http.MethodGet, item.Get},
+		{http.MethodPost, item.Post},
+		{http.MethodPut, item.Put},
+		{http.MethodDelete, item.Delete},
+		{http.MethodPatch, item.Patch},
+		{http.MethodHead, item.Head},
+		{http.MethodOptions, item.Options},
 	}
 	for _, e := range entries {
 		if e.op == nil {
@@ -148,7 +151,7 @@ func firstConsumes(consumes []string) string {
 	if len(consumes) > 0 {
 		return consumes[0]
 	}
-	return "application/json"
+	return mediaTypeJSON
 }
 
 func swaggerSchemaToSchema(s *spec.Schema) *Schema {
