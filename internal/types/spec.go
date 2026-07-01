@@ -1,14 +1,18 @@
 package types
 
-import "github.com/mmadfox/swag2mcp/internal/spec"
+import (
+	"github.com/mmadfox/swag2mcp/internal/auth"
+	"github.com/mmadfox/swag2mcp/internal/spec"
+)
 
 type Spec struct {
-	ID             string            `json:"id"`
-	Domain         string            `json:"domain"`
-	LLMTitle       string            `json:"llmtitle"`
-	LLMInstruction string            `json:"llminstruction"`
-	BaseURL        string            `json:"baseurl"`
-	Headers        map[string]string `json:"headers"`
+	ID             string             `json:"id"`
+	Domain         string             `json:"domain"`
+	LLMTitle       string             `json:"llmtitle"`
+	LLMInstruction string             `json:"llminstruction"`
+	BaseURL        string             `json:"baseurl"`
+	Headers        map[string]string  `json:"headers"`
+	Auth           auth.Authenticator `json:"auth"`
 	Stats          struct {
 		Collections int `json:"collections"`
 		Tags        int `json:"tags"`

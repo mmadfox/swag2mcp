@@ -12,11 +12,13 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/types"
 )
 
+// BootstrapRequest is the request for the Bootstrap method.
 type BootstrapRequest struct {
 	ConfFilepath string
 	Tags         []string
 }
 
+// Bootstrap bootstraps the service.
 //
 //nolint:gocognit,funlen
 func (s *Service) Bootstrap(_ context.Context, r BootstrapRequest) error {
@@ -40,6 +42,7 @@ func (s *Service) Bootstrap(_ context.Context, r BootstrapRequest) error {
 			LLMInstruction: spec.LLMInstruction,
 			BaseURL:        spec.BaseURL,
 			Headers:        spec.Headers,
+			Auth:           spec.Auth.Client,
 		}
 
 		allTags := make(map[string]*types.Tag)               // per spec

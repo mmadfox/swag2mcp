@@ -1,16 +1,24 @@
 package service
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
+
+const (
+	validationFailedErrCode = "validation_failed"
+	notFoundErrCode         = "not_found"
+)
 
 type LLMError struct {
 	Code     string `json:"code"`    // "validation_failed", "not_found", "internal_error"
 	Message  string `json:"message"` // human-readable for LLM
-	Original string `json:"original,omitempty"`
+	Original string `json:"hint,omitempty"`
 }
 
 func NewValidationError(msg string, err error) *LLMError {
 	return &LLMError{
-		Code:     "validation_failed",
+		Code:     validationFailedErrCode,
 		Message:  msg,
 		Original: formatError(err),
 	}
@@ -18,14 +26,15 @@ func NewValidationError(msg string, err error) *LLMError {
 
 func NewNotFoundError(msg string, err error) *LLMError {
 	return &LLMError{
-		Code:     "not_found",
+		Code:     notFoundErrCode,
 		Message:  msg,
 		Original: formatError(err),
 	}
 }
 
 func (e *LLMError) Error() string {
-	return e.Message
+	data, _ := json.Marshal(e)
+	return string(data)
 }
 
 func formatError(err error) string {

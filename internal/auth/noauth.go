@@ -4,8 +4,12 @@ import "net/http"
 
 type NoAuthClient struct{}
 
-func NewNoAuthClient() *NoAuthClient {
-	return &NoAuthClient{}
+func NewNoAuthClient() NoAuthClient {
+	return NoAuthClient{}
+}
+
+func (NoAuthClient) New() error {
+	return nil
 }
 
 func (NoAuthClient) Type() Type {

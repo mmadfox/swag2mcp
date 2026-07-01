@@ -10,16 +10,8 @@ type OAuth2ClientCredentialsAuthClient struct {
 	Scopes       []string `yaml:"scopes,omitempty"`
 }
 
-func NewOAuth2ClientCredentialsAuthClient(
-	clientID, clientSecret, tokenURL string,
-	scopes []string,
-) *OAuth2ClientCredentialsAuthClient {
-	return &OAuth2ClientCredentialsAuthClient{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-		TokenURL:     tokenURL,
-		Scopes:       scopes,
-	}
+func (c *OAuth2ClientCredentialsAuthClient) New() error {
+	return nil
 }
 
 func (c *OAuth2ClientCredentialsAuthClient) Type() Type {

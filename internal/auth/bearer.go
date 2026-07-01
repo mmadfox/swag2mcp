@@ -7,10 +7,8 @@ type BearerTokenAuthClient struct {
 	Token string `yaml:"token" validate:"required"`
 }
 
-func NewBearerTokenAuthClient(token string) *BearerTokenAuthClient {
-	return &BearerTokenAuthClient{
-		Token: token,
-	}
+func (c *BearerTokenAuthClient) New() error {
+	return nil
 }
 
 func (c *BearerTokenAuthClient) Type() Type {

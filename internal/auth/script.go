@@ -7,10 +7,8 @@ type ScriptAuthClient struct {
 	Source string `yaml:"source" validate:"required"`
 }
 
-func NewScriptAuthClient(source string) *ScriptAuthClient {
-	return &ScriptAuthClient{
-		Source: source,
-	}
+func (c *ScriptAuthClient) New() error {
+	return nil
 }
 
 func (c *ScriptAuthClient) Type() Type {

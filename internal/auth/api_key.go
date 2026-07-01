@@ -9,12 +9,8 @@ type APIKeyAuthClient struct {
 	In    string `yaml:"in"    validate:"required,oneof=header query"`
 }
 
-func NewAPIKeyAuthClient(key, value, in string) *APIKeyAuthClient {
-	return &APIKeyAuthClient{
-		Key:   key,
-		Value: value,
-		In:    in,
-	}
+func (c *APIKeyAuthClient) New() error {
+	return nil
 }
 
 func (c *APIKeyAuthClient) Type() Type {

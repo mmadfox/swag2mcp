@@ -12,18 +12,8 @@ type OAuth2PasswordAuthClient struct {
 	Scopes       []string `yaml:"scopes,omitempty"`
 }
 
-func NewOAuth2PasswordAuthClient(
-	username, password, clientID, clientSecret, tokenURL string,
-	scopes []string,
-) *OAuth2PasswordAuthClient {
-	return &OAuth2PasswordAuthClient{
-		Username:     username,
-		Password:     password,
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-		TokenURL:     tokenURL,
-		Scopes:       scopes,
-	}
+func (c *OAuth2PasswordAuthClient) New() error {
+	return nil
 }
 
 func (c *OAuth2PasswordAuthClient) Type() Type {

@@ -8,11 +8,8 @@ type DigestAuthClient struct {
 	Password string `yaml:"password" validate:"required"`
 }
 
-func NewDigestAuthClient(username, password string) *DigestAuthClient {
-	return &DigestAuthClient{
-		Username: username,
-		Password: password,
-	}
+func (c *DigestAuthClient) New() error {
+	return nil
 }
 
 func (c *DigestAuthClient) Type() Type {

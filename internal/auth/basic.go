@@ -8,11 +8,8 @@ type BasicAuthClient struct {
 	Password string `yaml:"password" validate:"required"`
 }
 
-func NewBasicAuthClient(username, password string) *BasicAuthClient {
-	return &BasicAuthClient{
-		Username: username,
-		Password: password,
-	}
+func (c *BasicAuthClient) New() error {
+	return nil
 }
 
 func (c *BasicAuthClient) Type() Type {

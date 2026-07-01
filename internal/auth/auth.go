@@ -32,6 +32,7 @@ var authValidator = validator.New(validator.WithRequiredStructEnabled())
 
 // Authenticator is an interface for authenticating requests.
 type Authenticator interface {
+	New() error
 	Type() Type
 	Apply(req *http.Request) error
 	Validate() error
