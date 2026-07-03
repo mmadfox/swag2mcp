@@ -32,7 +32,7 @@ func newValidateCmd() *cobra.Command {
 			}
 
 			if err := cfg.Validate(config.NewFilter(nil)); err != nil {
-				return fmt.Errorf("❌ Configuration is invalid:\n  %w\n  File: %s", err, configPath)
+				return fmt.Errorf("Configuration is invalid: %w\nPath: %s", err, configPath)
 			}
 
 			cmd.Printf("✅ Configuration is valid.\n")

@@ -32,7 +32,7 @@ type Config struct {
 //   - BaseURL: required, must be a valid URL.
 type Spec struct {
 	Domain         string            `yaml:"domain"                    validate:"required,domain_format"`
-	LLMTitle       string            `yaml:"llm_title,omitempty"       validate:"required,min=20,max=120,title_format"`
+	LLMTitle       string            `yaml:"llm_title,omitempty"       validate:"required,min=5,max=120,title_format"`
 	LLMInstruction string            `yaml:"llm_instruction,omitempty" validate:"omitempty,max=500,instruction_format"`
 	Collections    []Collection      `yaml:"collections,omitempty"     validate:"required,min=1,max=30"`
 	Disable        bool              `yaml:"disable,omitempty"`
