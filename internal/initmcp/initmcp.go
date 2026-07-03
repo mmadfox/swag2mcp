@@ -18,15 +18,15 @@ var configTemplate string
 // Setup creates a workspace and writes the example configuration file.
 // Use this for non-interactive / scripted initialization.
 func Setup(configPath, workspaceDir string) error {
-	ws, err := workspace.New(workspaceDir)
-	if err != nil {
-		return fmt.Errorf("workspace: %w", err)
+	ws, wsErr := workspace.New(workspaceDir)
+	if wsErr != nil {
+		return fmt.Errorf("workspace: %w", wsErr)
 	}
-	if err := ws.Init(); err != nil {
-		return fmt.Errorf("init workspace: %w", err)
+	if initErr := ws.Init(); initErr != nil {
+		return fmt.Errorf("init workspace: %w", initErr)
 	}
-	if err := os.WriteFile(configPath, exampleConfig, 0600); err != nil {
-		return fmt.Errorf("write config: %w", err)
+	if writeErr := os.WriteFile(configPath, exampleConfig, 0600); writeErr != nil {
+		return fmt.Errorf("write config: %w", writeErr)
 	}
 	return nil
 }

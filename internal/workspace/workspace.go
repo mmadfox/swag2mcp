@@ -31,6 +31,7 @@ func (w *Workspace) Init() error {
 		w.CacheDir(),
 		w.SpecsDir(),
 		w.ResponsesDir(),
+		w.AuthScriptsDir(),
 	}
 	for _, dir := range dirs {
 		if err := os.MkdirAll(dir, 0750); err != nil {
@@ -43,6 +44,20 @@ func (w *Workspace) Init() error {
 // Root returns the absolute path to the workspace root directory.
 func (w *Workspace) Root() string {
 	return w.root
+}
+
+// DefaultRoot returns the default workspace root path (~/.swag2mcp).
+func DefaultRoot() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return DefaultRootName
+	}
+	return filepath.Join(home, DefaultRootName)
+}
+
+// DefaultConfigPath returns the default config file path (~/.swag2mcp/swag2mcp.yaml).
+func DefaultConfigPath() string {
+	return filepath.Join(DefaultRoot(), "swag2mcp.yaml")
 }
 
 // Sub returns the path to a named subdirectory inside the workspace.
@@ -63,4 +78,9 @@ func (w *Workspace) SpecsDir() string {
 // ResponsesDir returns the path to the responses subdirectory.
 func (w *Workspace) ResponsesDir() string {
 	return w.Sub(DirResponses)
+}
+
+// AuthScriptsDir returns the path to the auth scripts subdirectory.
+func (w *Workspace) AuthScriptsDir() string {
+	return w.Sub(DirAuthScripts)
 }

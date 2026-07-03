@@ -56,6 +56,13 @@ func TestResponsesDir(t *testing.T) {
 	}
 }
 
+func TestAuthScriptsDir(t *testing.T) {
+	ws, _ := New("/root")
+	if got := ws.AuthScriptsDir(); got != "/root/"+DirAuthScripts {
+		t.Errorf("AuthScriptsDir() = %q, want %q", got, "/root/"+DirAuthScripts)
+	}
+}
+
 func TestInit(t *testing.T) {
 	tmpDir := t.TempDir()
 	ws, err := New(tmpDir)
@@ -65,7 +72,7 @@ func TestInit(t *testing.T) {
 	if err := ws.Init(); err != nil {
 		t.Fatalf("Init() error = %v", err)
 	}
-	for _, dir := range []string{ws.Root(), ws.CacheDir(), ws.SpecsDir(), ws.ResponsesDir()} {
+	for _, dir := range []string{ws.Root(), ws.CacheDir(), ws.SpecsDir(), ws.ResponsesDir(), ws.AuthScriptsDir()} {
 		if _, statErr := os.Stat(dir); os.IsNotExist(statErr) {
 			t.Errorf("directory %q was not created", dir)
 		}

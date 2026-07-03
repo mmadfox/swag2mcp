@@ -12,6 +12,7 @@ func TestConstants(t *testing.T) {
 		{"DirCache", DirCache, "cache"},
 		{"DirSpecs", DirSpecs, "specs"},
 		{"DirResponses", DirResponses, "responses"},
+		{"DirAuthScripts", DirAuthScripts, "auth_scripts"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

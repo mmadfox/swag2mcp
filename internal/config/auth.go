@@ -94,6 +94,28 @@ func (a *Auth) UnmarshalYAML(value *yaml.Node) error {
 	return nil
 }
 
+// MarshalYAML implements yaml.Marshaler.
+func (a Auth) MarshalYAML() (any, error) {
+	if a.Client == nil || a.Client.Type() == auth.NoAuth {
+		return nil, nil
+	}
+
+	configData, err := yaml.Marshal(a.Client)
+	if err != nil {
+		return nil, err
+	}
+
+	var config any
+	if err := yaml.Unmarshal(configData, &config); err != nil {
+		return nil, err
+	}
+
+	return map[string]any{
+		"type":   string(a.Client.Type()),
+		"config": config,
+	}, nil
+}
+
 // decodeConfig decodes a YAML node into the provided config struct.
 // It returns an error if the node is missing (Kind == 0) for types that require a config block.
 func decodeConfig(node *yaml.Node, cfg any) error {

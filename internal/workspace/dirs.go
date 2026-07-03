@@ -1,8 +1,8 @@
 // Package workspace manages the workspace directory layout for swag2mcp.
 //
 // The workspace is the root directory (default ~/.swag2mcp) that contains
-// subdirectories for cached remote specs, local spec files, and invocation
-// responses.
+// subdirectories for cached remote specs, local spec files, invocation
+// responses, and authentication scripts.
 package workspace
 
 const (
@@ -17,4 +17,7 @@ const (
 
 	// DirResponses is the subdirectory for invocation response files.
 	DirResponses = "responses"
+
+	// DirAuthScripts is the subdirectory for authentication scripts.
+	DirAuthScripts = "auth_scripts"
 )

@@ -10,7 +10,9 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"gopkg.in/yaml.v3"
 
+	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
@@ -18,8 +20,8 @@ import (
 type state int
 
 const (
-	stateConfigPath state = iota
-	stateWorkspaceDir
+	stateWorkspaceDir state = iota
+	stateConfigPath
 	stateAskAddSpec
 	stateSpecDomain
 	stateSpecTitle
@@ -143,7 +145,7 @@ func initialModel() model {
 	ti.Focus()
 
 	return model{
-		state: stateConfigPath,
+		state: stateWorkspaceDir,
 		input: ti,
 	}
 }
@@ -204,23 +206,23 @@ func (m model) handleEnter() (tea.Model, tea.Cmd) {
 	val := m.input.Value()
 
 	switch m.state {
+	case stateWorkspaceDir:
+		if val == "" {
+			val = workspace.DefaultRoot()
+		}
+		m.workspaceDir = val
+		m.input.SetValue("")
+		m.input.Placeholder = workspace.DefaultConfigPath()
+		return m.transitionTo(stateConfigPath)
+
 	case stateConfigPath:
 		if val == "" {
-			val = "swag2mcp.yaml"
+			val = workspace.DefaultConfigPath()
 		}
 		if info, statErr := os.Stat(val); statErr == nil && info.IsDir() {
 			val = filepath.Join(val, "swag2mcp.yaml")
 		}
 		m.configPath = val
-		m.input.SetValue("")
-		m.input.Placeholder = "./.swag2mcp"
-		return m.transitionTo(stateWorkspaceDir)
-
-	case stateWorkspaceDir:
-		if val == "" {
-			val = filepath.Join(filepath.Dir(m.configPath), ".swag2mcp")
-		}
-		m.workspaceDir = val
 		m.input.SetValue("")
 		return m.transitionTo(stateAskAddSpec)
 
@@ -399,17 +401,17 @@ func authFieldsFor(authType string) []authFieldDef {
 // currentHint returns the hint for the current wizard step.
 func (m model) currentHint() hint {
 	switch m.state {
-	case stateConfigPath:
-		return hint{
-			title:       "Config file path",
-			description: "Where should the swag2mcp.yaml configuration file be created?",
-			placeholder: ".",
-		}
 	case stateWorkspaceDir:
 		return hint{
 			title:       "Workspace directory",
 			description: "Where should the workspace directory be created?\n  This will store cached specs, local spec files, and API responses.",
-			placeholder: "./.swag2mcp",
+			placeholder: workspace.DefaultRoot(),
+		}
+	case stateConfigPath:
+		return hint{
+			title:       "Config file path",
+			description: "Where should the swag2mcp.yaml configuration file be created?",
+			placeholder: workspace.DefaultConfigPath(),
 		}
 	case stateSpecDomain:
 		return hint{
@@ -632,14 +634,6 @@ func BuildConfigYAML(workspaceDir string, specs []SpecInput) ([]byte, error) {
 
 // WriteResult writes the config file and initializes the workspace.
 func WriteResult(configPath, workspaceDir string, specs []SpecInput) error {
-	ws, err := workspace.New(workspaceDir)
-	if err != nil {
-		return fmt.Errorf("workspace: %w", err)
-	}
-	if err := ws.Init(); err != nil {
-		return fmt.Errorf("init workspace: %w", err)
-	}
-
 	if info, statErr := os.Stat(configPath); statErr == nil && info.IsDir() {
 		configPath = filepath.Join(configPath, "swag2mcp.yaml")
 	}
@@ -656,6 +650,22 @@ func WriteResult(configPath, workspaceDir string, specs []SpecInput) error {
 
 	if err := os.WriteFile(configPath, data, 0600); err != nil {
 		return fmt.Errorf("write config: %w", err)
+	}
+
+	// Validate the written config and warn if issues are found.
+	var cfg config.Config
+	if parseErr := yaml.Unmarshal(data, &cfg); parseErr == nil {
+		if verr := cfg.Validate(config.NewFilter(nil)); verr != nil {
+			fmt.Fprintf(os.Stderr, "  ⚠️  Configuration written with validation warnings:\n    %s\n    File: %s\n", verr, configPath)
+		}
+	}
+
+	ws, err := workspace.New(workspaceDir)
+	if err != nil {
+		return fmt.Errorf("workspace: %w", err)
+	}
+	if err := ws.Init(); err != nil {
+		return fmt.Errorf("init workspace: %w", err)
 	}
 
 	return nil

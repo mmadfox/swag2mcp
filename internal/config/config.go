@@ -34,10 +34,10 @@ type Spec struct {
 	Domain         string            `yaml:"domain"                    validate:"required,domain_format"`
 	LLMTitle       string            `yaml:"llm_title,omitempty"       validate:"required,min=20,max=120,title_format"`
 	LLMInstruction string            `yaml:"llm_instruction,omitempty" validate:"omitempty,max=500,instruction_format"`
-	Collections    []Collection      `yaml:"collections"               validate:"required,min=1,max=30"`
-	Disable        bool              `yaml:"disable"`
+	Collections    []Collection      `yaml:"collections,omitempty"     validate:"required,min=1,max=30"`
+	Disable        bool              `yaml:"disable,omitempty"`
 	Tags           []string          `yaml:"tags,omitempty"`
-	BaseURL        string            `yaml:"base_url"                  validate:"required,url"`
+	BaseURL        string            `yaml:"base_url,omitempty"        validate:"required,url"`
 	Headers        map[string]string `yaml:"headers,omitempty"`
 	Auth           Auth              `yaml:"auth,omitempty"`
 }
@@ -54,9 +54,9 @@ type Collection struct {
 	LLMInstruction string            `yaml:"llm_instruction,omitempty"                  validate:"omitempty,max=360,instruction_format"`
 	Title          string            `yaml:"title,omitempty"`
 	Location       string            `yaml:"location"                  json:"location"  validate:"required,min=5,max=250"`
-	Disable        bool              `yaml:"disable"                   json:"disable"`
+	Disable        bool              `yaml:"disable,omitempty"          json:"disable"`
 	Headers        map[string]string `yaml:"headers,omitempty"`
-	BaseURL        string            `yaml:"base_url"                                   validate:"omitempty,url"`
+	BaseURL        string            `yaml:"base_url,omitempty"                          validate:"omitempty,url"`
 }
 
 func (c *Config) SetDefaults() error {
