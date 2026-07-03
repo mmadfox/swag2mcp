@@ -1,4 +1,4 @@
-package initpkg
+package initmcp
 
 import (
 	"bytes"

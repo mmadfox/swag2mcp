@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mmadfox/swag2mcp/internal/initpkg"
+	"github.com/mmadfox/swag2mcp/internal/initmcp"
 )
 
 func newInitCmd() *cobra.Command {
@@ -34,7 +34,7 @@ writes the example configuration file non-interactively.`,
 				if opts.WorkspaceDir == "" {
 					opts.WorkspaceDir = ".swag2mcp"
 				}
-				if err := initpkg.Setup(opts.ConfigPath, opts.WorkspaceDir); err != nil {
+				if err := initmcp.Setup(opts.ConfigPath, opts.WorkspaceDir); err != nil {
 					return fmt.Errorf("init: %w", err)
 				}
 				cmd.Printf("Configuration written to %s\n", opts.ConfigPath)
@@ -42,7 +42,7 @@ writes the example configuration file non-interactively.`,
 				return nil
 			}
 
-			configPath, workspaceDir, _, err := initpkg.RunTUI()
+			configPath, workspaceDir, _, err := initmcp.RunTUI()
 			if err != nil {
 				return fmt.Errorf("init wizard: %w", err)
 			}
