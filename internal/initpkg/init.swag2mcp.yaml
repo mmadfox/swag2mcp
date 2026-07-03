@@ -1,3 +1,5 @@
+# swag2mcp — example configuration
+# Replace the values below with your own API specifications.
 workspace_dir: /some/path/to/workspace
 
 specs:

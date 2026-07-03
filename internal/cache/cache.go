@@ -33,9 +33,9 @@ func New(workspaceDir string) *Cache {
 	}
 }
 
-// SetWorkspaceDir sets the root directory for the cache.
-func (c *Cache) SetWorkspaceDir(dir string) {
-	c.dir = filepath.Join(dir, CacheDirName)
+// SetCacheDir sets the cache directory directly.
+func (c *Cache) SetCacheDir(dir string) {
+	c.dir = dir
 }
 
 // Resolve takes a location (local path, file:// URL, or http(s):// URL)

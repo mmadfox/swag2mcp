@@ -10,6 +10,7 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/id"
 	specparser "github.com/mmadfox/swag2mcp/internal/spec"
 	"github.com/mmadfox/swag2mcp/internal/types"
+	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
 // BootstrapRequest is the request for the Bootstrap method.
@@ -168,8 +169,17 @@ func (s *Service) loadAndValidateConfig(filepath string, filter *config.Filter) 
 }
 
 func (s *Service) makeWorkspaceDir(workspaceDir string) {
-	s.cache.SetWorkspaceDir(workspaceDir)
-	// TODO: make all dirs
+	if workspaceDir != "" && workspaceDir != s.ws.Root() {
+		var err error
+		s.ws, err = workspace.New(workspaceDir)
+		if err != nil {
+			return
+		}
+	}
+	if err := s.ws.Init(); err != nil {
+		return
+	}
+	s.cache.SetCacheDir(s.ws.CacheDir())
 }
 
 func (s *Service) indexSpec(

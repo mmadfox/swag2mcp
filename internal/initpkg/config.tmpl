@@ -1,0 +1,67 @@
+workspace_dir: "{{.WorkspaceDir}}"
+
+specs:
+{{- range .Specs}}
+  - domain: "{{.Domain}}"
+    llm_title: "{{.LLMTitle}}"
+    {{- if .Instruction}}
+    llm_instruction: "{{.Instruction}}"
+    {{- end}}
+    base_url: "{{.BaseURL}}"
+    {{- if .Tags}}
+    tags:
+    {{- range .Tags}}
+      - "{{.}}"
+    {{- end}}
+    {{- end}}
+    {{- if and .AuthType (ne .AuthType "none")}}
+    auth:
+      type: "{{.AuthType}}"
+      config:
+      {{- range $key, $val := .AuthConfig}}
+        {{$key}}: "{{$val}}"
+      {{- end}}
+    {{- end}}
+    {{- if .Collections}}
+    collections:
+    {{- range .Collections}}
+      - llm_title: "{{.Title}}"
+        location: "{{.Location}}"
+    {{- end}}
+    {{- end}}
+{{- end}}
+
+#  - domain: train-booking
+#    disable: true
+#    base_url: https://api.trains-railway.com
+#    headers:
+#      X-Request-ID: generated-request-id
+#      X-User-Agent: mobile-app-v2.5
+#      Authorization: Bearer your-access-token
+#
+#    llm_title: Railway Ticket Booking System API
+#    llm_instruction: |
+#      This API provides comprehensive functionality for booking train tickets,
+#      managing reservations, and viewing train schedules across the national railway network.
+#      Use this for passenger travel planning and ticket purchase operations.
+#
+#    auth:
+#      type: oauth2
+#      config:
+#        password: $(SOME_ENV)
+#        username: $(SOME_ENV)
+#
+#    collections:
+#      - llm_title: Train Schedules and Availability
+#        location: /some/path/to/spec/train-schedules.json
+#        disable: true
+#      - llm_title: Booking and Reservations
+#        location: /some/path/to/spec/train-bookings.json
+#      - llm_title: Passenger Services
+#        location: https://some.api.com/some/path/train-passengers.yaml
+#
+#    tags:
+#      - trains
+#      - transportation
+#      - booking
+#      - public-transport

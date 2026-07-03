@@ -6,15 +6,30 @@ import (
 	"iter"
 	"os"
 	"path/filepath"
+
+	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
-const DefaultWorkspaceDir = ".swag2mcp"
+const DefaultWorkspaceDir = workspace.DefaultRootName
 
+// Config is the top-level swag2mcp configuration.
+//
+// Validation rules:
+//   - WorkspaceDir: required, path to the workspace directory.
+//   - Specs: at least one spec must be defined.
 type Config struct {
 	WorkspaceDir string `yaml:"workspace_dir,omitempty" validate:"required"`
 	Specs        []Spec `yaml:"specs"`
 }
 
+// Spec defines a single API specification group.
+//
+// Validation rules:
+//   - Domain: required, 1-60 chars, letters/digits/underscore/hyphen only.
+//   - LLMTitle: required, 20-120 chars, allows letters/digits/punctuation.
+//   - LLMInstruction: optional, max 500 chars, allows letters/digits/punctuation.
+//   - Collections: required, 1-30 collections per spec.
+//   - BaseURL: required, must be a valid URL.
 type Spec struct {
 	Domain         string            `yaml:"domain"                    validate:"required,domain_format"`
 	LLMTitle       string            `yaml:"llm_title,omitempty"       validate:"required,min=20,max=120,title_format"`
@@ -27,6 +42,13 @@ type Spec struct {
 	Auth           Auth              `yaml:"auth,omitempty"`
 }
 
+// Collection defines a single spec file (Swagger/OpenAPI) within a Spec.
+//
+// Validation rules:
+//   - LLMTitle: optional, max 120 chars, allows letters/digits/punctuation.
+//   - LLMInstruction: optional, max 360 chars, allows letters/digits/punctuation.
+//   - Location: required, 5-250 chars (path or URL to the spec file).
+//   - BaseURL: optional, must be a valid URL if set.
 type Collection struct {
 	LLMTitle       string            `yaml:"llm_title,omitempty"       json:"llm_title" validate:"omitempty,max=120,title_format"`
 	LLMInstruction string            `yaml:"llm_instruction,omitempty"                  validate:"omitempty,max=360,instruction_format"`

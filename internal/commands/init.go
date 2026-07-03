@@ -2,65 +2,64 @@ package commands
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
+
+	"github.com/mmadfox/swag2mcp/internal/initpkg"
 )
 
 func newInitCmd() *cobra.Command {
+	opts := struct {
+		ConfigPath   string
+		WorkspaceDir string
+	}{}
+
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Initialize workspace directory and create configuration file",
-		Long: `Initialize workspace directory and create configuration file.
+		Short: "Initialize workspace and configuration",
+		Long: `Initialize workspace and configuration.
 
-This command creates:
-- Workspace directory (default: ~/.swag2mcp)
-- Configuration file (swag2mcp.yaml)
-- Subdirectories for storing responses and cache`,
+Without flags, starts an interactive wizard that guides you through
+setting up the workspace and adding API specifications.
+
+With --config-path and --workspace-dir, creates the workspace and
+writes the example configuration file non-interactively.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			home, homeErr := os.UserHomeDir()
-			if homeErr != nil {
-				return fmt.Errorf("cannot determine home directory: %w", homeErr)
-			}
+			hasFlags := opts.ConfigPath != "" || opts.WorkspaceDir != ""
 
-			workspaceDir := filepath.Join(home, ".swag2mcp")
-
-			// Create workspace directory
-			if err := os.MkdirAll(workspaceDir, 0750); err != nil {
-				return fmt.Errorf("failed to create workspace directory %q: %w", workspaceDir, err)
-			}
-
-			// Create subdirectories
-			subdirs := []string{"responses", "cache", "specs"}
-			for _, subdir := range subdirs {
-				dir := filepath.Join(workspaceDir, subdir)
-				if mkErr := os.MkdirAll(dir, 0750); mkErr != nil {
-					return fmt.Errorf("failed to create subdirectory %q: %w", dir, mkErr)
+			if hasFlags {
+				if opts.ConfigPath == "" {
+					opts.ConfigPath = "swag2mcp.yaml"
 				}
-			}
-
-			// Create default config file
-			configPath := filepath.Join(workspaceDir, "swag2mcp.yaml")
-			if _, statErr := os.Stat(configPath); statErr == nil {
-				// File exists
-				cmd.Printf("Configuration file already exists at %s\n", configPath)
+				if opts.WorkspaceDir == "" {
+					opts.WorkspaceDir = ".swag2mcp"
+				}
+				if err := initpkg.Setup(opts.ConfigPath, opts.WorkspaceDir); err != nil {
+					return fmt.Errorf("init: %w", err)
+				}
+				cmd.Printf("Configuration written to %s\n", opts.ConfigPath)
+				cmd.Printf("Workspace initialized at %s\n", opts.WorkspaceDir)
 				return nil
 			}
 
-			configContent := `collections: []
-`
-			if writeErr := os.WriteFile(configPath, []byte(configContent), 0600); writeErr != nil {
-				return fmt.Errorf("failed to write config file %q: %w", configPath, writeErr)
+			configPath, workspaceDir, _, err := initpkg.RunTUI()
+			if err != nil {
+				return fmt.Errorf("init wizard: %w", err)
 			}
 
-			cmd.Printf("Workspace initialized at %s\n", workspaceDir)
-			cmd.Printf("Configuration created at %s\n", configPath)
-			cmd.Printf("Subdirectories created: %v\n", subdirs)
+			cmd.Printf("\n  ✅ Configuration written to: %s\n", configPath)
+			cmd.Printf("  ✅ Workspace initialized at: %s\n", workspaceDir)
+			cmd.Println("  Run `swag2mcp mcp` to start the server.")
 
 			return nil
 		},
 	}
+
+	cmd.Flags().StringVarP(&opts.ConfigPath, "config-path", "c", "", "Path to write the configuration file (non-interactive)")
+	cmd.Flags().StringVarP(&opts.WorkspaceDir, "workspace-dir", "w", "", "Workspace directory path (non-interactive)")
+
+	cmd.SilenceUsage = true
+	cmd.SilenceErrors = true
 
 	return cmd
 }
