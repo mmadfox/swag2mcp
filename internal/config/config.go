@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"iter"
 	"os"
@@ -87,37 +86,48 @@ func (c *Config) Iterate(f *Filter) iter.Seq[*Spec] {
 }
 
 func (c *Config) Validate(f *Filter) error {
+	var errs validationErrors
+
 	if len(c.Specs) == 0 {
-		return errors.New("no specs found")
+		errs = append(errs, validationError{
+			field:   "specs",
+			message: "no specifications defined",
+		})
 	}
 
-	specIndex := 1
-	for spec := range c.Iterate(f) {
-		if err := getValidator().Struct(spec); err != nil {
-			return fmt.Errorf("failed to validate spec-%d: %w", specIndex, err)
+	for i, spec := range c.Specs {
+		if spec.Disable {
+			continue
 		}
+		if f != nil && !f.MatchSpec(spec.Tags...) {
+			continue
+		}
+
+		specPrefix := fmt.Sprintf("specs[%d]", i)
+		errs = append(errs, collectStructErrors(specPrefix, spec)...)
 
 		if spec.Auth.Client != nil {
 			if verr := spec.Auth.Client.Validate(); verr != nil {
-				return fmt.Errorf("spec: %s, failed to validate auth client: %w", spec.Domain, verr)
+				errs = append(errs, validationError{
+					field:   specPrefix + ".auth",
+					message: fmt.Sprintf("auth client validation failed: %s", verr),
+				})
 			}
 		}
 
-		for _, collection := range spec.Collections {
+		for j, collection := range spec.Collections {
 			if collection.Disable {
 				continue
 			}
-			if err := getValidator().Struct(collection); err != nil {
-				return fmt.Errorf("failed to validate collection %q: %w", collection.LLMTitle, err)
-			}
+			collPrefix := fmt.Sprintf("%s.collections[%d]", specPrefix, j)
+			errs = append(errs, collectStructErrors(collPrefix, collection)...)
 		}
-
-		specIndex++
 	}
 
-	if err := getValidator().Struct(c); err != nil {
-		return fmt.Errorf("failed to validate config: %w", err)
-	}
+	errs = append(errs, collectStructErrors("config", c)...)
 
-	return nil
+	if len(errs) == 0 {
+		return nil
+	}
+	return errs
 }

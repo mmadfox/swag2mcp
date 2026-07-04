@@ -353,6 +353,9 @@ linters:
         - os.WriteFile
         - prometheus.ExponentialBuckets.*
         - prometheus.LinearBuckets
+        - time.Second
+        - time.Minute
+        - time.Hour
 
     nakedret:
       # Make an issue if func has more lines of code than this setting, and it has naked returns.
@@ -494,6 +497,11 @@ linters:
       # Repeated strings in TUI
       - path: 'internal/initmcp/'
         linters: [ goconst ]
+      # Repeated strings in cache and config
+      - path: 'internal/cache/'
+        linters: [ goconst ]
+      - path: 'internal/config/'
+        linters: [ goconst ]
       # fmt.Sprintf in TUI
       - path: 'internal/initmcp/'
         linters: [ perfsprint ]
@@ -509,6 +517,9 @@ linters:
         linters: [ intrange ]
       # modernize SplitSeq
       - path: 'internal/initmcp/'
+        linters: [ modernize ]
+      # modernize in config validator
+      - path: 'internal/config/validator\.go'
         linters: [ modernize ]
       # musttag for yaml.Unmarshal
       - path: 'internal/initmcp/'
@@ -546,6 +557,14 @@ linters:
         linters: [ gocritic ]
       # gocognit in init command
       - path: 'internal/commands/init\.go'
+        linters: [ gocognit ]
+      # gocognit in mcp and validate commands
+      - path: 'internal/commands/mcp\.go'
+        linters: [ gocognit ]
+      - path: 'internal/commands/validate\.go'
+        linters: [ gocognit ]
+      # gocognit in config validator
+      - path: 'internal/config/validator\.go'
         linters: [ gocognit ]
       # nestif in commands
       - path: 'internal/commands/'

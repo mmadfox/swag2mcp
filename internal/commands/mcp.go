@@ -8,6 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/mmadfox/swag2mcp/internal/cache"
+	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/server/mcp"
 	"github.com/mmadfox/swag2mcp/internal/service"
 )
@@ -22,7 +24,6 @@ func newMCPCmd(version string) *cobra.Command {
 		Use:   "mcp [mcp-flags]",
 		Short: "Start the swag2mcp server in headless mode",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			// set up logging if we have a logfile
 			var logWriter io.Writer
 			if len(opts.Logfile) > 0 {
 				f, logErr := os.Create(opts.Logfile)
@@ -33,20 +34,29 @@ func newMCPCmd(version string) *cobra.Command {
 				logWriter = f
 			}
 
-			// initialize service
+			if opts.ConfigFile != "" {
+				cfg, loadErr := config.Load(opts.ConfigFile)
+				if loadErr == nil {
+					validateOpts := config.ValidateOptions{
+						Cache: cache.New(cfg.WorkspaceDir),
+					}
+					if err := config.ValidateConfig(cfg, validateOpts); err != nil {
+						fmt.Fprintf(os.Stderr, "⚠️  Configuration warnings:\n%s\n", err)
+					}
+				}
+			}
+
 			svc, svcErr := service.New()
 			if svcErr != nil {
 				return fmt.Errorf("failed to create service: %w", svcErr)
 			}
 
-			// bootstrap service with config
 			if bootErr := svc.Bootstrap(cmd.Context(), service.BootstrapRequest{
 				ConfFilepath: opts.ConfigFile,
 			}); bootErr != nil {
 				return fmt.Errorf("failed to bootstrap service: %w", bootErr)
 			}
 
-			// create mcp server options
 			mcpOpts := mcp.Options{
 				Version: version,
 				Logger:  logWriter,

@@ -1,11 +1,13 @@
 package cache
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/rand/v2"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -59,6 +61,48 @@ func (c *Cache) Resolve(location string) (string, error) {
 	default:
 		// Local path — expand ~ and return as-is
 		return resolveLocalPath(location)
+	}
+}
+
+// Exists checks whether the location is accessible.
+// For local paths it checks [os.Stat].
+// For file:// URLs it resolves the path and checks [os.Stat].
+// For http(s):// URLs it checks the cache first, then does a HEAD request.
+// Returns nil if accessible, [LocationError] otherwise.
+func (c *Cache) Exists(location string) error {
+	if location == "" {
+		return errors.New("empty location")
+	}
+
+	isURL := strings.HasPrefix(location, "https://") || strings.HasPrefix(location, "http://")
+	isFileURL := strings.HasPrefix(location, "file://")
+
+	switch {
+	case isFileURL:
+		path, pathErr := fileURIToPath(location)
+		if pathErr != nil {
+			return &LocationError{Location: location, Type: "file", Err: pathErr}
+		}
+		if _, statErr := os.Stat(path); os.IsNotExist(statErr) {
+			return &LocationError{Location: location, Type: "file", Err: fmt.Errorf("file not found at %s", path)}
+		}
+		return nil
+
+	case isURL:
+		return c.existsURL(location)
+
+	default:
+		path := expandTilde(location)
+		if !filepath.IsAbs(path) {
+			absPath, absErr := filepath.Abs(path)
+			if absErr == nil {
+				path = absPath
+			}
+		}
+		if _, statErr := os.Stat(path); os.IsNotExist(statErr) {
+			return &LocationError{Location: location, Type: "file", Err: fmt.Errorf("file not found at %s", path)}
+		}
+		return nil
 	}
 }
 
@@ -140,4 +184,47 @@ func cacheKey(rawURL string) string {
 func randomTTL() time.Duration {
 	n := rand.Int64N(int64(MaxTTL - MinTTL))
 	return MinTTL + time.Duration(n)
+}
+
+// existsURL checks if a URL is accessible, using cache if available.
+func (c *Cache) existsURL(url string) error {
+	// Check cache first
+	if c.dir != "" {
+		hash := cacheKey(url)
+		specPath := filepath.Join(c.dir, hash+".spec")
+		metaPath := filepath.Join(c.dir, hash+".meta")
+
+		meta, readErr := readMeta(metaPath)
+		if readErr == nil && !meta.IsExpired() {
+			if _, statErr := os.Stat(specPath); statErr == nil {
+				return nil
+			}
+		}
+	}
+
+	const fallbackTimeout = 10 * time.Second
+
+	// HEAD request as fallback
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		fallbackTimeout,
+	)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, url, nil)
+	if err != nil {
+		return &LocationError{Location: url, Type: "url", Err: fmt.Errorf("create request: %w", err)}
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return &LocationError{Location: url, Type: "url", Err: fmt.Errorf("unreachable: %w", err)}
+	}
+	_ = resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return &LocationError{Location: url, Type: "url", Err: fmt.Errorf("unexpected status %d", resp.StatusCode)}
+	}
+
+	return nil
 }

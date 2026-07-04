@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -332,5 +333,188 @@ func TestFileURIToPath_badScheme(t *testing.T) {
 	_, err := fileURIToPath("https://example.com/spec")
 	if err == nil {
 		t.Fatal("expected error for non-file scheme")
+	}
+}
+
+func TestExists_emptyLocation(t *testing.T) {
+	t.Parallel()
+	c := New(t.TempDir())
+	err := c.Exists("")
+	if err == nil {
+		t.Fatal("expected error for empty location")
+	}
+}
+
+func TestExists_localFileExists(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	specFile := filepath.Join(dir, "spec.yaml")
+	if err := os.WriteFile(specFile, []byte("data"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	c := New(dir)
+	if err := c.Exists(specFile); err != nil {
+		t.Errorf("expected nil, got %v", err)
+	}
+}
+
+func TestExists_localFileNotFound(t *testing.T) {
+	t.Parallel()
+	c := New(t.TempDir())
+	err := c.Exists("/nonexistent/path/spec.yaml")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	var locErr *LocationError
+	if !errors.As(err, &locErr) {
+		t.Fatal("expected LocationError")
+	}
+	if locErr.Type != "file" {
+		t.Errorf("expected type 'file', got %q", locErr.Type)
+	}
+}
+
+func TestExists_fileURLExists(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	specFile := filepath.Join(dir, "spec.yaml")
+	if err := os.WriteFile(specFile, []byte("data"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	c := New(dir)
+	err := c.Exists("file://" + specFile)
+	if err != nil {
+		t.Errorf("expected nil, got %v", err)
+	}
+}
+
+func TestExists_fileURLNotFound(t *testing.T) {
+	t.Parallel()
+	c := New(t.TempDir())
+	err := c.Exists("file:///nonexistent/path/spec.yaml")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	var locErr *LocationError
+	if !errors.As(err, &locErr) {
+		t.Fatal("expected LocationError")
+	}
+	if locErr.Type != "file" {
+		t.Errorf("expected type 'file', got %q", locErr.Type)
+	}
+}
+
+func TestExists_fileURLBadScheme(t *testing.T) {
+	t.Parallel()
+	c := New(t.TempDir())
+	err := c.Exists("https://example.com/spec")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	// HTTPS URLs go through existsURL, not file URL path
+	var locErr *LocationError
+	if !errors.As(err, &locErr) {
+		t.Fatal("expected LocationError")
+	}
+}
+
+func TestExists_urlOK(t *testing.T) {
+	t.Parallel()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	c := New(t.TempDir())
+	if err := c.Exists(srv.URL); err != nil {
+		t.Errorf("expected nil, got %v", err)
+	}
+}
+
+func TestExists_urlNotFound(t *testing.T) {
+	t.Parallel()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer srv.Close()
+
+	c := New(t.TempDir())
+	err := c.Exists(srv.URL)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	var locErr *LocationError
+	if !errors.As(err, &locErr) {
+		t.Fatal("expected LocationError")
+	}
+	if locErr.Type != "url" {
+		t.Errorf("expected type 'url', got %q", locErr.Type)
+	}
+}
+
+func TestExists_urlUnreachable(t *testing.T) {
+	t.Parallel()
+	c := New(t.TempDir())
+	err := c.Exists("https://nonexistent.example.com/spec")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	var locErr *LocationError
+	if !errors.As(err, &locErr) {
+		t.Fatal("expected LocationError")
+	}
+	if locErr.Type != "url" {
+		t.Errorf("expected type 'url', got %q", locErr.Type)
+	}
+}
+
+func TestExists_urlCached(t *testing.T) {
+	t.Parallel()
+	var callCount int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		callCount++
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("data"))
+	}))
+	defer srv.Close()
+
+	c := New(t.TempDir())
+
+	// First call — download via Resolve
+	_, err := c.Resolve(srv.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Second call — should use cache
+	if existsErr := c.Exists(srv.URL); existsErr != nil {
+		t.Errorf("expected nil, got %v", existsErr)
+	}
+
+	// Resolve made 1 call, Exists should not make another
+	if callCount != 1 {
+		t.Errorf("expected 1 server call, got %d", callCount)
+	}
+}
+
+func TestExists_LocationErrorFields(t *testing.T) {
+	t.Parallel()
+	c := New(t.TempDir())
+
+	err := c.Exists("/nonexistent/path")
+	var locErr *LocationError
+	if !errors.As(err, &locErr) {
+		t.Fatal("expected LocationError")
+	}
+	if locErr.Location != "/nonexistent/path" {
+		t.Errorf("expected Location %q, got %q", "/nonexistent/path", locErr.Location)
+	}
+	if locErr.Type != "file" {
+		t.Errorf("expected Type 'file', got %q", locErr.Type)
+	}
+	if locErr.Err == nil {
+		t.Fatal("expected non-nil Err")
 	}
 }
