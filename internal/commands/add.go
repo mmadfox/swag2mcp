@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mmadfox/swag2mcp/internal/config"
-	"github.com/mmadfox/swag2mcp/internal/initmcp"
+	"github.com/mmadfox/swag2mcp/internal/tui"
 )
 
 func newAddCmd() *cobra.Command {
@@ -23,15 +23,32 @@ func newAddCmd() *cobra.Command {
 	return cmd
 }
 
+func resolveBasePath(args []string) string {
+	if len(args) > 0 {
+		return args[0]
+	}
+	return ""
+}
+
+func readYAMLInput(yaml string) ([]byte, error) {
+	if yaml == "-" {
+		d, err := io.ReadAll(os.Stdin)
+		if err != nil {
+			return nil, fmt.Errorf("read stdin: %w", err)
+		}
+		return d, nil
+	}
+	return []byte(yaml), nil
+}
+
 func newAddSpecCmd() *cobra.Command {
 	opts := struct {
-		ConfigPath string
-		YAML       string
-		Example    bool
+		YAML    string
+		Example bool
 	}{}
 
 	cmd := &cobra.Command{
-		Use:   "spec",
+		Use:   "spec [path]",
 		Short: "Add a new API specification",
 		Long: `Add a new API specification to the configuration.
 
@@ -48,41 +65,29 @@ Non-interactive mode with YAML:
 
 Show YAML example:
   swag2mcp add spec --example`,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
 			if opts.Example {
 				fmt.Print(string(config.ExampleSpecAddYAML()))
 				return nil
 			}
 
-			configPath, err := ensureConfigExists(opts.ConfigPath)
+			configPath, err := ensureConfigExists(resolveBasePath(args))
 			if err != nil {
 				return err
 			}
 
 			if opts.YAML != "" {
-				var data []byte
-				if opts.YAML == "-" {
-					d, err := io.ReadAll(os.Stdin)
-					if err != nil {
-						return fmt.Errorf("read stdin: %w", err)
-					}
-					data = d
-				} else {
-					data = []byte(opts.YAML)
+				data, err := readYAMLInput(opts.YAML)
+				if err != nil {
+					return err
 				}
-				if err := initmcp.AddSpecFromYAML(configPath, data); err != nil {
-					return fmt.Errorf("add spec: %w", err)
-				}
-				return nil
+				return tui.AddSpecFromYAML(configPath, data)
 			}
-			if err := initmcp.AddSpecTUI(configPath); err != nil {
-				return fmt.Errorf("add spec: %w", err)
-			}
-			return nil
+			return tui.AddSpecTUI(configPath)
 		},
 	}
 
-	cmd.Flags().StringVarP(&opts.ConfigPath, "config", "c", "", "Path to configuration file")
 	cmd.Flags().StringVarP(&opts.YAML, "yaml", "y", "", "YAML input (use - for stdin)")
 	cmd.Flags().BoolVarP(&opts.Example, "example", "e", false, "Show YAML example and exit")
 	cmd.SilenceUsage = true
@@ -93,13 +98,12 @@ Show YAML example:
 
 func newAddCollectionCmd() *cobra.Command {
 	opts := struct {
-		ConfigPath string
-		YAML       string
-		Example    bool
+		YAML    string
+		Example bool
 	}{}
 
 	cmd := &cobra.Command{
-		Use:   "collection",
+		Use:   "collection [path]",
 		Short: "Add a new collection to an existing specification",
 		Long: `Add a new collection to an existing specification.
 
@@ -116,41 +120,29 @@ Non-interactive mode with YAML:
 
 Show YAML example:
   swag2mcp add collection --example`,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
 			if opts.Example {
 				fmt.Print(string(config.ExampleCollectionAddYAML()))
 				return nil
 			}
 
-			configPath, err := ensureConfigExists(opts.ConfigPath)
+			configPath, err := ensureConfigExists(resolveBasePath(args))
 			if err != nil {
 				return err
 			}
 
 			if opts.YAML != "" {
-				var data []byte
-				if opts.YAML == "-" {
-					d, err := io.ReadAll(os.Stdin)
-					if err != nil {
-						return fmt.Errorf("read stdin: %w", err)
-					}
-					data = d
-				} else {
-					data = []byte(opts.YAML)
+				data, err := readYAMLInput(opts.YAML)
+				if err != nil {
+					return err
 				}
-				if err := initmcp.AddCollectionFromYAML(configPath, data); err != nil {
-					return fmt.Errorf("add collection: %w", err)
-				}
-				return nil
+				return tui.AddCollectionFromYAML(configPath, data)
 			}
-			if err := initmcp.AddCollectionTUI(configPath); err != nil {
-				return fmt.Errorf("add collection: %w", err)
-			}
-			return nil
+			return tui.AddCollectionTUI(configPath)
 		},
 	}
 
-	cmd.Flags().StringVarP(&opts.ConfigPath, "config", "c", "", "Path to configuration file")
 	cmd.Flags().StringVarP(&opts.YAML, "yaml", "y", "", "YAML input (use - for stdin)")
 	cmd.Flags().BoolVarP(&opts.Example, "example", "e", false, "Show YAML example and exit")
 	cmd.SilenceUsage = true

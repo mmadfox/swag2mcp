@@ -1,7 +1,5 @@
 # swag2mcp — example configuration
 # Replace the values below with your own API specifications.
-workspace_dir: /some/path/to/workspace
-
 specs:
   - domain: train-booking
     disable: true
@@ -9,7 +7,6 @@ specs:
     headers:
       X-Request-ID: generated-request-id
       X-User-Agent: mobile-app-v2.5
-      Authorization: Bearer {{access_token}}
 
     llm_title: Railway Ticket Booking System API
     llm_instruction: |
@@ -18,10 +15,9 @@ specs:
       Use this for passenger travel planning and ticket purchase operations.
 
     auth:
-      type: oauth2
+      type: bearer
       config:
-        password: $(SOME_ENV)
-        username: $(SOME_ENV)
+        token: $(TOKEN_AUTH)
 
     collections:
       - llm_title: Train Schedules and Availability
@@ -43,7 +39,6 @@ specs:
     headers:
       X-Shop-ID: petshop-main
       X-Currency: USD
-      X-Session-Token: {{session_token}}
 
     llm_title: Pet Food E-Commerce Platform
     llm_instruction: |
@@ -72,7 +67,6 @@ specs:
     headers:
       X-Device-ID: device-{{device_uuid}}
       X-App-Version: 4.2.1
-      X-Timezone: {{timezone_offset}}
 
     llm_title: Global Music Streaming Service
     llm_instruction: |

@@ -3,22 +3,14 @@ package config
 import (
 	"fmt"
 	"iter"
-	"os"
-	"path/filepath"
-
-	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
-
-const DefaultWorkspaceDir = workspace.DefaultRootName
 
 // Config is the top-level swag2mcp configuration.
 //
 // Validation rules:
-//   - WorkspaceDir: required, path to the workspace directory.
 //   - Specs: at least one spec must be defined.
 type Config struct {
-	WorkspaceDir string `yaml:"workspace_dir,omitempty" validate:"required"`
-	Specs        []Spec `yaml:"specs"`
+	Specs []Spec `yaml:"specs"`
 }
 
 // Spec defines a single API specification group.
@@ -56,17 +48,6 @@ type Collection struct {
 	Disable        bool              `yaml:"disable,omitempty"          json:"disable"`
 	Headers        map[string]string `yaml:"headers,omitempty"`
 	BaseURL        string            `yaml:"base_url,omitempty"                          validate:"omitempty,url"`
-}
-
-func (c *Config) SetDefaults() error {
-	if c.WorkspaceDir == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return fmt.Errorf("cannot determine home directory: %w", err)
-		}
-		c.WorkspaceDir = filepath.Join(home, DefaultWorkspaceDir)
-	}
-	return nil
 }
 
 func (c *Config) Iterate(f *Filter) iter.Seq[*Spec] {

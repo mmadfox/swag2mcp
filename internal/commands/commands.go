@@ -2,36 +2,36 @@ package commands
 
 import (
 	"fmt"
-	"os"
+	"path/filepath"
 
-	"github.com/mmadfox/swag2mcp/internal/initmcp"
+	"github.com/mmadfox/swag2mcp/internal/tui"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
 // ensureConfigExists checks if the config file exists.
 // If not, it runs the init wizard to create one.
-func ensureConfigExists(configPath string) (string, error) {
-	if configPath == "" {
-		configPath = workspace.DefaultConfigPath()
-	}
-	if info, statErr := os.Stat(configPath); statErr == nil && info.IsDir() {
-		configPath = workspace.DefaultConfigPath()
+func ensureConfigExists(basePath string) (string, error) {
+	ws, err := workspace.NewFromBase(basePath)
+	if err != nil {
+		return "", fmt.Errorf("workspace: %w", err)
 	}
 
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+	configPath := ws.ConfigPath()
+
+	if ws.ConfigNotExists() {
 		fmt.Printf("\n  Configuration file not found at %s\n", configPath)
 		fmt.Println("  Let's create one first.")
 
-		cfgPath, wsDir, _, err := initmcp.RunTUI()
-		if err != nil {
-			return "", fmt.Errorf("init wizard: %w", err)
+		wsDir := filepath.Dir(configPath)
+		if err := tui.Setup(configPath, wsDir); err != nil {
+			return "", fmt.Errorf("setup: %w", err)
 		}
 
-		fmt.Printf("\n  ✅ Configuration written to: %s\n", cfgPath)
+		fmt.Printf("\n  ✅ Configuration written to: %s\n", configPath)
 		fmt.Printf("  ✅ Workspace initialized at: %s\n", wsDir)
 		fmt.Println()
 
-		return cfgPath, nil
+		return configPath, nil
 	}
 
 	return configPath, nil

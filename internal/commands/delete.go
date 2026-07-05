@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mmadfox/swag2mcp/internal/initmcp"
+	"github.com/mmadfox/swag2mcp/internal/tui"
 )
 
 func newDeleteCmd() *cobra.Command {
@@ -21,26 +21,27 @@ func newDeleteCmd() *cobra.Command {
 }
 
 func newDeleteSpecCmd() *cobra.Command {
-	opts := struct {
-		ConfigPath string
-	}{}
-
 	cmd := &cobra.Command{
-		Use:   "spec",
+		Use:   "spec [path]",
 		Short: "Delete an API specification",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			configPath, err := ensureConfigExists(opts.ConfigPath)
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			basePath := ""
+			if len(args) > 0 {
+				basePath = args[0]
+			}
+
+			configPath, err := ensureConfigExists(basePath)
 			if err != nil {
 				return err
 			}
-			if err := initmcp.DeleteSpecTUI(configPath); err != nil {
+			if err := tui.DeleteSpecTUI(configPath); err != nil {
 				return fmt.Errorf("delete spec: %w", err)
 			}
 			return nil
 		},
 	}
 
-	cmd.Flags().StringVarP(&opts.ConfigPath, "config", "c", "", "Path to configuration file")
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
 
@@ -48,26 +49,27 @@ func newDeleteSpecCmd() *cobra.Command {
 }
 
 func newDeleteCollectionCmd() *cobra.Command {
-	opts := struct {
-		ConfigPath string
-	}{}
-
 	cmd := &cobra.Command{
-		Use:   "collection",
+		Use:   "collection [path]",
 		Short: "Delete a collection from a specification",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			configPath, err := ensureConfigExists(opts.ConfigPath)
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			basePath := ""
+			if len(args) > 0 {
+				basePath = args[0]
+			}
+
+			configPath, err := ensureConfigExists(basePath)
 			if err != nil {
 				return err
 			}
-			if err := initmcp.DeleteCollectionTUI(configPath); err != nil {
+			if err := tui.DeleteCollectionTUI(configPath); err != nil {
 				return fmt.Errorf("delete collection: %w", err)
 			}
 			return nil
 		},
 	}
 
-	cmd.Flags().StringVarP(&opts.ConfigPath, "config", "c", "", "Path to configuration file")
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
 

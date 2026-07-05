@@ -20,6 +20,7 @@ type (
 		TagID        string            `json:"tagId"             jsonschema:"required,Unique identifier for the tag"`
 		CollectionID string            `json:"collectionId"      jsonschema:"required,Unique identifier for the collection"`
 		SpecID       string            `json:"specId"            jsonschema:"required,Unique identifier for the spec"`
+		SpecDomain   string            `json:"specDomain"        jsonschema:"required,Domain of the spec"`
 		Method       string            `json:"method"            jsonschema:"required,HTTP method (GET, POST, etc.)"`
 		Path         string            `json:"path"              jsonschema:"required,API path"`
 		BaseURL      string            `json:"baseUrl"           jsonschema:"required,Base URL of the API"`
@@ -60,6 +61,7 @@ func (s *Service) Inspect(_ context.Context, req InspectRequest) (InspectRespons
 		TagID:        ep.TagID,
 		CollectionID: ep.CollectionID,
 		SpecID:       ep.SpecID,
+		SpecDomain:   spec.Domain,
 		Method:       ep.Name,
 		Path:         ep.Path,
 		Operation:    ep.Operation,

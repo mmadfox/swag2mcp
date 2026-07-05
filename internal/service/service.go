@@ -38,3 +38,8 @@ func New() (*Service, error) {
 func (s *Service) validateRequest(typ any) error {
 	return s.v.Struct(typ)
 }
+
+// Workspace returns the workspace associated with the service.
+func (s *Service) Workspace() *workspace.Workspace {
+	return s.ws
+}

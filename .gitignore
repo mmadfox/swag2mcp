@@ -43,3 +43,4 @@ mcp-swagger-server
 *.log
 .gigacode/
 .agents
+.swag2mcp

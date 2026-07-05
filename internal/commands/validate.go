@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -14,21 +15,34 @@ import (
 
 func newValidateCmd() *cobra.Command {
 	opts := struct {
-		ConfigPath string
-		Tags       string
+		Tags string
 	}{}
 
 	cmd := &cobra.Command{
-		Use:   "validate",
+		Use:   "validate [path]",
 		Short: "Validate the configuration file",
 		Long: `Validate the configuration file and report any issues.
 
-  swag2mcp validate -c ./swag2mcp.yaml
-  swag2mcp validate -c ./swag2mcp.yaml --tags=public,internal`,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			configPath := opts.ConfigPath
-			if configPath == "" {
-				configPath = workspace.DefaultConfigPath()
+  swag2mcp validate              — validate ~/.swag2mcp/swag2mcp.yaml
+  swag2mcp validate ./           — validate ./.swag2mcp/swag2mcp.yaml
+  swag2mcp validate path/to      — validate path/to/.swag2mcp/swag2mcp.yaml
+  swag2mcp validate --tags=public,internal`,
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			basePath := ""
+			if len(args) > 0 {
+				basePath = args[0]
+			}
+
+			ws, err := workspace.NewFromBase(basePath)
+			if err != nil {
+				return fmt.Errorf("workspace: %w", err)
+			}
+
+			configPath := ws.ConfigPath()
+
+			if ws.ConfigNotExists() {
+				return fmt.Errorf("configuration not found at %s", configPath)
 			}
 
 			cfg, err := config.Load(configPath)
@@ -45,7 +59,7 @@ func newValidateCmd() *cobra.Command {
 			}
 
 			validateOpts := config.ValidateOptions{
-				Cache: cache.New(cfg.WorkspaceDir),
+				Cache: cache.New(filepath.Dir(configPath)),
 				Tags:  tags,
 			}
 
@@ -59,7 +73,6 @@ func newValidateCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&opts.ConfigPath, "config", "c", "", "Path to configuration file")
 	cmd.Flags().StringVarP(&opts.Tags, "tags", "t", "", "Filter specs by tags (comma-separated)")
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true

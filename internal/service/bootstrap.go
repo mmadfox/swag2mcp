@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/mmadfox/swag2mcp/internal/config"
@@ -29,7 +30,7 @@ func (s *Service) Bootstrap(_ context.Context, r BootstrapRequest) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	s.makeWorkspaceDir(conf.WorkspaceDir)
+	s.makeWorkspaceDir(filepath.Dir(r.ConfFilepath))
 
 	for spec := range conf.Iterate(filter) {
 		specInfo, serr := s.specFromConfig(spec)
@@ -71,7 +72,7 @@ func (s *Service) Bootstrap(_ context.Context, r BootstrapRequest) error {
 			}
 
 			specDoc, parseErr := specparser.Parse(data)
-			if err != nil {
+			if parseErr != nil {
 				return fmt.Errorf("collection %q: parse spec: %w", col.Location, parseErr)
 			}
 			if len(colInfo.LLMTitle) == 0 && len(specDoc.Title) > 0 {
@@ -179,7 +180,7 @@ func (s *Service) makeWorkspaceDir(workspaceDir string) {
 	if err := s.ws.Init(); err != nil {
 		return
 	}
-	s.cache.SetCacheDir(s.ws.CacheDir())
+	s.cache.SetWorkspaceDir(s.ws.Root())
 }
 
 func (s *Service) indexSpec(

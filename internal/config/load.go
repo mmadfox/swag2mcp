@@ -47,10 +47,6 @@ func loadPath(filepathSpec string) (*Config, error) {
 		return nil, fmt.Errorf("failed to parse config file '%s': %w", filepathSpec, parseErr)
 	}
 
-	if defaultErr := cfg.SetDefaults(); defaultErr != nil {
-		return nil, fmt.Errorf("failed to set defaults: %w", defaultErr)
-	}
-
 	return &cfg, nil
 }
 
@@ -80,10 +76,6 @@ func loadFromHTTPURL(urlStr string) (*Config, error) {
 	var cfg Config
 	if parseErr := yaml.Unmarshal(data, &cfg); parseErr != nil {
 		return nil, fmt.Errorf("failed to parse YAML from URL '%s': %w", urlStr, parseErr)
-	}
-
-	if defaultErr := cfg.SetDefaults(); defaultErr != nil {
-		return nil, fmt.Errorf("failed to set defaults: %w", defaultErr)
 	}
 
 	return &cfg, nil
@@ -125,10 +117,6 @@ func loadFromAbsolutePath(path string) (*Config, error) {
 	var cfg Config
 	if parseErr := yaml.Unmarshal(data, &cfg); parseErr != nil {
 		return nil, fmt.Errorf("failed to parse config file at absolute path '%s': %w", path, parseErr)
-	}
-
-	if defaultErr := cfg.SetDefaults(); defaultErr != nil {
-		return nil, fmt.Errorf("failed to set defaults: %w", defaultErr)
 	}
 
 	return &cfg, nil

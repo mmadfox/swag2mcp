@@ -1,4 +1,4 @@
-package initmcp
+package tui
 
 import (
 	"os"
@@ -20,7 +20,7 @@ func TestBuildConfigYAML(t *testing.T) {
 		},
 	}
 
-	data, err := BuildConfigYAML("/tmp/ws", specs)
+	data, err := BuildConfigYAML(specs)
 	if err != nil {
 		t.Fatalf("BuildConfigYAML() error = %v", err)
 	}
@@ -56,7 +56,7 @@ func TestBuildConfigYAML_WithAuth(t *testing.T) {
 		},
 	}
 
-	data, err := BuildConfigYAML("/tmp/ws", specs)
+	data, err := BuildConfigYAML(specs)
 	if err != nil {
 		t.Fatalf("BuildConfigYAML() error = %v", err)
 	}
@@ -83,7 +83,7 @@ func TestBuildConfigYAML_NoAuth(t *testing.T) {
 		},
 	}
 
-	data, err := BuildConfigYAML("/tmp/ws", specs)
+	data, err := BuildConfigYAML(specs)
 	if err != nil {
 		t.Fatalf("BuildConfigYAML() error = %v", err)
 	}
@@ -104,7 +104,7 @@ func TestBuildConfigYAML_NoAuth(t *testing.T) {
 }
 
 func TestBuildConfigYAML_EmptySpecs(t *testing.T) {
-	data, err := BuildConfigYAML("/tmp/ws", nil)
+	data, err := BuildConfigYAML(nil)
 	if err != nil {
 		t.Fatalf("BuildConfigYAML() error = %v", err)
 	}
@@ -114,14 +114,14 @@ func TestBuildConfigYAML_EmptySpecs(t *testing.T) {
 	}
 }
 
-func TestBuildConfigYAML_WorkspaceDir(t *testing.T) {
-	data, err := BuildConfigYAML("/custom/ws", nil)
+func TestBuildConfigYAML_NoWorkspaceDir(t *testing.T) {
+	data, err := BuildConfigYAML(nil)
 	if err != nil {
 		t.Fatalf("BuildConfigYAML() error = %v", err)
 	}
 	content := string(data)
-	if !strings.Contains(content, "workspace_dir: \"/custom/ws\"") {
-		t.Errorf("missing workspace_dir, got:\n%s", content)
+	if strings.Contains(content, "workspace_dir") {
+		t.Errorf("unexpected workspace_dir in output:\n%s", content)
 	}
 }
 

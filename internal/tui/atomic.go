@@ -1,4 +1,4 @@
-package initmcp
+package tui
 
 import (
 	"fmt"

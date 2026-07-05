@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -12,18 +14,36 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/server/mcp"
 	"github.com/mmadfox/swag2mcp/internal/service"
+	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
 func newMCPCmd(version string) *cobra.Command {
 	opts := struct {
-		ConfigFile string
-		Logfile    string
+		Logfile string
+		Tags    string
 	}{}
 
 	cmd := &cobra.Command{
-		Use:   "mcp [mcp-flags]",
+		Use:   "mcp [path]",
 		Short: "Start the swag2mcp server in headless mode",
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			basePath := ""
+			if len(args) > 0 {
+				basePath = args[0]
+			}
+
+			ws, err := workspace.NewFromBase(basePath)
+			if err != nil {
+				return fmt.Errorf("workspace: %w", err)
+			}
+
+			configFile := ws.ConfigPath()
+
+			if ws.ConfigNotExists() {
+				return fmt.Errorf("configuration not found at %s", configFile)
+			}
+
 			var logWriter io.Writer
 			if len(opts.Logfile) > 0 {
 				f, logErr := os.Create(opts.Logfile)
@@ -34,15 +54,21 @@ func newMCPCmd(version string) *cobra.Command {
 				logWriter = f
 			}
 
-			if opts.ConfigFile != "" {
-				cfg, loadErr := config.Load(opts.ConfigFile)
-				if loadErr == nil {
-					validateOpts := config.ValidateOptions{
-						Cache: cache.New(cfg.WorkspaceDir),
-					}
-					if err := config.ValidateConfig(cfg, validateOpts); err != nil {
-						fmt.Fprintf(os.Stderr, "⚠️  Configuration warnings:\n%s\n", err)
-					}
+			cfg, loadErr := config.Load(configFile)
+			if loadErr == nil {
+				validateOpts := config.ValidateOptions{
+					Cache: cache.New(filepath.Dir(configFile)),
+				}
+				if err := config.ValidateConfig(cfg, validateOpts); err != nil {
+					fmt.Fprintf(os.Stderr, "⚠️  Configuration warnings:\n%s\n", err)
+				}
+			}
+
+			var tags []string
+			if opts.Tags != "" {
+				tags = strings.Split(opts.Tags, ",")
+				for i := range tags {
+					tags[i] = strings.TrimSpace(tags[i])
 				}
 			}
 
@@ -52,7 +78,8 @@ func newMCPCmd(version string) *cobra.Command {
 			}
 
 			if bootErr := svc.Bootstrap(cmd.Context(), service.BootstrapRequest{
-				ConfFilepath: opts.ConfigFile,
+				ConfFilepath: configFile,
+				Tags:         tags,
 			}); bootErr != nil {
 				return fmt.Errorf("failed to bootstrap service: %w", bootErr)
 			}
@@ -70,9 +97,8 @@ func newMCPCmd(version string) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&opts.ConfigFile, "config", "c", "", "Path to configuration file")
 	cmd.Flags().StringVarP(&opts.Logfile, "logfile", "f", "", "Filename to log to; if unset, logs to stderr")
-
+	cmd.Flags().StringVarP(&opts.Tags, "tags", "t", "", "Filter specs by tags (comma-separated)")
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
 

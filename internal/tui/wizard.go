@@ -1,4 +1,4 @@
-package initmcp
+package tui
 
 import (
 	"bytes"
@@ -111,8 +111,7 @@ type CollectionInput struct {
 
 // templateData is passed to the config YAML template.
 type templateData struct {
-	WorkspaceDir string
-	Specs        []SpecInput
+	Specs []SpecInput
 }
 
 // hint holds the title, description, placeholder, and validation rules for a wizard step.
@@ -615,7 +614,7 @@ func RunTUI() (configPath, workspaceDir string, specs []SpecInput, err error) {
 }
 
 // BuildConfigYAML renders the config YAML from the template and collected data.
-func BuildConfigYAML(workspaceDir string, specs []SpecInput) ([]byte, error) {
+func BuildConfigYAML(specs []SpecInput) ([]byte, error) {
 	tmpl, err := template.New("config").Parse(configTemplate)
 	if err != nil {
 		return nil, fmt.Errorf("parse template: %w", err)
@@ -623,8 +622,7 @@ func BuildConfigYAML(workspaceDir string, specs []SpecInput) ([]byte, error) {
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, templateData{
-		WorkspaceDir: workspaceDir,
-		Specs:        specs,
+		Specs: specs,
 	}); err != nil {
 		return nil, fmt.Errorf("execute template: %w", err)
 	}
@@ -643,7 +641,7 @@ func WriteResult(configPath, workspaceDir string, specs []SpecInput) error {
 		return fmt.Errorf("create config dir: %w", err)
 	}
 
-	data, err := BuildConfigYAML(workspaceDir, specs)
+	data, err := BuildConfigYAML(specs)
 	if err != nil {
 		return fmt.Errorf("build config: %w", err)
 	}

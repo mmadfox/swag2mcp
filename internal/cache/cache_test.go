@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func TestResolve_localPath(t *testing.T) {
+func TestResolve_localPathOutsideSpecs(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
 	specFile := filepath.Join(dir, "spec.yaml")
@@ -25,12 +25,99 @@ func TestResolve_localPath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got != specFile {
-		t.Errorf("got %q, want %q", got, specFile)
+
+	// Should return a path inside the cache directory
+	cacheDir := filepath.Join(dir, CacheDirName)
+	if !stringsHasPrefix(got, cacheDir) {
+		t.Errorf("expected path in cache dir %q, got %q", cacheDir, got)
+	}
+
+	data, err := os.ReadFile(got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != "hello" {
+		t.Errorf("got content %q, want %q", string(data), "hello")
 	}
 }
 
-func TestResolve_fileURL(t *testing.T) {
+func TestResolve_localPathInsideSpecs(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	specsDir := filepath.Join(dir, SpecsDirName)
+	if err := os.MkdirAll(specsDir, 0750); err != nil {
+		t.Fatal(err)
+	}
+	specFile := filepath.Join(specsDir, "spec.yaml")
+	if err := os.WriteFile(specFile, []byte("hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	c := New(dir)
+
+	got, err := c.Resolve(specFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Should return the original path, not cached
+	if got != specFile {
+		t.Errorf("expected original path %q, got %q", specFile, got)
+	}
+}
+
+func TestResolve_localPathSpecsRelative(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	wsDir := filepath.Join(dir, ".swag2mcp")
+	specsDir := filepath.Join(wsDir, SpecsDirName)
+	if err := os.MkdirAll(specsDir, 0750); err != nil {
+		t.Fatal(err)
+	}
+	specFile := filepath.Join(specsDir, "layers.yaml")
+	if err := os.WriteFile(specFile, []byte("data"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	c := New(wsDir)
+
+	got, err := c.Resolve("specs/layers.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Should resolve to workspaceDir/specs/layers.yaml and return as-is (not cached)
+	if got != specFile {
+		t.Errorf("expected %q, got %q", specFile, got)
+	}
+}
+
+func TestResolve_localPathSpecsRelativeNested(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	wsDir := filepath.Join(dir, ".swag2mcp")
+	specsDir := filepath.Join(wsDir, SpecsDirName, "subdir")
+	if err := os.MkdirAll(specsDir, 0750); err != nil {
+		t.Fatal(err)
+	}
+	specFile := filepath.Join(specsDir, "api.yaml")
+	if err := os.WriteFile(specFile, []byte("data"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	c := New(wsDir)
+
+	got, err := c.Resolve("specs/subdir/api.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got != specFile {
+		t.Errorf("expected %q, got %q", specFile, got)
+	}
+}
+
+func TestResolve_fileURLOutsideSpecs(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
 	specFile := filepath.Join(dir, "spec.yaml")
@@ -44,8 +131,43 @@ func TestResolve_fileURL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	cacheDir := filepath.Join(dir, CacheDirName)
+	if !stringsHasPrefix(got, cacheDir) {
+		t.Errorf("expected path in cache dir %q, got %q", cacheDir, got)
+	}
+
+	data, err := os.ReadFile(got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != "hello" {
+		t.Errorf("got content %q, want %q", string(data), "hello")
+	}
+}
+
+func TestResolve_fileURLInsideSpecs(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	specsDir := filepath.Join(dir, SpecsDirName)
+	if err := os.MkdirAll(specsDir, 0750); err != nil {
+		t.Fatal(err)
+	}
+	specFile := filepath.Join(specsDir, "spec.yaml")
+	if err := os.WriteFile(specFile, []byte("hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	c := New(dir)
+
+	got, err := c.Resolve("file://" + specFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Should return the original path, not cached
 	if got != specFile {
-		t.Errorf("got %q, want %q", got, specFile)
+		t.Errorf("expected original path %q, got %q", specFile, got)
 	}
 }
 
@@ -85,6 +207,17 @@ func TestResolve_downloadAndCache(t *testing.T) {
 	metaPath := got[:len(got)-len(".spec")] + ".meta"
 	if _, statErr := os.Stat(metaPath); statErr != nil {
 		t.Errorf("meta file not found: %v", statErr)
+	}
+
+	meta, readErr := readMeta(metaPath)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	if meta.Source != srv.URL {
+		t.Errorf("got source %q, want %q", meta.Source, srv.URL)
+	}
+	if meta.SourceType != "url" {
+		t.Errorf("got source_type %q, want %q", meta.SourceType, "url")
 	}
 }
 
@@ -150,9 +283,10 @@ func TestResolve_reDownloadAfterExpiry(t *testing.T) {
 	hash := cacheKey(srv.URL)
 	metaPath := filepath.Join(c.dir, hash+".meta")
 	if mErr := writeMeta(metaPath, fileMeta{
-		URL:      srv.URL,
-		CachedAt: time.Now().Add(-2 * MaxTTL),
-		TTLSec:   60,
+		Source:     srv.URL,
+		SourceType: "url",
+		CachedAt:   time.Now().Add(-2 * MaxTTL),
+		TTLSec:     60,
 	}); mErr != nil {
 		t.Fatal(mErr)
 	}
@@ -212,12 +346,121 @@ func TestResolve_cacheDirCreated(t *testing.T) {
 	}
 }
 
+func TestResolve_localFileOutsideSpecsCaching(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	specFile := filepath.Join(dir, "spec.yaml")
+	if err := os.WriteFile(specFile, []byte("hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	c := New(dir)
+
+	got, err := c.Resolve(specFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Meta file should exist
+	metaPath := got[:len(got)-len(".spec")] + ".meta"
+	meta, readErr := readMeta(metaPath)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	if meta.SourceType != "local" {
+		t.Errorf("got source_type %q, want %q", meta.SourceType, "local")
+	}
+	if meta.ModTime.IsZero() {
+		t.Error("expected non-zero mod_time for local file")
+	}
+}
+
+func TestResolve_localFileOutsideSpecsServeFromCache(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	specFile := filepath.Join(dir, "spec.yaml")
+	if err := os.WriteFile(specFile, []byte("hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	c := New(dir)
+
+	// First call — cache
+	got1, err := c.Resolve(specFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Second call — should serve from cache (file unchanged)
+	got2, err := c.Resolve(specFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got1 != got2 {
+		t.Errorf("expected same cache path, got %q and %q", got1, got2)
+	}
+
+	data, err := os.ReadFile(got2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != "hello" {
+		t.Errorf("got %q, want %q", string(data), "hello")
+	}
+}
+
+func TestResolve_localFileOutsideSpecsReCacheOnModtimeChange(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	specFile := filepath.Join(dir, "spec.yaml")
+	if err := os.WriteFile(specFile, []byte("hello"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	c := New(dir)
+
+	// First call — cache
+	got1, err := c.Resolve(specFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Modify the file
+	if err = os.WriteFile(specFile, []byte("world"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Second call — should re-cache because modtime changed
+	got2, err := c.Resolve(specFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Path should be the same (same hash key), but content updated
+	if got1 != got2 {
+		t.Errorf("expected same cache path, got %q and %q", got1, got2)
+	}
+
+	data, err := os.ReadFile(got2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != "world" {
+		t.Errorf("got %q, want %q", string(data), "world")
+	}
+}
+
 func TestNew(t *testing.T) {
 	t.Parallel()
 	c := New("/tmp/swag2mcp")
 	expected := filepath.Join("/tmp/swag2mcp", CacheDirName)
 	if c.dir != expected {
 		t.Errorf("got dir %q, want %q", c.dir, expected)
+	}
+	expectedSpecs := filepath.Join("/tmp/swag2mcp", SpecsDirName)
+	if c.specsDir != expectedSpecs {
+		t.Errorf("got specsDir %q, want %q", c.specsDir, expectedSpecs)
 	}
 }
 
@@ -244,9 +487,10 @@ func TestMeta(t *testing.T) {
 	metaPath := filepath.Join(dir, "test.meta")
 
 	m := fileMeta{
-		URL:      "https://example.com/spec",
-		CachedAt: time.Now(),
-		TTLSec:   3600,
+		Source:     "https://example.com/spec",
+		SourceType: "url",
+		CachedAt:   time.Now(),
+		TTLSec:     3600,
 	}
 	if err := writeMeta(metaPath, m); err != nil {
 		t.Fatal(err)
@@ -257,8 +501,11 @@ func TestMeta(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if got.URL != m.URL {
-		t.Errorf("got URL %q, want %q", got.URL, m.URL)
+	if got.Source != m.Source {
+		t.Errorf("got Source %q, want %q", got.Source, m.Source)
+	}
+	if got.SourceType != m.SourceType {
+		t.Errorf("got SourceType %q, want %q", got.SourceType, m.SourceType)
 	}
 	if got.TTLSec != m.TTLSec {
 		t.Errorf("got TTL %d, want %d", got.TTLSec, m.TTLSec)
@@ -355,6 +602,25 @@ func TestExists_localFileExists(t *testing.T) {
 
 	c := New(dir)
 	if err := c.Exists(specFile); err != nil {
+		t.Errorf("expected nil, got %v", err)
+	}
+}
+
+func TestExists_localFileSpecsRelative(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	wsDir := filepath.Join(dir, ".swag2mcp")
+	specsDir := filepath.Join(wsDir, SpecsDirName)
+	if err := os.MkdirAll(specsDir, 0750); err != nil {
+		t.Fatal(err)
+	}
+	specFile := filepath.Join(specsDir, "layers.yaml")
+	if err := os.WriteFile(specFile, []byte("data"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	c := New(wsDir)
+	if err := c.Exists("specs/layers.yaml"); err != nil {
 		t.Errorf("expected nil, got %v", err)
 	}
 }
@@ -517,4 +783,10 @@ func TestExists_LocationErrorFields(t *testing.T) {
 	if locErr.Err == nil {
 		t.Fatal("expected non-nil Err")
 	}
+}
+
+// stringsHasPrefix is a helper to avoid importing strings in tests
+// for a single call.
+func stringsHasPrefix(s, prefix string) bool {
+	return len(s) >= len(prefix) && s[:len(prefix)] == prefix
 }

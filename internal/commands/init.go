@@ -3,77 +3,80 @@ package commands
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
-	"github.com/mmadfox/swag2mcp/internal/initmcp"
+	"github.com/mmadfox/swag2mcp/internal/tui"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
 func newInitCmd() *cobra.Command {
 	opts := struct {
-		ConfigPath   string
-		WorkspaceDir string
-		Force        bool
+		Interactive bool
+		Force       bool
 	}{}
 
 	cmd := &cobra.Command{
-		Use:   "init",
+		Use:   "init [path]",
 		Short: "Initialize workspace and configuration",
 		Long: `Initialize workspace and configuration.
 
-Without flags, starts an interactive wizard that guides you through
-setting up the workspace and adding API specifications.
+  swag2mcp init              — create ~/.swag2mcp/swag2mcp.yaml
+  swag2mcp init ./           — create ./.swag2mcp/swag2mcp.yaml
+  swag2mcp init path/to      — create path/to/.swag2mcp/swag2mcp.yaml
+  swag2mcp init -i           — interactive wizard
+  swag2mcp init -f           — force overwrite existing configuration`,
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			basePath := "."
+			if len(args) > 0 {
+				basePath = args[0]
+			}
 
-With --config-path and --workspace-dir, creates the workspace and
-writes the example configuration file non-interactively.
+			absBase, err := filepath.Abs(basePath)
+			if err != nil {
+				return fmt.Errorf("resolve path: %w", err)
+			}
 
-Use --force to overwrite an existing configuration.`,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			hasFlags := opts.ConfigPath != "" || opts.WorkspaceDir != ""
+			workspaceDir := filepath.Join(absBase, workspace.DefaultRootName)
+			configPath := workspace.ConfigPathIn(workspaceDir)
 
-			if hasFlags {
-				if opts.ConfigPath == "" {
-					opts.ConfigPath = workspace.DefaultConfigPath()
-				}
-				if opts.WorkspaceDir == "" {
-					opts.WorkspaceDir = workspace.DefaultRoot()
-				}
+			if opts.Interactive {
 				if !opts.Force {
-					if _, err := os.Stat(opts.ConfigPath); err == nil {
-						return fmt.Errorf("configuration already exists at %s\n  Use --force to overwrite", opts.ConfigPath)
+					if _, err := os.Stat(configPath); err == nil {
+						return fmt.Errorf("configuration already exists at %s\n  Use --force to overwrite", configPath)
 					}
 				}
-				if err := initmcp.Setup(opts.ConfigPath, opts.WorkspaceDir); err != nil {
-					return fmt.Errorf("init: %w", err)
+
+				cfgPath, wsDir, _, err := tui.RunTUI()
+				if err != nil {
+					return fmt.Errorf("init wizard: %w", err)
 				}
-				cmd.Printf("Configuration written to %s\n", opts.ConfigPath)
-				cmd.Printf("Workspace initialized at %s\n", opts.WorkspaceDir)
+
+				cmd.Printf("\n✅ Configuration written to: %s\n", cfgPath)
+				cmd.Printf("✅ Workspace initialized at: %s\n", wsDir)
+				cmd.Println("Run `swag2mcp mcp` to start the server.")
 				return nil
 			}
 
 			if !opts.Force {
-				configPath := workspace.DefaultConfigPath()
 				if _, err := os.Stat(configPath); err == nil {
 					return fmt.Errorf("configuration already exists at %s\n  Use --force to overwrite", configPath)
 				}
 			}
 
-			configPath, workspaceDir, _, err := initmcp.RunTUI()
-			if err != nil {
-				return fmt.Errorf("init wizard: %w", err)
+			if err := tui.Setup(configPath, workspaceDir); err != nil {
+				return fmt.Errorf("init: %w", err)
 			}
 
-			cmd.Printf("\n  ✅ Configuration written to: %s\n", configPath)
-			cmd.Printf("  ✅ Workspace initialized at: %s\n", workspaceDir)
-			cmd.Println("  Run `swag2mcp mcp` to start the server.")
-
+			cmd.Printf("✅ Configuration written to %s\n", configPath)
+			cmd.Printf("✅ Workspace initialized at %s\n", workspaceDir)
 			return nil
 		},
 	}
 
-	cmd.Flags().StringVarP(&opts.ConfigPath, "config-path", "c", "", "Path to write the configuration file (non-interactive)")
-	cmd.Flags().StringVarP(&opts.WorkspaceDir, "workspace-dir", "w", "", "Workspace directory path (non-interactive)")
+	cmd.Flags().BoolVarP(&opts.Interactive, "interactive", "i", false, "Run interactive wizard")
 	cmd.Flags().BoolVarP(&opts.Force, "force", "f", false, "Overwrite existing configuration")
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true

@@ -13,6 +13,7 @@ type Workspace struct {
 
 // New creates a Workspace rooted at the given directory.
 // If root is empty, it defaults to ~/.swag2mcp.
+// If root is a relative path, it is resolved to an absolute path.
 func New(root string) (*Workspace, error) {
 	if root == "" {
 		home, err := os.UserHomeDir()
@@ -20,8 +21,27 @@ func New(root string) (*Workspace, error) {
 			return nil, fmt.Errorf("cannot determine home directory: %w", err)
 		}
 		root = filepath.Join(home, DefaultRootName)
+	} else {
+		absRoot, err := filepath.Abs(root)
+		if err != nil {
+			return nil, fmt.Errorf("resolve path: %w", err)
+		}
+		root = absRoot
 	}
 	return &Workspace{root: root}, nil
+}
+
+// NewFromBase creates a Workspace rooted at base/.swag2mcp.
+// If base is empty, it defaults to ~/.swag2mcp.
+func NewFromBase(base string) (*Workspace, error) {
+	if base == "" {
+		return New("")
+	}
+	abs, err := filepath.Abs(base)
+	if err != nil {
+		return nil, fmt.Errorf("resolve path: %w", err)
+	}
+	return New(filepath.Join(abs, DefaultRootName))
 }
 
 // Init creates the workspace root and all standard subdirectories.
@@ -60,6 +80,27 @@ func DefaultConfigPath() string {
 	return filepath.Join(DefaultRoot(), "swag2mcp.yaml")
 }
 
+// ConfigPathIn returns the config path inside a given workspace directory.
+func ConfigPathIn(workspaceDir string) string {
+	return filepath.Join(workspaceDir, "swag2mcp.yaml")
+}
+
+// ConfigPath returns the config file path inside this workspace.
+func (w *Workspace) ConfigPath() string {
+	return ConfigPathIn(w.root)
+}
+
+// ConfigExists checks whether the config file exists in this workspace.
+func (w *Workspace) ConfigExists() bool {
+	_, err := os.Stat(w.ConfigPath())
+	return err == nil
+}
+
+// ConfigNotExists checks whether the config file does NOT exist in this workspace.
+func (w *Workspace) ConfigNotExists() bool {
+	return !w.ConfigExists()
+}
+
 // Sub returns the path to a named subdirectory inside the workspace.
 func (w *Workspace) Sub(name string) string {
 	return filepath.Join(w.root, name)
@@ -83,4 +124,38 @@ func (w *Workspace) ResponsesDir() string {
 // AuthScriptsDir returns the path to the auth scripts subdirectory.
 func (w *Workspace) AuthScriptsDir() string {
 	return w.Sub(DirAuthScripts)
+}
+
+// Clean removes all contents of cache/ and responses/ directories
+// without removing the directories themselves.
+func (w *Workspace) Clean() error {
+	dirs := []string{
+		w.CacheDir(),
+		w.ResponsesDir(),
+	}
+	for _, dir := range dirs {
+		if err := removeContents(dir); err != nil {
+			return fmt.Errorf("clean %s: %w", filepath.Base(dir), err)
+		}
+	}
+	return nil
+}
+
+// removeContents removes all files and subdirectories inside dir,
+// but keeps the directory itself.
+func removeContents(dir string) error {
+	entries, err := os.ReadDir(dir)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		p := filepath.Join(dir, entry.Name())
+		if rErr := os.RemoveAll(p); rErr != nil {
+			return rErr
+		}
+	}
+	return nil
 }

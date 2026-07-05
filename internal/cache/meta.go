@@ -8,9 +8,11 @@ import (
 )
 
 type fileMeta struct {
-	URL      string    `json:"url"`
-	CachedAt time.Time `json:"cached_at"`
-	TTLSec   int       `json:"ttl_sec"`
+	Source     string    `json:"source"`
+	SourceType string    `json:"source_type"` // "url" or "local"
+	CachedAt   time.Time `json:"cached_at"`
+	ModTime    time.Time `json:"mod_time"`
+	TTLSec     int       `json:"ttl_sec"`
 }
 
 func (m fileMeta) IsExpired() bool {

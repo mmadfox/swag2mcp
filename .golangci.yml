@@ -465,37 +465,37 @@ linters:
       - path: 'internal/cache/cache\.go'
         text: 'G404'
         linters: [ gosec ]
-      # CLI output functions are allowed in commands and initmcp packages
+      # CLI output functions are allowed in commands and tui packages
       - path: 'internal/commands/'
         linters: [ forbidigo ]
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ forbidigo ]
       # Bubbletea models need exhaustive switch cases
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ exhaustive ]
       # TUI code has long View functions
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ funlen ]
       # TUI code has high cognitive complexity
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ gocognit ]
       # TUI code has high cyclomatic complexity
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ gocyclo ]
       # TUI code has nested ifs
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ nestif ]
       # Global variable for auth methods list
-      - path: 'internal/initmcp/wizard\.go'
+      - path: 'internal/tui/wizard\.go'
         linters: [ gochecknoglobals ]
       # Named returns in TUI
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ nonamedreturns ]
       # Duplicate code in add spec/collection commands
       - path: 'internal/commands/add\.go'
         linters: [ dupl ]
       # Repeated strings in TUI
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ goconst ]
       # Repeated strings in cache and config
       - path: 'internal/cache/'
@@ -503,29 +503,29 @@ linters:
       - path: 'internal/config/'
         linters: [ goconst ]
       # fmt.Sprintf in TUI
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ perfsprint ]
       # fmt.Errorf in TUI
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ perfsprint ]
       # Magic number 127 in headerLine
-      - path: 'internal/initmcp/wizard\.go'
+      - path: 'internal/tui/wizard\.go'
         text: '127'
         linters: [ mnd ]
       # intrange in headerLine
-      - path: 'internal/initmcp/wizard\.go'
+      - path: 'internal/tui/wizard\.go'
         linters: [ intrange ]
       # modernize SplitSeq
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ modernize ]
       # modernize in config validator
       - path: 'internal/config/validator\.go'
         linters: [ modernize ]
       # musttag for yaml.Unmarshal
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ musttag ]
       # golines formatting
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ golines ]
       - path: 'internal/commands/'
         linters: [ golines ]
@@ -538,13 +538,13 @@ linters:
       - path: 'internal/config/example\.go'
         linters: [ embeddedstructfieldcheck ]
       # godoclint os.Rename link
-      - path: 'internal/initmcp/atomic\.go'
+      - path: 'internal/tui/atomic\.go'
         linters: [ godoclint ]
       # errcheck for Scanln/Scanf in TUI
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ errcheck ]
       # govet shadow in TUI and commands
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ govet ]
       - path: 'internal/commands/'
         linters: [ govet ]
@@ -553,7 +553,7 @@ linters:
       - path: 'internal/workspace/workspace_test\.go'
         linters: [ govet ]
       # gocritic appendAssign in delete
-      - path: 'internal/initmcp/delete\.go'
+      - path: 'internal/tui/delete\.go'
         linters: [ gocritic ]
       # gocognit in init command
       - path: 'internal/commands/init\.go'
@@ -570,10 +570,10 @@ linters:
       - path: 'internal/commands/'
         linters: [ nestif ]
       # cyclop in TUI
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ cyclop ]
       # gosec for Scanln/Scanf in TUI
-      - path: 'internal/initmcp/'
+      - path: 'internal/tui/'
         linters: [ gosec ]
       # paralleltest in test files
       - path: '_test\.go'
