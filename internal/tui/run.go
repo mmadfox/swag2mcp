@@ -165,9 +165,8 @@ func (m runModel) handleBack() (tea.Model, tea.Cmd) {
 	case runBrowseEndpoints:
 		return m.loadTags(m.selectedColl.ID)
 	case runEndpointDetail:
-		m.state = runBrowseEndpoints
-		m.input.Focus()
-		return m, textinput.Blink
+		m.state = runMenu
+		return m, nil
 	}
 	return m, nil
 }
@@ -477,7 +476,7 @@ func (m runModel) View() string {
 				s += fmt.Sprintf("  %s\n\n", m.msg)
 			}
 
-			s += "  [S]how JSON  [B]ack  [M]enu\n"
+			s += "  [S]how JSON  [M]enu\n"
 		}
 	}
 
