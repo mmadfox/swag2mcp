@@ -83,6 +83,8 @@ func (m runModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.handleEnter()
 		case "b", "B":
 			return m.handleBack()
+		case "M":
+			return m.handleMenu()
 		case "s", "S":
 			if m.state == runEndpointDetail {
 				return m.showEndpoint()
@@ -95,32 +97,15 @@ func (m runModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.input.Focus()
 				return m, textinput.Blink
 			}
-			return m.handleDigit("1")
 		case "2":
 			if m.state == runMenu {
 				return m.loadSpecs()
 			}
-			return m.handleDigit("2")
 		case "3":
 			if m.state == runMenu {
 				m.state = runDone
 				return m, tea.Quit
 			}
-			return m.handleDigit("3")
-		case "4":
-			return m.handleDigit("4")
-		case "5":
-			return m.handleDigit("5")
-		case "6":
-			return m.handleDigit("6")
-		case "7":
-			return m.handleDigit("7")
-		case "8":
-			return m.handleDigit("8")
-		case "9":
-			return m.handleDigit("9")
-		case "0":
-			return m.handleDigit("0")
 		}
 	}
 
@@ -130,15 +115,6 @@ func (m runModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.input, cmd = m.input.Update(msg)
 	return m, cmd
-}
-
-func (m runModel) handleDigit(digit string) (tea.Model, tea.Cmd) {
-	switch m.state {
-	case runSearchResults, runBrowseSpecs, runBrowseCollections, runBrowseTags, runBrowseEndpoints:
-		m.input.SetValue(digit)
-		return m.handleEnter()
-	}
-	return m, nil
 }
 
 func (m runModel) handleEnter() (tea.Model, tea.Cmd) {
@@ -173,7 +149,13 @@ func (m runModel) handleEnter() (tea.Model, tea.Cmd) {
 func (m runModel) handleBack() (tea.Model, tea.Cmd) {
 	m.msg = ""
 	switch m.state {
-	case runSearchResults, runBrowseSpecs:
+	case runSearchQuery:
+		return m, nil
+	case runSearchResults:
+		m.input.SetValue("")
+		m.state = runSearchQuery
+		return m, nil
+	case runBrowseSpecs:
 		m.state = runMenu
 		return m, nil
 	case runBrowseCollections:
@@ -190,6 +172,13 @@ func (m runModel) handleBack() (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (m runModel) handleMenu() (tea.Model, tea.Cmd) {
+	m.msg = ""
+	m.input.SetValue("")
+	m.state = runMenu
+	return m, nil
+}
+
 func (m runModel) doSearch(query string) (tea.Model, tea.Cmd) {
 	results, err := m.svc.Search(context.Background(), service.SearchRequest{
 		Query: query,
@@ -200,6 +189,8 @@ func (m runModel) doSearch(query string) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.searchResults = results.Endpoints
+	m.input.SetValue("")
+	m.input.Focus()
 	m.state = runSearchResults
 	return m, nil
 }
@@ -221,6 +212,8 @@ func (m runModel) loadSpecs() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.specs = specs.Specs
+	m.input.SetValue("")
+	m.input.Focus()
 	m.state = runBrowseSpecs
 	return m, nil
 }
@@ -241,6 +234,8 @@ func (m runModel) loadCollections(specID string) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.collections = collections.Collections
+	m.input.SetValue("")
+	m.input.Focus()
 	m.state = runBrowseCollections
 	return m, nil
 }
@@ -264,6 +259,8 @@ func (m runModel) loadTags(collectionID string) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.tags = tags.Tags
+	m.input.SetValue("")
+	m.input.Focus()
 	m.state = runBrowseTags
 	return m, nil
 }
@@ -284,6 +281,8 @@ func (m runModel) loadEndpoints(tagID string) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.endpoints = endpoints.Endpoints
+	m.input.SetValue("")
+	m.input.Focus()
 	m.state = runBrowseEndpoints
 	return m, nil
 }
@@ -367,9 +366,16 @@ func (m runModel) View() string {
 	case runSearchQuery:
 		s += "  Search endpoints\n"
 		s += "  ────────────────\n\n"
+		s += "  Search fields like method:GET, tag:auth, or path:/users\n"
+		s += "  using + for required matches and - to exclude.\n"
+		s += "  Use wildcards (*), exact phrases (\"...\"), or fuzzy matching (~)\n"
+		s += "  for advanced filtering.\n\n"
+		s += "  Examples:\n"
+		s += "    +method:POST +tag:user | path:*/v2/* -deprecated\n"
+		s += "    summary:\"login\"~\n\n"
 		s += "  Enter a search query:\n\n"
 		s += "  " + m.input.View() + "\n\n"
-		s += "  Press Enter to search, Esc to go back.\n"
+		s += "  Press Enter to search, [B]ack  [M]enu.\n"
 
 	case runSearchResults:
 		s += fmt.Sprintf("  Search results (%d):\n", len(m.searchResults))
@@ -378,7 +384,8 @@ func (m runModel) View() string {
 			s += fmt.Sprintf("  %d. %-6s %s\n", i+1, ep.Method, ep.Path)
 			s += fmt.Sprintf("     %s (%s)\n", ep.Summary, ep.SpecDomain)
 		}
-		s += "\n  Enter number to select, [B]ack.\n"
+		s += "\n  " + m.input.View() + "\n\n"
+		s += "  Enter number and press Enter.  [B]ack  [M]enu.\n"
 
 	case runBrowseSpecs:
 		s += "  Specifications:\n"
@@ -386,7 +393,8 @@ func (m runModel) View() string {
 		for i, sp := range m.specs {
 			s += fmt.Sprintf("  %d. %s\n", i+1, sp.Domain)
 		}
-		s += "\n  Enter number to select, [B]ack.\n"
+		s += "\n  " + m.input.View() + "\n\n"
+		s += "  Enter number and press Enter.  [B]ack  [M]enu.\n"
 
 	case runBrowseCollections:
 		s += fmt.Sprintf("  Collections for \"%s\":\n", m.selectedSpec.Domain)
@@ -394,7 +402,8 @@ func (m runModel) View() string {
 		for i, col := range m.collections {
 			s += fmt.Sprintf("  %d. %s (%d tags, %d methods)\n", i+1, col.Title, col.CountTags, col.CountMethods)
 		}
-		s += "\n  Enter number to select, [B]ack.\n"
+		s += "\n  " + m.input.View() + "\n\n"
+		s += "  Enter number and press Enter.  [B]ack  [M]enu.\n"
 
 	case runBrowseTags:
 		s += fmt.Sprintf("  Tags for \"%s\":\n", m.selectedColl.Title)
@@ -402,7 +411,8 @@ func (m runModel) View() string {
 		for i, tag := range m.tags {
 			s += fmt.Sprintf("  %d. %s (%d methods)\n", i+1, tag.Title, tag.CountMethods)
 		}
-		s += "\n  Enter number to select, [B]ack.\n"
+		s += "\n  " + m.input.View() + "\n\n"
+		s += "  Enter number and press Enter.  [B]ack  [M]enu.\n"
 
 	case runBrowseEndpoints:
 		s += fmt.Sprintf("  Endpoints for tag \"%s\":\n", m.selectedTag.Title)
@@ -411,7 +421,8 @@ func (m runModel) View() string {
 			s += fmt.Sprintf("  %d. %-6s %s\n", i+1, ep.Method, ep.Path)
 			s += fmt.Sprintf("     %s\n", ep.Summary)
 		}
-		s += "\n  Enter number to select, [B]ack.\n"
+		s += "\n  " + m.input.View() + "\n\n"
+		s += "  Enter number and press Enter.  [B]ack  [M]enu.\n"
 
 	case runEndpointDetail:
 		if m.epDetail != nil {
@@ -466,7 +477,7 @@ func (m runModel) View() string {
 				s += fmt.Sprintf("  %s\n\n", m.msg)
 			}
 
-			s += "  [S]how JSON  [B]ack\n"
+			s += "  [S]how JSON  [B]ack  [M]enu\n"
 		}
 	}
 

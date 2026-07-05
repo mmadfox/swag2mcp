@@ -5,15 +5,29 @@ import (
 	"errors"
 	"fmt"
 	"iter"
+	"strings"
 	"sync"
 	"sync/atomic"
 
 	"github.com/blugelabs/bluge"
+	"github.com/blugelabs/bluge/analysis"
+	"github.com/blugelabs/bluge/analysis/token"
+	"github.com/blugelabs/bluge/analysis/tokenizer"
+	"github.com/blugelabs/bluge/search"
 	querystring "github.com/blugelabs/query_string"
 	"github.com/mmadfox/swag2mcp/internal/types"
 )
 
 const initialSpecsCapacity = 8
+
+func newAnalyzer() *analysis.Analyzer {
+	return &analysis.Analyzer{
+		Tokenizer: tokenizer.NewUnicodeTokenizer(),
+		TokenFilters: []analysis.TokenFilter{
+			token.NewLowerCaseFilter(),
+		},
+	}
+}
 
 // EndpointCursor represents a position in the index.
 type EndpointCursor struct {
@@ -52,6 +66,7 @@ type Index struct {
 	endpointByID          map[string]*types.Endpoint     // endpointID -> Endpoint
 	blugeWriter           *bluge.Writer
 	blugeReader           atomic.Pointer[bluge.Reader]
+	analyzer              *analysis.Analyzer
 }
 
 // New creates an empty in-memory index with type-based structures.
@@ -73,6 +88,7 @@ func New() (*Index, error) {
 		endpointsByCollection: make(map[string][]*types.Endpoint),
 		endpointByID:          make(map[string]*types.Endpoint),
 		allSpecs:              make([]*types.Spec, 0, initialSpecsCapacity),
+		analyzer:              newAnalyzer(),
 	}, nil
 }
 
@@ -185,13 +201,13 @@ func (idx *Index) indexEndpoints(endpoints []*types.Endpoint) error {
 func (idx *Index) index(endpoints []*types.Endpoint) error {
 	batch := bluge.NewBatch()
 	for _, ep := range endpoints {
-		summary := ep.SummaryOrFallback()
+		summary := strings.ToLower(ep.SummaryOrFallback())
 		doc := bluge.NewDocument(ep.ID).
-			AddField(bluge.NewKeywordField("method", ep.Name).StoreValue()).
-			AddField(bluge.NewKeywordField("tag", ep.Tag).StoreValue()).
-			AddField(bluge.NewTextField("path", ep.Path).StoreValue()).
-			AddField(bluge.NewTextField("summary", summary).StoreValue()).
-			AddField(bluge.NewTextField("_all", fmt.Sprintf("%s %s %s %s", ep.Name, ep.Path, ep.Tag, ep.SummaryOrFallback())))
+			AddField(bluge.NewTextField("method", strings.ToLower(ep.Name)).StoreValue()).
+			AddField(bluge.NewTextField("tag", strings.ToLower(ep.Tag)).StoreValue()).
+			AddField(bluge.NewTextField("path", strings.ToLower(ep.Path)).StoreValue()).
+			AddField(bluge.NewTextField("summary", strings.ToLower(summary)).WithAnalyzer(idx.analyzer).StoreValue().SearchTermPositions()).
+			AddField(bluge.NewTextField("_all", fmt.Sprintf("%s %s %s %s", strings.ToLower(ep.Name), strings.ToLower(ep.Path), strings.ToLower(ep.Tag), strings.ToLower(summary))).WithAnalyzer(idx.analyzer).SearchTermPositions())
 
 		batch.Update(bluge.Identifier(ep.ID), doc)
 	}
@@ -395,8 +411,6 @@ func (idx *Index) IterateByCollections() iter.Seq[*CollectionCursor] {
 }
 
 // Search returns endpoints matching the query.
-//
-//nolint:gocognit
 func (idx *Index) Search(ctx context.Context, q string, limit int) ([]*types.Endpoint, error) {
 	if len(q) == 0 {
 		return nil, errors.New("query string is required")
@@ -406,32 +420,58 @@ func (idx *Index) Search(ctx context.Context, q string, limit int) ([]*types.End
 		limit = 20
 	}
 
-	var query bluge.Query
+	query := idx.buildQuery(q)
+	r, err := idx.reader()
+	if err != nil {
+		return nil, err
+	}
+
+	return idx.collectResults(ctx, r, query, limit)
+}
+
+func (idx *Index) buildQuery(q string) bluge.Query {
 	if q == "*" {
-		query = bluge.NewMatchAllQuery()
-	} else {
-		if parsedQuery, err := querystring.ParseQueryString(q, querystring.DefaultOptions()); err == nil {
-			query = parsedQuery
-		}
-		if query == nil {
-			query = bluge.NewMatchQuery(q).SetField("_all")
-		}
+		return bluge.NewMatchAllQuery()
 	}
 
-	reader := idx.blugeReader.Load()
-	if reader == nil {
-		r, err := idx.blugeWriter.Reader()
-		if err != nil {
-			return nil, fmt.Errorf("bluge reader: %w", err)
-		}
-		if !idx.blugeReader.CompareAndSwap(nil, r) {
-			_ = r.Close()
-		}
-		reader = idx.blugeReader.Load()
+	qsOpts := querystring.DefaultOptions().
+		WithDefaultAnalyzer(idx.analyzer).
+		WithAnalyzerForField("summary", idx.analyzer).
+		WithAnalyzerForField("_all", idx.analyzer)
+
+	if parsedQuery, err := querystring.ParseQueryString(q, qsOpts); err == nil {
+		return parsedQuery
 	}
 
+	return bluge.NewMatchQuery(q).SetField("_all").SetAnalyzer(idx.analyzer)
+}
+
+func (idx *Index) reader() (*bluge.Reader, error) {
+	r := idx.blugeReader.Load()
+	if r != nil {
+		return r, nil
+	}
+
+	newReader, err := idx.blugeWriter.Reader()
+	if err != nil {
+		return nil, fmt.Errorf("bluge reader: %w", err)
+	}
+
+	if !idx.blugeReader.CompareAndSwap(nil, newReader) {
+		_ = newReader.Close()
+	}
+
+	return idx.blugeReader.Load(), nil
+}
+
+func (idx *Index) collectResults(
+	ctx context.Context,
+	r *bluge.Reader,
+	query bluge.Query,
+	limit int,
+) ([]*types.Endpoint, error) {
 	req := bluge.NewTopNSearch(limit, query)
-	itr, err := reader.Search(ctx, req)
+	itr, err := r.Search(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("bluge search: %w", err)
 	}
@@ -440,28 +480,33 @@ func (idx *Index) Search(ctx context.Context, q string, limit int) ([]*types.End
 	defer idx.mu.RUnlock()
 
 	out := make([]*types.Endpoint, 0, limit)
-	match, err := itr.Next()
-	for err == nil && match != nil {
-		var docID string
-		_ = match.VisitStoredFields(func(field string, value []byte) bool {
-			if field == "_id" {
-				docID = string(value)
-				return false
-			}
-			return true
-		})
+	match, iterErr := itr.Next()
+	for iterErr == nil && match != nil {
+		docID := extractDocID(match)
 		if docID != "" {
 			if ep, ok := idx.endpointByID[docID]; ok {
 				out = append(out, ep)
 			}
 		}
-		match, err = itr.Next()
+		match, iterErr = itr.Next()
 	}
-	if err != nil {
-		return out, fmt.Errorf("bluge iterate: %w", err)
+	if iterErr != nil {
+		return out, fmt.Errorf("bluge iterate: %w", iterErr)
 	}
 
 	return out, nil
+}
+
+func extractDocID(match *search.DocumentMatch) string {
+	var docID string
+	_ = match.VisitStoredFields(func(field string, value []byte) bool {
+		if field == "_id" {
+			docID = string(value)
+			return false
+		}
+		return true
+	})
+	return docID
 }
 
 // Close releases all index resources.

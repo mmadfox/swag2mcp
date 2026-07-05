@@ -56,8 +56,10 @@ func (c *Config) Iterate(f *Filter) iter.Seq[*Spec] {
 			if spec.Disable {
 				continue
 			}
-			if match := f.MatchSpec(spec.Tags...); !match {
-				continue
+			if f != nil {
+				if match := f.MatchSpec(spec.Tags...); !match {
+					continue
+				}
 			}
 			if !yield(&spec) {
 				break

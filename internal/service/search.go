@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/mmadfox/swag2mcp/internal/types"
 )
@@ -27,7 +28,7 @@ func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse
 		return SearchResponse{}, NewValidationError("query is required and limit must be between 1 and 50", err)
 	}
 
-	endpoints, err := s.index.Search(ctx, req.Query, req.Limit)
+	endpoints, err := s.index.Search(ctx, strings.ToLower(req.Query), req.Limit)
 	if err != nil {
 		return SearchResponse{}, NewNotFoundError("search failed", err)
 	}
