@@ -101,14 +101,6 @@ swag2mcp mcp --tags=project-beta  --logfile=/tmp/swag2mcp-beta.log
 
 Все строковые поля поддерживают синтаксис `$(ENV_VAR)` — разрешается в рантайме из переменных окружения.
 
-### Загрузка конфига
-
-Конфиг можно загрузить из:
-- **Локального пути**: `./swag2mcp.yaml`, `/absolute/path/swag2mcp.yaml`
-- **HTTP/HTTPS URL**: `https://example.com/config.yaml`
-- **file:// URL**: `file:///home/user/.swag2mcp/swag2mcp.yaml`
-- **Tilde путь**: `~/.swag2mcp/swag2mcp.yaml`
-
 ---
 
 ## CLI Команды
@@ -261,13 +253,6 @@ spec_list
 | `search` | `query`, `limit` | Endpoints | Полнотекстовый поиск |
 | `inspect` | `endpointId` | Full Operation | Полный объект OpenAPI операции |
 | `invoke` | `endpointId`, `parameters`, `requestBody` | Response | Выполнение реального API вызова |
-
-### Сценарий использования
-
-1. **Просмотр**: `spec_list` → `spec_by_id` → `collection_by_spec` → `tag_by_collection` → `endpoint_by_tag`
-2. **Поиск**: Используйте `search` когда знаете, что ищете
-3. **Inspect**: Всегда вызывайте `inspect` перед `invoke` для получения полной спецификации операции
-4. **Invoke**: Только с подтверждением пользователя — делает реальные HTTP запросы
 
 ---
 

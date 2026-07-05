@@ -101,14 +101,6 @@ This allows running separate MCP servers for different projects from a single co
 
 All string fields support `$(ENV_VAR)` syntax — resolved at runtime from environment variables.
 
-### Config Loading
-
-Config can be loaded from:
-- **Local path**: `./swag2mcp.yaml`, `/absolute/path/swag2mcp.yaml`
-- **HTTP/HTTPS URL**: `https://example.com/config.yaml`
-- **file:// URL**: `file:///home/user/.swag2mcp/swag2mcp.yaml`
-- **Tilde path**: `~/.swag2mcp/swag2mcp.yaml`
-
 ---
 
 ## CLI Commands
@@ -261,13 +253,6 @@ spec_list
 | `search` | `query`, `limit` | Endpoints | Full-text search |
 | `inspect` | `endpointId` | Full Operation | Complete OpenAPI operation object |
 | `invoke` | `endpointId`, `parameters`, `requestBody` | Response | Executes real API call |
-
-### Usage Flow
-
-1. **Browse**: `spec_list` → `spec_by_id` → `collection_by_spec` → `tag_by_collection` → `endpoint_by_tag`
-2. **Search**: Use `search` when you know what you're looking for
-3. **Inspect**: Always call `inspect` before `invoke` to get full operation details
-4. **Invoke**: Only with user confirmation — makes real HTTP calls
 
 ---
 
