@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"sync/atomic"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/mmadfox/swag2mcp/internal/cache"
@@ -10,13 +11,22 @@ import (
 )
 
 type Service struct {
-	index *index.Index
-	cache *cache.Cache
-	ws    *workspace.Workspace
-	v     *validator.Validate
+	index          *index.Index
+	cache          *cache.Cache
+	ws             *workspace.Workspace
+	v              *validator.Validate
+	disableLLMAuth atomic.Bool
 }
 
-func New() (*Service, error) {
+type NewOption func(*Service)
+
+func WithDisableLLMAuth(disable bool) NewOption {
+	return func(s *Service) {
+		s.disableLLMAuth.Store(disable)
+	}
+}
+
+func New(opts ...NewOption) (*Service, error) {
 	idx, err := index.New()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create index: %w", err)
@@ -25,14 +35,18 @@ func New() (*Service, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create workspace: %w", err)
 	}
-	return &Service{
+	s := &Service{
 		index: idx,
 		cache: cache.New(ws.Root()),
 		ws:    ws,
 		v: validator.New(
 			validator.WithRequiredStructEnabled(),
 		),
-	}, nil
+	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s, nil
 }
 
 func (s *Service) validateRequest(typ any) error {

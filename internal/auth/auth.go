@@ -32,12 +32,40 @@ const (
 //nolint:gochecknoglobals // validator is stateless and safe to reuse.
 var authValidator = validator.New(validator.WithRequiredStructEnabled())
 
+// Info holds the authentication details extracted during Apply.
+type Info struct {
+	Headers     map[string]string
+	QueryParams map[string]string
+}
+
 // Authenticator is an interface for authenticating requests.
 type Authenticator interface {
 	New() error
 	Type() Type
-	Apply(req *http.Request) error
+	Apply(req *http.Request, out *Info) error
 	Validate() error
+}
+
+func setAuthHeader(req *http.Request, out *Info, key, value string) {
+	req.Header.Set(key, value)
+	if out != nil {
+		if out.Headers == nil {
+			out.Headers = make(map[string]string)
+		}
+		out.Headers[key] = value
+	}
+}
+
+func setAuthQuery(req *http.Request, out *Info, key, value string) {
+	q := req.URL.Query()
+	q.Set(key, value)
+	req.URL.RawQuery = q.Encode()
+	if out != nil {
+		if out.QueryParams == nil {
+			out.QueryParams = make(map[string]string)
+		}
+		out.QueryParams[key] = value
+	}
 }
 
 // resolveEnv checks if s matches the pattern $(VARNAME) with optional

@@ -18,8 +18,15 @@ func (c *BasicAuthClient) Type() Type {
 	return BasicAuth
 }
 
-func (c *BasicAuthClient) Apply(req *http.Request) error {
+func (c *BasicAuthClient) Apply(req *http.Request, out *Info) error {
 	req.SetBasicAuth(c.Username, c.Password)
+	if out != nil {
+		val := req.Header.Get("Authorization")
+		if out.Headers == nil {
+			out.Headers = make(map[string]string)
+		}
+		out.Headers["Authorization"] = val
+	}
 	return nil
 }
 

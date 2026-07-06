@@ -19,8 +19,9 @@ import (
 
 func newMCPCmd(version string) *cobra.Command {
 	opts := struct {
-		Logfile string
-		Tags    string
+		Logfile        string
+		Tags           string
+		DisableLLMAuth bool
 	}{}
 
 	cmd := &cobra.Command{
@@ -72,7 +73,9 @@ func newMCPCmd(version string) *cobra.Command {
 				}
 			}
 
-			svc, svcErr := service.New()
+			svc, svcErr := service.New(
+				service.WithDisableLLMAuth(opts.DisableLLMAuth),
+			)
 			if svcErr != nil {
 				return fmt.Errorf("failed to create service: %w", svcErr)
 			}
@@ -99,6 +102,7 @@ func newMCPCmd(version string) *cobra.Command {
 
 	cmd.Flags().StringVarP(&opts.Logfile, "logfile", "f", "", "Filename to log to; if unset, logs to stderr")
 	cmd.Flags().StringVarP(&opts.Tags, "tags", "t", "", "Filter specs by tags (comma-separated)")
+	cmd.Flags().BoolVar(&opts.DisableLLMAuth, "disable-llm-auth", false, "Disable LLM auth token retrieval")
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
 

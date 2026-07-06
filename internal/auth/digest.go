@@ -51,7 +51,7 @@ func (c *DigestAuthClient) Type() Type {
 	return DigestAuth
 }
 
-func (c *DigestAuthClient) Apply(req *http.Request) error {
+func (c *DigestAuthClient) Apply(req *http.Request, out *Info) error {
 	c.mu.Lock()
 	challenge := digestChallenge{
 		realm:     c.realm,
@@ -88,7 +88,7 @@ func (c *DigestAuthClient) Apply(req *http.Request) error {
 
 	nc++
 	auth := c.buildDigest(req.Method, req.URL.RequestURI(), challenge, nc, cnonce)
-	req.Header.Set("Authorization", auth)
+	setAuthHeader(req, out, "Authorization", auth)
 
 	c.mu.Lock()
 	c.nonceCount = nc

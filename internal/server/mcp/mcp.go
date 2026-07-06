@@ -183,6 +183,12 @@ func Serve(ctx context.Context, opts Options) error {
 				Name:        deftool.Name,
 				Description: deftool.Description,
 			}, h.handleInvoke)
+
+		case service.Auth:
+			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
+				Name:        deftool.Name,
+				Description: deftool.Description,
+			}, h.handleAuth)
 		}
 	}
 	return mcpServer.Run(ctx, mcpTransport)

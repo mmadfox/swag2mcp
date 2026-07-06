@@ -43,10 +43,10 @@ func (c *OAuth2ClientCredentialsAuthClient) Type() Type {
 	return OAuth2ClientCredentials
 }
 
-func (c *OAuth2ClientCredentialsAuthClient) Apply(req *http.Request) error {
+func (c *OAuth2ClientCredentialsAuthClient) Apply(req *http.Request, out *Info) error {
 	c.mu.Lock()
 	if c.token != "" && time.Now().Before(c.expiresAt) {
-		req.Header.Set("Authorization", "Bearer "+c.token)
+		setAuthHeader(req, out, "Authorization", "Bearer "+c.token)
 		c.mu.Unlock()
 		return nil
 	}
@@ -60,7 +60,7 @@ func (c *OAuth2ClientCredentialsAuthClient) Apply(req *http.Request) error {
 	c.mu.Lock()
 	c.token = token
 	c.expiresAt = time.Now().Add(time.Duration(expiresIn) * time.Second)
-	req.Header.Set("Authorization", "Bearer "+c.token)
+	setAuthHeader(req, out, "Authorization", "Bearer "+c.token)
 	c.mu.Unlock()
 	return nil
 }

@@ -11,7 +11,7 @@ type Transport struct {
 
 // RoundTrip implements [http.RoundTripper].
 func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if err := t.Auth.Apply(req); err != nil {
+	if err := t.Auth.Apply(req, nil); err != nil {
 		return nil, err
 	}
 	return t.Base.RoundTrip(req)
