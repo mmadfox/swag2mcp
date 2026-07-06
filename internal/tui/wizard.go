@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"unicode/utf8"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -582,19 +583,8 @@ func (m model) View() string {
 
 // headerLine returns a line of dashes matching the title length.
 func headerLine(title string) string {
-	n := 0
-	for _, r := range title {
-		if r > 127 {
-			n += 2
-		} else {
-			n++
-		}
-	}
-	line := ""
-	for i := 0; i < n; i++ {
-		line += "─"
-	}
-	return line
+	n := utf8.RuneCountInString(title)
+	return strings.Repeat("─", n)
 }
 
 // RunTUI starts the interactive initialization wizard.

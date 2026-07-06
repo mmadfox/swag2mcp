@@ -13,6 +13,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/mmadfox/swag2mcp/internal/service"
+	"github.com/mmadfox/swag2mcp/internal/spec"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
@@ -40,6 +41,7 @@ const (
 const (
 	randSuffixLen = 6
 	pageSize      = 10
+	actionHint    = "  Enter number and press Enter.  [B]ack  [M]enu.\n"
 )
 
 type runModel struct {
@@ -84,6 +86,17 @@ func (m runModel) Init() tea.Cmd {
 	return textinput.Blink
 }
 
+func (m runModel) shouldHandleInput() bool {
+	return m.input.Focused() && m.state != runEndpointDetail && m.state != runMenu && m.state != runDone
+}
+
+func (m runModel) transitionTo(state runState) (tea.Model, tea.Cmd) {
+	m.input.SetValue("")
+	m.input.Focus()
+	m.state = state
+	return m, textinput.Blink
+}
+
 func (m runModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -112,37 +125,35 @@ func (m runModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.input.Focus()
 				return m, textinput.Blink
 			}
-			return m.handleDigit("1")
+			if m.state != runSearchQuery {
+				return m.handleDigit("1"), nil
+			}
 		case "2":
 			if m.state == runMenu {
 				m.mode = modeBrowse
 				return m.loadSpecs()
 			}
-			return m.handleDigit("2")
+			if m.state != runSearchQuery {
+				return m.handleDigit("2"), nil
+			}
 		case "3":
 			if m.state == runMenu {
 				m.state = runDone
 				return m, tea.Quit
 			}
-			return m.handleDigit("3")
-		case "4":
-			return m.handleDigit("4")
-		case "5":
-			return m.handleDigit("5")
-		case "6":
-			return m.handleDigit("6")
-		case "7":
-			return m.handleDigit("7")
-		case "8":
-			return m.handleDigit("8")
-		case "9":
-			return m.handleDigit("9")
-		case "0":
-			return m.handleDigit("0")
+			if m.state != runSearchQuery {
+				return m.handleDigit("3"), nil
+			}
+		default:
+			if len(msg.String()) == 1 && msg.String()[0] >= '0' && msg.String()[0] <= '9' {
+				if m.state != runSearchQuery {
+					return m.handleDigit(msg.String()), nil
+				}
+			}
 		}
 	}
 
-	if m.state == runEndpointDetail || m.state == runMenu || m.state == runDone || !m.input.Focused() {
+	if !m.shouldHandleInput() {
 		return m, nil
 	}
 
@@ -151,13 +162,12 @@ func (m runModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m runModel) handleDigit(digit string) (tea.Model, tea.Cmd) {
+func (m runModel) handleDigit(digit string) tea.Model {
 	switch m.state {
 	case runSearchResults, runBrowseSpecs, runBrowseCollections, runBrowseTags, runBrowseEndpoints:
 		m.input.SetValue(m.input.Value() + digit)
-		return m, nil
 	}
-	return m, nil
+	return m
 }
 
 func (m runModel) handleEnter() (tea.Model, tea.Cmd) {
@@ -273,7 +283,6 @@ func (m runModel) selectSearchResult(val string) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	ep := m.searchResults[idx-1]
-	m.selectedEpID = ep.ID
 	return m.loadEndpointDetail(ep.ID)
 }
 
@@ -284,10 +293,7 @@ func (m runModel) loadSpecs() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.specs = specs.Specs
-	m.input.SetValue("")
-	m.input.Focus()
-	m.state = runBrowseSpecs
-	return m, nil
+	return m.transitionTo(runBrowseSpecs)
 }
 
 func (m runModel) selectSpec(val string) (tea.Model, tea.Cmd) {
@@ -306,10 +312,7 @@ func (m runModel) loadCollections(specID string) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.collections = collections.Collections
-	m.input.SetValue("")
-	m.input.Focus()
-	m.state = runBrowseCollections
-	return m, nil
+	return m.transitionTo(runBrowseCollections)
 }
 
 func (m runModel) selectCollection(val string) (tea.Model, tea.Cmd) {
@@ -331,10 +334,7 @@ func (m runModel) loadTags(collectionID string) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.tags = tags.Tags
-	m.input.SetValue("")
-	m.input.Focus()
-	m.state = runBrowseTags
-	return m, nil
+	return m.transitionTo(runBrowseTags)
 }
 
 func (m runModel) selectTag(val string) (tea.Model, tea.Cmd) {
@@ -353,10 +353,7 @@ func (m runModel) loadEndpoints(tagID string) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.endpoints = endpoints.Endpoints
-	m.input.SetValue("")
-	m.input.Focus()
-	m.state = runBrowseEndpoints
-	return m, nil
+	return m.transitionTo(runBrowseEndpoints)
 }
 
 func (m runModel) selectBrowseEndpoint(val string) (tea.Model, tea.Cmd) {
@@ -366,7 +363,6 @@ func (m runModel) selectBrowseEndpoint(val string) (tea.Model, tea.Cmd) {
 	}
 	ep := m.endpoints[idx-1]
 	m.selectedEp = ep
-	m.selectedEpID = ep.ID
 	return m.loadEndpointDetail(ep.ID)
 }
 
@@ -377,10 +373,101 @@ func (m runModel) loadEndpointDetail(endpointID string) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.epDetail = &detail
+	m.selectedEpID = endpointID
 	m.msg = ""
 	m.state = runEndpointDetail
 	m.input.Blur()
 	return m, nil
+}
+
+func randomSuffix(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letters[rand.IntN(len(letters))]
+	}
+	return string(b)
+}
+
+func renderSchema(schema *spec.Schema, indent string) string {
+	if schema == nil {
+		return ""
+	}
+	var b strings.Builder
+
+	if schema.Description != "" {
+		fmt.Fprintf(&b, "%s%s\n", indent, schema.Description)
+	}
+
+	typ := schema.Type
+	if typ == "" {
+		typ = "any"
+	}
+	fmt.Fprintf(&b, "%stype: %s", indent, typ)
+	if schema.Format != "" {
+		fmt.Fprintf(&b, " (%s)", schema.Format)
+	}
+	b.WriteString("\n")
+
+	if len(schema.Required) > 0 {
+		fmt.Fprintf(&b, "%srequired: %s\n", indent, strings.Join(schema.Required, ", "))
+	}
+
+	if schema.Default != nil {
+		fmt.Fprintf(&b, "%sdefault: %v\n", indent, schema.Default)
+	}
+
+	if len(schema.Enum) > 0 {
+		vals := make([]string, len(schema.Enum))
+		for i, v := range schema.Enum {
+			vals[i] = fmt.Sprintf("%v", v)
+		}
+		fmt.Fprintf(&b, "%senum: [%s]\n", indent, strings.Join(vals, ", "))
+	}
+
+	if schema.Example != nil {
+		exampleJSON, _ := json.MarshalIndent(schema.Example, indent+"  ", "  ")
+		fmt.Fprintf(&b, "%sexample:\n%s%s\n", indent, indent, string(exampleJSON))
+	}
+
+	if len(schema.Properties) > 0 {
+		fmt.Fprintf(&b, "%sproperties:\n", indent)
+		for name, prop := range schema.Properties {
+			req := ""
+			for _, r := range schema.Required {
+				if r == name {
+					req = " (required)"
+					break
+				}
+			}
+			if req == "" {
+				req = " (optional)"
+			}
+			propType := prop.Type
+			if propType == "" {
+				propType = "any"
+			}
+			fmt.Fprintf(&b, "%s  %s (%s)%s", indent, name, propType, req)
+			if prop.Description != "" {
+				fmt.Fprintf(&b, " — %s", prop.Description)
+			}
+			b.WriteString("\n")
+			if prop.Items != nil {
+				fmt.Fprintf(&b, "%s    items:\n", indent)
+				b.WriteString(renderSchema(prop.Items, indent+"      "))
+			}
+			if len(prop.Properties) > 0 {
+				b.WriteString(renderSchema(prop, indent+"    "))
+			}
+		}
+	}
+
+	if schema.Items != nil {
+		fmt.Fprintf(&b, "%sitems:\n", indent)
+		b.WriteString(renderSchema(schema.Items, indent+"  "))
+	}
+
+	return b.String()
 }
 
 func (m runModel) showEndpoint() (tea.Model, tea.Cmd) {
@@ -398,12 +485,7 @@ func (m runModel) showEndpoint() (tea.Model, tea.Cmd) {
 	path = strings.ReplaceAll(path, "/", "_")
 	path = strings.ReplaceAll(path, "{", "")
 	path = strings.ReplaceAll(path, "}", "")
-	randSuffix := make([]byte, randSuffixLen)
-	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
-	for i := range randSuffix {
-		randSuffix[i] = letters[rand.IntN(len(letters))]
-	}
-	filename := fmt.Sprintf("%s-%s-%s-%s.json", m.epDetail.SpecDomain, method, path, string(randSuffix))
+	filename := fmt.Sprintf("%s-%s-%s-%s.json", m.epDetail.SpecDomain, method, path, randomSuffix(randSuffixLen))
 
 	if err := os.WriteFile(filename, data, 0600); err != nil {
 		m.err = fmt.Errorf("save endpoint: %w", err)
@@ -475,7 +557,7 @@ func (m runModel) View() string {
 			s += fmt.Sprintf("  %d. %s\n", i+1, sp.Domain)
 		}
 		s += "\n  " + m.input.View() + "\n\n"
-		s += "  Enter number and press Enter.  [B]ack  [M]enu.\n"
+		s += actionHint
 
 	case runBrowseCollections:
 		s += fmt.Sprintf("  Collections for \"%s\":\n", m.selectedSpec.Domain)
@@ -484,7 +566,7 @@ func (m runModel) View() string {
 			s += fmt.Sprintf("  %d. %s (%d tags, %d methods)\n", i+1, col.Title, col.CountTags, col.CountMethods)
 		}
 		s += "\n  " + m.input.View() + "\n\n"
-		s += "  Enter number and press Enter.  [B]ack  [M]enu.\n"
+		s += actionHint
 
 	case runBrowseTags:
 		s += fmt.Sprintf("  Tags for \"%s\":\n", m.selectedColl.Title)
@@ -493,7 +575,7 @@ func (m runModel) View() string {
 			s += fmt.Sprintf("  %d. %s (%d methods)\n", i+1, tag.Title, tag.CountMethods)
 		}
 		s += "\n  " + m.input.View() + "\n\n"
-		s += "  Enter number and press Enter.  [B]ack  [M]enu.\n"
+		s += actionHint
 
 	case runBrowseEndpoints:
 		s += fmt.Sprintf("  Endpoints for tag \"%s\":\n", m.selectedTag.Title)
@@ -503,7 +585,7 @@ func (m runModel) View() string {
 			s += fmt.Sprintf("     %s\n", ep.Summary)
 		}
 		s += "\n  " + m.input.View() + "\n\n"
-		s += "  Enter number and press Enter.  [B]ack  [M]enu.\n"
+		s += actionHint
 
 	case runEndpointDetail:
 		if m.epDetail != nil {
@@ -512,7 +594,8 @@ func (m runModel) View() string {
 			s += fmt.Sprintf("  Spec:    %s\n", m.epDetail.SpecDomain)
 			s += fmt.Sprintf("  Method:  %s\n", m.epDetail.Method)
 			s += fmt.Sprintf("  Path:    %s\n", m.epDetail.Path)
-			s += fmt.Sprintf("  BaseURL: %s\n\n", m.epDetail.BaseURL)
+			s += fmt.Sprintf("  BaseURL: %s\n", m.epDetail.BaseURL)
+			s += fmt.Sprintf("  FullURL: %s%s\n\n", m.epDetail.BaseURL, m.epDetail.Path)
 
 			if m.epDetail.Operation != nil {
 				if m.epDetail.Operation.Summary != "" {
@@ -541,6 +624,15 @@ func (m runModel) View() string {
 					}
 					if m.epDetail.Operation.RequestBody.Description != "" {
 						s += fmt.Sprintf("    %s\n", m.epDetail.Operation.RequestBody.Description)
+					}
+					for contentType, mt := range m.epDetail.Operation.RequestBody.Content {
+						if !strings.Contains(contentType, "json") {
+							continue
+						}
+						s += fmt.Sprintf("\n    %s:\n", contentType)
+						if mt.Schema != nil {
+							s += renderSchema(mt.Schema, "      ")
+						}
 					}
 					s += "\n"
 				}

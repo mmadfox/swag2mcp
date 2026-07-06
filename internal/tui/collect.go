@@ -27,14 +27,16 @@ const (
 
 // collectModel is a Bubbletea model for collecting a single spec or collection.
 type collectModel struct {
-	state          collectState
-	specNum        int
-	domain         string
-	result         SpecInput
-	curColl        CollectionInput
-	input          textinput.Model
-	authFieldIndex int
-	err            error
+	state            collectState
+	specNum          int
+	collNum          int
+	domain           string
+	result           SpecInput
+	curColl          CollectionInput
+	input            textinput.Model
+	authFieldIndex   int
+	err              error
+	isCollectionOnly bool
 }
 
 func newCollectModel(specNum int) collectModel {
@@ -46,6 +48,21 @@ func newCollectModel(specNum int) collectModel {
 		state:   colDomain,
 		specNum: specNum,
 		input:   ti,
+	}
+}
+
+func newCollectCollectionModel(specNum, collNum int, domain string) collectModel {
+	ti := textinput.New()
+	ti.CharLimit = 256
+	ti.Width = 60
+	ti.Focus()
+	return collectModel{
+		state:            colCollTitle,
+		specNum:          specNum,
+		collNum:          collNum,
+		domain:           domain,
+		input:            ti,
+		isCollectionOnly: true,
 	}
 }
 
@@ -180,6 +197,10 @@ func (m collectModel) handleEnter() (tea.Model, tea.Cmd) {
 			val = "./specs/" + m.domain + ".json"
 		}
 		m.curColl.Location = val
+		if m.isCollectionOnly {
+			m.state = colDone
+			return m, tea.Quit
+		}
 		m.result.Collections = append(m.result.Collections, m.curColl)
 		m.curColl = CollectionInput{}
 		m.input.SetValue("")
@@ -202,9 +223,15 @@ func (m collectModel) handleNo() (tea.Model, tea.Cmd) {
 
 func (m collectModel) View() string {
 	var s string
-	s += "\n  ╭──────────────────────────────────────────────╮\n"
-	s += "  │           swag2mcp — Add Specification        │\n"
-	s += "  ╰──────────────────────────────────────────────╯\n\n"
+	if m.isCollectionOnly {
+		s += "\n  ╭──────────────────────────────────────────────╮\n"
+		s += "  │           swag2mcp — Add Collection          │\n"
+		s += "  ╰──────────────────────────────────────────────╯\n\n"
+	} else {
+		s += "\n  ╭──────────────────────────────────────────────╮\n"
+		s += "  │           swag2mcp — Add Specification        │\n"
+		s += "  ╰──────────────────────────────────────────────╯\n\n"
+	}
 
 	switch m.state {
 	case colDomain:
@@ -333,112 +360,6 @@ func collectSpec(specNum int) (SpecInput, error) {
 	return m.result, m.err
 }
 
-// collectCollectionModel is a minimal TUI for collecting a single collection.
-type collectCollectionModel struct {
-	state   collectState
-	domain  string
-	specNum int
-	collNum int
-	result  CollectionInput
-	input   textinput.Model
-	err     error
-}
-
-func newCollectCollectionModel(specNum, collNum int, domain string) collectCollectionModel {
-	ti := textinput.New()
-	ti.CharLimit = 256
-	ti.Width = 60
-	ti.Focus()
-	return collectCollectionModel{
-		state:   colCollTitle,
-		domain:  domain,
-		specNum: specNum,
-		collNum: collNum,
-		input:   ti,
-	}
-}
-
-func (m collectCollectionModel) Init() tea.Cmd {
-	return textinput.Blink
-}
-
-func (m collectCollectionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		return m, nil
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "esc":
-			return m, tea.Quit
-		case "enter":
-			return m.handleEnter()
-		}
-	}
-	var cmd tea.Cmd
-	m.input, cmd = m.input.Update(msg)
-	return m, cmd
-}
-
-func (m collectCollectionModel) handleEnter() (tea.Model, tea.Cmd) {
-	val := m.input.Value()
-	switch m.state {
-	case colCollTitle:
-		if val == "" {
-			val = m.domain + " Collection"
-		}
-		m.result.Title = val
-		m.input.SetValue("")
-		m.input.Placeholder = "./specs/swagger.json"
-		m.state = colCollLocation
-		m.input.Focus()
-		return m, textinput.Blink
-	case colCollLocation:
-		if val == "" {
-			val = "./specs/" + m.domain + ".json"
-		}
-		m.result.Location = val
-		m.state = colDone
-		return m, tea.Quit
-	}
-	return m, nil
-}
-
-func (m collectCollectionModel) View() string {
-	var s string
-	s += "\n  ╭──────────────────────────────────────────────╮\n"
-	s += "  │           swag2mcp — Add Collection          │\n"
-	s += "  ╰──────────────────────────────────────────────╯\n\n"
-
-	switch m.state {
-	case colCollTitle:
-		s += fmt.Sprintf("  Spec #%d (%s), Collection #%d — Title\n", m.specNum, m.domain, m.collNum)
-		s += "  " + headerLine(fmt.Sprintf("Spec #%d (%s), Collection #%d — Title", m.specNum, m.domain, m.collNum)) + "\n\n"
-		s += "  A name for this collection (a single Swagger/OpenAPI spec file).\n\n"
-		s += "  Rules: up to 120 characters. Letters, digits, spaces, and basic punctuation allowed.\n\n"
-		s += "  ────\n\n"
-		s += "  [" + m.domain + " Collection]\n"
-		s += "  " + m.input.View() + "\n\n"
-		s += "  Press Enter to confirm. Leave empty for default.\n"
-	case colCollLocation:
-		s += fmt.Sprintf("  Spec #%d (%s), Collection #%d — Location\n", m.specNum, m.domain, m.collNum)
-		s += "  " + headerLine(fmt.Sprintf("Spec #%d (%s), Collection #%d — Location", m.specNum, m.domain, m.collNum)) + "\n\n"
-		s += "  Path or URL to the Swagger/OpenAPI spec file.\n"
-		s += "  Supports:\n"
-		s += "    • Local path:  ./specs/api.json\n"
-		s += "    • File URL:    file:///home/user/specs/api.json\n"
-		s += "    • HTTP(S):     https://example.com/api/swagger.json\n\n"
-		s += "  Rules: 5–250 characters. Must point to a valid spec file or URL.\n\n"
-		if strings.HasPrefix(m.result.Location, "http://") || strings.HasPrefix(m.result.Location, "https://") {
-			s += "  ℹ️ URL detected — will be cached on first use.\n\n"
-		}
-		s += "  ────\n\n"
-		s += "  [./specs/" + m.domain + ".json]\n"
-		s += "  " + m.input.View() + "\n\n"
-		s += "  Press Enter to confirm. Leave empty for default.\n"
-	}
-	return s
-}
-
 // collectCollection runs a TUI to collect a single collection.
 func collectCollection(specNum, collNum int, domain string) (CollectionInput, error) {
 	p := tea.NewProgram(newCollectCollectionModel(specNum, collNum, domain))
@@ -446,9 +367,9 @@ func collectCollection(specNum, collNum int, domain string) (CollectionInput, er
 	if runErr != nil {
 		return CollectionInput{}, runErr
 	}
-	m, ok := final.(collectCollectionModel)
+	m, ok := final.(collectModel)
 	if !ok {
 		return CollectionInput{}, fmt.Errorf("unexpected model type")
 	}
-	return m.result, m.err
+	return m.curColl, m.err
 }

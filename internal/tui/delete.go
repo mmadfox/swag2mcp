@@ -2,22 +2,32 @@ package tui
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/mmadfox/swag2mcp/internal/config"
-	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
+
+func promptSelection(label string, maxVal int) (int, error) {
+	fmt.Printf("  Select %s [1-%d] > ", label, maxVal)
+	var idx int
+	fmt.Scanf("%d", &idx)
+	if idx < 1 || idx > maxVal {
+		return 0, fmt.Errorf("invalid number")
+	}
+	return idx, nil
+}
+
+func confirmAction(prompt string) bool {
+	fmt.Printf("  %s (y/n) > ", prompt)
+	var answer string
+	fmt.Scanln(&answer)
+	answer = strings.TrimSpace(strings.ToLower(answer))
+	return answer == "y" || answer == "yes"
+}
 
 // DeleteSpecTUI runs an interactive wizard to delete a specification.
 func DeleteSpecTUI(configPath string) error {
-	if configPath == "" {
-		configPath = workspace.DefaultConfigPath()
-	}
-	if info, statErr := os.Stat(configPath); statErr == nil && info.IsDir() {
-		configPath = filepath.Join(configPath, "swag2mcp.yaml")
-	}
+	configPath = resolveConfigPath(configPath)
 
 	cfg, err := config.Load(configPath)
 	if err != nil {
@@ -34,19 +44,13 @@ func DeleteSpecTUI(configPath string) error {
 	}
 	fmt.Println()
 
-	fmt.Print("  Select a spec to delete [1-", len(cfg.Specs), "] > ")
-	var specIdx int
-	fmt.Scanf("%d", &specIdx)
-	if specIdx < 1 || specIdx > len(cfg.Specs) {
-		return fmt.Errorf("invalid spec number")
+	specIdx, err := promptSelection("a spec to delete", len(cfg.Specs))
+	if err != nil {
+		return err
 	}
 	spec := cfg.Specs[specIdx-1]
 
-	fmt.Printf("\n  Are you sure you want to delete \"%s\" (%s)? (y/n) > ", spec.LLMTitle, spec.Domain)
-	var answer string
-	fmt.Scanln(&answer)
-	answer = strings.TrimSpace(strings.ToLower(answer))
-	if answer != "y" && answer != "yes" {
+	if !confirmAction(fmt.Sprintf("Are you sure you want to delete \"%s\" (%s)?", spec.LLMTitle, spec.Domain)) {
 		fmt.Println("  Cancelled.")
 		return nil
 	}
@@ -64,12 +68,7 @@ func DeleteSpecTUI(configPath string) error {
 
 // DeleteCollectionTUI runs an interactive wizard to delete a collection.
 func DeleteCollectionTUI(configPath string) error {
-	if configPath == "" {
-		configPath = workspace.DefaultConfigPath()
-	}
-	if info, statErr := os.Stat(configPath); statErr == nil && info.IsDir() {
-		configPath = filepath.Join(configPath, "swag2mcp.yaml")
-	}
+	configPath = resolveConfigPath(configPath)
 
 	cfg, err := config.Load(configPath)
 	if err != nil {
@@ -86,11 +85,9 @@ func DeleteCollectionTUI(configPath string) error {
 	}
 	fmt.Println()
 
-	fmt.Print("  Select a spec [1-", len(cfg.Specs), "] > ")
-	var specIdx int
-	fmt.Scanf("%d", &specIdx)
-	if specIdx < 1 || specIdx > len(cfg.Specs) {
-		return fmt.Errorf("invalid spec number")
+	specIdx, err := promptSelection("a spec", len(cfg.Specs))
+	if err != nil {
+		return err
 	}
 	spec := cfg.Specs[specIdx-1]
 
@@ -104,19 +101,13 @@ func DeleteCollectionTUI(configPath string) error {
 	}
 	fmt.Println()
 
-	fmt.Print("  Select a collection to delete [1-", len(spec.Collections), "] > ")
-	var colIdx int
-	fmt.Scanf("%d", &colIdx)
-	if colIdx < 1 || colIdx > len(spec.Collections) {
-		return fmt.Errorf("invalid collection number")
+	colIdx, err := promptSelection("a collection to delete", len(spec.Collections))
+	if err != nil {
+		return err
 	}
 	col := spec.Collections[colIdx-1]
 
-	fmt.Printf("\n  Are you sure you want to delete \"%s\"? (y/n) > ", col.LLMTitle)
-	var answer string
-	fmt.Scanln(&answer)
-	answer = strings.TrimSpace(strings.ToLower(answer))
-	if answer != "y" && answer != "yes" {
+	if !confirmAction(fmt.Sprintf("Are you sure you want to delete \"%s\"?", col.LLMTitle)) {
 		fmt.Println("  Cancelled.")
 		return nil
 	}

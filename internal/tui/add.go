@@ -11,14 +11,19 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// AddSpecFromYAML adds a specification from a YAML string (non-interactive).
-func AddSpecFromYAML(configPath string, data []byte) error {
+func resolveConfigPath(configPath string) string {
 	if configPath == "" {
 		configPath = workspace.DefaultConfigPath()
 	}
-	if info, statErr := os.Stat(configPath); statErr == nil && info.IsDir() {
+	if info, err := os.Stat(configPath); err == nil && info.IsDir() {
 		configPath = filepath.Join(configPath, "swag2mcp.yaml")
 	}
+	return configPath
+}
+
+// AddSpecFromYAML adds a specification from a YAML string (non-interactive).
+func AddSpecFromYAML(configPath string, data []byte) error {
+	configPath = resolveConfigPath(configPath)
 
 	var input config.SpecAddRequest
 	if err := yaml.Unmarshal(data, &input); err != nil {
@@ -48,12 +53,7 @@ func AddSpecFromYAML(configPath string, data []byte) error {
 
 // AddCollectionFromYAML adds a collection from a YAML string (non-interactive).
 func AddCollectionFromYAML(configPath string, data []byte) error {
-	if configPath == "" {
-		configPath = workspace.DefaultConfigPath()
-	}
-	if info, statErr := os.Stat(configPath); statErr == nil && info.IsDir() {
-		configPath = filepath.Join(configPath, "swag2mcp.yaml")
-	}
+	configPath = resolveConfigPath(configPath)
 
 	var input config.CollectionAddRequest
 	if err := yaml.Unmarshal(data, &input); err != nil {
@@ -88,12 +88,7 @@ func AddCollectionFromYAML(configPath string, data []byte) error {
 
 // AddSpecTUI runs an interactive wizard to add a specification to an existing config.
 func AddSpecTUI(configPath string) error {
-	if configPath == "" {
-		configPath = workspace.DefaultConfigPath()
-	}
-	if info, statErr := os.Stat(configPath); statErr == nil && info.IsDir() {
-		configPath = filepath.Join(configPath, "swag2mcp.yaml")
-	}
+	configPath = resolveConfigPath(configPath)
 
 	cfg, err := config.Load(configPath)
 	if err != nil {
@@ -169,12 +164,7 @@ func AddSpecTUI(configPath string) error {
 
 // AddCollectionTUI runs an interactive wizard to add a collection to an existing spec.
 func AddCollectionTUI(configPath string) error {
-	if configPath == "" {
-		configPath = workspace.DefaultConfigPath()
-	}
-	if info, statErr := os.Stat(configPath); statErr == nil && info.IsDir() {
-		configPath = filepath.Join(configPath, "swag2mcp.yaml")
-	}
+	configPath = resolveConfigPath(configPath)
 
 	cfg, err := config.Load(configPath)
 	if err != nil {
