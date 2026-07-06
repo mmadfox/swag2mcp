@@ -575,6 +575,12 @@ linters:
       # gosec for Scanln/Scanf in TUI
       - path: 'internal/tui/'
         linters: [ gosec ]
+      # gosec for md5 in digest auth (required by RFC 2617)
+      - path: 'internal/auth/digest\.go'
+        linters: [ gosec ]
+      # gosec for exec.Command in script auth (intentional)
+      - path: 'internal/auth/script\.go'
+        linters: [ gosec ]
       # paralleltest in test files
       - path: '_test\.go'
         linters: [ paralleltest ]

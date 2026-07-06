@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 )
 
 // Workspace manages the workspace directory and its standard subdirectories.
@@ -157,5 +159,79 @@ func removeContents(dir string) error {
 			return rErr
 		}
 	}
+	return nil
+}
+
+// AuthScriptPath returns the path to the auth script for the given domain.
+func (w *Workspace) AuthScriptPath(domain string) string {
+	ext := ".sh"
+	if runtime.GOOS == "windows" {
+		ext = ".bat"
+	}
+	return filepath.Join(w.AuthScriptsDir(), domain+ext)
+}
+
+// EnsureAuthScript creates an auth script stub for the given domain if it does not exist.
+func (w *Workspace) EnsureAuthScript(domain string) error {
+	if err := os.MkdirAll(w.AuthScriptsDir(), 0750); err != nil {
+		return fmt.Errorf("create auth_scripts dir: %w", err)
+	}
+
+	scriptPath := w.AuthScriptPath(domain)
+	if _, err := os.Stat(scriptPath); err == nil {
+		return nil
+	}
+
+	var content string
+	if runtime.GOOS == "windows" {
+		content = `@echo off
+echo {"token": "your-token-here", "expires_in": 3600}
+`
+	} else {
+		content = `#!/bin/sh
+echo '{"token": "your-token-here", "expires_in": 3600}'
+`
+	}
+
+	if err := os.WriteFile(scriptPath, []byte(content), 0600); err != nil {
+		return fmt.Errorf("write auth script %s: %w", scriptPath, err)
+	}
+
+	return nil
+}
+
+// RemoveOrphanAuthScripts removes auth script files for domains not in the active list.
+func (w *Workspace) RemoveOrphanAuthScripts(activeDomains []string) error {
+	active := make(map[string]bool, len(activeDomains))
+	for _, d := range activeDomains {
+		active[d] = true
+	}
+
+	entries, err := os.ReadDir(w.AuthScriptsDir())
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("read auth_scripts dir: %w", err)
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		domain := strings.TrimSuffix(name, ".sh")
+		domain = strings.TrimSuffix(domain, ".bat")
+		if domain == name {
+			continue
+		}
+		if !active[domain] {
+			p := filepath.Join(w.AuthScriptsDir(), name)
+			if rErr := os.Remove(p); rErr != nil {
+				return fmt.Errorf("remove orphan auth script %s: %w", name, rErr)
+			}
+		}
+	}
+
 	return nil
 }

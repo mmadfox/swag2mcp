@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
@@ -31,6 +32,19 @@ func newCleanCmd() *cobra.Command {
 
 			if err := ws.Clean(); err != nil {
 				return fmt.Errorf("clean: %w", err)
+			}
+
+			if ws.ConfigExists() {
+				cfg, loadErr := config.Load(ws.ConfigPath())
+				if loadErr == nil {
+					var activeDomains []string
+					for spec := range cfg.Iterate(nil) {
+						activeDomains = append(activeDomains, spec.Domain)
+					}
+					if oErr := ws.RemoveOrphanAuthScripts(activeDomains); oErr != nil {
+						return fmt.Errorf("remove orphan auth scripts: %w", oErr)
+					}
+				}
 			}
 
 			cmd.Println("✅ Removed contents")

@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/mmadfox/swag2mcp/internal/auth"
+	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/tui"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
@@ -54,6 +56,13 @@ func newInitCmd() *cobra.Command {
 					return fmt.Errorf("init wizard: %w", err)
 				}
 
+				ws, wsErr := workspace.New(wsDir)
+				if wsErr == nil {
+					if cfg, loadErr := config.Load(cfgPath); loadErr == nil {
+						ensureAuthScripts(cfg, ws)
+					}
+				}
+
 				cmd.Printf("\n✅ Configuration written to: %s\n", cfgPath)
 				cmd.Printf("✅ Workspace initialized at: %s\n", wsDir)
 				cmd.Println("Run `swag2mcp mcp` to start the server.")
@@ -70,6 +79,13 @@ func newInitCmd() *cobra.Command {
 				return fmt.Errorf("init: %w", err)
 			}
 
+			ws, wsErr := workspace.New(workspaceDir)
+			if wsErr == nil {
+				if cfg, loadErr := config.Load(configPath); loadErr == nil {
+					ensureAuthScripts(cfg, ws)
+				}
+			}
+
 			cmd.Printf("✅ Configuration written to %s\n", configPath)
 			cmd.Printf("✅ Workspace initialized at %s\n", workspaceDir)
 			return nil
@@ -82,4 +98,12 @@ func newInitCmd() *cobra.Command {
 	cmd.SilenceErrors = true
 
 	return cmd
+}
+
+func ensureAuthScripts(cfg *config.Config, ws *workspace.Workspace) {
+	for spec := range cfg.Iterate(nil) {
+		if spec.Auth.Client != nil && spec.Auth.Client.Type() == auth.ScriptAuth {
+			_ = ws.EnsureAuthScript(spec.Domain)
+		}
+	}
 }

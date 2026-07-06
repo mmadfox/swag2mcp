@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/id"
 	specparser "github.com/mmadfox/swag2mcp/internal/spec"
@@ -149,8 +150,14 @@ func (s *Service) specFromConfig(spec *config.Spec) (*types.Spec, error) {
 		Auth:           spec.Auth.Client,
 	}
 
-	if err := specInfo.InitAuthenticator(); err != nil {
-		return nil, fmt.Errorf("spec %s, failed to initialize authenticator: %w", spec.Domain, err)
+	if spec.Auth.Client != nil {
+		if err := specInfo.InitAuthenticator(); err != nil {
+			return nil, fmt.Errorf("spec %s, failed to initialize authenticator: %w", spec.Domain, err)
+		}
+
+		if scriptClient, ok := spec.Auth.Client.(*auth.ScriptAuthClient); ok {
+			scriptClient.SetWorkspaceDir(s.ws.Root())
+		}
 	}
 
 	return specInfo, nil

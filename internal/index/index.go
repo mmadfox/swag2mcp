@@ -203,9 +203,9 @@ func (idx *Index) index(endpoints []*types.Endpoint) error {
 	for _, ep := range endpoints {
 		summary := strings.ToLower(ep.SummaryOrFallback())
 		doc := bluge.NewDocument(ep.ID).
-			AddField(bluge.NewTextField("method", strings.ToLower(ep.Name)).StoreValue()).
-			AddField(bluge.NewTextField("tag", strings.ToLower(ep.Tag)).StoreValue()).
-			AddField(bluge.NewTextField("path", strings.ToLower(ep.Path)).StoreValue()).
+			AddField(bluge.NewKeywordField("method", strings.ToLower(ep.Name)).StoreValue()).
+			AddField(bluge.NewKeywordField("tag", strings.ToLower(ep.Tag)).StoreValue()).
+			AddField(bluge.NewKeywordField("path", strings.ToLower(ep.Path)).StoreValue()).
 			AddField(bluge.NewTextField("summary", strings.ToLower(summary)).WithAnalyzer(idx.analyzer).StoreValue().SearchTermPositions()).
 			AddField(bluge.NewTextField("_all", fmt.Sprintf("%s %s %s %s", strings.ToLower(ep.Name), strings.ToLower(ep.Path), strings.ToLower(ep.Tag), strings.ToLower(summary))).WithAnalyzer(idx.analyzer).SearchTermPositions())
 

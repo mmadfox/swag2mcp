@@ -5,11 +5,8 @@ import (
 	"time"
 )
 
-// defaultHTTPTimeout and defaultHTTPClient are reserved for future OAuth2
-// token exchange and similar internal auth flows.
-//
-//nolint:unused,gochecknoglobals // reserved for future OAuth2 token exchange.
-var defaultHTTPTimeout = 30 * time.Second
+// defaultHTTPTimeout and defaultHTTPClient are used for OAuth2 token exchange
+// and similar internal auth flows.
+var defaultHTTPTimeout = 30 * time.Second //nolint:gochecknoglobals // shared timeout
 
-//nolint:unused,gochecknoglobals // reserved for future OAuth2 token exchange.
-var defaultHTTPClient = &http.Client{Timeout: defaultHTTPTimeout}
+var defaultHTTPClient = &http.Client{Timeout: defaultHTTPTimeout} //nolint:gochecknoglobals // shared client

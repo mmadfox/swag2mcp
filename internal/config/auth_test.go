@@ -177,15 +177,15 @@ func TestAuth_UnmarshalYAML_script(t *testing.T) {
 	t.Parallel()
 
 	var a Auth
-	if err := yaml.Unmarshal([]byte("type: script\nconfig:\n  source: console.log(\"hello\")"), &a); err != nil {
+	if err := yaml.Unmarshal([]byte("type: script\nconfig:\n  domain: my-api"), &a); err != nil {
 		t.Fatal(err)
 	}
 	c, ok := a.Client.(*auth.ScriptAuthClient)
 	if !ok {
 		t.Fatalf("expected *auth.ScriptAuthClient, got %T", a.Client)
 	}
-	if c.Source != "console.log(\"hello\")" {
-		t.Errorf("Source = %q, want %q", c.Source, "console.log(\"hello\")")
+	if c.Domain != "my-api" {
+		t.Errorf("Domain = %q, want %q", c.Domain, "my-api")
 	}
 }
 
