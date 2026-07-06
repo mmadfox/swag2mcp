@@ -416,8 +416,8 @@ func (idx *Index) Search(ctx context.Context, q string, limit int) ([]*types.End
 		return nil, errors.New("query string is required")
 	}
 
-	if limit <= 0 || limit > 20 {
-		limit = 20
+	if limit <= 0 || limit > 50 {
+		limit = 50
 	}
 
 	query := idx.buildQuery(q)

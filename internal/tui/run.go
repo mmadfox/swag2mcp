@@ -30,7 +30,17 @@ const (
 	runDone
 )
 
-const randSuffixLen = 6
+type runMode int
+
+const (
+	modeSearch runMode = iota
+	modeBrowse
+)
+
+const (
+	randSuffixLen = 6
+	pageSize      = 10
+)
 
 type runModel struct {
 	state         runState
@@ -51,6 +61,9 @@ type runModel struct {
 	selectedEp    service.EndpointTagItem
 	selectedEpID  string
 	epDetail      *service.InspectResponse
+	page          int
+	totalPages    int
+	mode          runMode
 }
 
 func newRunModel(svc *service.Service, ws *workspace.Workspace) runModel {
@@ -63,6 +76,7 @@ func newRunModel(svc *service.Service, ws *workspace.Workspace) runModel {
 		svc:   svc,
 		ws:    ws,
 		input: ti,
+		page:  1,
 	}
 }
 
@@ -91,30 +105,59 @@ func (m runModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "1":
 			if m.state == runMenu {
+				m.mode = modeSearch
 				m.input.SetValue("")
 				m.input.Placeholder = "Search endpoints..."
 				m.state = runSearchQuery
 				m.input.Focus()
 				return m, textinput.Blink
 			}
+			return m.handleDigit("1")
 		case "2":
 			if m.state == runMenu {
+				m.mode = modeBrowse
 				return m.loadSpecs()
 			}
+			return m.handleDigit("2")
 		case "3":
 			if m.state == runMenu {
 				m.state = runDone
 				return m, tea.Quit
 			}
+			return m.handleDigit("3")
+		case "4":
+			return m.handleDigit("4")
+		case "5":
+			return m.handleDigit("5")
+		case "6":
+			return m.handleDigit("6")
+		case "7":
+			return m.handleDigit("7")
+		case "8":
+			return m.handleDigit("8")
+		case "9":
+			return m.handleDigit("9")
+		case "0":
+			return m.handleDigit("0")
 		}
 	}
 
 	if m.state == runEndpointDetail || m.state == runMenu || m.state == runDone || !m.input.Focused() {
 		return m, nil
 	}
+
 	var cmd tea.Cmd
 	m.input, cmd = m.input.Update(msg)
 	return m, cmd
+}
+
+func (m runModel) handleDigit(digit string) (tea.Model, tea.Cmd) {
+	switch m.state {
+	case runSearchResults, runBrowseSpecs, runBrowseCollections, runBrowseTags, runBrowseEndpoints:
+		m.input.SetValue(m.input.Value() + digit)
+		return m, nil
+	}
+	return m, nil
 }
 
 func (m runModel) handleEnter() (tea.Model, tea.Cmd) {
@@ -128,7 +171,22 @@ func (m runModel) handleEnter() (tea.Model, tea.Cmd) {
 		return m.doSearch(val)
 
 	case runSearchResults:
-		return m.selectSearchResult(val)
+		switch strings.ToUpper(val) {
+		case "N":
+			if m.page < m.totalPages {
+				m.page++
+			}
+			m.input.SetValue("")
+			return m, nil
+		case "P":
+			if m.page > 1 {
+				m.page--
+			}
+			m.input.SetValue("")
+			return m, nil
+		default:
+			return m.selectSearchResult(val)
+		}
 
 	case runBrowseSpecs:
 		return m.selectSpec(val)
@@ -153,8 +211,10 @@ func (m runModel) handleBack() (tea.Model, tea.Cmd) {
 		return m, nil
 	case runSearchResults:
 		m.input.SetValue("")
+		m.input.Placeholder = "Search endpoints..."
+		m.input.Focus()
 		m.state = runSearchQuery
-		return m, nil
+		return m, textinput.Blink
 	case runBrowseSpecs:
 		m.state = runMenu
 		return m, nil
@@ -165,8 +225,15 @@ func (m runModel) handleBack() (tea.Model, tea.Cmd) {
 	case runBrowseEndpoints:
 		return m.loadTags(m.selectedColl.ID)
 	case runEndpointDetail:
-		m.state = runMenu
-		return m, nil
+		switch m.mode {
+		case modeSearch:
+			m.state = runSearchResults
+		case modeBrowse:
+			m.state = runBrowseEndpoints
+		}
+		m.input.SetValue("")
+		m.input.Focus()
+		return m, textinput.Blink
 	}
 	return m, nil
 }
@@ -188,7 +255,13 @@ func (m runModel) doSearch(query string) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.searchResults = results.Endpoints
+	m.page = 1
+	m.totalPages = (len(results.Endpoints) + pageSize - 1) / pageSize
+	if m.totalPages < 1 {
+		m.totalPages = 1
+	}
 	m.input.SetValue("")
+	m.input.Placeholder = "Endpoint #"
 	m.input.Focus()
 	m.state = runSearchResults
 	return m, nil
@@ -377,14 +450,23 @@ func (m runModel) View() string {
 		s += "  Press Enter to search, [B]ack  [M]enu.\n"
 
 	case runSearchResults:
+		start := (m.page - 1) * pageSize
+		end := start + pageSize
+		if end > len(m.searchResults) {
+			end = len(m.searchResults)
+		}
+		pageItems := m.searchResults[start:end]
+
 		s += fmt.Sprintf("  Search results (%d):\n", len(m.searchResults))
 		s += "  ──────────────────────\n\n"
-		for i, ep := range m.searchResults {
-			s += fmt.Sprintf("  %d. %-6s %s\n", i+1, ep.Method, ep.Path)
+		for i, ep := range pageItems {
+			globalIdx := start + i + 1
+			s += fmt.Sprintf("  %d. %-6s %s\n", globalIdx, ep.Method, ep.Path)
 			s += fmt.Sprintf("     %s (%s)\n", ep.Summary, ep.SpecDomain)
 		}
+		s += fmt.Sprintf("\n  Page %d/%d\n", m.page, m.totalPages)
 		s += "\n  " + m.input.View() + "\n\n"
-		s += "  Enter number and press Enter.  [B]ack  [M]enu.\n"
+		s += "  Enter number and press Enter (N for next page, P for previous).  [B]ack  [M]enu.\n"
 
 	case runBrowseSpecs:
 		s += "  Specifications:\n"
@@ -476,7 +558,7 @@ func (m runModel) View() string {
 				s += fmt.Sprintf("  %s\n\n", m.msg)
 			}
 
-			s += "  [S]how JSON  [M]enu\n"
+			s += "  [S]how JSON  [B]ack  [M]enu\n"
 		}
 	}
 
