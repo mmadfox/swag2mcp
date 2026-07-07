@@ -224,6 +224,7 @@ func (s *Service) buildSpecInfo(specConfig *config.Spec) (*types.Spec, error) {
 			Timeout:         specConfig.HTTPClient.Timeout,
 			FollowRedirects: specConfig.HTTPClient.FollowRedirects,
 			MaxRedirects:    specConfig.HTTPClient.MaxRedirects,
+			MaxResponseSize: specConfig.HTTPClient.MaxResponseSize,
 		}
 	}
 
@@ -348,6 +349,9 @@ func mergeScalars(result *types.HTTPClientConfig, level *config.HTTPClientConfig
 	}
 	if result.MaxRedirects == nil && level.MaxRedirects != nil {
 		result.MaxRedirects = level.MaxRedirects
+	}
+	if result.MaxResponseSize == nil && level.MaxResponseSize != nil {
+		result.MaxResponseSize = level.MaxResponseSize
 	}
 }
 

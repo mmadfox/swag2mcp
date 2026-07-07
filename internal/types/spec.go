@@ -25,6 +25,7 @@ type HTTPClientConfig struct {
 	Timeout         time.Duration     `json:"timeout,omitempty"`
 	FollowRedirects *bool             `json:"followRedirects,omitempty"`
 	MaxRedirects    *int              `json:"maxRedirects,omitempty"`
+	MaxResponseSize *int              `json:"maxResponseSize,omitempty"`
 }
 
 type Spec struct {

@@ -25,6 +25,7 @@ type HTTPClientConfig struct {
 	Timeout         time.Duration     `yaml:"timeout,omitempty"`
 	FollowRedirects *bool             `yaml:"follow_redirects,omitempty"`
 	MaxRedirects    *int              `yaml:"max_redirects,omitempty"`
+	MaxResponseSize *int              `yaml:"max_response_size,omitempty"`
 }
 
 // Config is the top-level swag2mcp configuration.
