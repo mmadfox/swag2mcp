@@ -61,6 +61,7 @@ func (s *Service) CollectionsBySpec(_ context.Context, req CollectionsRequest) (
 		resp.Collections = append(resp.Collections, CollectionItem{
 			ID:           c.ID,
 			Title:        c.Title,
+			LLMTitle:     c.LLMTitle,
 			CountTags:    c.Stats.Tags,
 			CountMethods: c.Stats.Methods,
 		})

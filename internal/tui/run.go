@@ -629,7 +629,11 @@ func (m runModel) View() string {
 		s += fmt.Sprintf("  Collections for \"%s\":\n", m.selectedSpec.Domain)
 		s += "  ──────────────────────────────\n\n"
 		for i, col := range m.collections {
-			s += fmt.Sprintf("  %d. %s (%d tags, %d methods)\n", i+1, col.Title, col.CountTags, col.CountMethods)
+			title := col.Title
+			if title == "" {
+				title = col.LLMTitle
+			}
+			s += fmt.Sprintf("  %d. %s (%d tags, %d methods)\n", i+1, title, col.CountTags, col.CountMethods)
 		}
 		s += "\n  " + m.input.View() + "\n\n"
 		s += actionHint

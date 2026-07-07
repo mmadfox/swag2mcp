@@ -531,6 +531,8 @@ linters:
         linters: [ golines ]
       - path: 'internal/config/'
         linters: [ golines ]
+      - path: 'internal/service/'
+        linters: [ golines ]
       # nilnil in Auth.MarshalYAML
       - path: 'internal/config/auth\.go'
         linters: [ nilnil ]

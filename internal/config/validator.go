@@ -77,6 +77,22 @@ func ValidateConfig(cfg *Config, opts ValidateOptions) error {
 		})
 	}
 
+	seen := make(map[string]int)
+	for i, spec := range cfg.Specs {
+		if spec.Disable {
+			continue
+		}
+		if j, ok := seen[spec.Domain]; ok {
+			errs = append(errs, validationError{
+				spec:    spec.Domain,
+				errType: "config",
+				message: fmt.Sprintf("duplicate domain %q (specs #%d and #%d)", spec.Domain, j+1, i+1),
+			})
+		} else {
+			seen[spec.Domain] = i
+		}
+	}
+
 	for _, spec := range cfg.Specs {
 		if spec.Disable {
 			continue
