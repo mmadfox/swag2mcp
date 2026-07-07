@@ -8,6 +8,7 @@ import (
 const (
 	validationFailedErrCode = "validation_failed"
 	notFoundErrCode         = "not_found"
+	rateLimitErrCode        = "rate_limit"
 )
 
 type LLMError struct {
@@ -29,6 +30,14 @@ func NewNotFoundError(msg string, err error) *LLMError {
 		Code:     notFoundErrCode,
 		Message:  msg,
 		Original: formatError(err),
+	}
+}
+
+func NewRateLimitError(err error) *LLMError {
+	return &LLMError{
+		Code:     rateLimitErrCode,
+		Message:  err.Error(),
+		Original: "",
 	}
 }
 

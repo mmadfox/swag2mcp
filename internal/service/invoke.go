@@ -64,6 +64,10 @@ func (s *Service) Invoke(ctx context.Context, request InvokeRequest) (InvokeResp
 		)
 	}
 
+	if err := s.rateLimiter.allow(request.EndpointID); err != nil {
+		return InvokeResponse{}, NewRateLimitError(err)
+	}
+
 	endpoint, err := s.index.EndpointByID(request.EndpointID)
 	if err != nil {
 		return InvokeResponse{}, NewNotFoundError(

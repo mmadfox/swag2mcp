@@ -17,6 +17,7 @@ type Service struct {
 	v              *validator.Validate
 	disableLLMAuth atomic.Bool
 	dumpDir        string
+	rateLimiter    *invokeRateLimiter
 }
 
 type NewOption func(*Service)
@@ -43,12 +44,11 @@ func New(opts ...NewOption) (*Service, error) {
 		return nil, fmt.Errorf("failed to create workspace: %w", err)
 	}
 	s := &Service{
-		index: idx,
-		cache: cache.New(ws.Root()),
-		ws:    ws,
-		v: validator.New(
-			validator.WithRequiredStructEnabled(),
-		),
+		index:       idx,
+		cache:       cache.New(ws.Root()),
+		ws:          ws,
+		v:           validator.New(validator.WithRequiredStructEnabled()),
+		rateLimiter: newInvokeRateLimiter(),
 	}
 	for _, opt := range opts {
 		opt(s)
