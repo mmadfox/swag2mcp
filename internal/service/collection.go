@@ -113,6 +113,9 @@ func (s *Service) CollectionByID(_ context.Context, req CollectionByIDRequest) (
 				CountMethods: t.Stats.Methods,
 			})
 		}
+		sort.Slice(resp.Tags, func(i, j int) bool {
+			return resp.Tags[i].ID < resp.Tags[j].ID
+		})
 	}
 
 	return resp, nil

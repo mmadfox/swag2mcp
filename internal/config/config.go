@@ -3,14 +3,37 @@ package config
 import (
 	"fmt"
 	"iter"
+	"time"
 )
+
+// Cookie represents an HTTP cookie for configuration.
+type Cookie struct {
+	Name     string `yaml:"name"     validate:"required"`
+	Value    string `yaml:"value"    validate:"required"`
+	Domain   string `yaml:"domain,omitempty"`
+	Path     string `yaml:"path,omitempty"`
+	Secure   bool   `yaml:"secure,omitempty"`
+	HTTPOnly bool   `yaml:"http_only,omitempty"`
+}
+
+// HTTPClientConfig holds HTTP client settings for a config, spec, or collection.
+// Settings cascade: collection → spec → global.
+type HTTPClientConfig struct {
+	Headers         map[string]string `yaml:"headers,omitempty"`
+	Cookies         []Cookie          `yaml:"cookies,omitempty"`
+	UserAgent       string            `yaml:"user_agent,omitempty"`
+	Timeout         time.Duration     `yaml:"timeout,omitempty"`
+	FollowRedirects *bool             `yaml:"follow_redirects,omitempty"`
+	MaxRedirects    *int              `yaml:"max_redirects,omitempty"`
+}
 
 // Config is the top-level swag2mcp configuration.
 //
 // Validation rules:
 //   - Specs: at least one spec must be defined.
 type Config struct {
-	Specs []Spec `yaml:"specs"`
+	HTTPClient *HTTPClientConfig `yaml:"http_client,omitempty"`
+	Specs      []Spec            `yaml:"specs"`
 }
 
 // Spec defines a single API specification group.
@@ -29,7 +52,7 @@ type Spec struct {
 	Disable        bool              `yaml:"disable,omitempty"`
 	Tags           []string          `yaml:"tags,omitempty"`
 	BaseURL        string            `yaml:"base_url,omitempty"        validate:"required,url"`
-	Headers        map[string]string `yaml:"headers,omitempty"`
+	HTTPClient     *HTTPClientConfig `yaml:"http_client,omitempty"`
 	Auth           Auth              `yaml:"auth,omitempty"`
 }
 
@@ -46,7 +69,7 @@ type Collection struct {
 	Title          string            `yaml:"title,omitempty"`
 	Location       string            `yaml:"location"                  json:"location"  validate:"required,min=5,max=250"`
 	Disable        bool              `yaml:"disable,omitempty"          json:"disable"`
-	Headers        map[string]string `yaml:"headers,omitempty"`
+	HTTPClient     *HTTPClientConfig `yaml:"http_client,omitempty"`
 	BaseURL        string            `yaml:"base_url,omitempty"                          validate:"omitempty,url"`
 }
 

@@ -3,8 +3,9 @@ specs:
   - domain: saas-api
     base_url: https://api.saas.example.com
     llm_title: SaaS Platform API
-    headers:
-      X-Platform: saas-v2
+    http_client:
+      headers:
+        X-Platform: saas-v2
     collections:
       - llm_title: Users
         location: https://api.saas.example.com/openapi/users.json
@@ -12,8 +13,9 @@ specs:
       - llm_title: Billing
         location: https://api.saas.example.com/openapi/billing.json
         base_url: https://billing.saas.example.com
-        headers:
-          X-Billing-Version: "2024-q1"
+        http_client:
+          headers:
+            X-Billing-Version: "2024-q1"
 
       - llm_title: Legacy
         location: https://api.saas.example.com/openapi/legacy.json

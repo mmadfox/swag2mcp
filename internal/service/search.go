@@ -46,7 +46,10 @@ func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse
 		if a.CollectionID != b.CollectionID {
 			return a.CollectionID < b.CollectionID
 		}
-		return a.TagID < b.TagID
+		if a.TagID != b.TagID {
+			return a.TagID < b.TagID
+		}
+		return a.ID < b.ID
 	})
 
 	return SearchResponse{Endpoints: items}, nil

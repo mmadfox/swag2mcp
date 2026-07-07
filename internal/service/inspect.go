@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"strings"
 
 	"github.com/mmadfox/swag2mcp/internal/spec"
 )
@@ -24,6 +25,7 @@ type (
 		Method       string            `json:"method"            jsonschema:"required,HTTP method (GET, POST, etc.)"`
 		Path         string            `json:"path"              jsonschema:"required,API path"`
 		BaseURL      string            `json:"baseUrl"           jsonschema:"required,Base URL of the API"`
+		FullURL      string            `json:"fullUrl"           jsonschema:"required,Full URL of the endpoint"`
 		Operation    *spec.Operation   `json:"operation"         jsonschema:"required,Operation details"`
 		Headers      map[string]string `json:"headers,omitempty" jsonschema:"optional,Headers to be sent with the request"`
 	}
@@ -66,12 +68,12 @@ func (s *Service) Inspect(_ context.Context, req InspectRequest) (InspectRespons
 		Path:         ep.Path,
 		Operation:    ep.Operation,
 		BaseURL:      baseURL,
+		FullURL:      baseURL + "/" + strings.TrimLeft(ep.Path, "/"),
 	}
 
-	if len(spec.Headers) > 0 || len(collection.Headers) > 0 {
-		resp.Headers = make(map[string]string, len(spec.Headers)+len(collection.Headers))
-		maps.Copy(resp.Headers, spec.Headers)
-		maps.Copy(resp.Headers, collection.Headers)
+	if collection.HTTPClient != nil && len(collection.HTTPClient.Headers) > 0 {
+		resp.Headers = make(map[string]string, len(collection.HTTPClient.Headers))
+		maps.Copy(resp.Headers, collection.HTTPClient.Headers)
 	}
 
 	return resp, nil

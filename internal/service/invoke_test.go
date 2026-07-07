@@ -262,8 +262,10 @@ func TestInvoke_CollectionHeaders(t *testing.T) {
 	// Override collection headers
 	collectionID := id.Collection(specInfo.ID, t.Name()+"/collection")
 	collection, _ := serviceInstance.index.CollectionByID(collectionID)
-	collection.Headers = map[string]string{
-		"X-Region": "us-east-1",
+	collection.HTTPClient = &types.HTTPClientConfig{
+		Headers: map[string]string{
+			"X-Region": "us-east-1",
+		},
 	}
 
 	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
@@ -513,6 +515,139 @@ func TestInvoke_ContentTypeHeader(t *testing.T) {
 
 	if response.StatusCode != http.StatusCreated {
 		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusCreated)
+	}
+}
+
+// TestInvoke_UserAgent verifies that User-Agent from HTTPClientConfig is applied.
+func TestInvoke_UserAgent(t *testing.T) {
+	t.Parallel()
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	testServer := newTestServer(t, testServerConfig{
+		ExpectedMethod: http.MethodGet,
+		ExpectedPath:   "/users",
+		ExpectedHeaders: map[string]string{
+			"User-Agent": "swag2mcp-test/1.0",
+		},
+		StatusCode:   http.StatusOK,
+		ResponseBody: map[string]any{"users": []any{}},
+	})
+	t.Cleanup(testServer.Close)
+
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	// Set HTTP client config with custom User-Agent
+	userAgent := "swag2mcp-test/1.0"
+	collectionID := id.Collection(specInfo.ID, t.Name()+"/collection")
+	collection, _ := serviceInstance.index.CollectionByID(collectionID)
+	collection.HTTPClient = &types.HTTPClientConfig{
+		UserAgent: userAgent,
+	}
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
+	}
+}
+
+// TestInvoke_Cookies verifies that cookies from HTTPClientConfig are applied.
+func TestInvoke_Cookies(t *testing.T) {
+	t.Parallel()
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	testServer := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		cookie := request.Header.Get("Cookie")
+		if !strings.Contains(cookie, "session_id=abc123") {
+			writer.WriteHeader(http.StatusBadRequest)
+			_, _ = fmt.Fprintf(writer, `{"error":"missing cookie: %s"}`, cookie)
+			return
+		}
+		if !strings.Contains(cookie, "theme=dark") {
+			writer.WriteHeader(http.StatusBadRequest)
+			_, _ = fmt.Fprintf(writer, `{"error":"missing cookie: %s"}`, cookie)
+			return
+		}
+		writer.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(writer).Encode(map[string]any{"ok": true})
+	}))
+	t.Cleanup(testServer.Close)
+
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	collectionID := id.Collection(specInfo.ID, t.Name()+"/collection")
+	collection, _ := serviceInstance.index.CollectionByID(collectionID)
+	collection.HTTPClient = &types.HTTPClientConfig{
+		Cookies: []types.Cookie{
+			{Name: "session_id", Value: "abc123"},
+			{Name: "theme", Value: "dark"},
+		},
+	}
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
+	}
+}
+
+// TestInvoke_HTTPClientConfigHeaders verifies that headers from HTTPClientConfig are applied.
+func TestInvoke_HTTPClientConfigHeaders(t *testing.T) {
+	t.Parallel()
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	testServer := newTestServer(t, testServerConfig{
+		ExpectedMethod: http.MethodGet,
+		ExpectedPath:   "/users",
+		ExpectedHeaders: map[string]string{
+			"X-Custom-Header": "custom-value",
+		},
+		StatusCode:   http.StatusOK,
+		ResponseBody: map[string]any{"users": []any{}},
+	})
+	t.Cleanup(testServer.Close)
+
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	collectionID := id.Collection(specInfo.ID, t.Name()+"/collection")
+	collection, _ := serviceInstance.index.CollectionByID(collectionID)
+	collection.HTTPClient = &types.HTTPClientConfig{
+		Headers: map[string]string{
+			"X-Custom-Header": "custom-value",
+		},
+	}
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
 	}
 }
 
@@ -907,14 +1042,21 @@ func buildTestService(t *testing.T, _ string, specDoc *spec.Doc, specHeaders map
 		ID:      specID,
 		Domain:  uniqueDomain,
 		BaseURL: "http://test-server",
-		Headers: specHeaders,
 		Auth:    authenticator,
+	}
+	if len(specHeaders) > 0 {
+		specInfo.HTTPClient = &types.HTTPClientConfig{
+			Headers: specHeaders,
+		}
 	}
 
 	collectionID := id.Collection(specID, uniqueDomain+"/collection")
 	collectionInfo := &types.Collection{
 		ID:     collectionID,
 		SpecID: specID,
+	}
+	if specInfo.HTTPClient != nil {
+		collectionInfo.HTTPClient = specInfo.HTTPClient
 	}
 
 	var allTags []*types.Tag

@@ -54,6 +54,7 @@ demonstrates a specific feature or use case.
 | | [custom-headers](examples/spec-features/custom-headers) | Custom HTTP headers |
 | | [multiple-collections](examples/spec-features/multiple-collections) | Multiple collections per spec |
 | | [collection-override](examples/spec-features/collection-override) | Collection-level overrides |
+| | [http-client-config](examples/spec-features/http-client-config) | HTTP client configuration (headers, cookies, timeout, redirects) |
 
 ## License
 

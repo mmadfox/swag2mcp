@@ -1,9 +1,31 @@
 package types
 
 import (
+	"time"
+
 	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/spec"
 )
+
+// Cookie represents an HTTP cookie.
+type Cookie struct {
+	Name     string `json:"name"`
+	Value    string `json:"value"`
+	Domain   string `json:"domain,omitempty"`
+	Path     string `json:"path,omitempty"`
+	Secure   bool   `json:"secure,omitempty"`
+	HTTPOnly bool   `json:"httpOnly,omitempty"`
+}
+
+// HTTPClientConfig holds HTTP client settings.
+type HTTPClientConfig struct {
+	Headers         map[string]string `json:"headers,omitempty"`
+	Cookies         []Cookie          `json:"cookies,omitempty"`
+	UserAgent       string            `json:"userAgent,omitempty"`
+	Timeout         time.Duration     `json:"timeout,omitempty"`
+	FollowRedirects *bool             `json:"followRedirects,omitempty"`
+	MaxRedirects    *int              `json:"maxRedirects,omitempty"`
+}
 
 type Spec struct {
 	ID             string             `json:"id"`
@@ -11,7 +33,7 @@ type Spec struct {
 	LLMTitle       string             `json:"llmtitle"`
 	LLMInstruction string             `json:"llminstruction"`
 	BaseURL        string             `json:"baseurl"`
-	Headers        map[string]string  `json:"headers"`
+	HTTPClient     *HTTPClientConfig  `json:"httpClient,omitempty"`
 	Auth           auth.Authenticator `json:"auth"`
 	Stats          struct {
 		Collections int `json:"collections"`
@@ -34,7 +56,7 @@ type Collection struct {
 	LLMInstruction string            `json:"llminstruction"`
 	Title          string            `json:"title"`
 	BaseURL        string            `json:"baseurl,omitempty"`
-	Headers        map[string]string `json:"headers,omitempty"`
+	HTTPClient     *HTTPClientConfig `json:"httpClient,omitempty"`
 	Stats          struct {
 		Tags    int `json:"tags"`
 		Methods int `json:"methods"`

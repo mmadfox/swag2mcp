@@ -1,0 +1,45 @@
+# swag2mcp — HTTP Client Configuration
+http_client:
+  headers:
+    Accept: application/json
+  timeout: 30s
+  follow_redirects: true
+  max_redirects: 5
+
+specs:
+  - domain: api-a
+    base_url: https://api-a.example.com
+    llm_title: API A
+    http_client:
+      timeout: 60s
+      headers:
+        X-API-Key: $(API_A_KEY)
+    collections:
+      - llm_title: Main
+        location: https://api-a.example.com/openapi.json
+
+  - domain: api-b
+    base_url: https://api-b.example.com
+    llm_title: API B
+    http_client:
+      user_agent: swag2mcp-bot/1.0
+      cookies:
+        - name: session_id
+          value: $(SESSION_ID)
+          domain: .example.com
+          path: /
+          secure: true
+          http_only: true
+    collections:
+      - llm_title: Users
+        location: https://api-b.example.com/openapi/users.json
+      - llm_title: Billing
+        location: https://api-b.example.com/openapi/billing.json
+        http_client:
+          user_agent: billing-bot/1.0
+          headers:
+            X-Billing-Version: "2024-q1"
+      - llm_title: Legacy
+        location: https://api-b.example.com/openapi/legacy.json
+        http_client:
+          follow_redirects: false

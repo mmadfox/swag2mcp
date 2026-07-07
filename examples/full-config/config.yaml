@@ -1,5 +1,5 @@
 # swag2mcp — Full Configuration
-# Demonstrates every feature: multiple specs, all auth types, tags, headers,
+# Demonstrates every feature: multiple specs, all auth types, tags, http_client,
 # environment variables, disable flags, and collection overrides.
 specs:
   # ─── Spec 1: Production API with Bearer auth ──────────────────────────
@@ -13,9 +13,10 @@ specs:
     tags:
       - production
       - payments
-    headers:
-      X-Request-ID: req-001
-      X-Idempotency-Key: idem-001
+    http_client:
+      headers:
+        X-Request-ID: req-001
+        X-Idempotency-Key: idem-001
     auth:
       type: bearer
       config:
@@ -48,8 +49,9 @@ specs:
       - llm_title: System Settings
         location: /etc/swag2mcp/specs/admin-settings.json
         base_url: https://settings.internal.example.com
-        headers:
-          X-DC: us-east-1
+        http_client:
+          headers:
+            X-DC: us-east-1
 
   # ─── Spec 3: Disabled spec (will be ignored) ──────────────────────────
   - domain: legacy-api

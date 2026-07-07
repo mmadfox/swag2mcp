@@ -669,7 +669,7 @@ func (m runModel) View() string {
 			s += fmt.Sprintf("  Method:  %s\n", m.epDetail.Method)
 			s += fmt.Sprintf("  Path:    %s\n", m.epDetail.Path)
 			s += fmt.Sprintf("  BaseURL: %s\n", m.epDetail.BaseURL)
-			s += fmt.Sprintf("  FullURL: %s%s\n\n", m.epDetail.BaseURL, m.epDetail.Path)
+			s += fmt.Sprintf("  FullURL: %s\n\n", m.epDetail.FullURL)
 
 			if m.epDetail.Operation != nil {
 				if m.epDetail.Operation.Summary != "" {

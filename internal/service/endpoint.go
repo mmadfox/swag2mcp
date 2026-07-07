@@ -112,7 +112,7 @@ func (s *Service) EndpointsByTag(_ context.Context, req EndpointsByTagRequest) (
 	}
 
 	sort.Slice(resp.Endpoints, func(i, j int) bool {
-		return resp.Endpoints[i].Method < resp.Endpoints[j].Method
+		return resp.Endpoints[i].ID < resp.Endpoints[j].ID
 	})
 
 	return resp, nil
@@ -182,7 +182,7 @@ func (s *Service) EndpointsByCollection(
 	}
 
 	sort.Slice(resp.Endpoints, func(i, j int) bool {
-		return resp.Endpoints[i].TagID < resp.Endpoints[j].TagID
+		return resp.Endpoints[i].ID < resp.Endpoints[j].ID
 	})
 
 	return resp, nil
@@ -215,7 +215,10 @@ func (s *Service) EndpointsBySpec(_ context.Context, req EndpointsBySpecRequest)
 		if a.CollectionID != b.CollectionID {
 			return a.CollectionID < b.CollectionID
 		}
-		return a.TagID < b.TagID
+		if a.TagID != b.TagID {
+			return a.TagID < b.TagID
+		}
+		return a.ID < b.ID
 	})
 
 	return EndpointsBySpecResponse{Endpoints: items}, nil

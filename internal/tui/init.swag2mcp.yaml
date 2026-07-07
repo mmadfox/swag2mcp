@@ -4,9 +4,10 @@ specs:
   - domain: train-booking
     disable: true
     base_url: https://api.trains-railway.com
-    headers:
-      X-Request-ID: generated-request-id
-      X-User-Agent: mobile-app-v2.5
+    http_client:
+      headers:
+        X-Request-ID: generated-request-id
+        X-User-Agent: mobile-app-v2.5
 
     llm_title: Railway Ticket Booking System API
     llm_instruction: |
@@ -36,9 +37,10 @@ specs:
 
   - domain: petfood-shop
     base_url: https://shop.petfood.local
-    headers:
-      X-Shop-ID: petshop-main
-      X-Currency: USD
+    http_client:
+      headers:
+        X-Shop-ID: petshop-main
+        X-Currency: USD
 
     llm_title: Pet Food E-Commerce Platform
     llm_instruction: |
@@ -64,9 +66,10 @@ specs:
 
   - domain: music-stream
     base_url: https://stream.music.global
-    headers:
-      X-Device-ID: device-{{device_uuid}}
-      X-App-Version: 4.2.1
+    http_client:
+      headers:
+        X-Device-ID: device-{{device_uuid}}
+        X-App-Version: 4.2.1
 
     llm_title: Global Music Streaming Service
     llm_instruction: |
@@ -92,11 +95,6 @@ specs:
 
   - domain: cinema-tickets
     base_url: https://tickets.cinema.world
-    headers:
-      X-Theater-ID: cinema-main-metro
-      X-Language: en-US
-      X-Detector: web-browser
-
     llm_title: Cinema Ticket Booking Platform
     llm_instruction: |
       Comprehensive cinema management and ticket booking system.

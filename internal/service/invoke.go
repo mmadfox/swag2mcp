@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -83,6 +84,7 @@ func (s *Service) Invoke(ctx context.Context, request InvokeRequest) (InvokeResp
 		withEndpoint(endpoint),
 		withParameters(request.Parameters),
 		withBody(request.RequestBody),
+		withHTTPConfig(mergeHTTPClientConfigs(specification.HTTPClient, collection.HTTPClient)),
 	).build()
 	if buildError != nil {
 		return InvokeResponse{}, fmt.Errorf("failed to build request: %w", buildError)
@@ -90,7 +92,7 @@ func (s *Service) Invoke(ctx context.Context, request InvokeRequest) (InvokeResp
 
 	s.dumpRequest(httpRequest, specification.Domain)
 
-	httpClient := newAuthHTTPClient(specification)
+	httpClient := newAuthHTTPClient(specification, mergeHTTPClientConfigs(specification.HTTPClient, collection.HTTPClient))
 	response, doError := httpClient.Do(httpRequest)
 	if doError != nil {
 		return InvokeResponse{}, fmt.Errorf("request failed: %w", doError)
@@ -108,6 +110,7 @@ type requestBuilder struct {
 	endpoint   *types.Endpoint
 	parameters map[string]any
 	body       map[string]any
+	httpConfig *types.HTTPClientConfig
 }
 
 // requestOption is a functional option for configuring a requestBuilder.
@@ -166,6 +169,13 @@ func withBody(body map[string]any) requestOption {
 	}
 }
 
+// withHTTPConfig sets the HTTP client configuration.
+func withHTTPConfig(config *types.HTTPClientConfig) requestOption {
+	return func(builder *requestBuilder) {
+		builder.httpConfig = config
+	}
+}
+
 // build constructs the [http.Request] from the configured options.
 func (builder *requestBuilder) build() (*http.Request, error) {
 	targetURL := builder.resolveBaseURL()
@@ -213,6 +223,7 @@ func (builder *requestBuilder) build() (*http.Request, error) {
 	}
 
 	builder.applyHeaders(httpRequest)
+	builder.applyHTTPClientConfig(httpRequest)
 
 	return httpRequest, nil
 }
@@ -241,16 +252,8 @@ func (builder *requestBuilder) filterParametersByLocation(location string) map[s
 	return result
 }
 
-// applyHeaders sets spec-level, collection-level, and operation-level headers on the request.
+// applyHeaders sets operation-level headers and defaults on the request.
 func (builder *requestBuilder) applyHeaders(httpRequest *http.Request) {
-	for headerName, headerValue := range builder.spec.Headers {
-		httpRequest.Header.Set(headerName, headerValue)
-	}
-
-	for headerName, headerValue := range builder.collection.Headers {
-		httpRequest.Header.Set(headerName, headerValue)
-	}
-
 	headerParameters := builder.filterParametersByLocation("header")
 	for parameterName, parameterValue := range headerParameters {
 		httpRequest.Header.Set(parameterName, parameterValue)
@@ -262,6 +265,35 @@ func (builder *requestBuilder) applyHeaders(httpRequest *http.Request) {
 
 	if httpRequest.Header.Get("Accept") == "" {
 		httpRequest.Header.Set("Accept", "application/json")
+	}
+}
+
+// applyHTTPClientConfig applies HTTP client config (headers, cookies, user-agent) to the request.
+func (builder *requestBuilder) applyHTTPClientConfig(httpRequest *http.Request) {
+	if builder.httpConfig == nil {
+		return
+	}
+
+	for headerName, headerValue := range builder.httpConfig.Headers {
+		httpRequest.Header.Set(headerName, headerValue)
+	}
+
+	if builder.httpConfig.UserAgent != "" {
+		httpRequest.Header.Set("User-Agent", builder.httpConfig.UserAgent)
+	}
+
+	if len(builder.httpConfig.Cookies) > 0 {
+		for _, cookie := range builder.httpConfig.Cookies {
+			//nolint:gosec // cookies are user-configured, not secrets
+			httpRequest.AddCookie(&http.Cookie{
+				Name:     cookie.Name,
+				Value:    cookie.Value,
+				Domain:   cookie.Domain,
+				Path:     cookie.Path,
+				Secure:   cookie.Secure,
+				HttpOnly: cookie.HTTPOnly,
+			})
+		}
 	}
 }
 
@@ -295,12 +327,52 @@ func newInvokeResponse(response *http.Response) (InvokeResponse, error) {
 	}, nil
 }
 
-// newAuthHTTPClient returns an [http.Client] that applies authentication to every request.
-func newAuthHTTPClient(specification *types.Spec) *http.Client {
+// newAuthHTTPClient returns an [http.Client] that applies authentication and
+// HTTP client config (timeout, redirects) to every request.
+func newAuthHTTPClient(specification *types.Spec, httpConfig *types.HTTPClientConfig) *http.Client {
+	client := &http.Client{}
+
 	if specification.Auth != nil {
-		return auth.NewHTTPClient(specification.Auth)
+		client.Transport = &auth.Transport{
+			Base: http.DefaultTransport,
+			Auth: specification.Auth,
+		}
 	}
-	return http.DefaultClient
+
+	if httpConfig != nil {
+		applyHTTPClientTimeout(client, httpConfig)
+		applyHTTPClientRedirects(client, httpConfig)
+	}
+
+	if client.Transport == nil {
+		client.Transport = http.DefaultTransport
+	}
+
+	return client
+}
+
+// applyHTTPClientTimeout sets the timeout on the client if configured.
+func applyHTTPClientTimeout(client *http.Client, config *types.HTTPClientConfig) {
+	if config.Timeout > 0 {
+		client.Timeout = config.Timeout
+	}
+}
+
+// applyHTTPClientRedirects sets redirect behavior on the client if configured.
+func applyHTTPClientRedirects(client *http.Client, config *types.HTTPClientConfig) {
+	if config.FollowRedirects != nil && !*config.FollowRedirects {
+		client.CheckRedirect = func(_ *http.Request, _ []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+	} else if config.MaxRedirects != nil {
+		maxRedirects := *config.MaxRedirects
+		client.CheckRedirect = func(_ *http.Request, via []*http.Request) error {
+			if len(via) >= maxRedirects {
+				return fmt.Errorf("too many redirects (max %d)", maxRedirects)
+			}
+			return nil
+		}
+	}
 }
 
 // validateParameters checks that all required parameters are present and that no
@@ -448,7 +520,7 @@ func validateArraySchema(schema *spec.Schema, value any, path string) error {
 
 // dumpRequest writes the HTTP request to a file for debugging if dumpDir is configured.
 func (s *Service) dumpRequest(request *http.Request, domain string) {
-	if s.dumpDir == "" {
+	if len(s.dumpDir) == 0 {
 		return
 	}
 
@@ -463,4 +535,44 @@ func (s *Service) dumpRequest(request *http.Request, domain string) {
 
 	_ = os.MkdirAll(s.dumpDir, 0750)
 	_ = os.WriteFile(filePath, dump, 0600)
+}
+
+// mergeHTTPClientConfigs merges two HTTP client configs. Collection overrides spec.
+func mergeHTTPClientConfigs(spec, collection *types.HTTPClientConfig) *types.HTTPClientConfig {
+	if spec == nil {
+		return collection
+	}
+	if collection == nil {
+		return spec
+	}
+
+	result := &types.HTTPClientConfig{
+		Headers:         make(map[string]string),
+		Cookies:         collection.Cookies,
+		UserAgent:       collection.UserAgent,
+		Timeout:         collection.Timeout,
+		FollowRedirects: collection.FollowRedirects,
+		MaxRedirects:    collection.MaxRedirects,
+	}
+
+	maps.Copy(result.Headers, spec.Headers)
+	maps.Copy(result.Headers, collection.Headers)
+
+	if result.UserAgent == "" {
+		result.UserAgent = spec.UserAgent
+	}
+	if result.Timeout == 0 {
+		result.Timeout = spec.Timeout
+	}
+	if result.FollowRedirects == nil {
+		result.FollowRedirects = spec.FollowRedirects
+	}
+	if result.MaxRedirects == nil {
+		result.MaxRedirects = spec.MaxRedirects
+	}
+	if len(result.Cookies) == 0 {
+		result.Cookies = spec.Cookies
+	}
+
+	return result
 }
