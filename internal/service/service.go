@@ -16,6 +16,7 @@ type Service struct {
 	ws             *workspace.Workspace
 	v              *validator.Validate
 	disableLLMAuth atomic.Bool
+	dumpDir        string
 }
 
 type NewOption func(*Service)
@@ -23,6 +24,12 @@ type NewOption func(*Service)
 func WithDisableLLMAuth(disable bool) NewOption {
 	return func(s *Service) {
 		s.disableLLMAuth.Store(disable)
+	}
+}
+
+func WithDumpDir(dir string) NewOption {
+	return func(s *Service) {
+		s.dumpDir = dir
 	}
 }
 

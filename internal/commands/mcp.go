@@ -22,6 +22,7 @@ func newMCPCmd(version string) *cobra.Command {
 		Logfile        string
 		Tags           string
 		DisableLLMAuth bool
+		DumpDir        string
 	}{}
 
 	cmd := &cobra.Command{
@@ -73,9 +74,14 @@ func newMCPCmd(version string) *cobra.Command {
 				}
 			}
 
-			svc, svcErr := service.New(
+			svcOpts := []service.NewOption{
 				service.WithDisableLLMAuth(opts.DisableLLMAuth),
-			)
+			}
+			if opts.DumpDir != "" {
+				svcOpts = append(svcOpts, service.WithDumpDir(opts.DumpDir))
+			}
+
+			svc, svcErr := service.New(svcOpts...)
 			if svcErr != nil {
 				return fmt.Errorf("failed to create service: %w", svcErr)
 			}
@@ -103,6 +109,7 @@ func newMCPCmd(version string) *cobra.Command {
 	cmd.Flags().StringVarP(&opts.Logfile, "logfile", "f", "", "Filename to log to; if unset, logs to stderr")
 	cmd.Flags().StringVarP(&opts.Tags, "tags", "t", "", "Filter specs by tags (comma-separated)")
 	cmd.Flags().BoolVar(&opts.DisableLLMAuth, "disable-llm-auth", false, "Disable LLM auth token retrieval")
+	cmd.Flags().StringVar(&opts.DumpDir, "dump-dir", "", "Directory to dump HTTP requests for debugging")
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
 
