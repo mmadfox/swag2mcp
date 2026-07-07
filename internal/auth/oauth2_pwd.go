@@ -62,8 +62,9 @@ func (c *OAuth2PasswordAuthClient) Apply(req *http.Request, out *Info) error {
 }
 
 func (c *OAuth2PasswordAuthClient) fetchToken() (string, int, error) {
+	const grantTypePassword = "password"
 	form := url.Values{
-		"grant_type":    {"password"},
+		"grant_type":    {grantTypePassword},
 		"username":      {c.Username},
 		"password":      {c.Password},
 		"client_id":     {c.ClientID},

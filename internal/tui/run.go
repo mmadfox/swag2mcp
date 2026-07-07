@@ -434,7 +434,7 @@ func (m runModel) selectAuthSpec(val string) (tea.Model, tea.Cmd) {
 }
 
 func (m runModel) doAuth() (tea.Model, tea.Cmd) {
-	result, err := m.svc.Auth(context.Background(), service.AuthRequest{DomainID: m.selectedSpec.ID})
+	result, err := m.svc.Auth(context.Background(), service.AuthRequest{SpecID: m.selectedSpec.ID})
 	if err != nil {
 		m.err = err
 		return m, nil

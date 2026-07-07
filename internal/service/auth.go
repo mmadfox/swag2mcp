@@ -9,10 +9,12 @@ import (
 )
 
 type (
+	// AuthRequest is the request body for auth requests.
 	AuthRequest struct {
-		DomainID string `json:"domainId" validate:"required,md5" jsonschema:"required,The 32-character MD5 hash ID of the spec/domain to get an auth token for"`
+		SpecID string `json:"specId" validate:"required,md5" jsonschema:"required,The 32-character MD5 hash ID of the spec/domain to get an auth token for"`
 	}
 
+	// AuthResponse contains a JWT token.
 	AuthResponse struct {
 		Token       string            `json:"token"`
 		Headers     map[string]string `json:"headers,omitempty"`
@@ -20,14 +22,15 @@ type (
 	}
 )
 
+// Auth returns the authentication response.
 func (s *Service) Auth(ctx context.Context, req AuthRequest) (AuthResponse, error) {
 	if s.disableLLMAuth.Load() {
 		return AuthResponse{}, nil
 	}
 
-	spec, err := s.index.SpecByID(req.DomainID)
+	spec, err := s.index.SpecByID(req.SpecID)
 	if err != nil {
-		return AuthResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", req.DomainID), err)
+		return AuthResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", req.SpecID), err)
 	}
 
 	if spec.Auth == nil {
