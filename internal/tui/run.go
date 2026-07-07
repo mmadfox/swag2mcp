@@ -639,7 +639,11 @@ func (m runModel) View() string {
 		s += actionHint
 
 	case runBrowseTags:
-		s += fmt.Sprintf("  Tags for \"%s\":\n", m.selectedColl.Title)
+		title := m.selectedColl.Title
+		if title == "" {
+			title = m.selectedColl.LLMTitle
+		}
+		s += fmt.Sprintf("  Tags for \"%s\":\n", title)
 		s += "  ────────────────────────\n\n"
 		for i, tag := range m.tags {
 			s += fmt.Sprintf("  %d. %s (%d methods)\n", i+1, tag.Title, tag.CountMethods)
