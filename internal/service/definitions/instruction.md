@@ -30,6 +30,7 @@ User asks "what APIs exist?" → spec_list
 User names a spec         → spec_by_id → collection_by_spec → tag_by_collection → endpoint_by_tag
 User wants all of a spec  → endpoint_by_spec
 User describes functionality → search
+User asks to find a method/endpoint → search (NOT manual navigation)
 User has endpoint ID      → endpoint_by_id (quick) or inspect (details)
 User asks to "do" something → inspect → invoke
 ```
@@ -41,24 +42,32 @@ User asks to "do" something → inspect → invoke
 3. **Inspect before invoke**: Always call `inspect` before `invoke` to understand parameters
 4. **Destructive actions**: Never POST/PUT/PATCH/DELETE without explicit user request
 5. **`endpoint_by_id` vs `inspect`**: `endpoint_by_id` = quick summary (method, path); `inspect` = full technical spec (schemas, params)
+6. **Search, don't navigate**: When the user asks to find an endpoint by description, name, path, tag, or functionality — use `search`. Do NOT manually traverse spec → collection → tag → endpoint.
 
 ## The `search` Tool - Complete Guide
 
-**Purpose:** Search for API endpoints when you **do NOT know the endpoint ID**.
+**Purpose:** The ONLY tool for finding endpoints when you do NOT know the endpoint ID. One `search` call replaces dozens of manual navigation steps.
 
 **Arguments:**
 - `query` (string, required) — search query using the Query String syntax
 - `limit` (integer, required) — max number of results to return (1-50)
 
-### IMPORTANT RULE
-**ALWAYS use the `search` tool when you need to find an endpoint and don't have its ID.** 
-Never guess the endpoint ID. Never skip the search. If the user asks about an endpoint by name, path, tag, or description — search first.
+### CRITICAL RULE
+**ALWAYS use `search` when you need to find an endpoint and don't have its ID.**
+Never guess the endpoint ID. Never manually traverse spec → collection → tag → endpoint to find something. Never use `endpoint_by_tag`/`endpoint_by_collection` for discovery.
 
-### When to use
-- User asks: "How do I create a pet?" → search for `+method:POST +summary:pet`
-- User asks: "Show me auth endpoints" → search for `tag:auth`
-- User asks: "Find the endpoint for getting users" → search for `+method:GET +path:user`
-- User mentions a path fragment, tag, HTTP method, or summary keyword → **search**
+### User Intent → Search Query Examples
+
+| User says | What to search |
+|-----------|---------------|
+| "Find the create user endpoint" | `+method:POST +summary:create +summary:user` |
+| "Show all GET endpoints" | `method:GET` |
+| "What relates to orders?" | `order` |
+| "Find endpoint by path /api/v1/users" | `path:"/api/v1/users"` |
+| "How do I delete a pet?" | `+method:DELETE +summary:pet` |
+| "Show all auth endpoints" | `tag:auth` |
+| "Find something about inventory" | `inventory` |
+| "Give me all POST requests in the store section" | `+method:POST +tag:store` |
 
 ### Basic Queries
 - **Term**: `water`

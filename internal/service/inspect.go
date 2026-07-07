@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"maps"
 	"strings"
 
 	"github.com/mmadfox/swag2mcp/internal/spec"
@@ -17,17 +16,16 @@ type (
 
 	// InspectResponse represents a response to inspect an endpoint.
 	InspectResponse struct {
-		ID           string            `json:"id"                jsonschema:"required,Unique identifier for the endpoint"`
-		TagID        string            `json:"tagId"             jsonschema:"required,Unique identifier for the tag"`
-		CollectionID string            `json:"collectionId"      jsonschema:"required,Unique identifier for the collection"`
-		SpecID       string            `json:"specId"            jsonschema:"required,Unique identifier for the spec"`
-		SpecDomain   string            `json:"specDomain"        jsonschema:"required,Domain of the spec"`
-		Method       string            `json:"method"            jsonschema:"required,HTTP method (GET, POST, etc.)"`
-		Path         string            `json:"path"              jsonschema:"required,API path"`
-		BaseURL      string            `json:"baseUrl"           jsonschema:"required,Base URL of the API"`
-		FullURL      string            `json:"fullUrl"           jsonschema:"required,Full URL of the endpoint"`
-		Operation    *spec.Operation   `json:"operation"         jsonschema:"required,Operation details"`
-		Headers      map[string]string `json:"headers,omitempty" jsonschema:"optional,Headers to be sent with the request"`
+		ID           string          `json:"id"                jsonschema:"required,Unique identifier for the endpoint"`
+		TagID        string          `json:"tagId"             jsonschema:"required,Unique identifier for the tag"`
+		CollectionID string          `json:"collectionId"      jsonschema:"required,Unique identifier for the collection"`
+		SpecID       string          `json:"specId"            jsonschema:"required,Unique identifier for the spec"`
+		SpecDomain   string          `json:"specDomain"        jsonschema:"required,Domain of the spec"`
+		Method       string          `json:"method"            jsonschema:"required,HTTP method (GET, POST, etc.)"`
+		Path         string          `json:"path"              jsonschema:"required,API path"`
+		BaseURL      string          `json:"baseUrl"           jsonschema:"required,Base URL of the API"`
+		FullURL      string          `json:"fullUrl"           jsonschema:"required,Full URL of the endpoint"`
+		Operation    *spec.Operation `json:"operation"         jsonschema:"required,Operation details"`
 	}
 )
 
@@ -69,11 +67,6 @@ func (s *Service) Inspect(_ context.Context, req InspectRequest) (InspectRespons
 		Operation:    ep.Operation,
 		BaseURL:      baseURL,
 		FullURL:      baseURL + "/" + strings.TrimLeft(ep.Path, "/"),
-	}
-
-	if collection.HTTPClient != nil && len(collection.HTTPClient.Headers) > 0 {
-		resp.Headers = make(map[string]string, len(collection.HTTPClient.Headers))
-		maps.Copy(resp.Headers, collection.HTTPClient.Headers)
 	}
 
 	return resp, nil

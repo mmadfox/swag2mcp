@@ -85,6 +85,9 @@ func (s *Service) MakeToolDefinitions() (ToolDefinitions, error) {
 		if loadErr != nil {
 			return ToolDefinitions{}, fmt.Errorf("failed to load tool from %s: %w", entry.Name(), loadErr)
 		}
+		if loadedTool.Name == Auth && s.disableLLMAuth.Load() {
+			continue
+		}
 		tools = append(tools, loadedTool)
 	}
 
