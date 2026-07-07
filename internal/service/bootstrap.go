@@ -123,6 +123,7 @@ func (s *Service) Bootstrap(_ context.Context, r BootstrapRequest) error {
 					SpecID:       specInfo.ID,
 					CollectionID: colInfo.ID,
 					TagID:        tagID,
+					Tag:          tagName,
 					Name:         pi.Method,
 					Path:         pi.Path,
 					Operation:    op,

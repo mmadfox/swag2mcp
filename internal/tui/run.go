@@ -28,6 +28,9 @@ const (
 	runBrowseTags
 	runBrowseEndpoints
 	runEndpointDetail
+	runAuthSpecs
+	runAuthConfirm
+	runAuthResult
 	runDone
 )
 
@@ -36,6 +39,7 @@ type runMode int
 const (
 	modeSearch runMode = iota
 	modeBrowse
+	modeAuth
 )
 
 const (
@@ -63,6 +67,7 @@ type runModel struct {
 	selectedEp    service.EndpointTagItem
 	selectedEpID  string
 	epDetail      *service.InspectResponse
+	authResult    *service.AuthResponse
 	page          int
 	totalPages    int
 	mode          runMode
@@ -87,7 +92,7 @@ func (m runModel) Init() tea.Cmd {
 }
 
 func (m runModel) shouldHandleInput() bool {
-	return m.input.Focused() && m.state != runEndpointDetail && m.state != runMenu && m.state != runDone
+	return m.input.Focused() && m.state != runEndpointDetail && m.state != runAuthResult && m.state != runMenu && m.state != runDone
 }
 
 func (m runModel) transitionTo(state runState) (tea.Model, tea.Cmd) {
@@ -138,11 +143,19 @@ func (m runModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "3":
 			if m.state == runMenu {
+				m.mode = modeAuth
+				return m.loadAuthSpecs()
+			}
+			if m.state != runSearchQuery {
+				return m.handleDigit("3"), nil
+			}
+		case "4":
+			if m.state == runMenu {
 				m.state = runDone
 				return m, tea.Quit
 			}
 			if m.state != runSearchQuery {
-				return m.handleDigit("3"), nil
+				return m.handleDigit("4"), nil
 			}
 		default:
 			if len(msg.String()) == 1 && msg.String()[0] >= '0' && msg.String()[0] <= '9' {
@@ -164,7 +177,7 @@ func (m runModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m runModel) handleDigit(digit string) tea.Model {
 	switch m.state {
-	case runSearchResults, runBrowseSpecs, runBrowseCollections, runBrowseTags, runBrowseEndpoints:
+	case runSearchResults, runBrowseSpecs, runBrowseCollections, runBrowseTags, runBrowseEndpoints, runAuthSpecs:
 		m.input.SetValue(m.input.Value() + digit)
 	}
 	return m
@@ -209,6 +222,15 @@ func (m runModel) handleEnter() (tea.Model, tea.Cmd) {
 
 	case runBrowseEndpoints:
 		return m.selectBrowseEndpoint(val)
+
+	case runAuthSpecs:
+		return m.selectAuthSpec(val)
+
+	case runAuthConfirm:
+		if strings.ToUpper(val) == "Y" {
+			return m.doAuth()
+		}
+		return m, nil
 	}
 
 	return m, nil
@@ -244,12 +266,21 @@ func (m runModel) handleBack() (tea.Model, tea.Cmd) {
 		m.input.SetValue("")
 		m.input.Focus()
 		return m, textinput.Blink
+	case runAuthSpecs:
+		m.state = runMenu
+		return m, nil
+	case runAuthConfirm:
+		return m.loadAuthSpecs()
+	case runAuthResult:
+		m.authResult = nil
+		return m.loadAuthSpecs()
 	}
 	return m, nil
 }
 
 func (m runModel) handleMenu() (tea.Model, tea.Cmd) {
 	m.msg = ""
+	m.authResult = nil
 	m.input.SetValue("")
 	m.state = runMenu
 	return m, nil
@@ -376,6 +407,40 @@ func (m runModel) loadEndpointDetail(endpointID string) (tea.Model, tea.Cmd) {
 	m.selectedEpID = endpointID
 	m.msg = ""
 	m.state = runEndpointDetail
+	m.input.Blur()
+	return m, nil
+}
+
+func (m runModel) loadAuthSpecs() (tea.Model, tea.Cmd) {
+	specs, err := m.svc.Specs(context.Background())
+	if err != nil {
+		m.err = err
+		return m, nil
+	}
+	m.specs = specs.Specs
+	return m.transitionTo(runAuthSpecs)
+}
+
+func (m runModel) selectAuthSpec(val string) (tea.Model, tea.Cmd) {
+	idx := 0
+	if _, err := fmt.Sscanf(val, "%d", &idx); err != nil || idx < 1 || idx > len(m.specs) {
+		return m, nil
+	}
+	m.selectedSpec = m.specs[idx-1]
+	m.input.SetValue("")
+	m.input.Focus()
+	m.state = runAuthConfirm
+	return m, textinput.Blink
+}
+
+func (m runModel) doAuth() (tea.Model, tea.Cmd) {
+	result, err := m.svc.Auth(context.Background(), service.AuthRequest{DomainID: m.selectedSpec.ID})
+	if err != nil {
+		m.err = err
+		return m, nil
+	}
+	m.authResult = &result
+	m.state = runAuthResult
 	m.input.Blur()
 	return m, nil
 }
@@ -514,8 +579,9 @@ func (m runModel) View() string {
 		s += "  ──────────────────────────\n\n"
 		s += "  1. 🔍  Search endpoints\n"
 		s += "  2. 📂  Browse by specification\n"
-		s += "  3. ❌  Exit\n\n"
-		s += "  Press 1, 2, or 3.  (Esc/Ctrl+C to exit)\n"
+		s += "  3. 🔑  Get auth token\n"
+		s += "  4. ❌  Exit\n\n"
+		s += "  Press 1, 2, 3, or 4.  (Esc/Ctrl+C to exit)\n"
 
 	case runSearchQuery:
 		s += "  Search endpoints\n"
@@ -651,6 +717,49 @@ func (m runModel) View() string {
 			}
 
 			s += "  [S]how JSON  [B]ack  [M]enu\n"
+		}
+
+	case runAuthSpecs:
+		s += "  Select spec to get auth token:\n"
+		s += "  ───────────────────────────────\n\n"
+		for i, sp := range m.specs {
+			s += fmt.Sprintf("  %d. %s\n", i+1, sp.Domain)
+		}
+		s += "\n  " + m.input.View() + "\n\n"
+		s += actionHint
+
+	case runAuthConfirm:
+		s += fmt.Sprintf("  Get token for \"%s\"?\n", m.selectedSpec.Domain)
+		s += "  ───────────────────────────────\n\n"
+		s += "  (Y/N)\n\n"
+		s += "  " + m.input.View() + "\n\n"
+		s += "  [B]ack  [M]enu\n"
+
+	case runAuthResult:
+		if m.authResult != nil {
+			s += "  Auth Token\n"
+			s += "  ──────────\n\n"
+			if token := m.authResult.Headers["Authorization"]; token != "" {
+				s += fmt.Sprintf("  Token: %s\n\n", token)
+			}
+			if len(m.authResult.Headers) > 0 {
+				s += "  Headers:\n"
+				for k, v := range m.authResult.Headers {
+					s += fmt.Sprintf("    %s: %s\n", k, v)
+				}
+				s += "\n"
+			}
+			if len(m.authResult.QueryParams) > 0 {
+				s += "  Query Params:\n"
+				for k, v := range m.authResult.QueryParams {
+					s += fmt.Sprintf("    %s=%s\n", k, v)
+				}
+				s += "\n"
+			}
+			if len(m.authResult.Headers) == 0 && len(m.authResult.QueryParams) == 0 {
+				s += "  No auth data available.\n\n"
+			}
+			s += "  [B]ack  [M]enu\n"
 		}
 	}
 

@@ -47,6 +47,9 @@ type Authenticator interface {
 }
 
 func setAuthHeader(req *http.Request, out *Info, key, value string) {
+	if value == "" {
+		return
+	}
 	req.Header.Set(key, value)
 	if out != nil {
 		if out.Headers == nil {
@@ -57,6 +60,9 @@ func setAuthHeader(req *http.Request, out *Info, key, value string) {
 }
 
 func setAuthQuery(req *http.Request, out *Info, key, value string) {
+	if value == "" {
+		return
+	}
 	q := req.URL.Query()
 	q.Set(key, value)
 	req.URL.RawQuery = q.Encode()
