@@ -1,0 +1,21 @@
+# swag2mcp — Custom Headers
+specs:
+  - domain: multi-region-api
+    base_url: https://api.example.com
+    llm_title: Multi-Region API
+    headers:
+      X-Request-ID: req-001
+      X-Source: swag2mcp
+      X-API-Version: "2024-01"
+    collections:
+      - llm_title: US Region
+        location: https://api.example.com/openapi/us.json
+        headers:
+          X-Region: us-east-1
+          X-Request-ID: us-req-001
+
+      - llm_title: EU Region
+        location: https://api.example.com/openapi/eu.json
+        headers:
+          X-Region: eu-west-1
+          X-Request-ID: eu-req-001

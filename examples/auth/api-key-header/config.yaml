@@ -1,0 +1,14 @@
+# swag2mcp — API Key in Header
+specs:
+  - domain: key-header-api
+    base_url: https://api.keyheader.example.com
+    llm_title: API Key (Header) API
+    auth:
+      type: api-key
+      config:
+        key: X-API-Key
+        value: $(API_KEY_VALUE)
+        in: header
+    collections:
+      - llm_title: Protected Resources
+        location: https://api.keyheader.example.com/openapi.json

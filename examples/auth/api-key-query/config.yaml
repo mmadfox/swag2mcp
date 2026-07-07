@@ -1,0 +1,14 @@
+# swag2mcp — API Key in Query Parameter
+specs:
+  - domain: key-query-api
+    base_url: https://api.keyquery.example.com
+    llm_title: API Key (Query) API
+    auth:
+      type: api-key
+      config:
+        key: api_key
+        value: $(API_KEY_QUERY)
+        in: query
+    collections:
+      - llm_title: Protected Resources
+        location: https://api.keyquery.example.com/openapi.json

@@ -1,0 +1,12 @@
+# swag2mcp — Script-Based Authentication
+specs:
+  - domain: custom-auth
+    base_url: https://api.custom.example.com
+    llm_title: Custom Auth API
+    auth:
+      type: script
+      config:
+        domain: custom-auth
+    collections:
+      - llm_title: Protected Resources
+        location: https://api.custom.example.com/openapi.json

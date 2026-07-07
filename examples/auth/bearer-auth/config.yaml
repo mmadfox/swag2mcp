@@ -1,0 +1,12 @@
+# swag2mcp — Bearer Token Authentication
+specs:
+  - domain: secure-api
+    base_url: https://api.secure.example.com
+    llm_title: Secure API
+    auth:
+      type: bearer
+      config:
+        token: $(TOKEN_AUTH)
+    collections:
+      - llm_title: Protected Endpoints
+        location: https://api.secure.example.com/openapi.json

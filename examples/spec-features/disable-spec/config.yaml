@@ -1,0 +1,19 @@
+# swag2mcp — Disable Spec
+specs:
+  - domain: active-api
+    base_url: https://api.active.example.com
+    llm_title: Active API
+    collections:
+      - llm_title: Maintenance Mode
+        location: https://api.active.example.com/openapi/maintenance.json
+      - llm_title: Deprecated Endpoints
+        location: https://api.active.example.com/openapi/deprecated.json
+        disable: true
+
+  - domain: deprecated-api
+    disable: true
+    base_url: https://api.deprecated.example.com
+    llm_title: Deprecated API
+    collections:
+      - llm_title: Old Endpoints
+        location: https://api.deprecated.example.com/openapi.json

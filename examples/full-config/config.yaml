@@ -1,0 +1,86 @@
+# swag2mcp — Full Configuration
+# Demonstrates every feature: multiple specs, all auth types, tags, headers,
+# environment variables, disable flags, and collection overrides.
+specs:
+  # ─── Spec 1: Production API with Bearer auth ──────────────────────────
+  - domain: payments-api
+    disable: false
+    base_url: https://api.payments.example.com
+    llm_title: Payment Processing API
+    llm_instruction: |
+      Handles payment processing, refunds, and transaction history.
+      All endpoints require a valid bearer token obtained from the auth service.
+    tags:
+      - production
+      - payments
+    headers:
+      X-Request-ID: req-001
+      X-Idempotency-Key: idem-001
+    auth:
+      type: bearer
+      config:
+        token: $(PAYMENTS_API_TOKEN)
+    collections:
+      - llm_title: Transactions
+        location: https://api.payments.example.com/openapi/transactions.json
+      - llm_title: Refunds
+        location: https://api.payments.example.com/openapi/refunds.json
+        disable: true
+
+  # ─── Spec 2: Internal API with Basic auth ─────────────────────────────
+  - domain: internal-admin
+    base_url: https://admin.internal.example.com
+    llm_title: Internal Admin Panel API
+    llm_instruction: |
+      Internal administration API for managing users, roles, and system settings.
+      Restricted to internal network access only.
+    tags:
+      - internal
+      - admin
+    auth:
+      type: basic
+      config:
+        username: $(ADMIN_USER)
+        password: $(ADMIN_PASS)
+    collections:
+      - llm_title: User Management
+        location: /etc/swag2mcp/specs/admin-users.json
+      - llm_title: System Settings
+        location: /etc/swag2mcp/specs/admin-settings.json
+        base_url: https://settings.internal.example.com
+        headers:
+          X-DC: us-east-1
+
+  # ─── Spec 3: Disabled spec (will be ignored) ──────────────────────────
+  - domain: legacy-api
+    disable: true
+    base_url: https://legacy.example.com
+    llm_title: Legacy API (Deprecated)
+    collections:
+      - llm_title: Old Endpoints
+        location: https://legacy.example.com/swagger.json
+
+  # ─── Spec 4: OAuth2 Client Credentials ─────────────────────────────────
+  - domain: analytics-api
+    base_url: https://analytics.example.com
+    llm_title: Analytics & Reporting API
+    llm_instruction: |
+      Provides access to analytics data, reports, and dashboards.
+      Uses OAuth2 Client Credentials flow for machine-to-machine auth.
+    tags:
+      - production
+      - analytics
+    auth:
+      type: oauth2-cc
+      config:
+        client_id: $(ANALYTICS_CLIENT_ID)
+        client_secret: $(ANALYTICS_CLIENT_SECRET)
+        token_url: https://auth.example.com/oauth/token
+        scopes:
+          - analytics:read
+          - analytics:write
+    collections:
+      - llm_title: Reports
+        location: https://analytics.example.com/openapi/reports.json
+      - llm_title: Dashboards
+        location: https://analytics.example.com/openapi/dashboards.json

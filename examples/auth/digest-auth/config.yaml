@@ -1,0 +1,13 @@
+# swag2mcp — HTTP Digest Authentication
+specs:
+  - domain: digest-api
+    base_url: https://api.digest.example.com
+    llm_title: Digest Protected API
+    auth:
+      type: digest
+      config:
+        username: $(DIGEST_USER)
+        password: $(DIGEST_PASS)
+    collections:
+      - llm_title: Protected Resources
+        location: https://api.digest.example.com/openapi.json
