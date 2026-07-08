@@ -23,9 +23,7 @@ jobs:
           cache: true
 
       - name: Lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v2.0.2
+        uses: golangci/golangci-lint-action@v7
 
       - name: Test
         run: go test ./... -coverprofile=coverage.out -covermode=atomic
