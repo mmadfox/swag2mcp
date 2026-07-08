@@ -1,7 +1,5 @@
 # swag2mcp
 
-> ⚠️ **En desarrollo** — La API puede cambiar, contribuciones bienvenidas.
-
 **swag2mcp** es una herramienta CLI y servidor MCP (Model Context Protocol) que conecta especificaciones OpenAPI/Swagger/Postman con agentes LLM (Opencode, Crush, Copilot, Cursor, etc.).
 
 Indexa sus especificaciones API en un motor de búsqueda de texto completo, las expone a través de 14 herramientas MCP y permite a los LLM descubrir, inspeccionar e invocar endpoints API reales — sin escribir una sola línea de código de integración.

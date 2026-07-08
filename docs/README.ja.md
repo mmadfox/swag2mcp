@@ -1,7 +1,5 @@
 # swag2mcp
 
-> ⚠️ **開発中** — APIは変更される可能性があります。貢献を歓迎します。
-
 **swag2mcp** は、OpenAPI/Swagger/Postman API仕様とLLMエージェント（Opencode、Crush、Copilot、Cursorなど）を橋渡しするCLIツールおよびMCP（Model Context Protocol）サーバーです。
 
 API仕様を全文検索エンジンにインデックスし、14のMCPツールとして公開し、LLMが実際のAPIエンドポイントを発見、検査、呼び出しできるようにします——統合コードを1行も書く必要はありません。
