@@ -31,18 +31,29 @@ func newInitCmd() *cobra.Command {
   swag2mcp init -f           — force overwrite existing configuration`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			basePath := "."
+			basePath := ""
 			if len(args) > 0 {
 				basePath = args[0]
 			}
 
-			absBase, err := filepath.Abs(basePath)
-			if err != nil {
-				return fmt.Errorf("resolve path: %w", err)
-			}
+			var workspaceDir string
+			var configPath string
 
-			workspaceDir := filepath.Join(absBase, workspace.DefaultRootName)
-			configPath := workspace.ConfigPathIn(workspaceDir)
+			if basePath == "" {
+				ws, wsErr := workspace.New("")
+				if wsErr != nil {
+					return fmt.Errorf("workspace: %w", wsErr)
+				}
+				workspaceDir = ws.Root()
+				configPath = ws.ConfigPath()
+			} else {
+				absBase, err := filepath.Abs(basePath)
+				if err != nil {
+					return fmt.Errorf("resolve path: %w", err)
+				}
+				workspaceDir = filepath.Join(absBase, workspace.DefaultRootName)
+				configPath = workspace.ConfigPathIn(workspaceDir)
+			}
 
 			if opts.Interactive {
 				if !opts.Force {
