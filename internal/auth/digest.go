@@ -15,6 +15,9 @@ import (
 const (
 	digestNonceTTL   = 5 * time.Minute
 	digestNonceBytes = 8
+	digestAlgoMD5    = "MD5"
+	digestQopAuth    = "auth"
+	digestQopAuthInt = "auth-int"
 )
 
 // DigestAuthClient holds credentials for HTTP Digest authentication.
@@ -122,7 +125,7 @@ func (c *DigestAuthClient) fetchChallenge(req *http.Request) (digestChallenge, e
 }
 
 func parseDigestChallenge(header string) digestChallenge {
-	c := digestChallenge{algorithm: "MD5"}
+	c := digestChallenge{algorithm: digestAlgoMD5}
 	rest := header[len("Digest "):]
 
 	for part := range strings.SplitSeq(rest, ",") {
@@ -159,7 +162,7 @@ func (c *DigestAuthClient) buildDigest(method, uri string, ch digestChallenge, n
 	ncStr := fmt.Sprintf("%08x", nc)
 
 	var response string
-	if ch.qop == "auth" || ch.qop == "auth-int" {
+	if ch.qop == digestQopAuth || ch.qop == digestQopAuthInt {
 		respInput := fmt.Sprintf("%s:%s:%s:%s:%s:%s", ha1, ch.nonce, ncStr, cnonce, ch.qop, ha2)
 		response = md5hex(respInput)
 	} else {
