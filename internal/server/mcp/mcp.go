@@ -18,8 +18,6 @@ type Options struct {
 }
 
 // Serve starts the MCP server.
-//
-//nolint:funlen
 func Serve(ctx context.Context, opts Options) error {
 	if opts.Service == nil {
 		return errors.New("service is required")
@@ -30,166 +28,127 @@ func Serve(ctx context.Context, opts Options) error {
 		return fmt.Errorf("failed to make tool definitions: %w", err)
 	}
 
-	var mcpTransport sdkmcp.Transport
+	mcpServer := newServer(defs, opts)
+	h := handler{service: opts.Service}
+	registerTools(mcpServer, defs.Tools, h)
+
+	return mcpServer.Run(ctx, newTransport(opts))
+}
+
+func newTransport(opts Options) sdkmcp.Transport {
 	if opts.Logger != nil {
-		mcpTransport = &sdkmcp.LoggingTransport{
+		return &sdkmcp.LoggingTransport{
 			Transport: &sdkmcp.StdioTransport{},
 			Writer:    opts.Logger,
 		}
-	} else {
-		mcpTransport = &sdkmcp.StdioTransport{}
 	}
+	return &sdkmcp.StdioTransport{}
+}
 
-	srvOpts := &sdkmcp.ServerOptions{
-		Instructions: defs.Instruction,
-	}
-
-	mcpServer := sdkmcp.NewServer(&sdkmcp.Implementation{
+func newServer(defs service.ToolDefinitions, opts Options) *sdkmcp.Server {
+	return sdkmcp.NewServer(&sdkmcp.Implementation{
 		Name:    service.Name,
 		Version: opts.Version,
-	}, srvOpts)
+	}, &sdkmcp.ServerOptions{
+		Instructions: defs.Instruction,
+	})
+}
 
-	h := handler{service: opts.Service}
-	for _, deftool := range defs.Tools {
-		switch deftool.Name {
-		case service.EndpointByTag:
-			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
-				Name:        deftool.Name,
-				Description: deftool.Description,
-				Annotations: &sdkmcp.ToolAnnotations{
-					IdempotentHint: true,
-					ReadOnlyHint:   true,
-				},
-			}, h.handleEndpointsByTag)
-		case service.EndpointByCollection:
-			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
-				Name:        deftool.Name,
-				Description: deftool.Description,
-				Annotations: &sdkmcp.ToolAnnotations{
-					IdempotentHint: true,
-					ReadOnlyHint:   true,
-				},
-			}, h.handleEndpointsByCollection)
-		case service.EndpointBySpec:
-			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
-				Name:        deftool.Name,
-				Description: deftool.Description,
-				Annotations: &sdkmcp.ToolAnnotations{
-					IdempotentHint: true,
-					ReadOnlyHint:   true,
-				},
-			}, h.handleEndpointsBySpec)
-		case service.EndpointByID:
-			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
-				Name:        deftool.Name,
-				Description: deftool.Description,
-				Annotations: &sdkmcp.ToolAnnotations{
-					IdempotentHint: true,
-					ReadOnlyHint:   true,
-				},
-			}, h.handleEndpointByID)
-		case service.TagByCollection:
-			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
-				Name:        deftool.Name,
-				Description: deftool.Description,
-				Annotations: &sdkmcp.ToolAnnotations{
-					IdempotentHint: true,
-					ReadOnlyHint:   true,
-				},
-			}, h.handleTagsByCollection)
-
-		case service.TagBySpec:
-			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
-				Name:        deftool.Name,
-				Description: deftool.Description,
-				Annotations: &sdkmcp.ToolAnnotations{
-					IdempotentHint: true,
-					ReadOnlyHint:   true,
-				},
-			}, h.handleTagsBySpec)
-
-		case service.TagByID:
-			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
-				Name:        deftool.Name,
-				Description: deftool.Description,
-				Annotations: &sdkmcp.ToolAnnotations{
-					IdempotentHint: true,
-					ReadOnlyHint:   true,
-				},
-			}, h.handleTagByID)
-
-		case service.SpecByID:
-			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
-				Name:        deftool.Name,
-				Description: deftool.Description,
-				Annotations: &sdkmcp.ToolAnnotations{
-					IdempotentHint: true,
-					ReadOnlyHint:   true,
-				},
-			}, h.handleSpecByID)
-
-		case service.SpecList:
-			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
-				Name:        deftool.Name,
-				Description: deftool.Description,
-				Annotations: &sdkmcp.ToolAnnotations{
-					IdempotentHint: true,
-					ReadOnlyHint:   true,
-				},
-			}, h.handleSpecList)
-
-		case service.CollectionBySpec:
-			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
-				Name:        deftool.Name,
-				Description: deftool.Description,
-				Annotations: &sdkmcp.ToolAnnotations{
-					IdempotentHint: true,
-					ReadOnlyHint:   true,
-				},
-			}, h.handleCollectionBySpec)
-
-		case service.CollectionByID:
-			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
-				Name:        deftool.Name,
-				Description: deftool.Description,
-				Annotations: &sdkmcp.ToolAnnotations{
-					IdempotentHint: true,
-					ReadOnlyHint:   true,
-				},
-			}, h.handleCollectionByID)
-
-		case service.Search:
-			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
-				Name:        deftool.Name,
-				Description: deftool.Description,
-				Annotations: &sdkmcp.ToolAnnotations{
-					IdempotentHint: true,
-					ReadOnlyHint:   true,
-				},
-			}, h.handleSearch)
-
-		case service.Inspect:
-			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
-				Name:        deftool.Name,
-				Description: deftool.Description,
-				Annotations: &sdkmcp.ToolAnnotations{
-					IdempotentHint: true,
-					ReadOnlyHint:   true,
-				},
-			}, h.handleInspect)
-
-		case service.Invoke:
-			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
-				Name:        deftool.Name,
-				Description: deftool.Description,
-			}, h.handleInvoke)
-
-		case service.Auth:
-			sdkmcp.AddTool(mcpServer, &sdkmcp.Tool{
-				Name:        deftool.Name,
-				Description: deftool.Description,
-			}, h.handleAuth)
-		}
+func registerTools(mcpServer *sdkmcp.Server, tools []service.Tool, h handler) {
+	type reg struct {
+		add      func(t *sdkmcp.Tool)
+		readOnly bool
 	}
-	return mcpServer.Run(ctx, mcpTransport)
+
+	toolRegistrations := map[string]reg{
+		service.EndpointByTag: {
+			addTool[service.EndpointsByTagRequest](mcpServer, h.handleEndpointsByTag),
+			true,
+		},
+		service.EndpointByCollection: {
+			addTool[service.EndpointsByCollectionRequest](mcpServer, h.handleEndpointsByCollection),
+			true,
+		},
+		service.EndpointBySpec: {
+			addTool[service.EndpointsBySpecRequest](mcpServer, h.handleEndpointsBySpec),
+			true,
+		},
+		service.EndpointByID: {
+			addTool[service.EndpointByIDRequest](mcpServer, h.handleEndpointByID),
+			true,
+		},
+		service.TagByCollection: {
+			addTool[service.TagsByCollectionRequest](mcpServer, h.handleTagsByCollection),
+			true,
+		},
+		service.TagBySpec: {
+			addTool[service.TagsBySpecRequest](mcpServer, h.handleTagsBySpec),
+			true,
+		},
+		service.TagByID: {
+			addTool[service.TagByIDRequest](mcpServer, h.handleTagByID),
+			true,
+		},
+		service.SpecByID: {
+			addTool[service.SpecByIDRequest](mcpServer, h.handleSpecByID),
+			true,
+		},
+		service.SpecList: {
+			addTool[any](mcpServer, h.handleSpecList),
+			true,
+		},
+		service.CollectionBySpec: {
+			addTool[service.CollectionsRequest](mcpServer, h.handleCollectionBySpec),
+			true,
+		},
+		service.CollectionByID: {
+			addTool[service.CollectionByIDRequest](mcpServer, h.handleCollectionByID),
+			true,
+		},
+		service.Search: {
+			addTool[service.SearchRequest](mcpServer, h.handleSearch),
+			true,
+		},
+		service.Inspect: {
+			addTool[service.InspectRequest](mcpServer, h.handleInspect),
+			true,
+		},
+		service.Invoke: {
+			addTool[service.InvokeRequest](mcpServer, h.handleInvoke),
+			false,
+		},
+		service.Auth: {
+			addTool[service.AuthRequest](mcpServer, h.handleAuth),
+			false,
+		},
+	}
+
+	for _, deftool := range tools {
+		r, ok := toolRegistrations[deftool.Name]
+		if !ok {
+			continue
+		}
+
+		tool := &sdkmcp.Tool{
+			Name:        deftool.Name,
+			Description: deftool.Description,
+		}
+		if r.readOnly {
+			tool.Annotations = &sdkmcp.ToolAnnotations{
+				IdempotentHint: true,
+				ReadOnlyHint:   true,
+			}
+		}
+
+		r.add(tool)
+	}
+}
+
+func addTool[In any](
+	s *sdkmcp.Server,
+	fn func(context.Context, *sdkmcp.CallToolRequest, In) (*sdkmcp.CallToolResult, any, error),
+) func(t *sdkmcp.Tool) {
+	return func(tool *sdkmcp.Tool) {
+		sdkmcp.AddTool[In, any](s, tool, fn)
+	}
 }

@@ -1,11 +1,13 @@
 package mcp
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/service"
+	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 	"go.uber.org/mock/gomock"
 )
 
@@ -32,6 +34,156 @@ func TestServe_MakeToolDefinitionsError(t *testing.T) {
 	err := Serve(context.Background(), Options{Service: mock})
 	if err == nil {
 		t.Fatal("expected error")
+	}
+}
+
+func TestNewTransport_WithLogger(t *testing.T) {
+	t.Parallel()
+
+	var buf bytes.Buffer
+	opts := Options{Logger: &buf}
+	transport := newTransport(opts)
+
+	_, ok := transport.(*sdkmcp.LoggingTransport)
+	if !ok {
+		t.Fatalf("expected *LoggingTransport, got %T", transport)
+	}
+}
+
+func TestNewTransport_WithoutLogger(t *testing.T) {
+	t.Parallel()
+
+	opts := Options{}
+	transport := newTransport(opts)
+
+	_, ok := transport.(*sdkmcp.StdioTransport)
+	if !ok {
+		t.Fatalf("expected *StdioTransport, got %T", transport)
+	}
+}
+
+func TestNewServer(t *testing.T) {
+	t.Parallel()
+
+	defs := service.ToolDefinitions{
+		Instruction: "test instruction",
+	}
+	opts := Options{Version: "v1.0.0"}
+
+	srv := newServer(defs, opts)
+	if srv == nil {
+		t.Fatal("newServer() returned nil")
+	}
+}
+
+func TestRegisterTools_AllTools(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMocksvc(ctrl)
+	mock.EXPECT().MakeToolDefinitions().Return(
+		service.ToolDefinitions{
+			Instruction: "test",
+			Tools: []service.Tool{
+				{Name: "spec_list", Description: "List specs"},
+				{Name: "spec_by_id", Description: "Get spec"},
+				{Name: "collection_by_spec", Description: "List collections"},
+				{Name: "collection_by_id", Description: "Get collection"},
+				{Name: "tag_by_collection", Description: "List tags"},
+				{Name: "tag_by_spec", Description: "List tags by spec"},
+				{Name: "tag_by_id", Description: "Get tag"},
+				{Name: "endpoint_by_tag", Description: "List endpoints"},
+				{Name: "endpoint_by_collection", Description: "List endpoints"},
+				{Name: "endpoint_by_spec", Description: "List endpoints"},
+				{Name: "endpoint_by_id", Description: "Get endpoint"},
+				{Name: "search", Description: "Search"},
+				{Name: "inspect", Description: "Inspect"},
+				{Name: "invoke", Description: "Invoke"},
+				{Name: "auth", Description: "Auth"},
+			},
+		}, nil,
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	err := Serve(ctx, Options{Service: mock})
+	if err == nil {
+		t.Fatal("expected context canceled error, not nil")
+	}
+}
+
+func TestRegisterTools_UnknownTool(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMocksvc(ctrl)
+	mock.EXPECT().MakeToolDefinitions().Return(
+		service.ToolDefinitions{
+			Instruction: "test",
+			Tools: []service.Tool{
+				{Name: "unknown_tool", Description: "Should be ignored"},
+			},
+		}, nil,
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	err := Serve(ctx, Options{Service: mock})
+	if err == nil {
+		t.Fatal("expected context canceled error, not nil")
+	}
+}
+
+func TestServe_WithLogger(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMocksvc(ctrl)
+	mock.EXPECT().MakeToolDefinitions().Return(
+		service.ToolDefinitions{
+			Instruction: "test",
+			Tools:       []service.Tool{{Name: "spec_list", Description: "List"}},
+		}, nil,
+	)
+
+	var buf bytes.Buffer
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	err := Serve(ctx, Options{Service: mock, Logger: &buf})
+	if err == nil {
+		t.Fatal("expected context canceled error, not nil")
+	}
+}
+
+func TestServe_WithVersion(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMocksvc(ctrl)
+	mock.EXPECT().MakeToolDefinitions().Return(
+		service.ToolDefinitions{
+			Instruction: "test",
+			Tools:       []service.Tool{{Name: "spec_list", Description: "List"}},
+		}, nil,
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	err := Serve(ctx, Options{Service: mock, Version: "v2.0.0"})
+	if err == nil {
+		t.Fatal("expected context canceled error, not nil")
 	}
 }
 
