@@ -25,7 +25,7 @@ type (
 // Search returns endpoints matching the query.
 func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse, error) {
 	if err := s.validateRequest(req); err != nil {
-		return SearchResponse{}, NewValidationError("query is required and limit must be between 1 and 50", err)
+		return SearchResponse{}, NewValidationError("A search query is required and the limit must be between 1 and 50.", err)
 	}
 
 	endpoints, err := s.index.Search(ctx, strings.ToLower(req.Query), req.Limit)

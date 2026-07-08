@@ -12,6 +12,7 @@ require (
 	github.com/go-playground/validator/v10 v10.30.3
 	github.com/modelcontextprotocol/go-sdk v1.6.1
 	github.com/spf13/cobra v1.10.2
+	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v3 v3.0.4
 	gopkg.in/yaml.v3 v3.0.1
 )

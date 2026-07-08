@@ -44,7 +44,7 @@ type (
 func (s *Service) TagsByCollection(_ context.Context, req TagsByCollectionRequest) (TagsByCollectionResponse, error) {
 	if err := s.validateRequest(req); err != nil {
 		return TagsByCollectionResponse{}, NewValidationError(
-			"collectionId must be a 32-character lowercase hex string (MD5 format)",
+			"The collection ID is invalid — it must be a 32-character hex string.",
 			err,
 		)
 	}
@@ -52,20 +52,20 @@ func (s *Service) TagsByCollection(_ context.Context, req TagsByCollectionReques
 	collection, err := s.index.CollectionByID(req.CollectionID)
 	if err != nil {
 		return TagsByCollectionResponse{}, NewNotFoundError(
-			fmt.Sprintf("collection %q not found", req.CollectionID),
+			fmt.Sprintf("Collection %q not found — use collection_by_spec to list collections.", req.CollectionID),
 			err,
 		)
 	}
 
 	spec, err := s.index.SpecByID(collection.SpecID)
 	if err != nil {
-		return TagsByCollectionResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", collection.SpecID), err)
+		return TagsByCollectionResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — the collection references a spec that no longer exists.", collection.SpecID), err)
 	}
 
 	tags, err := s.index.TagsByCollection(req.CollectionID)
 	if err != nil {
 		return TagsByCollectionResponse{}, NewNotFoundError(
-			fmt.Sprintf("collection %q not found", req.CollectionID),
+			fmt.Sprintf("Collection %q not found — use collection_by_spec to list collections.", req.CollectionID),
 			err,
 		)
 	}
@@ -101,14 +101,14 @@ func (s *Service) TagsByCollection(_ context.Context, req TagsByCollectionReques
 func (s *Service) TagByID(_ context.Context, req TagByIDRequest) (TagByIDResponse, error) {
 	if err := s.validateRequest(req); err != nil {
 		return TagByIDResponse{}, NewValidationError(
-			"tagId must be a 32-character lowercase hex string (MD5 format)",
+			"The tag ID is invalid — it must be a 32-character hex string.",
 			err,
 		)
 	}
 
 	tag, err := s.index.TagByID(req.ID)
 	if err != nil {
-		return TagByIDResponse{}, NewNotFoundError(fmt.Sprintf("tag %q not found", req.ID), err)
+		return TagByIDResponse{}, NewNotFoundError(fmt.Sprintf("Tag %q not found — use tag_by_collection or tag_by_spec to list tags.", req.ID), err)
 	}
 
 	resp := TagByIDResponse{
@@ -126,14 +126,14 @@ func (s *Service) TagByID(_ context.Context, req TagByIDRequest) (TagByIDRespons
 func (s *Service) TagsBySpec(_ context.Context, req TagsBySpecRequest) (TagsBySpecResponse, error) {
 	if err := s.validateRequest(req); err != nil {
 		return TagsBySpecResponse{}, NewValidationError(
-			"specId must be a 32-character lowercase hex string (MD5 format)",
+			"The spec ID is invalid — it must be a 32-character hex string. Use spec_list to find available specs.",
 			err,
 		)
 	}
 
 	tags, err := s.index.TagsBySpec(req.SpecID)
 	if err != nil {
-		return TagsBySpecResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", req.SpecID), err)
+		return TagsBySpecResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", req.SpecID), err)
 	}
 
 	resp := TagsBySpecResponse{

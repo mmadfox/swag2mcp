@@ -31,9 +31,6 @@ go.work.sum
 .DS_Store
 Thumbs.db
 
-# Binary
-mcp-swagger-server
-
 # Environment variables
 .env
 .env.local

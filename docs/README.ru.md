@@ -52,8 +52,9 @@ specs:
     base_url: https://petstore.swagger.io/v2  # обязательно, валидный URL
     disable: false                      # опционально
     tags: [public, demo]                # опционально, для фильтрации
-    headers:                            # опционально
-      X-API-Version: "2"
+    http_client:
+        headers:                            # опционально
+           X-API-Version: "2"
     auth:                               # опционально
       type: bearer                      # см. Методы аутентификации
       config:

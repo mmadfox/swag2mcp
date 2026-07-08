@@ -59,7 +59,7 @@ type InvokeResponse struct {
 func (s *Service) Invoke(ctx context.Context, request InvokeRequest) (InvokeResponse, error) {
 	if err := s.validateRequest(request); err != nil {
 		return InvokeResponse{}, NewValidationError(
-			"endpointId must be a 32-character lowercase hex string (MD5 format)",
+			"The endpoint ID is invalid — it must be a 32-character hex string. Use the search tool to find the correct endpoint ID.",
 			err,
 		)
 	}
@@ -71,34 +71,34 @@ func (s *Service) Invoke(ctx context.Context, request InvokeRequest) (InvokeResp
 	endpoint, err := s.index.EndpointByID(request.EndpointID)
 	if err != nil {
 		return InvokeResponse{}, NewNotFoundError(
-			fmt.Sprintf("endpoint %q not found", request.EndpointID), err,
+			fmt.Sprintf("Endpoint %q not found — use the search tool to find the correct endpoint ID.", request.EndpointID), err,
 		)
 	}
 
 	if endpoint.Operation == nil {
-		return InvokeResponse{}, NewValidationError("endpoint has no operation definition", nil)
+		return InvokeResponse{}, NewValidationError("This endpoint has no operation definition — it may be malformed or incomplete.", nil)
 	}
 
 	specification, err := s.index.SpecByID(endpoint.SpecID)
 	if err != nil {
 		return InvokeResponse{}, NewNotFoundError(
-			fmt.Sprintf("spec %q not found", endpoint.SpecID), err,
+			fmt.Sprintf("Spec %q not found — the endpoint references a specification that no longer exists.", endpoint.SpecID), err,
 		)
 	}
 
 	collection, err := s.index.CollectionByID(endpoint.CollectionID)
 	if err != nil {
 		return InvokeResponse{}, NewNotFoundError(
-			fmt.Sprintf("collection %q not found", endpoint.CollectionID), err,
+			fmt.Sprintf("Collection %q not found — the endpoint references a collection that no longer exists.", endpoint.CollectionID), err,
 		)
 	}
 
 	if validationError := validateParameters(endpoint.Operation, request.Parameters); validationError != nil {
-		return InvokeResponse{}, NewValidationError("parameter validation failed", validationError)
+		return InvokeResponse{}, NewValidationError("Parameter validation failed — check that all required parameters are provided and match the expected names.", validationError)
 	}
 
 	if validationError := validateRequestBody(endpoint.Operation, request.RequestBody); validationError != nil {
-		return InvokeResponse{}, NewValidationError("request body validation failed", validationError)
+		return InvokeResponse{}, NewValidationError("Request body validation failed — check that all required fields are present and no unknown fields are included.", validationError)
 	}
 
 	httpRequest, buildError := newRequestBuilder(
@@ -111,7 +111,7 @@ func (s *Service) Invoke(ctx context.Context, request InvokeRequest) (InvokeResp
 		withHTTPConfig(mergeHTTPClientConfigs(specification.HTTPClient, collection.HTTPClient)),
 	).build()
 	if buildError != nil {
-		return InvokeResponse{}, fmt.Errorf("failed to build request: %w", buildError)
+		return InvokeResponse{}, NewInvokeError("Failed to build the HTTP request — check the endpoint parameters and try again.", buildError)
 	}
 
 	s.dumpRequest(httpRequest, specification.Domain)
@@ -120,13 +120,13 @@ func (s *Service) Invoke(ctx context.Context, request InvokeRequest) (InvokeResp
 	httpClient := newAuthHTTPClient(specification, mergedConfig)
 	response, doError := httpClient.Do(httpRequest)
 	if doError != nil {
-		return InvokeResponse{}, fmt.Errorf("request failed: %w", doError)
+		return InvokeResponse{}, NewInvokeError("The API request failed — the server may be unreachable or returned an error.", doError)
 	}
 	defer response.Body.Close()
 
 	body, readError := io.ReadAll(response.Body)
 	if readError != nil {
-		return InvokeResponse{}, fmt.Errorf("failed to read response: %w", readError)
+		return InvokeResponse{}, NewInvokeError("Failed to read the API response — the connection may have been interrupted.", readError)
 	}
 
 	maxSize := resolveMaxResponseSize(mergedConfig)

@@ -38,7 +38,7 @@ func (ve validationErrors) Error() string {
 		return "no validation errors"
 	}
 	var b strings.Builder
-	fmt.Fprintf(&b, "%d error(s):\n", len(ve))
+	fmt.Fprintf(&b, "Configuration validation failed with %d error(s):\n", len(ve))
 	for i, e := range ve {
 		prefix := e.errType
 		if prefix == "" {
@@ -183,19 +183,46 @@ func humanReadableError(fe validator.FieldError) string {
 
 	switch tag {
 	case "required":
-		return fmt.Sprintf("%s is required", field)
+		switch field {
+		case "Domain":
+			return "Domain is required — provide a unique identifier for this API (e.g. 'petstore', 'github-api')"
+		case "LLMTitle":
+			return "LLMTitle is required — provide a human-readable name the LLM will use to reference this API"
+		case "BaseURL":
+			return "BaseURL is required — provide the base URL for all API requests (e.g. 'https://api.example.com/v1')"
+		case "Location":
+			return "Location is required — provide a path or URL to the Swagger/OpenAPI spec file"
+		default:
+			return fmt.Sprintf("%s is required", field)
+		}
 	case "min":
-		return fmt.Sprintf("%s must be at least %s characters", field, param)
+		switch field {
+		case "LLMTitle":
+			return fmt.Sprintf("LLMTitle must be at least %s characters — provide a more descriptive name", param)
+		case "Location":
+			return fmt.Sprintf("Location must be at least %s characters — the path or URL is too short", param)
+		default:
+			return fmt.Sprintf("%s must be at least %s characters", field, param)
+		}
 	case "max":
-		return fmt.Sprintf("%s must be at most %s characters", field, param)
+		switch field {
+		case "LLMTitle":
+			return fmt.Sprintf("LLMTitle must be at most %s characters — the name is too long", param)
+		case "LLMInstruction":
+			return fmt.Sprintf("LLMInstruction must be at most %s characters — the instruction is too long", param)
+		case "Location":
+			return fmt.Sprintf("Location must be at most %s characters — the path or URL is too long", param)
+		default:
+			return fmt.Sprintf("%s must be at most %s characters", field, param)
+		}
 	case "url":
-		return fmt.Sprintf("%s must be a valid URL", field)
+		return fmt.Sprintf("%s must be a valid URL — provide a full URL starting with http:// or https://", field)
 	case "domain_format":
-		return fmt.Sprintf("%s must be 1-60 characters, letters/digits/hyphens/underscores only", field)
+		return "Domain must be 1-60 characters using only letters, digits, hyphens, and underscores"
 	case "title_format":
-		return fmt.Sprintf("%s contains invalid characters (letters, digits, spaces, and basic punctuation allowed)", field)
+		return "LLMTitle contains invalid characters — use letters, digits, spaces, and basic punctuation only"
 	case "instruction_format":
-		return fmt.Sprintf("%s contains invalid characters (letters, digits, spaces, and basic punctuation allowed)", field)
+		return "LLMInstruction contains invalid characters — use letters, digits, spaces, and basic punctuation only"
 	case "oneof":
 		return fmt.Sprintf("%s must be one of: %s", field, param)
 	default:

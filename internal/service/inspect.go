@@ -33,23 +33,23 @@ type (
 func (s *Service) Inspect(_ context.Context, req InspectRequest) (InspectResponse, error) {
 	if err := s.validateRequest(req); err != nil {
 		return InspectResponse{}, NewValidationError(
-			"endpointId must be a 32-character lowercase hex string (MD5 format)",
+			"The endpoint ID is invalid — it must be a 32-character hex string. Use the search tool to find the correct endpoint ID.",
 			err,
 		)
 	}
 
 	ep, eErr := s.index.EndpointByID(req.EndpointID)
 	if eErr != nil {
-		return InspectResponse{}, NewNotFoundError(fmt.Sprintf("endpoint %q not found", req.EndpointID), eErr)
+		return InspectResponse{}, NewNotFoundError(fmt.Sprintf("Endpoint %q not found — use the search tool to find the correct endpoint ID.", req.EndpointID), eErr)
 	}
 
 	spec, sErr := s.index.SpecByID(ep.SpecID)
 	if sErr != nil {
-		return InspectResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", ep.SpecID), sErr)
+		return InspectResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — the endpoint references a spec that no longer exists.", ep.SpecID), sErr)
 	}
 	collection, cErr := s.index.CollectionByID(ep.CollectionID)
 	if cErr != nil {
-		return InspectResponse{}, NewNotFoundError(fmt.Sprintf("collection %q not found", ep.CollectionID), cErr)
+		return InspectResponse{}, NewNotFoundError(fmt.Sprintf("Collection %q not found — the endpoint references a collection that no longer exists.", ep.CollectionID), cErr)
 	}
 	baseURL := spec.BaseURL
 	if len(collection.BaseURL) > 0 {

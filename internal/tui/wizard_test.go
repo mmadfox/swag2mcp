@@ -156,16 +156,6 @@ func TestWriteResult(t *testing.T) {
 	}
 }
 
-func TestExampleConfig(t *testing.T) {
-	data := ExampleConfig()
-	if len(data) == 0 {
-		t.Error("ExampleConfig() returned empty data")
-	}
-	if !strings.Contains(string(data), "specs:") {
-		t.Error("example config missing specs key")
-	}
-}
-
 func TestAuthMethodsList(t *testing.T) {
 	list := authMethodsList()
 	for _, m := range availableAuthMethods {

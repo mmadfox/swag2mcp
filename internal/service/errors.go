@@ -9,11 +9,12 @@ const (
 	validationFailedErrCode = "validation_failed"
 	notFoundErrCode         = "not_found"
 	rateLimitErrCode        = "rate_limit"
+	invokeErrorErrCode      = "invoke_error"
 )
 
 type LLMError struct {
-	Code     string `json:"code"`    // "validation_failed", "not_found", "internal_error"
-	Message  string `json:"message"` // human-readable for LLM
+	Code     string `json:"code"`
+	Message  string `json:"message"`
 	Original string `json:"hint,omitempty"`
 }
 
@@ -38,6 +39,14 @@ func NewRateLimitError(err error) *LLMError {
 		Code:     rateLimitErrCode,
 		Message:  err.Error(),
 		Original: "",
+	}
+}
+
+func NewInvokeError(msg string, err error) *LLMError {
+	return &LLMError{
+		Code:     invokeErrorErrCode,
+		Message:  msg,
+		Original: formatError(err),
 	}
 }
 

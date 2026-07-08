@@ -49,7 +49,7 @@ func (s *Service) Specs(_ context.Context) (SpecsResponse, error) {
 func (s *Service) SpecByID(_ context.Context, req SpecByIDRequest) (SpecByIDResponse, error) {
 	if err := s.validateRequest(req); err != nil {
 		return SpecByIDResponse{}, NewValidationError(
-			"specId must be a 32-character lowercase hex string (MD5 format)",
+			"The spec ID is invalid — it must be a 32-character hex string. Use spec_list to find available specs.",
 			err,
 		)
 	}
@@ -57,7 +57,7 @@ func (s *Service) SpecByID(_ context.Context, req SpecByIDRequest) (SpecByIDResp
 	var resp SpecByIDResponse
 	spec, err := s.index.SpecByID(req.ID)
 	if err != nil {
-		return SpecByIDResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", req.ID), err)
+		return SpecByIDResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", req.ID), err)
 	}
 	resp.Spec = Spec{
 		ID:     spec.ID,

@@ -509,6 +509,23 @@ func extractDocID(match *search.DocumentMatch) string {
 	return docID
 }
 
+// RefreshSearchReader forces the bluge reader to be re-created from the writer,
+// making newly indexed documents visible to Search.
+func (idx *Index) RefreshSearchReader() {
+	idx.mu.Lock()
+	defer idx.mu.Unlock()
+
+	if r := idx.blugeReader.Load(); r != nil {
+		_ = r.Close()
+	}
+
+	newReader, err := idx.blugeWriter.Reader()
+	if err != nil {
+		return
+	}
+	idx.blugeReader.Store(newReader)
+}
+
 // Close releases all index resources.
 func (idx *Index) Close() error {
 	idx.mu.Lock()
