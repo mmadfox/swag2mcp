@@ -67,6 +67,42 @@ func TestCollection(t *testing.T) {
 	}
 }
 
+func TestTag(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name       string
+		domain     string
+		collection string
+		tag        string
+		expected   string
+	}{
+		{
+			name:       "simple tag",
+			domain:     "petstore",
+			collection: "v1",
+			tag:        "pets",
+			expected:   "0c612ec95cacabbf36b22d967b1dff00",
+		},
+		{
+			name:       "tag with spaces",
+			domain:     "petstore",
+			collection: "v1",
+			tag:        "pet store",
+			expected:   "5dc29dee1b2f7ffe9f41c91c3ff47753",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := Tag(tt.domain, tt.collection, tt.tag)
+			if result != tt.expected {
+				t.Errorf("Tag(%s, %s, %s) = %s; want %s", tt.domain, tt.collection, tt.tag, result, tt.expected)
+			}
+		})
+	}
+}
+
 func TestMethod(t *testing.T) {
 	t.Parallel()
 	tests := []struct {

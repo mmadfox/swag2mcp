@@ -39,6 +39,30 @@ func TestLLMError_RateLimitError(t *testing.T) {
 	}
 }
 
+func TestLLMError_InvokeError(t *testing.T) {
+	t.Parallel()
+
+	llmErr := NewInvokeError("request failed", errors.New("connection refused"))
+	if llmErr.Code != invokeErrorErrCode {
+		t.Errorf("Code = %q, want %q", llmErr.Code, invokeErrorErrCode)
+	}
+	if llmErr.Message != "request failed" {
+		t.Errorf("Message = %q, want %q", llmErr.Message, "request failed")
+	}
+	if llmErr.Original != "connection refused" {
+		t.Errorf("Original = %q, want %q", llmErr.Original, "connection refused")
+	}
+}
+
+func TestLLMError_InvokeError_NilError(t *testing.T) {
+	t.Parallel()
+
+	llmErr := NewInvokeError("request failed", nil)
+	if llmErr.Original != "" {
+		t.Errorf("Original = %q, want empty", llmErr.Original)
+	}
+}
+
 func TestLLMError_JSONSerialization(t *testing.T) {
 	t.Parallel()
 

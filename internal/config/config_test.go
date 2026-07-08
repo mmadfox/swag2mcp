@@ -261,3 +261,32 @@ func TestConfig_Iterate_Empty(t *testing.T) {
 		t.Errorf("Iterate count = %d, want 0", count)
 	}
 }
+
+func TestHTTPClientConfig_MaxResponseSize(t *testing.T) {
+	t.Parallel()
+
+	val := 4096
+	cfg := &Config{
+		HTTPClient: &HTTPClientConfig{
+			MaxResponseSize: &val,
+		},
+	}
+
+	if cfg.HTTPClient.MaxResponseSize == nil {
+		t.Fatal("MaxResponseSize is nil")
+	}
+	if *cfg.HTTPClient.MaxResponseSize != 4096 {
+		t.Errorf("MaxResponseSize = %d, want %d", *cfg.HTTPClient.MaxResponseSize, 4096)
+	}
+}
+
+func TestHTTPClientConfig_MaxResponseSize_Nil(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		HTTPClient: &HTTPClientConfig{},
+	}
+	if cfg.HTTPClient.MaxResponseSize != nil {
+		t.Error("MaxResponseSize should be nil by default")
+	}
+}

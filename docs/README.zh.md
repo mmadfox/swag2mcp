@@ -1,6 +1,6 @@
 # swag2mcp
 
-**swag2mcp** 是一个 CLI 工具和 MCP（模型上下文协议）服务器，用于将 OpenAPI/Swagger/Postman API 规范与 LLM 代理（Opencode、Crush、Copilot、Cursor 等）连接。
+t**swag2mcp** 是一个 CLI 工具和 MCP（模型上下文协议）服务器，用于将 OpenAPI/Swagger/Postman API 规范与 LLM 代理（Opencode、Crush、Copilot、Cursor 等）连接。
 
 它将您的 API 规范索引到全文检索引擎中，通过 14 个 MCP 工具暴露它们，并让 LLM 能够发现、检查和调用真实的 API 端点——无需编写任何集成代码。
 
