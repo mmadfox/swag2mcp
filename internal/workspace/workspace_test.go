@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestNew_DefaultRoot(t *testing.T) {
@@ -76,5 +77,68 @@ func TestInit(t *testing.T) {
 		if _, statErr := os.Stat(dir); os.IsNotExist(statErr) {
 			t.Errorf("directory %q was not created", dir)
 		}
+	}
+}
+
+func TestCleanOldResponses_RemovesOldFiles(t *testing.T) {
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	if err != nil {
+		t.Fatalf("New() = %v", err)
+	}
+	if err := ws.Init(); err != nil {
+		t.Fatalf("Init() = %v", err)
+	}
+
+	oldFile := filepath.Join(ws.ResponsesDir(), "old-response.json")
+	if err := os.WriteFile(oldFile, []byte("old"), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+	oldModTime := time.Now().Add(-72 * time.Hour)
+	if err := os.Chtimes(oldFile, oldModTime, oldModTime); err != nil {
+		t.Fatalf("Chtimes() = %v", err)
+	}
+
+	freshFile := filepath.Join(ws.ResponsesDir(), "fresh-response.json")
+	if err := os.WriteFile(freshFile, []byte("fresh"), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	if err := ws.CleanOldResponses(48 * time.Hour); err != nil {
+		t.Fatalf("CleanOldResponses() = %v", err)
+	}
+
+	if _, err := os.Stat(oldFile); !os.IsNotExist(err) {
+		t.Error("old file was not removed")
+	}
+	if _, err := os.Stat(freshFile); os.IsNotExist(err) {
+		t.Error("fresh file was removed")
+	}
+}
+
+func TestCleanOldResponses_NoDir(t *testing.T) {
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	if err != nil {
+		t.Fatalf("New() = %v", err)
+	}
+
+	if err := ws.CleanOldResponses(48 * time.Hour); err != nil {
+		t.Fatalf("CleanOldResponses() = %v", err)
+	}
+}
+
+func TestCleanOldResponses_EmptyDir(t *testing.T) {
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	if err != nil {
+		t.Fatalf("New() = %v", err)
+	}
+	if err := ws.Init(); err != nil {
+		t.Fatalf("Init() = %v", err)
+	}
+
+	if err := ws.CleanOldResponses(48 * time.Hour); err != nil {
+		t.Fatalf("CleanOldResponses() = %v", err)
 	}
 }

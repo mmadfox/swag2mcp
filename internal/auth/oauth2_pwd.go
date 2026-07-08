@@ -15,12 +15,13 @@ import (
 
 // OAuth2PasswordAuthClient holds configuration for the OAuth2 resource owner password flow.
 type OAuth2PasswordAuthClient struct {
-	Username     string   `yaml:"username"         validate:"required"`
-	Password     string   `yaml:"password"         validate:"required"`
-	ClientID     string   `yaml:"client_id"        validate:"required"`
-	ClientSecret string   `yaml:"client_secret,omitempty"    validate:"omitempty"`
-	TokenURL     string   `yaml:"token_url"        validate:"required,url"`
-	Scopes       []string `yaml:"scopes,omitempty"`
+	Username string   `yaml:"username"         validate:"required"`
+	Password string   `yaml:"password"         validate:"required"`
+	ClientID string   `yaml:"client_id"        validate:"required"`
+	TokenURL string   `yaml:"token_url"        validate:"required,url"`
+	Scopes   []string `yaml:"scopes,omitempty"`
+
+	ClientSecret string `yaml:"client_secret,omitempty"`
 
 	mu        sync.Mutex
 	token     string
@@ -66,7 +67,7 @@ func (c *OAuth2PasswordAuthClient) fetchToken() (string, int, error) {
 	form := url.Values{
 		"grant_type": {grantTypePassword},
 		"username":   {c.Username},
-		"password":   {c.Password},
+		"password":   {c.Password}, //nolint:goconst // form field name
 		"client_id":  {c.ClientID},
 	}
 	if c.ClientSecret != "" {

@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-//nolint:gocognit
+//nolint:gocyclo,gocognit,cyclop // test code
 func TestOAuth2PasswordAuthClient_Apply(t *testing.T) {
 	t.Parallel()
 

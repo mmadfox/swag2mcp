@@ -93,6 +93,10 @@ func newMCPCmd(version string) *cobra.Command {
 				return fmt.Errorf("failed to bootstrap service: %w", bootErr)
 			}
 
+			if cleanErr := ws.CleanOldResponses(workspace.DefaultResponseMaxAge); cleanErr != nil {
+				fmt.Fprintf(os.Stderr, "⚠️  Failed to clean old responses: %s\n", cleanErr)
+			}
+
 			mcpOpts := mcp.Options{
 				Version: version,
 				Logger:  logWriter,
