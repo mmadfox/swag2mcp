@@ -18,7 +18,7 @@ type OAuth2PasswordAuthClient struct {
 	Username     string   `yaml:"username"         validate:"required"`
 	Password     string   `yaml:"password"         validate:"required"`
 	ClientID     string   `yaml:"client_id"        validate:"required"`
-	ClientSecret string   `yaml:"client_secret"    validate:"required"`
+	ClientSecret string   `yaml:"client_secret,omitempty"    validate:"omitempty"`
 	TokenURL     string   `yaml:"token_url"        validate:"required,url"`
 	Scopes       []string `yaml:"scopes,omitempty"`
 
@@ -64,11 +64,13 @@ func (c *OAuth2PasswordAuthClient) Apply(req *http.Request, out *Info) error {
 func (c *OAuth2PasswordAuthClient) fetchToken() (string, int, error) {
 	const grantTypePassword = "password"
 	form := url.Values{
-		"grant_type":    {grantTypePassword},
-		"username":      {c.Username},
-		"password":      {c.Password},
-		"client_id":     {c.ClientID},
-		"client_secret": {c.ClientSecret},
+		"grant_type": {grantTypePassword},
+		"username":   {c.Username},
+		"password":   {c.Password},
+		"client_id":  {c.ClientID},
+	}
+	if c.ClientSecret != "" {
+		form.Set("client_secret", c.ClientSecret)
 	}
 	if len(c.Scopes) > 0 {
 		form.Set("scope", strings.Join(c.Scopes, " "))

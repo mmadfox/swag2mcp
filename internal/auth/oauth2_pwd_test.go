@@ -185,6 +185,66 @@ func TestOAuth2PasswordAuthClient_Apply(t *testing.T) {
 		}
 	})
 
+	t.Run("successful token fetch without client_secret (public client)", func(t *testing.T) {
+		t.Parallel()
+
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if err := r.ParseForm(); err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			if r.Form.Get("grant_type") != "password" {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			if r.Form.Get("username") != "testuser" {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			if r.Form.Get("password") != "testpass" {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			if r.Form.Get("client_id") != "public-client" {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			if r.Form.Get("client_secret") != "" {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			resp := oauth2TokenResponse{
+				AccessToken: "public-client-token",
+				TokenType:   "Bearer",
+				ExpiresIn:   3600,
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(resp)
+		}))
+		t.Cleanup(srv.Close)
+
+		client := &OAuth2PasswordAuthClient{
+			Username: "testuser",
+			Password: "testpass",
+			ClientID: "public-client",
+			TokenURL: srv.URL + "/token",
+		}
+		if err := client.New(); err != nil {
+			t.Fatalf("New() = %v", err)
+		}
+
+		req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
+		var info Info
+		if err := client.Apply(req, &info); err != nil {
+			t.Fatalf("Apply() = %v", err)
+		}
+
+		if v := req.Header.Get("Authorization"); v != "Bearer public-client-token" {
+			t.Errorf("Authorization = %q, want %q", v, "Bearer public-client-token")
+		}
+	})
+
 	t.Run("returns error on non-200 response", func(t *testing.T) {
 		t.Parallel()
 

@@ -108,7 +108,7 @@ func newMCPCmd(version string) *cobra.Command {
 
 	cmd.Flags().StringVarP(&opts.Logfile, "logfile", "f", "", "Filename to log to; if unset, logs to stderr")
 	cmd.Flags().StringVarP(&opts.Tags, "tags", "t", "", "Filter specs by tags (comma-separated)")
-	cmd.Flags().BoolVar(&opts.DisableLLMAuth, "disable-llm-auth", false, "Disable LLM auth token retrieval")
+	cmd.Flags().BoolVar(&opts.DisableLLMAuth, "disable-llm-auth", true, "Disable LLM auth token retrieval")
 	cmd.Flags().StringVar(&opts.DumpDir, "dump-dir", "", "Directory to dump HTTP requests for debugging")
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
