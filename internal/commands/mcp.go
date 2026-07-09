@@ -17,17 +17,19 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
+type mcpCmdOpts struct {
+	Logfile        string
+	Tags           string
+	DisableLLMAuth bool
+	DumpDir        string
+	Transport      string
+	HTTPAddr       string
+	HTTPPath       string
+	AuthToken      string
+}
+
 func newMCPCmd(version string) *cobra.Command {
-	opts := struct {
-		Logfile        string
-		Tags           string
-		DisableLLMAuth bool
-		DumpDir        string
-		Transport      string
-		HTTPAddr       string
-		HTTPPath       string
-		AuthToken      string
-	}{}
+	opts := mcpCmdOpts{}
 
 	cmd := &cobra.Command{
 		Use:   "mcp [path]",
@@ -147,16 +149,7 @@ func newMCPCmd(version string) *cobra.Command {
 
 // applyMCPConfig applies MCP settings from YAML config as fallback
 // when the corresponding CLI flags were not explicitly set.
-func applyMCPConfig(cmd *cobra.Command, cfg *config.Config, opts *struct {
-	Logfile        string
-	Tags           string
-	DisableLLMAuth bool
-	DumpDir        string
-	Transport      string
-	HTTPAddr       string
-	HTTPPath       string
-	AuthToken      string
-}) {
+func applyMCPConfig(cmd *cobra.Command, cfg *config.Config, opts *mcpCmdOpts) {
 	if cfg == nil || cfg.MCP == nil {
 		return
 	}
