@@ -3,6 +3,7 @@ package workspace
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -20,12 +21,13 @@ func TestNew_DefaultRoot(t *testing.T) {
 }
 
 func TestNew_CustomRoot(t *testing.T) {
-	ws, err := New("/tmp/test-workspace")
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
-	if ws.Root() != "/tmp/test-workspace" {
-		t.Errorf("Root() = %q, want %q", ws.Root(), "/tmp/test-workspace")
+	if ws.Root() != tmpDir {
+		t.Errorf("Root() = %q, want %q", ws.Root(), tmpDir)
 	}
 }
 
@@ -66,36 +68,41 @@ func TestNewFromBase_Custom(t *testing.T) {
 
 func TestSub(t *testing.T) {
 	ws, _ := New("/root")
-	if got := ws.Sub("mydir"); got != "/root/mydir" {
-		t.Errorf("Sub() = %q, want %q", got, "/root/mydir")
+	want := filepath.Join("/root", "mydir")
+	if got := ws.Sub("mydir"); got != want {
+		t.Errorf("Sub() = %q, want %q", got, want)
 	}
 }
 
 func TestCacheDir(t *testing.T) {
 	ws, _ := New("/root")
-	if got := ws.CacheDir(); got != "/root/"+DirCache {
-		t.Errorf("CacheDir() = %q, want %q", got, "/root/"+DirCache)
+	want := filepath.Join("/root", DirCache)
+	if got := ws.CacheDir(); got != want {
+		t.Errorf("CacheDir() = %q, want %q", got, want)
 	}
 }
 
 func TestSpecsDir(t *testing.T) {
 	ws, _ := New("/root")
-	if got := ws.SpecsDir(); got != "/root/"+DirSpecs {
-		t.Errorf("SpecsDir() = %q, want %q", got, "/root/"+DirSpecs)
+	want := filepath.Join("/root", DirSpecs)
+	if got := ws.SpecsDir(); got != want {
+		t.Errorf("SpecsDir() = %q, want %q", got, want)
 	}
 }
 
 func TestResponsesDir(t *testing.T) {
 	ws, _ := New("/root")
-	if got := ws.ResponsesDir(); got != "/root/"+DirResponses {
-		t.Errorf("ResponsesDir() = %q, want %q", got, "/root/"+DirResponses)
+	want := filepath.Join("/root", DirResponses)
+	if got := ws.ResponsesDir(); got != want {
+		t.Errorf("ResponsesDir() = %q, want %q", got, want)
 	}
 }
 
 func TestAuthScriptsDir(t *testing.T) {
 	ws, _ := New("/root")
-	if got := ws.AuthScriptsDir(); got != "/root/"+DirAuthScripts {
-		t.Errorf("AuthScriptsDir() = %q, want %q", got, "/root/"+DirAuthScripts)
+	want := filepath.Join("/root", DirAuthScripts)
+	if got := ws.AuthScriptsDir(); got != want {
+		t.Errorf("AuthScriptsDir() = %q, want %q", got, want)
 	}
 }
 
@@ -119,7 +126,7 @@ func TestDefaultConfigPath(t *testing.T) {
 
 func TestConfigPathIn(t *testing.T) {
 	path := ConfigPathIn("/custom/workspace")
-	want := "/custom/workspace/swag2mcp.yaml"
+	want := filepath.Join("/custom/workspace", "swag2mcp.yaml")
 	if path != want {
 		t.Errorf("ConfigPathIn() = %q, want %q", path, want)
 	}
@@ -128,7 +135,7 @@ func TestConfigPathIn(t *testing.T) {
 func TestConfigPath(t *testing.T) {
 	ws, _ := New("/root")
 	path := ws.ConfigPath()
-	want := "/root/swag2mcp.yaml"
+	want := filepath.Join("/root", "swag2mcp.yaml")
 	if path != want {
 		t.Errorf("ConfigPath() = %q, want %q", path, want)
 	}
@@ -270,7 +277,7 @@ func TestCleanOldResponses_RemovesOldFiles(t *testing.T) {
 	}
 	oldModTime := time.Now().Add(-72 * time.Hour)
 	if err := os.Chtimes(oldFile, oldModTime, oldModTime); err != nil {
-		t.Fatalf("Chtimes() = %v", err)
+		t.Skipf("Chtimes not supported on this filesystem: %v", err)
 	}
 
 	freshFile := filepath.Join(ws.ResponsesDir(), "fresh-response.json")
@@ -333,7 +340,12 @@ func TestCleanOldResponses_SkipsSubdirs(t *testing.T) {
 		t.Fatalf("WriteFile() = %v", err)
 	}
 
-	if err := ws.CleanOldResponses(0); err != nil {
+	oldModTime := time.Now().Add(-72 * time.Hour)
+	if err := os.Chtimes(subDir, oldModTime, oldModTime); err != nil {
+		t.Skipf("Chtimes not supported on this filesystem: %v", err)
+	}
+
+	if err := ws.CleanOldResponses(48 * time.Hour); err != nil {
 		t.Fatalf("CleanOldResponses() = %v", err)
 	}
 
@@ -345,12 +357,12 @@ func TestCleanOldResponses_SkipsSubdirs(t *testing.T) {
 	}
 }
 
-func TestAuthScriptPath_Unix(t *testing.T) {
+func TestAuthScriptPath(t *testing.T) {
 	ws, _ := New("/root")
 	path := ws.AuthScriptPath("my-api")
-	want := filepath.Join(ws.AuthScriptsDir(), "my-api.sh")
-	if path != want {
-		t.Errorf("AuthScriptPath() = %q, want %q", path, want)
+	ext := filepath.Ext(path)
+	if ext != ".sh" && ext != ".bat" {
+		t.Errorf("AuthScriptPath() extension = %q, want .sh or .bat", ext)
 	}
 }
 
@@ -501,5 +513,216 @@ func TestRemoveOrphanAuthScripts_SkipsSubdirs(t *testing.T) {
 
 	if _, err := os.Stat(subDir); os.IsNotExist(err) {
 		t.Error("subdirectory was removed")
+	}
+}
+
+// removeContents error: ReadDir on a file returns ENOTDIR.
+func TestClean_ReadDirError(t *testing.T) {
+	tmpDir := t.TempDir()
+	ws, _ := New(tmpDir)
+	if err := ws.Init(); err != nil {
+		t.Fatalf("Init() = %v", err)
+	}
+
+	cacheDir := ws.CacheDir()
+	if err := os.RemoveAll(cacheDir); err != nil {
+		t.Fatalf("RemoveAll() = %v", err)
+	}
+	if err := os.WriteFile(cacheDir, []byte("not-a-dir"), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	if err := ws.Clean(); err == nil {
+		t.Error("Clean() expected error, got nil")
+	}
+}
+
+// CleanOldResponses error: ReadDir on a file returns ENOTDIR.
+func TestCleanOldResponses_ReadDirError(t *testing.T) {
+	tmpDir := t.TempDir()
+	ws, _ := New(tmpDir)
+	if err := ws.Init(); err != nil {
+		t.Fatalf("Init() = %v", err)
+	}
+
+	respDir := ws.ResponsesDir()
+	if err := os.RemoveAll(respDir); err != nil {
+		t.Fatalf("RemoveAll() = %v", err)
+	}
+	if err := os.WriteFile(respDir, []byte("not-a-dir"), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	if err := ws.CleanOldResponses(48 * time.Hour); err == nil {
+		t.Error("CleanOldResponses() expected error, got nil")
+	}
+}
+
+// CleanOldResponses error: Remove fails on read-only parent dir.
+func TestCleanOldResponses_RemoveError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Chmod does not prevent deletion on Windows")
+	}
+
+	tmpDir := t.TempDir()
+	ws, _ := New(tmpDir)
+	if err := ws.Init(); err != nil {
+		t.Fatalf("Init() = %v", err)
+	}
+
+	oldFile := filepath.Join(ws.ResponsesDir(), "old-response.json")
+	if err := os.WriteFile(oldFile, []byte("old"), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+	oldModTime := time.Now().Add(-72 * time.Hour)
+	if err := os.Chtimes(oldFile, oldModTime, oldModTime); err != nil {
+		t.Skipf("Chtimes not supported: %v", err)
+	}
+
+	if err := os.Chmod(ws.ResponsesDir(), 0500); err != nil {
+		t.Fatalf("Chmod() = %v", err)
+	}
+	t.Cleanup(func() { os.Chmod(ws.ResponsesDir(), 0750) })
+
+	if err := ws.CleanOldResponses(48 * time.Hour); err == nil {
+		t.Error("CleanOldResponses() expected error, got nil")
+	}
+}
+
+// EnsureAuthScript error: MkdirAll fails when auth_scripts dir is a file.
+func TestEnsureAuthScript_MkdirAllError(t *testing.T) {
+	tmpDir := t.TempDir()
+	ws, _ := New(tmpDir)
+
+	authDir := ws.AuthScriptsDir()
+	if err := os.WriteFile(authDir, []byte("not-a-dir"), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	if err := ws.EnsureAuthScript("test-domain"); err == nil {
+		t.Error("EnsureAuthScript() expected error, got nil")
+	}
+}
+
+// EnsureAuthScript error: WriteFile fails on read-only dir.
+func TestEnsureAuthScript_WriteFileError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Chmod does not prevent deletion on Windows")
+	}
+
+	tmpDir := t.TempDir()
+	ws, _ := New(tmpDir)
+	if err := ws.Init(); err != nil {
+		t.Fatalf("Init() = %v", err)
+	}
+
+	if err := os.Chmod(ws.AuthScriptsDir(), 0500); err != nil {
+		t.Fatalf("Chmod() = %v", err)
+	}
+	t.Cleanup(func() { os.Chmod(ws.AuthScriptsDir(), 0750) })
+
+	if err := ws.EnsureAuthScript("test-domain"); err == nil {
+		t.Error("EnsureAuthScript() expected error, got nil")
+	}
+}
+
+// RemoveOrphanAuthScripts error: ReadDir on a file returns ENOTDIR.
+func TestRemoveOrphanAuthScripts_ReadDirError(t *testing.T) {
+	tmpDir := t.TempDir()
+	ws, _ := New(tmpDir)
+	if err := ws.Init(); err != nil {
+		t.Fatalf("Init() = %v", err)
+	}
+
+	authDir := ws.AuthScriptsDir()
+	if err := os.RemoveAll(authDir); err != nil {
+		t.Fatalf("RemoveAll() = %v", err)
+	}
+	if err := os.WriteFile(authDir, []byte("not-a-dir"), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	if err := ws.RemoveOrphanAuthScripts([]string{"active"}); err == nil {
+		t.Error("RemoveOrphanAuthScripts() expected error, got nil")
+	}
+}
+
+// RemoveOrphanAuthScripts error: Remove fails on read-only parent dir.
+func TestRemoveOrphanAuthScripts_RemoveError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Chmod does not prevent deletion on Windows")
+	}
+
+	tmpDir := t.TempDir()
+	ws, _ := New(tmpDir)
+	if err := ws.Init(); err != nil {
+		t.Fatalf("Init() = %v", err)
+	}
+
+	orphanPath := filepath.Join(ws.AuthScriptsDir(), "orphan.sh")
+	if err := os.WriteFile(orphanPath, []byte("echo test"), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	if err := os.Chmod(ws.AuthScriptsDir(), 0500); err != nil {
+		t.Fatalf("Chmod() = %v", err)
+	}
+	t.Cleanup(func() { os.Chmod(ws.AuthScriptsDir(), 0750) })
+
+	if err := ws.RemoveOrphanAuthScripts([]string{"active"}); err == nil {
+		t.Error("RemoveOrphanAuthScripts() expected error, got nil")
+	}
+}
+
+// Init error: MkdirAll fails when root dir is a file.
+func TestInit_MkdirAllError(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	rootFile := filepath.Join(tmpDir, "blocker")
+	if err := os.WriteFile(rootFile, []byte("block"), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+	blocker, _ := New(rootFile)
+
+	if err := blocker.Init(); err == nil {
+		t.Error("Init() expected error, got nil")
+	}
+}
+
+// DefaultRoot error: [os.UserHomeDir] fails when HOME is unset.
+func TestDefaultRoot_NoHome(t *testing.T) {
+	t.Setenv("HOME", "")
+	t.Setenv("USERPROFILE", "")
+
+	root := DefaultRoot()
+	if root != DefaultRootName {
+		t.Errorf("DefaultRoot() = %q, want %q", root, DefaultRootName)
+	}
+}
+
+// removeContents error: RemoveAll fails when parent dir is read-only.
+func TestClean_RemoveAllError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Chmod does not prevent deletion on Windows")
+	}
+
+	tmpDir := t.TempDir()
+	ws, _ := New(tmpDir)
+	if err := ws.Init(); err != nil {
+		t.Fatalf("Init() = %v", err)
+	}
+
+	cacheFile := filepath.Join(ws.CacheDir(), "data.yaml")
+	if err := os.WriteFile(cacheFile, []byte("data"), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	if err := os.Chmod(ws.CacheDir(), 0000); err != nil {
+		t.Fatalf("Chmod() = %v", err)
+	}
+	t.Cleanup(func() { os.Chmod(ws.CacheDir(), 0750) })
+
+	if err := ws.Clean(); err == nil {
+		t.Error("Clean() expected error, got nil")
 	}
 }

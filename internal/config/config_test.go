@@ -290,3 +290,50 @@ func TestHTTPClientConfig_MaxResponseSize_Nil(t *testing.T) {
 		t.Error("MaxResponseSize should be nil by default")
 	}
 }
+
+func TestMCPAuthConfig_Resolve_Nil(t *testing.T) {
+	t.Parallel()
+
+	var c *MCPAuthConfig
+	c.Resolve() // should not panic
+}
+
+func TestMCPAuthConfig_Resolve_NoEnv(t *testing.T) {
+	t.Parallel()
+
+	c := &MCPAuthConfig{Token: "static-token"}
+	c.Resolve()
+	if c.Token != "static-token" {
+		t.Errorf("Token = %q, want %q", c.Token, "static-token")
+	}
+}
+
+func TestMCPAuthConfig_Resolve_WithEnv(t *testing.T) {
+	t.Setenv("MCP_TOKEN", "resolved-token")
+	c := &MCPAuthConfig{Token: "$(MCP_TOKEN)"}
+	c.Resolve()
+	if c.Token != "resolved-token" {
+		t.Errorf("Token = %q, want %q", c.Token, "resolved-token")
+	}
+}
+
+func TestMCPConfig_Defaults(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		MCP: &MCPConfig{
+			Transport: "sse",
+			Addr:      ":9090",
+			Path:      "/api/mcp",
+		},
+	}
+	if cfg.MCP.Transport != "sse" {
+		t.Errorf("Transport = %q, want %q", cfg.MCP.Transport, "sse")
+	}
+	if cfg.MCP.Addr != ":9090" {
+		t.Errorf("Addr = %q, want %q", cfg.MCP.Addr, ":9090")
+	}
+	if cfg.MCP.Path != "/api/mcp" {
+		t.Errorf("Path = %q, want %q", cfg.MCP.Path, "/api/mcp")
+	}
+}

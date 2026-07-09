@@ -156,6 +156,122 @@ func TestWriteResult(t *testing.T) {
 	}
 }
 
+func TestWriteResult_ConfigPathIsDir(t *testing.T) {
+	tmpDir := t.TempDir()
+	wsDir := filepath.Join(tmpDir, ".swag2mcp")
+
+	specs := []SpecInput{
+		{
+			Domain:   "test",
+			LLMTitle: "Test API",
+			BaseURL:  "https://test.example.com/v1",
+		},
+	}
+
+	if err := WriteResult(tmpDir, wsDir, specs); err != nil {
+		t.Fatalf("WriteResult() error = %v", err)
+	}
+
+	cfgPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+	if _, err := os.Stat(cfgPath); os.IsNotExist(err) {
+		t.Error("config file was not created inside directory")
+	}
+}
+
+func TestWriteResult_MkdirAllError(t *testing.T) {
+	tmpDir := t.TempDir()
+	wsDir := filepath.Join(tmpDir, ".swag2mcp")
+
+	blocker := filepath.Join(tmpDir, "blocker")
+	if err := os.WriteFile(blocker, []byte("block"), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+	cfgPath := filepath.Join(blocker, "swag2mcp.yaml")
+
+	specs := []SpecInput{
+		{
+			Domain:   "test",
+			LLMTitle: "Test API",
+			BaseURL:  "https://test.example.com/v1",
+		},
+	}
+
+	if err := WriteResult(cfgPath, wsDir, specs); err == nil {
+		t.Error("WriteResult() expected error, got nil")
+	}
+}
+
+func TestWriteResult_WriteFileError(t *testing.T) {
+	tmpDir := t.TempDir()
+	wsDir := filepath.Join(tmpDir, ".swag2mcp")
+
+	cfgDir := filepath.Join(tmpDir, "readonly")
+	if err := os.MkdirAll(cfgDir, 0750); err != nil {
+		t.Fatalf("MkdirAll() = %v", err)
+	}
+	if err := os.Chmod(cfgDir, 0000); err != nil {
+		t.Fatalf("Chmod() = %v", err)
+	}
+	t.Cleanup(func() { os.Chmod(cfgDir, 0750) })
+
+	cfgPath := filepath.Join(cfgDir, "swag2mcp.yaml")
+
+	specs := []SpecInput{
+		{
+			Domain:   "test",
+			LLMTitle: "Test API",
+			BaseURL:  "https://test.example.com/v1",
+		},
+	}
+
+	if err := WriteResult(cfgPath, wsDir, specs); err == nil {
+		t.Error("WriteResult() expected error, got nil")
+	}
+}
+
+func TestWriteResult_WorkspaceNewError(t *testing.T) {
+	tmpDir := t.TempDir()
+	cfgPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+
+	specs := []SpecInput{
+		{
+			Domain:   "test",
+			LLMTitle: "Test API",
+			BaseURL:  "https://test.example.com/v1",
+		},
+	}
+
+	if err := WriteResult(cfgPath, "/invalid:\x00path", specs); err == nil {
+		t.Error("WriteResult() expected error for invalid workspace path, got nil")
+	}
+}
+
+func TestWriteResult_WorkspaceInitError(t *testing.T) {
+	tmpDir := t.TempDir()
+	cfgPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+
+	wsDir := filepath.Join(tmpDir, ".swag2mcp")
+	if err := os.MkdirAll(wsDir, 0750); err != nil {
+		t.Fatalf("MkdirAll() = %v", err)
+	}
+	blocker := filepath.Join(wsDir, "cache")
+	if err := os.WriteFile(blocker, []byte("block"), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	specs := []SpecInput{
+		{
+			Domain:   "test",
+			LLMTitle: "Test API",
+			BaseURL:  "https://test.example.com/v1",
+		},
+	}
+
+	if err := WriteResult(cfgPath, wsDir, specs); err == nil {
+		t.Error("WriteResult() expected error for workspace init failure, got nil")
+	}
+}
+
 func TestAuthMethodsList(t *testing.T) {
 	list := authMethodsList()
 	for _, m := range availableAuthMethods {
@@ -177,5 +293,27 @@ func TestAuthFieldsFor(t *testing.T) {
 	fields = authFieldsFor("unknown")
 	if len(fields) != 0 {
 		t.Errorf("unknown auth should have 0 fields, got %d", len(fields))
+	}
+}
+
+func TestHeaderLine_Empty(t *testing.T) {
+	if got := headerLine(""); got != "" {
+		t.Errorf("headerLine('') = %q, want ''", got)
+	}
+}
+
+func TestHeaderLine_Ascii(t *testing.T) {
+	got := headerLine("Hello")
+	want := "─────"
+	if got != want {
+		t.Errorf("headerLine('Hello') = %q, want %q", got, want)
+	}
+}
+
+func TestHeaderLine_Unicode(t *testing.T) {
+	got := headerLine("Привет")
+	want := "──────"
+	if got != want {
+		t.Errorf("headerLine('Привет') = %q, want %q", got, want)
 	}
 }

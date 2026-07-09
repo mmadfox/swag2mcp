@@ -81,3 +81,86 @@ func TestListConfig_DisabledSpec(t *testing.T) {
 		t.Error("output should not contain disabled spec")
 	}
 }
+
+func TestListConfig_WithAuth(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfgPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+
+	content := []byte("specs:\n  - domain: secured-api\n    llm_title: Secured API\n    base_url: https://api.example.com\n    auth:\n      type: bearer\n      config:\n        token: my-token\n    collections:\n      - llm_title: Main\n        location: https://example.com/spec.yaml\n")
+	if err := os.WriteFile(cfgPath, content, 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	output, err := ListConfig(cfgPath, nil)
+	if err != nil {
+		t.Fatalf("ListConfig() = %v", err)
+	}
+	if !strings.Contains(output, "Auth:") {
+		t.Error("output missing auth info")
+	}
+}
+
+func TestListConfig_DisabledCollection(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfgPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+
+	content := []byte("specs:\n  - domain: test-api\n    llm_title: Test API\n    base_url: https://api.example.com\n    collections:\n      - llm_title: Enabled\n        location: https://example.com/enabled.yaml\n      - llm_title: Disabled\n        location: https://example.com/disabled.yaml\n        disable: true\n")
+	if err := os.WriteFile(cfgPath, content, 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	output, err := ListConfig(cfgPath, nil)
+	if err != nil {
+		t.Fatalf("ListConfig() = %v", err)
+	}
+	if !strings.Contains(output, "Enabled") {
+		t.Error("output missing enabled collection")
+	}
+	if strings.Contains(output, "Disabled") {
+		t.Error("output should not contain disabled collection")
+	}
+}
+
+func TestListConfig_NoTags(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfgPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+
+	content := []byte("specs:\n  - domain: no-tags\n    llm_title: No Tags API\n    base_url: https://api.example.com\n    collections:\n      - llm_title: Main\n        location: https://example.com/spec.yaml\n")
+	if err := os.WriteFile(cfgPath, content, 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	output, err := ListConfig(cfgPath, nil)
+	if err != nil {
+		t.Fatalf("ListConfig() = %v", err)
+	}
+	if !strings.Contains(output, "no-tags") {
+		t.Error("output missing spec without tags")
+	}
+}
+
+func TestListConfig_NoCollections(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfgPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+
+	content := []byte("specs:\n  - domain: empty\n    llm_title: Empty API\n    base_url: https://api.example.com\n")
+	if err := os.WriteFile(cfgPath, content, 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	output, err := ListConfig(cfgPath, nil)
+	if err != nil {
+		t.Fatalf("ListConfig() = %v", err)
+	}
+	if !strings.Contains(output, "empty") {
+		t.Error("output missing spec without collections")
+	}
+}

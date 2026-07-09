@@ -66,3 +66,32 @@ func TestAtomicWriteConfig_ValidationError(t *testing.T) {
 		t.Fatal("expected validation error")
 	}
 }
+
+func TestAtomicWriteConfig_WriteFileError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfgDir := filepath.Join(tmpDir, "readonly")
+	if err := os.MkdirAll(cfgDir, 0750); err != nil {
+		t.Fatalf("MkdirAll() = %v", err)
+	}
+	cfgPath := filepath.Join(cfgDir, "swag2mcp.yaml")
+
+	initialData := []byte("specs:\n  - domain: test\n    llm_title: Test API v1\n    base_url: https://example.com\n    collections:\n      - llm_title: Main\n        location: https://example.com/spec.yaml\n")
+	if err := os.WriteFile(cfgPath, initialData, 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	if err := os.Chmod(cfgDir, 0000); err != nil {
+		t.Fatalf("Chmod() = %v", err)
+	}
+	t.Cleanup(func() { os.Chmod(cfgDir, 0750) })
+
+	err := AtomicWriteConfig(cfgPath, func(cfg *config.Config) error {
+		cfg.Specs[0].Domain = "updated"
+		return nil
+	})
+	if err == nil {
+		t.Error("AtomicWriteConfig() expected error for read-only dir, got nil")
+	}
+}

@@ -78,3 +78,59 @@ func TestExampleConfig(t *testing.T) {
 		t.Fatal("ExampleConfig() returned empty data")
 	}
 }
+
+func TestSetup_WriteConfigError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfgDir := filepath.Join(tmpDir, "readonly")
+	if err := os.MkdirAll(cfgDir, 0750); err != nil {
+		t.Fatalf("MkdirAll() = %v", err)
+	}
+	if err := os.Chmod(cfgDir, 0000); err != nil {
+		t.Fatalf("Chmod() = %v", err)
+	}
+	t.Cleanup(func() { os.Chmod(cfgDir, 0750) })
+
+	cfgPath := filepath.Join(cfgDir, "swag2mcp.yaml")
+	wsDir := filepath.Join(tmpDir, ".swag2mcp")
+
+	if err := Setup(cfgPath, wsDir); err == nil {
+		t.Error("Setup() expected error for read-only config dir, got nil")
+	}
+}
+
+func TestSetup_WorkspaceInitError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfgPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+	wsDir := filepath.Join(tmpDir, ".swag2mcp")
+
+	if err := os.MkdirAll(wsDir, 0750); err != nil {
+		t.Fatalf("MkdirAll() = %v", err)
+	}
+	blocker := filepath.Join(wsDir, "cache")
+	if err := os.WriteFile(blocker, []byte("block"), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	if err := Setup(cfgPath, wsDir); err == nil {
+		t.Error("Setup() expected error for workspace init failure, got nil")
+	}
+}
+
+func TestWriteConfig_MkdirAllError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	blocker := filepath.Join(tmpDir, "blocker")
+	if err := os.WriteFile(blocker, []byte("block"), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+	cfgPath := filepath.Join(blocker, "swag2mcp.yaml")
+
+	if err := WriteConfig(cfgPath, []byte("specs: []")); err == nil {
+		t.Error("WriteConfig() expected error for blocked dir, got nil")
+	}
+}

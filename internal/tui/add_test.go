@@ -164,3 +164,49 @@ func TestResolveConfigPath_Directory(t *testing.T) {
 		t.Errorf("got %q, want %q", path, filepath.Join(tmpDir, "swag2mcp.yaml"))
 	}
 }
+
+func TestAddSpecFromYAML_AtomicWriteError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfgPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+
+	initialData := []byte("specs:\n  - domain: test\n    llm_title: Test API v1\n    base_url: https://example.com\n    collections:\n      - llm_title: Main\n        location: https://example.com/spec.yaml\n")
+	if err := os.WriteFile(cfgPath, initialData, 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	yamlData := []byte("domain: new-api\nllm_title: New API\nbase_url: https://new.example.com\ncollections:\n  - llm_title: New Coll\n    location: https://new.example.com/spec.yaml\n")
+
+	if err := os.Chmod(tmpDir, 0000); err != nil {
+		t.Fatalf("Chmod() = %v", err)
+	}
+	t.Cleanup(func() { os.Chmod(tmpDir, 0750) })
+
+	if err := AddSpecFromYAML(cfgPath, yamlData); err == nil {
+		t.Error("AddSpecFromYAML() expected error for read-only dir, got nil")
+	}
+}
+
+func TestAddCollectionFromYAML_AtomicWriteError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfgPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+
+	initialData := []byte("specs:\n  - domain: test-api\n    llm_title: Test API\n    base_url: https://example.com\n    collections:\n      - llm_title: Existing\n        location: https://example.com/existing.yaml\n")
+	if err := os.WriteFile(cfgPath, initialData, 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	yamlData := []byte("spec_domain: test-api\nllm_title: New Collection\nlocation: https://example.com/new.yaml\n")
+
+	if err := os.Chmod(tmpDir, 0000); err != nil {
+		t.Fatalf("Chmod() = %v", err)
+	}
+	t.Cleanup(func() { os.Chmod(tmpDir, 0750) })
+
+	if err := AddCollectionFromYAML(cfgPath, yamlData); err == nil {
+		t.Error("AddCollectionFromYAML() expected error for read-only dir, got nil")
+	}
+}

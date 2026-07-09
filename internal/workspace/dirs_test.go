@@ -1,6 +1,9 @@
 package workspace
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestConstants(t *testing.T) {
 	tests := []struct {
@@ -20,5 +23,11 @@ func TestConstants(t *testing.T) {
 				t.Errorf("%s = %q, want %q", tt.name, tt.value, tt.want)
 			}
 		})
+	}
+}
+
+func TestDefaultResponseMaxAge(t *testing.T) {
+	if DefaultResponseMaxAge != 48*time.Hour {
+		t.Errorf("DefaultResponseMaxAge = %v, want %v", DefaultResponseMaxAge, 48*time.Hour)
 	}
 }

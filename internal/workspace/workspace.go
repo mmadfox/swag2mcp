@@ -202,7 +202,7 @@ func (w *Workspace) CleanOldResponses(maxAge time.Duration) error {
 // AuthScriptPath returns the path to the auth script for the given domain.
 func (w *Workspace) AuthScriptPath(domain string) string {
 	ext := ".sh"
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == osWindows {
 		ext = ".bat"
 	}
 	return filepath.Join(w.AuthScriptsDir(), domain+ext)
@@ -220,7 +220,7 @@ func (w *Workspace) EnsureAuthScript(domain string) error {
 	}
 
 	var content string
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == osWindows {
 		content = `@echo off
 echo {"token": "your-token-here", "expires_in": 3600}
 `

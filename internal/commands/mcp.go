@@ -66,6 +66,9 @@ func newMCPCmd(version string) *cobra.Command {
 
 			cfg, loadErr := config.Load(configFile)
 			if loadErr == nil {
+				if cfg.MCP != nil {
+					cfg.MCP.Auth.Resolve()
+				}
 				validateOpts := config.ValidateOptions{
 					Cache: cache.New(filepath.Dir(configFile)),
 				}

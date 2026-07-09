@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"iter"
 	"time"
+
+	"github.com/mmadfox/swag2mcp/internal/env"
 )
 
 // Cookie represents an HTTP cookie for configuration.
@@ -49,6 +51,14 @@ type MCPConfig struct {
 // MCPAuthConfig holds the MCP server authentication configuration.
 type MCPAuthConfig struct {
 	Token string `yaml:"token,omitempty"`
+}
+
+// Resolve resolves environment variable references in the token.
+func (c *MCPAuthConfig) Resolve() {
+	if c == nil {
+		return
+	}
+	c.Token = env.Parse(c.Token)
 }
 
 // Spec defines a single API specification group.

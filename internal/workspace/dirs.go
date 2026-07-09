@@ -25,4 +25,7 @@ const (
 
 	// DefaultResponseMaxAge is the default age after which response files are cleaned up.
 	DefaultResponseMaxAge = 48 * time.Hour
+
+	// osWindows is the [runtime.GOOS] value for Windows.
+	osWindows = "windows"
 )
