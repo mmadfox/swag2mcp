@@ -76,3 +76,24 @@ func TestSpecByID_ValidationError(t *testing.T) {
 		t.Fatal("expected error")
 	}
 }
+
+func TestSpecByID_CollectionsError(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	specInfo, _, _, _ := seedTestData(t, svc, t.Name())
+
+	// Remove collections to trigger the else branch
+	svc.index.RemoveCollectionsBySpec(specInfo.ID)
+
+	resp, err := svc.SpecByID(context.Background(), SpecByIDRequest{ID: specInfo.ID})
+	if err != nil {
+		t.Fatalf("SpecByID() = %v", err)
+	}
+	if resp.Spec.ID != specInfo.ID {
+		t.Errorf("ID = %q, want %q", resp.Spec.ID, specInfo.ID)
+	}
+	if len(resp.Collections) != 0 {
+		t.Errorf("Collections = %d, want 0", len(resp.Collections))
+	}
+}

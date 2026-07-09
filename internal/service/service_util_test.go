@@ -336,3 +336,51 @@ func TestBootstrap_WithTags(t *testing.T) {
 		t.Errorf("Domain = %q, want %q", specs.Specs[0].Domain, "public-api")
 	}
 }
+
+func TestBootstrap_InvalidSpecFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	invalidSpecPath := filepath.Join(tmpDir, "invalid.yaml")
+	if wrErr := os.WriteFile(invalidSpecPath, []byte("invalid: yaml: ["), 0600); wrErr != nil {
+		t.Fatalf("WriteFile() = %v", wrErr)
+	}
+
+	configPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+	configContent := []byte("specs:\n  - domain: test-api\n    llm_title: Test API v1\n    base_url: https://api.example.com\n    collections:\n      - llm_title: Main\n        location: " + invalidSpecPath + "\n")
+	if wrErr := os.WriteFile(configPath, configContent, 0600); wrErr != nil {
+		t.Fatalf("WriteFile() = %v", wrErr)
+	}
+
+	svc, svcErr := New()
+	if svcErr != nil {
+		t.Fatalf("New() = %v", svcErr)
+	}
+
+	bootErr := svc.Bootstrap(context.Background(), BootstrapRequest{
+		ConfFilepath: configPath,
+	})
+	if bootErr == nil {
+		t.Fatal("expected error for invalid spec file")
+	}
+}
+
+func TestBootstrap_ConfigValidationError(t *testing.T) {
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+	// Valid YAML but missing required fields (no base_url)
+	configContent := []byte("specs:\n  - domain: test-api\n    llm_title: Test\n    collections:\n      - llm_title: Main\n        location: /tmp/test.yaml\n")
+	if wrErr := os.WriteFile(configPath, configContent, 0600); wrErr != nil {
+		t.Fatalf("WriteFile() = %v", wrErr)
+	}
+
+	svc, svcErr := New()
+	if svcErr != nil {
+		t.Fatalf("New() = %v", svcErr)
+	}
+
+	bootErr := svc.Bootstrap(context.Background(), BootstrapRequest{
+		ConfFilepath: configPath,
+	})
+	if bootErr == nil {
+		t.Fatal("expected error for config validation failure")
+	}
+}

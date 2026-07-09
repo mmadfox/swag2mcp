@@ -4,6 +4,10 @@ import (
 	"context"
 	"net/http"
 	"testing"
+
+	"github.com/mmadfox/swag2mcp/internal/index"
+	"github.com/mmadfox/swag2mcp/internal/spec"
+	"github.com/mmadfox/swag2mcp/internal/types"
 )
 
 func TestInspect_Success(t *testing.T) {
@@ -59,5 +63,103 @@ func TestInspect_ValidationError(t *testing.T) {
 	_, err := svc.Inspect(context.Background(), InspectRequest{EndpointID: "bad"})
 	if err == nil {
 		t.Fatal("expected error")
+	}
+}
+
+func TestInspect_OrphanSpec(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	seedTestData(t, svc, t.Name())
+
+	orphanIdx, idxErr := index.New()
+	if idxErr != nil {
+		t.Fatalf("index.New() = %v", idxErr)
+	}
+	orphanEndpoint := &types.Endpoint{
+		ID:           "00000000000000000000000000000001",
+		SpecID:       "00000000000000000000000000000000",
+		CollectionID: "00000000000000000000000000000002",
+		TagID:        "00000000000000000000000000000003",
+		Name:         "GET",
+		Path:         "/orphan",
+		Operation:    &spec.Operation{ID: "orphanOp"},
+	}
+	if idxErr = orphanIdx.EnsureIndex(
+		&types.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
+		[]*types.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
+		[]*types.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
+		[]*types.Endpoint{orphanEndpoint},
+	); idxErr != nil {
+		t.Fatalf("EnsureIndex() = %v", idxErr)
+	}
+
+	svc.index = orphanIdx
+	orphanIdx.RemoveSpec("00000000000000000000000000000000")
+
+	_, err := svc.Inspect(context.Background(), InspectRequest{EndpointID: orphanEndpoint.ID})
+	if err == nil {
+		t.Fatal("expected error for orphan spec")
+	}
+}
+
+func TestInspect_OrphanCollection(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	seedTestData(t, svc, t.Name())
+
+	orphanIdx, idxErr := index.New()
+	if idxErr != nil {
+		t.Fatalf("index.New() = %v", idxErr)
+	}
+	orphanEndpoint := &types.Endpoint{
+		ID:           "00000000000000000000000000000001",
+		SpecID:       "00000000000000000000000000000000",
+		CollectionID: "00000000000000000000000000000002",
+		TagID:        "00000000000000000000000000000003",
+		Name:         "GET",
+		Path:         "/orphan",
+		Operation:    &spec.Operation{ID: "orphanOp"},
+	}
+	if idxErr = orphanIdx.EnsureIndex(
+		&types.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
+		[]*types.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
+		[]*types.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
+		[]*types.Endpoint{orphanEndpoint},
+	); idxErr != nil {
+		t.Fatalf("EnsureIndex() = %v", idxErr)
+	}
+
+	svc.index = orphanIdx
+	orphanIdx.RemoveCollection("00000000000000000000000000000002")
+
+	_, err := svc.Inspect(context.Background(), InspectRequest{EndpointID: orphanEndpoint.ID})
+	if err == nil {
+		t.Fatal("expected error for orphan collection")
+	}
+}
+
+func TestInspect_CollectionBaseURL(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	specInfo, collectionInfo, _, endpointInfo := seedTestData(t, svc, t.Name())
+
+	collectionInfo.BaseURL = "https://collection.example.com"
+
+	resp, err := svc.Inspect(context.Background(), InspectRequest{EndpointID: endpointInfo.ID})
+	if err != nil {
+		t.Fatalf("Inspect() = %v", err)
+	}
+	if resp.BaseURL != "https://collection.example.com" {
+		t.Errorf("BaseURL = %q, want %q", resp.BaseURL, "https://collection.example.com")
+	}
+	if resp.FullURL != "https://collection.example.com/test" {
+		t.Errorf("FullURL = %q, want %q", resp.FullURL, "https://collection.example.com/test")
+	}
+	// Verify spec BaseURL is different
+	if specInfo.BaseURL == "https://collection.example.com" {
+		t.Error("spec BaseURL should not be the same as collection BaseURL")
 	}
 }

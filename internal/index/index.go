@@ -542,3 +542,48 @@ func (idx *Index) Size() int {
 	defer idx.mu.RUnlock()
 	return len(idx.endpointByID)
 }
+
+// RemoveSpec removes a spec from the index by its ID.
+func (idx *Index) RemoveSpec(specID string) {
+	idx.mu.Lock()
+	defer idx.mu.Unlock()
+	delete(idx.specs, specID)
+}
+
+// RemoveCollection removes a collection from the index by its ID.
+func (idx *Index) RemoveCollection(collectionID string) {
+	idx.mu.Lock()
+	defer idx.mu.Unlock()
+	delete(idx.collectionByID, collectionID)
+}
+
+// RemoveTag removes a tag from the index by its ID.
+func (idx *Index) RemoveTag(tagID string) {
+	idx.mu.Lock()
+	defer idx.mu.Unlock()
+	delete(idx.tagByID, tagID)
+}
+
+// RemoveAllTags removes all tags from the index.
+func (idx *Index) RemoveAllTags() {
+	idx.mu.Lock()
+	defer idx.mu.Unlock()
+	idx.tagByID = make(map[string]*types.Tag)
+	idx.tagsByCollection = make(map[string][]*types.Tag)
+	idx.tagBySpec = make(map[string][]*types.Tag)
+}
+
+// RemoveCollectionsBySpec removes all collections for a given spec ID.
+func (idx *Index) RemoveCollectionsBySpec(specID string) {
+	idx.mu.Lock()
+	defer idx.mu.Unlock()
+	delete(idx.collectionsBySpec, specID)
+}
+
+// AddCollection adds a collection to the index.
+func (idx *Index) AddCollection(coll *types.Collection) {
+	idx.mu.Lock()
+	defer idx.mu.Unlock()
+	idx.collectionByID[coll.ID] = coll
+	idx.collectionsBySpec[coll.SpecID] = append(idx.collectionsBySpec[coll.SpecID], coll)
+}

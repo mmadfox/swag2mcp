@@ -1,6 +1,8 @@
 package config
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -36,18 +38,15 @@ func TestLoad_FromFile(t *testing.T) {
 }
 
 func TestLoad_FromTildePath(t *testing.T) {
-	t.Parallel()
+	// Note: no t.Parallel() because t.Setenv is used
 
-	home, err := os.UserHomeDir()
-	if err != nil {
-		t.Fatalf("UserHomeDir() = %v", err)
-	}
+	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
 
-	dir := filepath.Join(home, ".swag2mcp-test")
+	dir := filepath.Join(tmpHome, ".swag2mcp-test")
 	if mkErr := os.MkdirAll(dir, 0750); mkErr != nil {
 		t.Fatalf("MkdirAll() = %v", mkErr)
 	}
-	defer os.RemoveAll(dir)
 
 	path := filepath.Join(dir, "config.yaml")
 	content := []byte(`specs:
@@ -185,5 +184,125 @@ func TestExpandTilde(t *testing.T) {
 		if result != tt.expected {
 			t.Errorf("expandTilde(%q) = %q, want %q", tt.input, result, tt.expected)
 		}
+	}
+}
+
+func TestLoad_FromHTTPURL_Success(t *testing.T) {
+	t.Parallel()
+
+	yamlContent := "specs:\n  - domain: test-api\n    llm_title: Test API v1\n    base_url: https://api.example.com\n    collections:\n      - llm_title: Main\n        location: https://example.com/spec.yaml\n"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(yamlContent))
+	}))
+	t.Cleanup(srv.Close)
+
+	cfg, err := Load(srv.URL)
+	if err != nil {
+		t.Fatalf("Load() = %v", err)
+	}
+	if len(cfg.Specs) != 1 {
+		t.Fatalf("Specs = %d, want 1", len(cfg.Specs))
+	}
+	if cfg.Specs[0].Domain != "test-api" {
+		t.Errorf("Domain = %q, want %q", cfg.Specs[0].Domain, "test-api")
+	}
+}
+
+func TestLoad_FromHTTPURL_NotFound(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(srv.Close)
+
+	_, err := Load(srv.URL)
+	if err == nil {
+		t.Fatal("expected error for 404 response")
+	}
+}
+
+func TestLoad_FromHTTPURL_InvalidYAML(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("invalid: [yaml: broken"))
+	}))
+	t.Cleanup(srv.Close)
+
+	_, err := Load(srv.URL)
+	if err == nil {
+		t.Fatal("expected error for invalid YAML from HTTP")
+	}
+}
+
+func TestLoad_FromHTTPURL_Unreachable(t *testing.T) {
+	t.Parallel()
+
+	_, err := Load("http://127.0.0.1:1/config.yaml")
+	if err == nil {
+		t.Fatal("expected error for unreachable URL")
+	}
+}
+
+func TestLoad_FromHTTPURL_InvalidURL(t *testing.T) {
+	t.Parallel()
+
+	_, err := Load("http://invalid url with spaces")
+	if err == nil {
+		t.Fatal("expected error for invalid URL")
+	}
+}
+
+func TestLoad_FromFileURL_InvalidScheme(t *testing.T) {
+	t.Parallel()
+
+	_, err := Load("ftp://example.com/config.yaml")
+	if err == nil {
+		t.Fatal("expected error for non-file URL scheme")
+	}
+}
+
+func TestLoad_FromFileURL_InvalidPath(t *testing.T) {
+	t.Parallel()
+
+	_, err := Load("file://%ZZinvalid")
+	if err == nil {
+		t.Fatal("expected error for invalid percent-encoded path")
+	}
+}
+
+func TestLoad_FromAbsolutePath_RelativePath(t *testing.T) {
+	t.Parallel()
+
+	_, err := loadFromAbsolutePath("relative/path")
+	if err == nil {
+		t.Fatal("expected error for relative path")
+	}
+}
+
+func TestExpandTilde_NoMatch(t *testing.T) {
+	t.Parallel()
+
+	result := expandTilde("no-tilde")
+	if result != "no-tilde" {
+		t.Errorf("got %q, want %q", result, "no-tilde")
+	}
+}
+
+func TestExpandTilde_WindowsBackslash(t *testing.T) {
+	t.Parallel()
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		t.Fatalf("UserHomeDir() = %v", err)
+	}
+
+	result := expandTilde("~\\config.yaml")
+	expected := filepath.Join(home, "config.yaml")
+	if result != expected {
+		t.Errorf("got %q, want %q", result, expected)
 	}
 }

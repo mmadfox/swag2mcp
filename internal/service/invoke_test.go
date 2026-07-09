@@ -807,6 +807,249 @@ func TestInvoke_TableDriven(t *testing.T) {
 	}
 }
 
+// TestInvoke_RateLimit verifies that rate limiting works.
+func TestInvoke_RateLimit(t *testing.T) {
+	t.Parallel()
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	testServer := newTestServer(t, testServerConfig{
+		ExpectedMethod: http.MethodGet,
+		ExpectedPath:   "/users",
+		StatusCode:     http.StatusOK,
+		ResponseBody:   map[string]any{"users": []any{}},
+	})
+	t.Cleanup(testServer.Close)
+
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	// First call should succeed
+	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+	})
+	if invokeError != nil {
+		t.Fatalf("first Invoke() returned error: %v", invokeError)
+	}
+
+	// Second call should be rate limited
+	_, invokeError = serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+	})
+	if invokeError == nil {
+		t.Fatal("expected rate limit error on second call")
+	}
+}
+
+// TestInvoke_NilOperation verifies that an endpoint with nil Operation returns an error.
+func TestInvoke_NilOperation(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	seedTestData(t, svc, t.Name())
+
+	// Create an endpoint with a valid Operation first, then set it to nil after indexing
+	nilOpEndpoint := &types.Endpoint{
+		ID:           "00000000000000000000000000000001",
+		SpecID:       "00000000000000000000000000000002",
+		CollectionID: "00000000000000000000000000000003",
+		TagID:        "00000000000000000000000000000004",
+		Name:         "GET",
+		Path:         "/nil-op",
+		Operation:    &spec.Operation{ID: "nilOp", Summary: "nil op"},
+	}
+	if err := svc.index.EnsureIndex(
+		&types.Spec{ID: "00000000000000000000000000000002", Domain: "nil-op-spec"},
+		[]*types.Collection{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000002"}},
+		[]*types.Tag{{ID: "00000000000000000000000000000004", SpecID: "00000000000000000000000000000002", CollectionID: "00000000000000000000000000000003"}},
+		[]*types.Endpoint{nilOpEndpoint},
+	); err != nil {
+		t.Fatalf("EnsureIndex() = %v", err)
+	}
+
+	// Set Operation to nil after indexing
+	nilOpEndpoint.Operation = nil
+
+	_, err := svc.Invoke(context.Background(), InvokeRequest{
+		EndpointID: nilOpEndpoint.ID,
+	})
+	if err == nil {
+		t.Fatal("expected error for nil operation")
+	}
+}
+
+// TestInvoke_OrphanSpec verifies that an endpoint with a non-existent spec returns an error.
+func TestInvoke_OrphanSpec(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	seedTestData(t, svc, t.Name())
+
+	orphanIdx, idxErr := index.New()
+	if idxErr != nil {
+		t.Fatalf("index.New() = %v", idxErr)
+	}
+	orphanEndpoint := &types.Endpoint{
+		ID:           "00000000000000000000000000000001",
+		SpecID:       "00000000000000000000000000000000",
+		CollectionID: "00000000000000000000000000000002",
+		TagID:        "00000000000000000000000000000003",
+		Name:         "GET",
+		Path:         "/orphan",
+		Operation:    &spec.Operation{ID: "orphanOp"},
+	}
+	if idxErr = orphanIdx.EnsureIndex(
+		&types.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
+		[]*types.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
+		[]*types.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
+		[]*types.Endpoint{orphanEndpoint},
+	); idxErr != nil {
+		t.Fatalf("EnsureIndex() = %v", idxErr)
+	}
+
+	svc.index = orphanIdx
+	orphanIdx.RemoveSpec("00000000000000000000000000000000")
+
+	_, err := svc.Invoke(context.Background(), InvokeRequest{
+		EndpointID: orphanEndpoint.ID,
+	})
+	if err == nil {
+		t.Fatal("expected error for orphan spec")
+	}
+}
+
+// TestInvoke_OrphanCollection verifies that an endpoint with a non-existent collection returns an error.
+func TestInvoke_OrphanCollection(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	seedTestData(t, svc, t.Name())
+
+	orphanIdx, idxErr := index.New()
+	if idxErr != nil {
+		t.Fatalf("index.New() = %v", idxErr)
+	}
+	orphanEndpoint := &types.Endpoint{
+		ID:           "00000000000000000000000000000001",
+		SpecID:       "00000000000000000000000000000000",
+		CollectionID: "00000000000000000000000000000002",
+		TagID:        "00000000000000000000000000000003",
+		Name:         "GET",
+		Path:         "/orphan",
+		Operation:    &spec.Operation{ID: "orphanOp"},
+	}
+	if idxErr = orphanIdx.EnsureIndex(
+		&types.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
+		[]*types.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
+		[]*types.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
+		[]*types.Endpoint{orphanEndpoint},
+	); idxErr != nil {
+		t.Fatalf("EnsureIndex() = %v", idxErr)
+	}
+
+	svc.index = orphanIdx
+	orphanIdx.RemoveCollection("00000000000000000000000000000002")
+
+	_, err := svc.Invoke(context.Background(), InvokeRequest{
+		EndpointID: orphanEndpoint.ID,
+	})
+	if err == nil {
+		t.Fatal("expected error for orphan collection")
+	}
+}
+
+// TestInvoke_InvalidParameters verifies that unknown parameters return an error.
+func TestInvoke_InvalidParameters(t *testing.T) {
+	t.Parallel()
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	_, err := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+		Parameters: map[string]any{"unknown_param": "value"},
+	})
+	if err == nil {
+		t.Fatal("expected error for unknown parameter")
+	}
+}
+
+// TestInvoke_InvalidRequestBody verifies that an invalid request body returns an error.
+func TestInvoke_InvalidRequestBody(t *testing.T) {
+	t.Parallel()
+
+	specDoc := parseSpecFromFile(t, "orders.yaml")
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodPost, "/orders")
+
+	_, err := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID:  endpointID,
+		RequestBody: map[string]any{"unknown_field": "value"},
+	})
+	if err == nil {
+		t.Fatal("expected error for unknown field in request body")
+	}
+}
+
+// TestInvoke_TransportError verifies that a transport error is returned.
+func TestInvoke_TransportError(t *testing.T) {
+	t.Parallel()
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = "http://127.0.0.1:1"
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	_, err := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+	})
+	if err == nil {
+		t.Fatal("expected transport error")
+	}
+}
+
+// TestInvoke_LargeResponse verifies that large responses are saved to disk.
+func TestInvoke_LargeResponse(t *testing.T) {
+	t.Parallel()
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	testServer := newTestServer(t, testServerConfig{
+		ExpectedMethod: http.MethodGet,
+		ExpectedPath:   "/users",
+		StatusCode:     http.StatusOK,
+		ResponseBody:   map[string]any{"data": string(make([]byte, 2000))},
+	})
+	t.Cleanup(testServer.Close)
+
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	// Set a small max response size to trigger large response path
+	smallSize := 100
+	specInfo.HTTPClient = &types.HTTPClientConfig{MaxResponseSize: &smallSize}
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	response, err := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+	})
+	if err != nil {
+		t.Fatalf("Invoke() returned error: %v", err)
+	}
+	if response.FileRef == nil {
+		t.Fatal("expected FileRef for large response")
+	}
+}
+
 // testServerConfig holds configuration for a test HTTP server.
 type testServerConfig struct {
 	ExpectedMethod  string

@@ -4,6 +4,10 @@ import (
 	"context"
 	"net/http"
 	"testing"
+
+	"github.com/mmadfox/swag2mcp/internal/index"
+	"github.com/mmadfox/swag2mcp/internal/spec"
+	"github.com/mmadfox/swag2mcp/internal/types"
 )
 
 func TestEndpointsByTag_Success(t *testing.T) {
@@ -158,5 +162,187 @@ func TestEndpointByID_ValidationError(t *testing.T) {
 	_, err := svc.EndpointByID(context.Background(), EndpointByIDRequest{ID: "bad"})
 	if err == nil {
 		t.Fatal("expected error")
+	}
+}
+
+func TestEndpointByID_OrphanSpec(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	seedTestData(t, svc, t.Name())
+
+	// Create a separate index with an endpoint whose SpecID doesn't exist
+	orphanIdx, err := index.New()
+	if err != nil {
+		t.Fatalf("index.New() = %v", err)
+	}
+	orphanEndpoint := &types.Endpoint{
+		ID:           "00000000000000000000000000000001",
+		SpecID:       "00000000000000000000000000000000",
+		CollectionID: "00000000000000000000000000000002",
+		TagID:        "00000000000000000000000000000003",
+		Name:         "GET",
+		Path:         "/orphan",
+		Operation:    &spec.Operation{ID: "orphanOp"},
+	}
+	if idxErr := orphanIdx.EnsureIndex(
+		&types.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
+		[]*types.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
+		[]*types.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
+		[]*types.Endpoint{orphanEndpoint},
+	); idxErr != nil {
+		t.Fatalf("EnsureIndex() = %v", idxErr)
+	}
+
+	svc.index = orphanIdx
+	orphanIdx.RemoveSpec("00000000000000000000000000000000")
+
+	_, err = svc.EndpointByID(context.Background(), EndpointByIDRequest{ID: orphanEndpoint.ID})
+	if err == nil {
+		t.Fatal("expected error for orphan spec")
+	}
+}
+
+func TestEndpointByID_OrphanCollection(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	seedTestData(t, svc, t.Name())
+
+	orphanIdx, idxErr := index.New()
+	if idxErr != nil {
+		t.Fatalf("index.New() = %v", idxErr)
+	}
+	orphanEndpoint := &types.Endpoint{
+		ID:           "00000000000000000000000000000001",
+		SpecID:       "00000000000000000000000000000000",
+		CollectionID: "00000000000000000000000000000002",
+		TagID:        "00000000000000000000000000000003",
+		Name:         "GET",
+		Path:         "/orphan",
+		Operation:    &spec.Operation{ID: "orphanOp"},
+	}
+	if idxErr = orphanIdx.EnsureIndex(
+		&types.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
+		[]*types.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
+		[]*types.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
+		[]*types.Endpoint{orphanEndpoint},
+	); idxErr != nil {
+		t.Fatalf("EnsureIndex() = %v", idxErr)
+	}
+
+	svc.index = orphanIdx
+	orphanIdx.RemoveCollection("00000000000000000000000000000002")
+
+	_, err := svc.EndpointByID(context.Background(), EndpointByIDRequest{ID: orphanEndpoint.ID})
+	if err == nil {
+		t.Fatal("expected error for orphan collection")
+	}
+}
+
+func TestEndpointByID_OrphanTag(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	seedTestData(t, svc, t.Name())
+
+	orphanIdx, idxErr := index.New()
+	if idxErr != nil {
+		t.Fatalf("index.New() = %v", idxErr)
+	}
+	orphanEndpoint := &types.Endpoint{
+		ID:           "00000000000000000000000000000001",
+		SpecID:       "00000000000000000000000000000000",
+		CollectionID: "00000000000000000000000000000002",
+		TagID:        "00000000000000000000000000000003",
+		Name:         "GET",
+		Path:         "/orphan",
+		Operation:    &spec.Operation{ID: "orphanOp"},
+	}
+	if idxErr = orphanIdx.EnsureIndex(
+		&types.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
+		[]*types.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
+		[]*types.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
+		[]*types.Endpoint{orphanEndpoint},
+	); idxErr != nil {
+		t.Fatalf("EnsureIndex() = %v", idxErr)
+	}
+
+	svc.index = orphanIdx
+	orphanIdx.RemoveTag("00000000000000000000000000000003")
+
+	_, err := svc.EndpointByID(context.Background(), EndpointByIDRequest{ID: orphanEndpoint.ID})
+	if err == nil {
+		t.Fatal("expected error for orphan tag")
+	}
+}
+
+func TestEndpointsByTag_OrphanCollection(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	_, _, tagInfo, _ := seedTestData(t, svc, t.Name())
+
+	svc.index.RemoveCollection(tagInfo.CollectionID)
+
+	_, err := svc.EndpointsByTag(context.Background(), EndpointsByTagRequest{TagID: tagInfo.ID})
+	if err == nil {
+		t.Fatal("expected error for orphan collection")
+	}
+}
+
+func TestEndpointsByTag_OrphanSpec(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	_, _, tagInfo, _ := seedTestData(t, svc, t.Name())
+
+	svc.index.RemoveSpec(tagInfo.SpecID)
+
+	_, err := svc.EndpointsByTag(context.Background(), EndpointsByTagRequest{TagID: tagInfo.ID})
+	if err == nil {
+		t.Fatal("expected error for orphan spec")
+	}
+}
+
+func TestEndpointsByCollection_OrphanSpec(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	_, collectionInfo, _, _ := seedTestData(t, svc, t.Name())
+
+	svc.index.RemoveSpec(collectionInfo.SpecID)
+
+	_, err := svc.EndpointsByCollection(context.Background(), EndpointsByCollectionRequest{CollectionID: collectionInfo.ID})
+	if err == nil {
+		t.Fatal("expected error for orphan spec")
+	}
+}
+
+func TestEndpointsByCollection_OrphanTag(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	_, collectionInfo, _, _ := seedTestData(t, svc, t.Name())
+
+	svc.index.RemoveAllTags()
+
+	_, err := svc.EndpointsByCollection(context.Background(), EndpointsByCollectionRequest{CollectionID: collectionInfo.ID})
+	if err == nil {
+		t.Fatal("expected error for orphan tag")
+	}
+}
+
+func TestEndpointsBySpec_OrphanTag(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	specInfo, _, _, _ := seedTestData(t, svc, t.Name())
+
+	svc.index.RemoveAllTags()
+
+	_, err := svc.EndpointsBySpec(context.Background(), EndpointsBySpecRequest{SpecID: specInfo.ID})
+	if err == nil {
+		t.Fatal("expected error for orphan tag through EndpointsBySpec")
 	}
 }

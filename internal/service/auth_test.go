@@ -65,3 +65,24 @@ func TestAuth_SpecNotFound(t *testing.T) {
 		t.Fatal("expected error")
 	}
 }
+
+func TestAuth_ApplyError(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	// OAuth2 CC with unreachable token URL will fail Apply
+	authenticator := &auth.OAuth2ClientCredentialsAuthClient{
+		ClientID:     "test",
+		ClientSecret: "test",
+		TokenURL:     "http://127.0.0.1:1/token",
+	}
+	if err := authenticator.New(); err != nil {
+		t.Fatalf("authenticator.New() = %v", err)
+	}
+	specInfo, _, _, _ := seedTestDataWithAuth(t, svc, t.Name(), authenticator)
+
+	_, err := svc.Auth(context.Background(), AuthRequest{SpecID: specInfo.ID})
+	if err == nil {
+		t.Fatal("expected error for auth apply failure")
+	}
+}

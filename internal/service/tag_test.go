@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 	"testing"
+
+	"github.com/mmadfox/swag2mcp/internal/index"
+	"github.com/mmadfox/swag2mcp/internal/types"
 )
 
 func TestTagsByCollection_Success(t *testing.T) {
@@ -40,6 +43,34 @@ func TestTagsByCollection_ValidationError(t *testing.T) {
 	_, err := svc.TagsByCollection(context.Background(), TagsByCollectionRequest{CollectionID: "bad"})
 	if err == nil {
 		t.Fatal("expected error")
+	}
+}
+
+func TestTagsByCollection_OrphanSpec(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	seedTestData(t, svc, t.Name())
+
+	orphanIdx, idxErr := index.New()
+	if idxErr != nil {
+		t.Fatalf("index.New() = %v", idxErr)
+	}
+	if idxErr = orphanIdx.EnsureIndex(
+		&types.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
+		[]*types.Collection{{ID: "00000000000000000000000000000001", SpecID: "00000000000000000000000000000000"}},
+		[]*types.Tag{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000001"}},
+		[]*types.Endpoint{},
+	); idxErr != nil {
+		t.Fatalf("EnsureIndex() = %v", idxErr)
+	}
+
+	svc.index = orphanIdx
+	orphanIdx.RemoveSpec("00000000000000000000000000000000")
+
+	_, err := svc.TagsByCollection(context.Background(), TagsByCollectionRequest{CollectionID: "00000000000000000000000000000001"})
+	if err == nil {
+		t.Fatal("expected error for orphan spec")
 	}
 }
 

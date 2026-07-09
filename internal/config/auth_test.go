@@ -227,3 +227,41 @@ func TestAuth_UnmarshalYAML_unknown_type(t *testing.T) {
 		t.Errorf("error = %q, want %q", err.Error(), `unsupported auth type "unknown"`)
 	}
 }
+
+func TestAuth_UnmarshalYAML_decode_error(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		yaml string
+	}{
+		{"basic", "type: basic\nconfig: 123"},
+		{"bearer", "type: bearer\nconfig: 123"},
+		{"digest", "type: digest\nconfig: 123"},
+		{"oauth2-cc", "type: oauth2-cc\nconfig: 123"},
+		{"oauth2-pwd", "type: oauth2-pwd\nconfig: 123"},
+		{"api-key", "type: api-key\nconfig: 123"},
+		{"script", "type: script\nconfig: 123"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			var a Auth
+			err := yaml.Unmarshal([]byte(tt.yaml), &a)
+			if err == nil {
+				t.Fatal("expected decode error, got nil")
+			}
+		})
+	}
+}
+
+func TestAuth_UnmarshalYAML_top_level_decode_error(t *testing.T) {
+	t.Parallel()
+
+	var a Auth
+	err := yaml.Unmarshal([]byte("type:\n  - broken"), &a)
+	if err == nil {
+		t.Fatal("expected error for malformed YAML")
+	}
+}

@@ -28,6 +28,9 @@ const (
 	defaultMaxResponseSize = 1048    // 1 KB
 	maxMaxResponseSize     = 1048576 // 1 MB
 	randSuffixLen          = 6
+
+	schemaTypeObject = "object"
+	schemaTypeArray  = "array"
 )
 
 // InvokeRequest represents a request to invoke an API endpoint.
@@ -468,7 +471,7 @@ func randomSuffix(n int) string {
 func newAuthHTTPClient(specification *types.Spec, httpConfig *types.HTTPClientConfig) *http.Client {
 	client := &http.Client{}
 
-	if specification.Auth != nil {
+	if specification != nil && specification.Auth != nil {
 		client.Transport = &auth.Transport{
 			Base: http.DefaultTransport,
 			Auth: specification.Auth,
@@ -592,9 +595,9 @@ func validateSchemaValue(schema *spec.Schema, value any, path string) error {
 	}
 
 	switch schema.Type {
-	case "object":
+	case schemaTypeObject:
 		return validateObjectSchema(schema, value, path)
-	case "array":
+	case schemaTypeArray:
 		return validateArraySchema(schema, value, path)
 	}
 

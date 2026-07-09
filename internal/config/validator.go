@@ -17,7 +17,6 @@ var (
 	domainRegex       = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,60}$`)
 	titleRegex        = regexp.MustCompile(`^[\p{L}\p{N} #*_` + "`" + `~>\[\]()|.,!?;:'"\\-]+$`)
 	instructionRegex  = regexp.MustCompile(`^[\p{L}\p{N}\s#*_` + "`" + `~>\[\]()|.,!?;:'"\\-]+$`)
-	scriptDomainRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,60}$`)
 )
 
 // validationError describes a single validation issue.
@@ -153,9 +152,6 @@ func getValidator() *validator.Validate {
 	if err := configValidator.RegisterValidation("instruction_format", instructionFormatValidation); err != nil {
 		panic(err)
 	}
-	if err := configValidator.RegisterValidation("script_domain_format", scriptDomainFormatValidation); err != nil {
-		panic(err)
-	}
 	return configValidator
 }
 
@@ -169,10 +165,6 @@ func titleFormatValidation(fl validator.FieldLevel) bool {
 
 func instructionFormatValidation(fl validator.FieldLevel) bool {
 	return instructionRegex.MatchString(fl.Field().String())
-}
-
-func scriptDomainFormatValidation(fl validator.FieldLevel) bool {
-	return scriptDomainRegex.MatchString(fl.Field().String())
 }
 
 // humanReadableError translates a validator.FieldError into a human-readable message.
