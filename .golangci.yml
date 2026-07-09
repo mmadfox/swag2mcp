@@ -465,6 +465,12 @@ linters:
       - path: 'internal/cache/cache\.go'
         text: 'G404'
         linters: [ gosec ]
+      - path: 'internal/service/randomizer\.go'
+        text: 'G404'
+        linters: [ gosec ]
+      - path: 'internal/httpclient/randomizer\.go'
+        text: 'G404'
+        linters: [ gosec ]
       # CLI output functions are allowed in commands and tui packages
       - path: 'internal/commands/'
         linters: [ forbidigo ]
@@ -487,6 +493,12 @@ linters:
         linters: [ nestif ]
       # Global variable for auth methods list
       - path: 'internal/tui/wizard\.go'
+        linters: [ gochecknoglobals ]
+      # Global variables for randomizer data
+      - path: 'internal/httpclient/randomizer\.go'
+        linters: [ gochecknoglobals ]
+      # Global config for httpclient
+      - path: 'internal/httpclient/client\.go'
         linters: [ gochecknoglobals ]
       # Named returns in TUI
       - path: 'internal/tui/'
@@ -565,6 +577,13 @@ linters:
         linters: [ gocognit, funlen ]
       - path: 'internal/commands/validate\.go'
         linters: [ gocognit ]
+      # funlen in service invoke
+      - path: 'internal/service/invoke\.go'
+        linters: [ funlen ]
+      # httpclient transport cookies are user-configured
+      - path: 'internal/httpclient/transport\.go'
+        text: 'G124'
+        linters: [ gosec ]
       # gocognit in config validator
       - path: 'internal/config/validator\.go'
         linters: [ gocognit ]

@@ -18,9 +18,25 @@ type Cookie struct {
 	HTTPOnly bool   `yaml:"http_only,omitempty"`
 }
 
-// HTTPClientConfig holds HTTP client settings for a config, spec, or collection.
-// Settings cascade: collection → spec → global.
+// ProxyConfig holds proxy connection settings.
+type ProxyConfig struct {
+	URL      string   `yaml:"url"`
+	Username string   `yaml:"username,omitempty"`
+	Password string   `yaml:"password,omitempty"`
+	Bypass   []string `yaml:"bypass,omitempty"`
+}
+
+// HTTPClientConfig holds per-request HTTP settings for a spec or collection.
+// These values are applied to each request at invocation time.
 type HTTPClientConfig struct {
+	Headers map[string]string `yaml:"headers,omitempty"`
+	Cookies []Cookie          `yaml:"cookies,omitempty"`
+}
+
+// GlobalHTTPClientConfig holds global HTTP client settings.
+type GlobalHTTPClientConfig struct {
+	Randomize       bool              `yaml:"random,omitempty"`
+	Proxy           *ProxyConfig      `yaml:"proxy,omitempty"`
 	Headers         map[string]string `yaml:"headers,omitempty"`
 	Cookies         []Cookie          `yaml:"cookies,omitempty"`
 	UserAgent       string            `yaml:"user_agent,omitempty"`
@@ -35,9 +51,9 @@ type HTTPClientConfig struct {
 // Validation rules:
 //   - Specs: at least one spec must be defined.
 type Config struct {
-	HTTPClient *HTTPClientConfig `yaml:"http_client,omitempty"`
-	MCP        *MCPConfig        `yaml:"mcp,omitempty"`
-	Specs      []Spec            `yaml:"specs"`
+	HTTPClient *GlobalHTTPClientConfig `yaml:"http_client,omitempty"`
+	MCP        *MCPConfig              `yaml:"mcp,omitempty"`
+	Specs      []Spec                  `yaml:"specs"`
 }
 
 // MCPConfig holds the MCP server configuration.

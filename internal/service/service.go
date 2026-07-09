@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"net/http"
 	"sync/atomic"
 
 	"github.com/go-playground/validator/v10"
@@ -11,13 +12,15 @@ import (
 )
 
 type Service struct {
-	index          *index.Index
-	cache          *cache.Cache
-	ws             *workspace.Workspace
-	v              *validator.Validate
-	disableLLMAuth atomic.Bool
-	dumpDir        string
-	rateLimiter    *invokeRateLimiter
+	index           *index.Index
+	cache           *cache.Cache
+	ws              *workspace.Workspace
+	v               *validator.Validate
+	disableLLMAuth  atomic.Bool
+	dumpDir         string
+	rateLimiter     *invokeRateLimiter
+	httpClient      *http.Client
+	maxResponseSize int
 }
 
 type NewOption func(*Service)
@@ -44,11 +47,13 @@ func New(opts ...NewOption) (*Service, error) {
 		return nil, fmt.Errorf("failed to create workspace: %w", err)
 	}
 	s := &Service{
-		index:       idx,
-		cache:       cache.New(ws.Root()),
-		ws:          ws,
-		v:           validator.New(validator.WithRequiredStructEnabled()),
-		rateLimiter: newInvokeRateLimiter(),
+		index:           idx,
+		cache:           cache.New(ws.Root()),
+		ws:              ws,
+		v:               validator.New(validator.WithRequiredStructEnabled()),
+		rateLimiter:     newInvokeRateLimiter(),
+		httpClient:      &http.Client{Transport: http.DefaultTransport},
+		maxResponseSize: defaultMaxResponseSize,
 	}
 	for _, opt := range opts {
 		opt(s)

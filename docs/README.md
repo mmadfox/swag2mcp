@@ -43,6 +43,12 @@ swag2mcp run
 
 ```yaml
 http_client:                        # optional, global HTTP defaults
+  random: false                     # optional, enables browser-like headers
+  proxy:                            # optional
+    url: socks5h://127.0.0.1:1080   # http, https, socks5, socks5h
+    username: ""                    # optional
+    password: ""                    # optional
+    bypass: []                      # optional, e.g. ["*.local", "10.0.0.0/8"]
   headers:                          # optional
     X-API-Version: "2"
   cookies: []                       # optional
@@ -60,7 +66,7 @@ specs:
     base_url: https://petstore.swagger.io/v2  # required, valid URL
     disable: false                      # optional
     tags: [public, demo]                # optional, for filtering
-    http_client:                        # optional, overrides global
+    http_client:                        # optional, overrides global (headers + cookies only)
       headers:
         X-API-Version: "2"
     auth:                               # optional
@@ -75,7 +81,7 @@ specs:
         location: https://petstore.swagger.io/v2/swagger.json  # required, 5-250 chars
         disable: false                  # optional
         base_url: ""                    # optional, overrides spec base_url
-        http_client: {}                 # optional, overrides spec
+        http_client: {}                 # optional, overrides spec (headers + cookies only)
 ```
 
 ### Tags — Filtering Specs by Project

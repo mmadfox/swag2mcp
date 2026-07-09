@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mmadfox/swag2mcp/internal/auth"
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 	"github.com/mmadfox/swag2mcp/internal/spec"
 	"github.com/mmadfox/swag2mcp/internal/types"
 )
@@ -24,7 +24,7 @@ func TestResolveMaxResponseSize_NilConfig(t *testing.T) {
 func TestResolveMaxResponseSize_NilField(t *testing.T) {
 	t.Parallel()
 
-	size := resolveMaxResponseSize(&types.HTTPClientConfig{})
+	size := resolveMaxResponseSize(nil)
 	if size != defaultMaxResponseSize {
 		t.Errorf("got %d, want %d", size, defaultMaxResponseSize)
 	}
@@ -34,7 +34,7 @@ func TestResolveMaxResponseSize_Custom(t *testing.T) {
 	t.Parallel()
 
 	val := 4096
-	size := resolveMaxResponseSize(&types.HTTPClientConfig{MaxResponseSize: &val})
+	size := resolveMaxResponseSize(&val)
 	if size != 4096 {
 		t.Errorf("got %d, want %d", size, 4096)
 	}
@@ -44,7 +44,7 @@ func TestResolveMaxResponseSize_ExceedsMax(t *testing.T) {
 	t.Parallel()
 
 	val := 2 * 1024 * 1024 // 2 MB
-	size := resolveMaxResponseSize(&types.HTTPClientConfig{MaxResponseSize: &val})
+	size := resolveMaxResponseSize(&val)
 	if size != maxMaxResponseSize {
 		t.Errorf("got %d, want %d", size, maxMaxResponseSize)
 	}
@@ -54,7 +54,7 @@ func TestResolveMaxResponseSize_Zero(t *testing.T) {
 	t.Parallel()
 
 	val := 0
-	size := resolveMaxResponseSize(&types.HTTPClientConfig{MaxResponseSize: &val})
+	size := resolveMaxResponseSize(&val)
 	if size != defaultMaxResponseSize {
 		t.Errorf("got %d, want %d", size, defaultMaxResponseSize)
 	}
@@ -64,7 +64,7 @@ func TestResolveMaxResponseSize_Negative(t *testing.T) {
 	t.Parallel()
 
 	val := -100
-	size := resolveMaxResponseSize(&types.HTTPClientConfig{MaxResponseSize: &val})
+	size := resolveMaxResponseSize(&val)
 	if size != defaultMaxResponseSize {
 		t.Errorf("got %d, want %d", size, defaultMaxResponseSize)
 	}
@@ -720,37 +720,27 @@ func TestValidateArraySchema_ItemValidationFailure(t *testing.T) {
 	}
 }
 
-// --- newAuthHTTPClient tests ---
+// --- httpclient.New tests ---
 
-func TestNewAuthHTTPClient_NilSpec(t *testing.T) {
+func TestNewHTTPClient_NilConfig(t *testing.T) {
 	t.Parallel()
 
-	client := newAuthHTTPClient(nil, nil)
+	client, err := httpclient.New(httpclient.Config{})
+	if err != nil {
+		t.Fatalf("New() = %v", err)
+	}
 	if client == nil {
 		t.Fatal("client is nil")
 	}
 }
 
-func TestNewAuthHTTPClient_WithAuth(t *testing.T) {
+func TestNewHTTPClient_WithTimeout(t *testing.T) {
 	t.Parallel()
 
-	authenticator := &auth.BearerTokenAuthClient{Token: "test-token"}
-	if err := authenticator.New(); err != nil {
-		t.Fatalf("failed to init authenticator: %v", err)
+	client, err := httpclient.New(httpclient.Config{Timeout: 30})
+	if err != nil {
+		t.Fatalf("New() = %v", err)
 	}
-
-	spec := &types.Spec{Auth: authenticator}
-	client := newAuthHTTPClient(spec, nil)
-	if client == nil {
-		t.Fatal("client is nil")
-	}
-}
-
-func TestNewAuthHTTPClient_WithTimeout(t *testing.T) {
-	t.Parallel()
-
-	config := &types.HTTPClientConfig{Timeout: 30}
-	client := newAuthHTTPClient(nil, config)
 	if client == nil {
 		t.Fatal("client is nil")
 	}
@@ -759,12 +749,14 @@ func TestNewAuthHTTPClient_WithTimeout(t *testing.T) {
 	}
 }
 
-func TestNewAuthHTTPClient_NoFollowRedirects(t *testing.T) {
+func TestNewHTTPClient_NoFollowRedirects(t *testing.T) {
 	t.Parallel()
 
 	follow := false
-	config := &types.HTTPClientConfig{FollowRedirects: &follow}
-	client := newAuthHTTPClient(nil, config)
+	client, err := httpclient.New(httpclient.Config{FollowRedirects: &follow})
+	if err != nil {
+		t.Fatalf("New() = %v", err)
+	}
 	if client == nil {
 		t.Fatal("client is nil")
 	}
@@ -773,12 +765,14 @@ func TestNewAuthHTTPClient_NoFollowRedirects(t *testing.T) {
 	}
 }
 
-func TestNewAuthHTTPClient_MaxRedirects(t *testing.T) {
+func TestNewHTTPClient_MaxRedirects(t *testing.T) {
 	t.Parallel()
 
 	maxRedirects := 3
-	config := &types.HTTPClientConfig{MaxRedirects: &maxRedirects}
-	client := newAuthHTTPClient(nil, config)
+	client, err := httpclient.New(httpclient.Config{MaxRedirects: &maxRedirects})
+	if err != nil {
+		t.Fatalf("New() = %v", err)
+	}
 	if client == nil {
 		t.Fatal("client is nil")
 	}
@@ -787,80 +781,65 @@ func TestNewAuthHTTPClient_MaxRedirects(t *testing.T) {
 	}
 }
 
-// --- applyHTTPClientTimeout tests ---
-
-func TestApplyHTTPClientTimeout_Zero(t *testing.T) {
+func TestNewHTTPClient_TimeoutZero(t *testing.T) {
 	t.Parallel()
 
-	client := &http.Client{}
-	applyHTTPClientTimeout(client, &types.HTTPClientConfig{Timeout: 0})
-	if client.Timeout != 0 {
-		t.Errorf("Timeout = %v, want 0", client.Timeout)
+	client, err := httpclient.New(httpclient.Config{Timeout: 0})
+	if err != nil {
+		t.Fatalf("New() = %v", err)
+	}
+	if client.Timeout == 0 {
+		t.Error("Timeout should have default value")
 	}
 }
 
-func TestApplyHTTPClientTimeout_Positive(t *testing.T) {
+func TestNewHTTPClient_RedirectsNoop(t *testing.T) {
 	t.Parallel()
 
-	client := &http.Client{}
-	applyHTTPClientTimeout(client, &types.HTTPClientConfig{Timeout: 15})
-	if client.Timeout != 15 {
-		t.Errorf("Timeout = %v, want %v", client.Timeout, 15)
+	client, err := httpclient.New(httpclient.Config{})
+	if err != nil {
+		t.Fatalf("New() = %v", err)
 	}
-}
-
-// --- applyHTTPClientRedirects tests ---
-
-func TestApplyHTTPClientRedirects_Noop(t *testing.T) {
-	t.Parallel()
-
-	client := &http.Client{}
-	config := &types.HTTPClientConfig{}
-	applyHTTPClientRedirects(client, config)
 	if client.CheckRedirect != nil {
 		t.Fatal("CheckRedirect should be nil when both fields are nil")
 	}
 }
 
-func TestApplyHTTPClientRedirects_NilConfig(t *testing.T) {
+func TestNewHTTPClient_FollowRedirectsFalse(t *testing.T) {
 	t.Parallel()
 
-	// applyHTTPClientRedirects panics on nil config, so we test via newAuthHTTPClient
-	result := newAuthHTTPClient(&types.Spec{}, nil)
-	if result.CheckRedirect != nil {
-		t.Fatal("CheckRedirect should be nil")
-	}
-}
-
-func TestApplyHTTPClientRedirects_FollowRedirectsFalse(t *testing.T) {
-	t.Parallel()
-
-	client := &http.Client{}
 	follow := false
-	applyHTTPClientRedirects(client, &types.HTTPClientConfig{FollowRedirects: &follow})
+	client, err := httpclient.New(httpclient.Config{FollowRedirects: &follow})
+	if err != nil {
+		t.Fatalf("New() = %v", err)
+	}
 	if client.CheckRedirect == nil {
 		t.Fatal("CheckRedirect is nil")
 	}
 }
 
-func TestApplyHTTPClientRedirects_MaxRedirects(t *testing.T) {
+func TestNewHTTPClient_MaxRedirectsSet(t *testing.T) {
 	t.Parallel()
 
-	client := &http.Client{}
 	maxRedirects := 5
-	applyHTTPClientRedirects(client, &types.HTTPClientConfig{MaxRedirects: &maxRedirects})
+	client, err := httpclient.New(httpclient.Config{MaxRedirects: &maxRedirects})
+	if err != nil {
+		t.Fatalf("New() = %v", err)
+	}
 	if client.CheckRedirect == nil {
 		t.Fatal("CheckRedirect is nil")
 	}
 }
 
-func TestApplyHTTPClientRedirects_BothSet(t *testing.T) {
+func TestNewHTTPClient_BothSet(t *testing.T) {
 	t.Parallel()
 
-	client := &http.Client{}
 	follow := true
 	maxRedirects := 5
-	applyHTTPClientRedirects(client, &types.HTTPClientConfig{FollowRedirects: &follow, MaxRedirects: &maxRedirects})
+	client, err := httpclient.New(httpclient.Config{FollowRedirects: &follow, MaxRedirects: &maxRedirects})
+	if err != nil {
+		t.Fatalf("New() = %v", err)
+	}
 	if client.CheckRedirect == nil {
 		t.Fatal("CheckRedirect is nil")
 	}

@@ -11,7 +11,6 @@ global.
 - `http_client` at collection level — overrides spec and global for that collection
 - `headers` — custom HTTP headers
 - `cookies` — HTTP cookies with Name, Value, Domain, Path, Secure, HttpOnly
-- `user_agent` — custom User-Agent string
 - `timeout` — request timeout (Go duration format: 30s, 5m, etc.)
 - `follow_redirects` — enable/disable following redirects
 - `max_redirects` — maximum number of redirects to follow
@@ -19,6 +18,6 @@ global.
 ## Expected behavior
 
 - All specs inherit `Accept: application/json` and `timeout: 30s` from global
-- "api-a" overrides timeout to 60s and adds custom headers
-- "api-b" collection "Billing" has its own User-Agent and cookies
-- "api-b" collection "Legacy" disables redirects
+- "api-a" adds custom headers
+- "api-b" has cookies configured
+- "api-b" collection "Billing" has its own headers

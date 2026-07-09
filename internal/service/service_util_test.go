@@ -124,15 +124,14 @@ func TestMergeHTTPClientConfigs_SpecOnly(t *testing.T) {
 	t.Parallel()
 
 	spec := &types.HTTPClientConfig{
-		UserAgent: "spec-agent",
-		Timeout:   30,
+		Headers: map[string]string{"X-Spec": "spec-val"},
 	}
 	result := mergeHTTPClientConfigs(spec, nil)
 	if result == nil {
 		t.Fatal("result is nil")
 	}
-	if result.UserAgent != "spec-agent" {
-		t.Errorf("UserAgent = %q, want %q", result.UserAgent, "spec-agent")
+	if result.Headers["X-Spec"] != "spec-val" {
+		t.Errorf("X-Spec = %q, want %q", result.Headers["X-Spec"], "spec-val")
 	}
 }
 
@@ -140,14 +139,14 @@ func TestMergeHTTPClientConfigs_CollectionOnly(t *testing.T) {
 	t.Parallel()
 
 	collection := &types.HTTPClientConfig{
-		UserAgent: "coll-agent",
+		Headers: map[string]string{"X-Coll": "coll-val"},
 	}
 	result := mergeHTTPClientConfigs(nil, collection)
 	if result == nil {
 		t.Fatal("result is nil")
 	}
-	if result.UserAgent != "coll-agent" {
-		t.Errorf("UserAgent = %q, want %q", result.UserAgent, "coll-agent")
+	if result.Headers["X-Coll"] != "coll-val" {
+		t.Errorf("X-Coll = %q, want %q", result.Headers["X-Coll"], "coll-val")
 	}
 }
 
@@ -155,18 +154,15 @@ func TestMergeHTTPClientConfigs_CollectionOverridesSpec(t *testing.T) {
 	t.Parallel()
 
 	spec := &types.HTTPClientConfig{
-		UserAgent: "spec-agent",
-		Timeout:   30,
+		Headers: map[string]string{"X-Header": "spec-val"},
 	}
 	collection := &types.HTTPClientConfig{
-		UserAgent: "coll-agent",
+		Headers: map[string]string{"X-Header": "coll-val"},
 	}
 	result := mergeHTTPClientConfigs(spec, collection)
-	if result.UserAgent != "coll-agent" {
-		t.Errorf("UserAgent = %q, want %q", result.UserAgent, "coll-agent")
-	}
-	if result.Timeout != 30 {
-		t.Errorf("Timeout = %v, want %v", result.Timeout, 30)
+	// Collection overrides spec
+	if result.Headers["X-Header"] != "coll-val" {
+		t.Errorf("X-Header = %q, want %q", result.Headers["X-Header"], "coll-val")
 	}
 }
 
@@ -200,38 +196,6 @@ func TestMergeHTTPClientConfigs_CollectionHeadersOverrideSpec(t *testing.T) {
 	result := mergeHTTPClientConfigs(spec, collection)
 	if result.Headers["X-Header"] != "coll-val" {
 		t.Errorf("X-Header = %q, want %q", result.Headers["X-Header"], "coll-val")
-	}
-}
-
-func TestMergeHTTPClientConfigs_MaxResponseSize(t *testing.T) {
-	t.Parallel()
-
-	specVal := 2048
-	collVal := 4096
-	spec := &types.HTTPClientConfig{MaxResponseSize: &specVal}
-	collection := &types.HTTPClientConfig{MaxResponseSize: &collVal}
-
-	result := mergeHTTPClientConfigs(spec, collection)
-	if result.MaxResponseSize == nil {
-		t.Fatal("MaxResponseSize is nil")
-	}
-	if *result.MaxResponseSize != 4096 {
-		t.Errorf("MaxResponseSize = %d, want %d", *result.MaxResponseSize, 4096)
-	}
-}
-
-func TestMergeHTTPClientConfigs_MaxResponseSize_SpecOnly(t *testing.T) {
-	t.Parallel()
-
-	specVal := 2048
-	spec := &types.HTTPClientConfig{MaxResponseSize: &specVal}
-
-	result := mergeHTTPClientConfigs(spec, nil)
-	if result.MaxResponseSize == nil {
-		t.Fatal("MaxResponseSize is nil")
-	}
-	if *result.MaxResponseSize != 2048 {
-		t.Errorf("MaxResponseSize = %d, want %d", *result.MaxResponseSize, 2048)
 	}
 }
 

@@ -119,8 +119,22 @@ func (s *Service) Invoke(ctx context.Context, request InvokeRequest) (InvokeResp
 
 	s.dumpRequest(httpRequest, specification.Domain)
 
-	mergedConfig := mergeHTTPClientConfigs(specification.HTTPClient, collection.HTTPClient)
-	httpClient := newAuthHTTPClient(specification, mergedConfig)
+	httpClient := s.httpClient
+	if specification.Auth != nil {
+		baseTransport := s.httpClient.Transport
+		if baseTransport == nil {
+			baseTransport = http.DefaultTransport
+		}
+		httpClient = &http.Client{
+			Transport: &auth.Transport{
+				Base: baseTransport,
+				Auth: specification.Auth,
+			},
+			Timeout:       s.httpClient.Timeout,
+			CheckRedirect: s.httpClient.CheckRedirect,
+		}
+	}
+
 	response, doError := httpClient.Do(httpRequest)
 	if doError != nil {
 		return InvokeResponse{}, NewInvokeError("The API request failed — the server may be unreachable or returned an error.", doError)
@@ -132,7 +146,7 @@ func (s *Service) Invoke(ctx context.Context, request InvokeRequest) (InvokeResp
 		return InvokeResponse{}, NewInvokeError("Failed to read the API response — the connection may have been interrupted.", readError)
 	}
 
-	maxSize := resolveMaxResponseSize(mergedConfig)
+	maxSize := s.maxResponseSize
 	if len(body) > maxSize {
 		return s.saveLargeResponse(response, body, specification.Domain, endpoint, maxSize)
 	}
@@ -302,11 +316,16 @@ func (builder *requestBuilder) applyHeaders(httpRequest *http.Request) {
 	}
 
 	if httpRequest.Header.Get("Accept") == "" {
-		httpRequest.Header.Set("Accept", "application/json")
+		isJSON := builder.body != nil || httpRequest.Header.Get("Content-Type") == "application/json" //nolint:goconst // content-type value
+		if isJSON {
+			httpRequest.Header.Set("Accept", "application/json, text/plain, */*")
+		} else {
+			httpRequest.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+		}
 	}
 }
 
-// applyHTTPClientConfig applies HTTP client config (headers, cookies, user-agent) to the request.
+// applyHTTPClientConfig applies per-request HTTP config (headers, cookies) to the request.
 func (builder *requestBuilder) applyHTTPClientConfig(httpRequest *http.Request) {
 	if builder.httpConfig == nil {
 		return
@@ -316,14 +335,9 @@ func (builder *requestBuilder) applyHTTPClientConfig(httpRequest *http.Request) 
 		httpRequest.Header.Set(headerName, headerValue)
 	}
 
-	if builder.httpConfig.UserAgent != "" {
-		httpRequest.Header.Set("User-Agent", builder.httpConfig.UserAgent)
-	}
-
 	if len(builder.httpConfig.Cookies) > 0 {
 		for _, cookie := range builder.httpConfig.Cookies {
-			//nolint:gosec // cookies are user-configured, not secrets
-			httpRequest.AddCookie(&http.Cookie{
+			httpRequest.AddCookie(&http.Cookie{ //nolint:gosec // cookies are user-configured, not secrets
 				Name:     cookie.Name,
 				Value:    cookie.Value,
 				Domain:   cookie.Domain,
@@ -417,17 +431,17 @@ func (s *Service) saveLargeResponse(
 
 // resolveMaxResponseSize returns the effective max response size.
 // Default is 2 KB, maximum is 1 MB.
-func resolveMaxResponseSize(config *types.HTTPClientConfig) int {
-	if config == nil || config.MaxResponseSize == nil {
+func resolveMaxResponseSize(maxResponseSize *int) int {
+	if maxResponseSize == nil {
 		return defaultMaxResponseSize
 	}
-	if *config.MaxResponseSize > maxMaxResponseSize {
+	if *maxResponseSize > maxMaxResponseSize {
 		return maxMaxResponseSize
 	}
-	if *config.MaxResponseSize <= 0 {
+	if *maxResponseSize <= 0 {
 		return defaultMaxResponseSize
 	}
-	return *config.MaxResponseSize
+	return *maxResponseSize
 }
 
 // openCommand returns the OS-specific command to open a file.
@@ -464,54 +478,6 @@ func randomSuffix(n int) string {
 		return fmt.Sprintf("%0*x", n, 0)
 	}
 	return hex.EncodeToString(b)[:n]
-}
-
-// newAuthHTTPClient returns an [http.Client] that applies authentication and
-// HTTP client config (timeout, redirects) to every request.
-func newAuthHTTPClient(specification *types.Spec, httpConfig *types.HTTPClientConfig) *http.Client {
-	client := &http.Client{}
-
-	if specification != nil && specification.Auth != nil {
-		client.Transport = &auth.Transport{
-			Base: http.DefaultTransport,
-			Auth: specification.Auth,
-		}
-	}
-
-	if httpConfig != nil {
-		applyHTTPClientTimeout(client, httpConfig)
-		applyHTTPClientRedirects(client, httpConfig)
-	}
-
-	if client.Transport == nil {
-		client.Transport = http.DefaultTransport
-	}
-
-	return client
-}
-
-// applyHTTPClientTimeout sets the timeout on the client if configured.
-func applyHTTPClientTimeout(client *http.Client, config *types.HTTPClientConfig) {
-	if config.Timeout > 0 {
-		client.Timeout = config.Timeout
-	}
-}
-
-// applyHTTPClientRedirects sets redirect behavior on the client if configured.
-func applyHTTPClientRedirects(client *http.Client, config *types.HTTPClientConfig) {
-	if config.FollowRedirects != nil && !*config.FollowRedirects {
-		client.CheckRedirect = func(_ *http.Request, _ []*http.Request) error {
-			return http.ErrUseLastResponse
-		}
-	} else if config.MaxRedirects != nil {
-		maxRedirects := *config.MaxRedirects
-		client.CheckRedirect = func(_ *http.Request, via []*http.Request) error {
-			if len(via) >= maxRedirects {
-				return fmt.Errorf("too many redirects (max %d)", maxRedirects)
-			}
-			return nil
-		}
-	}
 }
 
 // validateParameters checks that all required parameters are present and that no
@@ -676,7 +642,7 @@ func (s *Service) dumpRequest(request *http.Request, domain string) {
 	_ = os.WriteFile(filePath, dump, 0600)
 }
 
-// mergeHTTPClientConfigs merges two HTTP client configs. Collection overrides spec.
+// mergeHTTPClientConfigs merges two per-request HTTP configs. Collection overrides spec.
 func mergeHTTPClientConfigs(spec, collection *types.HTTPClientConfig) *types.HTTPClientConfig {
 	if spec == nil {
 		return collection
@@ -686,33 +652,13 @@ func mergeHTTPClientConfigs(spec, collection *types.HTTPClientConfig) *types.HTT
 	}
 
 	result := &types.HTTPClientConfig{
-		Headers:         make(map[string]string),
-		Cookies:         collection.Cookies,
-		UserAgent:       collection.UserAgent,
-		Timeout:         collection.Timeout,
-		FollowRedirects: collection.FollowRedirects,
-		MaxRedirects:    collection.MaxRedirects,
-		MaxResponseSize: collection.MaxResponseSize,
+		Headers: make(map[string]string),
+		Cookies: collection.Cookies,
 	}
 
 	maps.Copy(result.Headers, spec.Headers)
 	maps.Copy(result.Headers, collection.Headers)
 
-	if result.UserAgent == "" {
-		result.UserAgent = spec.UserAgent
-	}
-	if result.Timeout == 0 {
-		result.Timeout = spec.Timeout
-	}
-	if result.FollowRedirects == nil {
-		result.FollowRedirects = spec.FollowRedirects
-	}
-	if result.MaxRedirects == nil {
-		result.MaxRedirects = spec.MaxRedirects
-	}
-	if result.MaxResponseSize == nil {
-		result.MaxResponseSize = spec.MaxResponseSize
-	}
 	if len(result.Cookies) == 0 {
 		result.Cookies = spec.Cookies
 	}

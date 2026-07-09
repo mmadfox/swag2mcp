@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 	"github.com/mmadfox/swag2mcp/internal/spec"
 )
 
@@ -135,7 +136,7 @@ func TestSummaryOrFallback_EmptySummary(t *testing.T) {
 func TestCookie_Fields(t *testing.T) {
 	t.Parallel()
 
-	c := Cookie{
+	c := httpclient.Cookie{
 		Name:     "session",
 		Value:    "abc123",
 		Domain:   "example.com",
@@ -166,38 +167,15 @@ func TestCookie_Fields(t *testing.T) {
 func TestHTTPClientConfig_Fields(t *testing.T) {
 	t.Parallel()
 
-	follow := true
-	maxRedirects := 5
-	maxSize := 4096
 	cfg := &HTTPClientConfig{
-		Headers:         map[string]string{"X-Custom": "val"},
-		Cookies:         []Cookie{{Name: "c", Value: "v"}},
-		UserAgent:       "test-agent",
-		Timeout:         30,
-		FollowRedirects: &follow,
-		MaxRedirects:    &maxRedirects,
-		MaxResponseSize: &maxSize,
+		Headers: map[string]string{"X-Custom": "val"},
+		Cookies: []httpclient.Cookie{{Name: "c", Value: "v"}},
 	}
 	if cfg.Headers["X-Custom"] != "val" {
 		t.Error("Headers not set")
 	}
 	if len(cfg.Cookies) != 1 {
 		t.Error("Cookies not set")
-	}
-	if cfg.UserAgent != "test-agent" {
-		t.Error("UserAgent not set")
-	}
-	if cfg.Timeout != 30 {
-		t.Error("Timeout not set")
-	}
-	if *cfg.FollowRedirects != true {
-		t.Error("FollowRedirects not set")
-	}
-	if *cfg.MaxRedirects != 5 {
-		t.Error("MaxRedirects not set")
-	}
-	if *cfg.MaxResponseSize != 4096 {
-		t.Error("MaxResponseSize not set")
 	}
 }
 

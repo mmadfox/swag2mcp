@@ -135,64 +135,43 @@ func TestConvertCookies_Populated(t *testing.T) {
 func TestMergeHTTPClientConfig_AllNil(t *testing.T) {
 	t.Parallel()
 
-	result := mergeHTTPClientConfig(nil, nil, nil)
+	result := mergeHTTPClientConfig(nil, nil)
 	if result == nil {
 		t.Fatal("result is nil")
 	}
 }
 
-func TestMergeHTTPClientConfig_GlobalOnly(t *testing.T) {
+func TestMergeHTTPClientConfig_SpecOnly(t *testing.T) {
 	t.Parallel()
 
-	ua := "global-agent"
-	global := &config.HTTPClientConfig{UserAgent: ua}
-	result := mergeHTTPClientConfig(global, nil, nil)
-	if result.UserAgent != ua {
-		t.Errorf("UserAgent = %q, want %q", result.UserAgent, ua)
+	spec := &config.HTTPClientConfig{Headers: map[string]string{"X-Spec": "s"}}
+	result := mergeHTTPClientConfig(spec, nil)
+	if result.Headers["X-Spec"] != "s" {
+		t.Errorf("X-Spec = %q, want %q", result.Headers["X-Spec"], "s")
 	}
 }
 
-func TestMergeHTTPClientConfig_SpecOverridesGlobal(t *testing.T) {
+func TestMergeHTTPClientConfig_CollectionOverridesSpec(t *testing.T) {
 	t.Parallel()
 
-	global := &config.HTTPClientConfig{UserAgent: "global-agent", Timeout: 30}
-	spec := &config.HTTPClientConfig{UserAgent: "spec-agent"}
-	result := mergeHTTPClientConfig(global, spec, nil)
-	// First-wins: global sets UserAgent first
-	if result.UserAgent != "global-agent" {
-		t.Errorf("UserAgent = %q, want %q", result.UserAgent, "global-agent")
-	}
-	if result.Timeout != 30 {
-		t.Errorf("Timeout = %v, want %v", result.Timeout, 30)
-	}
-}
-
-func TestMergeHTTPClientConfig_CollectionOverridesAll(t *testing.T) {
-	t.Parallel()
-
-	global := &config.HTTPClientConfig{UserAgent: "global-agent"}
-	spec := &config.HTTPClientConfig{UserAgent: "spec-agent"}
-	coll := &config.HTTPClientConfig{UserAgent: "coll-agent"}
-	result := mergeHTTPClientConfig(global, spec, coll)
-	// First-wins: global sets UserAgent first
-	if result.UserAgent != "global-agent" {
-		t.Errorf("UserAgent = %q, want %q", result.UserAgent, "global-agent")
+	spec := &config.HTTPClientConfig{Headers: map[string]string{"X-Header": "spec"}}
+	coll := &config.HTTPClientConfig{Headers: map[string]string{"X-Header": "coll"}}
+	result := mergeHTTPClientConfig(spec, coll)
+	// First-wins: spec sets headers first
+	if result.Headers["X-Header"] != "spec" {
+		t.Errorf("X-Header = %q, want %q", result.Headers["X-Header"], "spec")
 	}
 }
 
 func TestMergeHTTPClientConfig_HeadersMerge(t *testing.T) {
 	t.Parallel()
 
-	global := &config.HTTPClientConfig{Headers: map[string]string{"X-Global": "g"}}
 	spec := &config.HTTPClientConfig{Headers: map[string]string{"X-Spec": "s"}}
 	coll := &config.HTTPClientConfig{Headers: map[string]string{"X-Coll": "c"}}
-	result := mergeHTTPClientConfig(global, spec, coll)
-	// First-wins: only global headers are set
-	if result.Headers["X-Global"] != "g" {
-		t.Errorf("X-Global = %q", result.Headers["X-Global"])
-	}
-	if result.Headers["X-Spec"] != "" {
-		t.Errorf("X-Spec should be empty, got %q", result.Headers["X-Spec"])
+	result := mergeHTTPClientConfig(spec, coll)
+	// First-wins: only spec headers are set
+	if result.Headers["X-Spec"] != "s" {
+		t.Errorf("X-Spec = %q", result.Headers["X-Spec"])
 	}
 	if result.Headers["X-Coll"] != "" {
 		t.Errorf("X-Coll should be empty, got %q", result.Headers["X-Coll"])
@@ -202,47 +181,27 @@ func TestMergeHTTPClientConfig_HeadersMerge(t *testing.T) {
 func TestMergeHTTPClientConfig_Cookies(t *testing.T) {
 	t.Parallel()
 
-	global := &config.HTTPClientConfig{Cookies: []config.Cookie{{Name: "g", Value: "1"}}}
 	spec := &config.HTTPClientConfig{Cookies: []config.Cookie{{Name: "s", Value: "2"}}}
-	result := mergeHTTPClientConfig(global, spec, nil)
-	// First-wins: global cookies are used
+	result := mergeHTTPClientConfig(spec, nil)
 	if len(result.Cookies) != 1 {
 		t.Fatalf("len = %d, want 1", len(result.Cookies))
 	}
-	if result.Cookies[0].Name != "g" {
-		t.Errorf("Cookie name = %q, want %q", result.Cookies[0].Name, "g")
+	if result.Cookies[0].Name != "s" {
+		t.Errorf("Cookie name = %q, want %q", result.Cookies[0].Name, "s")
 	}
 }
 
-func TestMergeHTTPClientConfig_FollowRedirects(t *testing.T) {
+func TestMergeHTTPClientConfig_CookiesCollectionOverrides(t *testing.T) {
 	t.Parallel()
 
-	follow := false
-	global := &config.HTTPClientConfig{FollowRedirects: &follow}
-	result := mergeHTTPClientConfig(global, nil, nil)
-	if result.FollowRedirects == nil || *result.FollowRedirects != false {
-		t.Error("FollowRedirects not preserved")
+	spec := &config.HTTPClientConfig{Cookies: []config.Cookie{{Name: "s", Value: "2"}}}
+	coll := &config.HTTPClientConfig{Cookies: []config.Cookie{{Name: "c", Value: "3"}}}
+	result := mergeHTTPClientConfig(spec, coll)
+	// First-wins: spec cookies are used
+	if len(result.Cookies) != 1 {
+		t.Fatalf("len = %d, want 1", len(result.Cookies))
 	}
-}
-
-func TestMergeHTTPClientConfig_MaxRedirects(t *testing.T) {
-	t.Parallel()
-
-	maxRedirects := 5
-	spec := &config.HTTPClientConfig{MaxRedirects: &maxRedirects}
-	result := mergeHTTPClientConfig(nil, spec, nil)
-	if result.MaxRedirects == nil || *result.MaxRedirects != 5 {
-		t.Error("MaxRedirects not preserved")
-	}
-}
-
-func TestMergeHTTPClientConfig_MaxResponseSize(t *testing.T) {
-	t.Parallel()
-
-	size := 4096
-	coll := &config.HTTPClientConfig{MaxResponseSize: &size}
-	result := mergeHTTPClientConfig(nil, nil, coll)
-	if result.MaxResponseSize == nil || *result.MaxResponseSize != 4096 {
-		t.Error("MaxResponseSize not preserved")
+	if result.Cookies[0].Name != "s" {
+		t.Errorf("Cookie name = %q, want %q", result.Cookies[0].Name, "s")
 	}
 }

@@ -62,6 +62,7 @@ demonstrates a specific feature or use case.
 | | [multiple-collections](examples/spec-features/multiple-collections) | Multiple collections per spec |
 | | [collection-override](examples/spec-features/collection-override) | Collection-level overrides |
 | | [http-client-config](examples/spec-features/http-client-config) | HTTP client configuration (headers, cookies, timeout, redirects) |
+| | [proxy-config](examples/spec-features/proxy-config) | Proxy configuration (SOCKS5, HTTP, HTTPS, bypass) |
 | **MCP Transport** | [stdio](examples/mcp-transport/stdio) | Default stdio transport |
 | | [sse](examples/mcp-transport/sse) | SSE transport with HTTP and bearer token auth |
 | | [streamable-http](examples/mcp-transport/streamable-http) | Streamable HTTP transport with HTTP and bearer token auth |

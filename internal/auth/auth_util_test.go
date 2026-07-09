@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 )
 
 func TestSetAuthHeader_EmptyValue(t *testing.T) {
@@ -587,11 +589,15 @@ func TestOAuth2PasswordAuthClient_New_EnvVars(t *testing.T) {
 func TestDefaultHTTPClient(t *testing.T) {
 	t.Parallel()
 
-	if defaultHTTPClient == nil {
-		t.Fatal("defaultHTTPClient is nil")
+	cli, err := httpclient.NewDefault()
+	if err != nil {
+		t.Fatalf("NewDefault() = %v", err)
 	}
-	if defaultHTTPClient.Timeout != defaultHTTPTimeout {
-		t.Errorf("Timeout = %v, want %v", defaultHTTPClient.Timeout, defaultHTTPTimeout)
+	if cli == nil {
+		t.Fatal("NewDefault() returned nil")
+	}
+	if cli.Timeout == 0 {
+		t.Error("Timeout should be set")
 	}
 }
 

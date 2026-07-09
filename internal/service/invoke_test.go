@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 	"github.com/mmadfox/swag2mcp/internal/id"
 	"github.com/mmadfox/swag2mcp/internal/index"
 	"github.com/mmadfox/swag2mcp/internal/spec"
@@ -518,48 +519,6 @@ func TestInvoke_ContentTypeHeader(t *testing.T) {
 	}
 }
 
-// TestInvoke_UserAgent verifies that User-Agent from HTTPClientConfig is applied.
-func TestInvoke_UserAgent(t *testing.T) {
-	t.Parallel()
-
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodGet,
-		ExpectedPath:   "/users",
-		ExpectedHeaders: map[string]string{
-			"User-Agent": "swag2mcp-test/1.0",
-		},
-		StatusCode:   http.StatusOK,
-		ResponseBody: map[string]any{"users": []any{}},
-	})
-	t.Cleanup(testServer.Close)
-
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	// Set HTTP client config with custom User-Agent
-	userAgent := "swag2mcp-test/1.0"
-	collectionID := id.Collection(specInfo.ID, t.Name()+"/collection")
-	collection, _ := serviceInstance.index.CollectionByID(collectionID)
-	collection.HTTPClient = &types.HTTPClientConfig{
-		UserAgent: userAgent,
-	}
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusOK {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
-	}
-}
-
 // TestInvoke_Cookies verifies that cookies from HTTPClientConfig are applied.
 func TestInvoke_Cookies(t *testing.T) {
 	t.Parallel()
@@ -589,7 +548,7 @@ func TestInvoke_Cookies(t *testing.T) {
 	collectionID := id.Collection(specInfo.ID, t.Name()+"/collection")
 	collection, _ := serviceInstance.index.CollectionByID(collectionID)
 	collection.HTTPClient = &types.HTTPClientConfig{
-		Cookies: []types.Cookie{
+		Cookies: []httpclient.Cookie{
 			{Name: "session_id", Value: "abc123"},
 			{Name: "theme", Value: "dark"},
 		},
@@ -1034,8 +993,7 @@ func TestInvoke_LargeResponse(t *testing.T) {
 	specInfo.BaseURL = testServer.URL
 
 	// Set a small max response size to trigger large response path
-	smallSize := 100
-	specInfo.HTTPClient = &types.HTTPClientConfig{MaxResponseSize: &smallSize}
+	serviceInstance.maxResponseSize = 100
 
 	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
 

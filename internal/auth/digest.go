@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 )
 
 const (
@@ -106,7 +108,11 @@ func (c *DigestAuthClient) fetchChallenge(req *http.Request) (digestChallenge, e
 		return digestChallenge{}, fmt.Errorf("create challenge request: %w", reqErr)
 	}
 
-	resp, doErr := defaultHTTPClient.Do(fakeReq)
+	cli, cliErr := httpclient.NewDefault()
+	if cliErr != nil {
+		return digestChallenge{}, fmt.Errorf("create http client: %w", cliErr)
+	}
+	resp, doErr := cli.Do(fakeReq)
 	if doErr != nil {
 		return digestChallenge{}, fmt.Errorf("challenge request: %w", doErr)
 	}

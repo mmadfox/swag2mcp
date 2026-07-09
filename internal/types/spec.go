@@ -1,31 +1,15 @@
 package types
 
 import (
-	"time"
-
 	"github.com/mmadfox/swag2mcp/internal/auth"
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 	"github.com/mmadfox/swag2mcp/internal/spec"
 )
 
-// Cookie represents an HTTP cookie.
-type Cookie struct {
-	Name     string `json:"name"`
-	Value    string `json:"value"`
-	Domain   string `json:"domain,omitempty"`
-	Path     string `json:"path,omitempty"`
-	Secure   bool   `json:"secure,omitempty"`
-	HTTPOnly bool   `json:"httpOnly,omitempty"`
-}
-
-// HTTPClientConfig holds HTTP client settings.
+// HTTPClientConfig holds per-request HTTP settings for a spec or collection.
 type HTTPClientConfig struct {
-	Headers         map[string]string `json:"headers,omitempty"`
-	Cookies         []Cookie          `json:"cookies,omitempty"`
-	UserAgent       string            `json:"userAgent,omitempty"`
-	Timeout         time.Duration     `json:"timeout,omitempty"`
-	FollowRedirects *bool             `json:"followRedirects,omitempty"`
-	MaxRedirects    *int              `json:"maxRedirects,omitempty"`
-	MaxResponseSize *int              `json:"maxResponseSize,omitempty"`
+	Headers map[string]string   `json:"headers,omitempty"`
+	Cookies []httpclient.Cookie `json:"cookies,omitempty"`
 }
 
 type Spec struct {

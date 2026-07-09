@@ -267,7 +267,7 @@ func TestHTTPClientConfig_MaxResponseSize(t *testing.T) {
 
 	val := 4096
 	cfg := &Config{
-		HTTPClient: &HTTPClientConfig{
+		HTTPClient: &GlobalHTTPClientConfig{
 			MaxResponseSize: &val,
 		},
 	}
@@ -284,7 +284,7 @@ func TestHTTPClientConfig_MaxResponseSize_Nil(t *testing.T) {
 	t.Parallel()
 
 	cfg := &Config{
-		HTTPClient: &HTTPClientConfig{},
+		HTTPClient: &GlobalHTTPClientConfig{},
 	}
 	if cfg.HTTPClient.MaxResponseSize != nil {
 		t.Error("MaxResponseSize should be nil by default")

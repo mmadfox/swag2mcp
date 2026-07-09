@@ -10,6 +10,7 @@ import (
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/config"
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 	"github.com/mmadfox/swag2mcp/internal/id"
 	"github.com/mmadfox/swag2mcp/internal/spec"
 	"github.com/mmadfox/swag2mcp/internal/types"
@@ -22,8 +23,8 @@ type BootstrapRequest struct {
 	Tags         []string
 }
 
-// Bootstrap loads the configuration, initializes the workspace, and indexes
-// all specs, collections, tags, and endpoints into the service.
+// Bootstrap loads the configuration, initializes the workspace, creates the
+// global HTTP client, and indexes all specs, collections, tags, and endpoints.
 func (s *Service) Bootstrap(_ context.Context, request BootstrapRequest) error {
 	configuration, loadError := s.loadConfiguration(request.ConfFilepath, request.Tags)
 	if loadError != nil {
@@ -34,15 +35,70 @@ func (s *Service) Bootstrap(_ context.Context, request BootstrapRequest) error {
 		return initError
 	}
 
+	globalHTTPConfig := buildGlobalHTTPConfig(configuration.HTTPClient)
+	if globalHTTPConfig.Randomize {
+		httpclient.RandomizeConfig(&globalHTTPConfig)
+	}
+
+	httpClient, clientError := httpclient.New(globalHTTPConfig)
+	if clientError != nil {
+		return fmt.Errorf("failed to create HTTP client: %w", clientError)
+	}
+	s.httpClient = httpClient
+	s.maxResponseSize = resolveMaxResponseSize(globalHTTPConfig.MaxResponseSize)
+
+	httpclient.SetGlobalConfig(globalHTTPConfig)
+
 	filter := config.NewFilter(request.Tags)
 
 	for specConfig := range configuration.Iterate(filter) {
-		if specError := s.processSpec(configuration, specConfig); specError != nil {
+		if specError := s.processSpec(specConfig); specError != nil {
 			return specError
 		}
 	}
 
 	return nil
+}
+
+func buildGlobalHTTPConfig(global *config.GlobalHTTPClientConfig) httpclient.Config {
+	if global == nil {
+		return httpclient.Config{}
+	}
+
+	cfg := httpclient.Config{
+		Randomize:       global.Randomize,
+		UserAgent:       global.UserAgent,
+		Timeout:         global.Timeout,
+		FollowRedirects: global.FollowRedirects,
+		MaxRedirects:    global.MaxRedirects,
+		MaxResponseSize: global.MaxResponseSize,
+	}
+	if global.Headers != nil {
+		cfg.Headers = make(map[string]string, len(global.Headers))
+		maps.Copy(cfg.Headers, global.Headers)
+	}
+	if len(global.Cookies) > 0 {
+		cfg.Cookies = make([]httpclient.Cookie, len(global.Cookies))
+		for i, cookie := range global.Cookies {
+			cfg.Cookies[i] = httpclient.Cookie{
+				Name:     cookie.Name,
+				Value:    cookie.Value,
+				Domain:   cookie.Domain,
+				Path:     cookie.Path,
+				Secure:   cookie.Secure,
+				HTTPOnly: cookie.HTTPOnly,
+			}
+		}
+	}
+	if global.Proxy != nil {
+		cfg.Proxy = &httpclient.ProxyConfig{
+			URL:      global.Proxy.URL,
+			Username: global.Proxy.Username,
+			Password: global.Proxy.Password,
+			Bypass:   append([]string{}, global.Proxy.Bypass...),
+		}
+	}
+	return cfg
 }
 
 func (s *Service) loadConfiguration(configFilepath string, tags []string) (*config.Config, error) {
@@ -76,7 +132,7 @@ func (s *Service) initializeWorkspace(workspaceDirectory string) error {
 	return nil
 }
 
-func (s *Service) processSpec(configuration *config.Config, specConfig *config.Spec) error {
+func (s *Service) processSpec(specConfig *config.Spec) error {
 	specification, specError := s.buildSpecInfo(specConfig)
 	if specError != nil {
 		return specError
@@ -93,7 +149,7 @@ func (s *Service) processSpec(configuration *config.Config, specConfig *config.S
 		}
 
 		collectionInfo, processError := s.processCollection(
-			configuration, specification, specConfig, collectionConfig,
+			specification, specConfig, collectionConfig,
 			allTags, allEndpoints,
 		)
 		if processError != nil {
@@ -108,7 +164,6 @@ func (s *Service) processSpec(configuration *config.Config, specConfig *config.S
 }
 
 func (s *Service) processCollection(
-	configuration *config.Config,
 	specification *types.Spec,
 	specConfig *config.Spec,
 	collectionConfig *config.Collection,
@@ -122,7 +177,6 @@ func (s *Service) processCollection(
 		LLMInstruction: collectionConfig.LLMInstruction,
 		BaseURL:        collectionConfig.BaseURL,
 		HTTPClient: mergeHTTPClientConfig(
-			configuration.HTTPClient,
 			specConfig.HTTPClient,
 			collectionConfig.HTTPClient,
 		),
@@ -218,13 +272,8 @@ func (s *Service) buildSpecInfo(specConfig *config.Spec) (*types.Spec, error) {
 
 	if specConfig.HTTPClient != nil {
 		specification.HTTPClient = &types.HTTPClientConfig{
-			Headers:         specConfig.HTTPClient.Headers,
-			Cookies:         convertCookies(specConfig.HTTPClient.Cookies),
-			UserAgent:       specConfig.HTTPClient.UserAgent,
-			Timeout:         specConfig.HTTPClient.Timeout,
-			FollowRedirects: specConfig.HTTPClient.FollowRedirects,
-			MaxRedirects:    specConfig.HTTPClient.MaxRedirects,
-			MaxResponseSize: specConfig.HTTPClient.MaxResponseSize,
+			Headers: specConfig.HTTPClient.Headers,
+			Cookies: convertCookies(specConfig.HTTPClient.Cookies),
 		}
 	}
 
@@ -289,14 +338,14 @@ func applySpecMetadata(collection *types.Collection, specDocument *spec.Doc) {
 	collection.Title = specDocument.Title
 }
 
-func convertCookies(cookies []config.Cookie) []types.Cookie {
+func convertCookies(cookies []config.Cookie) []httpclient.Cookie {
 	if len(cookies) == 0 {
 		return nil
 	}
 
-	result := make([]types.Cookie, len(cookies))
+	result := make([]httpclient.Cookie, len(cookies))
 	for index, cookie := range cookies {
-		result[index] = types.Cookie{
+		result[index] = httpclient.Cookie{
 			Name:     cookie.Name,
 			Value:    cookie.Value,
 			Domain:   cookie.Domain,
@@ -309,21 +358,20 @@ func convertCookies(cookies []config.Cookie) []types.Cookie {
 	return result
 }
 
-// mergeHTTPClientConfig merges HTTP client configs with cascade:
-// global → spec → collection. Fields set at a lower level override higher levels.
+// mergeHTTPClientConfig merges per-request HTTP configs with cascade:
+// spec → collection. Collection overrides spec.
 func mergeHTTPClientConfig(
-	global, spec, collection *config.HTTPClientConfig,
+	spec, collection *config.HTTPClientConfig,
 ) *types.HTTPClientConfig {
 	result := &types.HTTPClientConfig{}
 
-	levels := []*config.HTTPClientConfig{global, spec, collection}
+	levels := []*config.HTTPClientConfig{spec, collection}
 
 	for _, level := range levels {
 		if level == nil {
 			continue
 		}
 		mergeHeaders(result, level)
-		mergeScalars(result, level)
 		mergeCookies(result, level)
 	}
 
@@ -337,32 +385,14 @@ func mergeHeaders(result *types.HTTPClientConfig, level *config.HTTPClientConfig
 	}
 }
 
-func mergeScalars(result *types.HTTPClientConfig, level *config.HTTPClientConfig) {
-	if result.UserAgent == "" && level.UserAgent != "" {
-		result.UserAgent = level.UserAgent
-	}
-	if result.Timeout == 0 && level.Timeout != 0 {
-		result.Timeout = level.Timeout
-	}
-	if result.FollowRedirects == nil && level.FollowRedirects != nil {
-		result.FollowRedirects = level.FollowRedirects
-	}
-	if result.MaxRedirects == nil && level.MaxRedirects != nil {
-		result.MaxRedirects = level.MaxRedirects
-	}
-	if result.MaxResponseSize == nil && level.MaxResponseSize != nil {
-		result.MaxResponseSize = level.MaxResponseSize
-	}
-}
-
 func mergeCookies(result *types.HTTPClientConfig, level *config.HTTPClientConfig) {
 	if len(result.Cookies) > 0 || len(level.Cookies) == 0 {
 		return
 	}
 
-	result.Cookies = make([]types.Cookie, len(level.Cookies))
+	result.Cookies = make([]httpclient.Cookie, len(level.Cookies))
 	for index, cookie := range level.Cookies {
-		result.Cookies[index] = types.Cookie{
+		result.Cookies[index] = httpclient.Cookie{
 			Name:     cookie.Name,
 			Value:    cookie.Value,
 			Domain:   cookie.Domain,
