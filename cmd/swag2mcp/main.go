@@ -8,8 +8,12 @@ import (
 )
 
 func main() {
-	if err := commands.NewRootCmd().Execute(); err != nil {
+	if err := runMain(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)
 	}
+}
+
+func runMain() error {
+	return commands.NewRootCmd().Execute()
 }

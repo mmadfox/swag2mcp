@@ -1,6 +1,25 @@
 # swag2mcp — Full Configuration
 # Demonstrates every feature: multiple specs, all auth types, tags, http_client,
-# environment variables, disable flags, and collection overrides.
+# proxy, randomize, environment variables, disable flags, and collection overrides.
+http_client:
+  random: true
+  proxy:
+    url: socks5h://127.0.0.1:1080
+    username: $(PROXY_USER)
+    password: $(PROXY_PASS)
+    bypass:
+      - "*.local"
+      - "10.0.0.0/8"
+      - "172.16.0.0/12"
+      - "192.168.0.0/16"
+  headers:
+    Accept: application/json
+  user_agent: swag2mcp-global/1.0
+  timeout: 30s
+  follow_redirects: true
+  max_redirects: 10
+  max_response_size: 2048
+
 specs:
   # ─── Spec 1: Production API with Bearer auth ──────────────────────────
   - domain: payments-api

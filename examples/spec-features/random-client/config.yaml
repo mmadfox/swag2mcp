@@ -1,0 +1,26 @@
+# swag2mcp — Random Client Configuration
+http_client:
+  random: true
+  user_agent: MyCustomBot/1.0
+  timeout: 30s
+
+specs:
+  - domain: store-api
+    base_url: https://api.store.example.com
+    llm_title: Store API
+    http_client:
+      headers:
+        X-Store-ID: main-001
+    collections:
+      - llm_title: Products
+        location: https://api.store.example.com/openapi/products.json
+      - llm_title: Orders
+        location: https://api.store.example.com/openapi/orders.json
+        http_client:
+          cookies:
+            - name: session
+              value: $(SESSION_TOKEN)
+              domain: .store.example.com
+              path: /
+              secure: true
+              http_only: true
