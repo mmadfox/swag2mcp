@@ -767,3 +767,92 @@ func TestExampleCollectionAddYAML(t *testing.T) {
 		t.Error("location is missing")
 	}
 }
+
+func TestExampleMCPStdioYAML(t *testing.T) {
+	t.Parallel()
+
+	data := ExampleMCPStdioYAML()
+	if len(data) == 0 {
+		t.Fatal("ExampleMCPStdioYAML() returned empty data")
+	}
+
+	var raw map[string]any
+	if err := yaml.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("failed to unmarshal example YAML: %v", err)
+	}
+	mcp, ok := raw["mcp"].(map[string]any)
+	if !ok {
+		t.Fatal("mcp section is missing")
+	}
+	if mcp["transport"] != "stdio" {
+		t.Errorf("transport = %v, want %q", mcp["transport"], "stdio")
+	}
+}
+
+func TestExampleMCPSSEYAML(t *testing.T) {
+	t.Parallel()
+
+	data := ExampleMCPSSEYAML()
+	if len(data) == 0 {
+		t.Fatal("ExampleMCPSSEYAML() returned empty data")
+	}
+
+	var raw map[string]any
+	if err := yaml.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("failed to unmarshal example YAML: %v", err)
+	}
+	mcp, ok := raw["mcp"].(map[string]any)
+	if !ok {
+		t.Fatal("mcp section is missing")
+	}
+	if mcp["transport"] != "sse" {
+		t.Errorf("transport = %v, want %q", mcp["transport"], "sse")
+	}
+	if mcp["addr"] != ":8080" {
+		t.Errorf("addr = %v, want %q", mcp["addr"], ":8080")
+	}
+	if mcp["path"] != "/mcp" {
+		t.Errorf("path = %v, want %q", mcp["path"], "/mcp")
+	}
+	auth, ok := mcp["auth"].(map[string]any)
+	if !ok {
+		t.Fatal("auth section is missing")
+	}
+	if auth["token"] != "your-secret-token" {
+		t.Errorf("token = %v, want %q", auth["token"], "your-secret-token")
+	}
+}
+
+func TestExampleMCPStreamableHTTPYAML(t *testing.T) {
+	t.Parallel()
+
+	data := ExampleMCPStreamableHTTPYAML()
+	if len(data) == 0 {
+		t.Fatal("ExampleMCPStreamableHTTPYAML() returned empty data")
+	}
+
+	var raw map[string]any
+	if err := yaml.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("failed to unmarshal example YAML: %v", err)
+	}
+	mcp, ok := raw["mcp"].(map[string]any)
+	if !ok {
+		t.Fatal("mcp section is missing")
+	}
+	if mcp["transport"] != "streamable-http" {
+		t.Errorf("transport = %v, want %q", mcp["transport"], "streamable-http")
+	}
+	if mcp["addr"] != ":9090" {
+		t.Errorf("addr = %v, want %q", mcp["addr"], ":9090")
+	}
+	if mcp["path"] != "/api/mcp" {
+		t.Errorf("path = %v, want %q", mcp["path"], "/api/mcp")
+	}
+	auth, ok := mcp["auth"].(map[string]any)
+	if !ok {
+		t.Fatal("auth section is missing")
+	}
+	if auth["token"] != "your-secret-token" {
+		t.Errorf("token = %v, want %q", auth["token"], "your-secret-token")
+	}
+}

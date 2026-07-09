@@ -3,7 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
-	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,6 +23,10 @@ func newMCPCmd(version string) *cobra.Command {
 		Tags           string
 		DisableLLMAuth bool
 		DumpDir        string
+		Transport      string
+		HTTPAddr       string
+		HTTPPath       string
+		AuthToken      string
 	}{}
 
 	cmd := &cobra.Command{
@@ -46,14 +50,16 @@ func newMCPCmd(version string) *cobra.Command {
 				return fmt.Errorf("configuration not found at %s", configFile)
 			}
 
-			var logWriter io.Writer
+			var logger *slog.Logger
 			if len(opts.Logfile) > 0 {
 				f, logErr := os.Create(opts.Logfile)
 				if logErr != nil {
 					return fmt.Errorf("opening logfile: %w", logErr)
 				}
 				defer f.Close()
-				logWriter = f
+				logger = slog.New(slog.NewTextHandler(f, nil))
+			} else {
+				logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
 			}
 
 			cfg, loadErr := config.Load(configFile)
@@ -65,6 +71,9 @@ func newMCPCmd(version string) *cobra.Command {
 					fmt.Fprintf(os.Stderr, "⚠️  Configuration warnings:\n%s\n", err)
 				}
 			}
+
+			// Apply MCP config from YAML as fallback when CLI flags are not set
+			applyMCPConfig(cmd, cfg, &opts)
 
 			var tags []string
 			if opts.Tags != "" {
@@ -97,10 +106,22 @@ func newMCPCmd(version string) *cobra.Command {
 				fmt.Fprintf(os.Stderr, "⚠️  Failed to clean old responses: %s\n", cleanErr)
 			}
 
+			transportType := mcp.TransportStdio
+			switch opts.Transport {
+			case "sse":
+				transportType = mcp.TransportSSE
+			case "streamable-http":
+				transportType = mcp.TransportStreamableHTTP
+			}
+
 			mcpOpts := mcp.Options{
-				Version: version,
-				Logger:  logWriter,
-				Service: svc,
+				Version:   version,
+				Logger:    logger,
+				Service:   svc,
+				Transport: transportType,
+				HTTPAddr:  opts.HTTPAddr,
+				HTTPPath:  opts.HTTPPath,
+				AuthToken: opts.AuthToken,
 			}
 
 			ctx, cancel := context.WithCancel(cmd.Context())
@@ -114,8 +135,41 @@ func newMCPCmd(version string) *cobra.Command {
 	cmd.Flags().StringVarP(&opts.Tags, "tags", "t", "", "Filter specs by tags (comma-separated)")
 	cmd.Flags().BoolVar(&opts.DisableLLMAuth, "disable-llm-auth", true, "Disable LLM auth token retrieval")
 	cmd.Flags().StringVar(&opts.DumpDir, "dump-dir", "", "Directory to dump HTTP requests for debugging")
+	cmd.Flags().StringVar(&opts.Transport, "transport", "stdio", "MCP transport: stdio, sse, streamable-http")
+	cmd.Flags().StringVar(&opts.HTTPAddr, "http-addr", ":8080", "HTTP server address (for sse/streamable-http)")
+	cmd.Flags().StringVar(&opts.HTTPPath, "http-path", "/mcp", "HTTP path for MCP handler")
+	cmd.Flags().StringVar(&opts.AuthToken, "auth-token", "", "Bearer token for HTTP transport auth")
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
 
 	return cmd
+}
+
+// applyMCPConfig applies MCP settings from YAML config as fallback
+// when the corresponding CLI flags were not explicitly set.
+func applyMCPConfig(cmd *cobra.Command, cfg *config.Config, opts *struct {
+	Logfile        string
+	Tags           string
+	DisableLLMAuth bool
+	DumpDir        string
+	Transport      string
+	HTTPAddr       string
+	HTTPPath       string
+	AuthToken      string
+}) {
+	if cfg == nil || cfg.MCP == nil {
+		return
+	}
+	if !cmd.Flags().Changed("transport") && cfg.MCP.Transport != "" {
+		opts.Transport = cfg.MCP.Transport
+	}
+	if !cmd.Flags().Changed("http-addr") && cfg.MCP.Addr != "" {
+		opts.HTTPAddr = cfg.MCP.Addr
+	}
+	if !cmd.Flags().Changed("http-path") && cfg.MCP.Path != "" {
+		opts.HTTPPath = cfg.MCP.Path
+	}
+	if !cmd.Flags().Changed("auth-token") && cfg.MCP.Auth != nil && cfg.MCP.Auth.Token != "" {
+		opts.AuthToken = cfg.MCP.Auth.Token
+	}
 }

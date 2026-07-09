@@ -34,7 +34,21 @@ type HTTPClientConfig struct {
 //   - Specs: at least one spec must be defined.
 type Config struct {
 	HTTPClient *HTTPClientConfig `yaml:"http_client,omitempty"`
+	MCP        *MCPConfig        `yaml:"mcp,omitempty"`
 	Specs      []Spec            `yaml:"specs"`
+}
+
+// MCPConfig holds the MCP server configuration.
+type MCPConfig struct {
+	Transport string         `yaml:"transport,omitempty" validate:"omitempty,oneof=stdio sse streamable-http"`
+	Addr      string         `yaml:"addr,omitempty"`
+	Path      string         `yaml:"path,omitempty"`
+	Auth      *MCPAuthConfig `yaml:"auth,omitempty"`
+}
+
+// MCPAuthConfig holds the MCP server authentication configuration.
+type MCPAuthConfig struct {
+	Token string `yaml:"token,omitempty"`
 }
 
 // Spec defines a single API specification group.

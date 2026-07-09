@@ -1,5 +1,8 @@
 # swag2mcp — example configuration
 # Replace the values below with your own API specifications.
+mcp:
+  transport: stdio
+  
 specs:
   - domain: train-booking
     disable: true

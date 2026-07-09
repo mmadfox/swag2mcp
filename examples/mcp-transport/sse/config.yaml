@@ -1,0 +1,17 @@
+# swag2mcp — MCP SSE Transport
+# Server-Sent Events transport (2024-11-05 MCP spec).
+# Requires an HTTP server address and optional bearer token auth.
+# Clients connect via SSE endpoint and receive JSON-RPC messages.
+mcp:
+  transport: sse
+  addr: ":8080"
+  path: "/mcp"
+  auth:
+    token: $(MCP_AUTH_TOKEN)
+specs:
+  - domain: weather-api
+    base_url: https://api.weather.example.com/v1
+    llm_title: Weather Forecast API
+    collections:
+      - llm_title: Weather Data
+        location: https://api.weather.example.com/v1/openapi.json

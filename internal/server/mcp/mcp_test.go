@@ -4,9 +4,14 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/service"
+	"github.com/modelcontextprotocol/go-sdk/auth"
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 	"go.uber.org/mock/gomock"
 )
@@ -41,7 +46,8 @@ func TestNewTransport_WithLogger(t *testing.T) {
 	t.Parallel()
 
 	var buf bytes.Buffer
-	opts := Options{Logger: &buf}
+	logger := slog.New(slog.NewTextHandler(&buf, nil))
+	opts := Options{Logger: logger}
 	transport := newTransport(opts)
 
 	_, ok := transport.(*sdkmcp.LoggingTransport)
@@ -155,10 +161,11 @@ func TestServe_WithLogger(t *testing.T) {
 	)
 
 	var buf bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&buf, nil))
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	err := Serve(ctx, Options{Service: mock, Logger: &buf})
+	err := Serve(ctx, Options{Service: mock, Logger: logger})
 	if err == nil {
 		t.Fatal("expected context canceled error, not nil")
 	}
@@ -184,6 +191,177 @@ func TestServe_WithVersion(t *testing.T) {
 	err := Serve(ctx, Options{Service: mock, Version: "v2.0.0"})
 	if err == nil {
 		t.Fatal("expected context canceled error, not nil")
+	}
+}
+
+func TestServe_UnsupportedTransport(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMocksvc(ctrl)
+	mock.EXPECT().MakeToolDefinitions().Return(
+		service.ToolDefinitions{
+			Instruction: "test",
+			Tools:       []service.Tool{{Name: "spec_list", Description: "List"}},
+		}, nil,
+	)
+
+	err := Serve(context.Background(), Options{
+		Service:   mock,
+		Transport: TransportType(999),
+	})
+	if err == nil {
+		t.Fatal("expected error for unsupported transport")
+	}
+}
+
+func TestApplyAuthMiddleware_NoAuth(t *testing.T) {
+	t.Parallel()
+
+	handler := applyAuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}), Options{})
+
+	req, _ := http.NewRequest(http.MethodGet, "/", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w.Code)
+	}
+}
+
+func TestApplyAuthMiddleware_StaticToken_Valid(t *testing.T) {
+	t.Parallel()
+
+	handler := applyAuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}), Options{AuthToken: "secret"})
+
+	req, _ := http.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "Bearer secret")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w.Code)
+	}
+}
+
+func TestApplyAuthMiddleware_StaticToken_Invalid(t *testing.T) {
+	t.Parallel()
+
+	handler := applyAuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}), Options{AuthToken: "secret"})
+
+	req, _ := http.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "Bearer wrong")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
+	}
+}
+
+func TestApplyAuthMiddleware_CustomVerifier_Valid(t *testing.T) {
+	t.Parallel()
+
+	handler := applyAuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}), Options{
+		AuthVerifier: func(_ context.Context, token string, _ *http.Request) (*auth.TokenInfo, error) {
+			if token == "custom-token" {
+				return &auth.TokenInfo{UserID: "test-user", Expiration: time.Now().Add(time.Hour)}, nil
+			}
+			return nil, auth.ErrInvalidToken
+		},
+	})
+
+	req, _ := http.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "Bearer custom-token")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w.Code)
+	}
+}
+
+func TestApplyAuthMiddleware_CustomVerifier_Invalid(t *testing.T) {
+	t.Parallel()
+
+	handler := applyAuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}), Options{
+		AuthVerifier: func(_ context.Context, _ string, _ *http.Request) (*auth.TokenInfo, error) {
+			return nil, auth.ErrInvalidToken
+		},
+	})
+
+	req, _ := http.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "Bearer any-token")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
+	}
+}
+
+func TestWithLogging_NilLogger(t *testing.T) {
+	t.Parallel()
+
+	handler := withLogging(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}), nil)
+
+	req, _ := http.NewRequest(http.MethodGet, "/", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w.Code)
+	}
+}
+
+func TestSlogWriter(t *testing.T) {
+	t.Parallel()
+
+	var buf bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&buf, nil))
+	w := newSlogWriter(logger)
+
+	n, err := w.Write([]byte("test message"))
+	if err != nil {
+		t.Fatalf("Write() = %v", err)
+	}
+	if n != 12 {
+		t.Errorf("written = %d, want 12", n)
+	}
+	if buf.Len() == 0 {
+		t.Error("expected log output")
+	}
+}
+
+func TestOptions_Defaults(t *testing.T) {
+	t.Parallel()
+
+	opts := Options{}
+	if opts.httpAddr() != ":8080" {
+		t.Errorf("httpAddr = %q, want %q", opts.httpAddr(), ":8080")
+	}
+	if opts.httpPath() != "/mcp" {
+		t.Errorf("httpPath = %q, want %q", opts.httpPath(), "/mcp")
+	}
+}
+
+func TestOptions_CustomAddr(t *testing.T) {
+	t.Parallel()
+
+	opts := Options{HTTPAddr: ":9090", HTTPPath: "/api/mcp"}
+	if opts.httpAddr() != ":9090" {
+		t.Errorf("httpAddr = %q, want %q", opts.httpAddr(), ":9090")
+	}
+	if opts.httpPath() != "/api/mcp" {
+		t.Errorf("httpPath = %q, want %q", opts.httpPath(), "/api/mcp")
 	}
 }
 

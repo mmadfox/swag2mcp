@@ -562,7 +562,7 @@ linters:
         linters: [ gocognit ]
       # gocognit in mcp and validate commands
       - path: 'internal/commands/mcp\.go'
-        linters: [ gocognit ]
+        linters: [ gocognit, funlen ]
       - path: 'internal/commands/validate\.go'
         linters: [ gocognit ]
       # gocognit in config validator
