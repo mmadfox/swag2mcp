@@ -28,6 +28,11 @@ type mcpCmdOpts struct {
 	AuthToken      string
 }
 
+const (
+	transportSSE            = "sse"
+	transportStreamableHTTP = "streamable-http"
+)
+
 func newMCPCmd(version string) *cobra.Command {
 	opts := mcpCmdOpts{}
 
@@ -113,9 +118,9 @@ func newMCPCmd(version string) *cobra.Command {
 
 			transportType := mcp.TransportStdio
 			switch opts.Transport {
-			case "sse":
+			case transportSSE:
 				transportType = mcp.TransportSSE
-			case "streamable-http":
+			case transportStreamableHTTP:
 				transportType = mcp.TransportStreamableHTTP
 			}
 
