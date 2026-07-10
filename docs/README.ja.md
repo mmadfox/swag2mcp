@@ -42,6 +42,8 @@ swag2mcp run
 ### YAMLスキーマ
 
 ```yaml
+mock_enabled: true                    # オプション、モックサーバーモードを有効化
+
 http_client:                        # オプション、グローバルHTTPデフォルト
   headers:                          # オプション
     X-API-Version: "2"
@@ -75,6 +77,7 @@ specs:
         location: https://petstore.swagger.io/v2/swagger.json  # 必須、5-250文字
         disable: false                  # オプション
         base_url: ""                    # オプション、specのbase_urlを上書き
+        base_mock_url: localhost:8080   # オプション、形式 "host:port" または "host:port/path"
         http_client: {}                 # オプション、specを上書き
 ```
 
@@ -230,6 +233,45 @@ swag2mcp mcp --tags=public --logfile=/var/log/swag2mcp.log
 swag2mcp mcp --disable-llm-auth=false
 swag2mcp mcp --dump-dir=/tmp/dump
 ```
+
+### `mockserver [path]`
+
+すべてのAPI仕様に対してモックHTTPサーバーを起動します。各コレクションは独自の
+HTTPサーバーを持ち、OpenAPIレスポンススキーマに一致するランダムデータを生成します。
+
+| フラグ | デフォルト | 説明 |
+|--------|-----------|------|
+| `--tls` | `false` | 自己署名証明書でTLSを有効化 |
+| `--tls-cert` | `""` | TLS証明書ファイルのパス |
+| `--tls-key` | `""` | TLSキーファイルのパス |
+
+```bash
+swag2mcp-mock
+swag2mcp-mock --tls
+```
+
+**ワークフロー：**
+1. `mock_enabled: true` と `base_mock_url` を設定に追加
+2. モックサーバーを起動：`swag2mcp-mock`
+3. MCPサーバーを起動：`swag2mcp mcp` — invokeは `base_url` の代わりに `base_mock_url` を使用します
+
+### モック認証情報
+
+仕様で `auth` が設定されている場合、モックサーバーはランダムなポートで認証モックを
+起動します。各認証タイプは次の認証情報を受け付けます：
+
+| 認証タイプ | エンドポイント | 受け付けるもの | リクエスト例 |
+|------------|---------------|----------------|--------------|
+| `basic` | `GET /` | Base64の任意の `user:password` | `Authorization: Basic YWRtaW46cGFzcw==` |
+| `bearer` | `GET /` | 任意の空でないトークン | `Authorization: Bearer any-token` |
+| `digest` | `GET /` | 任意のDigestレスポンス | `Authorization: Digest username="test", realm="...", nonce="...", uri="/", response="..."` |
+| `oauth2-cc` | `POST /token` | 任意の `client_id` + `client_secret` | `grant_type=client_credentials&client_id=any&client_secret=any` |
+| `oauth2-pwd` | `POST /token` | 任意の `username` + `password` | `grant_type=password&username=any&password=any` |
+| `api-key` | `GET /` | 任意の `X-Api-Key` ヘッダーまたは `api_key` クエリ | `X-Api-Key: any-key` |
+| `script` | `GET /token` | 認証情報不要 | `GET /token` |
+
+すべての認証モックは `{"status":"authenticated","method":"<type>"}` を返します。
+OAuth2モックは `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}` を返します。
 
 ---
 

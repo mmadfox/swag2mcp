@@ -41,6 +41,7 @@ type Collection struct {
 	LLMInstruction string            `json:"llminstruction"`
 	Title          string            `json:"title"`
 	BaseURL        string            `json:"baseurl,omitempty"`
+	BaseMockURL    string            `json:"base_mock_url,omitempty"`
 	HTTPClient     *HTTPClientConfig `json:"httpClient,omitempty"`
 	Stats          struct {
 		Tags    int `json:"tags"`

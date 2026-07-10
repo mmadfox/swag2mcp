@@ -50,10 +50,12 @@ type GlobalHTTPClientConfig struct {
 //
 // Validation rules:
 //   - Specs: at least one spec must be defined.
+//   - MockEnabled: when true, all specs and collections must have BaseMockURL set.
 type Config struct {
-	HTTPClient *GlobalHTTPClientConfig `yaml:"http_client,omitempty"`
-	MCP        *MCPConfig              `yaml:"mcp,omitempty"`
-	Specs      []Spec                  `yaml:"specs"`
+	MockEnabled bool                    `yaml:"mock_enabled,omitempty"`
+	HTTPClient  *GlobalHTTPClientConfig `yaml:"http_client,omitempty"`
+	MCP         *MCPConfig              `yaml:"mcp,omitempty"`
+	Specs       []Spec                  `yaml:"specs"`
 }
 
 // MCPConfig holds the MCP server configuration.
@@ -104,6 +106,7 @@ type Spec struct {
 //   - LLMInstruction: optional, max 360 chars, allows letters/digits/punctuation.
 //   - Location: required, 5-250 chars (path or URL to the spec file).
 //   - BaseURL: optional, must be a valid URL if set.
+//   - BaseMockURL: optional, format "host:port".
 type Collection struct {
 	LLMTitle       string            `yaml:"llm_title,omitempty"       json:"llm_title" validate:"omitempty,max=120,title_format"`
 	LLMInstruction string            `yaml:"llm_instruction,omitempty"                  validate:"omitempty,max=360,instruction_format"`
@@ -112,6 +115,7 @@ type Collection struct {
 	Disable        bool              `yaml:"disable,omitempty"          json:"disable"`
 	HTTPClient     *HTTPClientConfig `yaml:"http_client,omitempty"`
 	BaseURL        string            `yaml:"base_url,omitempty"                          validate:"omitempty,url"`
+	BaseMockURL    string            `yaml:"base_mock_url,omitempty"                      validate:"omitempty,mock_addr_format"`
 }
 
 func (c *Config) Iterate(f *Filter) iter.Seq[*Spec] {
@@ -132,6 +136,7 @@ func (c *Config) Iterate(f *Filter) iter.Seq[*Spec] {
 	}
 }
 
+//nolint:gocognit // validation requires many checks
 func (c *Config) Validate(f *Filter) error {
 	var errs validationErrors
 
@@ -168,6 +173,15 @@ func (c *Config) Validate(f *Filter) error {
 			}
 			collPrefix := fmt.Sprintf("%s.collections[%d]", specPrefix, j)
 			errs = append(errs, collectStructErrors(collPrefix, collection)...)
+
+			if c.MockEnabled && collection.BaseMockURL == "" {
+				errs = append(errs, validationError{
+					field:      collPrefix + ".base_mock_url",
+					spec:       spec.Domain,
+					collection: collection.LLMTitle,
+					message:    "BaseMockURL is required when mock_enabled is true",
+				})
+			}
 		}
 	}
 

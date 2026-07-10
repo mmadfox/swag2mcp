@@ -42,6 +42,8 @@ swag2mcp run
 ### YAML 模式
 
 ```yaml
+mock_enabled: true                    # 可选，启用模拟服务器模式
+
 http_client:                        # 可选，全局 HTTP 默认设置
   headers:                          # 可选
     X-API-Version: "2"
@@ -75,6 +77,7 @@ specs:
         location: https://petstore.swagger.io/v2/swagger.json  # 必填，5-250 字符
         disable: false                  # 可选
         base_url: ""                    # 可选，覆盖 spec 的 base_url
+        base_mock_url: localhost:8080   # 可选，格式 "host:port" 或 "host:port/path"
         http_client: {}                 # 可选，覆盖 spec
 ```
 
@@ -230,6 +233,45 @@ swag2mcp mcp --tags=public --logfile=/var/log/swag2mcp.log
 swag2mcp mcp --disable-llm-auth=false
 swag2mcp mcp --dump-dir=/tmp/dump
 ```
+
+### `mockserver [path]`
+
+为所有 API 规范启动模拟 HTTP 服务器。每个集合获得自己的
+HTTP 服务器，生成与 OpenAPI 响应模式匹配的随机数据。
+
+| 标志 | 默认值 | 描述 |
+|------|--------|------|
+| `--tls` | `false` | 使用自签名证书启用 TLS |
+| `--tls-cert` | `""` | TLS 证书文件路径 |
+| `--tls-key` | `""` | TLS 密钥文件路径 |
+
+```bash
+swag2mcp-mock
+swag2mcp-mock --tls
+```
+
+**工作流程：**
+1. 将 `mock_enabled: true` 和 `base_mock_url` 添加到您的配置中
+2. 启动模拟服务器：`swag2mcp-mock`
+3. 启动 MCP 服务器：`swag2mcp mcp` — invoke 将使用 `base_mock_url` 而不是 `base_url`
+
+### 模拟认证凭据
+
+当在规范中配置了 `auth` 时，模拟服务器会在随机端口上启动一个认证模拟。
+每种认证类型接受以下凭据：
+
+| 认证类型 | 端点 | 接受 | 示例请求 |
+|----------|------|------|----------|
+| `basic` | `GET /` | 任何 Base64 编码的 `user:password` | `Authorization: Basic YWRtaW46cGFzcw==` |
+| `bearer` | `GET /` | 任何非空令牌 | `Authorization: Bearer any-token` |
+| `digest` | `GET /` | 任何 Digest 响应 | `Authorization: Digest username="test", realm="...", nonce="...", uri="/", response="..."` |
+| `oauth2-cc` | `POST /token` | 任何 `client_id` + `client_secret` | `grant_type=client_credentials&client_id=any&client_secret=any` |
+| `oauth2-pwd` | `POST /token` | 任何 `username` + `password` | `grant_type=password&username=any&password=any` |
+| `api-key` | `GET /` | 任何 `X-Api-Key` 标头或 `api_key` 查询 | `X-Api-Key: any-key` |
+| `script` | `GET /token` | 无需凭据 | `GET /token` |
+
+所有认证模拟返回 `{"status":"authenticated","method":"<type>"}`。
+OAuth2 模拟返回 `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}`。
 
 ---
 

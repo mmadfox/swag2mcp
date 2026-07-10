@@ -37,6 +37,34 @@ OR
 $ swag2mcp mcp --tags=project-1,work,petstore
 ```
 
+## Mock Server
+
+**swag2mcp-mock** is a built-in mock server that generates random API responses
+based on your OpenAPI/Swagger schemas — no real backend required.
+
+Use it for development, testing, or when the real API is not available.
+
+```bash
+# Install
+$ go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
+
+# Start mock server (reads the same config as swag2mcp)
+$ swag2mcp-mock
+
+# In another terminal, start MCP server — invoke uses mock URLs
+$ swag2mcp mcp
+```
+
+To enable, add to your config:
+```yaml
+mock_enabled: true
+specs:
+  - domain: petstore
+    collections:
+      - location: specs/petstore.json
+        base_mock_url: localhost:8080
+```
+
 ## Examples
 
 This directory contains example configurations for swag2mcp. Each example
@@ -67,6 +95,7 @@ demonstrates a specific feature or use case.
 | **MCP Transport** | [stdio](examples/mcp-transport/stdio) | Default stdio transport |
 | | [sse](examples/mcp-transport/sse) | SSE transport with HTTP and bearer token auth |
 | | [streamable-http](examples/mcp-transport/streamable-http) | Streamable HTTP transport with HTTP and bearer token auth |
+| **Mock Server** | [mock-server](examples/mock-server) | Mock server with random data generation and auth mock |
 
 ## License
 

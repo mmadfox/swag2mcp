@@ -337,3 +337,243 @@ func TestMCPConfig_Defaults(t *testing.T) {
 		t.Errorf("Path = %q, want %q", cfg.MCP.Path, "/api/mcp")
 	}
 }
+
+func TestConfig_Validate_MockEnabled_RequiresBaseMockURL(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		MockEnabled: true,
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+	err := cfg.Validate(nil)
+	if err == nil {
+		t.Fatal("expected error when mock_enabled is true but collection BaseMockURL is empty")
+	}
+}
+
+func TestConfig_Validate_MockEnabled_Valid(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		MockEnabled: true,
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle:    "Main Collection",
+						Location:    "https://example.com/spec.yaml",
+						BaseMockURL: "localhost:8080",
+					},
+				},
+			},
+		},
+	}
+	err := cfg.Validate(nil)
+	if err != nil {
+		t.Fatalf("Validate() = %v, want nil", err)
+	}
+}
+
+func TestConfig_Validate_MockEnabled_CollectionRequiresBaseMockURL(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		MockEnabled: true,
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+	err := cfg.Validate(nil)
+	if err == nil {
+		t.Fatal("expected error when mock_enabled is true but collection BaseMockURL is empty")
+	}
+}
+
+func TestConfig_Validate_BaseMockURL_InvalidFormat(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle:    "Main Collection",
+						Location:    "https://example.com/spec.yaml",
+						BaseMockURL: "invalid-addr",
+					},
+				},
+			},
+		},
+	}
+	err := cfg.Validate(nil)
+	if err == nil {
+		t.Fatal("expected error for invalid BaseMockURL format")
+	}
+}
+
+func TestConfig_Validate_BaseMockURL_ValidFormats(t *testing.T) {
+	t.Parallel()
+
+	formats := []string{
+		"localhost:8080",
+		"127.0.0.1:8080",
+		"0.0.0.0:8080",
+		"localhost:80",
+		"127.0.0.1:65535",
+		"localhost:8080/api/v1",
+		"127.0.0.1:9000/v1/smev",
+		"0.0.0.0:3000/path/to/service",
+	}
+
+	for _, addr := range formats {
+		t.Run(addr, func(t *testing.T) {
+			t.Parallel()
+			cfg := &Config{
+				Specs: []Spec{
+					{
+						Domain:   "test-api",
+						LLMTitle: "Test API v1",
+						BaseURL:  "https://api.example.com",
+						Collections: []Collection{
+							{
+								LLMTitle:    "Main Collection",
+								Location:    "https://example.com/spec.yaml",
+								BaseMockURL: addr,
+							},
+						},
+					},
+				},
+			}
+			err := cfg.Validate(nil)
+			if err != nil {
+				t.Errorf("Validate() with addr %q = %v, want nil", addr, err)
+			}
+		})
+	}
+}
+
+func TestConfig_Validate_BaseMockURL_InvalidFormats(t *testing.T) {
+	t.Parallel()
+
+	formats := []string{
+		"example.com:8080",
+		"192.168.1.1:8080",
+		"localhost",
+		":8080",
+		"localhost:",
+		"localhost:abc",
+		"example.com:8080/api/v1",
+		"192.168.1.1:9000/v1/smev",
+	}
+
+	for _, addr := range formats {
+		t.Run(addr, func(t *testing.T) {
+			t.Parallel()
+			cfg := &Config{
+				Specs: []Spec{
+					{
+						Domain:   "test-api",
+						LLMTitle: "Test API v1",
+						BaseURL:  "https://api.example.com",
+						Collections: []Collection{
+							{
+								LLMTitle:    "Main Collection",
+								Location:    "https://example.com/spec.yaml",
+								BaseMockURL: addr,
+							},
+						},
+					},
+				},
+			}
+			err := cfg.Validate(nil)
+			if err == nil {
+				t.Errorf("expected error for invalid addr %q", addr)
+			}
+		})
+	}
+}
+
+func TestConfig_Validate_MockEnabled_DisabledSpecSkipped(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		MockEnabled: true,
+		Specs: []Spec{
+			{
+				Domain:   "disabled-api",
+				LLMTitle: "Disabled API v1",
+				BaseURL:  "https://api.example.com",
+				Disable:  true,
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+	err := cfg.Validate(nil)
+	if err != nil {
+		t.Fatalf("Validate() = %v, want nil (disabled specs are skipped)", err)
+	}
+}
+
+func TestConfig_Validate_MockEnabled_DisabledCollectionSkipped(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		MockEnabled: true,
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Disabled Collection",
+						Location: "https://example.com/spec.yaml",
+						Disable:  true,
+					},
+					{
+						LLMTitle:    "Active Collection",
+						Location:    "https://example.com/spec2.yaml",
+						BaseMockURL: "localhost:8080",
+					},
+				},
+			},
+		},
+	}
+	err := cfg.Validate(nil)
+	if err != nil {
+		t.Fatalf("Validate() = %v, want nil", err)
+	}
+}

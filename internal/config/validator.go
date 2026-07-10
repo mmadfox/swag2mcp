@@ -3,6 +3,8 @@ package config
 import (
 	"errors"
 	"fmt"
+	"net"
+	"net/url"
 	"regexp"
 	"strings"
 	"sync"
@@ -76,6 +78,22 @@ func ValidateConfig(cfg *Config, opts ValidateOptions) error {
 		})
 	}
 
+	errs = append(errs, validateDuplicateDomains(cfg)...)
+
+	if cfg.MockEnabled {
+		errs = append(errs, validateMockPorts(cfg, filter)...)
+	}
+
+	errs = append(errs, validateSpecLocations(cfg, filter, opts.Cache)...)
+
+	if len(errs) == 0 {
+		return nil
+	}
+	return errs
+}
+
+func validateDuplicateDomains(cfg *Config) []validationError {
+	var errs []validationError
 	seen := make(map[string]int)
 	for i, spec := range cfg.Specs {
 		if spec.Disable {
@@ -91,7 +109,47 @@ func ValidateConfig(cfg *Config, opts ValidateOptions) error {
 			seen[spec.Domain] = i
 		}
 	}
+	return errs
+}
 
+func validateMockPorts(cfg *Config, filter *Filter) []validationError {
+	var errs []validationError
+	usedPorts := make(map[int]string)
+	for _, spec := range cfg.Specs {
+		if spec.Disable {
+			continue
+		}
+		if !filter.MatchSpec(spec.Tags...) {
+			continue
+		}
+
+		for _, col := range spec.Collections {
+			if col.Disable {
+				continue
+			}
+			if col.BaseMockURL != "" {
+				port := extractPort(col.BaseMockURL)
+				if port > 0 {
+					label := spec.Domain + "/" + col.LLMTitle
+					if existing, ok := usedPorts[port]; ok {
+						errs = append(errs, validationError{
+							spec:       spec.Domain,
+							collection: col.LLMTitle,
+							errType:    "config",
+							message:    fmt.Sprintf("duplicate mock port %d: used by %q and %q", port, existing, label),
+						})
+					} else {
+						usedPorts[port] = label
+					}
+				}
+			}
+		}
+	}
+	return errs
+}
+
+func validateSpecLocations(cfg *Config, filter *Filter, cacheInstance *cache.Cache) []validationError {
+	var errs []validationError
 	for _, spec := range cfg.Specs {
 		if spec.Disable {
 			continue
@@ -105,12 +163,12 @@ func ValidateConfig(cfg *Config, opts ValidateOptions) error {
 				continue
 			}
 
-			if opts.Cache == nil {
+			if cacheInstance == nil {
 				continue
 			}
 
 			loc := col.Location
-			err := opts.Cache.Exists(loc)
+			err := cacheInstance.Exists(loc)
 			if err != nil {
 				ve := validationError{
 					spec:       spec.Domain,
@@ -127,11 +185,24 @@ func ValidateConfig(cfg *Config, opts ValidateOptions) error {
 			}
 		}
 	}
-
-	if len(errs) == 0 {
-		return nil
-	}
 	return errs
+}
+
+// extractPort extracts the port number from a "host:port" or "host:port/path" string.
+func extractPort(addr string) int {
+	// Handle "host:port/path" — cut at the first slash after the port
+	_, portStr, found := strings.Cut(addr, ":")
+	if !found {
+		return 0
+	}
+	if idx := strings.IndexByte(portStr, '/'); idx >= 0 {
+		portStr = portStr[:idx]
+	}
+	var port int
+	if _, err := fmt.Sscanf(portStr, "%d", &port); err != nil {
+		return 0
+	}
+	return port
 }
 
 func getValidator() *validator.Validate {
@@ -152,7 +223,54 @@ func getValidator() *validator.Validate {
 	if err := configValidator.RegisterValidation("instruction_format", instructionFormatValidation); err != nil {
 		panic(err)
 	}
+	if err := configValidator.RegisterValidation("mock_addr_format", mockAddrFormatValidation); err != nil {
+		panic(err)
+	}
 	return configValidator
+}
+
+// mockAddrFormatValidation validates that the address is in format "host:port"
+// or "host:port/path", where host is localhost, 127.0.0.1, or 0.0.0.0.
+func mockAddrFormatValidation(fl validator.FieldLevel) bool {
+	addr := fl.Field().String()
+	if addr == "" {
+		return true
+	}
+
+	// Try to parse as URL first (handles "host:port/path")
+	if strings.Contains(addr, "://") {
+		u, err := url.Parse(addr)
+		if err != nil {
+			return false
+		}
+		addr = u.Host
+	}
+
+	// Strip path suffix: "host:port/path" → "host:port"
+	if hostPort, _, found := strings.Cut(addr, "/"); found {
+		addr = hostPort
+	}
+
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return false
+	}
+
+	if host != "localhost" && host != "127.0.0.1" && host != "0.0.0.0" {
+		return false
+	}
+
+	if port == "" {
+		return false
+	}
+
+	for _, c := range port {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+
+	return true
 }
 
 func domainFormatValidation(fl validator.FieldLevel) bool {
@@ -217,6 +335,8 @@ func humanReadableError(fe validator.FieldError) string {
 		return "LLMInstruction contains invalid characters — use letters, digits, spaces, and basic punctuation only"
 	case "oneof":
 		return fmt.Sprintf("%s must be one of: %s", field, param)
+	case "mock_addr_format":
+		return fmt.Sprintf("%s must be in format 'host:port' or 'host:port/path' where host is localhost, 127.0.0.1, or 0.0.0.0 (e.g. 'localhost:8080' or '127.0.0.1:9000/v1/api')", field)
 	default:
 		return fe.Error()
 	}

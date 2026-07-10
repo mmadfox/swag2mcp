@@ -176,6 +176,7 @@ func (s *Service) processCollection(
 		LLMTitle:       collectionConfig.LLMTitle,
 		LLMInstruction: collectionConfig.LLMInstruction,
 		BaseURL:        collectionConfig.BaseURL,
+		BaseMockURL:    collectionConfig.BaseMockURL,
 		HTTPClient: mergeHTTPClientConfig(
 			specConfig.HTTPClient,
 			collectionConfig.HTTPClient,

@@ -15,6 +15,7 @@ configuration file. Use it as a reference for building your own configs.
 - Environment variable resolution with `$(VAR_NAME)` syntax
 - Multiple collections per spec
 - Remote (HTTP) and local (file) collection locations
+- Mock server mode with `mock_enabled: true` and `base_mock_url`
 
 ## Expected behavior
 
@@ -23,3 +24,4 @@ configuration file. Use it as a reference for building your own configs.
 - Tags allow filtering: `swag2mcp mcp --tags=production`
 - Disabled specs/collections are ignored
 - Environment variables are resolved at startup
+- Mock server can be started with `swag2mcp-mock`

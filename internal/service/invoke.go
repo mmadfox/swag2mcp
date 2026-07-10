@@ -281,7 +281,11 @@ func (builder *requestBuilder) build() (*http.Request, error) {
 }
 
 // resolveBaseURL returns the base URL, preferring the collection's over the spec's.
+// If BaseMockURL is set on the collection, it is used with http:// prefix.
 func (builder *requestBuilder) resolveBaseURL() string {
+	if builder.collection.BaseMockURL != "" {
+		return "http://" + builder.collection.BaseMockURL
+	}
 	if builder.collection.BaseURL != "" {
 		return builder.collection.BaseURL
 	}

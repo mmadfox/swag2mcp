@@ -42,6 +42,8 @@ swag2mcp run
 ### Esquema YAML
 
 ```yaml
+mock_enabled: true                    # opcional, activa el modo de servidor mock
+
 http_client:                        # opcional, valores predeterminados HTTP globales
   headers:                          # opcional
     X-API-Version: "2"
@@ -75,6 +77,7 @@ specs:
         location: https://petstore.swagger.io/v2/swagger.json  # obligatorio, 5-250 car.
         disable: false                  # opcional
         base_url: ""                    # opcional, sobrescribe base_url de la spec
+        base_mock_url: localhost:8080   # opcional, formato "host:port" o "host:port/path"
         http_client: {}                 # opcional, sobrescribe la spec
 ```
 
@@ -230,6 +233,45 @@ swag2mcp mcp --tags=public --logfile=/var/log/swag2mcp.log
 swag2mcp mcp --disable-llm-auth=false
 swag2mcp mcp --dump-dir=/tmp/dump
 ```
+
+### `mockserver [path]`
+
+Inicia servidores HTTP mock para todas las especificaciones API. Cada colección obtiene su propio
+servidor HTTP que genera datos aleatorios que coinciden con los esquemas de respuesta OpenAPI.
+
+| Banderas | Predet. | Descripción |
+|----------|---------|-------------|
+| `--tls` | `false` | Habilitar TLS con certificado autofirmado |
+| `--tls-cert` | `""` | Ruta del archivo de certificado TLS |
+| `--tls-key` | `""` | Ruta del archivo de clave TLS |
+
+```bash
+swag2mcp-mock
+swag2mcp-mock --tls
+```
+
+**Flujo de trabajo:**
+1. Agregue `mock_enabled: true` y `base_mock_url` a su configuración
+2. Inicie el servidor mock: `swag2mcp-mock`
+3. Inicie el servidor MCP: `swag2mcp mcp` — invoke usará `base_mock_url` en lugar de `base_url`
+
+### Credenciales de autenticación mock
+
+Cuando `auth` está configurado en una especificación, el servidor mock inicia un mock de autenticación
+en un puerto aleatorio. Cada tipo de autenticación acepta las siguientes credenciales:
+
+| Tipo de auth | Endpoint | Acepta | Ejemplo de solicitud |
+|--------------|----------|--------|----------------------|
+| `basic` | `GET /` | Cualquier `user:password` en Base64 | `Authorization: Basic YWRtaW46cGFzcw==` |
+| `bearer` | `GET /` | Cualquier token no vacío | `Authorization: Bearer any-token` |
+| `digest` | `GET /` | Cualquier respuesta Digest | `Authorization: Digest username="test", realm="...", nonce="...", uri="/", response="..."` |
+| `oauth2-cc` | `POST /token` | Cualquier `client_id` + `client_secret` | `grant_type=client_credentials&client_id=any&client_secret=any` |
+| `oauth2-pwd` | `POST /token` | Cualquier `username` + `password` | `grant_type=password&username=any&password=any` |
+| `api-key` | `GET /` | Cualquier encabezado `X-Api-Key` o consulta `api_key` | `X-Api-Key: any-key` |
+| `script` | `GET /token` | No se requieren credenciales | `GET /token` |
+
+Todos los mocks de autenticación devuelven `{"status":"authenticated","method":"<type>"}`.
+Los mocks OAuth2 devuelven `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}`.
 
 ---
 

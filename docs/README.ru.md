@@ -42,6 +42,8 @@ swag2mcp run
 ### YAML Схема
 
 ```yaml
+mock_enabled: true                    # опционально, включает режим мок-сервера
+
 http_client:                        # опционально, глобальные настройки HTTP
   headers:                          # опционально
     X-API-Version: "2"
@@ -75,6 +77,7 @@ specs:
         location: https://petstore.swagger.io/v2/swagger.json  # обязательно, 5-250 символов
         disable: false                  # опционально
         base_url: ""                    # опционально, переопределяет base_url спецификации
+        base_mock_url: localhost:8080   # опционально, формат "host:port" или "host:port/path"
         http_client: {}                 # опционально, переопределяет spec
 ```
 
@@ -230,6 +233,45 @@ swag2mcp mcp --tags=public --logfile=/var/log/swag2mcp.log
 swag2mcp mcp --disable-llm-auth=false
 swag2mcp mcp --dump-dir=/tmp/dump
 ```
+
+### `mockserver [path]`
+
+Запускает мок-серверы для всех API спецификаций. Каждая коллекция получает
+свой HTTP-сервер, который генерирует случайные данные по OpenAPI схеме ответа.
+
+| Флаг | По умолчанию | Описание |
+|------|-------------|----------|
+| `--tls` | `false` | Включить TLS с самоподписанным сертификатом |
+| `--tls-cert` | `""` | Путь к TLS сертификату |
+| `--tls-key` | `""` | Путь к TLS ключу |
+
+```bash
+swag2mcp-mock
+swag2mcp-mock --tls
+```
+
+**Рабочий процесс:**
+1. Добавить `mock_enabled: true` и `base_mock_url` в конфиг
+2. Запустить мок-сервер: `swag2mcp-mock`
+3. Запустить MCP сервер: `swag2mcp mcp` — invoke будет использовать `base_mock_url`
+
+### Mock Credentials для аутентификации
+
+Когда в конфиге указан `auth`, мок-сервер авторизации запускается на случайном
+порту. Каждый тип аутентификации принимает следующие credentials:
+
+| Тип | Endpoint | Принимает | Пример запроса |
+|-----|----------|-----------|----------------|
+| `basic` | `GET /` | Любые `user:password` в Base64 | `Authorization: Basic YWRtaW46cGFzcw==` |
+| `bearer` | `GET /` | Любой non-empty токен | `Authorization: Bearer any-token` |
+| `digest` | `GET /` | Любой Digest response | `Authorization: Digest username="test", realm="...", nonce="...", uri="/", response="..."` |
+| `oauth2-cc` | `POST /token` | Любые `client_id` + `client_secret` | `grant_type=client_credentials&client_id=any&client_secret=any` |
+| `oauth2-pwd` | `POST /token` | Любые `username` + `password` | `grant_type=password&username=any&password=any` |
+| `api-key` | `GET /` | Любой `X-Api-Key` header или `api_key` query | `X-Api-Key: any-key` |
+| `script` | `GET /token` | Не требует credentials | `GET /token` |
+
+Все мок-серверы авторизации возвращают `{"status":"authenticated","method":"<type>"}`.
+OAuth2 моки возвращают `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}`.
 
 ---
 

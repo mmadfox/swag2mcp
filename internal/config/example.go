@@ -93,3 +93,25 @@ func ExampleMCPStreamableHTTPYAML() []byte {
 	})
 	return data
 }
+
+// ExampleMockConfigYAML returns a YAML example for mock server configuration.
+func ExampleMockConfigYAML() []byte {
+	data, _ := yaml.Marshal(map[string]any{
+		"mock_enabled": true,
+		"specs": []map[string]any{
+			{
+				"domain":    "petstore",
+				"llm_title": "Petstore API",
+				"base_url":  "https://petstore.swagger.io/v2",
+				"collections": []map[string]any{
+					{
+						"llm_title":     "Petstore Swagger",
+						"location":      "specs/petstore.json",
+						"base_mock_url": "localhost:8080",
+					},
+				},
+			},
+		},
+	})
+	return data
+}
