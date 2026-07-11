@@ -9,7 +9,7 @@
 
 > ⚠️ **Work in progress** — API may change, contributions welcome.
 
-<a href="https://www.youtube.com/watch?v=9CcvwmfTkds">
+<a href="https://www.youtube.com/watch?v=9CcvwmfTkds" target="_blank">
   <img src="https://i3.ytimg.com/vi/9CcvwmfTkds/maxresdefault.jpg" width="600" alt="Preview">
 </a>
 
