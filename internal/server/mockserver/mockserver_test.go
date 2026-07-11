@@ -400,76 +400,10 @@ func TestFindResponseSchema_FallbackToDefault(t *testing.T) {
 	}
 }
 
-func TestAuthMockServer_handleBasic_NoCredentials(t *testing.T) {
-	t.Parallel()
-
-	server := &authMockServer{}
-	responseRecorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/", nil)
-
-	server.handleBasic(responseRecorder, request)
-
-	if responseRecorder.Code != http.StatusUnauthorized {
-		t.Errorf("expected 401, got %d", responseRecorder.Code)
-	}
-}
-
-func TestAuthMockServer_handleBasic_ValidCredentials(t *testing.T) {
-	t.Parallel()
-
-	server := &authMockServer{}
-	responseRecorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/", nil)
-	request.Header.Set("Authorization", "Basic YWxpY2U6c2VjcmV0MTIz")
-
-	server.handleBasic(responseRecorder, request)
-
-	if responseRecorder.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", responseRecorder.Code)
-	}
-
-	var response map[string]string
-	if err := json.NewDecoder(responseRecorder.Body).Decode(&response); err != nil {
-		t.Fatalf("failed to decode response: %v", err)
-	}
-	if response["status"] != "authenticated" {
-		t.Errorf("expected status 'authenticated', got %q", response["status"])
-	}
-}
-
-func TestAuthMockServer_handleBearer_NoToken(t *testing.T) {
-	t.Parallel()
-
-	server := &authMockServer{}
-	responseRecorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/", nil)
-
-	server.handleBearer(responseRecorder, request)
-
-	if responseRecorder.Code != http.StatusUnauthorized {
-		t.Errorf("expected 401, got %d", responseRecorder.Code)
-	}
-}
-
-func TestAuthMockServer_handleBearer_ValidToken(t *testing.T) {
-	t.Parallel()
-
-	server := &authMockServer{}
-	responseRecorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/", nil)
-	request.Header.Set("Authorization", "Bearer my-token")
-
-	server.handleBearer(responseRecorder, request)
-
-	if responseRecorder.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", responseRecorder.Code)
-	}
-}
-
 func TestAuthMockServer_handleDigest_NoChallenge(t *testing.T) {
 	t.Parallel()
 
-	server := &authMockServer{}
+	server := newAuthMockServer(authServerDigest, "127.0.0.1:0", nil, nil)
 	responseRecorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
 
@@ -487,7 +421,7 @@ func TestAuthMockServer_handleDigest_NoChallenge(t *testing.T) {
 func TestAuthMockServer_handleDigest_ValidResponse(t *testing.T) {
 	t.Parallel()
 
-	server := &authMockServer{}
+	server := newAuthMockServer(authServerDigest, "127.0.0.1:0", nil, nil)
 	responseRecorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
 	request.Header.Set("Authorization", `Digest username="test", realm="test", nonce="abc", uri="/", response="def"`)
@@ -499,30 +433,30 @@ func TestAuthMockServer_handleDigest_ValidResponse(t *testing.T) {
 	}
 }
 
-func TestAuthMockServer_handleOAuth2CC_InvalidMethod(t *testing.T) {
+func TestAuthMockServer_handleOAuth2_InvalidMethod(t *testing.T) {
 	t.Parallel()
 
-	server := &authMockServer{}
+	server := newAuthMockServer(authServerOAuth2, "127.0.0.1:0", nil, nil)
 	responseRecorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/token", nil)
 
-	server.handleOAuth2CC(responseRecorder, request)
+	server.handleOAuth2(responseRecorder, request)
 
 	if responseRecorder.Code != http.StatusMethodNotAllowed {
 		t.Errorf("expected 405, got %d", responseRecorder.Code)
 	}
 }
 
-func TestAuthMockServer_handleOAuth2CC_ValidRequest(t *testing.T) {
+func TestAuthMockServer_handleOAuth2_CC_ValidRequest(t *testing.T) {
 	t.Parallel()
 
-	server := &authMockServer{}
+	server := newAuthMockServer(authServerOAuth2, "127.0.0.1:0", nil, nil)
 	responseRecorder := httptest.NewRecorder()
 	body := strings.NewReader("grant_type=client_credentials&client_id=test-client")
 	request := httptest.NewRequest(http.MethodPost, "/token", body)
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	server.handleOAuth2CC(responseRecorder, request)
+	server.handleOAuth2(responseRecorder, request)
 
 	if responseRecorder.Code != http.StatusOK {
 		t.Errorf("expected 200, got %d", responseRecorder.Code)
@@ -537,16 +471,16 @@ func TestAuthMockServer_handleOAuth2CC_ValidRequest(t *testing.T) {
 	}
 }
 
-func TestAuthMockServer_handleOAuth2Password_ValidRequest(t *testing.T) {
+func TestAuthMockServer_handleOAuth2_Password_ValidRequest(t *testing.T) {
 	t.Parallel()
 
-	server := &authMockServer{}
+	server := newAuthMockServer(authServerOAuth2, "127.0.0.1:0", nil, nil)
 	responseRecorder := httptest.NewRecorder()
 	body := strings.NewReader("grant_type=password&username=alice&password=secret")
 	request := httptest.NewRequest(http.MethodPost, "/token", body)
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	server.handleOAuth2Password(responseRecorder, request)
+	server.handleOAuth2(responseRecorder, request)
 
 	if responseRecorder.Code != http.StatusOK {
 		t.Errorf("expected 200, got %d", responseRecorder.Code)
@@ -561,68 +495,19 @@ func TestAuthMockServer_handleOAuth2Password_ValidRequest(t *testing.T) {
 	}
 }
 
-func TestAuthMockServer_handleAPIKey_NoKey(t *testing.T) {
+func TestAuthMockServer_handleOAuth2_InvalidGrantType(t *testing.T) {
 	t.Parallel()
 
-	server := &authMockServer{}
+	server := newAuthMockServer(authServerOAuth2, "127.0.0.1:0", nil, nil)
 	responseRecorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/", nil)
+	body := strings.NewReader("grant_type=invalid_grant")
+	request := httptest.NewRequest(http.MethodPost, "/token", body)
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	server.handleAPIKey(responseRecorder, request)
+	server.handleOAuth2(responseRecorder, request)
 
-	if responseRecorder.Code != http.StatusUnauthorized {
-		t.Errorf("expected 401, got %d", responseRecorder.Code)
-	}
-}
-
-func TestAuthMockServer_handleAPIKey_HeaderKey(t *testing.T) {
-	t.Parallel()
-
-	server := &authMockServer{}
-	responseRecorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/", nil)
-	request.Header.Set("X-Api-Key", "my-api-key")
-
-	server.handleAPIKey(responseRecorder, request)
-
-	if responseRecorder.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", responseRecorder.Code)
-	}
-}
-
-func TestAuthMockServer_handleAPIKey_QueryKey(t *testing.T) {
-	t.Parallel()
-
-	server := &authMockServer{}
-	responseRecorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/?api_key=my-api-key", nil)
-
-	server.handleAPIKey(responseRecorder, request)
-
-	if responseRecorder.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", responseRecorder.Code)
-	}
-}
-
-func TestAuthMockServer_handleScript(t *testing.T) {
-	t.Parallel()
-
-	server := &authMockServer{}
-	responseRecorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/token", nil)
-
-	server.handleScript(responseRecorder, request)
-
-	if responseRecorder.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", responseRecorder.Code)
-	}
-
-	var response map[string]any
-	if err := json.NewDecoder(responseRecorder.Body).Decode(&response); err != nil {
-		t.Fatalf("failed to decode response: %v", err)
-	}
-	if response["token"] == "" {
-		t.Error("expected token to be non-empty")
+	if responseRecorder.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", responseRecorder.Code)
 	}
 }
 

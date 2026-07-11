@@ -45,6 +45,16 @@ type Authenticator interface {
 	Validate() error
 }
 
+// TokenURLSetter is an optional interface for auth clients that have a configurable token URL.
+type TokenURLSetter interface {
+	SetTokenURL(url string)
+}
+
+// MockBaseURLSetter is an optional interface for auth clients that need a mock base URL.
+type MockBaseURLSetter interface {
+	SetMockBaseURL(url string)
+}
+
 func setAuthHeader(req *http.Request, out *Info, key, value string) {
 	if value == "" {
 		return

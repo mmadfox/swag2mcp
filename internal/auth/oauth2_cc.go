@@ -118,6 +118,10 @@ func (c *OAuth2ClientCredentialsAuthClient) fetchToken() (string, int, error) {
 	return tr.AccessToken, expiresIn, nil
 }
 
+func (c *OAuth2ClientCredentialsAuthClient) SetTokenURL(url string) {
+	c.TokenURL = url
+}
+
 func (c *OAuth2ClientCredentialsAuthClient) Validate() error {
 	return authValidator.Struct(c)
 }

@@ -115,6 +115,16 @@ func validateDuplicateDomains(cfg *Config) []validationError {
 func validateMockPorts(cfg *Config, filter *Filter) []validationError {
 	var errs []validationError
 	usedPorts := make(map[int]string)
+
+	if cfg.MockAuth != nil {
+		if cfg.MockAuth.OAuth2Port > 0 {
+			usedPorts[cfg.MockAuth.OAuth2Port] = "mock_auth.oauth2_port"
+		}
+		if cfg.MockAuth.DigestPort > 0 {
+			usedPorts[cfg.MockAuth.DigestPort] = "mock_auth.digest_port"
+		}
+	}
+
 	for _, spec := range cfg.Specs {
 		if spec.Disable {
 			continue

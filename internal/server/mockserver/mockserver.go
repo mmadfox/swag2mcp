@@ -1,10 +1,11 @@
 // Package mockserver provides mock HTTP servers for API specifications and
 // authentication methods defined in the swag2mcp configuration.
 //
-// The MockServer starts two kinds of servers for each configured spec:
-//   - Auth mock servers: one per spec with authentication configured, each on
-//     a separate port. They simulate the real auth flow (Basic, Bearer, Digest,
-//     OAuth2, API Key, Script).
+// The MockServer starts two kinds of servers:
+//   - Auth mock servers: two global servers (OAuth2 on port 9090, Digest on
+//     port 9091) that simulate the real auth flow. Other auth types (Basic,
+//     Bearer, API Key, Script) do not need a mock server — the MCP server
+//     applies authentication automatically via applyMockAuthURLs.
 //   - API mock servers: one per collection, each on a separate port. They parse
 //     the OpenAPI/Swagger spec and respond to requests with randomly generated
 //     data that conforms to the response schema.
@@ -107,26 +108,70 @@ func (m *MockServer) Start(ctx context.Context) error {
 			m.options.ConfigPath,
 		)
 	}
+
+	m.startAuthServers()
+	m.startAPIServers()
+
+	if len(m.authServers) == 0 && len(m.apiServers) == 0 {
+		return errors.New("no mock servers to start — check your configuration")
+	}
+
+	startContext, startCancel := context.WithCancel(ctx)
+	defer startCancel()
+
+	m.startAll(startContext)
+
+	m.printSummary()
+
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case <-signalChannel:
+		m.logger.InfoContext(ctx, "shutting down...")
+	case <-ctx.Done():
+	}
+
+	m.shutdownAll()
+
+	return nil
+}
+
+const (
+	defaultOAuth2Port = 9090
+	defaultDigestPort = 9091
+)
+
+func (m *MockServer) startAuthServers() {
+	oauth2Port := defaultOAuth2Port
+	digestPort := defaultDigestPort
+	if m.options.Config.MockAuth != nil {
+		if m.options.Config.MockAuth.OAuth2Port > 0 {
+			oauth2Port = m.options.Config.MockAuth.OAuth2Port
+		}
+		if m.options.Config.MockAuth.DigestPort > 0 {
+			digestPort = m.options.Config.MockAuth.DigestPort
+		}
+	}
+
+	addr := fmt.Sprintf("127.0.0.1:%d", oauth2Port)
+	server := newAuthMockServer(authServerOAuth2, addr, m.tlsConfig, m.logger)
+	m.mu.Lock()
+	m.authServers = append(m.authServers, server)
+	m.mu.Unlock()
+
+	addr = fmt.Sprintf("127.0.0.1:%d", digestPort)
+	server = newAuthMockServer(authServerDigest, addr, m.tlsConfig, m.logger)
+	m.mu.Lock()
+	m.authServers = append(m.authServers, server)
+	m.mu.Unlock()
+}
+
+func (m *MockServer) startAPIServers() {
 	for specIndex := range m.options.Config.Specs {
 		specConfig := &m.options.Config.Specs[specIndex]
 		if specConfig.Disable {
 			continue
-		}
-
-		if specConfig.Auth.Client != nil {
-			authAddr := "127.0.0.1:0"
-
-			authServer := newAuthMockServer(
-				specConfig.Domain,
-				specConfig.Auth.Client.Type().String(),
-				authAddr,
-				m.tlsConfig,
-				m.logger,
-			)
-
-			m.mu.Lock()
-			m.authServers = append(m.authServers, authServer)
-			m.mu.Unlock()
 		}
 
 		for collectionIndex := range specConfig.Collections {
@@ -154,30 +199,6 @@ func (m *MockServer) Start(ctx context.Context) error {
 			m.mu.Unlock()
 		}
 	}
-
-	if len(m.authServers) == 0 && len(m.apiServers) == 0 {
-		return errors.New("no mock servers to start — check your configuration")
-	}
-
-	startContext, startCancel := context.WithCancel(ctx)
-	defer startCancel()
-
-	m.startAll(startContext)
-
-	m.printSummary()
-
-	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
-
-	select {
-	case <-signalChannel:
-		m.logger.InfoContext(ctx, "shutting down...")
-	case <-ctx.Done():
-	}
-
-	m.shutdownAll()
-
-	return nil
 }
 
 func (m *MockServer) startAll(ctx context.Context) {
@@ -213,9 +234,8 @@ func (m *MockServer) printSummary() {
 			if m.options.TLS {
 				protocol = "https"
 			}
-			line := fmt.Sprintf("  %s (%s) → %s://%s\n",
-				authServer.specDomain,
-				authServer.authType,
+			line := fmt.Sprintf("  %s → %s://%s\n",
+				authServer.serverType,
 				protocol,
 				authServer.addr,
 			)

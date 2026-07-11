@@ -254,24 +254,20 @@ swag2mcp-mock --tls
 1. `mock_enabled: true` と `base_mock_url` を設定に追加
 2. モックサーバーを起動：`swag2mcp-mock`
 3. MCPサーバーを起動：`swag2mcp mcp` — invokeは `base_url` の代わりに `base_mock_url` を使用します
+4. 認証は自動的に適用されます：OAuth2/Digestはポート9090/9091のモックサーバーを使用し、その他のタイプは認証情報を直接適用します
 
-### モック認証情報
+### モック認証
 
-仕様で `auth` が設定されている場合、モックサーバーはランダムなポートで認証モックを
-起動します。各認証タイプは次の認証情報を受け付けます：
+仕様で `auth` が設定されている場合、MCPサーバーが自動的に認証を適用します。
+専用のモックサーバーが必要なのは次の2つの認証タイプのみです：
 
-| 認証タイプ | エンドポイント | 受け付けるもの | リクエスト例 |
-|------------|---------------|----------------|--------------|
-| `basic` | `GET /` | Base64の任意の `user:password` | `Authorization: Basic YWRtaW46cGFzcw==` |
-| `bearer` | `GET /` | 任意の空でないトークン | `Authorization: Bearer any-token` |
-| `digest` | `GET /` | 任意のDigestレスポンス | `Authorization: Digest username="test", realm="...", nonce="...", uri="/", response="..."` |
-| `oauth2-cc` | `POST /token` | 任意の `client_id` + `client_secret` | `grant_type=client_credentials&client_id=any&client_secret=any` |
-| `oauth2-pwd` | `POST /token` | 任意の `username` + `password` | `grant_type=password&username=any&password=any` |
-| `api-key` | `GET /` | 任意の `X-Api-Key` ヘッダーまたは `api_key` クエリ | `X-Api-Key: any-key` |
-| `script` | `GET /token` | 認証情報不要 | `GET /token` |
+| 認証タイプ | モックエンドポイント | 動作 |
+|------------|---------------------|------|
+| `oauth2-cc` / `oauth2-pwd` | ポート9090の `POST /token` | 任意の `client_id`/`username`+`password` を受け付け、`{"access_token":"<random>","token_type":"Bearer","expires_in":3600}` を返す |
+| `digest` | ポート9091の `GET /` | `algorithm=MD5` の401チャレンジを送信、任意のDigestレスポンスを受け付け、`{"status":"authenticated","method":"digest"}` を返す |
 
-すべての認証モックは `{"status":"authenticated","method":"<type>"}` を返します。
-OAuth2モックは `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}` を返します。
+その他の認証タイプ（`basic`、`bearer`、`api-key`、`script`）はモックサーバーを
+**必要としません** — MCPサーバーが設定された認証情報を各リクエストに自動的に適用します。
 
 ---
 

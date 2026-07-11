@@ -52,7 +52,7 @@ func (s *Service) Bootstrap(_ context.Context, request BootstrapRequest) error {
 	filter := config.NewFilter(request.Tags)
 
 	for specConfig := range configuration.Iterate(filter) {
-		if specError := s.processSpec(specConfig); specError != nil {
+		if specError := s.processSpec(specConfig, configuration.MockEnabled, configuration.MockAuth); specError != nil {
 			return specError
 		}
 	}
@@ -132,8 +132,8 @@ func (s *Service) initializeWorkspace(workspaceDirectory string) error {
 	return nil
 }
 
-func (s *Service) processSpec(specConfig *config.Spec) error {
-	specification, specError := s.buildSpecInfo(specConfig)
+func (s *Service) processSpec(specConfig *config.Spec, mockEnabled bool, mockAuth *config.MockAuthConfig) error {
+	specification, specError := s.buildSpecInfo(specConfig, mockEnabled, mockAuth)
 	if specError != nil {
 		return specError
 	}
@@ -261,7 +261,7 @@ func (s *Service) parseSpecDocument(location string) (*spec.Doc, error) {
 	return specDocument, nil
 }
 
-func (s *Service) buildSpecInfo(specConfig *config.Spec) (*types.Spec, error) {
+func (s *Service) buildSpecInfo(specConfig *config.Spec, mockEnabled bool, mockAuth *config.MockAuthConfig) (*types.Spec, error) {
 	specification := &types.Spec{
 		ID:             id.Domain(specConfig.Domain),
 		Domain:         specConfig.Domain,
@@ -289,9 +289,37 @@ func (s *Service) buildSpecInfo(specConfig *config.Spec) (*types.Spec, error) {
 		if scriptClient, isScript := specConfig.Auth.Client.(*auth.ScriptAuthClient); isScript {
 			scriptClient.SetWorkspaceDir(s.ws.Root())
 		}
+
+		if mockEnabled {
+			applyMockAuthURLs(specConfig.Auth.Client, mockAuth)
+		}
 	}
 
 	return specification, nil
+}
+
+const (
+	defaultMockOAuth2Port = 9090
+	defaultMockDigestPort = 9091
+)
+
+func applyMockAuthURLs(client auth.Authenticator, mockAuth *config.MockAuthConfig) {
+	oauth2Port := defaultMockOAuth2Port
+	digestPort := defaultMockDigestPort
+	if mockAuth != nil {
+		if mockAuth.OAuth2Port > 0 {
+			oauth2Port = mockAuth.OAuth2Port
+		}
+		if mockAuth.DigestPort > 0 {
+			digestPort = mockAuth.DigestPort
+		}
+	}
+	if setter, ok := client.(auth.TokenURLSetter); ok {
+		setter.SetTokenURL(fmt.Sprintf("http://127.0.0.1:%d/token", oauth2Port))
+	}
+	if setter, ok := client.(auth.MockBaseURLSetter); ok {
+		setter.SetMockBaseURL(fmt.Sprintf("http://127.0.0.1:%d/", digestPort))
+	}
 }
 
 func (s *Service) indexSpec(

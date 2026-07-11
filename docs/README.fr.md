@@ -254,24 +254,22 @@ swag2mcp-mock --tls
 1. Ajoutez `mock_enabled: true` et `base_mock_url` à votre configuration
 2. Démarrez le serveur mock : `swag2mcp-mock`
 3. Démarrez le serveur MCP : `swag2mcp mcp` — invoke utilisera `base_mock_url` au lieu de `base_url`
+4. L'authentification est appliquée automatiquement : OAuth2/Digest utilisent des serveurs mock sur les ports 9090/9091 ; les autres types appliquent les identifiants directement
 
-### Identifiants d'authentification mock
+### Authentification mock
 
-Lorsque `auth` est configuré dans une spécification, le serveur mock démarre un mock d'authentification
-sur un port aléatoire. Chaque type d'authentification accepte les identifiants suivants :
+Lorsque `auth` est configuré dans une spécification, le serveur MCP applique
+l'authentification automatiquement. Seuls deux types d'authentification
+nécessitent un serveur mock dédié :
 
-| Type d'auth | Point d'accès | Accepte | Exemple de requête |
-|-------------|---------------|---------|---------------------|
-| `basic` | `GET /` | Tout `user:password` en Base64 | `Authorization: Basic YWRtaW46cGFzcw==` |
-| `bearer` | `GET /` | Tout token non vide | `Authorization: Bearer any-token` |
-| `digest` | `GET /` | Toute réponse Digest | `Authorization: Digest username="test", realm="...", nonce="...", uri="/", response="..."` |
-| `oauth2-cc` | `POST /token` | Tout `client_id` + `client_secret` | `grant_type=client_credentials&client_id=any&client_secret=any` |
-| `oauth2-pwd` | `POST /token` | Tout `username` + `password` | `grant_type=password&username=any&password=any` |
-| `api-key` | `GET /` | Tout en-tête `X-Api-Key` ou requête `api_key` | `X-Api-Key: any-key` |
-| `script` | `GET /token` | Aucun identifiant requis | `GET /token` |
+| Type d'auth | Point d'accès mock | Comportement |
+|-------------|-------------------|--------------|
+| `oauth2-cc` / `oauth2-pwd` | `POST /token` sur le port 9090 | Accepte tout `client_id`/`username`+`password`, retourne `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}` |
+| `digest` | `GET /` sur le port 9091 | Envoie un défi 401 avec `algorithm=MD5`, accepte toute réponse Digest, retourne `{"status":"authenticated","method":"digest"}` |
 
-Tous les mocks d'authentification retournent `{"status":"authenticated","method":"<type>"}`.
-Les mocks OAuth2 retournent `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}`.
+Les autres types (`basic`, `bearer`, `api-key`, `script`) **ne nécessitent pas**
+de serveur mock — le serveur MCP applique les identifiants configurés à chaque
+requête automatiquement.
 
 ---
 

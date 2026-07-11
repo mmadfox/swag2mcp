@@ -260,24 +260,21 @@ swag2mcp-mock --tls
 1. Add `mock_enabled: true` and `base_mock_url` to your config
 2. Start mock server: `swag2mcp-mock`
 3. Start MCP server: `swag2mcp mcp` — invoke will use `base_mock_url` instead of `base_url`
+4. Auth is handled automatically: OAuth2/Digest use mock servers on ports 9090/9091; other types apply credentials directly
 
-### Mock Auth Credentials
+### Mock Auth
 
-When `auth` is configured in a spec, the mock server starts an auth mock
-on a random port. Each auth type accepts the following credentials:
+When `auth` is configured in a spec, the MCP server applies authentication
+automatically. Only two auth types need a dedicated mock server:
 
-| Auth Type | Endpoint | Accepts | Example Request |
-|-----------|----------|---------|-----------------|
-| `basic` | `GET /` | Any `user:password` in Base64 | `Authorization: Basic YWRtaW46cGFzcw==` |
-| `bearer` | `GET /` | Any non-empty token | `Authorization: Bearer any-token` |
-| `digest` | `GET /` | Any Digest response | `Authorization: Digest username="test", realm="...", nonce="...", uri="/", response="..."` |
-| `oauth2-cc` | `POST /token` | Any `client_id` + `client_secret` | `grant_type=client_credentials&client_id=any&client_secret=any` |
-| `oauth2-pwd` | `POST /token` | Any `username` + `password` | `grant_type=password&username=any&password=any` |
-| `api-key` | `GET /` | Any `X-Api-Key` header or `api_key` query | `X-Api-Key: any-key` |
-| `script` | `GET /token` | No credentials required | `GET /token` |
+| Auth Type | Mock Endpoint | Behavior |
+|-----------|---------------|----------|
+| `oauth2-cc` / `oauth2-pwd` | `POST /token` on port 9090 | Accepts any `client_id`/`username`+`password`, returns `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}` |
+| `digest` | `GET /` on port 9091 | Sends a 401 challenge with `algorithm=MD5`, accepts any Digest response, returns `{"status":"authenticated","method":"digest"}` |
 
-All auth mocks return `{"status":"authenticated","method":"<type>"}`.
-OAuth2 mocks return `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}`.
+Other auth types (`basic`, `bearer`, `api-key`, `script`) do **not** require
+a mock server — the MCP server applies the configured credentials to every
+request automatically.
 
 ---
 

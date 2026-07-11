@@ -43,6 +43,7 @@ User asks to "do" something → inspect → invoke
 4. **Destructive actions**: Never POST/PUT/PATCH/DELETE without explicit user request
 5. **`endpoint_by_id` vs `inspect`**: `endpoint_by_id` = quick summary (method, path); `inspect` = full technical spec (schemas, params)
 6. **Search, don't navigate**: When the user asks to find an endpoint by description, name, path, tag, or functionality — use `search`. Do NOT manually traverse spec → collection → tag → endpoint.
+7. **Auth is automatic**: `invoke` handles authentication automatically. Do NOT call `auth` before `invoke` or `inspect`. Only use `auth` when the user asks for a curl command or needs the raw token.
 
 ## The `search` Tool - Complete Guide
 

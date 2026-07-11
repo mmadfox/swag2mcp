@@ -120,6 +120,10 @@ func (c *OAuth2PasswordAuthClient) fetchToken() (string, int, error) {
 	return tr.AccessToken, expiresIn, nil
 }
 
+func (c *OAuth2PasswordAuthClient) SetTokenURL(url string) {
+	c.TokenURL = url
+}
+
 func (c *OAuth2PasswordAuthClient) Validate() error {
 	return authValidator.Struct(c)
 }

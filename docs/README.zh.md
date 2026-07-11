@@ -254,24 +254,20 @@ swag2mcp-mock --tls
 1. 将 `mock_enabled: true` 和 `base_mock_url` 添加到您的配置中
 2. 启动模拟服务器：`swag2mcp-mock`
 3. 启动 MCP 服务器：`swag2mcp mcp` — invoke 将使用 `base_mock_url` 而不是 `base_url`
+4. 认证自动应用：OAuth2/Digest 使用端口 9090/9091 的模拟服务器；其他类型直接应用凭据
 
-### 模拟认证凭据
+### 模拟认证
 
-当在规范中配置了 `auth` 时，模拟服务器会在随机端口上启动一个认证模拟。
-每种认证类型接受以下凭据：
+当在规范中配置了 `auth` 时，MCP 服务器会自动应用认证。
+只有两种认证类型需要专用的模拟服务器：
 
-| 认证类型 | 端点 | 接受 | 示例请求 |
-|----------|------|------|----------|
-| `basic` | `GET /` | 任何 Base64 编码的 `user:password` | `Authorization: Basic YWRtaW46cGFzcw==` |
-| `bearer` | `GET /` | 任何非空令牌 | `Authorization: Bearer any-token` |
-| `digest` | `GET /` | 任何 Digest 响应 | `Authorization: Digest username="test", realm="...", nonce="...", uri="/", response="..."` |
-| `oauth2-cc` | `POST /token` | 任何 `client_id` + `client_secret` | `grant_type=client_credentials&client_id=any&client_secret=any` |
-| `oauth2-pwd` | `POST /token` | 任何 `username` + `password` | `grant_type=password&username=any&password=any` |
-| `api-key` | `GET /` | 任何 `X-Api-Key` 标头或 `api_key` 查询 | `X-Api-Key: any-key` |
-| `script` | `GET /token` | 无需凭据 | `GET /token` |
+| 认证类型 | 模拟端点 | 行为 |
+|----------|----------|------|
+| `oauth2-cc` / `oauth2-pwd` | `POST /token` 在端口 9090 | 接受任何 `client_id`/`username`+`password`，返回 `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}` |
+| `digest` | `GET /` 在端口 9091 | 发送 401 挑战（`algorithm=MD5`），接受任何 Digest 响应，返回 `{"status":"authenticated","method":"digest"}` |
 
-所有认证模拟返回 `{"status":"authenticated","method":"<type>"}`。
-OAuth2 模拟返回 `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}`。
+其他类型（`basic`、`bearer`、`api-key`、`script`）**不需要**模拟服务器 —
+MCP 服务器会自动将配置的凭据应用于每个请求。
 
 ---
 

@@ -254,24 +254,20 @@ swag2mcp-mock --tls
 1. Добавить `mock_enabled: true` и `base_mock_url` в конфиг
 2. Запустить мок-сервер: `swag2mcp-mock`
 3. Запустить MCP сервер: `swag2mcp mcp` — invoke будет использовать `base_mock_url`
+4. Аутентификация применяется автоматически: OAuth2/Digest используют мок-серверы на портах 9090/9091; остальные типы применяют credentials напрямую
 
-### Mock Credentials для аутентификации
+### Mock аутентификация
 
-Когда в конфиге указан `auth`, мок-сервер авторизации запускается на случайном
-порту. Каждый тип аутентификации принимает следующие credentials:
+Когда в конфиге указан `auth`, MCP сервер применяет аутентификацию автоматически.
+Только два типа аутентификации требуют отдельного мок-сервера:
 
-| Тип | Endpoint | Принимает | Пример запроса |
-|-----|----------|-----------|----------------|
-| `basic` | `GET /` | Любые `user:password` в Base64 | `Authorization: Basic YWRtaW46cGFzcw==` |
-| `bearer` | `GET /` | Любой non-empty токен | `Authorization: Bearer any-token` |
-| `digest` | `GET /` | Любой Digest response | `Authorization: Digest username="test", realm="...", nonce="...", uri="/", response="..."` |
-| `oauth2-cc` | `POST /token` | Любые `client_id` + `client_secret` | `grant_type=client_credentials&client_id=any&client_secret=any` |
-| `oauth2-pwd` | `POST /token` | Любые `username` + `password` | `grant_type=password&username=any&password=any` |
-| `api-key` | `GET /` | Любой `X-Api-Key` header или `api_key` query | `X-Api-Key: any-key` |
-| `script` | `GET /token` | Не требует credentials | `GET /token` |
+| Тип | Мок-эндпоинт | Поведение |
+|-----|-------------|-----------|
+| `oauth2-cc` / `oauth2-pwd` | `POST /token` на порту 9090 | Принимает любые `client_id`/`username`+`password`, возвращает `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}` |
+| `digest` | `GET /` на порту 9091 | Отправляет 401 challenge с `algorithm=MD5`, принимает любой Digest response, возвращает `{"status":"authenticated","method":"digest"}` |
 
-Все мок-серверы авторизации возвращают `{"status":"authenticated","method":"<type>"}`.
-OAuth2 моки возвращают `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}`.
+Остальные типы (`basic`, `bearer`, `api-key`, `script`) **не требуют** мок-сервера —
+MCP сервер сам применяет настроенные credentials к каждому запросу.
 
 ---
 

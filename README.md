@@ -9,6 +9,10 @@
 
 > ⚠️ **Work in progress** — API may change, contributions welcome.
 
+<a href="https://www.youtube.com/watch?v=9CcvwmfTkds">
+  <img src="https://i3.ytimg.com/vi/9CcvwmfTkds/maxresdefault.jpg" width="600" alt="Preview">
+</a>
+
 **swag2mcp** bridges OpenAPI/Swagger/Postman API specifications with LLM agents via the Model Context Protocol (MCP).
 
 - **For LLM agents**: 14 MCP tools for discovering, inspecting, and invoking APIs

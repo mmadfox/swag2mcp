@@ -27,6 +27,8 @@ type DigestAuthClient struct {
 	Username string `yaml:"username" validate:"required"`
 	Password string `yaml:"password" validate:"required"`
 
+	MockBaseURL string `yaml:"-"`
+
 	mu         sync.Mutex
 	realm      string
 	nonce      string
@@ -102,8 +104,17 @@ func (c *DigestAuthClient) Apply(req *http.Request, out *Info) error {
 	return nil
 }
 
+func (c *DigestAuthClient) SetMockBaseURL(url string) {
+	c.MockBaseURL = url
+}
+
 func (c *DigestAuthClient) fetchChallenge(req *http.Request) (digestChallenge, error) {
-	fakeReq, reqErr := http.NewRequestWithContext(context.Background(), req.Method, req.URL.String(), nil)
+	challengeURL := req.URL.String()
+	if c.MockBaseURL != "" {
+		challengeURL = c.MockBaseURL
+	}
+
+	fakeReq, reqErr := http.NewRequestWithContext(context.Background(), req.Method, challengeURL, nil)
 	if reqErr != nil {
 		return digestChallenge{}, fmt.Errorf("create challenge request: %w", reqErr)
 	}

@@ -46,6 +46,12 @@ type GlobalHTTPClientConfig struct {
 	MaxResponseSize *int              `yaml:"max_response_size,omitempty"`
 }
 
+// MockAuthConfig holds port configuration for mock auth servers.
+type MockAuthConfig struct {
+	OAuth2Port int `yaml:"oauth2_port,omitempty" validate:"omitempty,min=1024,max=65535"`
+	DigestPort int `yaml:"digest_port,omitempty" validate:"omitempty,min=1024,max=65535"`
+}
+
 // Config is the top-level swag2mcp configuration.
 //
 // Validation rules:
@@ -53,6 +59,7 @@ type GlobalHTTPClientConfig struct {
 //   - MockEnabled: when true, all specs and collections must have BaseMockURL set.
 type Config struct {
 	MockEnabled bool                    `yaml:"mock_enabled,omitempty"`
+	MockAuth    *MockAuthConfig         `yaml:"mock_auth,omitempty"`
 	HTTPClient  *GlobalHTTPClientConfig `yaml:"http_client,omitempty"`
 	MCP         *MCPConfig              `yaml:"mcp,omitempty"`
 	Specs       []Spec                  `yaml:"specs"`
