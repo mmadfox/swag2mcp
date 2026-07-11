@@ -1,0 +1,11 @@
+specs:
+  - domain: petstore
+    llm_title: Petstore API
+    collections:
+      - title: Pets
+        location: ./tests/testdata/petstore.yaml
+  - domain: petstore
+    llm_title: Duplicate Petstore
+    collections:
+      - title: Store
+        location: ./tests/testdata/petstore.yaml

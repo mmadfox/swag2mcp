@@ -1,0 +1,23 @@
+specs:
+  - domain: petstore
+    llm_title: Petstore API
+    llm_instruction: API for managing pets and orders
+    tags: ["public"]
+    base_url: http://localhost:9099
+    collections:
+      - title: Pets
+        location: ./tests/testdata/petstore.yaml
+      - title: Store
+        location: ./tests/testdata/petstore.yaml
+  - domain: admin-api
+    llm_title: Admin API
+    llm_instruction: Internal admin endpoints
+    tags: ["internal"]
+    base_url: http://localhost:9098
+    auth:
+      type: bearer
+      config:
+        token: test-admin-token
+    collections:
+      - title: Users
+        location: ./tests/testdata/petstore.yaml

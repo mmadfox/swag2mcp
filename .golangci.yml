@@ -608,3 +608,6 @@ linters:
       # revive unused cmd parameter in RunE
       - path: 'internal/commands/'
         linters: [ revive ]
+      # Integration tests in tests/ directory
+      - path: 'tests/'
+        linters: [ gochecknoglobals, errorlint, gocritic, govet, goimports, golines, modernize, ineffassign, nonamedreturns, revive, staticcheck, unparam, unused, usestdlibvars, usetesting ]
