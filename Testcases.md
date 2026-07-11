@@ -442,3 +442,7 @@
 - [ ] MCP server restart with `--tags` — only filtered specs available
 - [ ] Concurrent `invoke` requests to different endpoints — both succeed
 - [ ] Concurrent `invoke` requests to same endpoint — rate limit applies per endpoint
+
+---
+
+ALL DONE []
