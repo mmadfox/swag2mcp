@@ -34,8 +34,9 @@ func New(root string) (*Workspace, error) {
 	return &Workspace{root: root}, nil
 }
 
-// NewFromBase creates a Workspace rooted at base/.swag2mcp.
+// NewFromBase creates a Workspace rooted at the given base directory.
 // If base is empty, it defaults to ~/.swag2mcp.
+// If base is provided, it is used as the workspace root directly.
 func NewFromBase(base string) (*Workspace, error) {
 	if base == "" {
 		return New("")
@@ -44,7 +45,7 @@ func NewFromBase(base string) (*Workspace, error) {
 	if err != nil {
 		return nil, fmt.Errorf("resolve path: %w", err)
 	}
-	return New(filepath.Join(abs, DefaultRootName))
+	return &Workspace{root: abs}, nil
 }
 
 // Init creates the workspace root and all standard subdirectories.

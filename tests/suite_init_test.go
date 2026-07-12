@@ -12,10 +12,10 @@ func TestScript_Init_CreatesWorkspace(t *testing.T) {
 	assertEqual(t, "exit code", code, 0)
 	assertContains(t, "stderr", stderr, "initialized")
 
-	wsDir := filepath.Join(ws, ".swag2mcp")
+	root := wsDir(ws)
 	dirs := []string{"cache", "specs", "responses", "auth_scripts"}
 	for _, d := range dirs {
-		info, err := os.Stat(filepath.Join(wsDir, d))
+		info, err := os.Stat(filepath.Join(root, d))
 		if err != nil {
 			t.Errorf("missing directory %s: %v", d, err)
 			continue
@@ -25,7 +25,7 @@ func TestScript_Init_CreatesWorkspace(t *testing.T) {
 		}
 	}
 
-	configPath := filepath.Join(wsDir, "swag2mcp.yaml")
+	configPath := filepath.Join(root, "swag2mcp.yaml")
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		t.Errorf("missing swag2mcp.yaml")
 	}
@@ -54,7 +54,7 @@ func TestScript_Init_CustomPath(t *testing.T) {
 	assertEqual(t, "exit code", code, 0)
 	assertContains(t, "stdout", stdout+stderr, "initialized")
 
-	configPath := filepath.Join(customPath, ".swag2mcp", "swag2mcp.yaml")
+	configPath := filepath.Join(customPath, "swag2mcp.yaml")
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		t.Errorf("config not created at custom path: %s", configPath)
 	}

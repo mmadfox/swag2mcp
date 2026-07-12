@@ -60,9 +60,8 @@ func TestNewFromBase_Custom(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewFromBase() = %v", err)
 	}
-	want := filepath.Join(tmpDir, DefaultRootName)
-	if ws.Root() != want {
-		t.Errorf("Root() = %q, want %q", ws.Root(), want)
+	if ws.Root() != tmpDir {
+		t.Errorf("Root() = %q, want %q", ws.Root(), tmpDir)
 	}
 }
 

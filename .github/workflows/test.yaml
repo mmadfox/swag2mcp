@@ -11,8 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: Test & Lint
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,10 +25,35 @@ jobs:
       - name: Lint
         uses: golangci/golangci-lint-action@v7
 
-      - name: Test
-        run: go test ./... -coverprofile=coverage.out -covermode=atomic
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+
+      - name: Unit Tests
+        run: go test -count=1 $(go list ./... | grep -v /tests/) -coverprofile=coverage.out -covermode=atomic
 
       - name: Coveralls
         uses: coverallsapp/github-action@v2
         with:
           file: coverage.out
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+
+      - name: Integration Tests
+        run: make integration-tests

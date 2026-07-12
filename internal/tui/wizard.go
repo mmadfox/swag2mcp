@@ -22,7 +22,6 @@ type state int
 
 const (
 	stateWorkspaceDir state = iota
-	stateConfigPath
 	stateAskAddSpec
 	stateSpecDomain
 	stateSpecTitle
@@ -126,6 +125,7 @@ type hint struct {
 // model is the Bubbletea model for the initialization wizard.
 type model struct {
 	state          state
+	prevStates     []state
 	configPath     string
 	workspaceDir   string
 	specs          []SpecInput
@@ -186,6 +186,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.state = stateAskAddAnotherSpec
 				return m, nil
 			}
+
+		case "b", "B":
+			if m.state == stateAskAddSpec || m.state == stateAskAddCollection || m.state == stateAskAddAnotherSpec || m.state == stateConfirm {
+				if len(m.prevStates) > 0 {
+					last := m.prevStates[len(m.prevStates)-1]
+					m.prevStates = m.prevStates[:len(m.prevStates)-1]
+					m.state = last
+					m.input.Focus()
+					return m, textinput.Blink
+				}
+			}
 		}
 	}
 
@@ -196,6 +207,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // transitionTo sets the state and refocuses the text input.
 func (m model) transitionTo(s state) (tea.Model, tea.Cmd) {
+	m.prevStates = append(m.prevStates, m.state)
 	m.state = s
 	m.input.Focus()
 	return m, textinput.Blink
@@ -211,18 +223,7 @@ func (m model) handleEnter() (tea.Model, tea.Cmd) {
 			val = workspace.DefaultRoot()
 		}
 		m.workspaceDir = val
-		m.input.SetValue("")
-		m.input.Placeholder = workspace.DefaultConfigPath()
-		return m.transitionTo(stateConfigPath)
-
-	case stateConfigPath:
-		if val == "" {
-			val = workspace.DefaultConfigPath()
-		}
-		if info, statErr := os.Stat(val); statErr == nil && info.IsDir() {
-			val = filepath.Join(val, "swag2mcp.yaml")
-		}
-		m.configPath = val
+		m.configPath = filepath.Join(val, "swag2mcp.yaml")
 		m.input.SetValue("")
 		return m.transitionTo(stateAskAddSpec)
 
@@ -407,12 +408,6 @@ func (m model) currentHint() hint {
 			description: "Where should the workspace directory be created?\n  This will store cached specs, local spec files, and API responses.",
 			placeholder: workspace.DefaultRoot(),
 		}
-	case stateConfigPath:
-		return hint{
-			title:       "Config file path",
-			description: "Where should the swag2mcp.yaml configuration file be created?",
-			placeholder: workspace.DefaultConfigPath(),
-		}
 	case stateSpecDomain:
 		return hint{
 			title:       fmt.Sprintf("Spec #%d — Domain", len(m.specs)+1),
@@ -512,7 +507,7 @@ func (m model) View() string {
 	s += "  ╰──────────────────────────────────────────────╯\n\n"
 
 	switch m.state {
-	case stateConfigPath, stateWorkspaceDir, stateSpecDomain, stateSpecTitle, stateSpecInstruction, stateSpecBaseURL, stateSpecTags, stateAuthType, stateAuthField, stateCollTitle, stateCollLocation:
+	case stateWorkspaceDir, stateSpecDomain, stateSpecTitle, stateSpecInstruction, stateSpecBaseURL, stateSpecTags, stateAuthType, stateAuthField, stateCollTitle, stateCollLocation:
 		h := m.currentHint()
 		s += fmt.Sprintf("  %s\n", h.title)
 		s += "  " + headerLine(h.title) + "\n\n"
@@ -523,26 +518,26 @@ func (m model) View() string {
 		s += "  ────\n\n"
 		s += "  [" + h.placeholder + "]\n"
 		s += "  " + m.input.View() + "\n\n"
-		s += "  Press Enter to confirm. Leave empty for default.\n"
+		s += "  Press Enter to confirm. Leave empty for default.  [B]ack\n"
 
 	case stateAskAddSpec:
 		s += "  Add an API specification?\n"
 		s += "  ─────────────────────────\n\n"
 		s += "  An API specification describes a set of related endpoints.\n"
 		s += "  You can add one or more specifications (e.g. petstore, github-api).\n\n"
-		s += "  Type y (yes) or n (no), then press Enter.\n"
+		s += "  Type y (yes) or n (no), then press Enter.  [B]ack\n"
 
 	case stateAskAddCollection:
 		s += fmt.Sprintf("  Spec #%d (%s) — Add a collection?\n", len(m.specs)+1, m.curSpec.Domain)
 		s += "  ───────────────────────────────\n\n"
 		s += "  A collection points to a single Swagger/OpenAPI spec file.\n"
 		s += "  Each specification can have multiple collections.\n\n"
-		s += "  Type y (yes) or n (no), then press Enter.\n"
+		s += "  Type y (yes) or n (no), then press Enter.  [B]ack\n"
 
 	case stateAskAddAnotherSpec:
 		s += "  Add another API specification?\n"
 		s += "  ───────────────────────────────\n\n"
-		s += "  Type y (yes) or n (no), then press Enter.\n"
+		s += "  Type y (yes) or n (no), then press Enter.  [B]ack\n"
 
 	case stateConfirm:
 		s += "  Review your configuration:\n"
@@ -566,7 +561,7 @@ func (m model) View() string {
 			s += "\n"
 		}
 		s += "  Write configuration and initialize workspace?\n"
-		s += "  Type y (yes) or n (no), then press Enter.\n"
+		s += "  Type y (yes) or n (no), then press Enter.  [B]ack\n"
 
 	case stateDone:
 		if m.err != nil {
@@ -574,7 +569,7 @@ func (m model) View() string {
 		} else {
 			s += fmt.Sprintf("  ✅ Configuration written to: %s\n", m.configPath)
 			s += fmt.Sprintf("  ✅ Workspace initialized at: %s\n", m.workspaceDir)
-			s += "  Run `swag2mcp mcp` to start the server.\n\n"
+			s += "  Run `swag2mcp mcp" + m.mcpPathHint() + "` to start the server.\n\n"
 		}
 	}
 
@@ -585,6 +580,16 @@ func (m model) View() string {
 func headerLine(title string) string {
 	n := utf8.RuneCountInString(title)
 	return strings.Repeat("─", n)
+}
+
+// mcpPathHint returns the path argument for the mcp command if the workspace
+// is not the default one.
+func (m model) mcpPathHint() string {
+	def := workspace.DefaultRoot()
+	if m.workspaceDir == def {
+		return ""
+	}
+	return " " + m.workspaceDir
 }
 
 // RunTUI starts the interactive initialization wizard.

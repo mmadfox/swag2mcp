@@ -9,8 +9,51 @@ permissions:
   contents: write
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v7
+
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+
+      - name: Unit Tests
+        run: go test -count=1 $(go list ./... | grep -v /tests/) -coverprofile=coverage.out -covermode=atomic
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+
+      - name: Integration Tests
+        run: make integration-tests
+
   release:
     name: Release
+    needs: [lint, unit, integration]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,12 +64,6 @@ jobs:
         with:
           go-version: stable
           cache: true
-
-      - name: Lint
-        uses: golangci/golangci-lint-action@v7
-
-      - name: Test
-        run: go test ./... -coverprofile=coverage.out -covermode=atomic
 
       - name: Release
         uses: goreleaser/goreleaser-action@v6

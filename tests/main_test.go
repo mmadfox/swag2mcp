@@ -26,6 +26,13 @@ var (
 	projectRoot string
 )
 
+// wsDir returns the workspace root directory for a test workspace.
+// After init, the config is at wsDir/swag2mcp.yaml and subdirs are
+// wsDir/cache, wsDir/specs, wsDir/responses, wsDir/auth_scripts.
+func wsDir(ws string) string {
+	return ws
+}
+
 func TestMain(m *testing.M) {
 	_, filename, _, _ := runtime.Caller(0)
 	projectRoot = filepath.Dir(filepath.Dir(filename))
@@ -206,10 +213,6 @@ func newTestWorkspace(t *testing.T) string {
 
 func writeConfig(t *testing.T, ws, content string) string {
 	t.Helper()
-	wsDir := filepath.Join(ws, ".swag2mcp")
-	if err := os.MkdirAll(wsDir, 0755); err != nil {
-		t.Fatalf("failed to create .swag2mcp dir: %v", err)
-	}
 
 	// Copy testdata files into workspace root so relative paths work
 	// when CWD is set to ws
@@ -226,7 +229,7 @@ func writeConfig(t *testing.T, ws, content string) string {
 		t.Fatalf("failed to copy internal testdata: %v", err)
 	}
 
-	path := filepath.Join(wsDir, "swag2mcp.yaml")
+	path := filepath.Join(ws, "swag2mcp.yaml")
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 		t.Fatalf("failed to write config: %v", err)
 	}

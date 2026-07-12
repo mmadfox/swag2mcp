@@ -32,33 +32,51 @@ specs:
     {{- end}}
 {{- end}}
 
-#  - domain: train-booking
-#    disable: true
-#    base_url: https://api.trains-railway.com
-#
-#    llm_title: Railway Ticket Booking System API
+# Example
+# mock_enabled: false 
+# http_client:
+#  random: true
+#  proxy:
+#    url: socks5h://127.0.0.1:1080
+#    username: $(PROXY_USER)
+#    password: $(PROXY_PASS)
+#    bypass:
+#      - "*.local"
+#      - "10.0.0.0/8"
+#      - "172.16.0.0/12"
+#      - "192.168.0.0/16"
+#  headers:
+#    Accept: application/json
+#  user_agent: swag2mcp-global/1.0
+#  timeout: 30s
+#  follow_redirects: true
+#  max_redirects: 10
+#  max_response_size: 2048
+
+#specs:
+  # ─── Spec 1: Production API with Bearer auth ──────────────────────────
+#  - domain: payments-api
+#    disable: false
+#    base_url: https://api.payments.example.com
+#    llm_title: Payment Processing API
 #    llm_instruction: |
-#      This API provides comprehensive functionality for booking train tickets,
-#      managing reservations, and viewing train schedules across the national railway network.
-#      Use this for passenger travel planning and ticket purchase operations.
-#
-#    auth:
-#      type: oauth2
-#      config:
-#        password: $(SOME_ENV)
-#        username: $(SOME_ENV)
-#
-#    collections:
-#      - llm_title: Train Schedules and Availability
-#        location: /some/path/to/spec/train-schedules.json
-#        disable: true
-#      - llm_title: Booking and Reservations
-#        location: /some/path/to/spec/train-bookings.json
-#      - llm_title: Passenger Services
-#        location: https://some.api.com/some/path/train-passengers.yaml
-#
+#      Handles payment processing, refunds, and transaction history.
+#      All endpoints require a valid bearer token obtained from the auth service.
 #    tags:
-#      - trains
-#      - transportation
-#      - booking
-#      - public-transport
+#      - production
+#      - payments
+#    http_client:
+#      headers:
+#        X-Request-ID: req-001
+#        X-Idempotency-Key: idem-001
+#    auth:
+#      type: bearer
+#      config:
+#        token: $(PAYMENTS_API_TOKEN)
+#    collections:
+#      - llm_title: Transactions
+#        location: https://api.payments.example.com/openapi/transactions.json
+#        base_mock_url: localhost:8080
+#      - llm_title: Refunds
+#        location: https://api.payments.example.com/openapi/refunds.json
+#        disable: true

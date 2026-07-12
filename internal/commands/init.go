@@ -25,8 +25,8 @@ func newInitCmd() *cobra.Command {
 		Long: `Initialize workspace and configuration.
 
   swag2mcp init              — create ~/.swag2mcp/swag2mcp.yaml
-  swag2mcp init ./           — create ./.swag2mcp/swag2mcp.yaml
-  swag2mcp init path/to      — create path/to/.swag2mcp/swag2mcp.yaml
+  swag2mcp init ./           — create ./swag2mcp.yaml
+  swag2mcp init path/to      — create path/to/swag2mcp.yaml
   swag2mcp init -i           — interactive wizard
   swag2mcp init -f           — force overwrite existing configuration`,
 		Args: cobra.MaximumNArgs(1),
@@ -34,6 +34,22 @@ func newInitCmd() *cobra.Command {
 			basePath := ""
 			if len(args) > 0 {
 				basePath = args[0]
+			}
+
+			if opts.Interactive {
+				cfgPath, wsDir, _, err := tui.RunTUI()
+				if err != nil {
+					return fmt.Errorf("init wizard: %w", err)
+				}
+
+				ws, wsErr := workspace.New(wsDir)
+				if wsErr == nil {
+					if cfg, loadErr := config.Load(cfgPath); loadErr == nil {
+						ensureAuthScripts(cfg, ws)
+					}
+				}
+
+				return nil
 			}
 
 			var workspaceDir string
@@ -51,33 +67,8 @@ func newInitCmd() *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("resolve path: %w", err)
 				}
-				workspaceDir = filepath.Join(absBase, workspace.DefaultRootName)
-				configPath = workspace.ConfigPathIn(workspaceDir)
-			}
-
-			if opts.Interactive {
-				if !opts.Force {
-					if _, err := os.Stat(configPath); err == nil {
-						return fmt.Errorf("configuration already exists at %s\n  Use --force to overwrite", configPath)
-					}
-				}
-
-				cfgPath, wsDir, _, err := tui.RunTUI()
-				if err != nil {
-					return fmt.Errorf("init wizard: %w", err)
-				}
-
-				ws, wsErr := workspace.New(wsDir)
-				if wsErr == nil {
-					if cfg, loadErr := config.Load(cfgPath); loadErr == nil {
-						ensureAuthScripts(cfg, ws)
-					}
-				}
-
-				cmd.Printf("\n✅ Configuration written to: %s\n", cfgPath)
-				cmd.Printf("✅ Workspace initialized at: %s\n", wsDir)
-				cmd.Println("Run `swag2mcp mcp` to start the server.")
-				return nil
+				workspaceDir = absBase
+				configPath = filepath.Join(absBase, "swag2mcp.yaml")
 			}
 
 			if !opts.Force {

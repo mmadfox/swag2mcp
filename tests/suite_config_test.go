@@ -305,12 +305,13 @@ func TestScript_Update_InvalidConfig(t *testing.T) {
 func TestScript_Clean_RemovesCache(t *testing.T) {
 	ws := newTestWorkspace(t)
 
-	cacheDir := filepath.Join(ws, ".swag2mcp", "cache")
+	root := wsDir(ws)
+	cacheDir := filepath.Join(root, "cache")
 	_ = os.MkdirAll(cacheDir, 0755)
 	dummyFile := filepath.Join(cacheDir, "test.cache")
 	_ = os.WriteFile(dummyFile, []byte("data"), 0644)
 
-	responsesDir := filepath.Join(ws, ".swag2mcp", "responses")
+	responsesDir := filepath.Join(root, "responses")
 	_ = os.MkdirAll(responsesDir, 0755)
 	dummyResp := filepath.Join(responsesDir, "test.json")
 	_ = os.WriteFile(dummyResp, []byte("{}"), 0644)
@@ -330,7 +331,8 @@ func TestScript_Clean_RemovesCache(t *testing.T) {
 func TestScript_Clean_PreservesSpecs(t *testing.T) {
 	ws := newTestWorkspace(t)
 
-	specsDir := filepath.Join(ws, ".swag2mcp", "specs")
+	root := wsDir(ws)
+	specsDir := filepath.Join(root, "specs")
 	_ = os.MkdirAll(specsDir, 0755)
 	specFile := filepath.Join(specsDir, "test.yaml")
 	_ = os.WriteFile(specFile, []byte("spec: test"), 0644)

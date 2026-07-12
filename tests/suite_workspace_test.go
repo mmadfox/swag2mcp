@@ -12,9 +12,9 @@ func TestScript_Workspace_DirectoryStructure(t *testing.T) {
 	initWorkspace(t, ws)
 
 	expectedDirs := []string{"cache", "specs", "responses", "auth_scripts"}
-	wsDir := filepath.Join(ws, ".swag2mcp")
+	root := wsDir(ws)
 	for _, d := range expectedDirs {
-		info, err := os.Stat(filepath.Join(wsDir, d))
+		info, err := os.Stat(filepath.Join(root, d))
 		if err != nil {
 			t.Errorf("missing directory %s: %v", d, err)
 			continue
@@ -24,7 +24,7 @@ func TestScript_Workspace_DirectoryStructure(t *testing.T) {
 		}
 	}
 
-	configPath := filepath.Join(wsDir, "swag2mcp.yaml")
+	configPath := filepath.Join(root, "swag2mcp.yaml")
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		t.Errorf("missing swag2mcp.yaml")
 	}
@@ -34,14 +34,14 @@ func TestScript_Workspace_CleanRemovesCacheAndResponses(t *testing.T) {
 	ws := newTestWorkspace(t)
 	initWorkspace(t, ws)
 
-	wsDir := filepath.Join(ws, ".swag2mcp")
-	cacheFile := filepath.Join(wsDir, "cache", "test.cache")
+	root := wsDir(ws)
+	cacheFile := filepath.Join(root, "cache", "test.cache")
 	_ = os.MkdirAll(filepath.Dir(cacheFile), 0755)
 	_ = os.WriteFile(cacheFile, []byte("data"), 0644)
-	respFile := filepath.Join(wsDir, "responses", "test.json")
+	respFile := filepath.Join(root, "responses", "test.json")
 	_ = os.MkdirAll(filepath.Dir(respFile), 0755)
 	_ = os.WriteFile(respFile, []byte("{}"), 0644)
-	specFile := filepath.Join(wsDir, "specs", "test.yaml")
+	specFile := filepath.Join(root, "specs", "test.yaml")
 	_ = os.MkdirAll(filepath.Dir(specFile), 0755)
 	_ = os.WriteFile(specFile, []byte("spec: test"), 0644)
 
@@ -102,8 +102,8 @@ func TestScript_Workspace_OldResponsesCleaned(t *testing.T) {
 	ws := newTestWorkspace(t)
 	initWorkspace(t, ws)
 
-	wsDir := filepath.Join(ws, ".swag2mcp")
-	oldResp := filepath.Join(wsDir, "responses", "old.json")
+	root := wsDir(ws)
+	oldResp := filepath.Join(root, "responses", "old.json")
 	_ = os.MkdirAll(filepath.Dir(oldResp), 0755)
 	_ = os.WriteFile(oldResp, []byte("old"), 0644)
 
@@ -131,8 +131,8 @@ func TestScript_Workspace_RecentResponsesPreserved(t *testing.T) {
 	ws := newTestWorkspace(t)
 	initWorkspace(t, ws)
 
-	wsDir := filepath.Join(ws, ".swag2mcp")
-	recentResp := filepath.Join(wsDir, "responses", "recent.json")
+	root := wsDir(ws)
+	recentResp := filepath.Join(root, "responses", "recent.json")
 	_ = os.MkdirAll(filepath.Dir(recentResp), 0755)
 	_ = os.WriteFile(recentResp, []byte("recent"), 0644)
 
