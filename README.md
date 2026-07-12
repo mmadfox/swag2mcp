@@ -13,7 +13,7 @@
   <img src="assets/cover.png" width="600" alt="Preview">
 </a>
 
-<video src='assets/swag2mcp.mp4' controls>
+<video src='assets/swag2mcp.mp4' controls></video>
 
 **swag2mcp** bridges OpenAPI/Swagger/Postman API specifications with LLM agents via the Model Context Protocol (MCP).
 
