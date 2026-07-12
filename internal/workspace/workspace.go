@@ -94,6 +94,26 @@ func (w *Workspace) ConfigPath() string {
 	return ConfigPathIn(w.root)
 }
 
+// IsEmpty checks whether the workspace directory is empty or does not exist.
+// Returns true if the directory does not exist, exists but is empty,
+// or contains only swag2mcp.yaml (from a previous init).
+func (w *Workspace) IsEmpty() (bool, error) {
+	entries, err := os.ReadDir(w.root)
+	if os.IsNotExist(err) {
+		return true, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("read directory %q: %w", w.root, err)
+	}
+	for _, entry := range entries {
+		if entry.Name() == "swag2mcp.yaml" {
+			continue
+		}
+		return false, nil
+	}
+	return true, nil
+}
+
 // ConfigExists checks whether the config file exists in this workspace.
 func (w *Workspace) ConfigExists() bool {
 	_, err := os.Stat(w.ConfigPath())

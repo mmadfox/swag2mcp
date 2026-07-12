@@ -725,3 +725,79 @@ func TestClean_RemoveAllError(t *testing.T) {
 		t.Error("Clean() expected error, got nil")
 	}
 }
+
+func TestIsEmpty_NotExists(t *testing.T) {
+	ws, _ := New("/nonexistent/path/that/does/not/exist")
+	empty, err := ws.IsEmpty()
+	if err != nil {
+		t.Fatalf("IsEmpty() = %v", err)
+	}
+	if !empty {
+		t.Error("IsEmpty() = false, want true for nonexistent dir")
+	}
+}
+
+func TestIsEmpty_EmptyDir(t *testing.T) {
+	tmpDir := t.TempDir()
+	ws, _ := New(tmpDir)
+	empty, err := ws.IsEmpty()
+	if err != nil {
+		t.Fatalf("IsEmpty() = %v", err)
+	}
+	if !empty {
+		t.Error("IsEmpty() = false, want true for empty dir")
+	}
+}
+
+func TestIsEmpty_WithFiles(t *testing.T) {
+	tmpDir := t.TempDir()
+	_ = os.WriteFile(filepath.Join(tmpDir, "test.txt"), []byte("data"), 0644)
+	ws, _ := New(tmpDir)
+	empty, err := ws.IsEmpty()
+	if err != nil {
+		t.Fatalf("IsEmpty() = %v", err)
+	}
+	if empty {
+		t.Error("IsEmpty() = true, want false for dir with files")
+	}
+}
+
+func TestIsEmpty_WithSubdir(t *testing.T) {
+	tmpDir := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(tmpDir, "subdir"), 0755)
+	ws, _ := New(tmpDir)
+	empty, err := ws.IsEmpty()
+	if err != nil {
+		t.Fatalf("IsEmpty() = %v", err)
+	}
+	if empty {
+		t.Error("IsEmpty() = true, want false for dir with subdir")
+	}
+}
+
+func TestIsEmpty_OnlyConfig(t *testing.T) {
+	tmpDir := t.TempDir()
+	_ = os.WriteFile(filepath.Join(tmpDir, "swag2mcp.yaml"), []byte("specs: []"), 0644)
+	ws, _ := New(tmpDir)
+	empty, err := ws.IsEmpty()
+	if err != nil {
+		t.Fatalf("IsEmpty() = %v", err)
+	}
+	if !empty {
+		t.Error("IsEmpty() = false, want true when only swag2mcp.yaml exists")
+	}
+}
+
+func TestIsEmpty_ConfigAndOtherFiles(t *testing.T) {
+	tmpDir := t.TempDir()
+	_ = os.WriteFile(filepath.Join(tmpDir, "swag2mcp.yaml"), []byte("specs: []"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "other.txt"), []byte("data"), 0644)
+	ws, _ := New(tmpDir)
+	empty, err := ws.IsEmpty()
+	if err != nil {
+		t.Fatalf("IsEmpty() = %v", err)
+	}
+	if empty {
+		t.Error("IsEmpty() = true, want false when other files exist alongside config")
+	}
+}

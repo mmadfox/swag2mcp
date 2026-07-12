@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -72,8 +71,16 @@ func newInitCmd() *cobra.Command {
 			}
 
 			if !opts.Force {
-				if _, err := os.Stat(configPath); err == nil {
-					return fmt.Errorf("configuration already exists at %s\n  Use --force to overwrite", configPath)
+				ws, wsErr := workspace.New(workspaceDir)
+				if wsErr != nil {
+					return fmt.Errorf("workspace: %w", wsErr)
+				}
+				empty, emptyErr := ws.IsEmpty()
+				if emptyErr != nil {
+					return fmt.Errorf("check directory: %w", emptyErr)
+				}
+				if !empty {
+					return fmt.Errorf("directory %q is not empty\n  Use --force to initialize in a non-empty directory", workspaceDir)
 				}
 			}
 

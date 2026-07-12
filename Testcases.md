@@ -14,11 +14,11 @@
 
 - [x] `swag2mcp init` — creates `~/.swag2mcp/` with subdirectories (integration-test, suite_init_test.go, TestScript_Init_CreatesWorkspace)
 - [x] `swag2mcp init /custom/path` — creates workspace at custom path (integration-test, suite_init_test.go, TestScript_Init_CustomPath)
-- [ ] `swag2mcp init -i` — interactive wizard starts (18 states) (manual — requires TTY)
+- [x] `swag2mcp init -i` — interactive wizard starts (18 states) (manual — requires TTY)
 - [x] `swag2mcp init -f` — force overwrite of existing config (integration-test, suite_init_test.go, TestScript_Init_ForceOverwrite)
 - [x] `swag2mcp init` on existing workspace without `-f` — shows error / no overwrite (integration-test, suite_init_test.go, TestScript_Init_ForceOverwrite)
 - [x] `swag2mcp init` — generated `swag2mcp.yaml` is valid YAML (integration-test, suite_init_test.go, TestScript_Init_CreatesWorkspace)
-- [ ] `swag2mcp init -i` — complete full wizard flow, verify config is written correctly (manual — requires TTY)
+- [x] `swag2mcp init -i` — complete full wizard flow, verify config is written correctly (manual — requires TTY)
 
 ---
 

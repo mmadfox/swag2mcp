@@ -22,6 +22,7 @@ type state int
 
 const (
 	stateWorkspaceDir state = iota
+	stateDirNotEmpty
 	stateAskAddSpec
 	stateSpecDomain
 	stateSpecTitle
@@ -177,6 +178,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.state == stateConfirm {
 				return m.handleConfirm()
 			}
+			if m.state == stateDirNotEmpty {
+				return m.transitionTo(stateAskAddSpec)
+			}
 
 		case "n", "N":
 			if m.state == stateAskAddSpec || m.state == stateAskAddCollection || m.state == stateAskAddAnotherSpec {
@@ -186,9 +190,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.state = stateAskAddAnotherSpec
 				return m, nil
 			}
+			if m.state == stateDirNotEmpty {
+				return m, tea.Quit
+			}
 
 		case "b", "B":
-			if m.state == stateAskAddSpec || m.state == stateAskAddCollection || m.state == stateAskAddAnotherSpec || m.state == stateConfirm {
+			if m.state == stateAskAddSpec || m.state == stateAskAddCollection || m.state == stateAskAddAnotherSpec || m.state == stateConfirm || m.state == stateDirNotEmpty {
 				if len(m.prevStates) > 0 {
 					last := m.prevStates[len(m.prevStates)-1]
 					m.prevStates = m.prevStates[:len(m.prevStates)-1]
@@ -225,6 +232,20 @@ func (m model) handleEnter() (tea.Model, tea.Cmd) {
 		m.workspaceDir = val
 		m.configPath = filepath.Join(val, "swag2mcp.yaml")
 		m.input.SetValue("")
+
+		ws, wsErr := workspace.New(val)
+		if wsErr != nil {
+			m.err = wsErr
+			return m, tea.Quit
+		}
+		empty, emptyErr := ws.IsEmpty()
+		if emptyErr != nil {
+			m.err = emptyErr
+			return m, tea.Quit
+		}
+		if !empty {
+			return m.transitionTo(stateDirNotEmpty)
+		}
 		return m.transitionTo(stateAskAddSpec)
 
 	case stateSpecDomain:
@@ -538,6 +559,13 @@ func (m model) View() string {
 		s += "  Add another API specification?\n"
 		s += "  ───────────────────────────────\n\n"
 		s += "  Type y (yes) or n (no), then press Enter.  [B]ack\n"
+
+	case stateDirNotEmpty:
+		s += "  Directory is not empty\n"
+		s += "  ────────────────────────\n\n"
+		s += fmt.Sprintf("  The directory %q already contains files.\n", m.workspaceDir)
+		s += "  Initializing here may conflict with existing content.\n\n"
+		s += "  Continue anyway?  y (yes) or n (no), then press Enter.  [B]ack\n"
 
 	case stateConfirm:
 		s += "  Review your configuration:\n"

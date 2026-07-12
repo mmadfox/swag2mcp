@@ -37,7 +37,7 @@ func TestScript_Init_ForceOverwrite(t *testing.T) {
 
 	_, stderr, code := runCommand(t, "init", ws)
 	assertNotEqual(t, "exit code without -f", code, 0)
-	assertContains(t, "stderr", stderr, "already exists")
+	assertContains(t, "stderr", stderr, "not empty")
 
 	_, _, code = runCommand(t, "init", "-f", ws)
 	assertEqual(t, "exit code with -f", code, 0)
