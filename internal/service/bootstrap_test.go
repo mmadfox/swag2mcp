@@ -2,206 +2,450 @@ package service
 
 import (
 	"testing"
+	"time"
 
+	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/config"
-	"github.com/mmadfox/swag2mcp/internal/spec"
-	"github.com/mmadfox/swag2mcp/internal/types"
 )
 
-func TestResolveTagName_Empty(t *testing.T) {
+func TestBuildGlobalHTTPConfig_Nil(t *testing.T) {
 	t.Parallel()
 
-	name := resolveTagName(nil)
-	if name != "default" {
-		t.Errorf("got %q, want %q", name, "default")
+	cfg := buildGlobalHTTPConfig(nil)
+
+	if cfg.Randomize {
+		t.Error("Randomize = true, want false")
+	}
+	if cfg.Proxy != nil {
+		t.Error("Proxy != nil, want nil")
 	}
 }
 
-func TestResolveTagName_Single(t *testing.T) {
+func TestBuildGlobalHTTPConfig_Full(t *testing.T) {
 	t.Parallel()
 
-	name := resolveTagName([]string{"pets"})
-	if name != "pets" {
-		t.Errorf("got %q, want %q", name, "pets")
+	timeout := 30 * time.Second
+	follow := false
+	maxRedir := 5
+	maxSize := 4096
+
+	global := &config.GlobalHTTPClientConfig{
+		Randomize:       true,
+		UserAgent:       "test-agent",
+		Timeout:         timeout,
+		FollowRedirects: &follow,
+		MaxRedirects:    &maxRedir,
+		MaxResponseSize: &maxSize,
+		Headers:         map[string]string{"X-Custom": "value"},
+		Cookies: []config.Cookie{
+			{Name: "session", Value: "abc", Domain: ".example.com", Path: "/", Secure: true, HTTPOnly: true},
+		},
+		Proxy: &config.ProxyConfig{
+			URL:      "http://proxy:8080",
+			Username: "user",
+			Password: "pass",
+			Bypass:   []string{"localhost"},
+		},
+	}
+
+	cfg := buildGlobalHTTPConfig(global)
+
+	if !cfg.Randomize {
+		t.Error("Randomize = false, want true")
+	}
+	if cfg.UserAgent != "test-agent" {
+		t.Errorf("UserAgent = %q, want %q", cfg.UserAgent, "test-agent")
+	}
+	if cfg.Timeout != timeout {
+		t.Errorf("Timeout = %v, want %v", cfg.Timeout, timeout)
+	}
+	if cfg.FollowRedirects == nil || *cfg.FollowRedirects != false {
+		t.Error("FollowRedirects = nil or true, want false")
+	}
+	if cfg.MaxRedirects == nil || *cfg.MaxRedirects != 5 {
+		t.Error("MaxRedirects = nil or wrong, want 5")
+	}
+	if cfg.MaxResponseSize == nil || *cfg.MaxResponseSize != 4096 {
+		t.Error("MaxResponseSize = nil or wrong, want 4096")
+	}
+	if cfg.Headers["X-Custom"] != "value" {
+		t.Errorf("Headers[X-Custom] = %q, want %q", cfg.Headers["X-Custom"], "value")
+	}
+	if len(cfg.Cookies) != 1 || cfg.Cookies[0].Name != "session" {
+		t.Error("Cookies missing session")
+	}
+	if cfg.Proxy == nil || cfg.Proxy.URL != "http://proxy:8080" {
+		t.Error("Proxy missing or wrong URL")
+	}
+	if cfg.Proxy.Username != "user" {
+		t.Errorf("Proxy.Username = %q, want %q", cfg.Proxy.Username, "user")
+	}
+	if len(cfg.Proxy.Bypass) != 1 || cfg.Proxy.Bypass[0] != "localhost" {
+		t.Error("Proxy.Bypass missing localhost")
 	}
 }
 
-func TestResolveTagName_Multiple(t *testing.T) {
+func TestBuildGlobalHTTPConfig_NoHeaders(t *testing.T) {
 	t.Parallel()
 
-	name := resolveTagName([]string{"pets", "store"})
-	if name != "pets,store" {
-		t.Errorf("got %q, want %q", name, "pets,store")
+	global := &config.GlobalHTTPClientConfig{Randomize: true}
+
+	cfg := buildGlobalHTTPConfig(global)
+
+	if !cfg.Randomize {
+		t.Error("Randomize = false, want true")
+	}
+	if cfg.Headers != nil {
+		t.Error("Headers should be nil when not set")
+	}
+	if cfg.Cookies != nil {
+		t.Error("Cookies should be nil when not set")
+	}
+	if cfg.Proxy != nil {
+		t.Error("Proxy should be nil when not set")
 	}
 }
 
-func TestApplySpecMetadata_EmptyCollection(t *testing.T) {
+func TestBuildGlobalHTTPConfig_NoProxy(t *testing.T) {
 	t.Parallel()
 
-	coll := &types.Collection{}
-	doc := &spec.Doc{
-		Title:       "Pet Store API",
-		Description: "A sample pet store API",
+	global := &config.GlobalHTTPClientConfig{
+		Headers: map[string]string{"X-Test": "val"},
 	}
-	applySpecMetadata(coll, doc)
-	if coll.LLMTitle != "Pet Store API" {
-		t.Errorf("LLMTitle = %q, want %q", coll.LLMTitle, "Pet Store API")
+
+	cfg := buildGlobalHTTPConfig(global)
+
+	if cfg.Proxy != nil {
+		t.Error("Proxy should be nil")
 	}
-	if coll.LLMInstruction != "A sample pet store API" {
-		t.Errorf("LLMInstruction = %q, want %q", coll.LLMInstruction, "A sample pet store API")
-	}
-	if coll.Title != "Pet Store API" {
-		t.Errorf("Title = %q, want %q", coll.Title, "Pet Store API")
+	if cfg.Headers["X-Test"] != "val" {
+		t.Errorf("Headers[X-Test] = %q, want %q", cfg.Headers["X-Test"], "val")
 	}
 }
 
-func TestApplySpecMetadata_PreexistingValues(t *testing.T) {
+func TestBuildGlobalHTTPConfig_NoCookies(t *testing.T) {
 	t.Parallel()
 
-	coll := &types.Collection{
-		LLMTitle:       "Custom Title",
-		LLMInstruction: "Custom Instruction",
-	}
-	doc := &spec.Doc{
-		Title:       "Doc Title",
-		Description: "Doc Description",
-	}
-	applySpecMetadata(coll, doc)
-	if coll.LLMTitle != "Custom Title" {
-		t.Errorf("LLMTitle = %q, want %q", coll.LLMTitle, "Custom Title")
-	}
-	if coll.LLMInstruction != "Custom Instruction" {
-		t.Errorf("LLMInstruction = %q, want %q", coll.LLMInstruction, "Custom Instruction")
-	}
-	if coll.Title != "Doc Title" {
-		t.Errorf("Title = %q, want %q", coll.Title, "Doc Title")
+	global := &config.GlobalHTTPClientConfig{Cookies: []config.Cookie{}}
+
+	cfg := buildGlobalHTTPConfig(global)
+
+	if cfg.Cookies != nil {
+		t.Error("Cookies should be nil for empty slice")
 	}
 }
 
-func TestApplySpecMetadata_EmptyDoc(t *testing.T) {
+func TestBuildGlobalHTTPConfig_ProxyNoAuth(t *testing.T) {
 	t.Parallel()
 
-	coll := &types.Collection{}
-	doc := &spec.Doc{}
-	applySpecMetadata(coll, doc)
-	if coll.LLMTitle != "" {
-		t.Errorf("LLMTitle = %q, want empty", coll.LLMTitle)
+	global := &config.GlobalHTTPClientConfig{
+		Proxy: &config.ProxyConfig{
+			URL:    "http://proxy:8080",
+			Bypass: []string{"localhost", "127.0.0.1"},
+		},
 	}
-	if coll.LLMInstruction != "" {
-		t.Errorf("LLMInstruction = %q, want empty", coll.LLMInstruction)
+
+	cfg := buildGlobalHTTPConfig(global)
+
+	if cfg.Proxy == nil {
+		t.Fatal("Proxy is nil")
+	}
+	if cfg.Proxy.URL != "http://proxy:8080" {
+		t.Errorf("Proxy.URL = %q, want %q", cfg.Proxy.URL, "http://proxy:8080")
+	}
+	if cfg.Proxy.Username != "" {
+		t.Errorf("Proxy.Username = %q, want empty", cfg.Proxy.Username)
+	}
+	if len(cfg.Proxy.Bypass) != 2 {
+		t.Errorf("Proxy.Bypass length = %d, want 2", len(cfg.Proxy.Bypass))
 	}
 }
 
-func TestConvertCookies_Nil(t *testing.T) {
+func TestBuildGlobalHTTPConfig_ConvertCookies(t *testing.T) {
 	t.Parallel()
 
-	result := convertCookies(nil)
-	if result != nil {
-		t.Fatal("expected nil")
+	global := &config.GlobalHTTPClientConfig{
+		Cookies: []config.Cookie{
+			{Name: "c1", Value: "v1"},
+			{Name: "c2", Value: "v2", Domain: ".example.com", Path: "/", Secure: true, HTTPOnly: true},
+		},
+	}
+
+	cfg := buildGlobalHTTPConfig(global)
+
+	if len(cfg.Cookies) != 2 {
+		t.Fatalf("Cookies length = %d, want 2", len(cfg.Cookies))
+	}
+	if cfg.Cookies[0].Name != "c1" || cfg.Cookies[0].Value != "v1" {
+		t.Error("Cookies[0] wrong")
+	}
+	if cfg.Cookies[1].Name != "c2" || !cfg.Cookies[1].Secure || !cfg.Cookies[1].HTTPOnly {
+		t.Error("Cookies[1] wrong")
 	}
 }
 
-func TestConvertCookies_Empty(t *testing.T) {
+func TestBuildGlobalHTTPConfig_ZeroValues(t *testing.T) {
 	t.Parallel()
 
-	result := convertCookies([]config.Cookie{})
-	if result != nil {
-		t.Fatal("expected nil")
+	global := &config.GlobalHTTPClientConfig{}
+
+	cfg := buildGlobalHTTPConfig(global)
+
+	if cfg.Randomize {
+		t.Error("Randomize = true, want false")
+	}
+	if cfg.UserAgent != "" {
+		t.Errorf("UserAgent = %q, want empty", cfg.UserAgent)
+	}
+	if cfg.Timeout != 0 {
+		t.Errorf("Timeout = %v, want 0", cfg.Timeout)
+	}
+	if cfg.FollowRedirects != nil {
+		t.Error("FollowRedirects should be nil")
+	}
+	if cfg.MaxRedirects != nil {
+		t.Error("MaxRedirects should be nil")
+	}
+	if cfg.MaxResponseSize != nil {
+		t.Error("MaxResponseSize should be nil")
 	}
 }
 
-func TestConvertCookies_Populated(t *testing.T) {
+func TestBuildGlobalHTTPConfig_WithProxyPassword(t *testing.T) {
 	t.Parallel()
 
-	input := []config.Cookie{
-		{Name: "session", Value: "abc123", Domain: "example.com", Path: "/", Secure: true, HTTPOnly: true},
-		{Name: "theme", Value: "dark"},
+	global := &config.GlobalHTTPClientConfig{
+		Proxy: &config.ProxyConfig{
+			URL:      "http://proxy:8080",
+			Username: "user",
+			Password: "secret",
+		},
 	}
-	result := convertCookies(input)
-	if len(result) != 2 {
-		t.Fatalf("len = %d, want 2", len(result))
+
+	cfg := buildGlobalHTTPConfig(global)
+
+	if cfg.Proxy == nil {
+		t.Fatal("Proxy is nil")
 	}
-	if result[0].Name != "session" || result[0].Value != "abc123" {
-		t.Errorf("cookie[0] = %+v", result[0])
-	}
-	if !result[0].Secure || !result[0].HTTPOnly {
-		t.Error("Secure/HTTPOnly not preserved")
-	}
-	if result[1].Name != "theme" || result[1].Value != "dark" {
-		t.Errorf("cookie[1] = %+v", result[1])
+	if cfg.Proxy.Password != "secret" {
+		t.Errorf("Proxy.Password = %q, want %q", cfg.Proxy.Password, "secret")
 	}
 }
 
-func TestMergeHTTPClientConfig_AllNil(t *testing.T) {
+func TestBuildGlobalHTTPConfig_WithBypass(t *testing.T) {
 	t.Parallel()
 
-	result := mergeHTTPClientConfig(nil, nil)
-	if result == nil {
-		t.Fatal("result is nil")
+	global := &config.GlobalHTTPClientConfig{
+		Proxy: &config.ProxyConfig{
+			URL:    "http://proxy:8080",
+			Bypass: []string{"localhost", "*.internal", "*.local"},
+		},
+	}
+
+	cfg := buildGlobalHTTPConfig(global)
+
+	if len(cfg.Proxy.Bypass) != 3 {
+		t.Fatalf("Bypass length = %d, want 3", len(cfg.Proxy.Bypass))
+	}
+	if cfg.Proxy.Bypass[0] != "localhost" {
+		t.Errorf("Bypass[0] = %q, want %q", cfg.Proxy.Bypass[0], "localhost")
 	}
 }
 
-func TestMergeHTTPClientConfig_SpecOnly(t *testing.T) {
+func TestBuildGlobalHTTPConfig_EmptyProxy(t *testing.T) {
 	t.Parallel()
 
-	spec := &config.HTTPClientConfig{Headers: map[string]string{"X-Spec": "s"}}
-	result := mergeHTTPClientConfig(spec, nil)
-	if result.Headers["X-Spec"] != "s" {
-		t.Errorf("X-Spec = %q, want %q", result.Headers["X-Spec"], "s")
+	global := &config.GlobalHTTPClientConfig{
+		Proxy: &config.ProxyConfig{},
+	}
+
+	cfg := buildGlobalHTTPConfig(global)
+
+	if cfg.Proxy == nil {
+		t.Fatal("Proxy is nil")
+	}
+	if cfg.Proxy.URL != "" {
+		t.Errorf("Proxy.URL = %q, want empty", cfg.Proxy.URL)
 	}
 }
 
-func TestMergeHTTPClientConfig_CollectionOverridesSpec(t *testing.T) {
+func TestBuildSpecInfo_WithAuth(t *testing.T) {
 	t.Parallel()
 
-	spec := &config.HTTPClientConfig{Headers: map[string]string{"X-Header": "spec"}}
-	coll := &config.HTTPClientConfig{Headers: map[string]string{"X-Header": "coll"}}
-	result := mergeHTTPClientConfig(spec, coll)
-	// First-wins: spec sets headers first
-	if result.Headers["X-Header"] != "spec" {
-		t.Errorf("X-Header = %q, want %q", result.Headers["X-Header"], "spec")
+	svc := newTestService(t)
+
+	specConfig := &config.Spec{
+		Domain:   "test-api",
+		LLMTitle: "Test API",
+		BaseURL:  "https://api.example.com",
+		Auth: config.Auth{
+			Client: &auth.BasicAuthClient{Username: "user", Password: "pass"},
+		},
+	}
+
+	spec, err := svc.buildSpecInfo(specConfig, false, nil)
+	if err != nil {
+		t.Fatalf("buildSpecInfo() = %v", err)
+	}
+
+	if spec.Domain != "test-api" {
+		t.Errorf("Domain = %q, want %q", spec.Domain, "test-api")
+	}
+	if spec.BaseURL != "https://api.example.com" {
+		t.Errorf("BaseURL = %q, want %q", spec.BaseURL, "https://api.example.com")
+	}
+	if spec.Auth == nil {
+		t.Fatal("Auth is nil")
 	}
 }
 
-func TestMergeHTTPClientConfig_HeadersMerge(t *testing.T) {
+func TestBuildSpecInfo_WithHTTPClient(t *testing.T) {
 	t.Parallel()
 
-	spec := &config.HTTPClientConfig{Headers: map[string]string{"X-Spec": "s"}}
-	coll := &config.HTTPClientConfig{Headers: map[string]string{"X-Coll": "c"}}
-	result := mergeHTTPClientConfig(spec, coll)
-	// First-wins: only spec headers are set
-	if result.Headers["X-Spec"] != "s" {
-		t.Errorf("X-Spec = %q", result.Headers["X-Spec"])
+	svc := newTestService(t)
+
+	specConfig := &config.Spec{
+		Domain:   "test-api",
+		LLMTitle: "Test API",
+		BaseURL:  "https://api.example.com",
+		HTTPClient: &config.HTTPClientConfig{
+			Headers: map[string]string{"X-Spec": "value"},
+		},
 	}
-	if result.Headers["X-Coll"] != "" {
-		t.Errorf("X-Coll should be empty, got %q", result.Headers["X-Coll"])
+
+	spec, err := svc.buildSpecInfo(specConfig, false, nil)
+	if err != nil {
+		t.Fatalf("buildSpecInfo() = %v", err)
+	}
+
+	if spec.HTTPClient == nil {
+		t.Fatal("HTTPClient is nil")
+	}
+	if spec.HTTPClient.Headers["X-Spec"] != "value" {
+		t.Errorf("Headers[X-Spec] = %q, want %q", spec.HTTPClient.Headers["X-Spec"], "value")
 	}
 }
 
-func TestMergeHTTPClientConfig_Cookies(t *testing.T) {
+func TestBuildSpecInfo_NoAuth(t *testing.T) {
 	t.Parallel()
 
-	spec := &config.HTTPClientConfig{Cookies: []config.Cookie{{Name: "s", Value: "2"}}}
-	result := mergeHTTPClientConfig(spec, nil)
-	if len(result.Cookies) != 1 {
-		t.Fatalf("len = %d, want 1", len(result.Cookies))
+	svc := newTestService(t)
+
+	specConfig := &config.Spec{
+		Domain:   "test-api",
+		LLMTitle: "Test API",
+		BaseURL:  "https://api.example.com",
 	}
-	if result.Cookies[0].Name != "s" {
-		t.Errorf("Cookie name = %q, want %q", result.Cookies[0].Name, "s")
+
+	spec, err := svc.buildSpecInfo(specConfig, false, nil)
+	if err != nil {
+		t.Fatalf("buildSpecInfo() = %v", err)
+	}
+
+	if spec.Auth != nil {
+		t.Error("Auth should be nil when not configured")
 	}
 }
 
-func TestMergeHTTPClientConfig_CookiesCollectionOverrides(t *testing.T) {
+func TestBuildSpecInfo_NoHTTPClient(t *testing.T) {
 	t.Parallel()
 
-	spec := &config.HTTPClientConfig{Cookies: []config.Cookie{{Name: "s", Value: "2"}}}
-	coll := &config.HTTPClientConfig{Cookies: []config.Cookie{{Name: "c", Value: "3"}}}
-	result := mergeHTTPClientConfig(spec, coll)
-	// First-wins: spec cookies are used
-	if len(result.Cookies) != 1 {
-		t.Fatalf("len = %d, want 1", len(result.Cookies))
+	svc := newTestService(t)
+
+	specConfig := &config.Spec{
+		Domain:   "test-api",
+		LLMTitle: "Test API",
+		BaseURL:  "https://api.example.com",
 	}
-	if result.Cookies[0].Name != "s" {
-		t.Errorf("Cookie name = %q, want %q", result.Cookies[0].Name, "s")
+
+	spec, err := svc.buildSpecInfo(specConfig, false, nil)
+	if err != nil {
+		t.Fatalf("buildSpecInfo() = %v", err)
+	}
+
+	if spec.HTTPClient != nil {
+		t.Error("HTTPClient should be nil when not configured")
+	}
+}
+
+func TestBuildSpecInfo_WithCookies(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+
+	specConfig := &config.Spec{
+		Domain:   "test-api",
+		LLMTitle: "Test API",
+		BaseURL:  "https://api.example.com",
+		HTTPClient: &config.HTTPClientConfig{
+			Cookies: []config.Cookie{
+				{Name: "session", Value: "abc"},
+			},
+		},
+	}
+
+	spec, err := svc.buildSpecInfo(specConfig, false, nil)
+	if err != nil {
+		t.Fatalf("buildSpecInfo() = %v", err)
+	}
+
+	if spec.HTTPClient == nil {
+		t.Fatal("HTTPClient is nil")
+	}
+	if len(spec.HTTPClient.Cookies) != 1 || spec.HTTPClient.Cookies[0].Name != "session" {
+		t.Error("Cookies missing session")
+	}
+}
+
+func TestBuildSpecInfo_WithMockEnabled(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+
+	specConfig := &config.Spec{
+		Domain:   "test-api",
+		LLMTitle: "Test API",
+		BaseURL:  "https://api.example.com",
+		Auth: config.Auth{
+			Client: &auth.BasicAuthClient{Username: "user", Password: "pass"},
+		},
+	}
+
+	spec, err := svc.buildSpecInfo(specConfig, true, nil)
+	if err != nil {
+		t.Fatalf("buildSpecInfo() = %v", err)
+	}
+
+	if spec.Auth == nil {
+		t.Fatal("Auth is nil")
+	}
+}
+
+func TestBuildSpecInfo_WithMockAuthConfig(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+
+	specConfig := &config.Spec{
+		Domain:   "test-api",
+		LLMTitle: "Test API",
+		BaseURL:  "https://api.example.com",
+		Auth: config.Auth{
+			Client: &auth.BasicAuthClient{Username: "user", Password: "pass"},
+		},
+	}
+
+	mockAuth := &config.MockAuthConfig{
+		OAuth2Port: 9099,
+		DigestPort: 9098,
+	}
+
+	spec, err := svc.buildSpecInfo(specConfig, true, mockAuth)
+	if err != nil {
+		t.Fatalf("buildSpecInfo() = %v", err)
+	}
+
+	if spec.Auth == nil {
+		t.Fatal("Auth is nil")
 	}
 }

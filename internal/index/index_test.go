@@ -792,3 +792,145 @@ func TestRefreshSearchReader(t *testing.T) {
 		t.Errorf("Results = %d, want 0", len(results))
 	}
 }
+
+func TestRemoveSpec(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	specInfo, _, _, _ := seedTestData(t, idx, t.Name())
+
+	idx.RemoveSpec(specInfo.ID)
+
+	_, err := idx.SpecByID(specInfo.ID)
+	if err == nil {
+		t.Error("expected error after RemoveSpec")
+	}
+}
+
+func TestRemoveSpec_NonExistent(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	idx.RemoveSpec("nonexistent")
+}
+
+func TestRemoveCollection(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	_, collectionInfo, _, _ := seedTestData(t, idx, t.Name())
+
+	idx.RemoveCollection(collectionInfo.ID)
+
+	_, err := idx.CollectionByID(collectionInfo.ID)
+	if err == nil {
+		t.Error("expected error after RemoveCollection")
+	}
+}
+
+func TestRemoveCollection_NonExistent(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	idx.RemoveCollection("nonexistent")
+}
+
+func TestRemoveTag(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	_, _, tagInfo, _ := seedTestData(t, idx, t.Name())
+
+	idx.RemoveTag(tagInfo.ID)
+
+	_, err := idx.TagByID(tagInfo.ID)
+	if err == nil {
+		t.Error("expected error after RemoveTag")
+	}
+}
+
+func TestRemoveTag_NonExistent(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	idx.RemoveTag("nonexistent")
+}
+
+func TestRemoveAllTags(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedTestData(t, idx, t.Name())
+
+	idx.RemoveAllTags()
+
+	_, err := idx.TagByID("any")
+	if err == nil {
+		t.Error("expected error after RemoveAllTags")
+	}
+}
+
+func TestRemoveCollectionsBySpec(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	specInfo, _, _, _ := seedTestData(t, idx, t.Name())
+
+	idx.RemoveCollectionsBySpec(specInfo.ID)
+
+	_, err := idx.CollectionsBySpec(specInfo.ID)
+	if err == nil {
+		t.Error("expected error after RemoveCollectionsBySpec")
+	}
+}
+
+func TestRemoveCollectionsBySpec_NonExistent(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	idx.RemoveCollectionsBySpec("nonexistent")
+}
+
+func TestAddCollection(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	specInfo, _, _, _ := seedTestData(t, idx, t.Name())
+
+	newColl := &types.Collection{
+		ID:     "new-collection-id",
+		SpecID: specInfo.ID,
+		Title:  "New Collection",
+	}
+	idx.AddCollection(newColl)
+
+	got, err := idx.CollectionByID(newColl.ID)
+	if err != nil {
+		t.Fatalf("CollectionByID() = %v", err)
+	}
+	if got.Title != "New Collection" {
+		t.Errorf("Title = %q, want %q", got.Title, "New Collection")
+	}
+}
+
+func TestAddCollection_Duplicate(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	_, collectionInfo, _, _ := seedTestData(t, idx, t.Name())
+
+	dup := &types.Collection{
+		ID:     collectionInfo.ID,
+		SpecID: collectionInfo.SpecID,
+		Title:  "Duplicate",
+	}
+	idx.AddCollection(dup)
+
+	got, err := idx.CollectionByID(collectionInfo.ID)
+	if err != nil {
+		t.Fatalf("CollectionByID() = %v", err)
+	}
+	if got.Title != "Duplicate" {
+		t.Errorf("Title = %q, want %q", got.Title, "Duplicate")
+	}
+}

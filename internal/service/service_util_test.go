@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/types"
 )
 
@@ -196,6 +197,106 @@ func TestMergeHTTPClientConfigs_CollectionHeadersOverrideSpec(t *testing.T) {
 	result := mergeHTTPClientConfigs(spec, collection)
 	if result.Headers["X-Header"] != "coll-val" {
 		t.Errorf("X-Header = %q, want %q", result.Headers["X-Header"], "coll-val")
+	}
+}
+
+func TestMergeHTTPClientConfig_ConfigLevel(t *testing.T) {
+	t.Parallel()
+
+	spec := &config.HTTPClientConfig{
+		Headers: map[string]string{"X-Spec": "spec-val"},
+		Cookies: []config.Cookie{{Name: "spec-cookie", Value: "spec-val"}},
+	}
+	collection := &config.HTTPClientConfig{
+		Headers: map[string]string{"X-Coll": "coll-val"},
+		Cookies: []config.Cookie{{Name: "coll-cookie", Value: "coll-val"}},
+	}
+
+	result := mergeHTTPClientConfig(spec, collection)
+	if result == nil {
+		t.Fatal("result is nil")
+	}
+	// First non-nil level wins for headers
+	if result.Headers["X-Spec"] != "spec-val" {
+		t.Errorf("Headers[X-Spec] = %q, want %q", result.Headers["X-Spec"], "spec-val")
+	}
+	// Collection headers are not merged (first non-nil level wins)
+	if result.Headers["X-Coll"] != "" {
+		t.Errorf("Headers[X-Coll] = %q, want empty (spec wins)", result.Headers["X-Coll"])
+	}
+	// First non-nil level wins for cookies
+	if len(result.Cookies) != 1 || result.Cookies[0].Name != "spec-cookie" {
+		t.Error("Cookies should come from spec (first non-nil level)")
+	}
+}
+
+func TestMergeHTTPClientConfig_SpecNil(t *testing.T) {
+	t.Parallel()
+
+	collection := &config.HTTPClientConfig{
+		Headers: map[string]string{"X-Coll": "val"},
+		Cookies: []config.Cookie{{Name: "c", Value: "v"}},
+	}
+
+	result := mergeHTTPClientConfig(nil, collection)
+	if result == nil {
+		t.Fatal("result is nil")
+	}
+	if result.Headers["X-Coll"] != "val" {
+		t.Errorf("Headers[X-Coll] = %q, want %q", result.Headers["X-Coll"], "val")
+	}
+	if len(result.Cookies) != 1 || result.Cookies[0].Name != "c" {
+		t.Error("Cookies missing")
+	}
+}
+
+func TestMergeHTTPClientConfig_BothNil(t *testing.T) {
+	t.Parallel()
+
+	result := mergeHTTPClientConfig(nil, nil)
+	if result == nil {
+		t.Fatal("result should not be nil (always returns new config)")
+	}
+}
+
+func TestMergeHTTPClientConfig_CollectionOverridesSpec(t *testing.T) {
+	t.Parallel()
+
+	spec := &config.HTTPClientConfig{
+		Headers: map[string]string{"X-Header": "spec-val"},
+	}
+	collection := &config.HTTPClientConfig{
+		Headers: map[string]string{"X-Header": "coll-val"},
+	}
+
+	result := mergeHTTPClientConfig(spec, collection)
+	// First non-nil level wins (spec), so spec value is kept
+	if result.Headers["X-Header"] != "spec-val" {
+		t.Errorf("X-Header = %q, want %q (spec wins)", result.Headers["X-Header"], "spec-val")
+	}
+}
+
+func TestMergeHTTPClientConfig_NoHeaders(t *testing.T) {
+	t.Parallel()
+
+	spec := &config.HTTPClientConfig{}
+	collection := &config.HTTPClientConfig{}
+
+	result := mergeHTTPClientConfig(spec, collection)
+	if result.Headers != nil {
+		t.Error("Headers should be nil when neither level has headers")
+	}
+}
+
+func TestMergeHTTPClientConfig_NoCookies(t *testing.T) {
+	t.Parallel()
+
+	spec := &config.HTTPClientConfig{}
+	collection := &config.HTTPClientConfig{}
+
+	result := mergeHTTPClientConfig(spec, collection)
+	if result.Cookies != nil {
+		t.Error("Cookies should be nil when neither level has cookies")
 	}
 }
 

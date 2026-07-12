@@ -1,7 +1,9 @@
 package httpclient
 
 import (
+	"errors"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 )
@@ -198,6 +200,178 @@ func TestMatchBypass_NoMatch(t *testing.T) {
 func TestMatchBypass_Empty(t *testing.T) {
 	if matchBypass("example.com", nil) {
 		t.Error("expected no match for empty bypass list")
+	}
+}
+
+func TestBypassProxy_Matches(t *testing.T) {
+	proxyURL, _ := url.Parse("http://proxy:8080")
+	bypassFn := bypassProxy(proxyURL, []string{"example.com"})
+
+	req, _ := http.NewRequest(http.MethodGet, "http://example.com/path", nil)
+	result, err := bypassFn(req)
+	if err != nil {
+		t.Fatalf("bypassFn() = %v", err)
+	}
+	if result != nil {
+		t.Error("expected nil (bypass), got proxy URL")
+	}
+}
+
+func TestBypassProxy_NoMatch(t *testing.T) {
+	proxyURL, _ := url.Parse("http://proxy:8080")
+	bypassFn := bypassProxy(proxyURL, []string{"example.com"})
+
+	req, _ := http.NewRequest(http.MethodGet, "http://other.com/path", nil)
+	result, err := bypassFn(req)
+	if err != nil {
+		t.Fatalf("bypassFn() = %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected proxy URL, got nil")
+	}
+	if result.String() != "http://proxy:8080" {
+		t.Errorf("result = %q, want %q", result.String(), "http://proxy:8080")
+	}
+}
+
+func TestBypassProxy_EmptyBypass(t *testing.T) {
+	proxyURL, _ := url.Parse("http://proxy:8080")
+	bypassFn := bypassProxy(proxyURL, nil)
+
+	req, _ := http.NewRequest(http.MethodGet, "http://example.com/path", nil)
+	result, err := bypassFn(req)
+	if err != nil {
+		t.Fatalf("bypassFn() = %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected proxy URL, got nil")
+	}
+}
+
+func TestBypassProxy_Wildcard(t *testing.T) {
+	proxyURL, _ := url.Parse("http://proxy:8080")
+	bypassFn := bypassProxy(proxyURL, []string{"*.example.com"})
+
+	req, _ := http.NewRequest(http.MethodGet, "http://api.example.com/path", nil)
+	result, err := bypassFn(req)
+	if err != nil {
+		t.Fatalf("bypassFn() = %v", err)
+	}
+	if result != nil {
+		t.Error("expected nil (bypass via wildcard), got proxy URL")
+	}
+}
+
+func TestBypassProxy_RegexPattern(t *testing.T) {
+	proxyURL, _ := url.Parse("http://proxy:8080")
+	bypassFn := bypassProxy(proxyURL, []string{"/internal/"})
+
+	req, _ := http.NewRequest(http.MethodGet, "http://api.internal.example.com/path", nil)
+	result, err := bypassFn(req)
+	if err != nil {
+		t.Fatalf("bypassFn() = %v", err)
+	}
+	if result != nil {
+		t.Error("expected nil (bypass via regex), got proxy URL")
+	}
+}
+
+func TestApplyRedirects_NoFollow(t *testing.T) {
+	client := &http.Client{}
+	follow := false
+	applyRedirects(client, Config{FollowRedirects: &follow})
+
+	if client.CheckRedirect == nil {
+		t.Fatal("CheckRedirect is nil")
+	}
+
+	err := client.CheckRedirect(nil, nil)
+	if !errors.Is(err, http.ErrUseLastResponse) {
+		t.Errorf("expected ErrUseLastResponse, got %v", err)
+	}
+}
+
+func TestApplyRedirects_MaxRedirects(t *testing.T) {
+	client := &http.Client{}
+	maxRedir := 3
+	applyRedirects(client, Config{MaxRedirects: &maxRedir})
+
+	if client.CheckRedirect == nil {
+		t.Fatal("CheckRedirect is nil")
+	}
+
+	req1, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
+	req2, _ := http.NewRequest(http.MethodGet, "http://example.com/2", nil)
+	req3, _ := http.NewRequest(http.MethodGet, "http://example.com/3", nil)
+
+	err := client.CheckRedirect(req1, []*http.Request{req1, req2, req3})
+	if err == nil {
+		t.Fatal("expected error for too many redirects")
+	}
+}
+
+func TestApplyRedirects_UnderMaxRedirects(t *testing.T) {
+	client := &http.Client{}
+	maxRedir := 5
+	applyRedirects(client, Config{MaxRedirects: &maxRedir})
+
+	if client.CheckRedirect == nil {
+		t.Fatal("CheckRedirect is nil")
+	}
+
+	req1, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
+	err := client.CheckRedirect(req1, []*http.Request{req1})
+	if err != nil {
+		t.Errorf("expected nil, got %v", err)
+	}
+}
+
+func TestApplyRedirects_Default(t *testing.T) {
+	client := &http.Client{}
+	applyRedirects(client, Config{})
+
+	if client.CheckRedirect != nil {
+		t.Error("CheckRedirect should be nil by default")
+	}
+}
+
+func TestApplyRedirects_FollowTrue(t *testing.T) {
+	client := &http.Client{}
+	follow := true
+	applyRedirects(client, Config{FollowRedirects: &follow})
+
+	if client.CheckRedirect != nil {
+		t.Error("CheckRedirect should be nil when FollowRedirects is true")
+	}
+}
+
+func TestMatchBypass_Regex(t *testing.T) {
+	if !matchBypass("api.internal.example.com", []string{"/internal/"}) {
+		t.Error("expected match for regex pattern")
+	}
+}
+
+func TestMatchBypass_RegexNoMatch(t *testing.T) {
+	if matchBypass("api.example.com", []string{"/internal/"}) {
+		t.Error("expected no match for regex pattern")
+	}
+}
+
+func TestMatchBypass_WildcardNoMatch(t *testing.T) {
+	if matchBypass("example.com", []string{"*.example.com"}) {
+		t.Error("expected no match for wildcard without subdomain")
+	}
+}
+
+func TestMatchBypass_Multiple(t *testing.T) {
+	if !matchBypass("test.local", []string{"example.com", "*.local", "other.com"}) {
+		t.Error("expected match for wildcard in multiple patterns")
+	}
+}
+
+func TestMatchBypass_NoMatchMultiple(t *testing.T) {
+	if matchBypass("remote.com", []string{"example.com", "*.local"}) {
+		t.Error("expected no match")
 	}
 }
 

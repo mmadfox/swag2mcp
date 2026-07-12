@@ -40,6 +40,8 @@ const (
 	EndpointBySpec = "endpoint_by_spec"
 	// Auth is the name of the auth tool.
 	Auth = "auth"
+	// Info is the name of the info tool.
+	Info = "info"
 )
 
 //go:embed definitions/*.md

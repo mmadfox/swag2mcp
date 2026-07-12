@@ -295,6 +295,10 @@ func registerTools(mcpServer *sdkmcp.Server, tools []service.Tool, h handler) {
 			addTool[service.AuthRequest](mcpServer, h.handleAuth),
 			false,
 		},
+		service.Info: {
+			addTool[any](mcpServer, h.handleInfo),
+			true,
+		},
 	}
 
 	for _, deftool := range tools {

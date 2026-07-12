@@ -1,0 +1,77 @@
+package commands
+
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/spf13/cobra"
+
+	"github.com/mmadfox/swag2mcp/internal/config"
+	"github.com/mmadfox/swag2mcp/internal/service"
+	"github.com/mmadfox/swag2mcp/internal/workspace"
+)
+
+func newInfoCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "info [path]",
+		Short: "Show detailed configuration and runtime information",
+		Long: `Show a comprehensive summary of the swag2mcp runtime: version,
+configuration, active specs, HTTP client settings, MCP transport,
+auth methods, and mock mode status.
+
+  swag2mcp info              — show info for ~/.swag2mcp/swag2mcp.yaml
+  swag2mcp info ./           — show info for ./.swag2mcp/swag2mcp.yaml
+  swag2mcp info path/to      — show info for path/to/.swag2mcp/swag2mcp.yaml`,
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			basePath := ""
+			if len(args) > 0 {
+				basePath = args[0]
+			}
+
+			ws, err := workspace.NewFromBase(basePath)
+			if err != nil {
+				return err
+			}
+
+			configPath := ws.ConfigPath()
+
+			if ws.ConfigNotExists() {
+				configPath, err = ensureConfigExists(basePath)
+				if err != nil {
+					return err
+				}
+			}
+
+			cfg, loadErr := config.Load(configPath)
+			if loadErr != nil {
+				return fmt.Errorf("failed to load config: %w", loadErr)
+			}
+
+			svc, svcErr := service.New(
+				service.WithVersion(Version),
+			)
+			if svcErr != nil {
+				return fmt.Errorf("failed to create service: %w", svcErr)
+			}
+
+			info, infoErr := svc.Info(cmd.Context(), cfg)
+			if infoErr != nil {
+				return fmt.Errorf("failed to get info: %w", infoErr)
+			}
+
+			out, marshalErr := json.MarshalIndent(info, "", "  ")
+			if marshalErr != nil {
+				return fmt.Errorf("failed to marshal info: %w", marshalErr)
+			}
+
+			cmd.Println(string(out))
+			return nil
+		},
+	}
+
+	cmd.SilenceUsage = true
+	cmd.SilenceErrors = true
+
+	return cmd
+}

@@ -494,6 +494,13 @@ linters:
       # Global Version variable injected via ldflags
       - path: 'internal/commands/version\.go'
         linters: [ gochecknoglobals ]
+      # Magic number for GitHub API timeout
+      - path: 'internal/service/info\.go'
+        text: 'githubFetchTimeout'
+        linters: [ mnd ]
+      # Cognitive complexity in info test
+      - path: 'internal/service/info_test\.go'
+        linters: [ gocognit ]
       # Global variable for auth methods list
       - path: 'internal/tui/wizard\.go'
         linters: [ gochecknoglobals ]

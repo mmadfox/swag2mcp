@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	"sync/atomic"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/mmadfox/swag2mcp/internal/cache"
+	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/index"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
@@ -21,6 +23,9 @@ type Service struct {
 	rateLimiter     *invokeRateLimiter
 	httpClient      *http.Client
 	maxResponseSize int
+	version         string
+	startedAt       time.Time
+	config          *config.Config
 }
 
 type NewOption func(*Service)
@@ -34,6 +39,12 @@ func WithDisableLLMAuth(disable bool) NewOption {
 func WithDumpDir(dir string) NewOption {
 	return func(s *Service) {
 		s.dumpDir = dir
+	}
+}
+
+func WithVersion(version string) NewOption {
+	return func(s *Service) {
+		s.version = version
 	}
 }
 
@@ -54,6 +65,7 @@ func New(opts ...NewOption) (*Service, error) {
 		rateLimiter:     newInvokeRateLimiter(),
 		httpClient:      &http.Client{Transport: http.DefaultTransport},
 		maxResponseSize: defaultMaxResponseSize,
+		startedAt:       time.Now(),
 	}
 	for _, opt := range opts {
 		opt(s)

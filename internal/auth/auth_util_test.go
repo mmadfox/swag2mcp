@@ -201,6 +201,54 @@ func TestBearerTokenAuthClient_Validate_EmptyToken(t *testing.T) {
 	}
 }
 
+func TestBasicAuthClient_Type(t *testing.T) {
+	t.Parallel()
+
+	client := &BasicAuthClient{}
+	if client.Type() != BasicAuth {
+		t.Errorf("Type() = %q, want %q", client.Type(), BasicAuth)
+	}
+}
+
+func TestBearerTokenAuthClient_Type(t *testing.T) {
+	t.Parallel()
+
+	client := &BearerTokenAuthClient{}
+	if client.Type() != BearerTokenAuth {
+		t.Errorf("Type() = %q, want %q", client.Type(), BearerTokenAuth)
+	}
+}
+
+func TestDigestAuthClient_SetMockBaseURL(t *testing.T) {
+	t.Parallel()
+
+	client := &DigestAuthClient{}
+	client.SetMockBaseURL("http://localhost:9091/")
+	if client.MockBaseURL != "http://localhost:9091/" {
+		t.Errorf("MockBaseURL = %q, want %q", client.MockBaseURL, "http://localhost:9091/")
+	}
+}
+
+func TestOAuth2ClientCredentialsAuthClient_SetTokenURL(t *testing.T) {
+	t.Parallel()
+
+	client := &OAuth2ClientCredentialsAuthClient{}
+	client.SetTokenURL("http://localhost:9090/token")
+	if client.TokenURL != "http://localhost:9090/token" {
+		t.Errorf("TokenURL = %q, want %q", client.TokenURL, "http://localhost:9090/token")
+	}
+}
+
+func TestOAuth2PasswordAuthClient_SetTokenURL(t *testing.T) {
+	t.Parallel()
+
+	client := &OAuth2PasswordAuthClient{}
+	client.SetTokenURL("http://localhost:9090/token")
+	if client.TokenURL != "http://localhost:9090/token" {
+		t.Errorf("TokenURL = %q, want %q", client.TokenURL, "http://localhost:9090/token")
+	}
+}
+
 func TestBasicAuthClient_Validate(t *testing.T) {
 	t.Parallel()
 

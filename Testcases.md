@@ -4,9 +4,9 @@
 
 - [x] `go build ./cmd/swag2mcp/` — builds without errors (integration-test, main_test.go, TestMain)
 - [x] `go build ./cmd/swag2mcp-mock/` — builds without errors (integration-test, main_test.go, TestMain)
-- [ ] `swag2mcp --help` — shows all 9 subcommands + flags (manual)
-- [ ] `swag2mcp-mock --help` — shows mockserver subcommand + flags (manual)
-- [ ] `swag2mcp version` (or `--version`) — prints version string (manual)
+- [x] `swag2mcp --help` — shows all 9 subcommands + flags (manual)
+- [x] `swag2mcp-mock --help` — shows mockserver subcommand + flags (manual)
+- [x] `swag2mcp version` (or `--version`) — prints version string (manual)
 
 ---
 

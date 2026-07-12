@@ -95,6 +95,7 @@ func newMCPCmd(version string) *cobra.Command {
 
 			svcOpts := []service.NewOption{
 				service.WithDisableLLMAuth(opts.DisableLLMAuth),
+				service.WithVersion(version),
 			}
 			if opts.DumpDir != "" {
 				svcOpts = append(svcOpts, service.WithDumpDir(opts.DumpDir))

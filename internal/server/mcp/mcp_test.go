@@ -108,6 +108,7 @@ func TestRegisterTools_AllTools(t *testing.T) {
 				{Name: "inspect", Description: "Inspect"},
 				{Name: "invoke", Description: "Invoke"},
 				{Name: "auth", Description: "Auth"},
+				{Name: "info", Description: "Info"},
 			},
 		}, nil,
 	)
@@ -1034,6 +1035,57 @@ func TestHandler_Auth_Error(t *testing.T) {
 	_, _, err := h.handleAuth(
 		context.Background(), nil, service.AuthRequest{SpecID: "spec-1"},
 	)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestHandler_Info_Success(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMocksvc(ctrl)
+	mock.EXPECT().Info(gomock.Any(), gomock.Any()).Return(
+		service.InfoResponse{
+			Version: "v1.0.0",
+			Specs: service.SpecsSummary{
+				Total: 2, Active: 1, Disabled: 1, Collections: 3, Endpoints: 42,
+			},
+			HTTPClient: service.HTTPClientInfo{
+				Randomize: true, MaxResponseSize: 2048,
+			},
+			MCP: service.MCPInfo{
+				Transport: "sse", AuthEnabled: true,
+			},
+			Mock: service.MockInfo{Enabled: false},
+		}, nil,
+	)
+
+	h := handler{service: mock}
+	result, _, err := h.handleInfo(context.Background(), nil, nil)
+	if err != nil {
+		t.Fatalf("handleInfo() = %v", err)
+	}
+	if result == nil {
+		t.Fatal("result is nil")
+	}
+}
+
+func TestHandler_Info_Error(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMocksvc(ctrl)
+	mock.EXPECT().Info(gomock.Any(), gomock.Any()).Return(
+		service.InfoResponse{}, errors.New("info error"),
+	)
+
+	h := handler{service: mock}
+	_, _, err := h.handleInfo(context.Background(), nil, nil)
 	if err == nil {
 		t.Fatal("expected error")
 	}

@@ -13,6 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	config "github.com/mmadfox/swag2mcp/internal/config"
 	service "github.com/mmadfox/swag2mcp/internal/service"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -144,6 +145,21 @@ func (m *Mocksvc) EndpointsByTag(arg0 context.Context, req service.EndpointsByTa
 func (mr *MocksvcMockRecorder) EndpointsByTag(arg0, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndpointsByTag", reflect.TypeOf((*Mocksvc)(nil).EndpointsByTag), arg0, req)
+}
+
+// Info mocks base method.
+func (m *Mocksvc) Info(arg0 context.Context, cfg *config.Config) (service.InfoResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Info", arg0, cfg)
+	ret0, _ := ret[0].(service.InfoResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Info indicates an expected call of Info.
+func (mr *MocksvcMockRecorder) Info(arg0, cfg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*Mocksvc)(nil).Info), arg0, cfg)
 }
 
 // Inspect mocks base method.

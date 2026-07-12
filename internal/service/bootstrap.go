@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/config"
@@ -26,10 +27,13 @@ type BootstrapRequest struct {
 // Bootstrap loads the configuration, initializes the workspace, creates the
 // global HTTP client, and indexes all specs, collections, tags, and endpoints.
 func (s *Service) Bootstrap(_ context.Context, request BootstrapRequest) error {
+	s.startedAt = time.Now()
+
 	configuration, loadError := s.loadConfiguration(request.ConfFilepath, request.Tags)
 	if loadError != nil {
 		return fmt.Errorf("failed to load config: %w", loadError)
 	}
+	s.config = configuration
 
 	if initError := s.initializeWorkspace(filepath.Dir(request.ConfFilepath)); initError != nil {
 		return initError
