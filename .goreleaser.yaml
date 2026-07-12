@@ -12,7 +12,7 @@ builds:
     env:
       - CGO_ENABLED=0
     ldflags:
-      - -s -w -X main.version={{ .Version }}
+      - -s -w -X github.com/mmadfox/swag2mcp/internal/commands.Version={{ .Version }}
     goos:
       - linux
       - darwin

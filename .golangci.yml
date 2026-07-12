@@ -491,6 +491,9 @@ linters:
       # TUI code has nested ifs
       - path: 'internal/tui/'
         linters: [ nestif ]
+      # Global Version variable injected via ldflags
+      - path: 'internal/commands/version\.go'
+        linters: [ gochecknoglobals ]
       # Global variable for auth methods list
       - path: 'internal/tui/wizard\.go'
         linters: [ gochecknoglobals ]

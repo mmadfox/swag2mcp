@@ -20,7 +20,8 @@ func NewRootCmd() *cobra.Command {
 	cmd.AddCommand(newValidateCmd())
 	cmd.AddCommand(newCleanCmd())
 	cmd.AddCommand(newUpdateCmd())
-	cmd.AddCommand(newMCPCmd("v0.1.0"))
+	cmd.AddCommand(newMCPCmd(Version))
+	cmd.AddCommand(newVersionCmd())
 
 	return cmd
 }
