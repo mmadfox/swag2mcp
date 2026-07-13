@@ -19,6 +19,17 @@
 - **For humans**: Interactive TUI explorer with full-text search
 - **Zero integration code**: Just point to your specs and go
 
+## Table of Contents
+
+- [Documentation](#documentation)
+- [Quick Start](#quick-start)
+- [Integration](#integration)
+  - [Stdio transport (local)](#stdio-transport-local)
+  - [SSE / Streamable HTTP transport (remote)](#sse--streamable-http-transport-remote)
+- [Mock Server](#mock-server)
+- [Examples](#examples)
+- [License](#license)
+
 ## Documentation
 
 | Language | File |
@@ -39,6 +50,121 @@ $ swag2mcp init
 $ swag2mcp mcp
 OR
 $ swag2mcp mcp --tags=project-1,work,petstore
+```
+
+## Integration
+
+swag2mcp speaks the Model Context Protocol (MCP) and works with any MCP-compatible client. All settings (tags, transport, auth) are configured in `swag2mcp.yaml` — see [examples/mcp-transport](examples/mcp-transport).
+
+### Stdio transport (local)
+
+#### OpenCode — opencode.json
+
+```json
+{
+  "mcp": {
+    "swag2mcp": {
+      "type": "local",
+      "command": ["swag2mcp", "mcp"]
+    }
+  }
+}
+```
+
+#### Crush — crush.json
+
+```json
+{
+  "mcp": {
+    "swag2mcp": {
+      "type": "stdio",
+      "command": "swag2mcp",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+#### Claude Desktop — claude_desktop_config.json
+
+```json
+{
+  "mcpServers": {
+    "swag2mcp": {
+      "command": "swag2mcp",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+#### Cursor — .cursor/mcp.json
+
+```json
+{
+  "mcpServers": {
+    "swag2mcp": {
+      "command": "swag2mcp",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+#### VS Code — .vscode/mcp.json
+
+```json
+{
+  "servers": {
+    "swag2mcp": {
+      "type": "stdio",
+      "command": "swag2mcp",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+### SSE / Streamable HTTP transport (remote)
+
+Start the server with the desired transport configured in `swag2mcp.yaml`:
+
+```yaml
+mcp:
+  transport: sse
+  addr: ":8080"
+  path: "/mcp"
+  auth:
+    token: $(MCP_AUTH_TOKEN)
+```
+
+#### OpenCode (remote) — opencode.json
+
+```json
+{
+  "mcp": {
+    "swag2mcp": {
+      "type": "remote",
+      "url": "http://localhost:8080/mcp",
+      "headers": {
+        "Authorization": "Bearer ${MCP_AUTH_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+#### VS Code (remote) — .vscode/mcp.json
+
+```json
+{
+  "servers": {
+    "swag2mcp": {
+      "type": "http",
+      "url": "http://localhost:8080/mcp"
+    }
+  }
+}
 ```
 
 ## Mock Server
