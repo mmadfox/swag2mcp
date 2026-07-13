@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"maps"
 	"net/http"
 	"net/http/httputil"
@@ -52,9 +53,9 @@ type FileReference struct {
 
 // InvokeResponse represents the response from invoking an API endpoint.
 type InvokeResponse struct {
-	StatusCode int               `json:"statusCode" jsonschema:"required,HTTP response status code"`
-	Headers    map[string]string `json:"headers"    jsonschema:"required,HTTP response headers"`
-	Body       any               `json:"body"       jsonschema:"required,Response body data"`
+	StatusCode int               `json:"statusCode"        jsonschema:"required,HTTP response status code"`
+	Headers    map[string]string `json:"headers"           jsonschema:"required,HTTP response headers"`
+	Body       any               `json:"body"              jsonschema:"required,Response body data"`
 	FileRef    *FileReference    `json:"fileRef,omitempty"`
 }
 
@@ -74,34 +75,55 @@ func (s *Service) Invoke(ctx context.Context, request InvokeRequest) (InvokeResp
 	endpoint, err := s.index.EndpointByID(request.EndpointID)
 	if err != nil {
 		return InvokeResponse{}, NewNotFoundError(
-			fmt.Sprintf("Endpoint %q not found — use the search tool to find the correct endpoint ID.", request.EndpointID), err,
+			fmt.Sprintf(
+				"Endpoint %q not found — use the search tool to find the correct endpoint ID.",
+				request.EndpointID,
+			),
+			err,
 		)
 	}
 
 	if endpoint.Operation == nil {
-		return InvokeResponse{}, NewValidationError("This endpoint has no operation definition — it may be malformed or incomplete.", nil)
+		return InvokeResponse{}, NewValidationError(
+			"This endpoint has no operation definition — it may be malformed or incomplete.",
+			nil,
+		)
 	}
 
 	specification, err := s.index.SpecByID(endpoint.SpecID)
 	if err != nil {
 		return InvokeResponse{}, NewNotFoundError(
-			fmt.Sprintf("Spec %q not found — the endpoint references a specification that no longer exists.", endpoint.SpecID), err,
+			fmt.Sprintf(
+				"Spec %q not found — the endpoint references a specification that no longer exists.",
+				endpoint.SpecID,
+			),
+			err,
 		)
 	}
 
 	collection, err := s.index.CollectionByID(endpoint.CollectionID)
 	if err != nil {
 		return InvokeResponse{}, NewNotFoundError(
-			fmt.Sprintf("Collection %q not found — the endpoint references a collection that no longer exists.", endpoint.CollectionID), err,
+			fmt.Sprintf(
+				"Collection %q not found — the endpoint references a collection that no longer exists.",
+				endpoint.CollectionID,
+			),
+			err,
 		)
 	}
 
 	if validationError := validateParameters(endpoint.Operation, request.Parameters); validationError != nil {
-		return InvokeResponse{}, NewValidationError("Parameter validation failed — check that all required parameters are provided and match the expected names.", validationError)
+		return InvokeResponse{}, NewValidationError(
+			"Parameter validation failed — check that all required parameters are provided and match the expected names.",
+			validationError,
+		)
 	}
 
 	if validationError := validateRequestBody(endpoint.Operation, request.RequestBody); validationError != nil {
-		return InvokeResponse{}, NewValidationError("Request body validation failed — check that all required fields are present and no unknown fields are included.", validationError)
+		return InvokeResponse{}, NewValidationError(
+			"Request body validation failed — check that all required fields are present and no unknown fields are included.",
+			validationError,
+		)
 	}
 
 	httpRequest, buildError := newRequestBuilder(
@@ -114,7 +136,10 @@ func (s *Service) Invoke(ctx context.Context, request InvokeRequest) (InvokeResp
 		withHTTPConfig(mergeHTTPClientConfigs(specification.HTTPClient, collection.HTTPClient)),
 	).build()
 	if buildError != nil {
-		return InvokeResponse{}, NewInvokeError("Failed to build the HTTP request — check the endpoint parameters and try again.", buildError)
+		return InvokeResponse{}, NewInvokeError(
+			"Failed to build the HTTP request — check the endpoint parameters and try again.",
+			buildError,
+		)
 	}
 
 	s.dumpRequest(httpRequest, specification.Domain)
@@ -137,13 +162,19 @@ func (s *Service) Invoke(ctx context.Context, request InvokeRequest) (InvokeResp
 
 	response, doError := httpClient.Do(httpRequest)
 	if doError != nil {
-		return InvokeResponse{}, NewInvokeError("The API request failed — the server may be unreachable or returned an error.", doError)
+		return InvokeResponse{}, NewInvokeError(
+			"The API request failed — the server may be unreachable or returned an error.",
+			doError,
+		)
 	}
 	defer response.Body.Close()
 
 	body, readError := io.ReadAll(response.Body)
 	if readError != nil {
-		return InvokeResponse{}, NewInvokeError("Failed to read the API response — the connection may have been interrupted.", readError)
+		return InvokeResponse{}, NewInvokeError(
+			"Failed to read the API response — the connection may have been interrupted.",
+			readError,
+		)
 	}
 
 	maxSize := s.maxResponseSize
@@ -170,11 +201,12 @@ type requestOption func(*requestBuilder)
 
 // newRequestBuilder creates a new requestBuilder with the given options.
 func newRequestBuilder(options ...requestOption) *requestBuilder {
-	builder := &requestBuilder{
-		context: context.Background(),
-	}
+	builder := &requestBuilder{}
 	for _, option := range options {
 		option(builder)
+	}
+	if builder.context == nil {
+		builder.context = context.Background()
 	}
 	return builder
 }
@@ -320,7 +352,8 @@ func (builder *requestBuilder) applyHeaders(httpRequest *http.Request) {
 	}
 
 	if httpRequest.Header.Get("Accept") == "" {
-		isJSON := builder.body != nil || httpRequest.Header.Get("Content-Type") == "application/json" //nolint:goconst // content-type value
+		isJSON := builder.body != nil ||
+			httpRequest.Header.Get("Content-Type") == "application/json" //nolint:goconst // content-type value
 		if isJSON {
 			httpRequest.Header.Set("Accept", "application/json, text/plain, */*")
 		} else {
@@ -476,7 +509,7 @@ func formatSize(bytes int) string {
 
 // randomSuffix generates a random hex string of length n.
 func randomSuffix(n int) string {
-	byteLen := (n + 1) / 2 //nolint:mnd // hex encoding: 2 chars per byte
+	byteLen := (n + 1) / 2 //nolint:mnd // Hex encoding uses 2 characters per byte.
 	b := make([]byte, byteLen)
 	if _, err := rand.Read(b); err != nil {
 		return fmt.Sprintf("%0*x", n, 0)
@@ -642,8 +675,13 @@ func (s *Service) dumpRequest(request *http.Request, domain string) {
 	filename := fmt.Sprintf("invoke-%s-%d.txt", domain, timestamp)
 	filePath := filepath.Join(s.dumpDir, filename)
 
-	_ = os.MkdirAll(s.dumpDir, 0750)
-	_ = os.WriteFile(filePath, dump, 0600)
+	if err := os.MkdirAll(s.dumpDir, 0750); err != nil {
+		slog.Default().WarnContext(request.Context(), "failed to create dump dir", "error", err)
+		return
+	}
+	if err := os.WriteFile(filePath, dump, 0600); err != nil {
+		slog.Default().WarnContext(request.Context(), "failed to write dump file", "error", err)
+	}
 }
 
 // mergeHTTPClientConfigs merges two per-request HTTP configs. Collection overrides spec.

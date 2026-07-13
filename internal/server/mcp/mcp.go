@@ -36,7 +36,7 @@ type TokenVerifier func(ctx context.Context, token string, req *http.Request) (*
 type Options struct {
 	Version string
 	Logger  *slog.Logger
-	Service svc
+	Service Svc
 
 	Transport TransportType
 
@@ -146,7 +146,9 @@ func serveHTTP(ctx context.Context, defs service.ToolDefinitions, opts Options) 
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(ctx, shutdownTimeout)
 		defer cancel()
-		_ = srv.Shutdown(shutdownCtx)
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			opts.Logger.WarnContext(ctx, "server shutdown error", "error", err)
+		}
 	}()
 
 	transportName := "sse"

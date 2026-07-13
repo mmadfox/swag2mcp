@@ -125,6 +125,7 @@ type Collection struct {
 	BaseMockURL    string            `yaml:"base_mock_url,omitempty"                      validate:"omitempty,mock_addr_format"`
 }
 
+// Iterate returns an iterator over non-disabled specs that match the given filter.
 func (c *Config) Iterate(f *Filter) iter.Seq[*Spec] {
 	return func(yield func(*Spec) bool) {
 		for _, spec := range c.Specs {
@@ -143,7 +144,7 @@ func (c *Config) Iterate(f *Filter) iter.Seq[*Spec] {
 	}
 }
 
-//nolint:gocognit // validation requires many checks
+//nolint:gocognit // Validation requires many checks for different field types.
 func (c *Config) Validate(f *Filter) error {
 	var errs validationErrors
 

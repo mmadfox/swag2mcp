@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -21,7 +22,7 @@ func TestResolve_localPathOutsideSpecs(t *testing.T) {
 
 	c := New(dir)
 
-	got, err := c.Resolve(specFile)
+	got, err := c.Resolve(context.Background(), specFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +56,7 @@ func TestResolve_localPathInsideSpecs(t *testing.T) {
 
 	c := New(dir)
 
-	got, err := c.Resolve(specFile)
+	got, err := c.Resolve(context.Background(), specFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +82,7 @@ func TestResolve_localPathSpecsRelative(t *testing.T) {
 
 	c := New(wsDir)
 
-	got, err := c.Resolve("specs/layers.yaml")
+	got, err := c.Resolve(context.Background(), "specs/layers.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +108,7 @@ func TestResolve_localPathSpecsRelativeNested(t *testing.T) {
 
 	c := New(wsDir)
 
-	got, err := c.Resolve("specs/subdir/api.yaml")
+	got, err := c.Resolve(context.Background(), "specs/subdir/api.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +128,7 @@ func TestResolve_fileURLOutsideSpecs(t *testing.T) {
 
 	c := New(dir)
 
-	got, err := c.Resolve("file://" + specFile)
+	got, err := c.Resolve(context.Background(), "file://"+specFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +161,7 @@ func TestResolve_fileURLInsideSpecs(t *testing.T) {
 
 	c := New(dir)
 
-	got, err := c.Resolve("file://" + specFile)
+	got, err := c.Resolve(context.Background(), "file://"+specFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -174,7 +175,7 @@ func TestResolve_fileURLInsideSpecs(t *testing.T) {
 func TestResolve_emptyLocation(t *testing.T) {
 	t.Parallel()
 	c := New(t.TempDir())
-	_, err := c.Resolve("")
+	_, err := c.Resolve(context.Background(), "")
 	if err == nil {
 		t.Fatal("expected error for empty location")
 	}
@@ -190,7 +191,7 @@ func TestResolve_downloadAndCache(t *testing.T) {
 
 	c := New(t.TempDir())
 
-	got, err := c.Resolve(srv.URL)
+	got, err := c.Resolve(context.Background(), srv.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -234,13 +235,13 @@ func TestResolve_serveFromCache(t *testing.T) {
 	c := New(t.TempDir())
 
 	// First call — download
-	_, err := c.Resolve(srv.URL)
+	_, err := c.Resolve(context.Background(), srv.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Second call — should serve from cache
-	got2, err := c.Resolve(srv.URL)
+	got2, err := c.Resolve(context.Background(), srv.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -271,7 +272,7 @@ func TestResolve_reDownloadAfterExpiry(t *testing.T) {
 	c := New(t.TempDir())
 
 	// First call — download
-	_, err := c.Resolve(srv.URL)
+	_, err := c.Resolve(context.Background(), srv.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -292,7 +293,7 @@ func TestResolve_reDownloadAfterExpiry(t *testing.T) {
 	}
 
 	// Second call — should re-download
-	_, err = c.Resolve(srv.URL)
+	_, err = c.Resolve(context.Background(), srv.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -304,7 +305,7 @@ func TestResolve_reDownloadAfterExpiry(t *testing.T) {
 func TestResolve_downloadError(t *testing.T) {
 	t.Parallel()
 	c := New(t.TempDir())
-	_, err := c.Resolve("https://nonexistent.example.com/spec")
+	_, err := c.Resolve(context.Background(), "https://nonexistent.example.com/spec")
 	if err == nil {
 		t.Fatal("expected error for non-existent URL")
 	}
@@ -318,7 +319,7 @@ func TestResolve_non200Status(t *testing.T) {
 	defer srv.Close()
 
 	c := New(t.TempDir())
-	_, err := c.Resolve(srv.URL)
+	_, err := c.Resolve(context.Background(), srv.URL)
 	if err == nil {
 		t.Fatal("expected error for 404")
 	}
@@ -335,7 +336,7 @@ func TestResolve_cacheDirCreated(t *testing.T) {
 	baseDir := t.TempDir()
 	c := New(baseDir)
 
-	_, err := c.Resolve(srv.URL)
+	_, err := c.Resolve(context.Background(), srv.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -356,7 +357,7 @@ func TestResolve_localFileOutsideSpecsCaching(t *testing.T) {
 
 	c := New(dir)
 
-	got, err := c.Resolve(specFile)
+	got, err := c.Resolve(context.Background(), specFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -386,13 +387,13 @@ func TestResolve_localFileOutsideSpecsServeFromCache(t *testing.T) {
 	c := New(dir)
 
 	// First call — cache
-	got1, err := c.Resolve(specFile)
+	got1, err := c.Resolve(context.Background(), specFile)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Second call — should serve from cache (file unchanged)
-	got2, err := c.Resolve(specFile)
+	got2, err := c.Resolve(context.Background(), specFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -421,7 +422,7 @@ func TestResolve_localFileOutsideSpecsReCacheOnModtimeChange(t *testing.T) {
 	c := New(dir)
 
 	// First call — cache
-	got1, err := c.Resolve(specFile)
+	got1, err := c.Resolve(context.Background(), specFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -432,7 +433,7 @@ func TestResolve_localFileOutsideSpecsReCacheOnModtimeChange(t *testing.T) {
 	}
 
 	// Second call — should re-cache because modtime changed
-	got2, err := c.Resolve(specFile)
+	got2, err := c.Resolve(context.Background(), specFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -586,7 +587,7 @@ func TestFileURIToPath_badScheme(t *testing.T) {
 func TestExists_emptyLocation(t *testing.T) {
 	t.Parallel()
 	c := New(t.TempDir())
-	err := c.Exists("")
+	err := c.Exists(context.Background(), "")
 	if err == nil {
 		t.Fatal("expected error for empty location")
 	}
@@ -601,7 +602,7 @@ func TestExists_localFileExists(t *testing.T) {
 	}
 
 	c := New(dir)
-	if err := c.Exists(specFile); err != nil {
+	if err := c.Exists(context.Background(), specFile); err != nil {
 		t.Errorf("expected nil, got %v", err)
 	}
 }
@@ -620,7 +621,7 @@ func TestExists_localFileSpecsRelative(t *testing.T) {
 	}
 
 	c := New(wsDir)
-	if err := c.Exists("specs/layers.yaml"); err != nil {
+	if err := c.Exists(context.Background(), "specs/layers.yaml"); err != nil {
 		t.Errorf("expected nil, got %v", err)
 	}
 }
@@ -628,7 +629,7 @@ func TestExists_localFileSpecsRelative(t *testing.T) {
 func TestExists_localFileNotFound(t *testing.T) {
 	t.Parallel()
 	c := New(t.TempDir())
-	err := c.Exists("/nonexistent/path/spec.yaml")
+	err := c.Exists(context.Background(), "/nonexistent/path/spec.yaml")
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -650,7 +651,7 @@ func TestExists_fileURLExists(t *testing.T) {
 	}
 
 	c := New(dir)
-	err := c.Exists("file://" + specFile)
+	err := c.Exists(context.Background(), "file://"+specFile)
 	if err != nil {
 		t.Errorf("expected nil, got %v", err)
 	}
@@ -659,7 +660,7 @@ func TestExists_fileURLExists(t *testing.T) {
 func TestExists_fileURLNotFound(t *testing.T) {
 	t.Parallel()
 	c := New(t.TempDir())
-	err := c.Exists("file:///nonexistent/path/spec.yaml")
+	err := c.Exists(context.Background(), "file:///nonexistent/path/spec.yaml")
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -675,7 +676,7 @@ func TestExists_fileURLNotFound(t *testing.T) {
 func TestExists_fileURLBadScheme(t *testing.T) {
 	t.Parallel()
 	c := New(t.TempDir())
-	err := c.Exists("https://example.com/spec")
+	err := c.Exists(context.Background(), "https://example.com/spec")
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -694,7 +695,7 @@ func TestExists_urlOK(t *testing.T) {
 	defer srv.Close()
 
 	c := New(t.TempDir())
-	if err := c.Exists(srv.URL); err != nil {
+	if err := c.Exists(context.Background(), srv.URL); err != nil {
 		t.Errorf("expected nil, got %v", err)
 	}
 }
@@ -707,7 +708,7 @@ func TestExists_urlNotFound(t *testing.T) {
 	defer srv.Close()
 
 	c := New(t.TempDir())
-	err := c.Exists(srv.URL)
+	err := c.Exists(context.Background(), srv.URL)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -723,7 +724,7 @@ func TestExists_urlNotFound(t *testing.T) {
 func TestExists_urlUnreachable(t *testing.T) {
 	t.Parallel()
 	c := New(t.TempDir())
-	err := c.Exists("https://nonexistent.example.com/spec")
+	err := c.Exists(context.Background(), "https://nonexistent.example.com/spec")
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -749,13 +750,13 @@ func TestExists_urlCached(t *testing.T) {
 	c := New(t.TempDir())
 
 	// First call — download via Resolve
-	_, err := c.Resolve(srv.URL)
+	_, err := c.Resolve(context.Background(), srv.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Second call — should use cache
-	if existsErr := c.Exists(srv.URL); existsErr != nil {
+	if existsErr := c.Exists(context.Background(), srv.URL); existsErr != nil {
 		t.Errorf("expected nil, got %v", existsErr)
 	}
 
@@ -769,7 +770,7 @@ func TestExists_LocationErrorFields(t *testing.T) {
 	t.Parallel()
 	c := New(t.TempDir())
 
-	err := c.Exists("/nonexistent/path")
+	err := c.Exists(context.Background(), "/nonexistent/path")
 	var locErr *LocationError
 	if !errors.As(err, &locErr) {
 		t.Fatal("expected LocationError")

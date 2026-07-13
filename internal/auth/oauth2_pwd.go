@@ -69,7 +69,7 @@ func (c *OAuth2PasswordAuthClient) fetchToken() (string, int, error) {
 	form := url.Values{
 		"grant_type": {grantTypePassword},
 		"username":   {c.Username},
-		"password":   {c.Password}, //nolint:goconst // form field name
+		"password":   {c.Password}, //nolint:goconst // Form field name.
 		"client_id":  {c.ClientID},
 	}
 	if c.ClientSecret != "" {
@@ -79,7 +79,7 @@ func (c *OAuth2PasswordAuthClient) fetchToken() (string, int, error) {
 		form.Set("scope", strings.Join(c.Scopes, " "))
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second) //nolint:mnd // token request timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second) //nolint:mnd // Token request timeout.
 	defer cancel()
 
 	tokenReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.TokenURL, strings.NewReader(form.Encode()))

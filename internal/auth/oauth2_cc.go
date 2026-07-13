@@ -77,7 +77,7 @@ func (c *OAuth2ClientCredentialsAuthClient) fetchToken() (string, int, error) {
 		form.Set("scope", strings.Join(c.Scopes, " "))
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second) //nolint:mnd // token request timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second) //nolint:mnd // Token request timeout.
 	defer cancel()
 
 	tokenReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.TokenURL, strings.NewReader(form.Encode()))

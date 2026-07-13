@@ -12,6 +12,7 @@ type HTTPClientConfig struct {
 	Cookies []httpclient.Cookie `json:"cookies,omitempty"`
 }
 
+// Spec represents an API specification with its domain, metadata, authentication, and HTTP client config.
 type Spec struct {
 	ID             string             `json:"id"`
 	Domain         string             `json:"domain"`
@@ -34,6 +35,7 @@ func (s *Spec) InitAuthenticator() error {
 	return s.Auth.New()
 }
 
+// Collection represents a group of endpoints within a spec.
 type Collection struct {
 	ID             string            `json:"id"`
 	SpecID         string            `json:"specId"`
@@ -49,6 +51,7 @@ type Collection struct {
 	}
 }
 
+// Tag represents a logical grouping of endpoints within a collection.
 type Tag struct {
 	ID           string `json:"id"`
 	CollectionID string `json:"collectionId"`
@@ -59,6 +62,7 @@ type Tag struct {
 	}
 }
 
+// Endpoint represents a single API endpoint with its method, path, tag, and operation details.
 type Endpoint struct {
 	ID           string          `json:"id"`
 	TagID        string          `json:"tagId"`

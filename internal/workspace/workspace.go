@@ -23,15 +23,13 @@ func New(root string) (*Workspace, error) {
 		if err != nil {
 			return nil, fmt.Errorf("cannot determine home directory: %w", err)
 		}
-		root = filepath.Join(home, DefaultRootName)
-	} else {
-		absRoot, err := filepath.Abs(root)
-		if err != nil {
-			return nil, fmt.Errorf("resolve path: %w", err)
-		}
-		root = absRoot
+		return &Workspace{root: filepath.Join(home, DefaultRootName)}, nil
 	}
-	return &Workspace{root: root}, nil
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		return nil, fmt.Errorf("resolve path: %w", err)
+	}
+	return &Workspace{root: absRoot}, nil
 }
 
 // NewFromBase creates a Workspace rooted at the given base directory.

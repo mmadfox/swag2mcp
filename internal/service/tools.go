@@ -74,7 +74,7 @@ func (s *Service) MakeToolDefinitions() (ToolDefinitions, error) {
 			continue
 		}
 
-		// Check if this is the instruction file
+		// Check if this is the instruction file.
 		if entry.Name() == "instruction.md" {
 			instruction, err = loadInstructionFromEmbed()
 			if err != nil {
@@ -127,7 +127,7 @@ func loadToolFromEmbed(filename string) (Tool, error) {
 		return Tool{}, errors.New("invalid markdown format: missing frontmatter delimiter")
 	}
 
-	// Find the end of frontmatter
+	// Find the end of frontmatter.
 	frontmatterEnd := -1
 	for i := 1; i < len(lines); i++ {
 		if lines[i] == "---" {
@@ -140,7 +140,7 @@ func loadToolFromEmbed(filename string) (Tool, error) {
 		return Tool{}, errors.New("invalid markdown format: missing closing frontmatter delimiter")
 	}
 
-	// Extract name from frontmatter
+	// Extract name from frontmatter.
 	var name string
 	for i := 1; i < frontmatterEnd; i++ {
 		if after, ok := strings.CutPrefix(lines[i], "name:"); ok {
@@ -153,7 +153,7 @@ func loadToolFromEmbed(filename string) (Tool, error) {
 		return Tool{}, errors.New("invalid markdown format: missing name in frontmatter")
 	}
 
-	// Extract description (everything after frontmatter)
+	// Extract description (everything after frontmatter).
 	var description strings.Builder
 	inDescription := false
 	for i := frontmatterEnd + 1; i < len(lines); i++ {
@@ -200,7 +200,7 @@ func (s *Service) makeAvaliablesSpecs() string {
 
 		if len(spec.LLMInstruction) > 0 {
 			sb.WriteString("instruction: ")
-			sb.WriteString(strings.ReplaceAll(spec.LLMInstruction, "\n", " ")) // Normalize to single line
+			sb.WriteString(strings.ReplaceAll(spec.LLMInstruction, "\n", " ")) // Normalize to a single line.
 			sb.WriteString("\n")
 		}
 

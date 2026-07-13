@@ -3,6 +3,7 @@ package mockserver
 import (
 	cryptorand "crypto/rand"
 	"encoding/hex"
+	"log/slog"
 	"maps"
 	"math/big"
 
@@ -226,7 +227,9 @@ func generateAllOf(schemas []*spec.Schema) map[string]any {
 func randomHexString(length int) string {
 	byteLength := (length + hexByteDivisor - 1) / hexByteDivisor
 	randomBytes := make([]byte, byteLength)
-	_, _ = cryptorand.Read(randomBytes)
+	if _, err := cryptorand.Read(randomBytes); err != nil {
+		slog.Default().Warn("failed to generate random hex", "error", err)
+	}
 	return hex.EncodeToString(randomBytes)[:length]
 }
 

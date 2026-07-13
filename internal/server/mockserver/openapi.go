@@ -80,7 +80,7 @@ func parseSpecDocument(location string, ws *workspace.Workspace) (*spec.Doc, err
 	}
 
 	cacheDir := cache.New(workspaceDir)
-	if resolvedPath, resolveError := cacheDir.Resolve(location); resolveError == nil {
+	if resolvedPath, resolveError := cacheDir.Resolve(context.Background(), location); resolveError == nil {
 		localPath = resolvedPath
 	}
 
@@ -157,7 +157,9 @@ func (m *apiMockServer) shutdown() {
 			apiShutdownTimeout*time.Second,
 		)
 		defer shutdownCancel()
-		_ = m.server.Shutdown(shutdownContext)
+		if err := m.server.Shutdown(shutdownContext); err != nil {
+			m.logger.Warn("mock api server shutdown error", "error", err)
+		}
 	}
 }
 

@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -120,7 +121,7 @@ func TestHTTPClientGet_Success(t *testing.T) {
 	defer srv.Close()
 
 	cli := defaultHTTPClient()
-	data, err := cli.Get(srv.URL)
+	data, err := cli.Get(context.Background(), srv.URL)
 	if err != nil {
 		t.Fatalf("Get() = %v", err)
 	}
@@ -138,7 +139,7 @@ func TestHTTPClientGet_Non200(t *testing.T) {
 	defer srv.Close()
 
 	cli := defaultHTTPClient()
-	_, err := cli.Get(srv.URL)
+	_, err := cli.Get(context.Background(), srv.URL)
 	if err == nil {
 		t.Fatal("expected error for 404")
 	}
@@ -153,7 +154,7 @@ func TestHTTPClientGet_EmptyBody(t *testing.T) {
 	defer srv.Close()
 
 	cli := defaultHTTPClient()
-	_, err := cli.Get(srv.URL)
+	_, err := cli.Get(context.Background(), srv.URL)
 	if err == nil {
 		t.Fatal("expected error for empty body")
 	}
@@ -295,7 +296,7 @@ func TestResolve_localFileOutsideSpecsReCacheOnExpiredMeta(t *testing.T) {
 
 	c := New(dir)
 
-	got1, err := c.Resolve(specFile)
+	got1, err := c.Resolve(context.Background(), specFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -312,7 +313,7 @@ func TestResolve_localFileOutsideSpecsReCacheOnExpiredMeta(t *testing.T) {
 		t.Fatal(mErr)
 	}
 
-	got2, err := c.Resolve(specFile)
+	got2, err := c.Resolve(context.Background(), specFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -340,7 +341,7 @@ func TestResolve_localFileOutsideSpecsReCacheOnMissingSpecFile(t *testing.T) {
 
 	c := New(dir)
 
-	got1, err := c.Resolve(specFile)
+	got1, err := c.Resolve(context.Background(), specFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -349,7 +350,7 @@ func TestResolve_localFileOutsideSpecsReCacheOnMissingSpecFile(t *testing.T) {
 		t.Fatal(rmErr)
 	}
 
-	got2, err := c.Resolve(specFile)
+	got2, err := c.Resolve(context.Background(), specFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -380,7 +381,7 @@ func TestExists_urlCachedExpired(t *testing.T) {
 	c := New(t.TempDir())
 
 	// First call — download via Resolve
-	_, err := c.Resolve(srv.URL)
+	_, err := c.Resolve(context.Background(), srv.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -398,7 +399,7 @@ func TestExists_urlCachedExpired(t *testing.T) {
 	}
 
 	// Exists should fall through to HEAD request
-	err = c.Exists(srv.URL)
+	err = c.Exists(context.Background(), srv.URL)
 	if err != nil {
 		t.Errorf("expected nil, got %v", err)
 	}
@@ -417,7 +418,7 @@ func TestExists_urlCachedMissingSpecFile(t *testing.T) {
 	c := New(t.TempDir())
 
 	// First call — download via Resolve
-	got, err := c.Resolve(srv.URL)
+	got, err := c.Resolve(context.Background(), srv.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -426,7 +427,7 @@ func TestExists_urlCachedMissingSpecFile(t *testing.T) {
 		t.Fatal(rmErr)
 	}
 
-	if exErr := c.Exists(srv.URL); exErr != nil {
+	if exErr := c.Exists(context.Background(), srv.URL); exErr != nil {
 		t.Errorf("expected nil, got %v", exErr)
 	}
 }
@@ -445,7 +446,7 @@ func TestExists_fileURLSpecsRelative(t *testing.T) {
 	}
 
 	c := New(wsDir)
-	if err := c.Exists("file://" + specFile); err != nil {
+	if err := c.Exists(context.Background(), "file://"+specFile); err != nil {
 		t.Errorf("expected nil, got %v", err)
 	}
 }
@@ -464,7 +465,7 @@ func TestExists_tildePath(t *testing.T) {
 	defer os.Remove(tmpFile)
 
 	c := New(t.TempDir())
-	if exErr := c.Exists("~/.swag2mcp-test-exists"); exErr != nil {
+	if exErr := c.Exists(context.Background(), "~/.swag2mcp-test-exists"); exErr != nil {
 		t.Errorf("expected nil, got %v", exErr)
 	}
 }
@@ -479,7 +480,7 @@ func TestExists_relativePath(t *testing.T) {
 	t.Chdir(dir)
 
 	c := New(dir)
-	if exErr := c.Exists("spec.yaml"); exErr != nil {
+	if exErr := c.Exists(context.Background(), "spec.yaml"); exErr != nil {
 		t.Errorf("expected nil, got %v", exErr)
 	}
 }

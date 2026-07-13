@@ -113,7 +113,9 @@ func (m *authMockServer) shutdown() {
 			authShutdownTimeout*time.Second,
 		)
 		defer shutdownCancel()
-		_ = m.server.Shutdown(shutdownContext)
+		if err := m.server.Shutdown(shutdownContext); err != nil {
+			m.logger.Warn("mock auth server shutdown error", "error", err)
+		}
 	}
 }
 
@@ -180,7 +182,9 @@ func (m *authMockServer) handleOAuth2CC(responseWriter http.ResponseWriter, requ
 
 	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(responseWriter).Encode(tokenResponse)
+	if err := json.NewEncoder(responseWriter).Encode(tokenResponse); err != nil {
+		m.logger.WarnContext(request.Context(), "failed to encode oauth2 cc token response", "error", err)
+	}
 }
 
 func (m *authMockServer) handleOAuth2Password(responseWriter http.ResponseWriter, request *http.Request) {
@@ -210,7 +214,9 @@ func (m *authMockServer) handleOAuth2Password(responseWriter http.ResponseWriter
 
 	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(responseWriter).Encode(tokenResponse)
+	if err := json.NewEncoder(responseWriter).Encode(tokenResponse); err != nil {
+		m.logger.WarnContext(request.Context(), "failed to encode oauth2 password token response", "error", err)
+	}
 }
 
 func (m *authMockServer) handleDigest(responseWriter http.ResponseWriter, request *http.Request) {
@@ -236,7 +242,9 @@ func (m *authMockServer) handleDigest(responseWriter http.ResponseWriter, reques
 
 	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(http.StatusOK)
-	_, _ = responseWriter.Write([]byte(`{"status":"authenticated","method":"digest"}`))
+	if _, err := responseWriter.Write([]byte(`{"status":"authenticated","method":"digest"}`)); err != nil {
+		m.logger.WarnContext(request.Context(), "failed to write digest response", "error", err)
+	}
 }
 
 func (m *authMockServer) generateDigestChallenge(responseWriter http.ResponseWriter) {
@@ -244,7 +252,9 @@ func (m *authMockServer) generateDigestChallenge(responseWriter http.ResponseWri
 	now := time.Now()
 	if m.nonce == "" || now.Sub(m.nonceTime) > authNonceTTL {
 		nonceBytes := make([]byte, authNonceBytes)
-		_, _ = rand.Read(nonceBytes)
+		if _, err := rand.Read(nonceBytes); err != nil {
+			m.logger.Warn("failed to generate nonce", "error", err)
+		}
 		m.nonce = hex.EncodeToString(nonceBytes)
 		m.opaque = hex.EncodeToString(nonceBytes)
 		m.nonceTime = now
@@ -286,6 +296,8 @@ func (m *authMockServer) parseDigestAuthorization(authorization string) map[stri
 
 func generateRandomToken() string {
 	tokenBytes := make([]byte, authTokenLength)
-	_, _ = rand.Read(tokenBytes)
+	if _, err := rand.Read(tokenBytes); err != nil {
+		slog.Default().Warn("failed to generate random token", "error", err)
+	}
 	return hex.EncodeToString(tokenBytes)
 }

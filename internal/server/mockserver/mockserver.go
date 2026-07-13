@@ -263,7 +263,9 @@ func (m *MockServer) printSummary() {
 
 	output.WriteString("\n")
 
-	_, _ = os.Stdout.WriteString(output.String())
+	if _, err := os.Stdout.WriteString(output.String()); err != nil {
+		m.logger.Warn("failed to write mock server output", "error", err)
+	}
 }
 
 // extractHostPort extracts the "host:port" portion from an address that may

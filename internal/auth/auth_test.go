@@ -4,6 +4,18 @@ import (
 	"testing"
 )
 
+// Compile-time checks: all auth clients satisfy the Authenticator interface.
+var (
+	_ Authenticator = (*NoAuthClient)(nil)
+	_ Authenticator = (*BasicAuthClient)(nil)
+	_ Authenticator = (*BearerTokenAuthClient)(nil)
+	_ Authenticator = (*DigestAuthClient)(nil)
+	_ Authenticator = (*OAuth2ClientCredentialsAuthClient)(nil)
+	_ Authenticator = (*OAuth2PasswordAuthClient)(nil)
+	_ Authenticator = (*APIKeyAuthClient)(nil)
+	_ Authenticator = (*ScriptAuthClient)(nil)
+)
+
 func TestType_String(t *testing.T) {
 	t.Parallel()
 

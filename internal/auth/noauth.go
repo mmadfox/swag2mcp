@@ -2,8 +2,10 @@ package auth
 
 import "net/http"
 
+// NoAuthClient is an authenticator that performs no authentication.
 type NoAuthClient struct{}
 
+// NewNoAuthClient creates a new NoAuthClient.
 func NewNoAuthClient() NoAuthClient {
 	return NoAuthClient{}
 }

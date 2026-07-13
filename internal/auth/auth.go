@@ -16,19 +16,25 @@ func (t Type) String() string {
 }
 
 const (
-	NoAuth                  Type = "none"
-	BasicAuth               Type = "basic"
-	BearerTokenAuth         Type = "bearer"
-	DigestAuth              Type = "digest"
-	OAuth2ClientCredentials Type = "oauth2-cc"  //nolint:gosec // not a credential, type name
-	OAuth2Password          Type = "oauth2-pwd" //nolint:gosec // not a credential, type name
-	APIKeyAuth              Type = "api-key"
-	ScriptAuth              Type = "script"
+	// NoAuth represents no authentication.
+	NoAuth Type = "none"
+	// BasicAuth represents HTTP Basic authentication.
+	BasicAuth Type = "basic"
+	// BearerTokenAuth represents Bearer token authentication.
+	BearerTokenAuth Type = "bearer"
+	// DigestAuth represents HTTP Digest authentication.
+	DigestAuth Type = "digest"
+	// OAuth2ClientCredentials represents OAuth2 Client Credentials flow.
+	OAuth2ClientCredentials Type = "oauth2-cc" //nolint:gosec // This is a type name, not a credential.
+	// OAuth2Password represents OAuth2 Password grant flow.
+	OAuth2Password Type = "oauth2-pwd" //nolint:gosec // This is a type name, not a credential.
+	// APIKeyAuth represents API key authentication.
+	APIKeyAuth Type = "api-key"
+	// ScriptAuth represents authentication via an external script.
+	ScriptAuth Type = "script"
 )
 
-// authValidator validates auth client structs using struct tags.
-//
-//nolint:gochecknoglobals // validator is stateless and safe to reuse.
+//nolint:gochecknoglobals // Validator is stateless and safe to reuse.
 var authValidator = validator.New(validator.WithRequiredStructEnabled())
 
 // Info holds the authentication details extracted during Apply.

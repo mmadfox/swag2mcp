@@ -26,7 +26,7 @@ type BootstrapRequest struct {
 
 // Bootstrap loads the configuration, initializes the workspace, creates the
 // global HTTP client, and indexes all specs, collections, tags, and endpoints.
-func (s *Service) Bootstrap(_ context.Context, request BootstrapRequest) error {
+func (s *Service) Bootstrap(ctx context.Context, request BootstrapRequest) error {
 	s.startedAt = time.Now()
 
 	configuration, loadError := s.loadConfiguration(request.ConfFilepath, request.Tags)
@@ -56,7 +56,7 @@ func (s *Service) Bootstrap(_ context.Context, request BootstrapRequest) error {
 	filter := config.NewFilter(request.Tags)
 
 	for specConfig := range configuration.Iterate(filter) {
-		if specError := s.processSpec(specConfig, configuration.MockEnabled, configuration.MockAuth); specError != nil {
+		if specError := s.processSpec(ctx, specConfig, configuration.MockEnabled, configuration.MockAuth); specError != nil {
 			return specError
 		}
 	}
@@ -136,7 +136,7 @@ func (s *Service) initializeWorkspace(workspaceDirectory string) error {
 	return nil
 }
 
-func (s *Service) processSpec(specConfig *config.Spec, mockEnabled bool, mockAuth *config.MockAuthConfig) error {
+func (s *Service) processSpec(ctx context.Context, specConfig *config.Spec, mockEnabled bool, mockAuth *config.MockAuthConfig) error {
 	specification, specError := s.buildSpecInfo(specConfig, mockEnabled, mockAuth)
 	if specError != nil {
 		return specError
@@ -153,7 +153,7 @@ func (s *Service) processSpec(specConfig *config.Spec, mockEnabled bool, mockAut
 		}
 
 		collectionInfo, processError := s.processCollection(
-			specification, specConfig, collectionConfig,
+			ctx, specification, specConfig, collectionConfig,
 			allTags, allEndpoints,
 		)
 		if processError != nil {
@@ -168,6 +168,7 @@ func (s *Service) processSpec(specConfig *config.Spec, mockEnabled bool, mockAut
 }
 
 func (s *Service) processCollection(
+	ctx context.Context,
 	specification *types.Spec,
 	specConfig *config.Spec,
 	collectionConfig *config.Collection,
@@ -187,7 +188,7 @@ func (s *Service) processCollection(
 		),
 	}
 
-	specDocument, parseError := s.parseSpecDocument(collectionConfig.Location)
+	specDocument, parseError := s.parseSpecDocument(ctx, collectionConfig.Location)
 	if parseError != nil {
 		return nil, parseError
 	}
@@ -241,12 +242,12 @@ func (s *Service) processCollection(
 	return collectionInfo, nil
 }
 
-func (s *Service) parseSpecDocument(location string) (*spec.Doc, error) {
+func (s *Service) parseSpecDocument(ctx context.Context, location string) (*spec.Doc, error) {
 	localPath := location
 	var resolveError error
 
 	if s.cache != nil {
-		localPath, resolveError = s.cache.Resolve(location)
+		localPath, resolveError = s.cache.Resolve(ctx, location)
 		if resolveError != nil {
 			return nil, fmt.Errorf("collection %q: %w", location, resolveError)
 		}

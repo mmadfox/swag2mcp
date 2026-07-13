@@ -1,11 +1,13 @@
 package service
 
+// TagListItem represents a tag with its method count for display in lists.
 type TagListItem struct {
 	ID           string `json:"id"           jsonschema:"required,Unique identifier for the tag"`
 	Title        string `json:"title"        jsonschema:"required,Human-readable title of the tag"`
 	CountMethods int    `json:"countMethods" jsonschema:"required,Number of methods in the tag"`
 }
 
+// ToolInfo represents a single MCP tool with its name and description.
 type ToolInfo struct {
 	Name        string `json:"name"        jsonschema:"required,Name of the tool"`
 	Description string `json:"description" jsonschema:"required,Description of the tool"`
@@ -25,6 +27,7 @@ type EndpointSearchItem struct {
 	Summary         string `json:"summary"         jsonschema:"required,Human-readable summary of the endpoint"`
 }
 
+// EndpointTagItem represents an endpoint within a tag context.
 type EndpointTagItem struct {
 	ID      string `json:"id"      jsonschema:"required,Unique identifier for the endpoint"`
 	Method  string `json:"method"  jsonschema:"required,HTTP method (GET, POST, etc.)"`
@@ -32,6 +35,7 @@ type EndpointTagItem struct {
 	Summary string `json:"summary" jsonschema:"required,Human-readable summary of the endpoint"`
 }
 
+// EndpointCollectionItem represents an endpoint within a collection context.
 type EndpointCollectionItem struct {
 	ID      string `json:"id"      jsonschema:"required,Unique identifier for the endpoint"`
 	TagID   string `json:"tagId"   jsonschema:"required,Unique identifier for the tag"`
@@ -41,6 +45,7 @@ type EndpointCollectionItem struct {
 	Summary string `json:"summary" jsonschema:"required,Human-readable summary of the endpoint"`
 }
 
+// Endpoint represents a minimal endpoint with method, path, and summary.
 type Endpoint struct {
 	ID      string `json:"id"      jsonschema:"required,Unique identifier for the endpoint"`
 	Method  string `json:"method"  jsonschema:"required,HTTP method (GET, POST, etc.)"`

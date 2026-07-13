@@ -88,7 +88,7 @@ func (c *ScriptAuthClient) scriptPath() string {
 func (c *ScriptAuthClient) execute() (string, int, error) {
 	scriptPath := c.scriptPath()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second) //nolint:mnd // script timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second) //nolint:mnd // Script execution timeout.
 	defer cancel()
 
 	var cmd *exec.Cmd

@@ -13,6 +13,8 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
+// Service is the core business logic layer for swag2mcp.
+// It manages the search index, cache, workspace, HTTP client, rate limiter, and configuration.
 type Service struct {
 	index           *index.Index
 	cache           *cache.Cache
@@ -28,26 +30,31 @@ type Service struct {
 	config          *config.Config
 }
 
+// NewOption is a functional option for configuring a Service.
 type NewOption func(*Service)
 
+// WithDisableLLMAuth configures whether the auth tool is disabled.
 func WithDisableLLMAuth(disable bool) NewOption {
 	return func(s *Service) {
 		s.disableLLMAuth.Store(disable)
 	}
 }
 
+// WithDumpDir configures the directory for dumping HTTP request traces.
 func WithDumpDir(dir string) NewOption {
 	return func(s *Service) {
 		s.dumpDir = dir
 	}
 }
 
+// WithVersion configures the version string for the service.
 func WithVersion(version string) NewOption {
 	return func(s *Service) {
 		s.version = version
 	}
 }
 
+// New creates a new Service with the given options.
 func New(opts ...NewOption) (*Service, error) {
 	idx, err := index.New()
 	if err != nil {

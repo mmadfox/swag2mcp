@@ -12,12 +12,14 @@ const (
 	invokeErrorErrCode      = "invoke_error"
 )
 
+// LLMError is an error type returned to the LLM with a machine-readable code and human-readable message.
 type LLMError struct {
 	Code     string `json:"code"`
 	Message  string `json:"message"`
 	Original string `json:"hint,omitempty"`
 }
 
+// NewValidationError creates an LLMError with code "validation_failed".
 func NewValidationError(msg string, err error) *LLMError {
 	return &LLMError{
 		Code:     validationFailedErrCode,
@@ -26,6 +28,7 @@ func NewValidationError(msg string, err error) *LLMError {
 	}
 }
 
+// NewNotFoundError creates an LLMError with code "not_found".
 func NewNotFoundError(msg string, err error) *LLMError {
 	return &LLMError{
 		Code:     notFoundErrCode,
@@ -34,6 +37,7 @@ func NewNotFoundError(msg string, err error) *LLMError {
 	}
 }
 
+// NewRateLimitError creates an LLMError with code "rate_limit".
 func NewRateLimitError(err error) *LLMError {
 	return &LLMError{
 		Code:     rateLimitErrCode,
@@ -42,6 +46,7 @@ func NewRateLimitError(err error) *LLMError {
 	}
 }
 
+// NewInvokeError creates an LLMError with code "invoke_error".
 func NewInvokeError(msg string, err error) *LLMError {
 	return &LLMError{
 		Code:     invokeErrorErrCode,
@@ -50,6 +55,7 @@ func NewInvokeError(msg string, err error) *LLMError {
 	}
 }
 
+// Error returns the JSON-encoded string representation of the LLMError.
 func (e *LLMError) Error() string {
 	data, _ := json.Marshal(e)
 	return string(data)

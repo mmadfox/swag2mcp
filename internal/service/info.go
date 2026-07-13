@@ -82,7 +82,7 @@ type MockInfo struct {
 
 // Info returns a comprehensive summary of the current service state.
 // If cfg is nil, the method uses the config stored during Bootstrap.
-func (s *Service) Info(_ context.Context, cfg *config.Config) (InfoResponse, error) {
+func (s *Service) Info(ctx context.Context, cfg *config.Config) (InfoResponse, error) {
 	resp := InfoResponse{
 		Version:   s.version,
 		Workspace: s.ws.Root(),
@@ -101,7 +101,7 @@ func (s *Service) Info(_ context.Context, cfg *config.Config) (InfoResponse, err
 		resp.Mock = MockInfo{Enabled: cfg.MockEnabled}
 	}
 
-	resp.LatestVersion = s.fetchLatestVersion()
+	resp.LatestVersion = s.fetchLatestVersion(ctx)
 
 	return resp, nil
 }
@@ -233,8 +233,8 @@ const (
 	defaultMCPTransport = "stdio"
 )
 
-func (s *Service) fetchLatestVersion() string {
-	ctx, cancel := context.WithTimeout(context.Background(), githubFetchTimeout*time.Second)
+func (s *Service) fetchLatestVersion(ctx context.Context) string {
+	ctx, cancel := context.WithTimeout(ctx, githubFetchTimeout*time.Second)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet,

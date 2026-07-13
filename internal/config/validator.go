@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -14,8 +15,8 @@ import (
 )
 
 var (
-	configValidator   *validator.Validate //nolint:gochecknoglobals // lazily initialized
-	configValidatorMu sync.Mutex          //nolint:gochecknoglobals // guards validator init
+	configValidator   *validator.Validate //nolint:gochecknoglobals // Lazily initialized singleton.
+	configValidatorMu sync.Mutex          //nolint:gochecknoglobals // Guards lazy validator initialization.
 	domainRegex       = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,60}$`)
 	titleRegex        = regexp.MustCompile(`^[\p{L}\p{N} #*_` + "`" + `~>\[\]()|.,!?;:'"\\-]+$`)
 	instructionRegex  = regexp.MustCompile(`^[\p{L}\p{N}\s#*_` + "`" + `~>\[\]()|.,!?;:'"\\-]+$`)
@@ -178,7 +179,7 @@ func validateSpecLocations(cfg *Config, filter *Filter, cacheInstance *cache.Cac
 			}
 
 			loc := col.Location
-			err := cacheInstance.Exists(loc)
+			err := cacheInstance.Exists(context.Background(), loc)
 			if err != nil {
 				ve := validationError{
 					spec:       spec.Domain,
@@ -215,28 +216,28 @@ func extractPort(addr string) int {
 	return port
 }
 
-func getValidator() *validator.Validate {
+func getValidator() (*validator.Validate, error) {
 	configValidatorMu.Lock()
 	defer configValidatorMu.Unlock()
 	if configValidator != nil {
-		return configValidator
+		return configValidator, nil
 	}
 	configValidator = validator.New(
 		validator.WithRequiredStructEnabled(),
 	)
 	if err := configValidator.RegisterValidation("domain_format", domainFormatValidation); err != nil {
-		panic(err)
+		return nil, fmt.Errorf("register domain_format validation: %w", err)
 	}
 	if err := configValidator.RegisterValidation("title_format", titleFormatValidation); err != nil {
-		panic(err)
+		return nil, fmt.Errorf("register title_format validation: %w", err)
 	}
 	if err := configValidator.RegisterValidation("instruction_format", instructionFormatValidation); err != nil {
-		panic(err)
+		return nil, fmt.Errorf("register instruction_format validation: %w", err)
 	}
 	if err := configValidator.RegisterValidation("mock_addr_format", mockAddrFormatValidation); err != nil {
-		panic(err)
+		return nil, fmt.Errorf("register mock_addr_format validation: %w", err)
 	}
-	return configValidator
+	return configValidator, nil
 }
 
 // mockAddrFormatValidation validates that the address is in format "host:port"
@@ -355,8 +356,16 @@ func humanReadableError(fe validator.FieldError) string {
 // collectStructErrors runs the validator on a struct and collects all field errors.
 func collectStructErrors(prefix string, v any) []validationError {
 	var errs []validationError
-	if err := getValidator().Struct(v); err != nil {
-		//nolint:errorlint // validator.Struct returns ValidationErrors directly
+	val, valErr := getValidator()
+	if valErr != nil {
+		errs = append(errs, validationError{
+			field:   prefix,
+			message: fmt.Sprintf("validator initialization failed: %s", valErr),
+		})
+		return errs
+	}
+	if err := val.Struct(v); err != nil {
+		//nolint:errorlint // validator.Struct returns ValidationErrors directly.
 		fe, ok := err.(validator.ValidationErrors)
 		if !ok {
 			return errs

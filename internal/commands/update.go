@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 
@@ -94,7 +95,7 @@ func cacheSpecs(cfg *config.Config, ca *cache.Cache, ws *workspace.Workspace) (i
 			if col.Disable {
 				continue
 			}
-			if _, rErr := ca.Resolve(col.Location); rErr != nil {
+			if _, rErr := ca.Resolve(context.Background(), col.Location); rErr != nil {
 				return 0, fmt.Errorf("cache %s: %w", col.Location, rErr)
 			}
 			total++

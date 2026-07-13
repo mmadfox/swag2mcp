@@ -30,8 +30,8 @@ func defaultHTTPClient() *httpClient {
 	return &httpClient{cli: cli}
 }
 
-func (h *httpClient) Get(specURL string) ([]byte, error) {
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, specURL, nil)
+func (h *httpClient) Get(ctx context.Context, specURL string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, specURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
 	}

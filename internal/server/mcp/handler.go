@@ -8,7 +8,9 @@ import (
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-type svc interface {
+// Svc is the service interface that the MCP handler depends on.
+// It defines all operations exposed as MCP tools.
+type Svc interface {
 	Specs(_ context.Context) (service.SpecsResponse, error)
 	SpecByID(_ context.Context, req service.SpecByIDRequest) (service.SpecByIDResponse, error)
 	CollectionByID(_ context.Context, req service.CollectionByIDRequest) (service.CollectionByIDResponse, error)
@@ -32,7 +34,7 @@ type svc interface {
 }
 
 type handler struct {
-	service svc
+	service Svc
 }
 
 // handleSpecByID handles the spec_by_id tool call.

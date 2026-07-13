@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"iter"
+	"log/slog"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -458,7 +459,9 @@ func (idx *Index) reader() (*bluge.Reader, error) {
 	}
 
 	if !idx.blugeReader.CompareAndSwap(nil, newReader) {
-		_ = newReader.Close()
+		if closeErr := newReader.Close(); closeErr != nil {
+			slog.Default().Debug("closing bluge reader after CAS", "error", closeErr)
+		}
 	}
 
 	return idx.blugeReader.Load(), nil
@@ -499,13 +502,15 @@ func (idx *Index) collectResults(
 
 func extractDocID(match *search.DocumentMatch) string {
 	var docID string
-	_ = match.VisitStoredFields(func(field string, value []byte) bool {
+	if err := match.VisitStoredFields(func(field string, value []byte) bool {
 		if field == "_id" {
 			docID = string(value)
 			return false
 		}
 		return true
-	})
+	}); err != nil {
+		slog.Default().Debug("visiting stored fields", "error", err)
+	}
 	return docID
 }
 
@@ -516,7 +521,9 @@ func (idx *Index) RefreshSearchReader() {
 	defer idx.mu.Unlock()
 
 	if r := idx.blugeReader.Load(); r != nil {
-		_ = r.Close()
+		if err := r.Close(); err != nil {
+			slog.Default().Debug("closing bluge reader on refresh", "error", err)
+		}
 	}
 
 	newReader, err := idx.blugeWriter.Reader()
@@ -531,7 +538,9 @@ func (idx *Index) Close() error {
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
 	if r := idx.blugeReader.Load(); r != nil {
-		_ = r.Close()
+		if err := r.Close(); err != nil {
+			slog.Default().Debug("closing bluge reader on close", "error", err)
+		}
 	}
 	return idx.blugeWriter.Close()
 }

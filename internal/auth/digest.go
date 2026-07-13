@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"sync"
@@ -127,7 +128,9 @@ func (c *DigestAuthClient) fetchChallenge(req *http.Request) (digestChallenge, e
 	if doErr != nil {
 		return digestChallenge{}, fmt.Errorf("challenge request: %w", doErr)
 	}
-	_ = resp.Body.Close()
+	if err := resp.Body.Close(); err != nil {
+		slog.Default().DebugContext(context.Background(), "closing digest challenge response", "error", err)
+	}
 
 	if resp.StatusCode != http.StatusUnauthorized {
 		return digestChallenge{}, fmt.Errorf("expected 401 for digest challenge, got %d", resp.StatusCode)
@@ -206,7 +209,9 @@ func (c *DigestAuthClient) buildDigest(method, uri string, ch digestChallenge, n
 
 func (c *DigestAuthClient) generateCnonce() string {
 	b := make([]byte, digestNonceBytes)
-	_, _ = rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		slog.Default().Warn("failed to generate cnonce", "error", err)
+	}
 	return hex.EncodeToString(b)
 }
 

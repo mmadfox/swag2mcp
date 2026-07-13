@@ -11,6 +11,7 @@ type Doc struct {
 	PathItems   []*PathItem `json:"pathItems,omitempty"`
 }
 
+// Server represents an API server with URL and description.
 type Server struct {
 	URL         string `json:"url,omitempty"`
 	Description string `json:"description,omitempty"`
@@ -23,6 +24,7 @@ type PathItem struct {
 	Operation *Operation `json:"operation,omitempty"`
 }
 
+// Operation represents a single API operation (method) with its parameters, request body, and responses.
 type Operation struct {
 	ID          string               `json:"id,omitempty"`
 	Tags        []string             `json:"tags,omitempty"`
@@ -34,6 +36,7 @@ type Operation struct {
 	Responses   map[string]*Response `json:"responses,omitempty"`
 }
 
+// Parameter represents a request parameter with name, location, schema, and required status.
 type Parameter struct {
 	Name        string  `json:"name,omitempty"`
 	In          string  `json:"in,omitempty"` // "query", "path", "header", "cookie"
@@ -42,21 +45,25 @@ type Parameter struct {
 	Schema      *Schema `json:"schema,omitempty"`
 }
 
+// RequestBody represents an HTTP request body with content type definitions.
 type RequestBody struct {
 	Description string                `json:"description,omitempty"`
 	Required    bool                  `json:"required,omitempty"`
 	Content     map[string]*MediaType `json:"content,omitempty"`
 }
 
+// Response represents an API response with description and content type definitions.
 type Response struct {
 	Description string                `json:"description,omitempty"`
 	Content     map[string]*MediaType `json:"content,omitempty"`
 }
 
+// MediaType represents a media type with an associated schema.
 type MediaType struct {
 	Schema *Schema `json:"schema,omitempty"`
 }
 
+// Schema represents a JSON Schema definition for request/response bodies.
 type Schema struct {
 	Type       string             `json:"type,omitempty"`
 	Format     string             `json:"format,omitempty"`

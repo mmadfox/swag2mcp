@@ -16,6 +16,9 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+// Compile-time check: service.Service satisfies the Svc interface.
+var _ Svc = (*service.Service)(nil)
+
 func TestServe_NoService(t *testing.T) {
 	t.Parallel()
 
@@ -31,7 +34,7 @@ func TestServe_MakeToolDefinitionsError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().MakeToolDefinitions().Return(
 		service.ToolDefinitions{}, errors.New("tool defs error"),
 	)
@@ -88,7 +91,7 @@ func TestRegisterTools_AllTools(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().MakeToolDefinitions().Return(
 		service.ToolDefinitions{
 			Instruction: "test",
@@ -128,7 +131,7 @@ func TestRegisterTools_UnknownTool(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().MakeToolDefinitions().Return(
 		service.ToolDefinitions{
 			Instruction: "test",
@@ -153,7 +156,7 @@ func TestServe_WithLogger(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().MakeToolDefinitions().Return(
 		service.ToolDefinitions{
 			Instruction: "test",
@@ -178,7 +181,7 @@ func TestServe_WithVersion(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().MakeToolDefinitions().Return(
 		service.ToolDefinitions{
 			Instruction: "test",
@@ -201,7 +204,7 @@ func TestServe_UnsupportedTransport(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().MakeToolDefinitions().Return(
 		service.ToolDefinitions{
 			Instruction: "test",
@@ -372,7 +375,7 @@ func TestHandler_SpecList_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().Specs(gomock.Any()).Return(
 		service.SpecsResponse{
 			Specs: []service.SpecItem{{ID: "spec-1", Domain: "test"}},
@@ -395,7 +398,7 @@ func TestHandler_SpecList_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().Specs(gomock.Any()).Return(
 		service.SpecsResponse{}, errors.New("specs error"),
 	)
@@ -413,7 +416,7 @@ func TestHandler_SpecByID_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().SpecByID(gomock.Any(), gomock.Any()).Return(
 		service.SpecByIDResponse{
 			Spec: service.Spec{ID: "abc", Domain: "test"},
@@ -438,7 +441,7 @@ func TestHandler_SpecByID_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().SpecByID(gomock.Any(), gomock.Any()).Return(
 		service.SpecByIDResponse{}, errors.New("not found"),
 	)
@@ -458,7 +461,7 @@ func TestHandler_CollectionByID_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().CollectionByID(gomock.Any(), gomock.Any()).Return(
 		service.CollectionByIDResponse{
 			Collection: service.Collection{ID: "coll-1", Title: "Test Coll"},
@@ -483,7 +486,7 @@ func TestHandler_CollectionByID_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().CollectionByID(gomock.Any(), gomock.Any()).Return(
 		service.CollectionByIDResponse{}, errors.New("not found"),
 	)
@@ -503,7 +506,7 @@ func TestHandler_CollectionBySpec_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().CollectionsBySpec(gomock.Any(), gomock.Any()).Return(
 		service.CollectionsResponse{
 			Collections: []service.CollectionItem{{ID: "coll-1", Title: "Coll"}},
@@ -528,7 +531,7 @@ func TestHandler_CollectionBySpec_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().CollectionsBySpec(gomock.Any(), gomock.Any()).Return(
 		service.CollectionsResponse{}, errors.New("not found"),
 	)
@@ -548,7 +551,7 @@ func TestHandler_TagsByCollection_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().TagsByCollection(gomock.Any(), gomock.Any()).Return(
 		service.TagsByCollectionResponse{
 			Tags: []service.TagListItem{{ID: "tag-1", Title: "Tag"}},
@@ -573,7 +576,7 @@ func TestHandler_TagsByCollection_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().TagsByCollection(gomock.Any(), gomock.Any()).Return(
 		service.TagsByCollectionResponse{}, errors.New("not found"),
 	)
@@ -593,7 +596,7 @@ func TestHandler_TagsBySpec_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().TagsBySpec(gomock.Any(), gomock.Any()).Return(
 		service.TagsBySpecResponse{
 			Tags: []service.TagListItem{{ID: "tag-1", Title: "Tag"}},
@@ -618,7 +621,7 @@ func TestHandler_TagsBySpec_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().TagsBySpec(gomock.Any(), gomock.Any()).Return(
 		service.TagsBySpecResponse{}, errors.New("not found"),
 	)
@@ -638,7 +641,7 @@ func TestHandler_TagByID_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().TagByID(gomock.Any(), gomock.Any()).Return(
 		service.TagByIDResponse{
 			Tag: service.TagListItem{ID: "tag-1", Title: "Test Tag"},
@@ -663,7 +666,7 @@ func TestHandler_TagByID_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().TagByID(gomock.Any(), gomock.Any()).Return(
 		service.TagByIDResponse{}, errors.New("not found"),
 	)
@@ -683,7 +686,7 @@ func TestHandler_EndpointByID_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().EndpointByID(gomock.Any(), gomock.Any()).Return(
 		service.EndpointByIDResponse{
 			Endpoint: service.Endpoint{ID: "ep-1", Method: "GET", Path: "/test"},
@@ -708,7 +711,7 @@ func TestHandler_EndpointByID_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().EndpointByID(gomock.Any(), gomock.Any()).Return(
 		service.EndpointByIDResponse{}, errors.New("not found"),
 	)
@@ -728,7 +731,7 @@ func TestHandler_EndpointsByTag_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().EndpointsByTag(gomock.Any(), gomock.Any()).Return(
 		service.EndpointsByTagResponse{
 			Endpoints: []service.EndpointTagItem{{ID: "ep-1", Method: "GET"}},
@@ -753,7 +756,7 @@ func TestHandler_EndpointsByTag_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().EndpointsByTag(gomock.Any(), gomock.Any()).Return(
 		service.EndpointsByTagResponse{}, errors.New("not found"),
 	)
@@ -773,7 +776,7 @@ func TestHandler_EndpointsByCollection_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().EndpointsByCollection(gomock.Any(), gomock.Any()).Return(
 		service.EndpointsByCollectionResponse{
 			Endpoints: []service.EndpointCollectionItem{{ID: "ep-1", Method: "GET"}},
@@ -798,7 +801,7 @@ func TestHandler_EndpointsByCollection_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().EndpointsByCollection(gomock.Any(), gomock.Any()).Return(
 		service.EndpointsByCollectionResponse{}, errors.New("not found"),
 	)
@@ -818,7 +821,7 @@ func TestHandler_EndpointsBySpec_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().EndpointsBySpec(gomock.Any(), gomock.Any()).Return(
 		service.EndpointsBySpecResponse{
 			Endpoints: []service.EndpointSearchItem{{ID: "ep-1", Method: "GET"}},
@@ -843,7 +846,7 @@ func TestHandler_EndpointsBySpec_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().EndpointsBySpec(gomock.Any(), gomock.Any()).Return(
 		service.EndpointsBySpecResponse{}, errors.New("not found"),
 	)
@@ -863,7 +866,7 @@ func TestHandler_Search_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().Search(gomock.Any(), gomock.Any()).Return(
 		service.SearchResponse{
 			Endpoints: []service.EndpointSearchItem{{ID: "ep-1", Method: "GET"}},
@@ -888,7 +891,7 @@ func TestHandler_Search_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().Search(gomock.Any(), gomock.Any()).Return(
 		service.SearchResponse{}, errors.New("search error"),
 	)
@@ -908,7 +911,7 @@ func TestHandler_Inspect_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().Inspect(gomock.Any(), gomock.Any()).Return(
 		service.InspectResponse{
 			ID:     "ep-1",
@@ -935,7 +938,7 @@ func TestHandler_Inspect_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().Inspect(gomock.Any(), gomock.Any()).Return(
 		service.InspectResponse{}, errors.New("not found"),
 	)
@@ -955,7 +958,7 @@ func TestHandler_Invoke_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().Invoke(gomock.Any(), gomock.Any()).Return(
 		service.InvokeResponse{
 			StatusCode: 200,
@@ -981,7 +984,7 @@ func TestHandler_Invoke_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().Invoke(gomock.Any(), gomock.Any()).Return(
 		service.InvokeResponse{}, errors.New("invoke error"),
 	)
@@ -1001,7 +1004,7 @@ func TestHandler_Auth_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().Auth(gomock.Any(), gomock.Any()).Return(
 		service.AuthResponse{
 			Token: "test-token",
@@ -1026,7 +1029,7 @@ func TestHandler_Auth_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().Auth(gomock.Any(), gomock.Any()).Return(
 		service.AuthResponse{}, errors.New("auth error"),
 	)
@@ -1046,7 +1049,7 @@ func TestHandler_Info_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().Info(gomock.Any(), gomock.Any()).Return(
 		service.InfoResponse{
 			Version: "v1.0.0",
@@ -1079,7 +1082,7 @@ func TestHandler_Info_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().Info(gomock.Any(), gomock.Any()).Return(
 		service.InfoResponse{}, errors.New("info error"),
 	)
@@ -1097,7 +1100,7 @@ func TestHandler_StructuredContent(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock := NewMocksvc(ctrl)
+	mock := NewMockSvc(ctrl)
 	mock.EXPECT().Specs(gomock.Any()).Return(
 		service.SpecsResponse{
 			Specs: []service.SpecItem{{ID: "spec-1", Domain: "test"}},

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math/rand/v2"
 	"net/http"
 	"os"
@@ -15,10 +16,14 @@ import (
 )
 
 const (
+	// CacheDirName is the name of the cache subdirectory within the workspace.
 	CacheDirName = "cache"
+	// SpecsDirName is the name of the specs subdirectory within the workspace.
 	SpecsDirName = "specs"
-	MaxTTL       = 48 * time.Hour
-	MinTTL       = 1 * time.Hour
+	// MaxTTL is the maximum time-to-live for cached spec files.
+	MaxTTL = 48 * time.Hour
+	// MinTTL is the minimum time-to-live for cached spec files.
+	MinTTL = 1 * time.Hour
 )
 
 type sourceType string
@@ -61,7 +66,7 @@ func (c *Cache) SetWorkspaceDir(workspaceDir string) {
 //   - URLs are always cached on disk.
 //   - Local paths inside workspaceDir/specs are returned as-is (not cached).
 //   - Local paths outside workspaceDir/specs are cached on disk.
-func (c *Cache) Resolve(location string) (string, error) {
+func (c *Cache) Resolve(ctx context.Context, location string) (string, error) {
 	if location == "" {
 		return "", errors.New("empty location")
 	}
@@ -92,7 +97,7 @@ func (c *Cache) Resolve(location string) (string, error) {
 		return specPath, nil
 	}
 
-	data, modTime, err := c.loadSource(normalized, stype)
+	data, modTime, err := c.loadSource(ctx, normalized, stype)
 	if err != nil {
 		return "", err
 	}
@@ -161,7 +166,7 @@ func (c *Cache) hitCache(normalized string, stype sourceType, metaPath, specPath
 	return true
 }
 
-func (c *Cache) loadSource(normalized string, stype sourceType) ([]byte, time.Time, error) {
+func (c *Cache) loadSource(ctx context.Context, normalized string, stype sourceType) ([]byte, time.Time, error) {
 	switch stype {
 	case sourceLocal:
 		fi, statErr := os.Stat(normalized)
@@ -175,7 +180,7 @@ func (c *Cache) loadSource(normalized string, stype sourceType) ([]byte, time.Ti
 		return data, fi.ModTime(), nil
 
 	case sourceURL:
-		data, getErr := c.cli.Get(normalized)
+		data, getErr := c.cli.Get(ctx, normalized)
 		if getErr != nil {
 			return nil, time.Time{}, fmt.Errorf("download %s: %w", normalized, getErr)
 		}
@@ -191,7 +196,7 @@ func (c *Cache) loadSource(normalized string, stype sourceType) ([]byte, time.Ti
 // For file:// URLs it resolves the path and checks [os.Stat].
 // For http(s):// URLs it checks the cache first, then does a HEAD request.
 // Returns nil if accessible, [LocationError] otherwise.
-func (c *Cache) Exists(location string) error {
+func (c *Cache) Exists(ctx context.Context, location string) error {
 	if location == "" {
 		return errors.New("empty location")
 	}
@@ -214,7 +219,7 @@ func (c *Cache) Exists(location string) error {
 		return nil
 
 	case isURL:
-		return c.existsURL(location)
+		return c.existsURL(ctx, location)
 
 	default:
 		path := expandTilde(location)
@@ -282,7 +287,7 @@ func randomTTL() time.Duration {
 }
 
 // existsURL checks if a URL is accessible, using cache if available.
-func (c *Cache) existsURL(url string) error {
+func (c *Cache) existsURL(ctx context.Context, url string) error {
 	// Check cache first
 	if c.dir != "" {
 		hash := cacheKey(url)
@@ -300,13 +305,13 @@ func (c *Cache) existsURL(url string) error {
 	const fallbackTimeout = 10 * time.Second
 
 	// HEAD request as fallback
-	ctx, cancel := context.WithTimeout(
-		context.Background(),
+	headCtx, cancel := context.WithTimeout(
+		ctx,
 		fallbackTimeout,
 	)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodHead, url, nil)
+	req, err := http.NewRequestWithContext(headCtx, http.MethodHead, url, nil)
 	if err != nil {
 		return &LocationError{Location: url, Type: "url", Err: fmt.Errorf("create request: %w", err)}
 	}
@@ -315,7 +320,9 @@ func (c *Cache) existsURL(url string) error {
 	if err != nil {
 		return &LocationError{Location: url, Type: "url", Err: fmt.Errorf("unreachable: %w", err)}
 	}
-	_ = resp.Body.Close()
+	if closeErr := resp.Body.Close(); closeErr != nil {
+		slog.Default().DebugContext(headCtx, "closing response body", "error", closeErr)
+	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return &LocationError{Location: url, Type: "url", Err: fmt.Errorf("unexpected status %d", resp.StatusCode)}

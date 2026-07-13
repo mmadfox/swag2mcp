@@ -5,8 +5,6 @@
 //
 //	mockgen -source=internal/server/mcp/handler.go -destination=internal/server/mcp/mock_svc_test.go -package=mcp
 //
-
-// Package mcp is a generated GoMock package.
 package mcp
 
 import (
@@ -18,32 +16,32 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// Mocksvc is a mock of svc interface.
-type Mocksvc struct {
+// MockSvc is a mock of Svc interface.
+type MockSvc struct {
 	ctrl     *gomock.Controller
-	recorder *MocksvcMockRecorder
+	recorder *MockSvcMockRecorder
 	isgomock struct{}
 }
 
-// MocksvcMockRecorder is the mock recorder for Mocksvc.
-type MocksvcMockRecorder struct {
-	mock *Mocksvc
+// MockSvcMockRecorder is the mock recorder for MockSvc.
+type MockSvcMockRecorder struct {
+	mock *MockSvc
 }
 
-// NewMocksvc creates a new mock instance.
-func NewMocksvc(ctrl *gomock.Controller) *Mocksvc {
-	mock := &Mocksvc{ctrl: ctrl}
-	mock.recorder = &MocksvcMockRecorder{mock}
+// NewMockSvc creates a new mock instance.
+func NewMockSvc(ctrl *gomock.Controller) *MockSvc {
+	mock := &MockSvc{ctrl: ctrl}
+	mock.recorder = &MockSvcMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *Mocksvc) EXPECT() *MocksvcMockRecorder {
+func (m *MockSvc) EXPECT() *MockSvcMockRecorder {
 	return m.recorder
 }
 
 // Auth mocks base method.
-func (m *Mocksvc) Auth(arg0 context.Context, req service.AuthRequest) (service.AuthResponse, error) {
+func (m *MockSvc) Auth(arg0 context.Context, req service.AuthRequest) (service.AuthResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Auth", arg0, req)
 	ret0, _ := ret[0].(service.AuthResponse)
@@ -52,13 +50,13 @@ func (m *Mocksvc) Auth(arg0 context.Context, req service.AuthRequest) (service.A
 }
 
 // Auth indicates an expected call of Auth.
-func (mr *MocksvcMockRecorder) Auth(arg0, req any) *gomock.Call {
+func (mr *MockSvcMockRecorder) Auth(arg0, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Auth", reflect.TypeOf((*Mocksvc)(nil).Auth), arg0, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Auth", reflect.TypeOf((*MockSvc)(nil).Auth), arg0, req)
 }
 
 // CollectionByID mocks base method.
-func (m *Mocksvc) CollectionByID(arg0 context.Context, req service.CollectionByIDRequest) (service.CollectionByIDResponse, error) {
+func (m *MockSvc) CollectionByID(arg0 context.Context, req service.CollectionByIDRequest) (service.CollectionByIDResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CollectionByID", arg0, req)
 	ret0, _ := ret[0].(service.CollectionByIDResponse)
@@ -67,13 +65,13 @@ func (m *Mocksvc) CollectionByID(arg0 context.Context, req service.CollectionByI
 }
 
 // CollectionByID indicates an expected call of CollectionByID.
-func (mr *MocksvcMockRecorder) CollectionByID(arg0, req any) *gomock.Call {
+func (mr *MockSvcMockRecorder) CollectionByID(arg0, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CollectionByID", reflect.TypeOf((*Mocksvc)(nil).CollectionByID), arg0, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CollectionByID", reflect.TypeOf((*MockSvc)(nil).CollectionByID), arg0, req)
 }
 
 // CollectionsBySpec mocks base method.
-func (m *Mocksvc) CollectionsBySpec(arg0 context.Context, req service.CollectionsRequest) (service.CollectionsResponse, error) {
+func (m *MockSvc) CollectionsBySpec(arg0 context.Context, req service.CollectionsRequest) (service.CollectionsResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CollectionsBySpec", arg0, req)
 	ret0, _ := ret[0].(service.CollectionsResponse)
@@ -82,13 +80,13 @@ func (m *Mocksvc) CollectionsBySpec(arg0 context.Context, req service.Collection
 }
 
 // CollectionsBySpec indicates an expected call of CollectionsBySpec.
-func (mr *MocksvcMockRecorder) CollectionsBySpec(arg0, req any) *gomock.Call {
+func (mr *MockSvcMockRecorder) CollectionsBySpec(arg0, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CollectionsBySpec", reflect.TypeOf((*Mocksvc)(nil).CollectionsBySpec), arg0, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CollectionsBySpec", reflect.TypeOf((*MockSvc)(nil).CollectionsBySpec), arg0, req)
 }
 
 // EndpointByID mocks base method.
-func (m *Mocksvc) EndpointByID(arg0 context.Context, req service.EndpointByIDRequest) (service.EndpointByIDResponse, error) {
+func (m *MockSvc) EndpointByID(arg0 context.Context, req service.EndpointByIDRequest) (service.EndpointByIDResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EndpointByID", arg0, req)
 	ret0, _ := ret[0].(service.EndpointByIDResponse)
@@ -97,13 +95,13 @@ func (m *Mocksvc) EndpointByID(arg0 context.Context, req service.EndpointByIDReq
 }
 
 // EndpointByID indicates an expected call of EndpointByID.
-func (mr *MocksvcMockRecorder) EndpointByID(arg0, req any) *gomock.Call {
+func (mr *MockSvcMockRecorder) EndpointByID(arg0, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndpointByID", reflect.TypeOf((*Mocksvc)(nil).EndpointByID), arg0, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndpointByID", reflect.TypeOf((*MockSvc)(nil).EndpointByID), arg0, req)
 }
 
 // EndpointsByCollection mocks base method.
-func (m *Mocksvc) EndpointsByCollection(arg0 context.Context, req service.EndpointsByCollectionRequest) (service.EndpointsByCollectionResponse, error) {
+func (m *MockSvc) EndpointsByCollection(arg0 context.Context, req service.EndpointsByCollectionRequest) (service.EndpointsByCollectionResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EndpointsByCollection", arg0, req)
 	ret0, _ := ret[0].(service.EndpointsByCollectionResponse)
@@ -112,13 +110,13 @@ func (m *Mocksvc) EndpointsByCollection(arg0 context.Context, req service.Endpoi
 }
 
 // EndpointsByCollection indicates an expected call of EndpointsByCollection.
-func (mr *MocksvcMockRecorder) EndpointsByCollection(arg0, req any) *gomock.Call {
+func (mr *MockSvcMockRecorder) EndpointsByCollection(arg0, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndpointsByCollection", reflect.TypeOf((*Mocksvc)(nil).EndpointsByCollection), arg0, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndpointsByCollection", reflect.TypeOf((*MockSvc)(nil).EndpointsByCollection), arg0, req)
 }
 
 // EndpointsBySpec mocks base method.
-func (m *Mocksvc) EndpointsBySpec(arg0 context.Context, req service.EndpointsBySpecRequest) (service.EndpointsBySpecResponse, error) {
+func (m *MockSvc) EndpointsBySpec(arg0 context.Context, req service.EndpointsBySpecRequest) (service.EndpointsBySpecResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EndpointsBySpec", arg0, req)
 	ret0, _ := ret[0].(service.EndpointsBySpecResponse)
@@ -127,13 +125,13 @@ func (m *Mocksvc) EndpointsBySpec(arg0 context.Context, req service.EndpointsByS
 }
 
 // EndpointsBySpec indicates an expected call of EndpointsBySpec.
-func (mr *MocksvcMockRecorder) EndpointsBySpec(arg0, req any) *gomock.Call {
+func (mr *MockSvcMockRecorder) EndpointsBySpec(arg0, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndpointsBySpec", reflect.TypeOf((*Mocksvc)(nil).EndpointsBySpec), arg0, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndpointsBySpec", reflect.TypeOf((*MockSvc)(nil).EndpointsBySpec), arg0, req)
 }
 
 // EndpointsByTag mocks base method.
-func (m *Mocksvc) EndpointsByTag(arg0 context.Context, req service.EndpointsByTagRequest) (service.EndpointsByTagResponse, error) {
+func (m *MockSvc) EndpointsByTag(arg0 context.Context, req service.EndpointsByTagRequest) (service.EndpointsByTagResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EndpointsByTag", arg0, req)
 	ret0, _ := ret[0].(service.EndpointsByTagResponse)
@@ -142,13 +140,13 @@ func (m *Mocksvc) EndpointsByTag(arg0 context.Context, req service.EndpointsByTa
 }
 
 // EndpointsByTag indicates an expected call of EndpointsByTag.
-func (mr *MocksvcMockRecorder) EndpointsByTag(arg0, req any) *gomock.Call {
+func (mr *MockSvcMockRecorder) EndpointsByTag(arg0, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndpointsByTag", reflect.TypeOf((*Mocksvc)(nil).EndpointsByTag), arg0, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndpointsByTag", reflect.TypeOf((*MockSvc)(nil).EndpointsByTag), arg0, req)
 }
 
 // Info mocks base method.
-func (m *Mocksvc) Info(arg0 context.Context, cfg *config.Config) (service.InfoResponse, error) {
+func (m *MockSvc) Info(arg0 context.Context, cfg *config.Config) (service.InfoResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Info", arg0, cfg)
 	ret0, _ := ret[0].(service.InfoResponse)
@@ -157,13 +155,13 @@ func (m *Mocksvc) Info(arg0 context.Context, cfg *config.Config) (service.InfoRe
 }
 
 // Info indicates an expected call of Info.
-func (mr *MocksvcMockRecorder) Info(arg0, cfg any) *gomock.Call {
+func (mr *MockSvcMockRecorder) Info(arg0, cfg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*Mocksvc)(nil).Info), arg0, cfg)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockSvc)(nil).Info), arg0, cfg)
 }
 
 // Inspect mocks base method.
-func (m *Mocksvc) Inspect(arg0 context.Context, req service.InspectRequest) (service.InspectResponse, error) {
+func (m *MockSvc) Inspect(arg0 context.Context, req service.InspectRequest) (service.InspectResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Inspect", arg0, req)
 	ret0, _ := ret[0].(service.InspectResponse)
@@ -172,13 +170,13 @@ func (m *Mocksvc) Inspect(arg0 context.Context, req service.InspectRequest) (ser
 }
 
 // Inspect indicates an expected call of Inspect.
-func (mr *MocksvcMockRecorder) Inspect(arg0, req any) *gomock.Call {
+func (mr *MockSvcMockRecorder) Inspect(arg0, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inspect", reflect.TypeOf((*Mocksvc)(nil).Inspect), arg0, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inspect", reflect.TypeOf((*MockSvc)(nil).Inspect), arg0, req)
 }
 
 // Invoke mocks base method.
-func (m *Mocksvc) Invoke(arg0 context.Context, req service.InvokeRequest) (service.InvokeResponse, error) {
+func (m *MockSvc) Invoke(arg0 context.Context, req service.InvokeRequest) (service.InvokeResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Invoke", arg0, req)
 	ret0, _ := ret[0].(service.InvokeResponse)
@@ -187,13 +185,13 @@ func (m *Mocksvc) Invoke(arg0 context.Context, req service.InvokeRequest) (servi
 }
 
 // Invoke indicates an expected call of Invoke.
-func (mr *MocksvcMockRecorder) Invoke(arg0, req any) *gomock.Call {
+func (mr *MockSvcMockRecorder) Invoke(arg0, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Invoke", reflect.TypeOf((*Mocksvc)(nil).Invoke), arg0, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Invoke", reflect.TypeOf((*MockSvc)(nil).Invoke), arg0, req)
 }
 
 // MakeToolDefinitions mocks base method.
-func (m *Mocksvc) MakeToolDefinitions() (service.ToolDefinitions, error) {
+func (m *MockSvc) MakeToolDefinitions() (service.ToolDefinitions, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MakeToolDefinitions")
 	ret0, _ := ret[0].(service.ToolDefinitions)
@@ -202,13 +200,13 @@ func (m *Mocksvc) MakeToolDefinitions() (service.ToolDefinitions, error) {
 }
 
 // MakeToolDefinitions indicates an expected call of MakeToolDefinitions.
-func (mr *MocksvcMockRecorder) MakeToolDefinitions() *gomock.Call {
+func (mr *MockSvcMockRecorder) MakeToolDefinitions() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeToolDefinitions", reflect.TypeOf((*Mocksvc)(nil).MakeToolDefinitions))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeToolDefinitions", reflect.TypeOf((*MockSvc)(nil).MakeToolDefinitions))
 }
 
 // Search mocks base method.
-func (m *Mocksvc) Search(ctx context.Context, req service.SearchRequest) (service.SearchResponse, error) {
+func (m *MockSvc) Search(ctx context.Context, req service.SearchRequest) (service.SearchResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Search", ctx, req)
 	ret0, _ := ret[0].(service.SearchResponse)
@@ -217,13 +215,13 @@ func (m *Mocksvc) Search(ctx context.Context, req service.SearchRequest) (servic
 }
 
 // Search indicates an expected call of Search.
-func (mr *MocksvcMockRecorder) Search(ctx, req any) *gomock.Call {
+func (mr *MockSvcMockRecorder) Search(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Search", reflect.TypeOf((*Mocksvc)(nil).Search), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Search", reflect.TypeOf((*MockSvc)(nil).Search), ctx, req)
 }
 
 // SpecByID mocks base method.
-func (m *Mocksvc) SpecByID(arg0 context.Context, req service.SpecByIDRequest) (service.SpecByIDResponse, error) {
+func (m *MockSvc) SpecByID(arg0 context.Context, req service.SpecByIDRequest) (service.SpecByIDResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SpecByID", arg0, req)
 	ret0, _ := ret[0].(service.SpecByIDResponse)
@@ -232,13 +230,13 @@ func (m *Mocksvc) SpecByID(arg0 context.Context, req service.SpecByIDRequest) (s
 }
 
 // SpecByID indicates an expected call of SpecByID.
-func (mr *MocksvcMockRecorder) SpecByID(arg0, req any) *gomock.Call {
+func (mr *MockSvcMockRecorder) SpecByID(arg0, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpecByID", reflect.TypeOf((*Mocksvc)(nil).SpecByID), arg0, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpecByID", reflect.TypeOf((*MockSvc)(nil).SpecByID), arg0, req)
 }
 
 // Specs mocks base method.
-func (m *Mocksvc) Specs(arg0 context.Context) (service.SpecsResponse, error) {
+func (m *MockSvc) Specs(arg0 context.Context) (service.SpecsResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Specs", arg0)
 	ret0, _ := ret[0].(service.SpecsResponse)
@@ -247,13 +245,13 @@ func (m *Mocksvc) Specs(arg0 context.Context) (service.SpecsResponse, error) {
 }
 
 // Specs indicates an expected call of Specs.
-func (mr *MocksvcMockRecorder) Specs(arg0 any) *gomock.Call {
+func (mr *MockSvcMockRecorder) Specs(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Specs", reflect.TypeOf((*Mocksvc)(nil).Specs), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Specs", reflect.TypeOf((*MockSvc)(nil).Specs), arg0)
 }
 
 // TagByID mocks base method.
-func (m *Mocksvc) TagByID(arg0 context.Context, req service.TagByIDRequest) (service.TagByIDResponse, error) {
+func (m *MockSvc) TagByID(arg0 context.Context, req service.TagByIDRequest) (service.TagByIDResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TagByID", arg0, req)
 	ret0, _ := ret[0].(service.TagByIDResponse)
@@ -262,13 +260,13 @@ func (m *Mocksvc) TagByID(arg0 context.Context, req service.TagByIDRequest) (ser
 }
 
 // TagByID indicates an expected call of TagByID.
-func (mr *MocksvcMockRecorder) TagByID(arg0, req any) *gomock.Call {
+func (mr *MockSvcMockRecorder) TagByID(arg0, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagByID", reflect.TypeOf((*Mocksvc)(nil).TagByID), arg0, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagByID", reflect.TypeOf((*MockSvc)(nil).TagByID), arg0, req)
 }
 
 // TagsByCollection mocks base method.
-func (m *Mocksvc) TagsByCollection(arg0 context.Context, req service.TagsByCollectionRequest) (service.TagsByCollectionResponse, error) {
+func (m *MockSvc) TagsByCollection(arg0 context.Context, req service.TagsByCollectionRequest) (service.TagsByCollectionResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TagsByCollection", arg0, req)
 	ret0, _ := ret[0].(service.TagsByCollectionResponse)
@@ -277,13 +275,13 @@ func (m *Mocksvc) TagsByCollection(arg0 context.Context, req service.TagsByColle
 }
 
 // TagsByCollection indicates an expected call of TagsByCollection.
-func (mr *MocksvcMockRecorder) TagsByCollection(arg0, req any) *gomock.Call {
+func (mr *MockSvcMockRecorder) TagsByCollection(arg0, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagsByCollection", reflect.TypeOf((*Mocksvc)(nil).TagsByCollection), arg0, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagsByCollection", reflect.TypeOf((*MockSvc)(nil).TagsByCollection), arg0, req)
 }
 
 // TagsBySpec mocks base method.
-func (m *Mocksvc) TagsBySpec(arg0 context.Context, req service.TagsBySpecRequest) (service.TagsBySpecResponse, error) {
+func (m *MockSvc) TagsBySpec(arg0 context.Context, req service.TagsBySpecRequest) (service.TagsBySpecResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TagsBySpec", arg0, req)
 	ret0, _ := ret[0].(service.TagsBySpecResponse)
@@ -292,7 +290,7 @@ func (m *Mocksvc) TagsBySpec(arg0 context.Context, req service.TagsBySpecRequest
 }
 
 // TagsBySpec indicates an expected call of TagsBySpec.
-func (mr *MocksvcMockRecorder) TagsBySpec(arg0, req any) *gomock.Call {
+func (mr *MockSvcMockRecorder) TagsBySpec(arg0, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagsBySpec", reflect.TypeOf((*Mocksvc)(nil).TagsBySpec), arg0, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagsBySpec", reflect.TypeOf((*MockSvc)(nil).TagsBySpec), arg0, req)
 }

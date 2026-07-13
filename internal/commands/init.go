@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"log/slog"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -115,7 +116,9 @@ func runInit(basePath string, interactive, force bool, cmd *cobra.Command) error
 func ensureAuthScripts(cfg *config.Config, ws *workspace.Workspace) {
 	for spec := range cfg.Iterate(nil) {
 		if spec.Auth.Client != nil && spec.Auth.Client.Type() == auth.ScriptAuth {
-			_ = ws.EnsureAuthScript(spec.Domain)
+			if err := ws.EnsureAuthScript(spec.Domain); err != nil {
+				slog.Default().Warn("failed to ensure auth script", "domain", spec.Domain, "error", err)
+			}
 		}
 	}
 }
