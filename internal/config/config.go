@@ -58,11 +58,12 @@ type MockAuthConfig struct {
 //   - Specs: at least one spec must be defined.
 //   - MockEnabled: when true, all specs and collections must have BaseMockURL set.
 type Config struct {
-	MockEnabled bool                    `yaml:"mock_enabled,omitempty"`
-	MockAuth    *MockAuthConfig         `yaml:"mock_auth,omitempty"`
-	HTTPClient  *GlobalHTTPClientConfig `yaml:"http_client,omitempty"`
-	MCP         *MCPConfig              `yaml:"mcp,omitempty"`
-	Specs       []Spec                  `yaml:"specs"`
+	MockEnabled        bool                    `yaml:"mock_enabled,omitempty"`
+	MockAuth           *MockAuthConfig         `yaml:"mock_auth,omitempty"`
+	HTTPClient         *GlobalHTTPClientConfig `yaml:"http_client,omitempty"`
+	MCP                *MCPConfig              `yaml:"mcp,omitempty"`
+	DisableRateLimiter bool                    `yaml:"disable_ratelimiter,omitempty"`
+	Specs              []Spec                  `yaml:"specs"`
 }
 
 // MCPConfig holds the MCP server configuration.

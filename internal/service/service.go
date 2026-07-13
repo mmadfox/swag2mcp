@@ -17,21 +17,22 @@ import (
 // Service is the core business logic layer for swag2mcp.
 // It manages the search index, cache, workspace, HTTP client, rate limiter, and configuration.
 type Service struct {
-	index            *index.Index
-	cache            *cache.Cache
-	ws               *workspace.Workspace
-	v                *validator.Validate
-	disableLLMAuth   atomic.Bool
-	dumpDir          string
-	rateLimiter      *invokeRateLimiter
-	httpClient       *http.Client
-	httpClientConfig httpclient.Config
-	maxResponseSize  int
-	version          string
-	startedAt        time.Time
-	config           *config.Config
-	indexNoFullText  bool
-	snapshot         atomic.Value // stores *InfoSnapshot
+	index              *index.Index
+	cache              *cache.Cache
+	ws                 *workspace.Workspace
+	v                  *validator.Validate
+	disableLLMAuth     atomic.Bool
+	dumpDir            string
+	rateLimiter        *invokeRateLimiter
+	httpClient         *http.Client
+	httpClientConfig   httpclient.Config
+	maxResponseSize    int
+	version            string
+	startedAt          time.Time
+	config             *config.Config
+	disableRateLimiter atomic.Bool
+	indexNoFullText    bool
+	snapshot           atomic.Value // stores *InfoSnapshot
 }
 
 // NewOption is a functional option for configuring a Service.

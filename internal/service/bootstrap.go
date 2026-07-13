@@ -34,6 +34,7 @@ func (s *Service) Bootstrap(ctx context.Context, request BootstrapRequest) error
 		return fmt.Errorf("failed to load config: %w", loadError)
 	}
 	s.config = configuration
+	s.disableRateLimiter.Store(configuration.DisableRateLimiter)
 
 	if initError := s.initializeWorkspace(filepath.Dir(request.ConfFilepath)); initError != nil {
 		return initError

@@ -1,8 +1,12 @@
 # swag2mcp — Full Configuration
 # Demonstrates every feature: multiple specs, all auth types, tags, http_client,
 # proxy, randomize, environment variables, disable flags, collection overrides,
-# and mock server.
+# mock server, and rate limiter control.
 mock_enabled: true
+# Disables the per-endpoint 10-second rate limiter for the invoke tool.
+# Set to true when testing or when you need to call the same endpoint
+# repeatedly without waiting. Defaults to false (rate limiter enabled).
+disable_ratelimiter: false
 http_client:
   random: true
   proxy:
