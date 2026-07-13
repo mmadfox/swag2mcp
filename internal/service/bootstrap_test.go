@@ -194,8 +194,8 @@ func TestBuildGlobalHTTPConfig_ZeroValues(t *testing.T) {
 	if cfg.Randomize {
 		t.Error("Randomize = true, want false")
 	}
-	if cfg.UserAgent != "" {
-		t.Errorf("UserAgent = %q, want empty", cfg.UserAgent)
+	if cfg.UserAgent != defaultUserAgent {
+		t.Errorf("UserAgent = %q, want %q", cfg.UserAgent, defaultUserAgent)
 	}
 	if cfg.Timeout != 0 {
 		t.Errorf("Timeout = %v, want 0", cfg.Timeout)

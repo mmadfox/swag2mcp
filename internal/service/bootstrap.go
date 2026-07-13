@@ -69,7 +69,9 @@ func (s *Service) Bootstrap(ctx context.Context, request BootstrapRequest) error
 
 func buildGlobalHTTPConfig(global *config.GlobalHTTPClientConfig) httpclient.Config {
 	if global == nil {
-		return httpclient.Config{}
+		return httpclient.Config{
+			UserAgent: defaultUserAgent,
+		}
 	}
 
 	cfg := httpclient.Config{
@@ -79,6 +81,10 @@ func buildGlobalHTTPConfig(global *config.GlobalHTTPClientConfig) httpclient.Con
 		FollowRedirects: global.FollowRedirects,
 		MaxRedirects:    global.MaxRedirects,
 		MaxResponseSize: global.MaxResponseSize,
+	}
+
+	if cfg.UserAgent == "" && !cfg.Randomize {
+		cfg.UserAgent = defaultUserAgent
 	}
 	if global.Headers != nil {
 		cfg.Headers = make(map[string]string, len(global.Headers))
@@ -310,6 +316,7 @@ func (s *Service) buildSpecInfo(specConfig *config.Spec, mockEnabled bool, mockA
 }
 
 const (
+	defaultUserAgent      = "swag2mcp-global/1.0"
 	defaultMockOAuth2Port = 9090
 	defaultMockDigestPort = 9091
 )
