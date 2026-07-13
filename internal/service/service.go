@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/mmadfox/swag2mcp/internal/cache"
 	"github.com/mmadfox/swag2mcp/internal/config"
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 	"github.com/mmadfox/swag2mcp/internal/index"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
@@ -16,20 +17,21 @@ import (
 // Service is the core business logic layer for swag2mcp.
 // It manages the search index, cache, workspace, HTTP client, rate limiter, and configuration.
 type Service struct {
-	index           *index.Index
-	cache           *cache.Cache
-	ws              *workspace.Workspace
-	v               *validator.Validate
-	disableLLMAuth  atomic.Bool
-	dumpDir         string
-	rateLimiter     *invokeRateLimiter
-	httpClient      *http.Client
-	maxResponseSize int
-	version         string
-	startedAt       time.Time
-	config          *config.Config
-	indexNoFullText bool
-	snapshot        atomic.Value // stores *InfoSnapshot
+	index            *index.Index
+	cache            *cache.Cache
+	ws               *workspace.Workspace
+	v                *validator.Validate
+	disableLLMAuth   atomic.Bool
+	dumpDir          string
+	rateLimiter      *invokeRateLimiter
+	httpClient       *http.Client
+	httpClientConfig httpclient.Config
+	maxResponseSize  int
+	version          string
+	startedAt        time.Time
+	config           *config.Config
+	indexNoFullText  bool
+	snapshot         atomic.Value // stores *InfoSnapshot
 }
 
 // NewOption is a functional option for configuring a Service.

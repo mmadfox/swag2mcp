@@ -49,6 +49,7 @@ func (s *Service) Bootstrap(ctx context.Context, request BootstrapRequest) error
 		return fmt.Errorf("failed to create HTTP client: %w", clientError)
 	}
 	s.httpClient = httpClient
+	s.httpClientConfig = globalHTTPConfig
 	s.maxResponseSize = resolveMaxResponseSize(globalHTTPConfig.MaxResponseSize)
 
 	httpclient.SetGlobalConfig(globalHTTPConfig)

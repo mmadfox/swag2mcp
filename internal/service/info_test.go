@@ -7,6 +7,7 @@ import (
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/config"
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 )
 
 func TestInfo_WithConfig(t *testing.T) {
@@ -49,6 +50,10 @@ func TestInfo_WithConfig(t *testing.T) {
 	*cfg.HTTPClient.MaxResponseSize = 4096
 
 	svc.config = cfg
+	svc.httpClientConfig = httpclient.Config{
+		Randomize: true,
+		UserAgent: "test-agent",
+	}
 	svc.buildSnapshot()
 
 	info, err := svc.Info(context.Background())
@@ -376,6 +381,10 @@ func TestInfo_WithFullHTTPClientConfig(t *testing.T) {
 		Specs: []config.Spec{},
 	}
 	svc.config = cfg
+	svc.httpClientConfig = httpclient.Config{
+		Randomize: true,
+		UserAgent: "my-ua",
+	}
 	svc.buildSnapshot()
 
 	info, err := svc.Info(context.Background())
@@ -471,6 +480,10 @@ func TestInfo_WithMCPTransports(t *testing.T) {
 				Specs: []config.Spec{},
 			}
 			svc.config = cfg
+			svc.httpClientConfig = httpclient.Config{
+				Randomize: true,
+				UserAgent: "test-agent",
+			}
 			svc.buildSnapshot()
 
 			info, err := svc.Info(context.Background())

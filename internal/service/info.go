@@ -165,8 +165,11 @@ func (s *Service) buildHTTPClientInfo(cfg *config.Config) HTTPClientInfo {
 	}
 
 	g := cfg.HTTPClient
-	info.Randomize = g.Randomize
-	info.UserAgent = g.UserAgent
+	info.Randomize = s.httpClientConfig.Randomize
+	info.UserAgent = s.httpClientConfig.UserAgent
+	if info.UserAgent == "" {
+		info.UserAgent = g.UserAgent
+	}
 	if g.Timeout > 0 {
 		info.Timeout = g.Timeout.String()
 	}
