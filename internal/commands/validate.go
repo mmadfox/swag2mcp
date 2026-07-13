@@ -24,8 +24,8 @@ func newValidateCmd() *cobra.Command {
 		Long: `Validate the configuration file and report any issues.
 
   swag2mcp validate              — validate ~/.swag2mcp/swag2mcp.yaml
-  swag2mcp validate ./           — validate ./.swag2mcp/swag2mcp.yaml
-  swag2mcp validate path/to      — validate path/to/.swag2mcp/swag2mcp.yaml
+  swag2mcp validate ./           — validate ./swag2mcp.yaml
+  swag2mcp validate path/to      — validate path/to/swag2mcp.yaml
   swag2mcp validate --tags=public,internal`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

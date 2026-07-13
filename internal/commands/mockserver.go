@@ -28,8 +28,8 @@ func NewMockServerCmd() *cobra.Command {
 		Long: `Start mock servers for all API specifications defined in the configuration.
 
   swag2mcp-mock              — start mocks for ~/.swag2mcp/swag2mcp.yaml
-  swag2mcp-mock ./           — start mocks for ./.swag2mcp/swag2mcp.yaml
-  swag2mcp-mock path/to      — start mocks for path/to/.swag2mcp/swag2mcp.yaml
+  swag2mcp-mock ./           — start mocks for ./swag2mcp.yaml
+  swag2mcp-mock path/to      — start mocks for path/to/swag2mcp.yaml
   swag2mcp-mock --tls        — enable TLS with self-signed certificate
 
 Addresses for mock servers are taken from the base_mock_url field in the

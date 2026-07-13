@@ -17,8 +17,8 @@ func newRunCmd() *cobra.Command {
 		Long: `Interactive API explorer for searching, browsing, and invoking endpoints.
 
   swag2mcp run              — run ~/.swag2mcp/swag2mcp.yaml
-  swag2mcp run ./           — run ./.swag2mcp/swag2mcp.yaml
-  swag2mcp run path/to      — run path/to/.swag2mcp/swag2mcp.yaml`,
+  swag2mcp run ./           — run ./swag2mcp.yaml
+  swag2mcp run path/to      — run path/to/swag2mcp.yaml`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			basePath := ""

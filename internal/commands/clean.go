@@ -17,8 +17,8 @@ func newCleanCmd() *cobra.Command {
 		Long: `Remove cached remote specs and invocation responses.
 
   swag2mcp clean              — clean ~/.swag2mcp/{cache,responses}
-  swag2mcp clean ./           — clean ./.swag2mcp/{cache,responses}
-  swag2mcp clean path/to      — clean path/to/.swag2mcp/{cache,responses}`,
+  swag2mcp clean ./           — clean ./{cache,responses}
+  swag2mcp clean path/to      — clean path/to/{cache,responses}`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			basePath := ""

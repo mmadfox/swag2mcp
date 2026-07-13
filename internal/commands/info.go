@@ -22,8 +22,8 @@ configuration, active specs, HTTP client settings, MCP transport,
 auth methods, and mock mode status.
 
   swag2mcp info              — show info for ~/.swag2mcp/swag2mcp.yaml
-  swag2mcp info ./           — show info for ./.swag2mcp/swag2mcp.yaml
-  swag2mcp info path/to      — show info for path/to/.swag2mcp/swag2mcp.yaml`,
+  swag2mcp info ./           — show info for ./swag2mcp.yaml
+  swag2mcp info path/to      — show info for path/to/swag2mcp.yaml`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			basePath := ""

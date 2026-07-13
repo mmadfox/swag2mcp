@@ -20,8 +20,8 @@ func newUpdateCmd() *cobra.Command {
 		Long: `Validate configuration, clear cache, and re-cache all spec files.
 
   swag2mcp update              — update ~/.swag2mcp
-  swag2mcp update ./           — update ./.swag2mcp
-  swag2mcp update path/to      — update path/to/.swag2mcp`,
+  swag2mcp update ./           — update ./
+  swag2mcp update path/to      — update path/to`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			basePath := ""

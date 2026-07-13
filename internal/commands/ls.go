@@ -21,8 +21,8 @@ func newLsCmd() *cobra.Command {
 		Long: `List all specifications and their collections from the configuration.
 
   swag2mcp ls              — list ~/.swag2mcp/swag2mcp.yaml
-  swag2mcp ls ./           — list ./.swag2mcp/swag2mcp.yaml
-  swag2mcp ls path/to      — list path/to/.swag2mcp/swag2mcp.yaml
+  swag2mcp ls ./           — list ./swag2mcp.yaml
+  swag2mcp ls path/to      — list path/to/swag2mcp.yaml
   swag2mcp ls --tags=public,internal`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
