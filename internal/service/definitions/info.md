@@ -25,3 +25,10 @@ This tool has no parameters.
 ## Returns
 
 A JSON object with version, latest_version (from GitHub), workspace path, uptime, specs summary, HTTP client configuration, MCP configuration, auth methods, and mock mode status.
+
+## Presentation
+
+When presenting results to the user, format numeric values in human-readable form:
+- `max_response_size`: convert bytes to a human-friendly string (e.g., `"1 KB"` instead of `1048`)
+- `uptime` is already human-readable
+- Counts (total, active, endpoints, etc.) are small numbers — show as-is

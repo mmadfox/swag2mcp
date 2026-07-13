@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"testing"
 	"time"
 
@@ -49,7 +48,10 @@ func TestInfo_WithConfig(t *testing.T) {
 	*cfg.HTTPClient.MaxRedirects = 5
 	*cfg.HTTPClient.MaxResponseSize = 4096
 
-	info, err := svc.Info(context.Background(), cfg)
+	svc.config = cfg
+	svc.buildSnapshot()
+
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -113,7 +115,7 @@ func TestInfo_WithNilConfig(t *testing.T) {
 	svc := newTestService(t, WithVersion("v1.0.0"))
 	seedTestData(t, svc, t.Name())
 
-	info, err := svc.Info(context.Background(), nil)
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -136,8 +138,10 @@ func TestInfo_WithNilHTTPClient(t *testing.T) {
 		HTTPClient: nil,
 		Specs:      []config.Spec{},
 	}
+	svc.config = cfg
+	svc.buildSnapshot()
 
-	info, err := svc.Info(context.Background(), cfg)
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -157,8 +161,10 @@ func TestInfo_WithNilMCP(t *testing.T) {
 		MCP:   nil,
 		Specs: []config.Spec{},
 	}
+	svc.config = cfg
+	svc.buildSnapshot()
 
-	info, err := svc.Info(context.Background(), cfg)
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -214,8 +220,10 @@ func TestInfo_WithAuthMethods(t *testing.T) {
 			},
 		},
 	}
+	svc.config = cfg
+	svc.buildSnapshot()
 
-	info, err := svc.Info(context.Background(), cfg)
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -254,8 +262,10 @@ func TestInfo_WithNoAuth(t *testing.T) {
 			},
 		},
 	}
+	svc.config = cfg
+	svc.buildSnapshot()
 
-	info, err := svc.Info(context.Background(), cfg)
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -274,8 +284,10 @@ func TestInfo_WithEmptySpecs(t *testing.T) {
 	cfg := &config.Config{
 		Specs: []config.Spec{},
 	}
+	svc.config = cfg
+	svc.buildSnapshot()
 
-	info, err := svc.Info(context.Background(), cfg)
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -313,8 +325,10 @@ func TestInfo_WithAllDisabledSpecs(t *testing.T) {
 			},
 		},
 	}
+	svc.config = cfg
+	svc.buildSnapshot()
 
-	info, err := svc.Info(context.Background(), cfg)
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -361,8 +375,10 @@ func TestInfo_WithFullHTTPClientConfig(t *testing.T) {
 		},
 		Specs: []config.Spec{},
 	}
+	svc.config = cfg
+	svc.buildSnapshot()
 
-	info, err := svc.Info(context.Background(), cfg)
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -454,8 +470,10 @@ func TestInfo_WithMCPTransports(t *testing.T) {
 				MCP:   tt.mcp,
 				Specs: []config.Spec{},
 			}
+			svc.config = cfg
+			svc.buildSnapshot()
 
-			info, err := svc.Info(context.Background(), cfg)
+			info, err := svc.Info(context.Background())
 			if err != nil {
 				t.Fatalf("Info() = %v", err)
 			}
@@ -476,7 +494,7 @@ func TestInfo_Uptime(t *testing.T) {
 	svc := newTestService(t)
 	seedTestData(t, svc, t.Name())
 
-	info, err := svc.Info(context.Background(), nil)
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -492,7 +510,7 @@ func TestInfo_Version(t *testing.T) {
 	svc := newTestService(t, WithVersion("v2.0.0-rc1"))
 	seedTestData(t, svc, t.Name())
 
-	info, err := svc.Info(context.Background(), nil)
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -508,7 +526,7 @@ func TestInfo_Workspace(t *testing.T) {
 	svc := newTestService(t)
 	seedTestData(t, svc, t.Name())
 
-	info, err := svc.Info(context.Background(), nil)
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -528,8 +546,10 @@ func TestInfo_MockDisabled(t *testing.T) {
 		MockEnabled: false,
 		Specs:       []config.Spec{},
 	}
+	svc.config = cfg
+	svc.buildSnapshot()
 
-	info, err := svc.Info(context.Background(), cfg)
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -554,8 +574,10 @@ func TestInfo_WithProxyNoAuth(t *testing.T) {
 		},
 		Specs: []config.Spec{},
 	}
+	svc.config = cfg
+	svc.buildSnapshot()
 
-	info, err := svc.Info(context.Background(), cfg)
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -589,8 +611,10 @@ func TestInfo_WithCookies(t *testing.T) {
 		},
 		Specs: []config.Spec{},
 	}
+	svc.config = cfg
+	svc.buildSnapshot()
 
-	info, err := svc.Info(context.Background(), cfg)
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -627,8 +651,10 @@ func TestInfo_WithHeaders(t *testing.T) {
 		},
 		Specs: []config.Spec{},
 	}
+	svc.config = cfg
+	svc.buildSnapshot()
 
-	info, err := svc.Info(context.Background(), cfg)
+	info, err := svc.Info(context.Background())
 	if err != nil {
 		t.Fatalf("Info() = %v", err)
 	}
@@ -641,50 +667,5 @@ func TestInfo_WithHeaders(t *testing.T) {
 	}
 	if info.HTTPClient.Headers["X-Request-Id"] != "12345" {
 		t.Errorf("Headers[X-Request-Id] = %q, want %q", info.HTTPClient.Headers["X-Request-Id"], "12345")
-	}
-}
-
-func TestFetchLatestVersion_JSONDecode(t *testing.T) {
-	t.Parallel()
-
-	var release struct {
-		TagName string `json:"tag_name"`
-	}
-	data := []byte(`{"tag_name": "v1.5.0"}`)
-	if err := json.Unmarshal(data, &release); err != nil {
-		t.Fatalf("json.Unmarshal() = %v", err)
-	}
-	if release.TagName != "v1.5.0" {
-		t.Errorf("TagName = %q, want %q", release.TagName, "v1.5.0")
-	}
-}
-
-func TestFetchLatestVersion_JSONDecodeEmpty(t *testing.T) {
-	t.Parallel()
-
-	var release struct {
-		TagName string `json:"tag_name"`
-	}
-	data := []byte(`{}`)
-	if err := json.Unmarshal(data, &release); err != nil {
-		t.Fatalf("json.Unmarshal() = %v", err)
-	}
-	if release.TagName != "" {
-		t.Errorf("TagName = %q, want empty", release.TagName)
-	}
-}
-
-func TestFetchLatestVersion_JSONDecodeNoTag(t *testing.T) {
-	t.Parallel()
-
-	var release struct {
-		TagName string `json:"tag_name"`
-	}
-	data := []byte(`{"name": "release-1"}`)
-	if err := json.Unmarshal(data, &release); err != nil {
-		t.Fatalf("json.Unmarshal() = %v", err)
-	}
-	if release.TagName != "" {
-		t.Errorf("TagName = %q, want empty", release.TagName)
 	}
 }

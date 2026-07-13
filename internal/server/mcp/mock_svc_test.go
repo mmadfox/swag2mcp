@@ -5,13 +5,14 @@
 //
 //	mockgen -source=internal/server/mcp/handler.go -destination=internal/server/mcp/mock_svc_test.go -package=mcp
 //
+
+// Package mcp is a generated GoMock package.
 package mcp
 
 import (
 	context "context"
 	reflect "reflect"
 
-	config "github.com/mmadfox/swag2mcp/internal/config"
 	service "github.com/mmadfox/swag2mcp/internal/service"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -146,18 +147,18 @@ func (mr *MockSvcMockRecorder) EndpointsByTag(arg0, req any) *gomock.Call {
 }
 
 // Info mocks base method.
-func (m *MockSvc) Info(arg0 context.Context, cfg *config.Config) (service.InfoResponse, error) {
+func (m *MockSvc) Info(arg0 context.Context) (service.InfoResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Info", arg0, cfg)
+	ret := m.ctrl.Call(m, "Info", arg0)
 	ret0, _ := ret[0].(service.InfoResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Info indicates an expected call of Info.
-func (mr *MockSvcMockRecorder) Info(arg0, cfg any) *gomock.Call {
+func (mr *MockSvcMockRecorder) Info(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockSvc)(nil).Info), arg0, cfg)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockSvc)(nil).Info), arg0)
 }
 
 // Inspect mocks base method.

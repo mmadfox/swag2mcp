@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/service"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
@@ -30,7 +29,7 @@ auth methods, and mock mode status.
 			if len(args) > 0 {
 				basePath = args[0]
 			}
-			return runInfo(basePath, cmd.OutOrStdout())
+			return runInfo(basePath, cmd.OutOrStdout(), cmd.Context())
 		},
 	}
 
@@ -40,7 +39,7 @@ auth methods, and mock mode status.
 	return cmd
 }
 
-func runInfo(basePath string, w io.Writer) error {
+func runInfo(basePath string, w io.Writer, ctx context.Context) error {
 	ws, err := workspace.NewFromBase(basePath)
 	if err != nil {
 		return err
@@ -55,19 +54,21 @@ func runInfo(basePath string, w io.Writer) error {
 		}
 	}
 
-	cfg, loadErr := config.Load(configPath)
-	if loadErr != nil {
-		return fmt.Errorf("failed to load config: %w", loadErr)
-	}
-
 	svc, svcErr := service.New(
 		service.WithVersion(Version),
+		service.WithIndexNoFullText(),
 	)
 	if svcErr != nil {
 		return fmt.Errorf("failed to create service: %w", svcErr)
 	}
 
-	info, infoErr := svc.Info(context.Background(), cfg)
+	if err := svc.Bootstrap(ctx, service.BootstrapRequest{
+		ConfFilepath: configPath,
+	}); err != nil {
+		return fmt.Errorf("failed to bootstrap: %w", err)
+	}
+
+	info, infoErr := svc.Info(ctx)
 	if infoErr != nil {
 		return fmt.Errorf("failed to get info: %w", infoErr)
 	}

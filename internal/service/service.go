@@ -28,6 +28,8 @@ type Service struct {
 	version         string
 	startedAt       time.Time
 	config          *config.Config
+	indexNoFullText bool
+	snapshot        atomic.Value // stores *InfoSnapshot
 }
 
 // NewOption is a functional option for configuring a Service.
@@ -54,20 +56,17 @@ func WithVersion(version string) NewOption {
 	}
 }
 
+// WithIndexNoFullText disables full-text search indexing.
+// Use this for CLI commands that only need in-memory lookups (e.g. info).
+func WithIndexNoFullText() NewOption {
+	return func(s *Service) {
+		s.indexNoFullText = true
+	}
+}
+
 // New creates a new Service with the given options.
 func New(opts ...NewOption) (*Service, error) {
-	idx, err := index.New()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create index: %w", err)
-	}
-	ws, err := workspace.New("")
-	if err != nil {
-		return nil, fmt.Errorf("failed to create workspace: %w", err)
-	}
 	s := &Service{
-		index:           idx,
-		cache:           cache.New(ws.Root()),
-		ws:              ws,
 		v:               validator.New(validator.WithRequiredStructEnabled()),
 		rateLimiter:     newInvokeRateLimiter(),
 		httpClient:      &http.Client{Transport: http.DefaultTransport},
@@ -77,6 +76,24 @@ func New(opts ...NewOption) (*Service, error) {
 	for _, opt := range opts {
 		opt(s)
 	}
+
+	idxOpts := []index.NewOption{}
+	if s.indexNoFullText {
+		idxOpts = append(idxOpts, index.WithNoFullText())
+	}
+	idx, err := index.New(idxOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create index: %w", err)
+	}
+	s.index = idx
+
+	ws, err := workspace.New("")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create workspace: %w", err)
+	}
+	s.ws = ws
+	s.cache = cache.New(ws.Root())
+
 	return s, nil
 }
 

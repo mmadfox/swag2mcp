@@ -61,6 +61,8 @@ func (s *Service) Bootstrap(ctx context.Context, request BootstrapRequest) error
 		}
 	}
 
+	s.buildSnapshot()
+
 	return nil
 }
 
@@ -163,6 +165,9 @@ func (s *Service) processSpec(ctx context.Context, specConfig *config.Spec, mock
 		allCollections[collectionInfo.ID] = collectionInfo
 		specification.Stats.Collections++
 	}
+
+	specification.Stats.Tags = len(allTags)
+	specification.Stats.Methods = len(allEndpoints)
 
 	return s.indexSpec(specification, allCollections, allTags, allEndpoints)
 }

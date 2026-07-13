@@ -3,7 +3,6 @@ package mcp
 import (
 	"context"
 
-	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/service"
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -29,7 +28,7 @@ type Svc interface {
 	Inspect(_ context.Context, req service.InspectRequest) (service.InspectResponse, error)
 	Invoke(_ context.Context, req service.InvokeRequest) (service.InvokeResponse, error)
 	Auth(_ context.Context, req service.AuthRequest) (service.AuthResponse, error)
-	Info(_ context.Context, cfg *config.Config) (service.InfoResponse, error)
+	Info(_ context.Context) (service.InfoResponse, error)
 	MakeToolDefinitions() (service.ToolDefinitions, error)
 }
 
@@ -268,7 +267,7 @@ func (h *handler) handleInfo(
 	_ *sdkmcp.CallToolRequest,
 	_ any,
 ) (*sdkmcp.CallToolResult, any, error) {
-	resp, err := h.service.Info(ctx, nil)
+	resp, err := h.service.Info(ctx)
 	if err != nil {
 		return nil, nil, err
 	}

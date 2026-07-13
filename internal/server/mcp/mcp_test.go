@@ -1050,7 +1050,7 @@ func TestHandler_Info_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	mock := NewMockSvc(ctrl)
-	mock.EXPECT().Info(gomock.Any(), gomock.Any()).Return(
+	mock.EXPECT().Info(gomock.Any()).Return(
 		service.InfoResponse{
 			Version: "v1.0.0",
 			Specs: service.SpecsSummary{
@@ -1083,7 +1083,7 @@ func TestHandler_Info_Error(t *testing.T) {
 	defer ctrl.Finish()
 
 	mock := NewMockSvc(ctrl)
-	mock.EXPECT().Info(gomock.Any(), gomock.Any()).Return(
+	mock.EXPECT().Info(gomock.Any()).Return(
 		service.InfoResponse{}, errors.New("info error"),
 	)
 

@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,18 +11,6 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 	"gopkg.in/yaml.v3"
 )
-
-func TestRunInfo_NoConfig(t *testing.T) {
-	tmpDir := t.TempDir()
-	var buf strings.Builder
-	err := runInfo(tmpDir, &buf)
-	if err != nil {
-		t.Fatalf("runInfo() = %v", err)
-	}
-	if buf.Len() == 0 {
-		t.Error("runInfo() produced no output")
-	}
-}
 
 func TestRunInfo_WithConfig(t *testing.T) {
 	tmpDir := t.TempDir()
@@ -51,7 +40,7 @@ func TestRunInfo_WithConfig(t *testing.T) {
 	}
 
 	var buf strings.Builder
-	err := runInfo(tmpDir, &buf)
+	err := runInfo(tmpDir, &buf, context.Background())
 	if err != nil {
 		t.Fatalf("runInfo() = %v", err)
 	}
@@ -62,7 +51,7 @@ func TestRunInfo_WithConfig(t *testing.T) {
 
 func TestRunInfo_InvalidPath(t *testing.T) {
 	var buf strings.Builder
-	err := runInfo("/nonexistent/path", &buf)
+	err := runInfo("/nonexistent/path", &buf, context.Background())
 	if err == nil {
 		t.Fatal("runInfo() expected error, got nil")
 	}

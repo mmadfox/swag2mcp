@@ -68,15 +68,27 @@ type Index struct {
 	blugeWriter           *bluge.Writer
 	blugeReader           atomic.Pointer[bluge.Reader]
 	analyzer              *analysis.Analyzer
+	noFullText            bool
+}
+
+// NewOption is a functional option for configuring an Index.
+type NewOption func(*Index)
+
+// WithNoFullText disables full-text search indexing.
+// Use this for CLI commands that only need in-memory lookups.
+func WithNoFullText() NewOption {
+	return func(idx *Index) {
+		idx.noFullText = true
+	}
 }
 
 // New creates an empty in-memory index with type-based structures.
-func New() (*Index, error) {
+func New(opts ...NewOption) (*Index, error) {
 	writer, err := bluge.OpenWriter(bluge.InMemoryOnlyConfig())
 	if err != nil {
 		return nil, fmt.Errorf("bluge open: %w", err)
 	}
-	return &Index{
+	idx := &Index{
 		blugeWriter:           writer,
 		specs:                 make(map[string]*types.Spec),
 		collectionsBySpec:     make(map[string][]*types.Collection),
@@ -90,7 +102,11 @@ func New() (*Index, error) {
 		endpointByID:          make(map[string]*types.Endpoint),
 		allSpecs:              make([]*types.Spec, 0, initialSpecsCapacity),
 		analyzer:              newAnalyzer(),
-	}, nil
+	}
+	for _, opt := range opts {
+		opt(idx)
+	}
+	return idx, nil
 }
 
 // EnsureIndex indexes all provided data: (spec, collections, tags, endpoints).
@@ -119,7 +135,10 @@ func (idx *Index) EnsureIndex(
 		return fmt.Errorf("indexing endpoints: %w", err)
 	}
 
-	return idx.index(endpoints)
+	if !idx.noFullText {
+		return idx.index(endpoints)
+	}
+	return nil
 }
 
 // indexSpec indexes a spec.

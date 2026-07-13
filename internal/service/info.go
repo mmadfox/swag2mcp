@@ -2,26 +2,36 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"maps"
-	"net/http"
 	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/config"
 )
 
+// InfoSnapshot is a point-in-time snapshot of the service state,
+// computed once after Bootstrap and served on every Info call.
+type InfoSnapshot struct {
+	Version    string         `json:"version"`
+	Workspace  string         `json:"workspace"`
+	Uptime     time.Duration  `json:"-"`
+	Specs      SpecsSummary   `json:"specs"`
+	HTTPClient HTTPClientInfo `json:"http_client"`
+	MCP        MCPInfo        `json:"mcp"`
+	Auth       AuthInfo       `json:"auth"`
+	Mock       MockInfo       `json:"mock"`
+}
+
 // InfoResponse holds the complete runtime and configuration summary.
 type InfoResponse struct {
-	Version       string         `json:"version"`
-	LatestVersion string         `json:"latest_version,omitempty"`
-	Workspace     string         `json:"workspace"`
-	Uptime        string         `json:"uptime"`
-	Specs         SpecsSummary   `json:"specs"`
-	HTTPClient    HTTPClientInfo `json:"http_client"`
-	MCP           MCPInfo        `json:"mcp"`
-	Auth          AuthInfo       `json:"auth"`
-	Mock          MockInfo       `json:"mock"`
+	Version    string         `json:"version"`
+	Workspace  string         `json:"workspace"`
+	Uptime     string         `json:"uptime"`
+	Specs      SpecsSummary   `json:"specs"`
+	HTTPClient HTTPClientInfo `json:"http_client"`
+	MCP        MCPInfo        `json:"mcp"`
+	Auth       AuthInfo       `json:"auth"`
+	Mock       MockInfo       `json:"mock"`
 }
 
 // SpecsSummary holds aggregate spec statistics.
@@ -80,30 +90,45 @@ type MockInfo struct {
 	Enabled bool `json:"enabled"`
 }
 
-// Info returns a comprehensive summary of the current service state.
-// If cfg is nil, the method uses the config stored during Bootstrap.
-func (s *Service) Info(ctx context.Context, cfg *config.Config) (InfoResponse, error) {
-	resp := InfoResponse{
+// Info returns a comprehensive summary of the current service state from the snapshot.
+func (s *Service) Info(_ context.Context) (InfoResponse, error) {
+	snap, ok := s.snapshot.Load().(*InfoSnapshot)
+	if ok && snap != nil {
+		return InfoResponse{
+			Version:    snap.Version,
+			Workspace:  snap.Workspace,
+			Uptime:     time.Since(s.startedAt).Round(time.Second).String(),
+			Specs:      snap.Specs,
+			HTTPClient: snap.HTTPClient,
+			MCP:        snap.MCP,
+			Auth:       snap.Auth,
+			Mock:       snap.Mock,
+		}, nil
+	}
+
+	return InfoResponse{
 		Version:   s.version,
 		Workspace: s.ws.Root(),
 		Uptime:    time.Since(s.startedAt).Round(time.Second).String(),
+	}, nil
+}
+
+// buildSnapshot computes a point-in-time snapshot of the service state.
+func (s *Service) buildSnapshot() {
+	snap := &InfoSnapshot{
+		Version:   s.version,
+		Workspace: s.ws.Root(),
 	}
 
-	if cfg == nil {
-		cfg = s.config
+	if s.config != nil {
+		snap.Specs = s.buildSpecsSummary(s.config)
+		snap.HTTPClient = s.buildHTTPClientInfo(s.config)
+		snap.MCP = s.buildMCPInfo(s.config)
+		snap.Auth = s.buildAuthInfo(s.config)
+		snap.Mock = MockInfo{Enabled: s.config.MockEnabled}
 	}
 
-	if cfg != nil {
-		resp.Specs = s.buildSpecsSummary(cfg)
-		resp.HTTPClient = s.buildHTTPClientInfo(cfg)
-		resp.MCP = s.buildMCPInfo(cfg)
-		resp.Auth = s.buildAuthInfo(cfg)
-		resp.Mock = MockInfo{Enabled: cfg.MockEnabled}
-	}
-
-	resp.LatestVersion = s.fetchLatestVersion(ctx)
-
-	return resp, nil
+	s.snapshot.Store(snap)
 }
 
 func (s *Service) buildSpecsSummary(cfg *config.Config) SpecsSummary {
@@ -229,45 +254,5 @@ func (s *Service) buildAuthInfo(cfg *config.Config) AuthInfo {
 }
 
 const (
-	githubFetchTimeout  = 3
 	defaultMCPTransport = "stdio"
 )
-
-func (s *Service) fetchLatestVersion(ctx context.Context) string {
-	ctx, cancel := context.WithTimeout(ctx, githubFetchTimeout*time.Second)
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
-		"https://api.github.com/repos/mmadfox/swag2mcp/releases/latest", nil)
-	if err != nil {
-		return ""
-	}
-	req.Header.Set("Accept", "application/json")
-
-	resp, doErr := http.DefaultClient.Do(req)
-	if doErr != nil {
-		return ""
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return ""
-	}
-
-	var release struct {
-		TagName string `json:"tag_name"`
-	}
-	if decodeErr := json.NewDecoder(resp.Body).Decode(&release); decodeErr != nil {
-		return ""
-	}
-
-	return release.TagName
-}
-
-// InfoRequest is an empty request for the info tool.
-type InfoRequest struct{}
-
-// InfoResponseWrapper wraps InfoResponse for the MCP tool.
-type InfoResponseWrapper struct {
-	InfoResponse
-}
