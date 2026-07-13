@@ -1,0 +1,17 @@
+# .coveralls.yml
+# Coverage strategy — informational mode (never blocks PRs).
+# Exclude from report: test files, mocks, generated code,
+# and interactive TUI/CLI files that are inherently hard to unit test.
+
+exclude_patterns:
+  - "**/*_test.go"                 # test files themselves
+  - "**/mocks/**"                  # generated mocks (go.uber.org/mock)
+  - "**/mock_*"                    # files with mock_ prefix
+  - "**/*.pb.go"                   # protobuf generated code
+  - "internal/tui/run.go"          # Bubbletea Explorer TUI (782 lines)
+  - "internal/tui/collect.go"     # Bubbletea sub-wizard 
+  - "internal/tui/wizard.go"      # Bubbletea init-wizard
+  - "internal/commands/init.go"   # interactive init command
+  - "internal/commands/add.go"    # interactive add commands
+  - "internal/commands/delete.go"  # interactive delete commands
+  - "internal/commands/run.go"     # interactive run command (launches TUI)

@@ -34,70 +34,7 @@ func newInitCmd() *cobra.Command {
 			if len(args) > 0 {
 				basePath = args[0]
 			}
-
-			if opts.Interactive {
-				cfgPath, wsDir, _, err := tui.RunTUI()
-				if err != nil {
-					return fmt.Errorf("init wizard: %w", err)
-				}
-
-				ws, wsErr := workspace.New(wsDir)
-				if wsErr == nil {
-					if cfg, loadErr := config.Load(cfgPath); loadErr == nil {
-						ensureAuthScripts(cfg, ws)
-					}
-				}
-
-				return nil
-			}
-
-			var workspaceDir string
-			var configPath string
-
-			if basePath == "" {
-				ws, wsErr := workspace.New("")
-				if wsErr != nil {
-					return fmt.Errorf("workspace: %w", wsErr)
-				}
-				workspaceDir = ws.Root()
-				configPath = ws.ConfigPath()
-			} else {
-				absBase, err := filepath.Abs(basePath)
-				if err != nil {
-					return fmt.Errorf("resolve path: %w", err)
-				}
-				workspaceDir = absBase
-				configPath = filepath.Join(absBase, "swag2mcp.yaml")
-			}
-
-			if !opts.Force {
-				ws, wsErr := workspace.New(workspaceDir)
-				if wsErr != nil {
-					return fmt.Errorf("workspace: %w", wsErr)
-				}
-				empty, emptyErr := ws.IsEmpty()
-				if emptyErr != nil {
-					return fmt.Errorf("check directory: %w", emptyErr)
-				}
-				if !empty {
-					return fmt.Errorf("directory %q is not empty\n  Use --force to initialize in a non-empty directory", workspaceDir)
-				}
-			}
-
-			if err := tui.Setup(configPath, workspaceDir); err != nil {
-				return fmt.Errorf("init: %w", err)
-			}
-
-			ws, wsErr := workspace.New(workspaceDir)
-			if wsErr == nil {
-				if cfg, loadErr := config.Load(configPath); loadErr == nil {
-					ensureAuthScripts(cfg, ws)
-				}
-			}
-
-			cmd.Printf("✅ Configuration written to %s\n", configPath)
-			cmd.Printf("✅ Workspace initialized at %s\n", workspaceDir)
-			return nil
+			return runInit(basePath, opts.Interactive, opts.Force, cmd)
 		},
 	}
 
@@ -107,6 +44,72 @@ func newInitCmd() *cobra.Command {
 	cmd.SilenceErrors = true
 
 	return cmd
+}
+
+func runInit(basePath string, interactive, force bool, cmd *cobra.Command) error {
+	if interactive {
+		cfgPath, wsDir, _, err := tui.RunTUI()
+		if err != nil {
+			return fmt.Errorf("init wizard: %w", err)
+		}
+
+		ws, wsErr := workspace.New(wsDir)
+		if wsErr == nil {
+			if cfg, loadErr := config.Load(cfgPath); loadErr == nil {
+				ensureAuthScripts(cfg, ws)
+			}
+		}
+
+		return nil
+	}
+
+	var workspaceDir string
+	var configPath string
+
+	if basePath == "" {
+		ws, wsErr := workspace.New("")
+		if wsErr != nil {
+			return fmt.Errorf("workspace: %w", wsErr)
+		}
+		workspaceDir = ws.Root()
+		configPath = ws.ConfigPath()
+	} else {
+		absBase, err := filepath.Abs(basePath)
+		if err != nil {
+			return fmt.Errorf("resolve path: %w", err)
+		}
+		workspaceDir = absBase
+		configPath = filepath.Join(absBase, "swag2mcp.yaml")
+	}
+
+	if !force {
+		ws, wsErr := workspace.New(workspaceDir)
+		if wsErr != nil {
+			return fmt.Errorf("workspace: %w", wsErr)
+		}
+		empty, emptyErr := ws.IsEmpty()
+		if emptyErr != nil {
+			return fmt.Errorf("check directory: %w", emptyErr)
+		}
+		if !empty {
+			return fmt.Errorf("directory %q is not empty\n  Use --force to initialize in a non-empty directory", workspaceDir)
+		}
+	}
+
+	if err := tui.Setup(configPath, workspaceDir); err != nil {
+		return fmt.Errorf("init: %w", err)
+	}
+
+	ws, wsErr := workspace.New(workspaceDir)
+	if wsErr == nil {
+		if cfg, loadErr := config.Load(configPath); loadErr == nil {
+			ensureAuthScripts(cfg, ws)
+		}
+	}
+
+	cmd.Printf("✅ Configuration written to %s\n", configPath)
+	cmd.Printf("✅ Workspace initialized at %s\n", workspaceDir)
+	return nil
 }
 
 func ensureAuthScripts(cfg *config.Config, ws *workspace.Workspace) {

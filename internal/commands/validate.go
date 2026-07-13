@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"os"
+	"io"
 	"path/filepath"
 	"strings"
 
@@ -33,43 +33,7 @@ func newValidateCmd() *cobra.Command {
 			if len(args) > 0 {
 				basePath = args[0]
 			}
-
-			ws, err := workspace.NewFromBase(basePath)
-			if err != nil {
-				return fmt.Errorf("workspace: %w", err)
-			}
-
-			configPath := ws.ConfigPath()
-
-			if ws.ConfigNotExists() {
-				return fmt.Errorf("configuration not found at %s", configPath)
-			}
-
-			cfg, err := config.Load(configPath)
-			if err != nil {
-				return fmt.Errorf("load config: %w", err)
-			}
-
-			var tags []string
-			if opts.Tags != "" {
-				tags = strings.Split(opts.Tags, ",")
-				for i := range tags {
-					tags[i] = strings.TrimSpace(tags[i])
-				}
-			}
-
-			validateOpts := config.ValidateOptions{
-				Cache: cache.New(filepath.Dir(configPath)),
-				Tags:  tags,
-			}
-
-			if err := config.ValidateConfig(cfg, validateOpts); err != nil {
-				cmd.Printf("❌ %s\n", err)
-				os.Exit(1)
-			}
-
-			cmd.Printf("✅ Configuration is valid.\n")
-			return nil
+			return runValidate(basePath, opts.Tags, cmd.OutOrStdout())
 		},
 	}
 
@@ -78,4 +42,43 @@ func newValidateCmd() *cobra.Command {
 	cmd.SilenceErrors = true
 
 	return cmd
+}
+
+func runValidate(basePath, tagsFilter string, w io.Writer) error {
+	ws, err := workspace.NewFromBase(basePath)
+	if err != nil {
+		return fmt.Errorf("workspace: %w", err)
+	}
+
+	configPath := ws.ConfigPath()
+
+	if ws.ConfigNotExists() {
+		return fmt.Errorf("configuration not found at %s", configPath)
+	}
+
+	cfg, err := config.Load(configPath)
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
+	var tags []string
+	if tagsFilter != "" {
+		tags = strings.Split(tagsFilter, ",")
+		for i := range tags {
+			tags[i] = strings.TrimSpace(tags[i])
+		}
+	}
+
+	validateOpts := config.ValidateOptions{
+		Cache: cache.New(filepath.Dir(configPath)),
+		Tags:  tags,
+	}
+
+	if err := config.ValidateConfig(cfg, validateOpts); err != nil {
+		fmt.Fprintf(w, "❌ %s\n", err)
+		return err
+	}
+
+	fmt.Fprintf(w, "✅ Configuration is valid.\n")
+	return nil
 }

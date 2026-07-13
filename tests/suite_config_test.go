@@ -19,9 +19,9 @@ func TestScript_Validate_ValidConfig(t *testing.T) {
 `
 	writeConfig(t, ws, configContent)
 
-	_, stderr, code := runCommandInWS(t, ws, "validate", ".")
+	stdout, _, code := runCommandInWS(t, ws, "validate", ".")
 	assertEqual(t, "exit code", code, 0)
-	assertContains(t, "stderr", stderr, "valid")
+	assertContains(t, "stdout", stdout, "valid")
 }
 
 func TestScript_Validate_DuplicateDomain(t *testing.T) {
@@ -122,8 +122,8 @@ collections:
 	assertEqual(t, "exit code", code, 0)
 	assertContains(t, "stdout", stdout+stderr, "added")
 
-	_, stderr2, _ := runCommandInWS(t, ws, "ls", ".")
-	assertContains(t, "stderr", stderr2, "added-spec")
+	stdout2, _, _ := runCommandInWS(t, ws, "ls", ".")
+	assertContains(t, "stdout", stdout2, "added-spec")
 }
 
 func TestScript_AddSpec_FromStdin(t *testing.T) {
@@ -140,8 +140,8 @@ collections:
 	assertEqual(t, "exit code", code, 0)
 	assertContains(t, "stdout", stdout+stderr, "added")
 
-	_, stderr2, _ := runCommandInWS(t, ws, "ls", ".")
-	assertContains(t, "stderr", stderr2, "stdin-spec")
+	stdout2, _, _ := runCommandInWS(t, ws, "ls", ".")
+	assertContains(t, "stdout", stdout2, "stdin-spec")
 }
 
 func TestScript_AddSpec_InvalidYAML(t *testing.T) {
@@ -171,8 +171,8 @@ location: ./testdata/petstore.yaml
 	assertEqual(t, "exit code", code, 0)
 	assertContains(t, "stdout", stdout+stderr, "added")
 
-	_, stderr2, _ := runCommandInWS(t, ws, "ls", ".")
-	assertContains(t, "stderr", stderr2, "Added Collection")
+	stdout2, _, _ := runCommandInWS(t, ws, "ls", ".")
+	assertContains(t, "stdout", stdout2, "Added Collection")
 }
 
 func TestScript_DeleteSpec(t *testing.T) {
@@ -187,14 +187,14 @@ collections:
 `
 	runCommandInWS(t, ws, "add", "spec", "--yaml", specYAML, ".")
 
-	_, stderr, _ := runCommandInWS(t, ws, "ls", ".")
-	assertContains(t, "stderr", stderr, "to-delete")
+	stdout, _, _ := runCommandInWS(t, ws, "ls", ".")
+	assertContains(t, "stdout", stdout, "to-delete")
 
 	_, _, code := runCommandWithStdinInWS(t, ws, "5\ny\n", "delete", "spec", ".")
 	assertEqual(t, "exit code", code, 0)
 
-	_, stderr2, _ := runCommandInWS(t, ws, "ls", ".")
-	assertNotContains(t, "stderr", stderr2, "to-delete")
+	stdout2, _, _ := runCommandInWS(t, ws, "ls", ".")
+	assertNotContains(t, "stdout", stdout2, "to-delete")
 }
 
 func TestScript_DeleteSpec_Cancel(t *testing.T) {
@@ -211,8 +211,8 @@ collections:
 
 	runCommandWithStdinInWS(t, ws, "n\n", "delete", "spec", ".")
 
-	_, stderr, _ := runCommandInWS(t, ws, "ls", ".")
-	assertContains(t, "stderr", stderr, "keep-me")
+	stdout, _, _ := runCommandInWS(t, ws, "ls", ".")
+	assertContains(t, "stdout", stdout, "keep-me")
 }
 
 func TestScript_ListSpecs(t *testing.T) {
@@ -227,11 +227,11 @@ collections:
 `
 	runCommandInWS(t, ws, "add", "spec", "--yaml", specYAML, ".")
 
-	_, stderr, code := runCommandInWS(t, ws, "ls", ".")
+	stdout, _, code := runCommandInWS(t, ws, "ls", ".")
 	assertEqual(t, "exit code", code, 0)
-	assertContains(t, "stderr", stderr, "list-test")
-	assertContains(t, "stderr", stderr, "List Test")
-	assertContains(t, "stderr", stderr, "petstore.yaml")
+	assertContains(t, "stdout", stdout, "list-test")
+	assertContains(t, "stdout", stdout, "List Test")
+	assertContains(t, "stdout", stdout, "petstore.yaml")
 }
 
 func TestScript_ListSpecs_Empty(t *testing.T) {
@@ -262,9 +262,9 @@ func TestScript_ListSpecs_TagFilter(t *testing.T) {
 `
 	writeConfig(t, ws, configContent)
 
-	_, stderr, _ := runCommandInWS(t, ws, "ls", "-t", "public", ".")
-	assertContains(t, "stderr", stderr, "public-api")
-	assertNotContains(t, "stderr", stderr, "internal-api")
+	stdout, _, _ := runCommandInWS(t, ws, "ls", "-t", "public", ".")
+	assertContains(t, "stdout", stdout, "public-api")
+	assertNotContains(t, "stdout", stdout, "internal-api")
 }
 
 func TestScript_Update_ReCachesSpecs(t *testing.T) {
@@ -316,9 +316,9 @@ func TestScript_Clean_RemovesCache(t *testing.T) {
 	dummyResp := filepath.Join(responsesDir, "test.json")
 	_ = os.WriteFile(dummyResp, []byte("{}"), 0644)
 
-	_, stderr, code := runCommandInWS(t, ws, "clean", ".")
+	stdout, _, code := runCommandInWS(t, ws, "clean", ".")
 	assertEqual(t, "exit code", code, 0)
-	assertContains(t, "stderr", stderr, "Removed")
+	assertContains(t, "stdout", stdout, "Removed")
 
 	if _, err := os.Stat(dummyFile); !os.IsNotExist(err) {
 		t.Errorf("cache file was not removed")

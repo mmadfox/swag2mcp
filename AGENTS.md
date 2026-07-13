@@ -5,6 +5,7 @@
 ```sh
 make lint          # golangci-lint (120 line limit, strict linters)
 make cover         # go test ./... + coverage HTML report
+make cover-core    # coverage only for core packages (80%+ target)
 go test ./pkg/...  # single package
 go test ./...      # all packages
 go generate ./...  # installs mockgen + generates mocks (internal/server/mcp)
@@ -35,3 +36,11 @@ Order: `make lint && go test ./...`
 - **Test helpers**: `newTestService()` + `seedTestData()` in `internal/service/service_test.go`; `newTestIndex()` in `internal/index/index_test.go`
 - **MCP handler tests**: use `go.uber.org/mock/gomock` — run `go generate ./...` after changing `svc` interface
 - **Lint exclusions**: TUI, commands, config, service paths have relaxed rules in `.golangci.yml`
+
+## Coverage strategy
+
+- **Core packages** (`auth`, `cache`, `config`, `env`, `httpclient`, `id`, `index`, `server/mcp`, `service`, `spec`, `types`, `workspace`) — target 80%+, tracked via `make cover-core`
+- **Integration packages** (`commands`, `tui`, `mockserver`) — inherently hard to unit test (cobra RunE, Bubbletea models, real HTTP servers). Coverage is informational only
+- **Coveralls** runs in `informational` mode (`fail-on-error: false`) — never blocks PRs on coverage drop
+- **`.coveralls.yml`** excludes `*_test.go`, `mocks/`, `mock_*`, `*.pb.go` from the report
+- **Commands**: `make cover` (all packages), `make cover-core` (core only)

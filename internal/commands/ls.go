@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"io"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -29,35 +30,7 @@ func newLsCmd() *cobra.Command {
 			if len(args) > 0 {
 				basePath = args[0]
 			}
-
-			ws, err := workspace.NewFromBase(basePath)
-			if err != nil {
-				return err
-			}
-
-			configPath := ws.ConfigPath()
-
-			if ws.ConfigNotExists() {
-				configPath, err = ensureConfigExists(basePath)
-				if err != nil {
-					return err
-				}
-			}
-
-			var tags []string
-			if opts.Tags != "" {
-				tags = strings.Split(opts.Tags, ",")
-				for i := range tags {
-					tags[i] = strings.TrimSpace(tags[i])
-				}
-			}
-
-			output, err := tui.ListConfig(configPath, tags)
-			if err != nil {
-				return err
-			}
-			cmd.Print(output)
-			return nil
+			return runLs(basePath, opts.Tags, cmd.OutOrStdout())
 		},
 	}
 
@@ -66,4 +39,35 @@ func newLsCmd() *cobra.Command {
 	cmd.SilenceErrors = true
 
 	return cmd
+}
+
+func runLs(basePath, tagsFilter string, w io.Writer) error {
+	ws, err := workspace.NewFromBase(basePath)
+	if err != nil {
+		return err
+	}
+
+	configPath := ws.ConfigPath()
+
+	if ws.ConfigNotExists() {
+		configPath, err = ensureConfigExists(basePath)
+		if err != nil {
+			return err
+		}
+	}
+
+	var tags []string
+	if tagsFilter != "" {
+		tags = strings.Split(tagsFilter, ",")
+		for i := range tags {
+			tags[i] = strings.TrimSpace(tags[i])
+		}
+	}
+
+	output, err := tui.ListConfig(configPath, tags)
+	if err != nil {
+		return err
+	}
+	_, err = io.WriteString(w, output)
+	return err
 }

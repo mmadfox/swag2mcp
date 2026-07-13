@@ -45,100 +45,7 @@ func newMCPCmd(version string) *cobra.Command {
 			if len(args) > 0 {
 				basePath = args[0]
 			}
-
-			ws, err := workspace.NewFromBase(basePath)
-			if err != nil {
-				return fmt.Errorf("workspace: %w", err)
-			}
-
-			configFile := ws.ConfigPath()
-
-			if ws.ConfigNotExists() {
-				return fmt.Errorf("configuration not found at %s", configFile)
-			}
-
-			var logger *slog.Logger
-			if len(opts.Logfile) > 0 {
-				f, logErr := os.Create(opts.Logfile)
-				if logErr != nil {
-					return fmt.Errorf("opening logfile: %w", logErr)
-				}
-				defer f.Close()
-				logger = slog.New(slog.NewTextHandler(f, nil))
-			} else {
-				logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
-			}
-
-			cfg, loadErr := config.Load(configFile)
-			if loadErr == nil {
-				if cfg.MCP != nil {
-					cfg.MCP.Auth.Resolve()
-				}
-				validateOpts := config.ValidateOptions{
-					Cache: cache.New(filepath.Dir(configFile)),
-				}
-				if err := config.ValidateConfig(cfg, validateOpts); err != nil {
-					fmt.Fprintf(os.Stderr, "⚠️  Configuration warnings:\n%s\n", err)
-				}
-			}
-
-			// Apply MCP config from YAML as fallback when CLI flags are not set
-			applyMCPConfig(cmd, cfg, &opts)
-
-			var tags []string
-			if opts.Tags != "" {
-				tags = strings.Split(opts.Tags, ",")
-				for i := range tags {
-					tags[i] = strings.TrimSpace(tags[i])
-				}
-			}
-
-			svcOpts := []service.NewOption{
-				service.WithDisableLLMAuth(opts.DisableLLMAuth),
-				service.WithVersion(version),
-			}
-			if opts.DumpDir != "" {
-				svcOpts = append(svcOpts, service.WithDumpDir(opts.DumpDir))
-			}
-
-			svc, svcErr := service.New(svcOpts...)
-			if svcErr != nil {
-				return fmt.Errorf("failed to create service: %w", svcErr)
-			}
-
-			if bootErr := svc.Bootstrap(cmd.Context(), service.BootstrapRequest{
-				ConfFilepath: configFile,
-				Tags:         tags,
-			}); bootErr != nil {
-				return fmt.Errorf("failed to bootstrap service: %w", bootErr)
-			}
-
-			if cleanErr := ws.CleanOldResponses(workspace.DefaultResponseMaxAge); cleanErr != nil {
-				fmt.Fprintf(os.Stderr, "⚠️  Failed to clean old responses: %s\n", cleanErr)
-			}
-
-			transportType := mcp.TransportStdio
-			switch opts.Transport {
-			case transportSSE:
-				transportType = mcp.TransportSSE
-			case transportStreamableHTTP:
-				transportType = mcp.TransportStreamableHTTP
-			}
-
-			mcpOpts := mcp.Options{
-				Version:   version,
-				Logger:    logger,
-				Service:   svc,
-				Transport: transportType,
-				HTTPAddr:  opts.HTTPAddr,
-				HTTPPath:  opts.HTTPPath,
-				AuthToken: opts.AuthToken,
-			}
-
-			ctx, cancel := context.WithCancel(cmd.Context())
-			defer cancel()
-
-			return mcp.Serve(ctx, mcpOpts)
+			return runMCP(basePath, version, &opts, cmd)
 		},
 	}
 
@@ -154,6 +61,101 @@ func newMCPCmd(version string) *cobra.Command {
 	cmd.SilenceErrors = true
 
 	return cmd
+}
+
+func runMCP(basePath, version string, opts *mcpCmdOpts, cmd *cobra.Command) error {
+	ws, err := workspace.NewFromBase(basePath)
+	if err != nil {
+		return fmt.Errorf("workspace: %w", err)
+	}
+
+	configFile := ws.ConfigPath()
+
+	if ws.ConfigNotExists() {
+		return fmt.Errorf("configuration not found at %s", configFile)
+	}
+
+	var logger *slog.Logger
+	if len(opts.Logfile) > 0 {
+		f, logErr := os.Create(opts.Logfile)
+		if logErr != nil {
+			return fmt.Errorf("opening logfile: %w", logErr)
+		}
+		defer f.Close()
+		logger = slog.New(slog.NewTextHandler(f, nil))
+	} else {
+		logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
+	}
+
+	cfg, loadErr := config.Load(configFile)
+	if loadErr == nil {
+		if cfg.MCP != nil {
+			cfg.MCP.Auth.Resolve()
+		}
+		validateOpts := config.ValidateOptions{
+			Cache: cache.New(filepath.Dir(configFile)),
+		}
+		if err := config.ValidateConfig(cfg, validateOpts); err != nil {
+			fmt.Fprintf(os.Stderr, "⚠️  Configuration warnings:\n%s\n", err)
+		}
+	}
+
+	applyMCPConfig(cmd, cfg, opts)
+
+	var tags []string
+	if opts.Tags != "" {
+		tags = strings.Split(opts.Tags, ",")
+		for i := range tags {
+			tags[i] = strings.TrimSpace(tags[i])
+		}
+	}
+
+	svcOpts := []service.NewOption{
+		service.WithDisableLLMAuth(opts.DisableLLMAuth),
+		service.WithVersion(version),
+	}
+	if opts.DumpDir != "" {
+		svcOpts = append(svcOpts, service.WithDumpDir(opts.DumpDir))
+	}
+
+	svc, svcErr := service.New(svcOpts...)
+	if svcErr != nil {
+		return fmt.Errorf("failed to create service: %w", svcErr)
+	}
+
+	if bootErr := svc.Bootstrap(cmd.Context(), service.BootstrapRequest{
+		ConfFilepath: configFile,
+		Tags:         tags,
+	}); bootErr != nil {
+		return fmt.Errorf("failed to bootstrap service: %w", bootErr)
+	}
+
+	if cleanErr := ws.CleanOldResponses(workspace.DefaultResponseMaxAge); cleanErr != nil {
+		fmt.Fprintf(os.Stderr, "⚠️  Failed to clean old responses: %s\n", cleanErr)
+	}
+
+	transportType := mcp.TransportStdio
+	switch opts.Transport {
+	case transportSSE:
+		transportType = mcp.TransportSSE
+	case transportStreamableHTTP:
+		transportType = mcp.TransportStreamableHTTP
+	}
+
+	mcpOpts := mcp.Options{
+		Version:   version,
+		Logger:    logger,
+		Service:   svc,
+		Transport: transportType,
+		HTTPAddr:  opts.HTTPAddr,
+		HTTPPath:  opts.HTTPPath,
+		AuthToken: opts.AuthToken,
+	}
+
+	ctx, cancel := context.WithCancel(cmd.Context())
+	defer cancel()
+
+	return mcp.Serve(ctx, mcpOpts)
 }
 
 // applyMCPConfig applies MCP settings from YAML config as fallback

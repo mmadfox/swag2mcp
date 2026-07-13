@@ -1,8 +1,10 @@
 package commands
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 
 	"github.com/spf13/cobra"
 
@@ -28,45 +30,7 @@ auth methods, and mock mode status.
 			if len(args) > 0 {
 				basePath = args[0]
 			}
-
-			ws, err := workspace.NewFromBase(basePath)
-			if err != nil {
-				return err
-			}
-
-			configPath := ws.ConfigPath()
-
-			if ws.ConfigNotExists() {
-				configPath, err = ensureConfigExists(basePath)
-				if err != nil {
-					return err
-				}
-			}
-
-			cfg, loadErr := config.Load(configPath)
-			if loadErr != nil {
-				return fmt.Errorf("failed to load config: %w", loadErr)
-			}
-
-			svc, svcErr := service.New(
-				service.WithVersion(Version),
-			)
-			if svcErr != nil {
-				return fmt.Errorf("failed to create service: %w", svcErr)
-			}
-
-			info, infoErr := svc.Info(cmd.Context(), cfg)
-			if infoErr != nil {
-				return fmt.Errorf("failed to get info: %w", infoErr)
-			}
-
-			out, marshalErr := json.MarshalIndent(info, "", "  ")
-			if marshalErr != nil {
-				return fmt.Errorf("failed to marshal info: %w", marshalErr)
-			}
-
-			cmd.Println(string(out))
-			return nil
+			return runInfo(basePath, cmd.OutOrStdout())
 		},
 	}
 
@@ -74,4 +38,45 @@ auth methods, and mock mode status.
 	cmd.SilenceErrors = true
 
 	return cmd
+}
+
+func runInfo(basePath string, w io.Writer) error {
+	ws, err := workspace.NewFromBase(basePath)
+	if err != nil {
+		return err
+	}
+
+	configPath := ws.ConfigPath()
+
+	if ws.ConfigNotExists() {
+		configPath, err = ensureConfigExists(basePath)
+		if err != nil {
+			return err
+		}
+	}
+
+	cfg, loadErr := config.Load(configPath)
+	if loadErr != nil {
+		return fmt.Errorf("failed to load config: %w", loadErr)
+	}
+
+	svc, svcErr := service.New(
+		service.WithVersion(Version),
+	)
+	if svcErr != nil {
+		return fmt.Errorf("failed to create service: %w", svcErr)
+	}
+
+	info, infoErr := svc.Info(context.Background(), cfg)
+	if infoErr != nil {
+		return fmt.Errorf("failed to get info: %w", infoErr)
+	}
+
+	out, marshalErr := json.MarshalIndent(info, "", "  ")
+	if marshalErr != nil {
+		return fmt.Errorf("failed to marshal info: %w", marshalErr)
+	}
+
+	_, err = io.WriteString(w, string(out)+"\n")
+	return err
 }

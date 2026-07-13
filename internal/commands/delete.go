@@ -30,15 +30,7 @@ func newDeleteSpecCmd() *cobra.Command {
 			if len(args) > 0 {
 				basePath = args[0]
 			}
-
-			configPath, err := ensureConfigExists(basePath)
-			if err != nil {
-				return err
-			}
-			if err := tui.DeleteSpecTUI(configPath); err != nil {
-				return fmt.Errorf("delete spec: %w", err)
-			}
-			return nil
+			return runDeleteSpec(basePath)
 		},
 	}
 
@@ -46,6 +38,17 @@ func newDeleteSpecCmd() *cobra.Command {
 	cmd.SilenceErrors = true
 
 	return cmd
+}
+
+func runDeleteSpec(basePath string) error {
+	configPath, err := ensureConfigExists(basePath)
+	if err != nil {
+		return err
+	}
+	if err := tui.DeleteSpecTUI(configPath); err != nil {
+		return fmt.Errorf("delete spec: %w", err)
+	}
+	return nil
 }
 
 func newDeleteCollectionCmd() *cobra.Command {
@@ -58,15 +61,7 @@ func newDeleteCollectionCmd() *cobra.Command {
 			if len(args) > 0 {
 				basePath = args[0]
 			}
-
-			configPath, err := ensureConfigExists(basePath)
-			if err != nil {
-				return err
-			}
-			if err := tui.DeleteCollectionTUI(configPath); err != nil {
-				return fmt.Errorf("delete collection: %w", err)
-			}
-			return nil
+			return runDeleteCollection(basePath)
 		},
 	}
 
@@ -74,4 +69,15 @@ func newDeleteCollectionCmd() *cobra.Command {
 	cmd.SilenceErrors = true
 
 	return cmd
+}
+
+func runDeleteCollection(basePath string) error {
+	configPath, err := ensureConfigExists(basePath)
+	if err != nil {
+		return err
+	}
+	if err := tui.DeleteCollectionTUI(configPath); err != nil {
+		return fmt.Errorf("delete collection: %w", err)
+	}
+	return nil
 }

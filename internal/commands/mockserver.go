@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 
@@ -39,42 +40,7 @@ configuration (spec or collection level). Format: "host:port".`,
 			if len(arguments) > 0 {
 				basePath = arguments[0]
 			}
-
-			ws, workspaceError := workspace.NewFromBase(basePath)
-			if workspaceError != nil {
-				return fmt.Errorf("workspace: %w", workspaceError)
-			}
-
-			configFile := ws.ConfigPath()
-
-			if ws.ConfigNotExists() {
-				return fmt.Errorf("configuration not found at %s", configFile)
-			}
-
-			configuration, loadError := config.Load(configFile)
-			if loadError != nil {
-				return fmt.Errorf("failed to load config: %w", loadError)
-			}
-
-			validateOpts := config.ValidateOptions{
-				Cache: cache.New(filepath.Dir(configFile)),
-			}
-			if err := config.ValidateConfig(configuration, validateOpts); err != nil {
-				return fmt.Errorf("configuration validation failed: %w", err)
-			}
-
-			mockServerOptions := mockserver.Options{
-				Config:     configuration,
-				ConfigPath: configFile,
-				Workspace:  ws,
-				TLS:        options.TLS,
-				TLSCert:    options.TLSCert,
-				TLSKey:     options.TLSKey,
-			}
-
-			mockServer := mockserver.New(mockServerOptions)
-
-			return mockServer.Start(command.Context())
+			return runMockServer(basePath, &options, command.Context())
 		},
 	}
 
@@ -85,4 +51,42 @@ configuration (spec or collection level). Format: "host:port".`,
 	command.SilenceErrors = true
 
 	return command
+}
+
+func runMockServer(basePath string, opts *mockServerCmdOptions, ctx context.Context) error {
+	ws, workspaceError := workspace.NewFromBase(basePath)
+	if workspaceError != nil {
+		return fmt.Errorf("workspace: %w", workspaceError)
+	}
+
+	configFile := ws.ConfigPath()
+
+	if ws.ConfigNotExists() {
+		return fmt.Errorf("configuration not found at %s", configFile)
+	}
+
+	configuration, loadError := config.Load(configFile)
+	if loadError != nil {
+		return fmt.Errorf("failed to load config: %w", loadError)
+	}
+
+	validateOpts := config.ValidateOptions{
+		Cache: cache.New(filepath.Dir(configFile)),
+	}
+	if err := config.ValidateConfig(configuration, validateOpts); err != nil {
+		return fmt.Errorf("configuration validation failed: %w", err)
+	}
+
+	mockServerOptions := mockserver.Options{
+		Config:     configuration,
+		ConfigPath: configFile,
+		Workspace:  ws,
+		TLS:        opts.TLS,
+		TLSCert:    opts.TLSCert,
+		TLSKey:     opts.TLSKey,
+	}
+
+	mockServer := mockserver.New(mockServerOptions)
+
+	return mockServer.Start(ctx)
 }
