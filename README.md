@@ -28,6 +28,7 @@
   - [SSE / Streamable HTTP transport (remote)](#sse--streamable-http-transport-remote)
 - [Mock Server](#mock-server)
 - [Examples](#examples)
+- [Available Skills](#available-skills-for-swag2mcp)
 - [License](#license)
 
 ## Documentation
@@ -226,6 +227,14 @@ demonstrates a specific feature or use case.
 | | [sse](examples/mcp-transport/sse) | SSE transport with HTTP and bearer token auth |
 | | [streamable-http](examples/mcp-transport/streamable-http) | Streamable HTTP transport with HTTP and bearer token auth |
 | **Mock Server** | [mock-server](examples/mock-server) | Mock server with random data generation and auth mock |
+
+## Available Skills for swag2mcp
+
+Customize your experience with specialized skills that enhance swag2mcp MCP tool responses:
+
+- **swag2mcp-format** — Formats responses as human-readable markdown with pagination, HTTP method colorization, and structured schemas/headers/errors
+
+[Download](https://github.com/mmadfox/skills#swag2mcp-format)
 
 ## License
 
