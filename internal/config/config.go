@@ -20,7 +20,7 @@ type Cookie struct {
 
 // ProxyConfig holds proxy connection settings.
 type ProxyConfig struct {
-	URL      string   `yaml:"url"`
+	URL      string   `yaml:"url"                  validate:"omitempty,proxy_url_format"`
 	Username string   `yaml:"username,omitempty"`
 	Password string   `yaml:"password,omitempty"`
 	Bypass   []string `yaml:"bypass,omitempty"`
@@ -36,14 +36,14 @@ type HTTPClientConfig struct {
 // GlobalHTTPClientConfig holds global HTTP client settings.
 type GlobalHTTPClientConfig struct {
 	Randomize       bool              `yaml:"random,omitempty"`
-	Proxy           *ProxyConfig      `yaml:"proxy,omitempty"`
+	Proxy           *ProxyConfig      `yaml:"proxy,omitempty"              validate:"omitempty"`
 	Headers         map[string]string `yaml:"headers,omitempty"`
-	Cookies         []Cookie          `yaml:"cookies,omitempty"`
+	Cookies         []Cookie          `yaml:"cookies,omitempty"            validate:"omitempty,dive"`
 	UserAgent       string            `yaml:"user_agent,omitempty"`
-	Timeout         time.Duration     `yaml:"timeout,omitempty"`
+	Timeout         time.Duration     `yaml:"timeout,omitempty"            validate:"omitempty,min=1000000000,max=300000000000"`
 	FollowRedirects *bool             `yaml:"follow_redirects,omitempty"`
-	MaxRedirects    *int              `yaml:"max_redirects,omitempty"`
-	MaxResponseSize *int              `yaml:"max_response_size,omitempty"`
+	MaxRedirects    *int              `yaml:"max_redirects,omitempty"      validate:"omitempty,min=0,max=50"`
+	MaxResponseSize *int              `yaml:"max_response_size,omitempty"   validate:"omitempty,min=256,max=1048576"`
 }
 
 // MockAuthConfig holds port configuration for mock auth servers.
@@ -64,6 +64,38 @@ type Config struct {
 	MCP                *MCPConfig              `yaml:"mcp,omitempty"`
 	DisableRateLimiter bool                    `yaml:"disable_ratelimiter,omitempty"`
 	Specs              []Spec                  `yaml:"specs"`
+}
+
+const (
+	defaultUserAgent       = "swag2mcp-global/1.0"
+	defaultTimeout         = 30 * time.Second
+	defaultMaxRedirects    = 10
+	defaultMaxResponseSize = 2048
+)
+
+// SetDefaults fills nil/zero fields with sensible defaults.
+func (c *GlobalHTTPClientConfig) SetDefaults() {
+	if c == nil {
+		return
+	}
+	if c.UserAgent == "" && !c.Randomize {
+		c.UserAgent = defaultUserAgent
+	}
+	if c.Timeout <= 0 {
+		c.Timeout = defaultTimeout
+	}
+	if c.FollowRedirects == nil {
+		v := true
+		c.FollowRedirects = &v
+	}
+	if c.MaxRedirects == nil {
+		v := defaultMaxRedirects
+		c.MaxRedirects = &v
+	}
+	if c.MaxResponseSize == nil {
+		v := defaultMaxResponseSize
+		c.MaxResponseSize = &v
+	}
 }
 
 // MCPConfig holds the MCP server configuration.

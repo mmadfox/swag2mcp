@@ -107,7 +107,7 @@ func TestScript_ResponseSize_Configurable(t *testing.T) {
 	srv := startHTTPServer(t, mux)
 
 	configContent := `http_client:
-  max_response_size: 100
+  max_response_size: 300
 specs:
   - domain: petstore
     llm_title: Petstore API

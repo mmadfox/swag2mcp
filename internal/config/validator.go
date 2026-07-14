@@ -70,6 +70,8 @@ type ValidateOptions struct {
 func ValidateConfig(cfg *Config, opts ValidateOptions) error {
 	var errs validationErrors
 
+	cfg.HTTPClient.SetDefaults()
+
 	filter := NewFilter(opts.Tags)
 
 	if err := cfg.Validate(filter); err != nil {
@@ -86,6 +88,8 @@ func ValidateConfig(cfg *Config, opts ValidateOptions) error {
 	}
 
 	errs = append(errs, validateSpecLocations(cfg, filter, opts.Cache)...)
+
+	errs = append(errs, validateGlobalHTTPClient(cfg)...)
 
 	if len(errs) == 0 {
 		return nil
@@ -199,6 +203,21 @@ func validateSpecLocations(cfg *Config, filter *Filter, cacheInstance *cache.Cac
 	return errs
 }
 
+func validateGlobalHTTPClient(cfg *Config) []validationError {
+	var errs []validationError
+	if cfg.HTTPClient == nil {
+		return nil
+	}
+
+	errs = append(errs, collectStructErrors("http_client", *cfg.HTTPClient)...)
+
+	if cfg.HTTPClient.Proxy != nil {
+		errs = append(errs, collectStructErrors("http_client.proxy", *cfg.HTTPClient.Proxy)...)
+	}
+
+	return errs
+}
+
 // extractPort extracts the port number from a "host:port" or "host:port/path" string.
 func extractPort(addr string) int {
 	// Handle "host:port/path" — cut at the first slash after the port
@@ -237,7 +256,28 @@ func getValidator() (*validator.Validate, error) {
 	if err := configValidator.RegisterValidation("mock_addr_format", mockAddrFormatValidation); err != nil {
 		return nil, fmt.Errorf("register mock_addr_format validation: %w", err)
 	}
+	if err := configValidator.RegisterValidation("proxy_url_format", proxyURLFormatValidation); err != nil {
+		return nil, fmt.Errorf("register proxy_url_format validation: %w", err)
+	}
 	return configValidator, nil
+}
+
+// proxyURLFormatValidation validates that the URL has a supported proxy scheme.
+func proxyURLFormatValidation(fl validator.FieldLevel) bool {
+	u := fl.Field().String()
+	if u == "" {
+		return true
+	}
+	parsed, err := url.Parse(u)
+	if err != nil {
+		return false
+	}
+	switch parsed.Scheme {
+	case "http", "https", "socks5", "socks5h":
+		return true
+	default:
+		return false
+	}
 }
 
 // mockAddrFormatValidation validates that the address is in format "host:port"
@@ -296,60 +336,81 @@ func instructionFormatValidation(fl validator.FieldLevel) bool {
 	return instructionRegex.MatchString(fl.Field().String())
 }
 
-// humanReadableError translates a validator.FieldError into a human-readable message.
 func humanReadableError(fe validator.FieldError) string {
-	field := fe.Field()
-	tag := fe.Tag()
-	param := fe.Param()
-
-	switch tag {
+	switch fe.Tag() {
 	case "required":
-		switch field {
-		case "Domain":
-			return "Domain is required — provide a unique identifier for this API (e.g. 'petstore', 'github-api')"
-		case "LLMTitle":
-			return "LLMTitle is required — provide a human-readable name the LLM will use to reference this API"
-		case "BaseURL":
-			return "BaseURL is required — provide the base URL for all API requests (e.g. 'https://api.example.com/v1')"
-		case "Location":
-			return "Location is required — provide a path or URL to the Swagger/OpenAPI spec file"
-		default:
-			return fmt.Sprintf("%s is required", field)
-		}
+		return requiredFieldError(fe.Field())
 	case "min":
-		switch field {
-		case "LLMTitle":
-			return fmt.Sprintf("LLMTitle must be at least %s characters — provide a more descriptive name", param)
-		case "Location":
-			return fmt.Sprintf("Location must be at least %s characters — the path or URL is too short", param)
-		default:
-			return fmt.Sprintf("%s must be at least %s characters", field, param)
-		}
+		return minFieldError(fe.Field(), fe.Param())
 	case "max":
-		switch field {
-		case "LLMTitle":
-			return fmt.Sprintf("LLMTitle must be at most %s characters — the name is too long", param)
-		case "LLMInstruction":
-			return fmt.Sprintf("LLMInstruction must be at most %s characters — the instruction is too long", param)
-		case "Location":
-			return fmt.Sprintf("Location must be at most %s characters — the path or URL is too long", param)
-		default:
-			return fmt.Sprintf("%s must be at most %s characters", field, param)
-		}
+		return maxFieldError(fe.Field(), fe.Param())
 	case "url":
-		return fmt.Sprintf("%s must be a valid URL — provide a full URL starting with http:// or https://", field)
+		return fmt.Sprintf("%s must be a valid URL — provide a full URL starting with http:// or https://", fe.Field())
+	case "oneof":
+		return fmt.Sprintf("%s must be one of: %s", fe.Field(), fe.Param())
 	case "domain_format":
 		return "Domain must be 1-60 characters using only letters, digits, hyphens, and underscores"
 	case "title_format":
 		return "LLMTitle contains invalid characters — use letters, digits, spaces, and basic punctuation only"
 	case "instruction_format":
 		return "LLMInstruction contains invalid characters — use letters, digits, spaces, and basic punctuation only"
-	case "oneof":
-		return fmt.Sprintf("%s must be one of: %s", field, param)
 	case "mock_addr_format":
-		return fmt.Sprintf("%s must be in format 'host:port' or 'host:port/path' where host is localhost, 127.0.0.1, or 0.0.0.0 (e.g. 'localhost:8080' or '127.0.0.1:9000/v1/api')", field)
+		return fmt.Sprintf("%s must be in format 'host:port' or 'host:port/path' where host is localhost, 127.0.0.1, or 0.0.0.0 (e.g. 'localhost:8080' or '127.0.0.1:9000/v1/api')", fe.Field())
+	case "proxy_url_format":
+		return "Proxy URL must use a supported scheme: http, https, socks5, or socks5h (e.g. 'socks5h://127.0.0.1:1080')"
 	default:
 		return fe.Error()
+	}
+}
+
+func requiredFieldError(field string) string {
+	switch field {
+	case "Domain":
+		return "Domain is required — provide a unique identifier for this API (e.g. 'petstore', 'github-api')"
+	case "LLMTitle":
+		return "LLMTitle is required — provide a human-readable name the LLM will use to reference this API"
+	case "BaseURL":
+		return "BaseURL is required — provide the base URL for all API requests (e.g. 'https://api.example.com/v1')"
+	case "Location":
+		return "Location is required — provide a path or URL to the Swagger/OpenAPI spec file"
+	default:
+		return fmt.Sprintf("%s is required", field)
+	}
+}
+
+func minFieldError(field, param string) string {
+	switch field {
+	case "LLMTitle":
+		return fmt.Sprintf("LLMTitle must be at least %s characters — provide a more descriptive name", param)
+	case "Location":
+		return fmt.Sprintf("Location must be at least %s characters — the path or URL is too short", param)
+	case "Timeout":
+		return "Timeout must be at least 1 second — set a reasonable timeout for HTTP requests"
+	case "MaxRedirects":
+		return "MaxRedirects must be at least 0 — set to 0 to disable redirects"
+	case "MaxResponseSize":
+		return "MaxResponseSize must be at least 256 bytes — the minimum response size limit"
+	default:
+		return fmt.Sprintf("%s must be at least %s", field, param)
+	}
+}
+
+func maxFieldError(field, param string) string {
+	switch field {
+	case "LLMTitle":
+		return fmt.Sprintf("LLMTitle must be at most %s characters — the name is too long", param)
+	case "LLMInstruction":
+		return fmt.Sprintf("LLMInstruction must be at most %s characters — the instruction is too long", param)
+	case "Location":
+		return fmt.Sprintf("Location must be at most %s characters — the path or URL is too long", param)
+	case "Timeout":
+		return "Timeout must be at most 5 minutes (300 seconds) — set a reasonable timeout for HTTP requests"
+	case "MaxRedirects":
+		return "MaxRedirects must be at most 50 — too many redirects may cause infinite loops"
+	case "MaxResponseSize":
+		return "MaxResponseSize must be at most 1 MB (1048576 bytes) — the maximum response size limit"
+	default:
+		return fmt.Sprintf("%s must be at most %s", field, param)
 	}
 }
 

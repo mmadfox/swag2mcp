@@ -2,6 +2,7 @@ package config
 
 import (
 	"testing"
+	"time"
 )
 
 func TestConfig_Validate_NoSpecs(t *testing.T) {
@@ -575,5 +576,82 @@ func TestConfig_Validate_MockEnabled_DisabledCollectionSkipped(t *testing.T) {
 	err := cfg.Validate(nil)
 	if err != nil {
 		t.Fatalf("Validate() = %v, want nil", err)
+	}
+}
+
+func TestGlobalHTTPClientConfig_SetDefaults(t *testing.T) {
+	t.Parallel()
+
+	cfg := &GlobalHTTPClientConfig{}
+	cfg.SetDefaults()
+
+	if cfg.UserAgent != "swag2mcp-global/1.0" {
+		t.Errorf("UserAgent = %q, want %q", cfg.UserAgent, "swag2mcp-global/1.0")
+	}
+	if cfg.Timeout != 30*time.Second {
+		t.Errorf("Timeout = %v, want %v", cfg.Timeout, 30*time.Second)
+	}
+	if cfg.FollowRedirects == nil || !*cfg.FollowRedirects {
+		t.Error("FollowRedirects should be true")
+	}
+	if cfg.MaxRedirects == nil || *cfg.MaxRedirects != 10 {
+		t.Errorf("MaxRedirects = %v, want 10", *cfg.MaxRedirects)
+	}
+	if cfg.MaxResponseSize == nil || *cfg.MaxResponseSize != 2048 {
+		t.Errorf("MaxResponseSize = %v, want 2048", *cfg.MaxResponseSize)
+	}
+}
+
+func TestGlobalHTTPClientConfig_SetDefaults_Nil(t *testing.T) {
+	t.Parallel()
+
+	var cfg *GlobalHTTPClientConfig
+	cfg.SetDefaults() // should not panic
+}
+
+func TestGlobalHTTPClientConfig_SetDefaults_DoesNotOverwrite(t *testing.T) {
+	t.Parallel()
+
+	timeout := 10 * time.Second
+	follow := false
+	maxRedir := 5
+	maxSize := 4096
+
+	cfg := &GlobalHTTPClientConfig{
+		UserAgent:       "custom-agent/1.0",
+		Timeout:         timeout,
+		FollowRedirects: &follow,
+		MaxRedirects:    &maxRedir,
+		MaxResponseSize: &maxSize,
+	}
+	cfg.SetDefaults()
+
+	if cfg.UserAgent != "custom-agent/1.0" {
+		t.Errorf("UserAgent = %q, want %q", cfg.UserAgent, "custom-agent/1.0")
+	}
+	if cfg.Timeout != timeout {
+		t.Errorf("Timeout = %v, want %v", cfg.Timeout, timeout)
+	}
+	if *cfg.FollowRedirects != follow {
+		t.Errorf("FollowRedirects = %v, want %v", *cfg.FollowRedirects, follow)
+	}
+	if *cfg.MaxRedirects != maxRedir {
+		t.Errorf("MaxRedirects = %d, want %d", *cfg.MaxRedirects, maxRedir)
+	}
+	if *cfg.MaxResponseSize != maxSize {
+		t.Errorf("MaxResponseSize = %d, want %d", *cfg.MaxResponseSize, maxSize)
+	}
+}
+
+func TestGlobalHTTPClientConfig_SetDefaults_WithRandomize(t *testing.T) {
+	t.Parallel()
+
+	cfg := &GlobalHTTPClientConfig{
+		Randomize: true,
+	}
+	cfg.SetDefaults()
+
+	if cfg.UserAgent != "" {
+		t.Errorf("UserAgent should be empty when Randomize is true, got %q", cfg.UserAgent)
 	}
 }

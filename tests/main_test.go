@@ -289,6 +289,8 @@ type mcpClient struct {
 	mu     sync.Mutex
 }
 
+const mcpStartTimeout = 10 * time.Second
+
 func startMCPStdio(t *testing.T, ws, configContent string, extraArgs ...string) *mcpClient {
 	t.Helper()
 	writeConfig(t, ws, configContent)
@@ -384,7 +386,7 @@ func (c *mcpClient) initialize(t *testing.T) {
 
 	var resp jsonRPCResponse
 	dec := json.NewDecoder(c.stdout)
-	if err := dec.Decode(&resp); err != nil {
+	if err := decodeWithTimeout(dec, &resp, mcpStartTimeout); err != nil {
 		t.Fatalf("decode initialize response: %v\nstderr: %s", err, c.stderr.String())
 	}
 
@@ -411,7 +413,7 @@ func (c *mcpClient) callTool(t *testing.T, name string, params interface{}) json
 		ID:      1,
 		Method:  "tools/call",
 		Params: map[string]interface{}{
-			"name":   name,
+			"name":      name,
 			"arguments": params,
 		},
 	}
@@ -428,7 +430,7 @@ func (c *mcpClient) callTool(t *testing.T, name string, params interface{}) json
 
 	var resp jsonRPCResponse
 	dec := json.NewDecoder(c.stdout)
-	if err := dec.Decode(&resp); err != nil {
+	if err := decodeWithTimeout(dec, &resp, mcpStartTimeout); err != nil {
 		t.Fatalf("decode response: %v\nstderr: %s", err, c.stderr.String())
 	}
 
@@ -469,7 +471,7 @@ func (c *mcpClient) listTools(t *testing.T) json.RawMessage {
 
 	var resp jsonRPCResponse
 	dec := json.NewDecoder(c.stdout)
-	if err := dec.Decode(&resp); err != nil {
+	if err := decodeWithTimeout(dec, &resp, mcpStartTimeout); err != nil {
 		t.Fatalf("decode response: %v\nstderr: %s", err, c.stderr.String())
 	}
 
@@ -488,6 +490,22 @@ func (c *mcpClient) listTools(t *testing.T) json.RawMessage {
 	}
 	result, _ := json.Marshal(listResult)
 	return result
+}
+
+func decodeWithTimeout(dec *json.Decoder, v any, timeout time.Duration) error {
+	type result struct {
+		err error
+	}
+	ch := make(chan result, 1)
+	go func() {
+		ch <- result{err: dec.Decode(v)}
+	}()
+	select {
+	case r := <-ch:
+		return r.err
+	case <-time.After(timeout):
+		return fmt.Errorf("timed out after %v waiting for JSON response", timeout)
+	}
 }
 
 func startHTTPServer(t *testing.T, handler http.Handler) *httptest.Server {

@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/cache"
@@ -854,5 +855,320 @@ func TestExampleMCPStreamableHTTPYAML(t *testing.T) {
 	}
 	if auth["token"] != "your-secret-token" {
 		t.Errorf("token = %v, want %q", auth["token"], "your-secret-token")
+	}
+}
+
+func TestValidateConfig_HTTPClient_Valid(t *testing.T) {
+	t.Parallel()
+
+	timeout := 15 * time.Second
+	maxRedir := 5
+	maxSize := 4096
+	follow := true
+
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{
+			UserAgent:       "test-agent/1.0",
+			Timeout:         timeout,
+			FollowRedirects: &follow,
+			MaxRedirects:    &maxRedir,
+			MaxResponseSize: &maxSize,
+		},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	if err != nil {
+		t.Fatalf("ValidateConfig() = %v, want nil", err)
+	}
+}
+
+func TestValidateConfig_HTTPClient_Nil(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	if err != nil {
+		t.Fatalf("ValidateConfig() = %v, want nil", err)
+	}
+}
+
+func TestValidateConfig_HTTPClient_InvalidProxyURL(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{
+			Proxy: &ProxyConfig{
+				URL: "ftp://proxy.example.com:8080",
+			},
+		},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	if err == nil {
+		t.Fatal("expected error for invalid proxy URL scheme")
+	}
+}
+
+func TestValidateConfig_HTTPClient_ValidProxyURL(t *testing.T) {
+	t.Parallel()
+
+	urls := []string{
+		"http://proxy.example.com:8080",
+		"https://proxy.example.com:8443",
+		"socks5://127.0.0.1:1080",
+		"socks5h://127.0.0.1:1080",
+	}
+
+	for _, u := range urls {
+		t.Run(u, func(t *testing.T) {
+			t.Parallel()
+
+			cfg := &Config{
+				HTTPClient: &GlobalHTTPClientConfig{
+					Proxy: &ProxyConfig{URL: u},
+				},
+				Specs: []Spec{
+					{
+						Domain:   "test-api",
+						LLMTitle: "Test API v1",
+						BaseURL:  "https://api.example.com",
+						Collections: []Collection{
+							{
+								LLMTitle: "Main Collection",
+								Location: "https://example.com/spec.yaml",
+							},
+						},
+					},
+				},
+			}
+
+			err := ValidateConfig(cfg, ValidateOptions{})
+			if err != nil {
+				t.Errorf("ValidateConfig() with proxy %q = %v, want nil", u, err)
+			}
+		})
+	}
+}
+
+func TestValidateConfig_HTTPClient_MaxResponseSizeTooSmall(t *testing.T) {
+	t.Parallel()
+
+	val := 100
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{
+			MaxResponseSize: &val,
+		},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	if err == nil {
+		t.Fatal("expected error for MaxResponseSize < 256")
+	}
+}
+
+func TestValidateConfig_HTTPClient_MaxResponseSizeTooLarge(t *testing.T) {
+	t.Parallel()
+
+	val := 2_000_000
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{
+			MaxResponseSize: &val,
+		},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	if err == nil {
+		t.Fatal("expected error for MaxResponseSize > 1MB")
+	}
+}
+
+func TestValidateConfig_HTTPClient_MaxRedirectsTooLarge(t *testing.T) {
+	t.Parallel()
+
+	val := 100
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{
+			MaxRedirects: &val,
+		},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	if err == nil {
+		t.Fatal("expected error for MaxRedirects > 50")
+	}
+}
+
+func TestValidateConfig_HTTPClient_TimeoutTooSmall(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{
+			Timeout: 500 * time.Millisecond,
+		},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	if err == nil {
+		t.Fatal("expected error for Timeout < 1s")
+	}
+}
+
+func TestValidateConfig_HTTPClient_TimeoutTooLarge(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{
+			Timeout: 600 * time.Second,
+		},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	if err == nil {
+		t.Fatal("expected error for Timeout > 300s")
+	}
+}
+
+func TestValidateConfig_HTTPClient_DefaultsApplied(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	if err != nil {
+		t.Fatalf("ValidateConfig() = %v, want nil", err)
+	}
+
+	if cfg.HTTPClient.UserAgent != "swag2mcp-global/1.0" {
+		t.Errorf("UserAgent = %q, want %q", cfg.HTTPClient.UserAgent, "swag2mcp-global/1.0")
+	}
+	if cfg.HTTPClient.Timeout != 30*time.Second {
+		t.Errorf("Timeout = %v, want %v", cfg.HTTPClient.Timeout, 30*time.Second)
+	}
+	if cfg.HTTPClient.MaxRedirects == nil || *cfg.HTTPClient.MaxRedirects != 10 {
+		t.Errorf("MaxRedirects = %v, want 10", *cfg.HTTPClient.MaxRedirects)
+	}
+	if cfg.HTTPClient.MaxResponseSize == nil || *cfg.HTTPClient.MaxResponseSize != 2048 {
+		t.Errorf("MaxResponseSize = %v, want 2048", *cfg.HTTPClient.MaxResponseSize)
 	}
 }
