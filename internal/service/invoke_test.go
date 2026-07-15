@@ -447,6 +447,46 @@ func TestInvoke_DigestAuth(t *testing.T) {
 	}
 }
 
+// TestInvoke_HMACAuth verifies that HMAC-SHA256 authentication works.
+func TestInvoke_HMACAuth(t *testing.T) {
+	t.Parallel()
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	testServer := newTestServer(t, testServerConfig{
+		ExpectedMethod: http.MethodGet,
+		ExpectedPath:   "/users",
+		AuthType:       "hmac",
+		AuthCredentials: map[string]string{
+			"api_key": "test-api-key",
+		},
+		StatusCode:   http.StatusOK,
+		ResponseBody: map[string]any{"users": []any{}},
+	})
+	t.Cleanup(testServer.Close)
+
+	authenticator := &auth.HMACAuthClient{APIKey: "test-api-key", SecretKey: "test-secret-key"}
+	if newError := authenticator.New(); newError != nil {
+		t.Fatalf("failed to init authenticator: %v", newError)
+	}
+
+	serviceInstance := buildTestService(t, "hmac-auth", specDoc, nil, authenticator)
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
+	}
+}
+
 // TestInvoke_NotFoundError verifies that invoking a non-existent endpoint returns an error.
 func TestInvoke_NotFoundError(t *testing.T) {
 	t.Parallel()
@@ -1138,6 +1178,20 @@ func validateAuthHeader(t *testing.T, request *http.Request, config testServerCo
 		authHeader := request.Header.Get("Authorization")
 		if !strings.HasPrefix(authHeader, "Digest ") {
 			return fmt.Sprintf("expected Digest auth, got %s", authHeader)
+		}
+	case "hmac":
+		expectedAPIKey := config.AuthCredentials["api_key"]
+		actualAPIKey := request.Header.Get("X-MBX-APIKEY") //nolint:canonicalheader // Binance requires this exact header name
+		if actualAPIKey != expectedAPIKey {
+			return fmt.Sprintf("expected X-MBX-APIKEY %s, got %s", expectedAPIKey, actualAPIKey)
+		}
+		signature := request.URL.Query().Get("signature")
+		if signature == "" {
+			return "missing signature query param"
+		}
+		timestamp := request.URL.Query().Get("timestamp")
+		if timestamp == "" {
+			return "missing timestamp query param"
 		}
 	}
 

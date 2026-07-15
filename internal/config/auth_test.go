@@ -189,6 +189,26 @@ func TestAuth_UnmarshalYAML_script(t *testing.T) {
 	}
 }
 
+func TestAuth_UnmarshalYAML_hmac(t *testing.T) {
+	t.Parallel()
+
+	var a Auth
+	y := "type: hmac\nconfig:\n  api_key: my-api-key\n  secret_key: my-secret-key"
+	if err := yaml.Unmarshal([]byte(y), &a); err != nil {
+		t.Fatal(err)
+	}
+	c, ok := a.Client.(*auth.HMACAuthClient)
+	if !ok {
+		t.Fatalf("expected *auth.HMACAuthClient, got %T", a.Client)
+	}
+	if c.APIKey != "my-api-key" {
+		t.Errorf("APIKey = %q, want %q", c.APIKey, "my-api-key")
+	}
+	if c.SecretKey != "my-secret-key" {
+		t.Errorf("SecretKey = %q, want %q", c.SecretKey, "my-secret-key")
+	}
+}
+
 func TestAuth_UnmarshalYAML_underscore_type(t *testing.T) {
 	t.Parallel()
 
@@ -242,6 +262,7 @@ func TestAuth_UnmarshalYAML_decode_error(t *testing.T) {
 		{"oauth2-pwd", "type: oauth2-pwd\nconfig: 123"},
 		{"api-key", "type: api-key\nconfig: 123"},
 		{"script", "type: script\nconfig: 123"},
+		{"hmac", "type: hmac\nconfig: 123"},
 	}
 
 	for _, tt := range tests {

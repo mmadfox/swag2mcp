@@ -107,6 +107,7 @@ swag2mcp mcp --tags=project-beta  --logfile=/tmp/swag2mcp-beta.log
 | `basic` | `username`, `password` | `username: $(USER)`, `password: $(PASS)` |
 | `bearer` | `token` | `token: $(TOKEN)` |
 | `digest` | `username`, `password` | `username: admin`, `password: secret` |
+| `hmac` | `api_key`, `secret_key` | `api_key: $(API_KEY)`, `secret_key: $(SECRET_KEY)` |
 | `api-key` | `key`, `value`, `in` (header/query) | `key: X-API-Key`, `value: $(KEY)`, `in: header` |
 | `oauth2-cc` | `client_id`, `client_secret`, `token_url`, `scopes` | `client_id: $(ID)`, `token_url: https://auth.example.com/token` |
 | `oauth2-pwd` | `username`, `password`, `client_id`, `client_secret`, `token_url`, `scopes` | `username: $(USER)`, `token_url: https://auth.example.com/token` |
@@ -266,7 +267,7 @@ swag2mcp-mock --tls
 | `oauth2-cc` / `oauth2-pwd` | ポート9090の `POST /token` | 任意の `client_id`/`username`+`password` を受け付け、`{"access_token":"<random>","token_type":"Bearer","expires_in":3600}` を返す |
 | `digest` | ポート9091の `GET /` | `algorithm=MD5` の401チャレンジを送信、任意のDigestレスポンスを受け付け、`{"status":"authenticated","method":"digest"}` を返す |
 
-その他の認証タイプ（`basic`、`bearer`、`api-key`、`script`）はモックサーバーを
+その他の認証タイプ（`basic`、`bearer`、`api-key`、`hmac`、`script`）はモックサーバーを
 **必要としません** — MCPサーバーが設定された認証情報を各リクエストに自動的に適用します。
 
 ---

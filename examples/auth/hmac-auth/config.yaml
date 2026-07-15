@@ -1,0 +1,13 @@
+# swag2mcp — HMAC-SHA256 Authentication (Binance-style)
+specs:
+  - domain: binance-api
+    base_url: https://api.binance.com
+    llm_title: Binance API
+    auth:
+      type: hmac
+      config:
+        api_key: $(BINANCE_API_KEY)
+        secret_key: $(BINANCE_SECRET_KEY)
+    collections:
+      - llm_title: Market Data
+        location: https://api.binance.com/openapi.yaml

@@ -363,3 +363,57 @@ func TestScript_Auth_InvokeWithBearer(t *testing.T) {
 
 	assertEqual(t, "Authorization header", authHeader, "Bearer invoke-bearer-token")
 }
+
+func TestScript_Auth_HMAC(t *testing.T) {
+	ws := newTestWorkspace(t)
+
+	configContent := `specs:
+  - domain: hmac-api
+    llm_title: HMAC Auth API
+    base_url: https://api.example.com
+    auth:
+      type: hmac
+      config:
+        api_key: test-api-key
+        secret_key: test-secret-key
+    collections:
+      - title: Pets
+        location: ./testdata/petstore.yaml
+`
+	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
+	client.initialize(t)
+
+	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
+	var specsResp struct {
+		Specs []struct {
+			ID string `json:"id"`
+		} `json:"specs"`
+	}
+	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
+		t.Fatalf("parse spec_list: %v", err)
+	}
+	if len(specsResp.Specs) == 0 {
+		t.Fatal("no specs found")
+	}
+
+	result := client.callTool(t, "auth", map[string]interface{}{
+		"specId": specsResp.Specs[0].ID,
+	})
+
+	var authResp struct {
+		Token       string            `json:"token"`
+		Headers     map[string]string `json:"headers"`
+		QueryParams map[string]string `json:"queryParams"`
+	}
+	if err := json.Unmarshal(result, &authResp); err != nil {
+		t.Fatalf("parse auth: %v", err)
+	}
+
+	assertEqual(t, "X-MBX-APIKEY header", authResp.Headers["X-MBX-APIKEY"], "test-api-key")
+	if authResp.QueryParams["signature"] == "" {
+		t.Error("signature query param should not be empty")
+	}
+	if authResp.QueryParams["timestamp"] == "" {
+		t.Error("timestamp query param should not be empty")
+	}
+}

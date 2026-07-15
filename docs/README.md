@@ -113,6 +113,7 @@ This allows running separate MCP servers for different projects from a single co
 | `basic` | `username`, `password` | `username: $(USER)`, `password: $(PASS)` |
 | `bearer` | `token` | `token: $(TOKEN)` |
 | `digest` | `username`, `password` | `username: admin`, `password: secret` |
+| `hmac` | `api_key`, `secret_key` | `api_key: $(API_KEY)`, `secret_key: $(SECRET_KEY)` |
 | `api-key` | `key`, `value`, `in` (header/query) | `key: X-API-Key`, `value: $(KEY)`, `in: header` |
 | `oauth2-cc` | `client_id`, `client_secret`, `token_url`, `scopes` | `client_id: $(ID)`, `token_url: https://auth.example.com/token` |
 | `oauth2-pwd` | `username`, `password`, `client_id`, `client_secret`, `token_url`, `scopes` | `username: $(USER)`, `token_url: https://auth.example.com/token` |
@@ -272,7 +273,7 @@ automatically. Only two auth types need a dedicated mock server:
 | `oauth2-cc` / `oauth2-pwd` | `POST /token` on port 9090 | Accepts any `client_id`/`username`+`password`, returns `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}` |
 | `digest` | `GET /` on port 9091 | Sends a 401 challenge with `algorithm=MD5`, accepts any Digest response, returns `{"status":"authenticated","method":"digest"}` |
 
-Other auth types (`basic`, `bearer`, `api-key`, `script`) do **not** require
+Other auth types (`basic`, `bearer`, `api-key`, `hmac`, `script`) do **not** require
 a mock server — the MCP server applies the configured credentials to every
 request automatically.
 

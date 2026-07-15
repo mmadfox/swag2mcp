@@ -107,6 +107,7 @@ Dies ermöglicht den Betrieb separater MCP Server für verschiedene Projekte aus
 | `basic` | `username`, `password` | `username: $(USER)`, `password: $(PASS)` |
 | `bearer` | `token` | `token: $(TOKEN)` |
 | `digest` | `username`, `password` | `username: admin`, `password: secret` |
+| `hmac` | `api_key`, `secret_key` | `api_key: $(API_KEY)`, `secret_key: $(SECRET_KEY)` |
 | `api-key` | `key`, `value`, `in` (header/query) | `key: X-API-Key`, `value: $(KEY)`, `in: header` |
 | `oauth2-cc` | `client_id`, `client_secret`, `token_url`, `scopes` | `client_id: $(ID)`, `token_url: https://auth.example.com/token` |
 | `oauth2-pwd` | `username`, `password`, `client_id`, `client_secret`, `token_url`, `scopes` | `username: $(USER)`, `token_url: https://auth.example.com/token` |
@@ -267,7 +268,7 @@ dedizierten Mock-Server:
 | `oauth2-cc` / `oauth2-pwd` | `POST /token` auf Port 9090 | Akzeptiert beliebige `client_id`/`username`+`password`, gibt `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}` zurück |
 | `digest` | `GET /` auf Port 9091 | Sendet eine 401-Challenge mit `algorithm=MD5`, akzeptiert jede Digest-Antwort, gibt `{"status":"authenticated","method":"digest"}` zurück |
 
-Andere Auth-Typen (`basic`, `bearer`, `api-key`, `script`) benötigen **keinen**
+Andere Auth-Typen (`basic`, `bearer`, `api-key`, `hmac`, `script`) benötigen **keinen**
 Mock-Server — der MCP-Server wendet die konfigurierten Anmeldedaten automatisch
 auf jede Anfrage an.
 

@@ -87,6 +87,13 @@ func (a *Auth) UnmarshalYAML(value *yaml.Node) error {
 		}
 		a.Client = &client
 
+	case auth.HMACAuth.String():
+		var client auth.HMACAuthClient
+		if err := decodeConfig(&raw.Config, &client); err != nil {
+			return err
+		}
+		a.Client = &client
+
 	default:
 		return fmt.Errorf("unsupported auth type %q", raw.Type)
 	}

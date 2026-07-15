@@ -349,6 +349,14 @@
 - [ ] Script file does not exist — error returned (not covered)
 - [ ] `.bat` script on Windows (if applicable) (not covered)
 
+### 6.9 HMAC
+
+- [ ] `Authorization` header with HMAC-SHA256 signature sent (not covered)
+- [ ] `X-MBX-APIKEY` header sent with API key (not covered)
+- [ ] `timestamp` and `signature` query parameters present (not covered)
+- [ ] Signature computed correctly from query string + secret key (not covered)
+- [ ] `$(ENV_VAR)` in api_key/secret_key — resolved from environment (not covered)
+
 ---
 
 ## 7. Spec Parsing

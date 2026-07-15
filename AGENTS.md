@@ -20,7 +20,7 @@ Order: `make lint && go test ./...`
 - **MCP server**: `internal/server/mcp/` — 14 MCP tools, uses `go.uber.org/mock` for tests
 - **TUI**: `internal/tui/` — Bubbletea explorer + wizards (see `internal/tui/AGENTS.md`)
 - **Config**: YAML, cascade: global → spec → collection (`internal/config/`)
-- **Auth**: 8 methods in `internal/auth/` (none, basic, bearer, digest, oauth2-cc, oauth2-pwd, api-key, script)
+- **Auth**: 9 methods in `internal/auth/` (none, basic, bearer, digest, hmac, oauth2-cc, oauth2-pwd, api-key, script)
 - **Search**: bluge full-text engine (`internal/index/`)
 - **IDs**: MD5-based (`internal/id/`)
 

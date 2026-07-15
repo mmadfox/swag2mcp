@@ -14,6 +14,7 @@ var (
 	_ Authenticator = (*OAuth2PasswordAuthClient)(nil)
 	_ Authenticator = (*APIKeyAuthClient)(nil)
 	_ Authenticator = (*ScriptAuthClient)(nil)
+	_ Authenticator = (*HMACAuthClient)(nil)
 )
 
 func TestType_String(t *testing.T) {
@@ -32,6 +33,7 @@ func TestType_String(t *testing.T) {
 		{"oauth2-pwd", OAuth2Password, "oauth2-pwd"},
 		{"api-key", APIKeyAuth, "api-key"},
 		{"script", ScriptAuth, "script"},
+		{"hmac", HMACAuth, "hmac"},
 	}
 
 	for _, tt := range tests {

@@ -214,6 +214,7 @@ demonstrates a specific feature or use case.
 | | [api-key-header](examples/auth/api-key-header) | API Key in HTTP Header |
 | | [api-key-query](examples/auth/api-key-query) | API Key in Query Parameter |
 | | [script-auth](examples/auth/script-auth) | Script-Based Authentication |
+| | [hmac-auth](examples/auth/hmac-auth) | HMAC-SHA256 Authentication |
 | **Spec Features** | [llm-metadata](examples/spec-features/llm-metadata) | LLM titles and instructions |
 | | [disable-spec](examples/spec-features/disable-spec) | Disabling specs and collections |
 | | [tags-filtering](examples/spec-features/tags-filtering) | Tag-based filtering with `--tags` |

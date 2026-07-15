@@ -32,6 +32,8 @@ const (
 	APIKeyAuth Type = "api-key"
 	// ScriptAuth represents authentication via an external script.
 	ScriptAuth Type = "script"
+	// HMACAuth represents HMAC-SHA256 signature authentication (Binance-style).
+	HMACAuth Type = "hmac"
 )
 
 //nolint:gochecknoglobals // Validator is stateless and safe to reuse.

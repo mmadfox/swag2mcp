@@ -107,6 +107,7 @@ Cela permet d'exécuter des serveurs MCP séparés pour différents projets à p
 | `basic` | `username`, `password` | `username: $(USER)`, `password: $(PASS)` |
 | `bearer` | `token` | `token: $(TOKEN)` |
 | `digest` | `username`, `password` | `username: admin`, `password: secret` |
+| `hmac` | `api_key`, `secret_key` | `api_key: $(API_KEY)`, `secret_key: $(SECRET_KEY)` |
 | `api-key` | `key`, `value`, `in` (header/query) | `key: X-API-Key`, `value: $(KEY)`, `in: header` |
 | `oauth2-cc` | `client_id`, `client_secret`, `token_url`, `scopes` | `client_id: $(ID)`, `token_url: https://auth.example.com/token` |
 | `oauth2-pwd` | `username`, `password`, `client_id`, `client_secret`, `token_url`, `scopes` | `username: $(USER)`, `token_url: https://auth.example.com/token` |
@@ -267,7 +268,7 @@ nécessitent un serveur mock dédié :
 | `oauth2-cc` / `oauth2-pwd` | `POST /token` sur le port 9090 | Accepte tout `client_id`/`username`+`password`, retourne `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}` |
 | `digest` | `GET /` sur le port 9091 | Envoie un défi 401 avec `algorithm=MD5`, accepte toute réponse Digest, retourne `{"status":"authenticated","method":"digest"}` |
 
-Les autres types (`basic`, `bearer`, `api-key`, `script`) **ne nécessitent pas**
+Les autres types (`basic`, `bearer`, `api-key`, `hmac`, `script`) **ne nécessitent pas**
 de serveur mock — le serveur MCP applique les identifiants configurés à chaque
 requête automatiquement.
 

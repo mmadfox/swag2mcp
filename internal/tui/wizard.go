@@ -90,6 +90,10 @@ var availableAuthMethods = []authMethod{
 	{Type: "script", Label: "Script (custom auth logic)", Fields: []authFieldDef{
 		{Name: "source", Placeholder: "path/to/script.sh or inline code"},
 	}},
+	{Type: "hmac", Label: "HMAC-SHA256 (API Key + Secret Key)", Fields: []authFieldDef{
+		{Name: "api_key", Placeholder: "your-api-key", SupportsEnv: true},
+		{Name: "secret_key", Placeholder: "your-secret-key", SupportsEnv: true},
+	}},
 }
 
 // SpecInput holds the user-provided data for a single API specification.
