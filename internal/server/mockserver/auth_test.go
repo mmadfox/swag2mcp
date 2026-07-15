@@ -144,3 +144,62 @@ func TestParseDigestAuthorization(t *testing.T) {
 		}
 	}
 }
+
+func TestAuthMockServer_handleHMAC_Valid(t *testing.T) {
+	t.Parallel()
+
+	server := newAuthMockServer(authServerHMAC, "127.0.0.1:0", nil, nil)
+	responseRecorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api?symbol=BTCUSDT&signature=abc123&timestamp=1770736694138", nil)
+	request.Header.Set("X-MBX-APIKEY", "test-api-key")
+
+	server.handleHMAC(responseRecorder, request)
+
+	if responseRecorder.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", responseRecorder.Code)
+	}
+}
+
+func TestAuthMockServer_handleHMAC_MissingAPIKey(t *testing.T) {
+	t.Parallel()
+
+	server := newAuthMockServer(authServerHMAC, "127.0.0.1:0", nil, nil)
+	responseRecorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api?signature=abc&timestamp=123", nil)
+
+	server.handleHMAC(responseRecorder, request)
+
+	if responseRecorder.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", responseRecorder.Code)
+	}
+}
+
+func TestAuthMockServer_handleHMAC_MissingSignature(t *testing.T) {
+	t.Parallel()
+
+	server := newAuthMockServer(authServerHMAC, "127.0.0.1:0", nil, nil)
+	responseRecorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api?timestamp=123", nil)
+	request.Header.Set("X-MBX-APIKEY", "key")
+
+	server.handleHMAC(responseRecorder, request)
+
+	if responseRecorder.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", responseRecorder.Code)
+	}
+}
+
+func TestAuthMockServer_handleHMAC_MissingTimestamp(t *testing.T) {
+	t.Parallel()
+
+	server := newAuthMockServer(authServerHMAC, "127.0.0.1:0", nil, nil)
+	responseRecorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api?signature=abc", nil)
+	request.Header.Set("X-MBX-APIKEY", "key")
+
+	server.handleHMAC(responseRecorder, request)
+
+	if responseRecorder.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", responseRecorder.Code)
+	}
+}

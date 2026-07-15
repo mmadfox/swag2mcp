@@ -29,6 +29,7 @@ type authServerType string
 const (
 	authServerOAuth2 authServerType = "oauth2"
 	authServerDigest authServerType = "digest"
+	authServerHMAC   authServerType = "hmac"
 )
 
 type authMockServer struct {
@@ -68,6 +69,8 @@ func (m *authMockServer) start(ctx context.Context) {
 		mux.HandleFunc("/token", m.handleOAuth2)
 	case authServerDigest:
 		mux.HandleFunc("/", m.handleDigest)
+	case authServerHMAC:
+		mux.HandleFunc("/", m.handleHMAC)
 	default:
 		m.logger.ErrorContext(ctx, "unsupported auth server type",
 			"type", m.serverType,
@@ -244,6 +247,39 @@ func (m *authMockServer) handleDigest(responseWriter http.ResponseWriter, reques
 	responseWriter.WriteHeader(http.StatusOK)
 	if _, err := responseWriter.Write([]byte(`{"status":"authenticated","method":"digest"}`)); err != nil {
 		m.logger.WarnContext(request.Context(), "failed to write digest response", "error", err)
+	}
+}
+
+func (m *authMockServer) handleHMAC(responseWriter http.ResponseWriter, request *http.Request) {
+	apiKey := request.Header.Get("X-MBX-APIKEY")
+	if apiKey == "" {
+		m.logger.WarnContext(request.Context(), "hmac mock: missing X-MBX-APIKEY header")
+		http.Error(responseWriter, "Missing X-MBX-APIKEY header", http.StatusUnauthorized)
+		return
+	}
+
+	signature := request.URL.Query().Get("signature")
+	if signature == "" {
+		m.logger.WarnContext(request.Context(), "hmac mock: missing signature query param")
+		http.Error(responseWriter, "Missing signature query param", http.StatusUnauthorized)
+		return
+	}
+
+	timestamp := request.URL.Query().Get("timestamp")
+	if timestamp == "" {
+		m.logger.WarnContext(request.Context(), "hmac mock: missing timestamp query param")
+		http.Error(responseWriter, "Missing timestamp query param", http.StatusUnauthorized)
+		return
+	}
+
+	m.logger.InfoContext(request.Context(), "hmac mock: authentication successful",
+		"api_key_prefix", apiKey[:min(len(apiKey), authNonceBytes)],
+	)
+
+	responseWriter.Header().Set("Content-Type", "application/json")
+	responseWriter.WriteHeader(http.StatusOK)
+	if _, err := responseWriter.Write([]byte(`{"status":"authenticated","method":"hmac"}`)); err != nil {
+		m.logger.WarnContext(request.Context(), "failed to write hmac response", "error", err)
 	}
 }
 

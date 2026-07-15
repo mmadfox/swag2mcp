@@ -75,7 +75,6 @@ func TestHMACAuthClient_Apply_SetsAPIKeyHeader(t *testing.T) {
 		t.Fatalf("Apply() = %v", err)
 	}
 
-	//nolint:canonicalheader // Binance requires this exact header name
 	if v := req.Header.Get("X-MBX-APIKEY"); v != "test-api-key" {
 		t.Errorf("X-MBX-APIKEY header = %q, want %q", v, "test-api-key")
 	}
@@ -254,7 +253,6 @@ func TestHMACAuthClient_Apply_EmptyAPIKey(t *testing.T) {
 		t.Fatalf("Apply() = %v", err)
 	}
 
-	//nolint:canonicalheader // Binance requires this exact header name
 	if v := req.Header.Get("X-MBX-APIKEY"); v != "" {
 		t.Errorf("X-MBX-APIKEY header should be empty, got %q", v)
 	}
@@ -273,7 +271,6 @@ func TestHMACAuthClient_Apply_InfoNil(t *testing.T) {
 		t.Fatalf("Apply() = %v", err)
 	}
 
-	//nolint:canonicalheader // Binance requires this exact header name
 	if v := req.Header.Get("X-MBX-APIKEY"); v != "key" {
 		t.Errorf("X-MBX-APIKEY = %q, want %q", v, "key")
 	}
@@ -591,7 +588,6 @@ func TestHMACAuthClient_Apply_DoesNotModifyBody(t *testing.T) {
 		t.Fatalf("Apply() = %v", err)
 	}
 
-	//nolint:canonicalheader // Binance requires this exact header name
 	if req.Header.Get("X-MBX-APIKEY") != "key" {
 		t.Errorf("X-MBX-APIKEY = %q, want %q", req.Header.Get("X-MBX-APIKEY"), "key")
 	}

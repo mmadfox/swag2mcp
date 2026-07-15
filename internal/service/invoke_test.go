@@ -1181,7 +1181,7 @@ func validateAuthHeader(t *testing.T, request *http.Request, config testServerCo
 		}
 	case "hmac":
 		expectedAPIKey := config.AuthCredentials["api_key"]
-		actualAPIKey := request.Header.Get("X-MBX-APIKEY") //nolint:canonicalheader // Binance requires this exact header name
+		actualAPIKey := request.Header.Get("X-MBX-APIKEY")
 		if actualAPIKey != expectedAPIKey {
 			return fmt.Sprintf("expected X-MBX-APIKEY %s, got %s", expectedAPIKey, actualAPIKey)
 		}

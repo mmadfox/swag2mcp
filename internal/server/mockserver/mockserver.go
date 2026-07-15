@@ -140,17 +140,22 @@ func (m *MockServer) Start(ctx context.Context) error {
 const (
 	defaultOAuth2Port = 9090
 	defaultDigestPort = 9091
+	defaultHMACPort   = 9092
 )
 
 func (m *MockServer) startAuthServers() {
 	oauth2Port := defaultOAuth2Port
 	digestPort := defaultDigestPort
+	hmacPort := defaultHMACPort
 	if m.options.Config.MockAuth != nil {
 		if m.options.Config.MockAuth.OAuth2Port > 0 {
 			oauth2Port = m.options.Config.MockAuth.OAuth2Port
 		}
 		if m.options.Config.MockAuth.DigestPort > 0 {
 			digestPort = m.options.Config.MockAuth.DigestPort
+		}
+		if m.options.Config.MockAuth.HMACPort > 0 {
+			hmacPort = m.options.Config.MockAuth.HMACPort
 		}
 	}
 
@@ -162,6 +167,12 @@ func (m *MockServer) startAuthServers() {
 
 	addr = fmt.Sprintf("127.0.0.1:%d", digestPort)
 	server = newAuthMockServer(authServerDigest, addr, m.tlsConfig, m.logger)
+	m.mu.Lock()
+	m.authServers = append(m.authServers, server)
+	m.mu.Unlock()
+
+	addr = fmt.Sprintf("127.0.0.1:%d", hmacPort)
+	server = newAuthMockServer(authServerHMAC, addr, m.tlsConfig, m.logger)
 	m.mu.Lock()
 	m.authServers = append(m.authServers, server)
 	m.mu.Unlock()

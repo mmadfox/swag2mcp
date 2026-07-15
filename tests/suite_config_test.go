@@ -187,14 +187,25 @@ collections:
 `
 	runCommandInWS(t, ws, "add", "spec", "--yaml", specYAML, ".")
 
+	specYAML2 := `domain: keep-me
+llm_title: Keep Me
+base_url: https://api.example.com
+collections:
+  - title: Pets
+    location: ./testdata/petstore.yaml
+`
+	runCommandInWS(t, ws, "add", "spec", "--yaml", specYAML2, ".")
+
 	stdout, _, _ := runCommandInWS(t, ws, "ls", ".")
 	assertContains(t, "stdout", stdout, "to-delete")
+	assertContains(t, "stdout", stdout, "keep-me")
 
-	_, _, code := runCommandWithStdinInWS(t, ws, "5\ny\n", "delete", "spec", ".")
+	_, _, code := runCommandWithStdinInWS(t, ws, "1\ny\n", "delete", "spec", ".")
 	assertEqual(t, "exit code", code, 0)
 
 	stdout2, _, _ := runCommandInWS(t, ws, "ls", ".")
 	assertNotContains(t, "stdout", stdout2, "to-delete")
+	assertContains(t, "stdout", stdout2, "keep-me")
 }
 
 func TestScript_DeleteSpec_Cancel(t *testing.T) {

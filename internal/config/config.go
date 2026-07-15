@@ -50,6 +50,7 @@ type GlobalHTTPClientConfig struct {
 type MockAuthConfig struct {
 	OAuth2Port int `yaml:"oauth2_port,omitempty" validate:"omitempty,min=1024,max=65535"`
 	DigestPort int `yaml:"digest_port,omitempty" validate:"omitempty,min=1024,max=65535"`
+	HMACPort   int `yaml:"hmac_port,omitempty"   validate:"omitempty,min=1024,max=65535"`
 }
 
 // Config is the top-level swag2mcp configuration.
