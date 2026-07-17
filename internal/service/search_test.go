@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/mmadfox/swag2mcp/internal/model"
 )
 
@@ -15,15 +18,9 @@ func TestSearch_ByMethod(t *testing.T) {
 	seedTestData(t, svc, t.Name())
 
 	resp, err := svc.Search(context.Background(), SearchRequest{Query: "method:GET", Limit: 10})
-	if err != nil {
-		t.Fatalf("Search() = %v", err)
-	}
-	if len(resp.Endpoints) == 0 {
-		t.Fatal("expected at least 1 result")
-	}
-	if resp.Endpoints[0].Method != http.MethodGet {
-		t.Errorf("Method = %q, want %q", resp.Endpoints[0].Method, "GET")
-	}
+	require.NoError(t, err)
+	require.NotEmpty(t, resp.Endpoints)
+	assert.Equal(t, http.MethodGet, resp.Endpoints[0].Method)
 }
 
 func TestSearch_ByTag(t *testing.T) {
@@ -33,12 +30,8 @@ func TestSearch_ByTag(t *testing.T) {
 	seedTestData(t, svc, t.Name())
 
 	resp, err := svc.Search(context.Background(), SearchRequest{Query: "test", Limit: 10})
-	if err != nil {
-		t.Fatalf("Search() = %v", err)
-	}
-	if len(resp.Endpoints) == 0 {
-		t.Fatal("expected at least 1 result")
-	}
+	require.NoError(t, err)
+	require.NotEmpty(t, resp.Endpoints)
 }
 
 func TestSearch_ByPath(t *testing.T) {
@@ -48,12 +41,8 @@ func TestSearch_ByPath(t *testing.T) {
 	seedTestData(t, svc, t.Name())
 
 	resp, err := svc.Search(context.Background(), SearchRequest{Query: "test", Limit: 10})
-	if err != nil {
-		t.Fatalf("Search() = %v", err)
-	}
-	if len(resp.Endpoints) == 0 {
-		t.Fatal("expected at least 1 result")
-	}
+	require.NoError(t, err)
+	require.NotEmpty(t, resp.Endpoints)
 }
 
 func TestSearch_BySummary(t *testing.T) {
@@ -63,12 +52,8 @@ func TestSearch_BySummary(t *testing.T) {
 	seedTestData(t, svc, t.Name())
 
 	resp, err := svc.Search(context.Background(), SearchRequest{Query: "summary:\"Test endpoint\"", Limit: 10})
-	if err != nil {
-		t.Fatalf("Search() = %v", err)
-	}
-	if len(resp.Endpoints) == 0 {
-		t.Fatal("expected at least 1 result")
-	}
+	require.NoError(t, err)
+	require.NotEmpty(t, resp.Endpoints)
 }
 
 func TestSearch_NoResults(t *testing.T) {
@@ -78,12 +63,8 @@ func TestSearch_NoResults(t *testing.T) {
 	seedTestData(t, svc, t.Name())
 
 	resp, err := svc.Search(context.Background(), SearchRequest{Query: "method:POST", Limit: 10})
-	if err != nil {
-		t.Fatalf("Search() = %v", err)
-	}
-	if len(resp.Endpoints) != 0 {
-		t.Errorf("Endpoints = %d, want 0", len(resp.Endpoints))
-	}
+	require.NoError(t, err)
+	assert.Empty(t, resp.Endpoints)
 }
 
 func TestSearch_ValidationError(t *testing.T) {
@@ -91,9 +72,7 @@ func TestSearch_ValidationError(t *testing.T) {
 
 	svc := newTestService(t)
 	_, err := svc.Search(context.Background(), SearchRequest{Query: "", Limit: 0})
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestSearch_Limit(t *testing.T) {
@@ -103,12 +82,33 @@ func TestSearch_Limit(t *testing.T) {
 	seedTestData(t, svc, t.Name())
 
 	resp, err := svc.Search(context.Background(), SearchRequest{Query: "test", Limit: 1})
-	if err != nil {
-		t.Fatalf("Search() = %v", err)
-	}
-	if len(resp.Endpoints) > 1 {
-		t.Errorf("Endpoints = %d, want <= 1", len(resp.Endpoints))
-	}
+	require.NoError(t, err)
+	assert.LessOrEqual(t, len(resp.Endpoints), 1)
+}
+
+func TestSearch_IndexError(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	seedTestData(t, svc, t.Name())
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := svc.Search(ctx, SearchRequest{Query: "test", Limit: 10})
+	require.Error(t, err)
+}
+
+func TestSearch_OrphanEndpoints(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestService(t)
+	seedTestData(t, svc, t.Name())
+
+	svc.index.RemoveAllTags()
+
+	_, err := svc.Search(context.Background(), SearchRequest{Query: "test", Limit: 10})
+	require.Error(t, err)
 }
 
 func TestMapEndpointsToSearchItems_Success(t *testing.T) {
@@ -118,24 +118,12 @@ func TestMapEndpointsToSearchItems_Success(t *testing.T) {
 	_, _, _, endpointInfo := seedTestData(t, svc, t.Name())
 
 	items, err := svc.mapEndpointsToSearchItems([]*model.Endpoint{endpointInfo})
-	if err != nil {
-		t.Fatalf("mapEndpointsToSearchItems() = %v", err)
-	}
-	if len(items) != 1 {
-		t.Fatalf("items = %d, want 1", len(items))
-	}
-	if items[0].ID != endpointInfo.ID {
-		t.Errorf("ID = %q, want %q", items[0].ID, endpointInfo.ID)
-	}
-	if items[0].SpecDomain == "" {
-		t.Error("SpecDomain is empty")
-	}
-	if items[0].CollectionTitle == "" {
-		t.Error("CollectionTitle is empty")
-	}
-	if items[0].TagName == "" {
-		t.Error("TagName is empty")
-	}
+	require.NoError(t, err)
+	require.Len(t, items, 1)
+	assert.Equal(t, endpointInfo.ID, items[0].ID)
+	assert.NotEmpty(t, items[0].SpecDomain)
+	assert.NotEmpty(t, items[0].CollectionTitle)
+	assert.NotEmpty(t, items[0].TagName)
 }
 
 func TestMapEndpointsToSearchItems_Empty(t *testing.T) {
@@ -143,12 +131,8 @@ func TestMapEndpointsToSearchItems_Empty(t *testing.T) {
 
 	svc := newTestService(t)
 	items, err := svc.mapEndpointsToSearchItems(nil)
-	if err != nil {
-		t.Fatalf("mapEndpointsToSearchItems() = %v", err)
-	}
-	if len(items) != 0 {
-		t.Errorf("items = %d, want 0", len(items))
-	}
+	require.NoError(t, err)
+	assert.Empty(t, items)
 }
 
 func TestMapEndpointsToSearchItems_OrphanSpec(t *testing.T) {
@@ -165,9 +149,7 @@ func TestMapEndpointsToSearchItems_OrphanSpec(t *testing.T) {
 	}
 
 	_, err := svc.mapEndpointsToSearchItems([]*model.Endpoint{orphanEndpoint})
-	if err == nil {
-		t.Fatal("expected error for orphan spec")
-	}
+	require.Error(t, err)
 }
 
 func TestMapEndpointsToSearchItems_OrphanCollection(t *testing.T) {
@@ -184,9 +166,7 @@ func TestMapEndpointsToSearchItems_OrphanCollection(t *testing.T) {
 	}
 
 	_, err := svc.mapEndpointsToSearchItems([]*model.Endpoint{orphanEndpoint})
-	if err == nil {
-		t.Fatal("expected error for orphan collection")
-	}
+	require.Error(t, err)
 }
 
 func TestMapEndpointsToSearchItems_OrphanTag(t *testing.T) {
@@ -203,22 +183,5 @@ func TestMapEndpointsToSearchItems_OrphanTag(t *testing.T) {
 	}
 
 	_, err := svc.mapEndpointsToSearchItems([]*model.Endpoint{orphanEndpoint})
-	if err == nil {
-		t.Fatal("expected error for orphan tag")
-	}
-}
-
-func TestSearch_OrphanEndpoints(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	// Remove all tags to make Search return orphan endpoints
-	svc.index.RemoveAllTags()
-
-	_, err := svc.Search(context.Background(), SearchRequest{Query: "test", Limit: 10})
-	if err == nil {
-		t.Fatal("expected error for orphan endpoints through Search")
-	}
+	require.Error(t, err)
 }

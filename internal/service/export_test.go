@@ -9,6 +9,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
@@ -25,9 +28,7 @@ func TestExport_Success(t *testing.T) {
 
 	svc := newTestService(t)
 	svc.ws, _ = workspace.New(tmpDir)
-	if err := svc.ws.Init(); err != nil {
-		t.Fatalf("Init() = %v", err)
-	}
+	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
   - domain: petstore
@@ -37,27 +38,17 @@ func TestExport_Success(t *testing.T) {
       - title: Pets
         location: ` + srv.URL + `
 `
-	if err := os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600); err != nil {
-		t.Fatalf("WriteFile() = %v", err)
-	}
+	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
 
 	outputPath := filepath.Join(tmpDir, "backup.zip")
 	resp, err := svc.Export(context.Background(), ExportRequest{
 		OutputPath: outputPath,
 	})
-	if err != nil {
-		t.Fatalf("Export() = %v", err)
-	}
-
-	if resp.FileCount != 1 {
-		t.Errorf("FileCount = %d, want 1", resp.FileCount)
-	}
-	if resp.OutputPath != outputPath {
-		t.Errorf("OutputPath = %q, want %q", resp.OutputPath, outputPath)
-	}
-	if _, statErr := os.Stat(outputPath); os.IsNotExist(statErr) {
-		t.Error("zip file was not created")
-	}
+	require.NoError(t, err)
+	assert.Equal(t, 1, resp.FileCount)
+	assert.Equal(t, outputPath, resp.OutputPath)
+	_, statErr := os.Stat(outputPath)
+	assert.NoError(t, statErr, "zip file was not created")
 }
 
 func TestExport_WithSpecFilter(t *testing.T) {
@@ -73,9 +64,7 @@ func TestExport_WithSpecFilter(t *testing.T) {
 
 	svc := newTestService(t)
 	svc.ws, _ = workspace.New(tmpDir)
-	if err := svc.ws.Init(); err != nil {
-		t.Fatalf("Init() = %v", err)
-	}
+	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
   - domain: petstore
@@ -91,22 +80,15 @@ func TestExport_WithSpecFilter(t *testing.T) {
       - title: Products
         location: ` + srv.URL + `
 `
-	if err := os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600); err != nil {
-		t.Fatalf("WriteFile() = %v", err)
-	}
+	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
 
 	outputPath := filepath.Join(tmpDir, "backup.zip")
 	resp, err := svc.Export(context.Background(), ExportRequest{
 		OutputPath: outputPath,
 		SpecFilter: []string{"petstore"},
 	})
-	if err != nil {
-		t.Fatalf("Export() = %v", err)
-	}
-
-	if resp.FileCount != 1 {
-		t.Errorf("FileCount = %d, want 1", resp.FileCount)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, 1, resp.FileCount)
 }
 
 func TestExport_NoConfig(t *testing.T) {
@@ -119,9 +101,7 @@ func TestExport_NoConfig(t *testing.T) {
 	_, err := svc.Export(context.Background(), ExportRequest{
 		OutputPath: filepath.Join(tmpDir, "backup.zip"),
 	})
-	if err == nil {
-		t.Fatal("Export() expected error, got nil")
-	}
+	require.Error(t, err)
 }
 
 func TestExport_NoCollections(t *testing.T) {
@@ -130,9 +110,7 @@ func TestExport_NoCollections(t *testing.T) {
 	tmpDir := t.TempDir()
 	svc := newTestService(t)
 	svc.ws, _ = workspace.New(tmpDir)
-	if err := svc.ws.Init(); err != nil {
-		t.Fatalf("Init() = %v", err)
-	}
+	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
   - domain: petstore
@@ -140,16 +118,12 @@ func TestExport_NoCollections(t *testing.T) {
     base_url: https://api.petstore.com
     collections: []
 `
-	if err := os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600); err != nil {
-		t.Fatalf("WriteFile() = %v", err)
-	}
+	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
 
 	_, err := svc.Export(context.Background(), ExportRequest{
 		OutputPath: filepath.Join(tmpDir, "backup.zip"),
 	})
-	if err == nil {
-		t.Fatal("Export() expected error, got nil")
-	}
+	require.Error(t, err)
 }
 
 func TestExport_DefaultOutputPath(t *testing.T) {
@@ -165,9 +139,7 @@ func TestExport_DefaultOutputPath(t *testing.T) {
 
 	svc := newTestService(t)
 	svc.ws, _ = workspace.New(tmpDir)
-	if err := svc.ws.Init(); err != nil {
-		t.Fatalf("Init() = %v", err)
-	}
+	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
   - domain: petstore
@@ -177,24 +149,16 @@ func TestExport_DefaultOutputPath(t *testing.T) {
       - title: Pets
         location: ` + srv.URL + `
 `
-	if err := os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600); err != nil {
-		t.Fatalf("WriteFile() = %v", err)
-	}
+	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
 
 	outputPath := filepath.Join(tmpDir, "backup.zip")
 	resp, err := svc.Export(context.Background(), ExportRequest{
 		OutputPath: outputPath,
 	})
-	if err != nil {
-		t.Fatalf("Export() = %v", err)
-	}
-
-	if !strings.HasSuffix(resp.OutputPath, ".zip") {
-		t.Errorf("OutputPath = %q, want .zip suffix", resp.OutputPath)
-	}
-	if _, statErr := os.Stat(outputPath); os.IsNotExist(statErr) {
-		t.Error("zip file was not created")
-	}
+	require.NoError(t, err)
+	assert.True(t, strings.HasSuffix(resp.OutputPath, ".zip"))
+	_, statErr := os.Stat(outputPath)
+	assert.NoError(t, statErr, "zip file was not created")
 }
 
 func TestExport_ProducesValidSwag2mcpZip(t *testing.T) {
@@ -210,9 +174,7 @@ func TestExport_ProducesValidSwag2mcpZip(t *testing.T) {
 
 	svc := newTestService(t)
 	svc.ws, _ = workspace.New(tmpDir)
-	if err := svc.ws.Init(); err != nil {
-		t.Fatalf("Init() = %v", err)
-	}
+	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
   - domain: petstore
@@ -222,19 +184,184 @@ func TestExport_ProducesValidSwag2mcpZip(t *testing.T) {
       - title: Pets
         location: ` + srv.URL + `
 `
-	if err := os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600); err != nil {
-		t.Fatalf("WriteFile() = %v", err)
-	}
+	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
 
 	outputPath := filepath.Join(tmpDir, "backup.zip")
 	_, err := svc.Export(context.Background(), ExportRequest{
 		OutputPath: outputPath,
 	})
-	if err != nil {
-		t.Fatalf("Export() = %v", err)
-	}
+	require.NoError(t, err)
+	assert.True(t, workspace.IsSwag2mcpZip(outputPath))
+}
 
-	if !workspace.IsSwag2mcpZip(outputPath) {
-		t.Error("exported zip is not a valid swag2mcp backup")
-	}
+func TestExport_LoadConfigError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	svc := newTestService(t)
+	svc.ws, _ = workspace.New(tmpDir)
+	require.NoError(t, svc.ws.Init())
+
+	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte("invalid: yaml: ["), 0600))
+
+	_, err := svc.Export(context.Background(), ExportRequest{
+		OutputPath: filepath.Join(tmpDir, "backup.zip"),
+	})
+	require.Error(t, err)
+}
+
+func TestExport_DownloadSpecError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	svc := newTestService(t)
+	svc.ws, _ = workspace.New(tmpDir)
+	require.NoError(t, svc.ws.Init())
+
+	cfgContent := `specs:
+  - domain: petstore
+    llm_title: Petstore API
+    base_url: https://api.petstore.com
+    collections:
+      - title: Pets
+        location: http://localhost:1/nonexistent
+`
+	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
+
+	_, err := svc.Export(context.Background(), ExportRequest{
+		OutputPath: filepath.Join(tmpDir, "backup.zip"),
+	})
+	require.Error(t, err)
+}
+
+func TestExport_DisabledSpec(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	specContent := "openapi: 3.0.0\ninfo:\n  title: Test\n"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(specContent))
+	}))
+	t.Cleanup(srv.Close)
+
+	svc := newTestService(t)
+	svc.ws, _ = workspace.New(tmpDir)
+	require.NoError(t, svc.ws.Init())
+
+	cfgContent := `specs:
+  - domain: petstore
+    llm_title: Petstore API
+    base_url: https://api.petstore.com
+    disable: true
+    collections:
+      - title: Pets
+        location: ` + srv.URL + `
+`
+	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
+
+	_, err := svc.Export(context.Background(), ExportRequest{
+		OutputPath: filepath.Join(tmpDir, "backup.zip"),
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "no collections")
+}
+
+func TestExport_DisabledCollection(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	specContent := "openapi: 3.0.0\ninfo:\n  title: Test\n"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(specContent))
+	}))
+	t.Cleanup(srv.Close)
+
+	svc := newTestService(t)
+	svc.ws, _ = workspace.New(tmpDir)
+	require.NoError(t, svc.ws.Init())
+
+	cfgContent := `specs:
+  - domain: petstore
+    llm_title: Petstore API
+    base_url: https://api.petstore.com
+    collections:
+      - title: Pets
+        location: ` + srv.URL + `
+        disable: true
+`
+	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
+
+	_, err := svc.Export(context.Background(), ExportRequest{
+		OutputPath: filepath.Join(tmpDir, "backup.zip"),
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "no collections")
+}
+
+func TestExport_DuplicateLocation(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	specContent := "openapi: 3.0.0\ninfo:\n  title: Test\n"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(specContent))
+	}))
+	t.Cleanup(srv.Close)
+
+	svc := newTestService(t)
+	svc.ws, _ = workspace.New(tmpDir)
+	require.NoError(t, svc.ws.Init())
+
+	cfgContent := `specs:
+  - domain: petstore
+    llm_title: Petstore API
+    base_url: https://api.petstore.com
+    collections:
+      - title: Pets
+        location: ` + srv.URL + `
+      - title: PetsDup
+        location: ` + srv.URL + `
+`
+	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
+
+	outputPath := filepath.Join(tmpDir, "backup.zip")
+	resp, err := svc.Export(context.Background(), ExportRequest{
+		OutputPath: outputPath,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 1, resp.FileCount)
+}
+
+func TestExport_CreateZipError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	specContent := "openapi: 3.0.0\ninfo:\n  title: Test\n"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(specContent))
+	}))
+	t.Cleanup(srv.Close)
+
+	svc := newTestService(t)
+	svc.ws, _ = workspace.New(tmpDir)
+	require.NoError(t, svc.ws.Init())
+
+	cfgContent := `specs:
+  - domain: petstore
+    llm_title: Petstore API
+    base_url: https://api.petstore.com
+    collections:
+      - title: Pets
+        location: ` + srv.URL + `
+`
+	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
+
+	_, err := svc.Export(context.Background(), ExportRequest{
+		OutputPath: filepath.Join(tmpDir, "nonexistent", "backup.zip"),
+	})
+	require.Error(t, err)
 }

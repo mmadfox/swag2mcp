@@ -311,13 +311,15 @@ func specFileName(domain, title, location string) string {
 	return fmt.Sprintf("%s-%s%s", domain, sanitized, ext)
 }
 
+const defaultSpecName = "spec"
+
 func specFileNameBase(location string) string {
 	if strings.HasPrefix(location, "http://") || strings.HasPrefix(location, "https://") {
 		u, err := url.Parse(location)
 		if err == nil && u.Path != "" && u.Path != "/" {
 			return filepath.Base(u.Path)
 		}
-		return "spec"
+		return defaultSpecName
 	}
 	return filepath.Base(location)
 }
