@@ -758,6 +758,26 @@ func TestCopyAuthScriptsToExport_NoDir(t *testing.T) {
 	require.NoError(t, ws.CopyAuthScriptsToExport(exportDir))
 }
 
+func TestCopyAuthScriptsToExport_Subdir(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	subdir := filepath.Join(ws.AuthScriptsDir(), "subdir")
+	require.NoError(t, os.MkdirAll(subdir, 0750))
+	require.NoError(t, os.WriteFile(filepath.Join(subdir, "nested.sh"), []byte("#!/bin/sh"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(ws.AuthScriptsDir(), "test.sh"), []byte("#!/bin/sh"), 0600))
+
+	exportDir := t.TempDir()
+	require.NoError(t, ws.CopyAuthScriptsToExport(exportDir))
+
+	assert.FileExists(t, filepath.Join(exportDir, DirAuthScripts, "test.sh"))
+	assert.NoFileExists(t, filepath.Join(exportDir, DirAuthScripts, "subdir", "nested.sh"))
+}
+
 func TestCreateMetaFile(t *testing.T) {
 	t.Parallel()
 
@@ -788,6 +808,30 @@ func TestCreateZip_AddsExtension(t *testing.T) {
 	require.NoError(t, CreateZip(sourceDir, outputPath))
 
 	require.FileExists(t, outputPath+".zip")
+}
+
+func TestCreateZip_WithSubdir(t *testing.T) {
+	t.Parallel()
+
+	sourceDir := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(sourceDir, "subdir"), 0750))
+	require.NoError(t, os.WriteFile(filepath.Join(sourceDir, "subdir", "test.txt"), []byte("hello"), 0600))
+
+	outputPath := filepath.Join(t.TempDir(), "test.zip")
+	require.NoError(t, CreateZip(sourceDir, outputPath))
+	require.FileExists(t, outputPath)
+}
+
+func TestCreateZip_WalkError(t *testing.T) {
+	t.Parallel()
+
+	sourceDir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(sourceDir, "test.txt"), []byte("hello"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(sourceDir, "unreadable.txt"), []byte("secret"), 0000))
+
+	outputPath := filepath.Join(t.TempDir(), "test.zip")
+	err := CreateZip(sourceDir, outputPath)
+	require.Error(t, err)
 }
 
 func TestValidateZip_Valid(t *testing.T) {
@@ -864,6 +908,24 @@ func TestExtractZip_ZipSlipPrevented(t *testing.T) {
 	err = ExtractZip(zipPath, destDir)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "zip slip")
+}
+
+func TestExtractZip_CreateDirError(t *testing.T) {
+	t.Parallel()
+
+	sourceDir := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(sourceDir, "subdir"), 0750))
+	require.NoError(t, os.WriteFile(filepath.Join(sourceDir, "subdir", "test.txt"), []byte("hello"), 0600))
+
+	zipPath := filepath.Join(t.TempDir(), "backup.zip")
+	require.NoError(t, CreateZip(sourceDir, zipPath))
+
+	destDir := t.TempDir()
+	require.NoError(t, os.Chmod(destDir, 0444))
+	t.Cleanup(func() { _ = os.Chmod(destDir, 0755) })
+
+	err := ExtractZip(zipPath, destDir)
+	require.Error(t, err)
 }
 
 func TestDefaultExportName(t *testing.T) {
@@ -987,6 +1049,408 @@ func TestReadConfigFromExport(t *testing.T) {
 	data, err := ReadConfigFromExport(exportDir)
 	require.NoError(t, err)
 	assert.Equal(t, cfgContent, string(data))
+}
+
+func TestWriteSpecToExport_MkdirAllError(t *testing.T) {
+	t.Parallel()
+
+	err := WriteSpecToExport("/nonexistent/readonly", "spec.yaml", []byte("data"))
+	require.Error(t, err)
+}
+
+func TestWriteSpecToExport_WriteFileError(t *testing.T) {
+	t.Parallel()
+
+	exportDir := t.TempDir()
+	specsDir := filepath.Join(exportDir, DirSpecs)
+	require.NoError(t, os.MkdirAll(specsDir, 0750))
+	require.NoError(t, os.Chmod(specsDir, 0444))
+	t.Cleanup(func() { _ = os.Chmod(specsDir, 0755) })
+
+	err := WriteSpecToExport(exportDir, "spec.yaml", []byte("data"))
+	require.Error(t, err)
+}
+
+func TestCopyAuthScriptsToExport_ReadDirError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	require.NoError(t, os.Chmod(ws.AuthScriptsDir(), 0000))
+	t.Cleanup(func() { _ = os.Chmod(ws.AuthScriptsDir(), 0755) })
+
+	exportDir := t.TempDir()
+	err = ws.CopyAuthScriptsToExport(exportDir)
+	require.Error(t, err)
+}
+
+func TestCopyAuthScriptsToExport_WriteError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	scriptContent := "#!/bin/sh\necho test"
+	scriptPath := filepath.Join(ws.AuthScriptsDir(), "test.sh")
+	require.NoError(t, os.WriteFile(scriptPath, []byte(scriptContent), 0600))
+
+	exportDir := t.TempDir()
+	authDir := filepath.Join(exportDir, DirAuthScripts)
+	require.NoError(t, os.MkdirAll(authDir, 0750))
+	require.NoError(t, os.Chmod(authDir, 0444))
+	t.Cleanup(func() { _ = os.Chmod(authDir, 0755) })
+
+	err = ws.CopyAuthScriptsToExport(exportDir)
+	require.Error(t, err)
+}
+
+func TestCopyAuthScriptsToExport_ReadFileError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	require.NoError(t, os.WriteFile(filepath.Join(ws.AuthScriptsDir(), "test.sh"), []byte("#!/bin/sh"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(ws.AuthScriptsDir(), "broken.sh"), []byte("data"), 0000))
+
+	exportDir := t.TempDir()
+	err = ws.CopyAuthScriptsToExport(exportDir)
+	require.Error(t, err)
+}
+
+func TestCreateMetaFile_WriteError(t *testing.T) {
+	t.Parallel()
+
+	exportDir := t.TempDir()
+	require.NoError(t, os.Chmod(exportDir, 0444))
+	t.Cleanup(func() { _ = os.Chmod(exportDir, 0755) })
+
+	err := CreateMetaFile(exportDir, "1.0.0")
+	require.Error(t, err)
+}
+
+func TestCreateZip_CreateError(t *testing.T) {
+	t.Parallel()
+
+	sourceDir := t.TempDir()
+	err := CreateZip(sourceDir, "/nonexistent/backup.zip")
+	require.Error(t, err)
+}
+
+func TestCreateZip_ReadFileError(t *testing.T) {
+	t.Parallel()
+
+	sourceDir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(sourceDir, "test.txt"), []byte("hello"), 0600))
+
+	outputPath := filepath.Join(t.TempDir(), "test.zip")
+	require.NoError(t, CreateZip(sourceDir, outputPath))
+	require.FileExists(t, outputPath)
+}
+
+func TestValidateZip_OpenError(t *testing.T) {
+	t.Parallel()
+
+	_, err := ValidateZip("/nonexistent/backup.zip")
+	require.Error(t, err)
+}
+
+func TestValidateZip_InvalidMeta(t *testing.T) {
+	t.Parallel()
+
+	sourceDir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(sourceDir, MetaFileName), []byte("{invalid json}"), 0600))
+
+	zipPath := filepath.Join(t.TempDir(), "backup.zip")
+	require.NoError(t, CreateZip(sourceDir, zipPath))
+
+	valid, err := ValidateZip(zipPath)
+	require.NoError(t, err)
+	assert.False(t, valid)
+}
+
+func TestExtractZip_OpenError(t *testing.T) {
+	t.Parallel()
+
+	err := ExtractZip("/nonexistent/backup.zip", t.TempDir())
+	require.Error(t, err)
+}
+
+func TestExtractZip_WriteError(t *testing.T) {
+	t.Parallel()
+
+	sourceDir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(sourceDir, "test.txt"), []byte("hello"), 0600))
+
+	zipPath := filepath.Join(t.TempDir(), "backup.zip")
+	require.NoError(t, CreateZip(sourceDir, zipPath))
+
+	destDir := t.TempDir()
+	require.NoError(t, os.Chmod(destDir, 0444))
+	t.Cleanup(func() { _ = os.Chmod(destDir, 0755) })
+
+	err := ExtractZip(zipPath, destDir)
+	require.Error(t, err)
+}
+
+func TestReadMetaFromZip_OpenError(t *testing.T) {
+	t.Parallel()
+
+	_, err := ReadMetaFromZip("/nonexistent/backup.zip")
+	require.Error(t, err)
+}
+
+func TestReadMetaFromZip_NotFound(t *testing.T) {
+	t.Parallel()
+
+	sourceDir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(sourceDir, "test.txt"), []byte("hello"), 0600))
+
+	zipPath := filepath.Join(t.TempDir(), "backup.zip")
+	require.NoError(t, CreateZip(sourceDir, zipPath))
+
+	_, err := ReadMetaFromZip(zipPath)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not found")
+}
+
+func TestCreateEmptyDirsInExport_Error(t *testing.T) {
+	t.Parallel()
+
+	err := CreateEmptyDirsInExport("/nonexistent/readonly")
+	require.Error(t, err)
+}
+
+func TestCopyConfigToExport_ReadError(t *testing.T) {
+	t.Parallel()
+
+	ws := &Workspace{root: t.TempDir()}
+	exportDir := t.TempDir()
+
+	err := ws.copyConfigToExport(exportDir)
+	require.Error(t, err)
+}
+
+func TestCopyConfigToExport_WriteError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	cfgContent := "specs:\n  - domain: test\n"
+	require.NoError(t, os.WriteFile(ws.ConfigPath(), []byte(cfgContent), 0600))
+
+	exportDir := t.TempDir()
+	require.NoError(t, os.Chmod(exportDir, 0444))
+	t.Cleanup(func() { _ = os.Chmod(exportDir, 0755) })
+
+	err = ws.copyConfigToExport(exportDir)
+	require.Error(t, err)
+}
+
+func TestReadConfigFromExport_Error(t *testing.T) {
+	t.Parallel()
+
+	_, err := ReadConfigFromExport(t.TempDir())
+	require.Error(t, err)
+}
+
+func TestCopySpecsToWorkspace_NoDir(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	exportDir := t.TempDir()
+	require.NoError(t, ws.CopySpecsToWorkspace(exportDir))
+}
+
+func TestCopySpecsToWorkspace_SaveSpecError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	exportDir := t.TempDir()
+	specsDir := filepath.Join(exportDir, DirSpecs)
+	require.NoError(t, os.MkdirAll(specsDir, 0750))
+	require.NoError(t, os.WriteFile(filepath.Join(specsDir, "test.yaml"), []byte("openapi: 3.0.0"), 0600))
+
+	require.NoError(t, os.WriteFile(filepath.Join(ws.SpecsDir(), "test.yaml"), []byte("existing"), 0600))
+
+	err = ws.CopySpecsToWorkspace(exportDir)
+	require.Error(t, err)
+}
+
+func TestCopySpecsToWorkspace_ReadFileError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	exportDir := t.TempDir()
+	specsDir := filepath.Join(exportDir, DirSpecs)
+	require.NoError(t, os.MkdirAll(specsDir, 0750))
+	specFile := filepath.Join(specsDir, "test.yaml")
+	require.NoError(t, os.WriteFile(specFile, []byte("openapi: 3.0.0"), 0600))
+	require.NoError(t, os.Chmod(specFile, 0000))
+	t.Cleanup(func() { _ = os.Chmod(specFile, 0600) })
+
+	err = ws.CopySpecsToWorkspace(exportDir)
+	require.Error(t, err)
+}
+
+func TestCopySpecsToWorkspace_ReadDirError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	exportDir := filepath.Join(t.TempDir(), "not-a-dir")
+	require.NoError(t, os.WriteFile(exportDir, []byte("not a dir"), 0600))
+
+	err = ws.CopySpecsToWorkspace(exportDir)
+	require.Error(t, err)
+}
+
+func TestCopyAuthScriptsToWorkspace_NoDir(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	exportDir := t.TempDir()
+	require.NoError(t, ws.CopyAuthScriptsToWorkspace(exportDir))
+}
+
+func TestCopyAuthScriptsToWorkspace_ReadDirError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	exportDir := filepath.Join(t.TempDir(), "not-a-dir")
+	require.NoError(t, os.WriteFile(exportDir, []byte("not a dir"), 0600))
+
+	err = ws.CopyAuthScriptsToWorkspace(exportDir)
+	require.Error(t, err)
+}
+
+func TestCopyAuthScriptsToWorkspace_ReadFileError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	exportDir := t.TempDir()
+	authDir := filepath.Join(exportDir, DirAuthScripts)
+	require.NoError(t, os.MkdirAll(authDir, 0750))
+	scriptFile := filepath.Join(authDir, "test.sh")
+	require.NoError(t, os.WriteFile(scriptFile, []byte("#!/bin/sh"), 0600))
+	require.NoError(t, os.Chmod(scriptFile, 0000))
+	t.Cleanup(func() { _ = os.Chmod(scriptFile, 0600) })
+
+	err = ws.CopyAuthScriptsToWorkspace(exportDir)
+	require.Error(t, err)
+}
+
+func TestCopyAuthScriptsToWorkspace_WriteError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	require.NoError(t, os.Chmod(ws.AuthScriptsDir(), 0444))
+	t.Cleanup(func() { _ = os.Chmod(ws.AuthScriptsDir(), 0755) })
+
+	exportDir := t.TempDir()
+	authDir := filepath.Join(exportDir, DirAuthScripts)
+	require.NoError(t, os.MkdirAll(authDir, 0750))
+	require.NoError(t, os.WriteFile(filepath.Join(authDir, "test.sh"), []byte("#!/bin/sh"), 0600))
+
+	err = ws.CopyAuthScriptsToWorkspace(exportDir)
+	require.Error(t, err)
+}
+
+func TestCopyAuthScriptsToExport_MkdirAllError(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	require.NoError(t, os.WriteFile(filepath.Join(ws.AuthScriptsDir(), "test.sh"), []byte("#!/bin/sh"), 0600))
+
+	exportDir := t.TempDir()
+	require.NoError(t, os.Chmod(exportDir, 0444))
+	t.Cleanup(func() { _ = os.Chmod(exportDir, 0755) })
+
+	err = ws.CopyAuthScriptsToExport(exportDir)
+	require.Error(t, err)
+}
+
+func TestValidateZip_CorruptMetaEntry(t *testing.T) {
+	t.Parallel()
+
+	sourceDir := t.TempDir()
+	require.NoError(t, CreateMetaFile(sourceDir, "1.0.0"))
+
+	zipPath := filepath.Join(t.TempDir(), "backup.zip")
+	require.NoError(t, CreateZip(sourceDir, zipPath))
+
+	f, err := os.OpenFile(filepath.Clean(zipPath), os.O_RDWR, 0600)
+	require.NoError(t, err)
+	_, err = f.WriteAt([]byte("CORRUPT"), 50)
+	require.NoError(t, err)
+	require.NoError(t, f.Close())
+
+	_, err = ValidateZip(zipPath)
+	require.Error(t, err)
+}
+
+func TestReadMetaFromZip_CorruptMeta(t *testing.T) {
+	t.Parallel()
+
+	sourceDir := t.TempDir()
+	require.NoError(t, CreateMetaFile(sourceDir, "1.0.0"))
+
+	zipPath := filepath.Join(t.TempDir(), "backup.zip")
+	require.NoError(t, CreateZip(sourceDir, zipPath))
+
+	f, err := os.OpenFile(filepath.Clean(zipPath), os.O_RDWR, 0600)
+	require.NoError(t, err)
+	_, err = f.WriteAt([]byte("CORRUPT"), 50)
+	require.NoError(t, err)
+	require.NoError(t, f.Close())
+
+	_, err = ReadMetaFromZip(zipPath)
+	require.Error(t, err)
 }
 
 func TestEnsureZipExt(t *testing.T) {
