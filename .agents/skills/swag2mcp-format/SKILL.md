@@ -1,13 +1,13 @@
 ---
 name: swag2mcp-format
 description: |
-  [WHAT] Response formatting rules for swag2mcp MCP tools.
-  [WHEN] Use when displaying results from ANY swag2mcp MCP tool:
-         spec_list, spec_by_id, collection_by_*, tag_by_*,
-         endpoint_by_*, search, inspect, invoke, auth, info.
-         Automatically triggered on every swag2mcp tool response.
-  [WHY] Ensures consistent human-readable markdown, enforces pagination,
-        colorizes HTTP methods, structures schemas/headers/errors.
+  Response formatting rules for swag2mcp MCP tools.
+  Use when displaying results from ANY swag2mcp MCP tool:
+  spec_list, spec_by_id, collection_by_*, tag_by_*,
+  endpoint_by_*, search, inspect, invoke, auth, info.
+  Automatically triggered on every swag2mcp tool response.
+  Ensures consistent human-readable markdown, enforces pagination,
+  colorizes HTTP methods, structures schemas/headers/errors.
 license: MIT
 metadata:
   author: mmadfox
