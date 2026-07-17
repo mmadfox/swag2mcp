@@ -6,40 +6,42 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mmadfox/swag2mcp/internal/types"
+	"github.com/mmadfox/swag2mcp/internal/model"
 )
 
+// SearchRequest contains the search query and result limit for searching
+// endpoints across all loaded specs.
 type (
-	// SearchRequest represents a request to search endpoints.
 	SearchRequest struct {
 		Query string `json:"query" jsonschema:"required,"                                    validate:"required"`
 		Limit int    `json:"limit" jsonschema:"required,Maximum number of results to return" validate:"required,min=1,max=50"`
 	}
 
-	// SearchResponse represents a response to search endpoints.
+	// SearchResponse contains the list of endpoints that matched the search query.
 	SearchResponse struct {
 		Endpoints []EndpointSearchItem `json:"endpoints" jsonschema:"required,List of endpoints matching the search query"`
 	}
 )
 
-// Search returns endpoints matching the query.
-func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse, error) {
-	if err := s.validateRequest(req); err != nil {
+// Search performs a full-text search across all endpoints using the given
+// query string and returns up to the specified limit of matching results.
+func (s *Service) Search(ctx context.Context, rq SearchRequest) (SearchResponse, error) {
+	if err := s.validateRequest(rq); err != nil {
 		return SearchResponse{}, NewValidationError("A search query is required and the limit must be between 1 and 50.", err)
 	}
 
-	endpoints, err := s.index.Search(ctx, strings.ToLower(req.Query), req.Limit)
+	eps, err := s.index.Search(ctx, strings.ToLower(rq.Query), rq.Limit)
 	if err != nil {
 		return SearchResponse{}, NewNotFoundError("search failed", err)
 	}
 
-	items, itemsErr := s.mapEndpointsToSearchItems(endpoints)
-	if itemsErr != nil {
-		return SearchResponse{}, itemsErr
+	is, err := s.mapEndpointsToSearchItems(eps)
+	if err != nil {
+		return SearchResponse{}, err
 	}
 
-	sort.Slice(items, func(i, j int) bool {
-		a, b := items[i], items[j]
+	sort.Slice(is, func(i, j int) bool {
+		a, b := is[i], is[j]
 		if a.SpecID != b.SpecID {
 			return a.SpecID < b.SpecID
 		}
@@ -52,36 +54,35 @@ func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse
 		return a.ID < b.ID
 	})
 
-	return SearchResponse{Endpoints: items}, nil
+	return SearchResponse{Endpoints: is}, nil
 }
 
-// mapEndpointsToSearchItems maps raw endpoints to EndpointSearchItem with resolved spec/collection/tag.
-func (s *Service) mapEndpointsToSearchItems(endpoints []*types.Endpoint) ([]EndpointSearchItem, error) {
-	items := make([]EndpointSearchItem, 0, len(endpoints))
-	for _, ep := range endpoints {
-		epSpec, sErr := s.index.SpecByID(ep.SpecID)
-		if sErr != nil {
-			return nil, NewNotFoundError(fmt.Sprintf("spec %q not found", ep.SpecID), sErr)
+func (s *Service) mapEndpointsToSearchItems(eps []*model.Endpoint) ([]EndpointSearchItem, error) {
+	items := make([]EndpointSearchItem, 0, len(eps))
+	for _, e := range eps {
+		sp, err := s.index.SpecByID(e.SpecID)
+		if err != nil {
+			return nil, NewNotFoundError(fmt.Sprintf("spec %q not found", e.SpecID), err)
 		}
-		epColl, cErr := s.index.CollectionByID(ep.CollectionID)
-		if cErr != nil {
-			return nil, NewNotFoundError(fmt.Sprintf("collection %q not found", ep.CollectionID), cErr)
+		coll, err := s.index.CollectionByID(e.CollectionID)
+		if err != nil {
+			return nil, NewNotFoundError(fmt.Sprintf("collection %q not found", e.CollectionID), err)
 		}
-		epTag, tErr := s.index.TagByID(ep.TagID)
-		if tErr != nil {
-			return nil, NewNotFoundError(fmt.Sprintf("tag %q not found", ep.TagID), tErr)
+		tag, err := s.index.TagByID(e.TagID)
+		if err != nil {
+			return nil, NewNotFoundError(fmt.Sprintf("tag %q not found", e.TagID), err)
 		}
 		items = append(items, EndpointSearchItem{
-			ID:              ep.ID,
-			TagID:           ep.TagID,
-			TagName:         epTag.Name,
-			CollectionID:    ep.CollectionID,
-			CollectionTitle: epColl.Title,
-			SpecID:          ep.SpecID,
-			SpecDomain:      epSpec.Domain,
-			Method:          ep.Name,
-			Path:            ep.Path,
-			Summary:         ep.SummaryOrFallback(),
+			ID:              e.ID,
+			TagID:           e.TagID,
+			TagName:         tag.Name,
+			CollectionID:    e.CollectionID,
+			CollectionTitle: coll.Title,
+			SpecID:          e.SpecID,
+			SpecDomain:      sp.Domain,
+			Method:          e.Name,
+			Path:            e.Path,
+			Summary:         e.SummaryOrFallback(),
 		})
 	}
 	return items, nil

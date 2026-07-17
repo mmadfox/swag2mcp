@@ -6,6 +6,9 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAuthMockServer_handleDigest_NoChallenge(t *testing.T) {
@@ -17,13 +20,10 @@ func TestAuthMockServer_handleDigest_NoChallenge(t *testing.T) {
 
 	server.handleDigest(responseRecorder, request)
 
-	if responseRecorder.Code != http.StatusUnauthorized {
-		t.Errorf("expected 401, got %d", responseRecorder.Code)
-	}
+	assert.Equal(t, http.StatusUnauthorized, responseRecorder.Code, "expected 401")
 	wwwAuth := responseRecorder.Header().Get("WWW-Authenticate")
-	if !strings.HasPrefix(wwwAuth, "Digest ") {
-		t.Errorf("expected WWW-Authenticate to start with 'Digest ', got %q", wwwAuth)
-	}
+	assert.True(t, strings.HasPrefix(wwwAuth, "Digest "),
+		"expected WWW-Authenticate to start with 'Digest ', got %q", wwwAuth)
 }
 
 func TestAuthMockServer_handleDigest_ValidResponse(t *testing.T) {
@@ -36,9 +36,7 @@ func TestAuthMockServer_handleDigest_ValidResponse(t *testing.T) {
 
 	server.handleDigest(responseRecorder, request)
 
-	if responseRecorder.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", responseRecorder.Code)
-	}
+	assert.Equal(t, http.StatusOK, responseRecorder.Code, "expected 200")
 }
 
 func TestAuthMockServer_handleOAuth2_InvalidMethod(t *testing.T) {
@@ -50,9 +48,7 @@ func TestAuthMockServer_handleOAuth2_InvalidMethod(t *testing.T) {
 
 	server.handleOAuth2(responseRecorder, request)
 
-	if responseRecorder.Code != http.StatusMethodNotAllowed {
-		t.Errorf("expected 405, got %d", responseRecorder.Code)
-	}
+	assert.Equal(t, http.StatusMethodNotAllowed, responseRecorder.Code, "expected 405")
 }
 
 func TestAuthMockServer_handleOAuth2_CC_ValidRequest(t *testing.T) {
@@ -66,17 +62,12 @@ func TestAuthMockServer_handleOAuth2_CC_ValidRequest(t *testing.T) {
 
 	server.handleOAuth2(responseRecorder, request)
 
-	if responseRecorder.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", responseRecorder.Code)
-	}
+	assert.Equal(t, http.StatusOK, responseRecorder.Code, "expected 200")
 
 	var response map[string]any
-	if err := json.NewDecoder(responseRecorder.Body).Decode(&response); err != nil {
-		t.Fatalf("failed to decode response: %v", err)
-	}
-	if response["access_token"] == "" {
-		t.Error("expected access_token to be non-empty")
-	}
+	err := json.NewDecoder(responseRecorder.Body).Decode(&response)
+	require.NoError(t, err, "failed to decode response")
+	assert.NotEmpty(t, response["access_token"], "expected access_token to be non-empty")
 }
 
 func TestAuthMockServer_handleOAuth2_Password_ValidRequest(t *testing.T) {
@@ -90,17 +81,12 @@ func TestAuthMockServer_handleOAuth2_Password_ValidRequest(t *testing.T) {
 
 	server.handleOAuth2(responseRecorder, request)
 
-	if responseRecorder.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", responseRecorder.Code)
-	}
+	assert.Equal(t, http.StatusOK, responseRecorder.Code, "expected 200")
 
 	var response map[string]any
-	if err := json.NewDecoder(responseRecorder.Body).Decode(&response); err != nil {
-		t.Fatalf("failed to decode response: %v", err)
-	}
-	if response["access_token"] == "" {
-		t.Error("expected access_token to be non-empty")
-	}
+	err := json.NewDecoder(responseRecorder.Body).Decode(&response)
+	require.NoError(t, err, "failed to decode response")
+	assert.NotEmpty(t, response["access_token"], "expected access_token to be non-empty")
 }
 
 func TestAuthMockServer_handleOAuth2_InvalidGrantType(t *testing.T) {
@@ -114,9 +100,7 @@ func TestAuthMockServer_handleOAuth2_InvalidGrantType(t *testing.T) {
 
 	server.handleOAuth2(responseRecorder, request)
 
-	if responseRecorder.Code != http.StatusBadRequest {
-		t.Errorf("expected 400, got %d", responseRecorder.Code)
-	}
+	assert.Equal(t, http.StatusBadRequest, responseRecorder.Code, "expected 400")
 }
 
 func TestParseDigestAuthorization(t *testing.T) {
@@ -139,9 +123,7 @@ func TestParseDigestAuthorization(t *testing.T) {
 	}
 
 	for key, expectedValue := range expected {
-		if params[key] != expectedValue {
-			t.Errorf("expected %q=%q, got %q", key, expectedValue, params[key])
-		}
+		assert.Equal(t, expectedValue, params[key], "key %q", key)
 	}
 }
 
@@ -155,9 +137,7 @@ func TestAuthMockServer_handleHMAC_Valid(t *testing.T) {
 
 	server.handleHMAC(responseRecorder, request)
 
-	if responseRecorder.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", responseRecorder.Code)
-	}
+	assert.Equal(t, http.StatusOK, responseRecorder.Code, "expected 200")
 }
 
 func TestAuthMockServer_handleHMAC_MissingAPIKey(t *testing.T) {
@@ -169,9 +149,7 @@ func TestAuthMockServer_handleHMAC_MissingAPIKey(t *testing.T) {
 
 	server.handleHMAC(responseRecorder, request)
 
-	if responseRecorder.Code != http.StatusUnauthorized {
-		t.Errorf("expected 401, got %d", responseRecorder.Code)
-	}
+	assert.Equal(t, http.StatusUnauthorized, responseRecorder.Code, "expected 401")
 }
 
 func TestAuthMockServer_handleHMAC_MissingSignature(t *testing.T) {
@@ -184,9 +162,7 @@ func TestAuthMockServer_handleHMAC_MissingSignature(t *testing.T) {
 
 	server.handleHMAC(responseRecorder, request)
 
-	if responseRecorder.Code != http.StatusUnauthorized {
-		t.Errorf("expected 401, got %d", responseRecorder.Code)
-	}
+	assert.Equal(t, http.StatusUnauthorized, responseRecorder.Code, "expected 401")
 }
 
 func TestAuthMockServer_handleHMAC_MissingTimestamp(t *testing.T) {
@@ -199,7 +175,5 @@ func TestAuthMockServer_handleHMAC_MissingTimestamp(t *testing.T) {
 
 	server.handleHMAC(responseRecorder, request)
 
-	if responseRecorder.Code != http.StatusUnauthorized {
-		t.Errorf("expected 401, got %d", responseRecorder.Code)
-	}
+	assert.Equal(t, http.StatusUnauthorized, responseRecorder.Code, "expected 401")
 }

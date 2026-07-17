@@ -5,16 +5,16 @@ import (
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/id"
+	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/mmadfox/swag2mcp/internal/spec"
-	"github.com/mmadfox/swag2mcp/internal/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func newTestIndex(t *testing.T) *Index {
 	t.Helper()
 	idx, err := New()
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, err, "New()")
 	return idx
 }
 
@@ -22,25 +22,25 @@ func seedTestData(
 	t *testing.T,
 	idx *Index,
 	domain string,
-) (*types.Spec, *types.Collection, *types.Tag, *types.Endpoint) {
+) (*model.Spec, *model.Collection, *model.Tag, *model.Endpoint) {
 	t.Helper()
 
 	specID := id.Domain(domain)
-	specInfo := &types.Spec{
+	specInfo := &model.Spec{
 		ID:      specID,
 		Domain:  domain,
 		BaseURL: "https://api.example.com",
 	}
 
 	collectionID := id.Collection(specID, domain+"/collection")
-	collectionInfo := &types.Collection{
+	collectionInfo := &model.Collection{
 		ID:     collectionID,
 		SpecID: specID,
 		Title:  "Test Collection",
 	}
 
 	tagID := id.Tag(specID, collectionID, "test-tag")
-	tagInfo := &types.Tag{
+	tagInfo := &model.Tag{
 		ID:           tagID,
 		SpecID:       specID,
 		CollectionID: collectionID,
@@ -48,7 +48,7 @@ func seedTestData(
 	}
 
 	endpointID := id.Method(specID, collectionID, tagID, "GET", "/test", "testOp")
-	endpointInfo := &types.Endpoint{
+	endpointInfo := &model.Endpoint{
 		ID:           endpointID,
 		SpecID:       specID,
 		CollectionID: collectionID,
@@ -63,14 +63,12 @@ func seedTestData(
 		},
 	}
 
-	if err := idx.EnsureIndex(
+	require.NoError(t, idx.EnsureIndex(
 		specInfo,
-		[]*types.Collection{collectionInfo},
-		[]*types.Tag{tagInfo},
-		[]*types.Endpoint{endpointInfo},
-	); err != nil {
-		t.Fatalf("EnsureIndex() = %v", err)
-	}
+		[]*model.Collection{collectionInfo},
+		[]*model.Tag{tagInfo},
+		[]*model.Endpoint{endpointInfo},
+	), "EnsureIndex()")
 	idx.RefreshSearchReader()
 
 	return specInfo, collectionInfo, tagInfo, endpointInfo
@@ -80,15 +78,9 @@ func TestNew(t *testing.T) {
 	t.Parallel()
 
 	idx, err := New()
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if idx == nil {
-		t.Fatal("New() returned nil")
-	}
-	if idx.Size() != 0 {
-		t.Errorf("Size() = %d, want 0", idx.Size())
-	}
+	require.NoError(t, err, "New()")
+	require.NotNil(t, idx, "New() returned nil")
+	assert.Equal(t, 0, idx.Size())
 }
 
 func TestEnsureIndex_DuplicateSpec(t *testing.T) {
@@ -98,26 +90,22 @@ func TestEnsureIndex_DuplicateSpec(t *testing.T) {
 	specInfo, _, _, _ := seedTestData(t, idx, t.Name())
 
 	err := idx.EnsureIndex(specInfo, nil, nil, nil)
-	if err == nil {
-		t.Fatal("expected error for duplicate spec")
-	}
+	require.Error(t, err, "expected error for duplicate spec")
 }
 
 func TestEnsureIndex_CollectionMissingSpec(t *testing.T) {
 	t.Parallel()
 
 	idx := newTestIndex(t)
-	specInfo := &types.Spec{ID: "spec-1", Domain: t.Name(), BaseURL: "https://example.com"}
-	collectionInfo := &types.Collection{
+	specInfo := &model.Spec{ID: "spec-1", Domain: t.Name(), BaseURL: "https://example.com"}
+	collectionInfo := &model.Collection{
 		ID:     "coll-1",
 		SpecID: "spec-2",
 		Title:  "Orphan Collection",
 	}
 
-	err := idx.EnsureIndex(specInfo, []*types.Collection{collectionInfo}, nil, nil)
-	if err == nil {
-		t.Fatal("expected error for collection with missing spec")
-	}
+	err := idx.EnsureIndex(specInfo, []*model.Collection{collectionInfo}, nil, nil)
+	require.Error(t, err, "expected error for collection with missing spec")
 }
 
 func TestEnsureIndex_DuplicateCollection(t *testing.T) {
@@ -126,46 +114,40 @@ func TestEnsureIndex_DuplicateCollection(t *testing.T) {
 	idx := newTestIndex(t)
 	specInfo, collectionInfo, _, _ := seedTestData(t, idx, t.Name())
 
-	err := idx.EnsureIndex(specInfo, []*types.Collection{collectionInfo}, nil, nil)
-	if err == nil {
-		t.Fatal("expected error for duplicate collection")
-	}
+	err := idx.EnsureIndex(specInfo, []*model.Collection{collectionInfo}, nil, nil)
+	require.Error(t, err, "expected error for duplicate collection")
 }
 
 func TestEnsureIndex_TagMissingSpec(t *testing.T) {
 	t.Parallel()
 
 	idx := newTestIndex(t)
-	specInfo := &types.Spec{ID: "spec-1", Domain: t.Name(), BaseURL: "https://example.com"}
-	tagInfo := &types.Tag{
+	specInfo := &model.Spec{ID: "spec-1", Domain: t.Name(), BaseURL: "https://example.com"}
+	tagInfo := &model.Tag{
 		ID:     "tag-1",
 		SpecID: "spec-2",
 		Name:   "orphan-tag",
 	}
 
-	err := idx.EnsureIndex(specInfo, nil, []*types.Tag{tagInfo}, nil)
-	if err == nil {
-		t.Fatal("expected error for tag with missing spec")
-	}
+	err := idx.EnsureIndex(specInfo, nil, []*model.Tag{tagInfo}, nil)
+	require.Error(t, err, "expected error for tag with missing spec")
 }
 
 func TestEnsureIndex_TagMissingCollection(t *testing.T) {
 	t.Parallel()
 
 	idx := newTestIndex(t)
-	specInfo := &types.Spec{ID: "spec-1", Domain: t.Name(), BaseURL: "https://example.com"}
-	collectionInfo := &types.Collection{ID: "coll-1", SpecID: "spec-1", Title: "Coll"}
-	tagInfo := &types.Tag{
+	specInfo := &model.Spec{ID: "spec-1", Domain: t.Name(), BaseURL: "https://example.com"}
+	collectionInfo := &model.Collection{ID: "coll-1", SpecID: "spec-1", Title: "Coll"}
+	tagInfo := &model.Tag{
 		ID:           "tag-1",
 		SpecID:       "spec-1",
 		CollectionID: "coll-2",
 		Name:         "orphan-tag",
 	}
 
-	err := idx.EnsureIndex(specInfo, []*types.Collection{collectionInfo}, []*types.Tag{tagInfo}, nil)
-	if err == nil {
-		t.Fatal("expected error for tag with missing collection")
-	}
+	err := idx.EnsureIndex(specInfo, []*model.Collection{collectionInfo}, []*model.Tag{tagInfo}, nil)
+	require.Error(t, err, "expected error for tag with missing collection")
 }
 
 func TestEnsureIndex_DuplicateTag(t *testing.T) {
@@ -174,24 +156,22 @@ func TestEnsureIndex_DuplicateTag(t *testing.T) {
 	idx := newTestIndex(t)
 	_, _, tagInfo, _ := seedTestData(t, idx, t.Name())
 
-	specInfo := &types.Spec{ID: tagInfo.SpecID, Domain: t.Name(), BaseURL: "https://example.com"}
-	collectionInfo := &types.Collection{ID: tagInfo.CollectionID, SpecID: tagInfo.SpecID, Title: "Coll"}
+	specInfo := &model.Spec{ID: tagInfo.SpecID, Domain: t.Name(), BaseURL: "https://example.com"}
+	collectionInfo := &model.Collection{ID: tagInfo.CollectionID, SpecID: tagInfo.SpecID, Title: "Coll"}
 
-	err := idx.EnsureIndex(specInfo, []*types.Collection{collectionInfo}, []*types.Tag{tagInfo}, nil)
-	if err == nil {
-		t.Fatal("expected error for duplicate tag")
-	}
+	err := idx.EnsureIndex(specInfo, []*model.Collection{collectionInfo}, []*model.Tag{tagInfo}, nil)
+	require.Error(t, err, "expected error for duplicate tag")
 }
 
 func TestEnsureIndex_EndpointMissingSpec(t *testing.T) {
 	t.Parallel()
 
 	idx := newTestIndex(t)
-	specInfo := &types.Spec{ID: "spec-1", Domain: t.Name(), BaseURL: "https://example.com"}
-	collectionInfo := &types.Collection{ID: "coll-1", SpecID: "spec-1", Title: "Coll"}
-	tagInfo := &types.Tag{ID: "tag-1", SpecID: "spec-1", CollectionID: "coll-1", Name: "tag"}
+	specInfo := &model.Spec{ID: "spec-1", Domain: t.Name(), BaseURL: "https://example.com"}
+	collectionInfo := &model.Collection{ID: "coll-1", SpecID: "spec-1", Title: "Coll"}
+	tagInfo := &model.Tag{ID: "tag-1", SpecID: "spec-1", CollectionID: "coll-1", Name: "tag"}
 
-	endpointInfo := &types.Endpoint{
+	endpointInfo := &model.Endpoint{
 		ID:           "ep-1",
 		SpecID:       "spec-2",
 		CollectionID: "coll-1",
@@ -202,23 +182,21 @@ func TestEnsureIndex_EndpointMissingSpec(t *testing.T) {
 
 	err := idx.EnsureIndex(
 		specInfo,
-		[]*types.Collection{collectionInfo},
-		[]*types.Tag{tagInfo},
-		[]*types.Endpoint{endpointInfo},
+		[]*model.Collection{collectionInfo},
+		[]*model.Tag{tagInfo},
+		[]*model.Endpoint{endpointInfo},
 	)
-	if err == nil {
-		t.Fatal("expected error for endpoint with missing spec")
-	}
+	require.Error(t, err, "expected error for endpoint with missing spec")
 }
 
 func TestEnsureIndex_EndpointMissingCollection(t *testing.T) {
 	t.Parallel()
 
 	idx := newTestIndex(t)
-	specInfo := &types.Spec{ID: "spec-1", Domain: t.Name(), BaseURL: "https://example.com"}
-	tagInfo := &types.Tag{ID: "tag-1", SpecID: "spec-1", CollectionID: "coll-1", Name: "tag"}
+	specInfo := &model.Spec{ID: "spec-1", Domain: t.Name(), BaseURL: "https://example.com"}
+	tagInfo := &model.Tag{ID: "tag-1", SpecID: "spec-1", CollectionID: "coll-1", Name: "tag"}
 
-	endpointInfo := &types.Endpoint{
+	endpointInfo := &model.Endpoint{
 		ID:           "ep-1",
 		SpecID:       "spec-1",
 		CollectionID: "coll-2",
@@ -227,20 +205,18 @@ func TestEnsureIndex_EndpointMissingCollection(t *testing.T) {
 		Path:         "/test",
 	}
 
-	err := idx.EnsureIndex(specInfo, nil, []*types.Tag{tagInfo}, []*types.Endpoint{endpointInfo})
-	if err == nil {
-		t.Fatal("expected error for endpoint with missing collection")
-	}
+	err := idx.EnsureIndex(specInfo, nil, []*model.Tag{tagInfo}, []*model.Endpoint{endpointInfo})
+	require.Error(t, err, "expected error for endpoint with missing collection")
 }
 
 func TestEnsureIndex_EndpointMissingTag(t *testing.T) {
 	t.Parallel()
 
 	idx := newTestIndex(t)
-	specInfo := &types.Spec{ID: "spec-1", Domain: t.Name(), BaseURL: "https://example.com"}
-	collectionInfo := &types.Collection{ID: "coll-1", SpecID: "spec-1", Title: "Coll"}
+	specInfo := &model.Spec{ID: "spec-1", Domain: t.Name(), BaseURL: "https://example.com"}
+	collectionInfo := &model.Collection{ID: "coll-1", SpecID: "spec-1", Title: "Coll"}
 
-	endpointInfo := &types.Endpoint{
+	endpointInfo := &model.Endpoint{
 		ID:           "ep-1",
 		SpecID:       "spec-1",
 		CollectionID: "coll-1",
@@ -249,10 +225,8 @@ func TestEnsureIndex_EndpointMissingTag(t *testing.T) {
 		Path:         "/test",
 	}
 
-	err := idx.EnsureIndex(specInfo, []*types.Collection{collectionInfo}, nil, []*types.Endpoint{endpointInfo})
-	if err == nil {
-		t.Fatal("expected error for endpoint with missing tag")
-	}
+	err := idx.EnsureIndex(specInfo, []*model.Collection{collectionInfo}, nil, []*model.Endpoint{endpointInfo})
+	require.Error(t, err, "expected error for endpoint with missing tag")
 }
 
 func TestEnsureIndex_DuplicateEndpoint(t *testing.T) {
@@ -261,9 +235,9 @@ func TestEnsureIndex_DuplicateEndpoint(t *testing.T) {
 	idx := newTestIndex(t)
 	_, _, _, endpointInfo := seedTestData(t, idx, t.Name())
 
-	specInfo := &types.Spec{ID: endpointInfo.SpecID, Domain: t.Name(), BaseURL: "https://example.com"}
-	collectionInfo := &types.Collection{ID: endpointInfo.CollectionID, SpecID: endpointInfo.SpecID, Title: "Coll"}
-	tagInfo := &types.Tag{
+	specInfo := &model.Spec{ID: endpointInfo.SpecID, Domain: t.Name(), BaseURL: "https://example.com"}
+	collectionInfo := &model.Collection{ID: endpointInfo.CollectionID, SpecID: endpointInfo.SpecID, Title: "Coll"}
+	tagInfo := &model.Tag{
 		ID:           endpointInfo.TagID,
 		SpecID:       endpointInfo.SpecID,
 		CollectionID: endpointInfo.CollectionID,
@@ -272,13 +246,11 @@ func TestEnsureIndex_DuplicateEndpoint(t *testing.T) {
 
 	err := idx.EnsureIndex(
 		specInfo,
-		[]*types.Collection{collectionInfo},
-		[]*types.Tag{tagInfo},
-		[]*types.Endpoint{endpointInfo},
+		[]*model.Collection{collectionInfo},
+		[]*model.Tag{tagInfo},
+		[]*model.Endpoint{endpointInfo},
 	)
-	if err == nil {
-		t.Fatal("expected error for duplicate endpoint")
-	}
+	require.Error(t, err, "expected error for duplicate endpoint")
 }
 
 func TestAllSpecs(t *testing.T) {
@@ -288,12 +260,8 @@ func TestAllSpecs(t *testing.T) {
 	seedTestData(t, idx, t.Name())
 
 	specs := idx.AllSpecs()
-	if len(specs) != 1 {
-		t.Fatalf("AllSpecs() = %d, want 1", len(specs))
-	}
-	if specs[0].Domain != t.Name() {
-		t.Errorf("Domain = %q, want %q", specs[0].Domain, t.Name())
-	}
+	require.Len(t, specs, 1)
+	assert.Equal(t, t.Name(), specs[0].Domain)
 }
 
 func TestAllSpecs_Empty(t *testing.T) {
@@ -301,9 +269,7 @@ func TestAllSpecs_Empty(t *testing.T) {
 
 	idx := newTestIndex(t)
 	specs := idx.AllSpecs()
-	if len(specs) != 0 {
-		t.Errorf("AllSpecs() = %d, want 0", len(specs))
-	}
+	assert.Len(t, specs, 0)
 }
 
 func TestSpecByID_Success(t *testing.T) {
@@ -313,12 +279,8 @@ func TestSpecByID_Success(t *testing.T) {
 	specInfo, _, _, _ := seedTestData(t, idx, t.Name())
 
 	got, err := idx.SpecByID(specInfo.ID)
-	if err != nil {
-		t.Fatalf("SpecByID() = %v", err)
-	}
-	if got.ID != specInfo.ID {
-		t.Errorf("ID = %q, want %q", got.ID, specInfo.ID)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, specInfo.ID, got.ID)
 }
 
 func TestSpecByID_NotFound(t *testing.T) {
@@ -326,9 +288,7 @@ func TestSpecByID_NotFound(t *testing.T) {
 
 	idx := newTestIndex(t)
 	_, err := idx.SpecByID("nonexistent")
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestCollectionByID_Success(t *testing.T) {
@@ -338,12 +298,8 @@ func TestCollectionByID_Success(t *testing.T) {
 	_, collectionInfo, _, _ := seedTestData(t, idx, t.Name())
 
 	got, err := idx.CollectionByID(collectionInfo.ID)
-	if err != nil {
-		t.Fatalf("CollectionByID() = %v", err)
-	}
-	if got.ID != collectionInfo.ID {
-		t.Errorf("ID = %q, want %q", got.ID, collectionInfo.ID)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, collectionInfo.ID, got.ID)
 }
 
 func TestCollectionByID_NotFound(t *testing.T) {
@@ -351,9 +307,7 @@ func TestCollectionByID_NotFound(t *testing.T) {
 
 	idx := newTestIndex(t)
 	_, err := idx.CollectionByID("nonexistent")
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestCollectionsBySpec_Success(t *testing.T) {
@@ -363,12 +317,8 @@ func TestCollectionsBySpec_Success(t *testing.T) {
 	specInfo, _, _, _ := seedTestData(t, idx, t.Name())
 
 	cols, err := idx.CollectionsBySpec(specInfo.ID)
-	if err != nil {
-		t.Fatalf("CollectionsBySpec() = %v", err)
-	}
-	if len(cols) != 1 {
-		t.Fatalf("Collections = %d, want 1", len(cols))
-	}
+	require.NoError(t, err)
+	require.Len(t, cols, 1)
 }
 
 func TestCollectionsBySpec_NotFound(t *testing.T) {
@@ -376,9 +326,7 @@ func TestCollectionsBySpec_NotFound(t *testing.T) {
 
 	idx := newTestIndex(t)
 	_, err := idx.CollectionsBySpec("nonexistent")
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestTagByID_Success(t *testing.T) {
@@ -388,12 +336,8 @@ func TestTagByID_Success(t *testing.T) {
 	_, _, tagInfo, _ := seedTestData(t, idx, t.Name())
 
 	got, err := idx.TagByID(tagInfo.ID)
-	if err != nil {
-		t.Fatalf("TagByID() = %v", err)
-	}
-	if got.ID != tagInfo.ID {
-		t.Errorf("ID = %q, want %q", got.ID, tagInfo.ID)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, tagInfo.ID, got.ID)
 }
 
 func TestTagByID_NotFound(t *testing.T) {
@@ -401,9 +345,7 @@ func TestTagByID_NotFound(t *testing.T) {
 
 	idx := newTestIndex(t)
 	_, err := idx.TagByID("nonexistent")
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestTagsByCollection_Success(t *testing.T) {
@@ -413,12 +355,8 @@ func TestTagsByCollection_Success(t *testing.T) {
 	_, collectionInfo, _, _ := seedTestData(t, idx, t.Name())
 
 	tags, err := idx.TagsByCollection(collectionInfo.ID)
-	if err != nil {
-		t.Fatalf("TagsByCollection() = %v", err)
-	}
-	if len(tags) != 1 {
-		t.Fatalf("Tags = %d, want 1", len(tags))
-	}
+	require.NoError(t, err)
+	require.Len(t, tags, 1)
 }
 
 func TestTagsByCollection_NotFound(t *testing.T) {
@@ -426,9 +364,7 @@ func TestTagsByCollection_NotFound(t *testing.T) {
 
 	idx := newTestIndex(t)
 	_, err := idx.TagsByCollection("nonexistent")
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestTagsBySpec_Success(t *testing.T) {
@@ -438,12 +374,8 @@ func TestTagsBySpec_Success(t *testing.T) {
 	specInfo, _, _, _ := seedTestData(t, idx, t.Name())
 
 	tags, err := idx.TagsBySpec(specInfo.ID)
-	if err != nil {
-		t.Fatalf("TagsBySpec() = %v", err)
-	}
-	if len(tags) != 1 {
-		t.Fatalf("Tags = %d, want 1", len(tags))
-	}
+	require.NoError(t, err)
+	require.Len(t, tags, 1)
 }
 
 func TestTagsBySpec_NotFound(t *testing.T) {
@@ -451,9 +383,7 @@ func TestTagsBySpec_NotFound(t *testing.T) {
 
 	idx := newTestIndex(t)
 	_, err := idx.TagsBySpec("nonexistent")
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestEndpointsByTag_Success(t *testing.T) {
@@ -463,12 +393,8 @@ func TestEndpointsByTag_Success(t *testing.T) {
 	_, _, tagInfo, _ := seedTestData(t, idx, t.Name())
 
 	eps, err := idx.EndpointsByTag(tagInfo.ID)
-	if err != nil {
-		t.Fatalf("EndpointsByTag() = %v", err)
-	}
-	if len(eps) != 1 {
-		t.Fatalf("Endpoints = %d, want 1", len(eps))
-	}
+	require.NoError(t, err)
+	require.Len(t, eps, 1)
 }
 
 func TestEndpointsByTag_NotFound(t *testing.T) {
@@ -476,9 +402,7 @@ func TestEndpointsByTag_NotFound(t *testing.T) {
 
 	idx := newTestIndex(t)
 	_, err := idx.EndpointsByTag("nonexistent")
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestEndpointsBySpec_Success(t *testing.T) {
@@ -488,12 +412,8 @@ func TestEndpointsBySpec_Success(t *testing.T) {
 	specInfo, _, _, _ := seedTestData(t, idx, t.Name())
 
 	eps, err := idx.EndpointsBySpec(specInfo.ID)
-	if err != nil {
-		t.Fatalf("EndpointsBySpec() = %v", err)
-	}
-	if len(eps) != 1 {
-		t.Fatalf("Endpoints = %d, want 1", len(eps))
-	}
+	require.NoError(t, err)
+	require.Len(t, eps, 1)
 }
 
 func TestEndpointsBySpec_NotFound(t *testing.T) {
@@ -501,9 +421,7 @@ func TestEndpointsBySpec_NotFound(t *testing.T) {
 
 	idx := newTestIndex(t)
 	_, err := idx.EndpointsBySpec("nonexistent")
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestEndpointByCollection_Success(t *testing.T) {
@@ -513,12 +431,8 @@ func TestEndpointByCollection_Success(t *testing.T) {
 	_, collectionInfo, _, _ := seedTestData(t, idx, t.Name())
 
 	eps, err := idx.EndpointByCollection(collectionInfo.ID)
-	if err != nil {
-		t.Fatalf("EndpointByCollection() = %v", err)
-	}
-	if len(eps) != 1 {
-		t.Fatalf("Endpoints = %d, want 1", len(eps))
-	}
+	require.NoError(t, err)
+	require.Len(t, eps, 1)
 }
 
 func TestEndpointByCollection_NotFound(t *testing.T) {
@@ -526,9 +440,7 @@ func TestEndpointByCollection_NotFound(t *testing.T) {
 
 	idx := newTestIndex(t)
 	_, err := idx.EndpointByCollection("nonexistent")
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestEndpointByID_Success(t *testing.T) {
@@ -538,12 +450,8 @@ func TestEndpointByID_Success(t *testing.T) {
 	_, _, _, endpointInfo := seedTestData(t, idx, t.Name())
 
 	got, err := idx.EndpointByID(endpointInfo.ID)
-	if err != nil {
-		t.Fatalf("EndpointByID() = %v", err)
-	}
-	if got.ID != endpointInfo.ID {
-		t.Errorf("ID = %q, want %q", got.ID, endpointInfo.ID)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, endpointInfo.ID, got.ID)
 }
 
 func TestEndpointByID_NotFound(t *testing.T) {
@@ -551,9 +459,7 @@ func TestEndpointByID_NotFound(t *testing.T) {
 
 	idx := newTestIndex(t)
 	_, err := idx.EndpointByID("nonexistent")
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestSearch_EmptyQuery(t *testing.T) {
@@ -561,9 +467,7 @@ func TestSearch_EmptyQuery(t *testing.T) {
 
 	idx := newTestIndex(t)
 	_, err := idx.Search(context.Background(), "", 10)
-	if err == nil {
-		t.Fatal("expected error for empty query")
-	}
+	require.Error(t, err, "expected error for empty query")
 }
 
 func TestSearch_ByMethod(t *testing.T) {
@@ -573,12 +477,8 @@ func TestSearch_ByMethod(t *testing.T) {
 	seedTestData(t, idx, t.Name())
 
 	results, err := idx.Search(context.Background(), "method:GET", 10)
-	if err != nil {
-		t.Fatalf("Search() = %v", err)
-	}
-	if len(results) == 0 {
-		t.Fatal("expected at least 1 result")
-	}
+	require.NoError(t, err)
+	require.NotEmpty(t, results, "expected at least 1 result")
 }
 
 func TestSearch_ByTag(t *testing.T) {
@@ -588,12 +488,8 @@ func TestSearch_ByTag(t *testing.T) {
 	seedTestData(t, idx, t.Name())
 
 	results, err := idx.Search(context.Background(), "test", 10)
-	if err != nil {
-		t.Fatalf("Search() = %v", err)
-	}
-	if len(results) == 0 {
-		t.Fatal("expected at least 1 result")
-	}
+	require.NoError(t, err)
+	require.NotEmpty(t, results, "expected at least 1 result")
 }
 
 func TestSearch_ByPath(t *testing.T) {
@@ -603,12 +499,8 @@ func TestSearch_ByPath(t *testing.T) {
 	seedTestData(t, idx, t.Name())
 
 	results, err := idx.Search(context.Background(), "test", 10)
-	if err != nil {
-		t.Fatalf("Search() = %v", err)
-	}
-	if len(results) == 0 {
-		t.Fatal("expected at least 1 result")
-	}
+	require.NoError(t, err)
+	require.NotEmpty(t, results, "expected at least 1 result")
 }
 
 func TestSearch_BySummary(t *testing.T) {
@@ -618,12 +510,8 @@ func TestSearch_BySummary(t *testing.T) {
 	seedTestData(t, idx, t.Name())
 
 	results, err := idx.Search(context.Background(), "endpoint", 10)
-	if err != nil {
-		t.Fatalf("Search() = %v", err)
-	}
-	if len(results) == 0 {
-		t.Fatal("expected at least 1 result")
-	}
+	require.NoError(t, err)
+	require.NotEmpty(t, results, "expected at least 1 result")
 }
 
 func TestSearch_NoResults(t *testing.T) {
@@ -633,12 +521,8 @@ func TestSearch_NoResults(t *testing.T) {
 	seedTestData(t, idx, t.Name())
 
 	results, err := idx.Search(context.Background(), "zzzzzznonexistent", 10)
-	if err != nil {
-		t.Fatalf("Search() = %v", err)
-	}
-	if len(results) != 0 {
-		t.Errorf("Results = %d, want 0", len(results))
-	}
+	require.NoError(t, err)
+	assert.Len(t, results, 0)
 }
 
 func TestSearch_Limit(t *testing.T) {
@@ -648,12 +532,8 @@ func TestSearch_Limit(t *testing.T) {
 	seedTestData(t, idx, t.Name())
 
 	results, err := idx.Search(context.Background(), "test", 1)
-	if err != nil {
-		t.Fatalf("Search() = %v", err)
-	}
-	if len(results) > 1 {
-		t.Errorf("Results = %d, want <= 1", len(results))
-	}
+	require.NoError(t, err)
+	assert.LessOrEqual(t, len(results), 1)
 }
 
 func TestSearch_MatchAll(t *testing.T) {
@@ -663,26 +543,18 @@ func TestSearch_MatchAll(t *testing.T) {
 	seedTestData(t, idx, t.Name())
 
 	results, err := idx.Search(context.Background(), "*", 10)
-	if err != nil {
-		t.Fatalf("Search() = %v", err)
-	}
-	if len(results) == 0 {
-		t.Fatal("expected at least 1 result for match all")
-	}
+	require.NoError(t, err)
+	require.NotEmpty(t, results, "expected at least 1 result for match all")
 }
 
 func TestSize(t *testing.T) {
 	t.Parallel()
 
 	idx := newTestIndex(t)
-	if idx.Size() != 0 {
-		t.Errorf("Size() = %d, want 0", idx.Size())
-	}
+	assert.Equal(t, 0, idx.Size())
 
 	seedTestData(t, idx, t.Name())
-	if idx.Size() != 1 {
-		t.Errorf("Size() = %d, want 1", idx.Size())
-	}
+	assert.Equal(t, 1, idx.Size())
 }
 
 func TestIterateByEndpoints(t *testing.T) {
@@ -695,9 +567,7 @@ func TestIterateByEndpoints(t *testing.T) {
 	for range idx.IterateByEndpoints() {
 		count++
 	}
-	if count != 1 {
-		t.Errorf("IterateByEndpoints count = %d, want 1", count)
-	}
+	assert.Equal(t, 1, count)
 }
 
 func TestIterateByEndpoints_Empty(t *testing.T) {
@@ -708,9 +578,7 @@ func TestIterateByEndpoints_Empty(t *testing.T) {
 	for range idx.IterateByEndpoints() {
 		count++
 	}
-	if count != 0 {
-		t.Errorf("IterateByEndpoints count = %d, want 0", count)
-	}
+	assert.Equal(t, 0, count)
 }
 
 func TestIterateByTags(t *testing.T) {
@@ -723,9 +591,7 @@ func TestIterateByTags(t *testing.T) {
 	for range idx.IterateByTags() {
 		count++
 	}
-	if count != 1 {
-		t.Errorf("IterateByTags count = %d, want 1", count)
-	}
+	assert.Equal(t, 1, count)
 }
 
 func TestIterateByTags_Empty(t *testing.T) {
@@ -736,9 +602,7 @@ func TestIterateByTags_Empty(t *testing.T) {
 	for range idx.IterateByTags() {
 		count++
 	}
-	if count != 0 {
-		t.Errorf("IterateByTags count = %d, want 0", count)
-	}
+	assert.Equal(t, 0, count)
 }
 
 func TestIterateByCollections(t *testing.T) {
@@ -751,9 +615,7 @@ func TestIterateByCollections(t *testing.T) {
 	for range idx.IterateByCollections() {
 		count++
 	}
-	if count != 1 {
-		t.Errorf("IterateByCollections count = %d, want 1", count)
-	}
+	assert.Equal(t, 1, count)
 }
 
 func TestIterateByCollections_Empty(t *testing.T) {
@@ -764,18 +626,14 @@ func TestIterateByCollections_Empty(t *testing.T) {
 	for range idx.IterateByCollections() {
 		count++
 	}
-	if count != 0 {
-		t.Errorf("IterateByCollections count = %d, want 0", count)
-	}
+	assert.Equal(t, 0, count)
 }
 
 func TestClose(t *testing.T) {
 	t.Parallel()
 
 	idx := newTestIndex(t)
-	if err := idx.Close(); err != nil {
-		t.Fatalf("Close() = %v", err)
-	}
+	require.NoError(t, idx.Close())
 }
 
 func TestRefreshSearchReader(t *testing.T) {
@@ -785,12 +643,8 @@ func TestRefreshSearchReader(t *testing.T) {
 	idx.RefreshSearchReader()
 
 	results, err := idx.Search(context.Background(), "*", 10)
-	if err != nil {
-		t.Fatalf("Search() after RefreshSearchReader = %v", err)
-	}
-	if len(results) != 0 {
-		t.Errorf("Results = %d, want 0", len(results))
-	}
+	require.NoError(t, err)
+	assert.Len(t, results, 0)
 }
 
 func TestRemoveSpec(t *testing.T) {
@@ -802,9 +656,7 @@ func TestRemoveSpec(t *testing.T) {
 	idx.RemoveSpec(specInfo.ID)
 
 	_, err := idx.SpecByID(specInfo.ID)
-	if err == nil {
-		t.Error("expected error after RemoveSpec")
-	}
+	require.Error(t, err, "expected error after RemoveSpec")
 }
 
 func TestRemoveSpec_NonExistent(t *testing.T) {
@@ -823,9 +675,7 @@ func TestRemoveCollection(t *testing.T) {
 	idx.RemoveCollection(collectionInfo.ID)
 
 	_, err := idx.CollectionByID(collectionInfo.ID)
-	if err == nil {
-		t.Error("expected error after RemoveCollection")
-	}
+	require.Error(t, err, "expected error after RemoveCollection")
 }
 
 func TestRemoveCollection_NonExistent(t *testing.T) {
@@ -844,9 +694,7 @@ func TestRemoveTag(t *testing.T) {
 	idx.RemoveTag(tagInfo.ID)
 
 	_, err := idx.TagByID(tagInfo.ID)
-	if err == nil {
-		t.Error("expected error after RemoveTag")
-	}
+	require.Error(t, err, "expected error after RemoveTag")
 }
 
 func TestRemoveTag_NonExistent(t *testing.T) {
@@ -865,9 +713,7 @@ func TestRemoveAllTags(t *testing.T) {
 	idx.RemoveAllTags()
 
 	_, err := idx.TagByID("any")
-	if err == nil {
-		t.Error("expected error after RemoveAllTags")
-	}
+	require.Error(t, err, "expected error after RemoveAllTags")
 }
 
 func TestRemoveCollectionsBySpec(t *testing.T) {
@@ -879,9 +725,7 @@ func TestRemoveCollectionsBySpec(t *testing.T) {
 	idx.RemoveCollectionsBySpec(specInfo.ID)
 
 	_, err := idx.CollectionsBySpec(specInfo.ID)
-	if err == nil {
-		t.Error("expected error after RemoveCollectionsBySpec")
-	}
+	require.Error(t, err, "expected error after RemoveCollectionsBySpec")
 }
 
 func TestRemoveCollectionsBySpec_NonExistent(t *testing.T) {
@@ -897,7 +741,7 @@ func TestAddCollection(t *testing.T) {
 	idx := newTestIndex(t)
 	specInfo, _, _, _ := seedTestData(t, idx, t.Name())
 
-	newColl := &types.Collection{
+	newColl := &model.Collection{
 		ID:     "new-collection-id",
 		SpecID: specInfo.ID,
 		Title:  "New Collection",
@@ -905,12 +749,8 @@ func TestAddCollection(t *testing.T) {
 	idx.AddCollection(newColl)
 
 	got, err := idx.CollectionByID(newColl.ID)
-	if err != nil {
-		t.Fatalf("CollectionByID() = %v", err)
-	}
-	if got.Title != "New Collection" {
-		t.Errorf("Title = %q, want %q", got.Title, "New Collection")
-	}
+	require.NoError(t, err)
+	assert.Equal(t, "New Collection", got.Title)
 }
 
 func TestAddCollection_Duplicate(t *testing.T) {
@@ -919,7 +759,7 @@ func TestAddCollection_Duplicate(t *testing.T) {
 	idx := newTestIndex(t)
 	_, collectionInfo, _, _ := seedTestData(t, idx, t.Name())
 
-	dup := &types.Collection{
+	dup := &model.Collection{
 		ID:     collectionInfo.ID,
 		SpecID: collectionInfo.SpecID,
 		Title:  "Duplicate",
@@ -927,10 +767,6 @@ func TestAddCollection_Duplicate(t *testing.T) {
 	idx.AddCollection(dup)
 
 	got, err := idx.CollectionByID(collectionInfo.ID)
-	if err != nil {
-		t.Fatalf("CollectionByID() = %v", err)
-	}
-	if got.Title != "Duplicate" {
-		t.Errorf("Title = %q, want %q", got.Title, "Duplicate")
-	}
+	require.NoError(t, err)
+	assert.Equal(t, "Duplicate", got.Title)
 }

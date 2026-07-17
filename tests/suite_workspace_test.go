@@ -5,62 +5,57 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/suite"
 )
 
-func TestScript_Workspace_DirectoryStructure(t *testing.T) {
-	ws := newTestWorkspace(t)
-	initWorkspace(t, ws)
+type WorkspaceSuite struct {
+	BaseSuite
+}
+
+func (s *WorkspaceSuite) TestDirectoryStructure() {
+	s.InitWorkspace()
 
 	expectedDirs := []string{"cache", "specs", "responses", "auth_scripts"}
-	root := wsDir(ws)
+	root := s.Workspace
 	for _, d := range expectedDirs {
 		info, err := os.Stat(filepath.Join(root, d))
-		if err != nil {
-			t.Errorf("missing directory %s: %v", d, err)
-			continue
-		}
-		if !info.IsDir() {
-			t.Errorf("%s is not a directory", d)
+		if s.NoError(err, "missing directory %s", d) {
+			s.True(info.IsDir(), "%s is not a directory", d)
 		}
 	}
 
 	configPath := filepath.Join(root, "swag2mcp.yaml")
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		t.Errorf("missing swag2mcp.yaml")
-	}
+	_, err := os.Stat(configPath)
+	s.Require().NoError(err, "missing swag2mcp.yaml")
 }
 
-func TestScript_Workspace_CleanRemovesCacheAndResponses(t *testing.T) {
-	ws := newTestWorkspace(t)
-	initWorkspace(t, ws)
+func (s *WorkspaceSuite) TestCleanRemovesCacheAndResponses() {
+	s.InitWorkspace()
 
-	root := wsDir(ws)
+	root := s.Workspace
 	cacheFile := filepath.Join(root, "cache", "test.cache")
-	_ = os.MkdirAll(filepath.Dir(cacheFile), 0755)
-	_ = os.WriteFile(cacheFile, []byte("data"), 0644)
+	s.Require().NoError(os.MkdirAll(filepath.Dir(cacheFile), 0755))
+	s.Require().NoError(os.WriteFile(cacheFile, []byte("data"), 0644))
 	respFile := filepath.Join(root, "responses", "test.json")
-	_ = os.MkdirAll(filepath.Dir(respFile), 0755)
-	_ = os.WriteFile(respFile, []byte("{}"), 0644)
+	s.Require().NoError(os.MkdirAll(filepath.Dir(respFile), 0755))
+	s.Require().NoError(os.WriteFile(respFile, []byte("{}"), 0644))
 	specFile := filepath.Join(root, "specs", "test.yaml")
-	_ = os.MkdirAll(filepath.Dir(specFile), 0755)
-	_ = os.WriteFile(specFile, []byte("spec: test"), 0644)
+	s.Require().NoError(os.MkdirAll(filepath.Dir(specFile), 0755))
+	s.Require().NoError(os.WriteFile(specFile, []byte("spec: test"), 0644))
 
-	runCommandInWS(t, ws, "clean", ".")
+	s.RunCommandInWS("clean", ".")
 
-	if _, err := os.Stat(cacheFile); !os.IsNotExist(err) {
-		t.Errorf("cache file was not removed")
-	}
-	if _, err := os.Stat(respFile); !os.IsNotExist(err) {
-		t.Errorf("response file was not removed")
-	}
-	if _, err := os.Stat(specFile); os.IsNotExist(err) {
-		t.Errorf("spec file was removed but should be preserved")
-	}
+	_, err := os.Stat(cacheFile)
+	s.True(os.IsNotExist(err), "cache file was not removed")
+	_, err = os.Stat(respFile)
+	s.True(os.IsNotExist(err), "response file was not removed")
+	_, err = os.Stat(specFile)
+	s.Require().NoError(err, "spec file was removed but should be preserved")
 }
 
-func TestScript_Workspace_UpdateReCachesSpecs(t *testing.T) {
-	ws := newTestWorkspace(t)
-	initWorkspace(t, ws)
+func (s *WorkspaceSuite) TestUpdateReCachesSpecs() {
+	s.InitWorkspace()
 
 	configContent := `specs:
   - domain: test-api
@@ -70,17 +65,14 @@ func TestScript_Workspace_UpdateReCachesSpecs(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	writeConfig(t, ws, configContent)
+	s.WriteConfig(configContent)
 
-	stdout, stderr, code := runCommandInWS(t, ws, "update", ".")
-	if code != 0 {
-		t.Fatalf("update failed (exit %d):\nstdout: %s\nstderr: %s", code, stdout, stderr)
-	}
+	stdout, stderr, code := s.RunCommandInWS("update", ".")
+	s.Equal(0, code, "update failed:\nstdout: %s\nstderr: %s", stdout, stderr)
 }
 
-func TestScript_Workspace_UpdateWithInvalidConfig(t *testing.T) {
-	ws := newTestWorkspace(t)
-	initWorkspace(t, ws)
+func (s *WorkspaceSuite) TestUpdateWithInvalidConfig() {
+	s.InitWorkspace()
 
 	configContent := `specs:
   - domain: "INVALID DOMAIN"
@@ -90,25 +82,22 @@ func TestScript_Workspace_UpdateWithInvalidConfig(t *testing.T) {
       - title: Pets
         location: ./nonexistent.yaml
 `
-	writeConfig(t, ws, configContent)
+	s.WriteConfig(configContent)
 
-	_, _, code := runCommandInWS(t, ws, "update", ".")
-	if code == 0 {
-		t.Errorf("expected update to fail with invalid config")
-	}
+	_, _, code := s.RunCommandInWS("update", ".")
+	s.NotEqual(0, code, "expected update to fail with invalid config")
 }
 
-func TestScript_Workspace_OldResponsesCleaned(t *testing.T) {
-	ws := newTestWorkspace(t)
-	initWorkspace(t, ws)
+func (s *WorkspaceSuite) TestOldResponsesCleaned() {
+	s.InitWorkspace()
 
-	root := wsDir(ws)
+	root := s.Workspace
 	oldResp := filepath.Join(root, "responses", "old.json")
-	_ = os.MkdirAll(filepath.Dir(oldResp), 0755)
-	_ = os.WriteFile(oldResp, []byte("old"), 0644)
+	s.Require().NoError(os.MkdirAll(filepath.Dir(oldResp), 0755))
+	s.Require().NoError(os.WriteFile(oldResp, []byte("old"), 0644))
 
 	past := time.Now().Add(-49 * time.Hour)
-	_ = os.Chtimes(oldResp, past, past)
+	s.Require().NoError(os.Chtimes(oldResp, past, past))
 
 	configContent := `specs:
   - domain: test-api
@@ -118,23 +107,21 @@ func TestScript_Workspace_OldResponsesCleaned(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	writeConfig(t, ws, configContent)
+	s.WriteConfig(configContent)
 
-	runCommandInWS(t, ws, "mcp", ".", "--auth-token", "test")
+	s.RunCommandInWS("mcp", ".", "--auth-token", "test")
 
-	if _, err := os.Stat(oldResp); !os.IsNotExist(err) {
-		t.Errorf("old response file (>48h) was not cleaned on mcp start")
-	}
+	_, err := os.Stat(oldResp)
+	s.True(os.IsNotExist(err), "old response file (>48h) was not cleaned on mcp start")
 }
 
-func TestScript_Workspace_RecentResponsesPreserved(t *testing.T) {
-	ws := newTestWorkspace(t)
-	initWorkspace(t, ws)
+func (s *WorkspaceSuite) TestRecentResponsesPreserved() {
+	s.InitWorkspace()
 
-	root := wsDir(ws)
+	root := s.Workspace
 	recentResp := filepath.Join(root, "responses", "recent.json")
-	_ = os.MkdirAll(filepath.Dir(recentResp), 0755)
-	_ = os.WriteFile(recentResp, []byte("recent"), 0644)
+	s.Require().NoError(os.MkdirAll(filepath.Dir(recentResp), 0755))
+	s.Require().NoError(os.WriteFile(recentResp, []byte("recent"), 0644))
 
 	configContent := `specs:
   - domain: test-api
@@ -144,11 +131,14 @@ func TestScript_Workspace_RecentResponsesPreserved(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	writeConfig(t, ws, configContent)
+	s.WriteConfig(configContent)
 
-	runCommandInWS(t, ws, "mcp", ".", "--auth-token", "test")
+	s.RunCommandInWS("mcp", ".", "--auth-token", "test")
 
-	if _, err := os.Stat(recentResp); os.IsNotExist(err) {
-		t.Errorf("recent response file (<48h) was incorrectly cleaned")
-	}
+	_, err := os.Stat(recentResp)
+	s.Require().NoError(err, "recent response file (<48h) was incorrectly cleaned")
+}
+
+func TestWorkspaceSuite(t *testing.T) {
+	suite.Run(t, new(WorkspaceSuite))
 }

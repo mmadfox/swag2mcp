@@ -4,11 +4,15 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 )
 
-func TestScript_Validate_ValidConfig(t *testing.T) {
-	ws := newTestWorkspace(t)
+type ConfigSuite struct {
+	BaseSuite
+}
 
+func (s *ConfigSuite) TestValidateValidConfig() {
 	configContent := `specs:
   - domain: test-api
     llm_title: Test API
@@ -17,16 +21,13 @@ func TestScript_Validate_ValidConfig(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	writeConfig(t, ws, configContent)
-
-	stdout, _, code := runCommandInWS(t, ws, "validate", ".")
-	assertEqual(t, "exit code", code, 0)
-	assertContains(t, "stdout", stdout, "valid")
+	s.WriteConfig(configContent)
+	stdout, _, code := s.RunCommandInWS("validate", ".")
+	s.Equal(0, code)
+	s.Contains(stdout, "valid")
 }
 
-func TestScript_Validate_DuplicateDomain(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ConfigSuite) TestValidateDuplicateDomain() {
 	configContent := `specs:
   - domain: petstore
     llm_title: Petstore API
@@ -41,16 +42,13 @@ func TestScript_Validate_DuplicateDomain(t *testing.T) {
       - title: Store
         location: ./testdata/petstore.yaml
 `
-	writeConfig(t, ws, configContent)
-
-	_, stderr, code := runCommandInWS(t, ws, "validate", ".")
-	assertNotEqual(t, "exit code", code, 0)
-	assertContains(t, "stderr", stderr, "duplicate")
+	s.WriteConfig(configContent)
+	_, stderr, code := s.RunCommandInWS("validate", ".")
+	s.NotEqual(0, code)
+	s.Contains(stderr, "duplicate")
 }
 
-func TestScript_Validate_InvalidDomainFormat(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ConfigSuite) TestValidateInvalidDomainFormat() {
 	configContent := `specs:
   - domain: "UPPERCASE INVALID"
     llm_title: Bad API
@@ -59,16 +57,13 @@ func TestScript_Validate_InvalidDomainFormat(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	writeConfig(t, ws, configContent)
-
-	_, stderr, code := runCommandInWS(t, ws, "validate", ".")
-	assertNotEqual(t, "exit code", code, 0)
-	assertContains(t, "stderr", stderr, "Domain")
+	s.WriteConfig(configContent)
+	_, stderr, code := s.RunCommandInWS("validate", ".")
+	s.NotEqual(0, code)
+	s.Contains(stderr, "Domain")
 }
 
-func TestScript_Validate_UnreachableLocation(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ConfigSuite) TestValidateUnreachableLocation() {
 	configContent := `specs:
   - domain: test-api
     llm_title: Test API
@@ -77,15 +72,12 @@ func TestScript_Validate_UnreachableLocation(t *testing.T) {
       - title: Missing
         location: ./nonexistent.yaml
 `
-	writeConfig(t, ws, configContent)
-
-	_, _, code := runCommandInWS(t, ws, "validate", ".")
-	assertNotEqual(t, "exit code", code, 0)
+	s.WriteConfig(configContent)
+	_, _, code := s.RunCommandInWS("validate", ".")
+	s.NotEqual(0, code)
 }
 
-func TestScript_Validate_TagFilter(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ConfigSuite) TestValidateTagFilter() {
 	configContent := `specs:
   - domain: public-api
     llm_title: Public API
@@ -102,15 +94,12 @@ func TestScript_Validate_TagFilter(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	writeConfig(t, ws, configContent)
-
-	_, _, code := runCommandInWS(t, ws, "validate", "-t", "public", ".")
-	assertEqual(t, "exit code", code, 0)
+	s.WriteConfig(configContent)
+	_, _, code := s.RunCommandInWS("validate", "-t", "public", ".")
+	s.Equal(0, code)
 }
 
-func TestScript_AddSpec_FromYAML(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ConfigSuite) TestAddSpecFromYAML() {
 	yamlData := `domain: added-spec
 llm_title: Added Spec
 base_url: https://api.example.com
@@ -118,17 +107,15 @@ collections:
   - title: Pets
     location: ./testdata/petstore.yaml
 `
-	stdout, stderr, code := runCommandInWS(t, ws, "add", "spec", "--yaml", yamlData, ".")
-	assertEqual(t, "exit code", code, 0)
-	assertContains(t, "stdout", stdout+stderr, "added")
+	stdout, stderr, code := s.RunCommandInWS("add", "spec", "--yaml", yamlData, ".")
+	s.Equal(0, code)
+	s.Contains(stdout+stderr, "added")
 
-	stdout2, _, _ := runCommandInWS(t, ws, "ls", ".")
-	assertContains(t, "stdout", stdout2, "added-spec")
+	stdout2, _, _ := s.RunCommandInWS("ls", ".")
+	s.Contains(stdout2, "added-spec")
 }
 
-func TestScript_AddSpec_FromStdin(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ConfigSuite) TestAddSpecFromStdin() {
 	yamlData := `domain: stdin-spec
 llm_title: Stdin Spec
 base_url: https://api.example.com
@@ -136,24 +123,20 @@ collections:
   - title: Pets
     location: ./testdata/petstore.yaml
 `
-	stdout, stderr, code := runCommandWithStdinInWS(t, ws, yamlData, "add", "spec", "--yaml", "-", ".")
-	assertEqual(t, "exit code", code, 0)
-	assertContains(t, "stdout", stdout+stderr, "added")
+	stdout, stderr, code := s.RunCommandWithStdinInWS(yamlData, "add", "spec", "--yaml", "-", ".")
+	s.Equal(0, code)
+	s.Contains(stdout+stderr, "added")
 
-	stdout2, _, _ := runCommandInWS(t, ws, "ls", ".")
-	assertContains(t, "stdout", stdout2, "stdin-spec")
+	stdout2, _, _ := s.RunCommandInWS("ls", ".")
+	s.Contains(stdout2, "stdin-spec")
 }
 
-func TestScript_AddSpec_InvalidYAML(t *testing.T) {
-	ws := newTestWorkspace(t)
-
-	_, _, code := runCommandInWS(t, ws, "add", "spec", "--yaml", "invalid: [yaml: broken", ".")
-	assertNotEqual(t, "exit code", code, 0)
+func (s *ConfigSuite) TestAddSpecInvalidYAML() {
+	_, _, code := s.RunCommandInWS("add", "spec", "--yaml", "invalid: [yaml: broken", ".")
+	s.NotEqual(0, code)
 }
 
-func TestScript_AddCollection_FromYAML(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ConfigSuite) TestAddCollectionFromYAML() {
 	specYAML := `domain: test-api
 llm_title: Test API
 base_url: https://api.example.com
@@ -161,23 +144,21 @@ collections:
   - title: Existing
     location: ./testdata/petstore.yaml
 `
-	runCommandInWS(t, ws, "add", "spec", "--yaml", specYAML, ".")
+	s.RunCommandInWS("add", "spec", "--yaml", specYAML, ".")
 
 	collectionYAML := `spec_domain: test-api
 llm_title: Added Collection
 location: ./testdata/petstore.yaml
 `
-	stdout, stderr, code := runCommandInWS(t, ws, "add", "collection", "--yaml", collectionYAML, ".")
-	assertEqual(t, "exit code", code, 0)
-	assertContains(t, "stdout", stdout+stderr, "added")
+	stdout, stderr, code := s.RunCommandInWS("add", "collection", "--yaml", collectionYAML, ".")
+	s.Equal(0, code)
+	s.Contains(stdout+stderr, "added")
 
-	stdout2, _, _ := runCommandInWS(t, ws, "ls", ".")
-	assertContains(t, "stdout", stdout2, "Added Collection")
+	stdout2, _, _ := s.RunCommandInWS("ls", ".")
+	s.Contains(stdout2, "Added Collection")
 }
 
-func TestScript_DeleteSpec(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ConfigSuite) TestDeleteSpec() {
 	specYAML := `domain: to-delete
 llm_title: To Delete
 base_url: https://api.example.com
@@ -185,7 +166,7 @@ collections:
   - title: Pets
     location: ./testdata/petstore.yaml
 `
-	runCommandInWS(t, ws, "add", "spec", "--yaml", specYAML, ".")
+	s.RunCommandInWS("add", "spec", "--yaml", specYAML, ".")
 
 	specYAML2 := `domain: keep-me
 llm_title: Keep Me
@@ -194,23 +175,21 @@ collections:
   - title: Pets
     location: ./testdata/petstore.yaml
 `
-	runCommandInWS(t, ws, "add", "spec", "--yaml", specYAML2, ".")
+	s.RunCommandInWS("add", "spec", "--yaml", specYAML2, ".")
 
-	stdout, _, _ := runCommandInWS(t, ws, "ls", ".")
-	assertContains(t, "stdout", stdout, "to-delete")
-	assertContains(t, "stdout", stdout, "keep-me")
+	stdout, _, _ := s.RunCommandInWS("ls", ".")
+	s.Contains(stdout, "to-delete")
+	s.Contains(stdout, "keep-me")
 
-	_, _, code := runCommandWithStdinInWS(t, ws, "1\ny\n", "delete", "spec", ".")
-	assertEqual(t, "exit code", code, 0)
+	_, _, code := s.RunCommandWithStdinInWS("1\ny\n", "delete", "spec", ".")
+	s.Equal(0, code)
 
-	stdout2, _, _ := runCommandInWS(t, ws, "ls", ".")
-	assertNotContains(t, "stdout", stdout2, "to-delete")
-	assertContains(t, "stdout", stdout2, "keep-me")
+	stdout2, _, _ := s.RunCommandInWS("ls", ".")
+	s.NotContains(stdout2, "to-delete")
+	s.Contains(stdout2, "keep-me")
 }
 
-func TestScript_DeleteSpec_Cancel(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ConfigSuite) TestDeleteSpecCancel() {
 	specYAML := `domain: keep-me
 llm_title: Keep Me
 base_url: https://api.example.com
@@ -218,17 +197,14 @@ collections:
   - title: Pets
     location: ./testdata/petstore.yaml
 `
-	runCommandInWS(t, ws, "add", "spec", "--yaml", specYAML, ".")
+	s.RunCommandInWS("add", "spec", "--yaml", specYAML, ".")
+	s.RunCommandWithStdinInWS("n\n", "delete", "spec", ".")
 
-	runCommandWithStdinInWS(t, ws, "n\n", "delete", "spec", ".")
-
-	stdout, _, _ := runCommandInWS(t, ws, "ls", ".")
-	assertContains(t, "stdout", stdout, "keep-me")
+	stdout, _, _ := s.RunCommandInWS("ls", ".")
+	s.Contains(stdout, "keep-me")
 }
 
-func TestScript_ListSpecs(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ConfigSuite) TestListSpecs() {
 	specYAML := `domain: list-test
 llm_title: List Test
 base_url: https://api.example.com
@@ -236,25 +212,21 @@ collections:
   - title: Pets
     location: ./testdata/petstore.yaml
 `
-	runCommandInWS(t, ws, "add", "spec", "--yaml", specYAML, ".")
+	s.RunCommandInWS("add", "spec", "--yaml", specYAML, ".")
 
-	stdout, _, code := runCommandInWS(t, ws, "ls", ".")
-	assertEqual(t, "exit code", code, 0)
-	assertContains(t, "stdout", stdout, "list-test")
-	assertContains(t, "stdout", stdout, "List Test")
-	assertContains(t, "stdout", stdout, "petstore.yaml")
+	stdout, _, code := s.RunCommandInWS("ls", ".")
+	s.Equal(0, code)
+	s.Contains(stdout, "list-test")
+	s.Contains(stdout, "List Test")
+	s.Contains(stdout, "petstore.yaml")
 }
 
-func TestScript_ListSpecs_Empty(t *testing.T) {
-	ws := newTestWorkspace(t)
-
-	_, _, code := runCommandInWS(t, ws, "ls", ".")
-	assertEqual(t, "exit code", code, 0)
+func (s *ConfigSuite) TestListSpecsEmpty() {
+	_, _, code := s.RunCommandInWS("ls", ".")
+	s.Equal(0, code)
 }
 
-func TestScript_ListSpecs_TagFilter(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ConfigSuite) TestListSpecsTagFilter() {
 	configContent := `specs:
   - domain: public-api
     llm_title: Public API
@@ -271,16 +243,13 @@ func TestScript_ListSpecs_TagFilter(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	writeConfig(t, ws, configContent)
-
-	stdout, _, _ := runCommandInWS(t, ws, "ls", "-t", "public", ".")
-	assertContains(t, "stdout", stdout, "public-api")
-	assertNotContains(t, "stdout", stdout, "internal-api")
+	s.WriteConfig(configContent)
+	stdout, _, _ := s.RunCommandInWS("ls", "-t", "public", ".")
+	s.Contains(stdout, "public-api")
+	s.NotContains(stdout, "internal-api")
 }
 
-func TestScript_Update_ReCachesSpecs(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ConfigSuite) TestUpdateReCachesSpecs() {
 	configContent := `specs:
   - domain: test-api
     llm_title: Test API
@@ -289,16 +258,13 @@ func TestScript_Update_ReCachesSpecs(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	writeConfig(t, ws, configContent)
-
-	_, stderr, code := runCommandInWS(t, ws, "update", ".")
-	assertEqual(t, "exit code", code, 0)
-	assertContains(t, "stderr", stderr, "updated")
+	s.WriteConfig(configContent)
+	_, stderr, code := s.RunCommandInWS("update", ".")
+	s.Equal(0, code)
+	s.Contains(stderr, "updated")
 }
 
-func TestScript_Update_InvalidConfig(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ConfigSuite) TestUpdateInvalidConfig() {
 	configContent := `specs:
   - domain: "INVALID DOMAIN"
     llm_title: Bad
@@ -307,57 +273,48 @@ func TestScript_Update_InvalidConfig(t *testing.T) {
       - title: Pets
         location: ./nonexistent.yaml
 `
-	writeConfig(t, ws, configContent)
-
-	_, _, code := runCommandInWS(t, ws, "update", ".")
-	assertNotEqual(t, "exit code", code, 0)
+	s.WriteConfig(configContent)
+	_, _, code := s.RunCommandInWS("update", ".")
+	s.NotEqual(0, code)
 }
 
-func TestScript_Clean_RemovesCache(t *testing.T) {
-	ws := newTestWorkspace(t)
-
-	root := wsDir(ws)
+func (s *ConfigSuite) TestCleanRemovesCache() {
+	root := s.Workspace
 	cacheDir := filepath.Join(root, "cache")
-	_ = os.MkdirAll(cacheDir, 0755)
+	s.Require().NoError(os.MkdirAll(cacheDir, 0755))
 	dummyFile := filepath.Join(cacheDir, "test.cache")
-	_ = os.WriteFile(dummyFile, []byte("data"), 0644)
+	s.Require().NoError(os.WriteFile(dummyFile, []byte("data"), 0644))
 
 	responsesDir := filepath.Join(root, "responses")
-	_ = os.MkdirAll(responsesDir, 0755)
+	s.Require().NoError(os.MkdirAll(responsesDir, 0755))
 	dummyResp := filepath.Join(responsesDir, "test.json")
-	_ = os.WriteFile(dummyResp, []byte("{}"), 0644)
+	s.Require().NoError(os.WriteFile(dummyResp, []byte("{}"), 0644))
 
-	stdout, _, code := runCommandInWS(t, ws, "clean", ".")
-	assertEqual(t, "exit code", code, 0)
-	assertContains(t, "stdout", stdout, "Removed")
+	stdout, _, code := s.RunCommandInWS("clean", ".")
+	s.Equal(0, code)
+	s.Contains(stdout, "Removed")
 
-	if _, err := os.Stat(dummyFile); !os.IsNotExist(err) {
-		t.Errorf("cache file was not removed")
-	}
-	if _, err := os.Stat(dummyResp); !os.IsNotExist(err) {
-		t.Errorf("response file was not removed")
-	}
+	_, err := os.Stat(dummyFile)
+	s.True(os.IsNotExist(err), "cache file was not removed")
+	_, err = os.Stat(dummyResp)
+	s.True(os.IsNotExist(err), "response file was not removed")
 }
 
-func TestScript_Clean_PreservesSpecs(t *testing.T) {
-	ws := newTestWorkspace(t)
-
-	root := wsDir(ws)
+func (s *ConfigSuite) TestCleanPreservesSpecs() {
+	root := s.Workspace
 	specsDir := filepath.Join(root, "specs")
-	_ = os.MkdirAll(specsDir, 0755)
+	s.Require().NoError(os.MkdirAll(specsDir, 0755))
 	specFile := filepath.Join(specsDir, "test.yaml")
-	_ = os.WriteFile(specFile, []byte("spec: test"), 0644)
+	s.Require().NoError(os.WriteFile(specFile, []byte("spec: test"), 0644))
 
-	runCommandInWS(t, ws, "clean", ".")
+	s.RunCommandInWS("clean", ".")
 
-	if _, err := os.Stat(specFile); os.IsNotExist(err) {
-		t.Errorf("specs directory was cleaned but should be preserved")
-	}
+	_, err := os.Stat(specFile)
+	s.Require().NoError(err, "spec file was removed but should be preserved")
 }
 
-func TestScript_EnvVarResolution(t *testing.T) {
-	ws := newTestWorkspace(t)
-	t.Setenv("TEST_BASE_URL", "https://env-test.example.com")
+func (s *ConfigSuite) TestEnvVarResolution() {
+	s.T().Setenv("TEST_BASE_URL", "https://env-test.example.com")
 
 	configContent := `specs:
   - domain: env-test
@@ -367,15 +324,12 @@ func TestScript_EnvVarResolution(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	writeConfig(t, ws, configContent)
-
-	_, _, code := runCommandInWS(t, ws, "validate", ".")
-	assertEqual(t, "exit code", code, 0)
+	s.WriteConfig(configContent)
+	_, _, code := s.RunCommandInWS("validate", ".")
+	s.Equal(0, code)
 }
 
-func TestScript_ConfigCascade(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ConfigSuite) TestConfigCascade() {
 	configContent := `http_client:
   timeout: 10s
   headers:
@@ -395,8 +349,11 @@ specs:
           headers:
             X-Collection: "collection-only"
 `
-	writeConfig(t, ws, configContent)
+	s.WriteConfig(configContent)
+	_, _, code := s.RunCommandInWS("validate", ".")
+	s.Equal(0, code)
+}
 
-	_, _, code := runCommandInWS(t, ws, "validate", ".")
-	assertEqual(t, "exit code", code, 0)
+func TestConfigSuite(t *testing.T) {
+	suite.Run(t, new(ConfigSuite))
 }

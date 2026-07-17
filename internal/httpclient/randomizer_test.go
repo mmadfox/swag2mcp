@@ -3,88 +3,63 @@ package httpclient
 import (
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRandomUserAgent(t *testing.T) {
 	ua := randomUserAgent()
-	if ua == "" {
-		t.Fatal("randomUserAgent() returned empty")
-	}
-	if !strings.HasPrefix(ua, "Mozilla/5.0") {
-		t.Errorf("randomUserAgent() = %q, want Mozilla/5.0 prefix", ua)
-	}
+	require.NotEmpty(t, ua)
+	assert.True(t, strings.HasPrefix(ua, "Mozilla/5.0"))
 }
 
 func TestRandomReferer(t *testing.T) {
 	ref := randomReferer()
-	if ref == "" {
-		t.Fatal("randomReferer() returned empty")
-	}
-	if !strings.HasPrefix(ref, "https://") {
-		t.Errorf("randomReferer() = %q, want https:// prefix", ref)
-	}
+	require.NotEmpty(t, ref)
+	assert.True(t, strings.HasPrefix(ref, "https://"))
 }
 
 func TestRandomAccept_JSON(t *testing.T) {
 	accept := randomAccept(true)
-	if accept == "" {
-		t.Fatal("randomAccept(true) returned empty")
-	}
-	if !strings.Contains(accept, "application/json") {
-		t.Errorf("randomAccept(true) = %q, want application/json", accept)
-	}
+	require.NotEmpty(t, accept)
+	assert.Contains(t, accept, "application/json")
 }
 
 func TestRandomAccept_HTML(t *testing.T) {
 	accept := randomAccept(false)
-	if accept == "" {
-		t.Fatal("randomAccept(false) returned empty")
-	}
-	if !strings.Contains(accept, "text/html") {
-		t.Errorf("randomAccept(false) = %q, want text/html", accept)
-	}
+	require.NotEmpty(t, accept)
+	assert.Contains(t, accept, "text/html")
 }
 
 func TestRandomAcceptEncoding(t *testing.T) {
 	enc := randomAcceptEncoding()
-	if enc == "" {
-		t.Fatal("randomAcceptEncoding() returned empty")
-	}
+	require.NotEmpty(t, enc)
 }
 
 func TestRandomSecChUa(t *testing.T) {
 	ua := randomSecChUa()
-	if ua == "" {
-		t.Fatal("randomSecChUa() returned empty")
-	}
+	require.NotEmpty(t, ua)
 }
 
 func TestRandomSecChUaPlatform(t *testing.T) {
 	p := randomSecChUaPlatform()
-	if p == "" {
-		t.Fatal("randomSecChUaPlatform() returned empty")
-	}
+	require.NotEmpty(t, p)
 }
 
 func TestRandomSecFetchSite(t *testing.T) {
 	s := randomSecFetchSite()
-	if s == "" {
-		t.Fatal("randomSecFetchSite() returned empty")
-	}
+	require.NotEmpty(t, s)
 }
 
 func TestRandomSecFetchMode(t *testing.T) {
 	m := randomSecFetchMode()
-	if m == "" {
-		t.Fatal("randomSecFetchMode() returned empty")
-	}
+	require.NotEmpty(t, m)
 }
 
 func TestRandomSecFetchDest(t *testing.T) {
 	d := randomSecFetchDest()
-	if d == "" {
-		t.Fatal("randomSecFetchDest() returned empty")
-	}
+	require.NotEmpty(t, d)
 }
 
 func TestDetectSystemLanguage(t *testing.T) {
@@ -94,9 +69,7 @@ func TestDetectSystemLanguage(t *testing.T) {
 	cachedSystemLang = ""
 
 	lang := detectSystemLanguage()
-	if lang != "ru_RU.UTF-8" {
-		t.Errorf("detectSystemLanguage() = %q, want ru_RU.UTF-8", lang)
-	}
+	assert.Equal(t, "ru_RU.UTF-8", lang)
 }
 
 func TestDetectSystemLanguage_Fallback(t *testing.T) {
@@ -106,9 +79,7 @@ func TestDetectSystemLanguage_Fallback(t *testing.T) {
 	cachedSystemLang = ""
 
 	lang := detectSystemLanguage()
-	if lang != "en_US.UTF-8" {
-		t.Errorf("detectSystemLanguage() = %q, want en_US.UTF-8", lang)
-	}
+	assert.Equal(t, "en_US.UTF-8", lang)
 }
 
 func TestRandomAcceptLanguage_Russian(t *testing.T) {
@@ -116,9 +87,7 @@ func TestRandomAcceptLanguage_Russian(t *testing.T) {
 	cachedSystemLang = ""
 
 	al := randomAcceptLanguage()
-	if !strings.Contains(al, "ru-RU") {
-		t.Errorf("randomAcceptLanguage() = %q, want ru-RU", al)
-	}
+	assert.Contains(t, al, "ru-RU")
 }
 
 func TestRandomAcceptLanguage_English(t *testing.T) {
@@ -126,31 +95,17 @@ func TestRandomAcceptLanguage_English(t *testing.T) {
 	cachedSystemLang = ""
 
 	al := randomAcceptLanguage()
-	if !strings.Contains(al, "en-US") {
-		t.Errorf("randomAcceptLanguage() = %q, want en-US", al)
-	}
+	assert.Contains(t, al, "en-US")
 }
 
 func TestRandomSecHeaders(t *testing.T) {
 	h := randomSecHeaders()
-	if len(h) == 0 {
-		t.Fatal("randomSecHeaders() returned empty map")
-	}
-	if _, ok := h["Sec-Ch-Ua"]; !ok {
-		t.Error("missing Sec-Ch-Ua")
-	}
-	if _, ok := h["Sec-Ch-Ua-Platform"]; !ok {
-		t.Error("missing Sec-Ch-Ua-Platform")
-	}
-	if _, ok := h["Sec-Fetch-Site"]; !ok {
-		t.Error("missing Sec-Fetch-Site")
-	}
-	if _, ok := h["Sec-Fetch-Mode"]; !ok {
-		t.Error("missing Sec-Fetch-Mode")
-	}
-	if _, ok := h["Sec-Fetch-Dest"]; !ok {
-		t.Error("missing Sec-Fetch-Dest")
-	}
+	require.NotEmpty(t, h)
+	assert.Contains(t, h, "Sec-Ch-Ua")
+	assert.Contains(t, h, "Sec-Ch-Ua-Platform")
+	assert.Contains(t, h, "Sec-Fetch-Site")
+	assert.Contains(t, h, "Sec-Fetch-Mode")
+	assert.Contains(t, h, "Sec-Fetch-Dest")
 }
 
 func TestDetectSystemLanguage_Cache(t *testing.T) {
@@ -162,7 +117,5 @@ func TestDetectSystemLanguage_Cache(t *testing.T) {
 	t.Setenv("LANG", "fr_FR.UTF-8")
 
 	lang := detectSystemLanguage()
-	if lang != "de_DE.UTF-8" {
-		t.Errorf("detectSystemLanguage() = %q, want de_DE.UTF-8 (cached)", lang)
-	}
+	assert.Equal(t, "de_DE.UTF-8", lang)
 }

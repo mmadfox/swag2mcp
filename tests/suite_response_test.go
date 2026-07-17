@@ -5,11 +5,15 @@ import (
 	"net/http"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 )
 
-func TestScript_ResponseSize_DefaultLimit(t *testing.T) {
-	ws := newTestWorkspace(t)
+type ResponseSuite struct {
+	BaseSuite
+}
 
+func (s *ResponseSuite) TestDefaultLimit() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -20,7 +24,7 @@ func TestScript_ResponseSize_DefaultLimit(t *testing.T) {
 		}
 		_, _ = w.Write([]byte(`[{"data":"` + string(largeBody) + `"}]`))
 	})
-	srv := startHTTPServer(t, mux)
+	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
   - domain: petstore
@@ -30,81 +34,41 @@ func TestScript_ResponseSize_DefaultLimit(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
 
-	epResult := client.callTool(t, "endpoint_by_spec", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
-	})
-	var epResp struct {
-		Endpoints []struct {
-			ID   string `json:"id"`
-			Method string `json:"method"`
-			Path string `json:"path"`
-		} `json:"endpoints"`
-	}
-	if err := json.Unmarshal(epResult, &epResp); err != nil {
-		t.Fatalf("parse endpoints: %v", err)
-	}
-
-	var getEndpointID string
-	for _, ep := range epResp.Endpoints {
-		if ep.Method == "GET" && ep.Path == "/pets" {
-			getEndpointID = ep.ID
-			break
-		}
-	}
-	if getEndpointID == "" {
-		t.Fatal("GET /pets endpoint not found")
-	}
-
-	result := client.callTool(t, "invoke", map[string]interface{}{
-		"endpointId": getEndpointID,
+	result := client.callTool(s.T(), "invoke", map[string]interface{}{
+		"endpointId": endpointID,
 	})
 
 	var invokeResp struct {
-		StatusCode  int             `json:"statusCode"`
-		Body        json.RawMessage `json:"body"`
-		FileRef     *struct {
+		StatusCode int             `json:"statusCode"`
+		Body       json.RawMessage `json:"body"`
+		FileRef    *struct {
 			Path    string `json:"path"`
 			Size    int    `json:"size"`
 			Message string `json:"message"`
 		} `json:"fileReference,omitempty"`
 	}
-	if err := json.Unmarshal(result, &invokeResp); err != nil {
-		t.Fatalf("parse invoke: %v", err)
-	}
+	s.Require().NoError(json.Unmarshal(result, &invokeResp))
 
 	if invokeResp.FileRef != nil {
-		if _, err := os.Stat(invokeResp.FileRef.Path); os.IsNotExist(err) {
-			t.Errorf("file reference points to non-existent file: %s", invokeResp.FileRef.Path)
-		}
+		_, err := os.Stat(invokeResp.FileRef.Path)
+		s.Require().NoError(err, "file reference points to non-existent file: %s", invokeResp.FileRef.Path)
 	}
 }
 
-func TestScript_ResponseSize_Configurable(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ResponseSuite) TestConfigurable() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[{"id":1,"name":"Fluffy"}]`))
 	})
-	srv := startHTTPServer(t, mux)
+	srv := s.StartHTTPServer(mux)
 
 	configContent := `http_client:
   max_response_size: 300
@@ -116,64 +80,24 @@ specs:
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
 
-	epResult := client.callTool(t, "endpoint_by_spec", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
-	})
-	var epResp struct {
-		Endpoints []struct {
-			ID   string `json:"id"`
-			Method string `json:"method"`
-			Path string `json:"path"`
-		} `json:"endpoints"`
-	}
-	if err := json.Unmarshal(epResult, &epResp); err != nil {
-		t.Fatalf("parse endpoints: %v", err)
-	}
-
-	var getEndpointID string
-	for _, ep := range epResp.Endpoints {
-		if ep.Method == "GET" && ep.Path == "/pets" {
-			getEndpointID = ep.ID
-			break
-		}
-	}
-	if getEndpointID == "" {
-		t.Fatal("GET /pets endpoint not found")
-	}
-
-	result := client.callTool(t, "invoke", map[string]interface{}{
-		"endpointId": getEndpointID,
+	result := client.callTool(s.T(), "invoke", map[string]interface{}{
+		"endpointId": endpointID,
 	})
 
 	var invokeResp struct {
-		StatusCode int             `json:"statusCode"`
-		Body       json.RawMessage `json:"body"`
+		StatusCode int `json:"statusCode"`
 	}
-	if err := json.Unmarshal(result, &invokeResp); err != nil {
-		t.Fatalf("parse invoke: %v", err)
-	}
-	assertEqual(t, "statusCode", invokeResp.StatusCode, 200)
+	s.Require().NoError(json.Unmarshal(result, &invokeResp))
+	s.Equal(200, invokeResp.StatusCode)
 }
 
-func TestScript_ResponseSize_FileReference(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ResponseSuite) TestFileReference() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -184,7 +108,7 @@ func TestScript_ResponseSize_FileReference(t *testing.T) {
 		}
 		_, _ = w.Write([]byte(`{"data":"` + string(largeBody) + `"}`))
 	})
-	srv := startHTTPServer(t, mux)
+	srv := s.StartHTTPServer(mux)
 
 	configContent := `http_client:
   max_response_size: 1000
@@ -196,69 +120,32 @@ specs:
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
 
-	epResult := client.callTool(t, "endpoint_by_spec", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
-	})
-	var epResp struct {
-		Endpoints []struct {
-			ID   string `json:"id"`
-			Method string `json:"method"`
-			Path string `json:"path"`
-		} `json:"endpoints"`
-	}
-	if err := json.Unmarshal(epResult, &epResp); err != nil {
-		t.Fatalf("parse endpoints: %v", err)
-	}
-
-	var getEndpointID string
-	for _, ep := range epResp.Endpoints {
-		if ep.Method == "GET" && ep.Path == "/pets" {
-			getEndpointID = ep.ID
-			break
-		}
-	}
-	if getEndpointID == "" {
-		t.Fatal("GET /pets endpoint not found")
-	}
-
-	result := client.callTool(t, "invoke", map[string]interface{}{
-		"endpointId": getEndpointID,
+	result := client.callTool(s.T(), "invoke", map[string]interface{}{
+		"endpointId": endpointID,
 	})
 
 	var invokeResp struct {
 		StatusCode int             `json:"statusCode"`
-		Body        json.RawMessage `json:"body"`
-		FileRef     *struct {
+		Body       json.RawMessage `json:"body"`
+		FileRef    *struct {
 			Path    string `json:"path"`
 			Size    int    `json:"size"`
 			Message string `json:"message"`
 		} `json:"fileRef,omitempty"`
 	}
-	if err := json.Unmarshal(result, &invokeResp); err != nil {
-		t.Fatalf("parse invoke: %v", err)
-	}
+	s.Require().NoError(json.Unmarshal(result, &invokeResp))
+	s.Require().NotNil(invokeResp.FileRef, "expected fileReference for large response")
 
-	if invokeResp.FileRef == nil {
-		t.Fatal("expected fileReference for large response")
-	}
+	_, err := os.Stat(invokeResp.FileRef.Path)
+	s.Require().NoError(err, "file reference points to non-existent file: %s", invokeResp.FileRef.Path)
+}
 
-	if _, err := os.Stat(invokeResp.FileRef.Path); os.IsNotExist(err) {
-		t.Errorf("file reference points to non-existent file: %s", invokeResp.FileRef.Path)
-	}
+func TestResponseSuite(t *testing.T) {
+	suite.Run(t, new(ResponseSuite))
 }

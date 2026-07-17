@@ -10,6 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/mmadfox/swag2mcp/internal/httpclient"
 )
 
@@ -17,10 +20,8 @@ func TestSetAuthHeader_EmptyValue(t *testing.T) {
 	t.Parallel()
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com", nil)
-	setAuthHeader(req, nil, "Authorization", "")
-	if req.Header.Get("Authorization") != "" {
-		t.Error("header should not be set for empty value")
-	}
+	setAuthHeader(req, nil, headerAuthorization, "")
+	assert.Empty(t, req.Header.Get(headerAuthorization), "header should not be set for empty value")
 }
 
 func TestSetAuthHeader_WithInfo(t *testing.T) {
@@ -28,13 +29,9 @@ func TestSetAuthHeader_WithInfo(t *testing.T) {
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com", nil)
 	var info Info
-	setAuthHeader(req, &info, "Authorization", "Bearer token")
-	if req.Header.Get("Authorization") != "Bearer token" {
-		t.Errorf("Authorization = %q, want %q", req.Header.Get("Authorization"), "Bearer token")
-	}
-	if info.Headers["Authorization"] != "Bearer token" {
-		t.Errorf("info.Headers[Authorization] = %q, want %q", info.Headers["Authorization"], "Bearer token")
-	}
+	setAuthHeader(req, &info, headerAuthorization, "Bearer token")
+	assert.Equal(t, "Bearer token", req.Header.Get(headerAuthorization))
+	assert.Equal(t, "Bearer token", info.Headers[headerAuthorization])
 }
 
 func TestSetAuthHeader_NilInfo(t *testing.T) {
@@ -42,9 +39,7 @@ func TestSetAuthHeader_NilInfo(t *testing.T) {
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com", nil)
 	setAuthHeader(req, nil, "X-Key", "value")
-	if req.Header.Get("X-Key") != "value" {
-		t.Errorf("X-Key = %q, want %q", req.Header.Get("X-Key"), "value")
-	}
+	assert.Equal(t, "value", req.Header.Get("X-Key"))
 }
 
 func TestSetAuthQuery_EmptyValue(t *testing.T) {
@@ -52,9 +47,7 @@ func TestSetAuthQuery_EmptyValue(t *testing.T) {
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
 	setAuthQuery(req, nil, "key", "")
-	if req.URL.Query().Get("key") != "" {
-		t.Error("query param should not be set for empty value")
-	}
+	assert.Empty(t, req.URL.Query().Get("key"), "query param should not be set for empty value")
 }
 
 func TestSetAuthQuery_WithInfo(t *testing.T) {
@@ -63,12 +56,8 @@ func TestSetAuthQuery_WithInfo(t *testing.T) {
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
 	var info Info
 	setAuthQuery(req, &info, "api_key", "secret")
-	if req.URL.Query().Get("api_key") != "secret" {
-		t.Errorf("api_key = %q, want %q", req.URL.Query().Get("api_key"), "secret")
-	}
-	if info.QueryParams["api_key"] != "secret" {
-		t.Errorf("info.QueryParams[api_key] = %q, want %q", info.QueryParams["api_key"], "secret")
-	}
+	assert.Equal(t, "secret", req.URL.Query().Get("api_key"))
+	assert.Equal(t, "secret", info.QueryParams["api_key"])
 }
 
 func TestSetAuthQuery_NilInfo(t *testing.T) {
@@ -76,9 +65,7 @@ func TestSetAuthQuery_NilInfo(t *testing.T) {
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
 	setAuthQuery(req, nil, "key", "val")
-	if req.URL.Query().Get("key") != "val" {
-		t.Errorf("key = %q, want %q", req.URL.Query().Get("key"), "val")
-	}
+	assert.Equal(t, "val", req.URL.Query().Get("key"))
 }
 
 func TestTransport_RoundTrip(t *testing.T) {
@@ -90,9 +77,7 @@ func TestTransport_RoundTrip(t *testing.T) {
 	defer srv.Close()
 
 	client := &BearerTokenAuthClient{Token: "test-token"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	transport := &Transport{
 		Base: http.DefaultTransport,
@@ -101,26 +86,18 @@ func TestTransport_RoundTrip(t *testing.T) {
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, srv.URL, nil)
 	resp, err := transport.RoundTrip(req)
-	if err != nil {
-		t.Fatalf("RoundTrip() = %v", err)
-	}
+	require.NoError(t, err, "RoundTrip()")
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("StatusCode = %d, want %d", resp.StatusCode, http.StatusOK)
-	}
-	if req.Header.Get("Authorization") != "Bearer test-token" {
-		t.Errorf("Authorization = %q, want %q", req.Header.Get("Authorization"), "Bearer test-token")
-	}
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, "Bearer test-token", req.Header.Get(headerAuthorization))
 }
 
 func TestTransport_RoundTrip_Error(t *testing.T) {
 	t.Parallel()
 
 	client := &BearerTokenAuthClient{Token: "test-token"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	transport := &Transport{
 		Base: http.DefaultTransport,
@@ -129,94 +106,70 @@ func TestTransport_RoundTrip_Error(t *testing.T) {
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://nonexistent.example.com", nil)
 	_, err := transport.RoundTrip(req)
-	if err == nil {
-		t.Fatal("expected error for nonexistent host")
-	}
+	require.Error(t, err, "expected error for nonexistent host")
 }
 
 func TestNewHTTPClient(t *testing.T) {
 	t.Parallel()
 
 	client := &BearerTokenAuthClient{Token: "test-token"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
-	httpClient := NewHTTPClient(client)
-	if httpClient == nil {
-		t.Fatal("NewHTTPClient() returned nil")
-	}
+	httpClient := newHTTPClient(client)
+	require.NotNil(t, httpClient, "newHTTPClient() returned nil")
 
 	transport, ok := httpClient.Transport.(*Transport)
-	if !ok {
-		t.Fatalf("Transport type = %T, want *Transport", httpClient.Transport)
-	}
-	if transport.Auth != client {
-		t.Error("Auth mismatch")
-	}
+	require.True(t, ok, "Transport type should be *Transport")
+	assert.Equal(t, client, transport.Auth)
 }
 
 func TestNoAuthClient_New(t *testing.T) {
 	t.Parallel()
 
 	client := NewNoAuthClient()
-	if err := client.New(); err != nil {
-		t.Errorf("New() = %v", err)
-	}
+	require.NoError(t, client.New())
 }
 
 func TestNoAuthClient_Type(t *testing.T) {
 	t.Parallel()
 
 	client := NewNoAuthClient()
-	if client.Type() != NoAuth {
-		t.Errorf("Type() = %q, want %q", client.Type(), NoAuth)
-	}
+	assert.Equal(t, NoAuth, client.Type())
 }
 
 func TestNoAuthClient_Validate(t *testing.T) {
 	t.Parallel()
 
 	client := NewNoAuthClient()
-	if err := client.Validate(); err != nil {
-		t.Errorf("Validate() = %v", err)
-	}
+	require.NoError(t, client.Validate())
 }
 
 func TestBearerTokenAuthClient_Validate(t *testing.T) {
 	t.Parallel()
 
 	client := &BearerTokenAuthClient{Token: "valid-token"}
-	if err := client.Validate(); err != nil {
-		t.Errorf("Validate() = %v", err)
-	}
+	require.NoError(t, client.Validate())
 }
 
 func TestBearerTokenAuthClient_Validate_EmptyToken(t *testing.T) {
 	t.Parallel()
 
 	client := &BearerTokenAuthClient{Token: ""}
-	if err := client.Validate(); err == nil {
-		t.Error("expected validation error for empty token")
-	}
+	require.Error(t, client.Validate())
 }
 
 func TestBasicAuthClient_Type(t *testing.T) {
 	t.Parallel()
 
 	client := &BasicAuthClient{}
-	if client.Type() != BasicAuth {
-		t.Errorf("Type() = %q, want %q", client.Type(), BasicAuth)
-	}
+	assert.Equal(t, BasicAuth, client.Type())
 }
 
 func TestBearerTokenAuthClient_Type(t *testing.T) {
 	t.Parallel()
 
 	client := &BearerTokenAuthClient{}
-	if client.Type() != BearerTokenAuth {
-		t.Errorf("Type() = %q, want %q", client.Type(), BearerTokenAuth)
-	}
+	assert.Equal(t, BearerTokenAuth, client.Type())
 }
 
 func TestDigestAuthClient_SetMockBaseURL(t *testing.T) {
@@ -224,9 +177,7 @@ func TestDigestAuthClient_SetMockBaseURL(t *testing.T) {
 
 	client := &DigestAuthClient{}
 	client.SetMockBaseURL("http://localhost:9091/")
-	if client.MockBaseURL != "http://localhost:9091/" {
-		t.Errorf("MockBaseURL = %q, want %q", client.MockBaseURL, "http://localhost:9091/")
-	}
+	assert.Equal(t, "http://localhost:9091/", client.MockBaseURL)
 }
 
 func TestOAuth2ClientCredentialsAuthClient_SetTokenURL(t *testing.T) {
@@ -234,9 +185,7 @@ func TestOAuth2ClientCredentialsAuthClient_SetTokenURL(t *testing.T) {
 
 	client := &OAuth2ClientCredentialsAuthClient{}
 	client.SetTokenURL("http://localhost:9090/token")
-	if client.TokenURL != "http://localhost:9090/token" {
-		t.Errorf("TokenURL = %q, want %q", client.TokenURL, "http://localhost:9090/token")
-	}
+	assert.Equal(t, "http://localhost:9090/token", client.TokenURL)
 }
 
 func TestOAuth2PasswordAuthClient_SetTokenURL(t *testing.T) {
@@ -244,63 +193,49 @@ func TestOAuth2PasswordAuthClient_SetTokenURL(t *testing.T) {
 
 	client := &OAuth2PasswordAuthClient{}
 	client.SetTokenURL("http://localhost:9090/token")
-	if client.TokenURL != "http://localhost:9090/token" {
-		t.Errorf("TokenURL = %q, want %q", client.TokenURL, "http://localhost:9090/token")
-	}
+	assert.Equal(t, "http://localhost:9090/token", client.TokenURL)
 }
 
 func TestBasicAuthClient_Validate(t *testing.T) {
 	t.Parallel()
 
 	client := &BasicAuthClient{Username: "u", Password: "p"}
-	if err := client.Validate(); err != nil {
-		t.Errorf("Validate() = %v", err)
-	}
+	require.NoError(t, client.Validate())
 }
 
 func TestBasicAuthClient_Validate_Empty(t *testing.T) {
 	t.Parallel()
 
 	client := &BasicAuthClient{}
-	if err := client.Validate(); err == nil {
-		t.Error("expected validation error for empty basic auth")
-	}
+	require.Error(t, client.Validate())
 }
 
 func TestDigestAuthClient_New(t *testing.T) {
 	t.Parallel()
 
 	client := &DigestAuthClient{Username: "u", Password: "p"}
-	if err := client.New(); err != nil {
-		t.Errorf("New() = %v", err)
-	}
+	require.NoError(t, client.New())
 }
 
 func TestDigestAuthClient_Validate(t *testing.T) {
 	t.Parallel()
 
 	client := &DigestAuthClient{Username: "u", Password: "p"}
-	if err := client.Validate(); err != nil {
-		t.Errorf("Validate() = %v", err)
-	}
+	require.NoError(t, client.Validate())
 }
 
 func TestDigestAuthClient_Validate_Empty(t *testing.T) {
 	t.Parallel()
 
 	client := &DigestAuthClient{}
-	if err := client.Validate(); err == nil {
-		t.Error("expected validation error for empty digest auth")
-	}
+	require.Error(t, client.Validate())
 }
 
 func TestDigestAuthClient_Type(t *testing.T) {
 	t.Parallel()
 
 	client := &DigestAuthClient{}
-	if client.Type() != DigestAuth {
-		t.Errorf("Type() = %q, want %q", client.Type(), DigestAuth)
-	}
+	assert.Equal(t, DigestAuth, client.Type())
 }
 
 func TestParseDigestChallenge(t *testing.T) {
@@ -308,48 +243,32 @@ func TestParseDigestChallenge(t *testing.T) {
 
 	header := `Digest realm="test-realm", nonce="test-nonce", opaque="test-opaque", qop="auth", algorithm="MD5"`
 	ch := parseDigestChallenge(header)
-	if ch.realm != "test-realm" {
-		t.Errorf("realm = %q, want %q", ch.realm, "test-realm")
-	}
-	if ch.nonce != "test-nonce" {
-		t.Errorf("nonce = %q, want %q", ch.nonce, "test-nonce")
-	}
-	if ch.opaque != "test-opaque" {
-		t.Errorf("opaque = %q, want %q", ch.opaque, "test-opaque")
-	}
-	if ch.qop != "auth" {
-		t.Errorf("qop = %q, want %q", ch.qop, "auth")
-	}
-	if ch.algorithm != "MD5" {
-		t.Errorf("algorithm = %q, want %q", ch.algorithm, "MD5")
-	}
+	assert.Equal(t, "test-realm", ch.realm)
+	assert.Equal(t, "test-nonce", ch.nonce)
+	assert.Equal(t, "test-opaque", ch.opaque)
+	assert.Equal(t, "auth", ch.qop)
+	assert.Equal(t, "MD5", ch.algorithm)
 }
 
 func TestParseDigestChallenge_Defaults(t *testing.T) {
 	t.Parallel()
 
 	ch := parseDigestChallenge(`Digest realm="r", nonce="n"`)
-	if ch.algorithm != "MD5" {
-		t.Errorf("algorithm = %q, want %q", ch.algorithm, "MD5")
-	}
+	assert.Equal(t, "MD5", ch.algorithm)
 }
 
 func TestParseDigestChallenge_Empty(t *testing.T) {
 	t.Parallel()
 
 	ch := parseDigestChallenge(`Digest `)
-	if ch.realm != "" {
-		t.Errorf("realm = %q, want empty", ch.realm)
-	}
+	assert.Empty(t, ch.realm)
 }
 
 func TestMd5hex(t *testing.T) {
 	t.Parallel()
 
 	result := md5hex("hello")
-	if len(result) != 32 {
-		t.Errorf("len = %d, want 32", len(result))
-	}
+	assert.Len(t, result, 32)
 }
 
 func TestGenerateCnonce(t *testing.T) {
@@ -358,12 +277,8 @@ func TestGenerateCnonce(t *testing.T) {
 	client := &DigestAuthClient{}
 	c1 := client.generateCnonce()
 	c2 := client.generateCnonce()
-	if len(c1) != 16 {
-		t.Errorf("len = %d, want 16", len(c1))
-	}
-	if c1 == c2 {
-		t.Error("cnonces should be unique")
-	}
+	assert.Len(t, c1, 16)
+	assert.NotEqual(t, c1, c2, "cnonces should be unique")
 }
 
 func TestBuildDigest(t *testing.T) {
@@ -379,33 +294,15 @@ func TestBuildDigest(t *testing.T) {
 	}
 
 	auth := client.buildDigest("GET", "/api", ch, 1, "cnonce123")
-	if !strings.HasPrefix(auth, "Digest ") {
-		t.Errorf("expected Digest prefix, got %q", auth)
-	}
-	if !strings.Contains(auth, `username="user"`) {
-		t.Errorf("missing username: %s", auth)
-	}
-	if !strings.Contains(auth, `realm="test-realm"`) {
-		t.Errorf("missing realm: %s", auth)
-	}
-	if !strings.Contains(auth, `nonce="test-nonce"`) {
-		t.Errorf("missing nonce: %s", auth)
-	}
-	if !strings.Contains(auth, `response="`) {
-		t.Errorf("missing response: %s", auth)
-	}
-	if !strings.Contains(auth, `opaque="test-opaque"`) {
-		t.Errorf("missing opaque: %s", auth)
-	}
-	if !strings.Contains(auth, `qop=auth`) {
-		t.Errorf("missing qop: %s", auth)
-	}
-	if !strings.Contains(auth, `nc=00000001`) {
-		t.Errorf("missing nc: %s", auth)
-	}
-	if !strings.Contains(auth, `cnonce="cnonce123"`) {
-		t.Errorf("missing cnonce: %s", auth)
-	}
+	assert.True(t, strings.HasPrefix(auth, "Digest "), "expected Digest prefix")
+	assert.Contains(t, auth, `username="user"`)
+	assert.Contains(t, auth, `realm="test-realm"`)
+	assert.Contains(t, auth, `nonce="test-nonce"`)
+	assert.Contains(t, auth, `response="`)
+	assert.Contains(t, auth, `opaque="test-opaque"`)
+	assert.Contains(t, auth, `qop=auth`)
+	assert.Contains(t, auth, `nc=00000001`)
+	assert.Contains(t, auth, `cnonce="cnonce123"`)
 }
 
 func TestBuildDigest_NoQop(t *testing.T) {
@@ -418,48 +315,36 @@ func TestBuildDigest_NoQop(t *testing.T) {
 	}
 
 	auth := client.buildDigest("GET", "/api", ch, 1, "cnonce123")
-	if !strings.Contains(auth, `response="`) {
-		t.Errorf("missing response: %s", auth)
-	}
-	if strings.Contains(auth, "qop=") {
-		t.Errorf("unexpected qop: %s", auth)
-	}
+	assert.Contains(t, auth, `response="`)
+	assert.NotContains(t, auth, "qop=")
 }
 
 func TestAPIKeyAuthClient_New(t *testing.T) {
 	t.Parallel()
 
 	client := &APIKeyAuthClient{Key: "X-Key", Value: "val", In: "header"}
-	if err := client.New(); err != nil {
-		t.Errorf("New() = %v", err)
-	}
+	require.NoError(t, client.New())
 }
 
 func TestAPIKeyAuthClient_Validate(t *testing.T) {
 	t.Parallel()
 
 	client := &APIKeyAuthClient{Key: "X-Key", Value: "val", In: "header"}
-	if err := client.Validate(); err != nil {
-		t.Errorf("Validate() = %v", err)
-	}
+	require.NoError(t, client.Validate())
 }
 
 func TestAPIKeyAuthClient_Validate_Empty(t *testing.T) {
 	t.Parallel()
 
 	client := &APIKeyAuthClient{}
-	if err := client.Validate(); err == nil {
-		t.Error("expected validation error for empty api key")
-	}
+	require.Error(t, client.Validate())
 }
 
 func TestAPIKeyAuthClient_Type(t *testing.T) {
 	t.Parallel()
 
 	client := &APIKeyAuthClient{}
-	if client.Type() != APIKeyAuth {
-		t.Errorf("Type() = %q, want %q", client.Type(), APIKeyAuth)
-	}
+	assert.Equal(t, APIKeyAuth, client.Type())
 }
 
 func TestScriptAuthClient_New_PathSeparators(t *testing.T) {
@@ -467,9 +352,7 @@ func TestScriptAuthClient_New_PathSeparators(t *testing.T) {
 
 	client := &ScriptAuthClient{Domain: "my/domain"}
 	err := client.New()
-	if err == nil {
-		t.Fatal("expected error for domain with path separator")
-	}
+	require.Error(t, err, "expected error for domain with path separator")
 }
 
 func TestScriptAuthClient_New_Backslash(t *testing.T) {
@@ -477,18 +360,14 @@ func TestScriptAuthClient_New_Backslash(t *testing.T) {
 
 	client := &ScriptAuthClient{Domain: "my\\domain"}
 	err := client.New()
-	if err == nil {
-		t.Fatal("expected error for domain with backslash")
-	}
+	require.Error(t, err, "expected error for domain with backslash")
 }
 
 func TestScriptAuthClient_Type(t *testing.T) {
 	t.Parallel()
 
 	client := &ScriptAuthClient{}
-	if client.Type() != ScriptAuth {
-		t.Errorf("Type() = %q, want %q", client.Type(), ScriptAuth)
-	}
+	assert.Equal(t, ScriptAuth, client.Type())
 }
 
 func TestScriptAuthClient_SetWorkspaceDir(t *testing.T) {
@@ -496,9 +375,7 @@ func TestScriptAuthClient_SetWorkspaceDir(t *testing.T) {
 
 	client := &ScriptAuthClient{Domain: "test"}
 	client.SetWorkspaceDir("/custom/workspace")
-	if client.workspaceDir != "/custom/workspace" {
-		t.Errorf("workspaceDir = %q, want %q", client.workspaceDir, "/custom/workspace")
-	}
+	assert.Equal(t, "/custom/workspace", client.workspaceDir)
 }
 
 func TestScriptAuthClient_ScriptPath(t *testing.T) {
@@ -507,31 +384,21 @@ func TestScriptAuthClient_ScriptPath(t *testing.T) {
 	client := &ScriptAuthClient{Domain: "test", workspaceDir: "/ws"}
 	path := client.scriptPath()
 	expected := filepath.Join("/ws", "auth_scripts", "test.sh")
-	if path != expected {
-		t.Errorf("scriptPath() = %q, want %q", path, expected)
-	}
+	assert.Equal(t, expected, path)
 }
 
 func TestScriptAuthClient_New_EnvVars(t *testing.T) {
 	t.Setenv("TEST_SCRIPT_DOMAIN", "env-domain")
 
 	client := &ScriptAuthClient{Domain: "$(TEST_SCRIPT_DOMAIN)"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client.Domain != "env-domain" {
-		t.Errorf("Domain = %q, want %q", client.Domain, "env-domain")
-	}
+	require.NoError(t, client.New(), "New()")
+	assert.Equal(t, "env-domain", client.Domain)
 }
 
 func TestScriptAuthClient_New_TrimsSpace(t *testing.T) {
 	client := &ScriptAuthClient{Domain: "  my-domain  "}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client.Domain != "my-domain" {
-		t.Errorf("Domain = %q, want %q", client.Domain, "my-domain")
-	}
+	require.NoError(t, client.New(), "New()")
+	assert.Equal(t, "my-domain", client.Domain)
 }
 
 func TestOAuth2ClientCredentialsAuthClient_Validate(t *testing.T) {
@@ -540,27 +407,21 @@ func TestOAuth2ClientCredentialsAuthClient_Validate(t *testing.T) {
 	client := &OAuth2ClientCredentialsAuthClient{
 		ClientID: "cid", ClientSecret: "cs", TokenURL: "https://example.com/token",
 	}
-	if err := client.Validate(); err != nil {
-		t.Errorf("Validate() = %v", err)
-	}
+	require.NoError(t, client.Validate())
 }
 
 func TestOAuth2ClientCredentialsAuthClient_Validate_Empty(t *testing.T) {
 	t.Parallel()
 
 	client := &OAuth2ClientCredentialsAuthClient{}
-	if err := client.Validate(); err == nil {
-		t.Error("expected validation error for empty oauth2-cc")
-	}
+	require.Error(t, client.Validate())
 }
 
 func TestOAuth2ClientCredentialsAuthClient_Type(t *testing.T) {
 	t.Parallel()
 
 	client := &OAuth2ClientCredentialsAuthClient{}
-	if client.Type() != OAuth2ClientCredentials {
-		t.Errorf("Type() = %q, want %q", client.Type(), OAuth2ClientCredentials)
-	}
+	assert.Equal(t, OAuth2ClientCredentials, client.Type())
 }
 
 func TestOAuth2ClientCredentialsAuthClient_New_EnvVars(t *testing.T) {
@@ -571,15 +432,9 @@ func TestOAuth2ClientCredentialsAuthClient_New_EnvVars(t *testing.T) {
 		ClientID: "$(TEST_CC_ID)", ClientSecret: "$(TEST_CC_SECRET)",
 		TokenURL: "https://example.com/token",
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client.ClientID != "env-cid" {
-		t.Errorf("ClientID = %q, want %q", client.ClientID, "env-cid")
-	}
-	if client.ClientSecret != "env-cs" {
-		t.Errorf("ClientSecret = %q, want %q", client.ClientSecret, "env-cs")
-	}
+	require.NoError(t, client.New(), "New()")
+	assert.Equal(t, "env-cid", client.ClientID)
+	assert.Equal(t, "env-cs", client.ClientSecret)
 }
 
 func TestOAuth2PasswordAuthClient_Validate(t *testing.T) {
@@ -589,27 +444,21 @@ func TestOAuth2PasswordAuthClient_Validate(t *testing.T) {
 		Username: "u", Password: "p", ClientID: "cid",
 		TokenURL: "https://example.com/token",
 	}
-	if err := client.Validate(); err != nil {
-		t.Errorf("Validate() = %v", err)
-	}
+	require.NoError(t, client.Validate())
 }
 
 func TestOAuth2PasswordAuthClient_Validate_Empty(t *testing.T) {
 	t.Parallel()
 
 	client := &OAuth2PasswordAuthClient{}
-	if err := client.Validate(); err == nil {
-		t.Error("expected validation error for empty oauth2-pwd")
-	}
+	require.Error(t, client.Validate())
 }
 
 func TestOAuth2PasswordAuthClient_Type(t *testing.T) {
 	t.Parallel()
 
 	client := &OAuth2PasswordAuthClient{}
-	if client.Type() != OAuth2Password {
-		t.Errorf("Type() = %q, want %q", client.Type(), OAuth2Password)
-	}
+	assert.Equal(t, OAuth2Password, client.Type())
 }
 
 func TestOAuth2PasswordAuthClient_New_EnvVars(t *testing.T) {
@@ -623,42 +472,26 @@ func TestOAuth2PasswordAuthClient_New_EnvVars(t *testing.T) {
 		ClientID: "$(TEST_PWD_CID)", ClientSecret: "$(TEST_PWD_CS)",
 		TokenURL: "https://example.com/token",
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client.Username != "env-user" {
-		t.Errorf("Username = %q, want %q", client.Username, "env-user")
-	}
-	if client.Password != "env-pass" {
-		t.Errorf("Password = %q, want %q", client.Password, "env-pass")
-	}
+	require.NoError(t, client.New(), "New()")
+	assert.Equal(t, "env-user", client.Username)
+	assert.Equal(t, "env-pass", client.Password)
 }
 
 func TestDefaultHTTPClient(t *testing.T) {
 	t.Parallel()
 
 	cli, err := httpclient.NewDefault()
-	if err != nil {
-		t.Fatalf("NewDefault() = %v", err)
-	}
-	if cli == nil {
-		t.Fatal("NewDefault() returned nil")
-	}
-	if cli.Timeout == 0 {
-		t.Error("Timeout should be set")
-	}
+	require.NoError(t, err, "NewDefault()")
+	require.NotNil(t, cli, "NewDefault() returned nil")
+	assert.NotZero(t, cli.Timeout, "Timeout should be set")
 }
 
 func TestInfo_HeadersNil(t *testing.T) {
 	t.Parallel()
 
 	var info Info
-	if info.Headers != nil {
-		t.Error("Headers should be nil initially")
-	}
-	if info.QueryParams != nil {
-		t.Error("QueryParams should be nil initially")
-	}
+	assert.Nil(t, info.Headers, "Headers should be nil initially")
+	assert.Nil(t, info.QueryParams, "QueryParams should be nil initially")
 }
 
 func TestDigestAuthClient_fetchChallenge_Non401(t *testing.T) {
@@ -672,9 +505,7 @@ func TestDigestAuthClient_fetchChallenge_Non401(t *testing.T) {
 	client := &DigestAuthClient{Username: "u", Password: "p"}
 	req, _ := http.NewRequest(http.MethodGet, srv.URL, nil)
 	_, err := client.fetchChallenge(req)
-	if err == nil {
-		t.Fatal("expected error for non-401 response")
-	}
+	require.Error(t, err, "expected error for non-401 response")
 }
 
 func TestDigestAuthClient_fetchChallenge_MissingWWWAuth(t *testing.T) {
@@ -688,9 +519,7 @@ func TestDigestAuthClient_fetchChallenge_MissingWWWAuth(t *testing.T) {
 	client := &DigestAuthClient{Username: "u", Password: "p"}
 	req, _ := http.NewRequest(http.MethodGet, srv.URL, nil)
 	_, err := client.fetchChallenge(req)
-	if err == nil {
-		t.Fatal("expected error for missing WWW-Authenticate")
-	}
+	require.Error(t, err, "expected error for missing WWW-Authenticate")
 }
 
 func TestDigestAuthClient_fetchChallenge_NonDigest(t *testing.T) {
@@ -705,9 +534,7 @@ func TestDigestAuthClient_fetchChallenge_NonDigest(t *testing.T) {
 	client := &DigestAuthClient{Username: "u", Password: "p"}
 	req, _ := http.NewRequest(http.MethodGet, srv.URL, nil)
 	_, err := client.fetchChallenge(req)
-	if err == nil {
-		t.Fatal("expected error for non-Digest challenge")
-	}
+	require.Error(t, err, "expected error for non-Digest challenge")
 }
 
 func TestDigestAuthClient_Apply_EnvVars(t *testing.T) {
@@ -720,19 +547,13 @@ func TestDigestAuthClient_Apply_EnvVars(t *testing.T) {
 		Username: "$(TEST_DIGEST_USER)",
 		Password: "$(TEST_DIGEST_PASS)",
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(http.MethodGet, ds.srv.URL+"/api", nil)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 
-	auth := req.Header.Get("Authorization")
-	if !strings.HasPrefix(auth, "Digest ") {
-		t.Errorf("Authorization = %q, want Digest prefix", auth)
-	}
+	auth := req.Header.Get(headerAuthorization)
+	assert.True(t, strings.HasPrefix(auth, "Digest "), "Authorization should have Digest prefix")
 }
 
 func TestScriptAuthClient_Apply_RefetchesAfterExpiry(t *testing.T) {
@@ -745,42 +566,30 @@ func TestScriptAuthClient_Apply_RefetchesAfterExpiry(t *testing.T) {
 		Domain:       "testdomain",
 		workspaceDir: dir,
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req1, _ := newGetRequest()
-	if err := client.Apply(req1, nil); err != nil {
-		t.Fatalf("Apply #1 = %v", err)
-	}
+	require.NoError(t, client.Apply(req1, nil), "Apply #1")
 
 	client.mu.Lock()
 	client.expiresAt = time.Now().Add(-time.Second)
 	client.mu.Unlock()
 
 	req2, _ := newGetRequest()
-	if err := client.Apply(req2, nil); err != nil {
-		t.Fatalf("Apply #2 = %v", err)
-	}
+	require.NoError(t, client.Apply(req2, nil), "Apply #2")
 
-	if v := req2.Header.Get("Authorization"); v != "Bearer script-token" {
-		t.Errorf("Authorization = %q, want %q", v, "Bearer script-token")
-	}
+	assert.Equal(t, "Bearer script-token", req2.Header.Get(headerAuthorization))
 }
 
 func TestScriptAuthClient_Apply_NoWorkspaceDir(t *testing.T) {
 	t.Parallel()
 
 	client := &ScriptAuthClient{Domain: "testdomain"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := newGetRequest()
 	err := client.Apply(req, nil)
-	if err == nil {
-		t.Fatal("expected error for missing workspace dir")
-	}
+	require.Error(t, err, "expected error for missing workspace dir")
 }
 
 func TestScriptAuthClient_Apply_EnvVars(t *testing.T) {
@@ -793,18 +602,12 @@ func TestScriptAuthClient_Apply_EnvVars(t *testing.T) {
 		Domain:       "$(TEST_SCRIPT_DOMAIN)",
 		workspaceDir: dir,
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := newGetRequest()
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 
-	if v := req.Header.Get("Authorization"); v != "Bearer env-script-token" {
-		t.Errorf("Authorization = %q, want %q", v, "Bearer env-script-token")
-	}
+	assert.Equal(t, "Bearer env-script-token", req.Header.Get(headerAuthorization))
 }
 
 func TestOAuth2ClientCredentialsAuthClient_Apply_Scopes(t *testing.T) {
@@ -826,17 +629,11 @@ func TestOAuth2ClientCredentialsAuthClient_Apply_Scopes(t *testing.T) {
 		ClientID: "c", ClientSecret: "s", TokenURL: srv.URL + "/token",
 		Scopes: []string{"read", "write"},
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
-	if v := req.Header.Get("Authorization"); v != "Bearer scoped-token" {
-		t.Errorf("Authorization = %q, want %q", v, "Bearer scoped-token")
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
+	assert.Equal(t, "Bearer scoped-token", req.Header.Get(headerAuthorization))
 }
 
 func TestOAuth2ClientCredentialsAuthClient_Apply_DefaultExpiry(t *testing.T) {
@@ -852,17 +649,11 @@ func TestOAuth2ClientCredentialsAuthClient_Apply_DefaultExpiry(t *testing.T) {
 	client := &OAuth2ClientCredentialsAuthClient{
 		ClientID: "c", ClientSecret: "s", TokenURL: srv.URL + "/token",
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
-	if v := req.Header.Get("Authorization"); v != "Bearer token" {
-		t.Errorf("Authorization = %q, want %q", v, "Bearer token")
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
+	assert.Equal(t, "Bearer token", req.Header.Get(headerAuthorization))
 }
 
 func TestOAuth2PasswordAuthClient_Apply_DefaultExpiry(t *testing.T) {
@@ -879,17 +670,11 @@ func TestOAuth2PasswordAuthClient_Apply_DefaultExpiry(t *testing.T) {
 		Username: "u", Password: "p", ClientID: "c",
 		TokenURL: srv.URL + "/token",
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
-	if v := req.Header.Get("Authorization"); v != "Bearer token" {
-		t.Errorf("Authorization = %q, want %q", v, "Bearer token")
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
+	assert.Equal(t, "Bearer token", req.Header.Get(headerAuthorization))
 }
 
 func TestOAuth2PasswordAuthClient_Apply_Scopes(t *testing.T) {
@@ -912,17 +697,11 @@ func TestOAuth2PasswordAuthClient_Apply_Scopes(t *testing.T) {
 		TokenURL: srv.URL + "/token",
 		Scopes:   []string{"openid", "profile"},
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
-	if v := req.Header.Get("Authorization"); v != "Bearer scoped-token" {
-		t.Errorf("Authorization = %q, want %q", v, "Bearer scoped-token")
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
+	assert.Equal(t, "Bearer scoped-token", req.Header.Get(headerAuthorization))
 }
 
 func TestOAuth2PasswordAuthClient_Apply_EmptyAccessToken(t *testing.T) {
@@ -939,14 +718,11 @@ func TestOAuth2PasswordAuthClient_Apply_EmptyAccessToken(t *testing.T) {
 		Username: "u", Password: "p", ClientID: "c",
 		TokenURL: srv.URL + "/token",
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err == nil {
-		t.Fatal("expected error for empty access_token")
-	}
+	err := client.Apply(req, nil)
+	require.Error(t, err, "expected error for empty access_token")
 }
 
 func TestOAuth2PasswordAuthClient_Apply_Non200(t *testing.T) {
@@ -961,14 +737,11 @@ func TestOAuth2PasswordAuthClient_Apply_Non200(t *testing.T) {
 		Username: "u", Password: "p", ClientID: "c",
 		TokenURL: srv.URL + "/token",
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err == nil {
-		t.Fatal("expected error for non-200")
-	}
+	err := client.Apply(req, nil)
+	require.Error(t, err, "expected error for non-200")
 }
 
 func TestOAuth2ClientCredentialsAuthClient_Apply_EmptyAccessToken(t *testing.T) {
@@ -984,14 +757,11 @@ func TestOAuth2ClientCredentialsAuthClient_Apply_EmptyAccessToken(t *testing.T) 
 	client := &OAuth2ClientCredentialsAuthClient{
 		ClientID: "c", ClientSecret: "s", TokenURL: srv.URL + "/token",
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err == nil {
-		t.Fatal("expected error for empty access_token")
-	}
+	err := client.Apply(req, nil)
+	require.Error(t, err, "expected error for empty access_token")
 }
 
 func TestOAuth2ClientCredentialsAuthClient_Apply_Non200(t *testing.T) {
@@ -1005,12 +775,9 @@ func TestOAuth2ClientCredentialsAuthClient_Apply_Non200(t *testing.T) {
 	client := &OAuth2ClientCredentialsAuthClient{
 		ClientID: "c", ClientSecret: "s", TokenURL: srv.URL + "/token",
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err == nil {
-		t.Fatal("expected error for non-200")
-	}
+	err := client.Apply(req, nil)
+	require.Error(t, err, "expected error for non-200")
 }

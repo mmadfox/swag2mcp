@@ -9,6 +9,10 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/mmadfox/swag2mcp/internal/env"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSetWorkspaceDir(t *testing.T) {
@@ -18,27 +22,19 @@ func TestSetWorkspaceDir(t *testing.T) {
 	c.SetWorkspaceDir("/new/workspace")
 
 	expectedCache := filepath.Join("/new/workspace", CacheDirName)
-	if c.dir != expectedCache {
-		t.Errorf("dir = %q, want %q", c.dir, expectedCache)
-	}
+	assert.Equal(t, expectedCache, c.dir)
 
 	expectedSpecs := filepath.Join("/new/workspace", SpecsDirName)
-	if c.specsDir != expectedSpecs {
-		t.Errorf("specsDir = %q, want %q", c.specsDir, expectedSpecs)
-	}
+	assert.Equal(t, expectedSpecs, c.specsDir)
 
-	if c.workspaceDir != "/new/workspace" {
-		t.Errorf("workspaceDir = %q, want %q", c.workspaceDir, "/new/workspace")
-	}
+	assert.Equal(t, "/new/workspace", c.workspaceDir)
 }
 
 func TestExpandTilde(t *testing.T) {
 	t.Parallel()
 
 	home, err := os.UserHomeDir()
-	if err != nil {
-		t.Fatalf("UserHomeDir() = %v", err)
-	}
+	require.NoError(t, err)
 
 	tests := []struct {
 		input    string
@@ -50,10 +46,8 @@ func TestExpandTilde(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		result := expandTilde(tt.input)
-		if result != tt.expected {
-			t.Errorf("expandTilde(%q) = %q, want %q", tt.input, result, tt.expected)
-		}
+		result := env.ExpandTilde(tt.input)
+		assert.Equal(t, tt.expected, result, "ExpandTilde(%q)", tt.input)
 	}
 }
 
@@ -62,12 +56,8 @@ func TestRandomTTL(t *testing.T) {
 
 	for range 100 {
 		ttl := randomTTL()
-		if ttl < MinTTL {
-			t.Errorf("TTL %v < MinTTL %v", ttl, MinTTL)
-		}
-		if ttl > MaxTTL {
-			t.Errorf("TTL %v > MaxTTL %v", ttl, MaxTTL)
-		}
+		assert.GreaterOrEqual(t, ttl, MinTTL, "TTL < MinTTL")
+		assert.LessOrEqual(t, ttl, MaxTTL, "TTL > MaxTTL")
 	}
 }
 
@@ -79,10 +69,7 @@ func TestLocationError_Error(t *testing.T) {
 		Type:     "file",
 		Err:      errors.New("file not found"),
 	}
-	errStr := err.Error()
-	if errStr == "" {
-		t.Fatal("Error() returned empty string")
-	}
+	assert.NotEmpty(t, err.Error())
 }
 
 func TestLocationError_Unwrap(t *testing.T) {
@@ -94,21 +81,15 @@ func TestLocationError_Unwrap(t *testing.T) {
 		Type:     "file",
 		Err:      inner,
 	}
-	if !errors.Is(err, inner) {
-		t.Error("errors.Is() should match inner error")
-	}
+	assert.True(t, errors.Is(err, inner), "errors.Is() should match inner error")
 }
 
 func TestDefaultHTTPClient(t *testing.T) {
 	t.Parallel()
 
 	cli := defaultHTTPClient()
-	if cli == nil {
-		t.Fatal("defaultHTTPClient() returned nil")
-	}
-	if cli.cli == nil {
-		t.Fatal("http.Client is nil")
-	}
+	require.NotNil(t, cli, "defaultHTTPClient() returned nil")
+	require.NotNil(t, cli.cli, "http.Client is nil")
 }
 
 func TestHTTPClientGet_Success(t *testing.T) {
@@ -122,12 +103,8 @@ func TestHTTPClientGet_Success(t *testing.T) {
 
 	cli := defaultHTTPClient()
 	data, err := cli.Get(context.Background(), srv.URL)
-	if err != nil {
-		t.Fatalf("Get() = %v", err)
-	}
-	if string(data) != "hello world" {
-		t.Errorf("got %q, want %q", string(data), "hello world")
-	}
+	require.NoError(t, err, "Get()")
+	assert.Equal(t, "hello world", string(data))
 }
 
 func TestHTTPClientGet_Non200(t *testing.T) {
@@ -140,9 +117,7 @@ func TestHTTPClientGet_Non200(t *testing.T) {
 
 	cli := defaultHTTPClient()
 	_, err := cli.Get(context.Background(), srv.URL)
-	if err == nil {
-		t.Fatal("expected error for 404")
-	}
+	require.Error(t, err, "expected error for 404")
 }
 
 func TestHTTPClientGet_EmptyBody(t *testing.T) {
@@ -155,63 +130,41 @@ func TestHTTPClientGet_EmptyBody(t *testing.T) {
 
 	cli := defaultHTTPClient()
 	_, err := cli.Get(context.Background(), srv.URL)
-	if err == nil {
-		t.Fatal("expected error for empty body")
-	}
+	require.Error(t, err, "expected error for empty body")
 }
 
 func TestNormalizeLocation_URL(t *testing.T) {
 	t.Parallel()
 
 	normalized, stype, err := normalizeLocation("https://example.com/spec.yaml")
-	if err != nil {
-		t.Fatalf("normalizeLocation() = %v", err)
-	}
-	if normalized != "https://example.com/spec.yaml" {
-		t.Errorf("normalized = %q, want %q", normalized, "https://example.com/spec.yaml")
-	}
-	if stype != sourceURL {
-		t.Errorf("stype = %q, want %q", stype, sourceURL)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, "https://example.com/spec.yaml", normalized)
+	assert.Equal(t, sourceURL, stype)
 }
 
 func TestNormalizeLocation_FileURL(t *testing.T) {
 	t.Parallel()
 
 	normalized, stype, err := normalizeLocation("file:///home/user/spec.yaml")
-	if err != nil {
-		t.Fatalf("normalizeLocation() = %v", err)
-	}
-	if stype != sourceLocal {
-		t.Errorf("stype = %q, want %q", stype, sourceLocal)
-	}
-	if normalized != "/home/user/spec.yaml" {
-		t.Errorf("normalized = %q, want %q", normalized, "/home/user/spec.yaml")
-	}
+	require.NoError(t, err)
+	assert.Equal(t, sourceLocal, stype)
+	assert.Equal(t, "/home/user/spec.yaml", normalized)
 }
 
 func TestNormalizeLocation_LocalPath(t *testing.T) {
 	t.Parallel()
 
 	normalized, stype, err := normalizeLocation("/absolute/path/spec.yaml")
-	if err != nil {
-		t.Fatalf("normalizeLocation() = %v", err)
-	}
-	if stype != sourceLocal {
-		t.Errorf("stype = %q, want %q", stype, sourceLocal)
-	}
-	if normalized != "/absolute/path/spec.yaml" {
-		t.Errorf("normalized = %q, want %q", normalized, "/absolute/path/spec.yaml")
-	}
+	require.NoError(t, err)
+	assert.Equal(t, sourceLocal, stype)
+	assert.Equal(t, "/absolute/path/spec.yaml", normalized)
 }
 
 func TestNormalizeLocation_InvalidFileURL(t *testing.T) {
 	t.Parallel()
 
 	_, _, err := normalizeLocation("ftp://example.com/spec.yaml")
-	if err != nil {
-		t.Fatalf("normalizeLocation() = %v, want nil (ftp falls through to local path)", err)
-	}
+	require.NoError(t, err, "ftp falls through to local path")
 }
 
 func TestIsInsideSpecs_Inside(t *testing.T) {
@@ -219,27 +172,21 @@ func TestIsInsideSpecs_Inside(t *testing.T) {
 
 	c := New("/workspace")
 	path := filepath.Join("/workspace", SpecsDirName, "subdir", "spec.yaml")
-	if !c.isInsideSpecs(path) {
-		t.Error("isInsideSpecs() = false, want true")
-	}
+	assert.True(t, c.isInsideSpecs(path))
 }
 
 func TestIsInsideSpecs_Outside(t *testing.T) {
 	t.Parallel()
 
 	c := New("/workspace")
-	if c.isInsideSpecs("/other/path/spec.yaml") {
-		t.Error("isInsideSpecs() = true, want false")
-	}
+	assert.False(t, c.isInsideSpecs("/other/path/spec.yaml"))
 }
 
 func TestIsInsideSpecs_EmptySpecsDir(t *testing.T) {
 	t.Parallel()
 
 	c := &Cache{specsDir: ""}
-	if c.isInsideSpecs("/any/path") {
-		t.Error("isInsideSpecs() = true, want false")
-	}
+	assert.False(t, c.isInsideSpecs("/any/path"))
 }
 
 func TestResolveSpecsPath_Found(t *testing.T) {
@@ -248,22 +195,14 @@ func TestResolveSpecsPath_Found(t *testing.T) {
 	dir := t.TempDir()
 	wsDir := filepath.Join(dir, ".swag2mcp")
 	specsDir := filepath.Join(wsDir, SpecsDirName)
-	if err := os.MkdirAll(specsDir, 0750); err != nil {
-		t.Fatalf("MkdirAll() = %v", err)
-	}
+	require.NoError(t, os.MkdirAll(specsDir, 0750))
 	specFile := filepath.Join(specsDir, "api.yaml")
-	if err := os.WriteFile(specFile, []byte("data"), 0600); err != nil {
-		t.Fatalf("WriteFile() = %v", err)
-	}
+	require.NoError(t, os.WriteFile(specFile, []byte("data"), 0600))
 
 	c := New(wsDir)
 	got, ok := c.resolveSpecsPath("specs/api.yaml")
-	if !ok {
-		t.Fatal("resolveSpecsPath() = false, want true")
-	}
-	if got != specFile {
-		t.Errorf("got %q, want %q", got, specFile)
-	}
+	require.True(t, ok, "resolveSpecsPath() = false, want true")
+	assert.Equal(t, specFile, got)
 }
 
 func TestResolveSpecsPath_NotFound(t *testing.T) {
@@ -271,9 +210,7 @@ func TestResolveSpecsPath_NotFound(t *testing.T) {
 
 	c := New(t.TempDir())
 	_, ok := c.resolveSpecsPath("specs/nonexistent.yaml")
-	if ok {
-		t.Fatal("resolveSpecsPath() = true, want false")
-	}
+	assert.False(t, ok, "resolveSpecsPath() = true, want false")
 }
 
 func TestResolveSpecsPath_NotSpecsPath(t *testing.T) {
@@ -281,91 +218,61 @@ func TestResolveSpecsPath_NotSpecsPath(t *testing.T) {
 
 	c := New(t.TempDir())
 	_, ok := c.resolveSpecsPath("/absolute/path.yaml")
-	if ok {
-		t.Fatal("resolveSpecsPath() = true, want false")
-	}
+	assert.False(t, ok, "resolveSpecsPath() = true, want false")
 }
 
 func TestResolve_localFileOutsideSpecsReCacheOnExpiredMeta(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
 	specFile := filepath.Join(dir, "spec.yaml")
-	if err := os.WriteFile(specFile, []byte("hello"), 0644); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, os.WriteFile(specFile, []byte("hello"), 0644))
 
 	c := New(dir)
 
 	got1, err := c.Resolve(context.Background(), specFile)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// Manually expire the meta
 	hash := cacheKey(specFile)
 	metaPath := filepath.Join(c.dir, hash+".meta")
-	if mErr := writeMeta(metaPath, fileMeta{
+	require.NoError(t, writeMeta(metaPath, fileMeta{
 		Source:     specFile,
 		SourceType: "local",
 		CachedAt:   time.Now().Add(-2 * MaxTTL),
 		TTLSec:     60,
-	}); mErr != nil {
-		t.Fatal(mErr)
-	}
+	}))
 
 	got2, err := c.Resolve(context.Background(), specFile)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if got1 != got2 {
-		t.Errorf("expected same cache path, got %q and %q", got1, got2)
-	}
+	assert.Equal(t, got1, got2, "expected same cache path")
 
 	data, err := os.ReadFile(got2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(data) != "hello" {
-		t.Errorf("got %q, want %q", string(data), "hello")
-	}
+	require.NoError(t, err)
+	assert.Equal(t, "hello", string(data))
 }
 
 func TestResolve_localFileOutsideSpecsReCacheOnMissingSpecFile(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
 	specFile := filepath.Join(dir, "spec.yaml")
-	if err := os.WriteFile(specFile, []byte("hello"), 0644); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, os.WriteFile(specFile, []byte("hello"), 0644))
 
 	c := New(dir)
 
 	got1, err := c.Resolve(context.Background(), specFile)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if rmErr := os.Remove(got1); rmErr != nil {
-		t.Fatal(rmErr)
-	}
+	require.NoError(t, os.Remove(got1))
 
 	got2, err := c.Resolve(context.Background(), specFile)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if got1 != got2 {
-		t.Errorf("expected same cache path, got %q and %q", got1, got2)
-	}
+	assert.Equal(t, got1, got2, "expected same cache path")
 
 	data, err := os.ReadFile(got2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(data) != "hello" {
-		t.Errorf("got %q, want %q", string(data), "hello")
-	}
+	require.NoError(t, err)
+	assert.Equal(t, "hello", string(data))
 }
 
 func TestExists_urlCachedExpired(t *testing.T) {
@@ -382,27 +289,20 @@ func TestExists_urlCachedExpired(t *testing.T) {
 
 	// First call — download via Resolve
 	_, err := c.Resolve(context.Background(), srv.URL)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// Manually expire the meta
 	hash := cacheKey(srv.URL)
 	metaPath := filepath.Join(c.dir, hash+".meta")
-	if mErr := writeMeta(metaPath, fileMeta{
+	require.NoError(t, writeMeta(metaPath, fileMeta{
 		Source:     srv.URL,
 		SourceType: "url",
 		CachedAt:   time.Now().Add(-2 * MaxTTL),
 		TTLSec:     60,
-	}); mErr != nil {
-		t.Fatal(mErr)
-	}
+	}))
 
 	// Exists should fall through to HEAD request
-	err = c.Exists(context.Background(), srv.URL)
-	if err != nil {
-		t.Errorf("expected nil, got %v", err)
-	}
+	require.NoError(t, c.Exists(context.Background(), srv.URL))
 }
 
 func TestExists_urlCachedMissingSpecFile(t *testing.T) {
@@ -419,17 +319,11 @@ func TestExists_urlCachedMissingSpecFile(t *testing.T) {
 
 	// First call — download via Resolve
 	got, err := c.Resolve(context.Background(), srv.URL)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if rmErr := os.Remove(got); rmErr != nil {
-		t.Fatal(rmErr)
-	}
+	require.NoError(t, os.Remove(got))
 
-	if exErr := c.Exists(context.Background(), srv.URL); exErr != nil {
-		t.Errorf("expected nil, got %v", exErr)
-	}
+	require.NoError(t, c.Exists(context.Background(), srv.URL))
 }
 
 func TestExists_fileURLSpecsRelative(t *testing.T) {
@@ -437,50 +331,131 @@ func TestExists_fileURLSpecsRelative(t *testing.T) {
 	dir := t.TempDir()
 	wsDir := filepath.Join(dir, ".swag2mcp")
 	specsDir := filepath.Join(wsDir, SpecsDirName)
-	if err := os.MkdirAll(specsDir, 0750); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, os.MkdirAll(specsDir, 0750))
 	specFile := filepath.Join(specsDir, "layers.yaml")
-	if err := os.WriteFile(specFile, []byte("data"), 0644); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, os.WriteFile(specFile, []byte("data"), 0644))
 
 	c := New(wsDir)
-	if err := c.Exists(context.Background(), "file://"+specFile); err != nil {
-		t.Errorf("expected nil, got %v", err)
-	}
+	require.NoError(t, c.Exists(context.Background(), "file://"+specFile))
 }
 
 func TestExists_tildePath(t *testing.T) {
 	t.Parallel()
 	home, homeErr := os.UserHomeDir()
-	if homeErr != nil {
-		t.Fatalf("UserHomeDir() = %v", homeErr)
-	}
+	require.NoError(t, homeErr)
 
 	tmpFile := filepath.Join(home, ".swag2mcp-test-exists")
-	if wrErr := os.WriteFile(tmpFile, []byte("data"), 0600); wrErr != nil {
-		t.Fatalf("WriteFile() = %v", wrErr)
-	}
+	require.NoError(t, os.WriteFile(tmpFile, []byte("data"), 0600))
 	defer os.Remove(tmpFile)
 
 	c := New(t.TempDir())
-	if exErr := c.Exists(context.Background(), "~/.swag2mcp-test-exists"); exErr != nil {
-		t.Errorf("expected nil, got %v", exErr)
-	}
+	require.NoError(t, c.Exists(context.Background(), "~/.swag2mcp-test-exists"))
 }
 
 func TestExists_relativePath(t *testing.T) {
 	dir := t.TempDir()
 	specFile := filepath.Join(dir, "spec.yaml")
-	if wrErr := os.WriteFile(specFile, []byte("data"), 0644); wrErr != nil {
-		t.Fatal(wrErr)
-	}
+	require.NoError(t, os.WriteFile(specFile, []byte("data"), 0644))
 
 	t.Chdir(dir)
 
 	c := New(dir)
-	if exErr := c.Exists(context.Background(), "spec.yaml"); exErr != nil {
-		t.Errorf("expected nil, got %v", exErr)
-	}
+	require.NoError(t, c.Exists(context.Background(), "spec.yaml"))
+}
+
+func TestClassifyLocation_httpURL(t *testing.T) {
+	t.Parallel()
+	stype, path, err := classifyLocation("http://example.com/spec.yaml")
+	require.NoError(t, err)
+	assert.Equal(t, sourceURL, stype)
+	assert.Equal(t, "http://example.com/spec.yaml", path)
+}
+
+func TestClassifyLocation_httpsURL(t *testing.T) {
+	t.Parallel()
+	stype, path, err := classifyLocation("https://example.com/spec.yaml")
+	require.NoError(t, err)
+	assert.Equal(t, sourceURL, stype)
+	assert.Equal(t, "https://example.com/spec.yaml", path)
+}
+
+func TestClassifyLocation_fileURL(t *testing.T) {
+	t.Parallel()
+	stype, path, err := classifyLocation("file:///home/user/spec.yaml")
+	require.NoError(t, err)
+	assert.Equal(t, sourceLocal, stype)
+	assert.Equal(t, "/home/user/spec.yaml", path)
+}
+
+func TestClassifyLocation_fileURLBadScheme(t *testing.T) {
+	t.Parallel()
+	_, _, err := classifyLocation("file://invalid|path")
+	require.Error(t, err)
+	var locErr *LocationError
+	require.True(t, errors.As(err, &locErr))
+}
+
+func TestClassifyLocation_localPath(t *testing.T) {
+	t.Parallel()
+	stype, path, err := classifyLocation("/absolute/path/spec.yaml")
+	require.NoError(t, err)
+	assert.Equal(t, sourceLocal, stype)
+	assert.Equal(t, "/absolute/path/spec.yaml", path)
+}
+
+func TestClassifyLocation_tildePath(t *testing.T) {
+	t.Parallel()
+	stype, path, err := classifyLocation("~/spec.yaml")
+	require.NoError(t, err)
+	assert.Equal(t, sourceLocal, stype)
+	assert.Contains(t, path, "spec.yaml")
+}
+
+func TestExistsFile_found(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	specFile := filepath.Join(dir, "spec.yaml")
+	require.NoError(t, os.WriteFile(specFile, []byte("data"), 0644))
+
+	c := New(dir)
+	require.NoError(t, c.existsFile(specFile))
+}
+
+func TestExistsFile_notFound(t *testing.T) {
+	t.Parallel()
+	c := New(t.TempDir())
+	err := c.existsFile("/nonexistent/path/spec.yaml")
+	require.Error(t, err)
+	var locErr *LocationError
+	require.True(t, errors.As(err, &locErr))
+	assert.Equal(t, "file", locErr.Type)
+}
+
+func TestExistsFile_specsRelative(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	wsDir := filepath.Join(dir, ".swag2mcp")
+	specsDir := filepath.Join(wsDir, SpecsDirName)
+	require.NoError(t, os.MkdirAll(specsDir, 0750))
+	specFile := filepath.Join(specsDir, "api.yaml")
+	require.NoError(t, os.WriteFile(specFile, []byte("data"), 0600))
+
+	c := New(wsDir)
+	require.NoError(t, c.existsFile("specs/api.yaml"))
+}
+
+func TestClassifyLocation_ftpAsLocal(t *testing.T) {
+	t.Parallel()
+	stype, path, err := classifyLocation("ftp://example.com/spec.yaml")
+	require.NoError(t, err)
+	assert.Equal(t, sourceLocal, stype)
+	assert.Equal(t, "ftp://example.com/spec.yaml", path)
+}
+
+func TestLoadSource_unknownType(t *testing.T) {
+	t.Parallel()
+	c := New(t.TempDir())
+	_, _, err := c.loadSource(context.Background(), "/tmp/test.yaml", sourceType("unknown"))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "unknown source type")
 }

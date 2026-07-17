@@ -1,21 +1,13 @@
 package auth
 
 import (
-	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/mmadfox/swag2mcp/internal/httpclient"
 )
-
-const defaultExpiresIn = 3600
 
 // OAuth2ClientCredentialsAuthClient holds configuration for the OAuth2 client credentials flow.
 type OAuth2ClientCredentialsAuthClient struct {
@@ -29,45 +21,62 @@ type OAuth2ClientCredentialsAuthClient struct {
 	expiresAt time.Time
 }
 
-type oauth2TokenResponse struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
-}
-
+// New resolves environment variables in ClientID and ClientSecret and returns nil.
 func (c *OAuth2ClientCredentialsAuthClient) New() error {
 	c.ClientID = resolveEnv(c.ClientID)
 	c.ClientSecret = resolveEnv(c.ClientSecret)
 	return nil
 }
 
+// Type returns the authentication type for OAuth2 client credentials flow.
 func (c *OAuth2ClientCredentialsAuthClient) Type() Type {
 	return OAuth2ClientCredentials
 }
 
+// Apply obtains a Bearer token via the client credentials grant and sets it on the request, caching the token until expiry.
 func (c *OAuth2ClientCredentialsAuthClient) Apply(req *http.Request, out *Info) error {
-	c.mu.Lock()
-	if c.token != "" && time.Now().Before(c.expiresAt) {
-		setAuthHeader(req, out, "Authorization", "Bearer "+c.token)
-		c.mu.Unlock()
+	if token, ok := c.readCachedToken(); ok {
+		setAuthHeader(req, out, headerAuthorization, bearerToken(token))
 		return nil
 	}
-	c.mu.Unlock()
 
 	token, expiresIn, err := c.fetchToken()
 	if err != nil {
 		return fmt.Errorf("oauth2-cc: %w", err)
 	}
 
-	c.mu.Lock()
-	c.token = token
-	c.expiresAt = time.Now().Add(time.Duration(expiresIn) * time.Second)
-	setAuthHeader(req, out, "Authorization", "Bearer "+c.token)
-	c.mu.Unlock()
+	c.writeToken(token, expiresIn)
+	setAuthHeader(req, out, headerAuthorization, bearerToken(token))
 	return nil
 }
 
+func (c *OAuth2ClientCredentialsAuthClient) readCachedToken() (string, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.token != "" && time.Now().Before(c.expiresAt) {
+		return c.token, true
+	}
+	return "", false
+}
+
+func (c *OAuth2ClientCredentialsAuthClient) writeToken(token string, expiresIn int) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.token = token
+	c.expiresAt = time.Now().Add(time.Duration(expiresIn) * time.Second)
+}
+
 func (c *OAuth2ClientCredentialsAuthClient) fetchToken() (string, int, error) {
+	form := c.buildTokenForm()
+	resp, err := doTokenRequest(c.TokenURL, form)
+	if err != nil {
+		return "", 0, err
+	}
+	defer resp.Body.Close()
+	return decodeTokenResponse(resp.Body)
+}
+
+func (c *OAuth2ClientCredentialsAuthClient) buildTokenForm() url.Values {
 	form := url.Values{
 		"grant_type":    {"client_credentials"},
 		"client_id":     {c.ClientID},
@@ -76,52 +85,15 @@ func (c *OAuth2ClientCredentialsAuthClient) fetchToken() (string, int, error) {
 	if len(c.Scopes) > 0 {
 		form.Set("scope", strings.Join(c.Scopes, " "))
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second) //nolint:mnd // Token request timeout.
-	defer cancel()
-
-	tokenReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.TokenURL, strings.NewReader(form.Encode()))
-	if err != nil {
-		return "", 0, fmt.Errorf("create token request: %w", err)
-	}
-	tokenReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	cli, cliErr := httpclient.NewDefault()
-	if cliErr != nil {
-		return "", 0, fmt.Errorf("create http client: %w", cliErr)
-	}
-	resp, err := cli.Do(tokenReq)
-	if err != nil {
-		return "", 0, fmt.Errorf("token request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return "", 0, fmt.Errorf("token endpoint returned %d: %s", resp.StatusCode, string(body))
-	}
-
-	var tr oauth2TokenResponse
-	if decodeErr := json.NewDecoder(resp.Body).Decode(&tr); decodeErr != nil {
-		return "", 0, fmt.Errorf("decode token response: %w", decodeErr)
-	}
-
-	if tr.AccessToken == "" {
-		return "", 0, errors.New("empty access_token in response")
-	}
-
-	expiresIn := tr.ExpiresIn
-	if expiresIn <= 0 {
-		expiresIn = defaultExpiresIn
-	}
-
-	return tr.AccessToken, expiresIn, nil
+	return form
 }
 
+// SetTokenURL sets the token endpoint URL for the client credentials flow.
 func (c *OAuth2ClientCredentialsAuthClient) SetTokenURL(url string) {
 	c.TokenURL = url
 }
 
+// Validate checks that the ClientID, ClientSecret, and TokenURL fields are present and valid.
 func (c *OAuth2ClientCredentialsAuthClient) Validate() error {
 	return authValidator.Struct(c)
 }

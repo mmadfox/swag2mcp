@@ -49,62 +49,70 @@ type digestChallenge struct {
 	algorithm string
 }
 
+// New resolves environment variables in Username and Password and returns nil.
 func (c *DigestAuthClient) New() error {
 	c.Username = resolveEnv(c.Username)
 	c.Password = resolveEnv(c.Password)
 	return nil
 }
 
+// Type returns the authentication type for HTTP Digest auth.
 func (c *DigestAuthClient) Type() Type {
 	return DigestAuth
 }
 
+// Apply performs Digest authentication by fetching a challenge, computing the response, and setting the Authorization header.
 func (c *DigestAuthClient) Apply(req *http.Request, out *Info) error {
-	c.mu.Lock()
-	challenge := digestChallenge{
-		realm:     c.realm,
-		nonce:     c.nonce,
-		opaque:    c.opaque,
-		qop:       c.qop,
-		algorithm: c.algorithm,
-	}
-	nc := c.nonceCount
-	cnonce := c.cnonce
-	hasChallenge := c.realm != "" && c.nonce != "" && time.Since(c.cachedAt) < digestNonceTTL
-	c.mu.Unlock()
-
-	if !hasChallenge {
-		newChallenge, err := c.fetchChallenge(req)
+	challenge, nc, cnonce, ok := c.readChallenge()
+	if !ok {
+		var err error
+		challenge, err = c.fetchChallenge(req)
 		if err != nil {
 			return fmt.Errorf("digest: %w", err)
 		}
-		challenge = newChallenge
 		nc = 0
 		cnonce = c.generateCnonce()
-
-		c.mu.Lock()
-		c.realm = challenge.realm
-		c.nonce = challenge.nonce
-		c.opaque = challenge.opaque
-		c.qop = challenge.qop
-		c.algorithm = challenge.algorithm
-		c.nonceCount = 0
-		c.cnonce = cnonce
-		c.cachedAt = time.Now()
-		c.mu.Unlock()
+		c.writeChallenge(challenge, cnonce)
 	}
 
 	nc++
 	auth := c.buildDigest(req.Method, req.URL.RequestURI(), challenge, nc, cnonce)
-	setAuthHeader(req, out, "Authorization", auth)
+	setAuthHeader(req, out, headerAuthorization, auth)
 
-	c.mu.Lock()
-	c.nonceCount = nc
-	c.mu.Unlock()
-
+	c.updateNonceCount(nc)
 	return nil
 }
 
+func (c *DigestAuthClient) readChallenge() (digestChallenge, int, string, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	ok := c.realm != "" && c.nonce != "" && time.Since(c.cachedAt) < digestNonceTTL
+	return digestChallenge{
+		realm: c.realm, nonce: c.nonce, opaque: c.opaque,
+		qop: c.qop, algorithm: c.algorithm,
+	}, c.nonceCount, c.cnonce, ok
+}
+
+func (c *DigestAuthClient) writeChallenge(ch digestChallenge, cnonce string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.realm = ch.realm
+	c.nonce = ch.nonce
+	c.opaque = ch.opaque
+	c.qop = ch.qop
+	c.algorithm = ch.algorithm
+	c.nonceCount = 0
+	c.cnonce = cnonce
+	c.cachedAt = time.Now()
+}
+
+func (c *DigestAuthClient) updateNonceCount(nc int) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.nonceCount = nc
+}
+
+// SetMockBaseURL sets a mock base URL used for fetching the Digest challenge during testing.
 func (c *DigestAuthClient) SetMockBaseURL(url string) {
 	c.MockBaseURL = url
 }
@@ -115,22 +123,20 @@ func (c *DigestAuthClient) fetchChallenge(req *http.Request) (digestChallenge, e
 		challengeURL = c.MockBaseURL
 	}
 
-	fakeReq, reqErr := http.NewRequestWithContext(context.Background(), req.Method, challengeURL, nil)
-	if reqErr != nil {
-		return digestChallenge{}, fmt.Errorf("create challenge request: %w", reqErr)
+	fakeReq, err := http.NewRequestWithContext(context.Background(), req.Method, challengeURL, nil)
+	if err != nil {
+		return digestChallenge{}, fmt.Errorf("create challenge request: %w", err)
 	}
 
-	cli, cliErr := httpclient.NewDefault()
-	if cliErr != nil {
-		return digestChallenge{}, fmt.Errorf("create http client: %w", cliErr)
+	cli, err := httpclient.NewDefault()
+	if err != nil {
+		return digestChallenge{}, fmt.Errorf("create http client: %w", err)
 	}
-	resp, doErr := cli.Do(fakeReq)
-	if doErr != nil {
-		return digestChallenge{}, fmt.Errorf("challenge request: %w", doErr)
+	resp, err := cli.Do(fakeReq)
+	if err != nil {
+		return digestChallenge{}, fmt.Errorf("challenge request: %w", err)
 	}
-	if err := resp.Body.Close(); err != nil {
-		slog.Default().DebugContext(context.Background(), "closing digest challenge response", "error", err)
-	}
+	_ = resp.Body.Close()
 
 	if resp.StatusCode != http.StatusUnauthorized {
 		return digestChallenge{}, fmt.Errorf("expected 401 for digest challenge, got %d", resp.StatusCode)
@@ -220,6 +226,7 @@ func md5hex(s string) string {
 	return hex.EncodeToString(h[:])
 }
 
+// Validate checks that the Username and Password fields are present and valid.
 func (c *DigestAuthClient) Validate() error {
 	return authValidator.Struct(c)
 }

@@ -18,7 +18,7 @@ type ImportRequest struct {
 	Source       string
 	Name         string
 	SpecFilter   []string
-	ConfFilepath string
+	ConfFilePath string
 	ZipSource    string // path to a swag2mcp backup ZIP to restore
 }
 
@@ -184,19 +184,19 @@ func (s *Service) importSingle(ctx context.Context, req ImportRequest) (ImportRe
 }
 
 func (s *Service) importSpecs(ctx context.Context, req ImportRequest) (ImportResponse, error) {
-	if req.ConfFilepath == "" {
+	if req.ConfFilePath == "" {
 		return ImportResponse{}, NewValidationError(
 			"Configuration file path is required when using --spec filter. "+
 				"Run the command from within a workspace directory or provide the workspace path.",
-			errors.New("confFilepath is empty"),
+			errors.New("config file path is empty"),
 		)
 	}
 
-	cfg, loadErr := config.Load(req.ConfFilepath)
-	if loadErr != nil {
+	cfg, err := config.Load(req.ConfFilePath)
+	if err != nil {
 		return ImportResponse{}, NewInvokeError(
-			fmt.Sprintf("Failed to load configuration from %q. Ensure the config file exists and is valid YAML.", req.ConfFilepath),
-			loadErr,
+			fmt.Sprintf("Failed to load configuration from %q. Ensure the config file exists and is valid YAML.", req.ConfFilePath),
+			err,
 		)
 	}
 
@@ -219,24 +219,24 @@ func (s *Service) importSpecs(ctx context.Context, req ImportRequest) (ImportRes
 				continue
 			}
 
-			data, dlErr := s.ws.DownloadSpec(ctx, coll.Location)
-			if dlErr != nil {
+			data, err := s.ws.DownloadSpec(ctx, coll.Location)
+			if err != nil {
 				return ImportResponse{}, NewInvokeError(
 					fmt.Sprintf("Failed to download spec from %q for collection %q in spec %q. "+
 						"Check that the location is correct and accessible.",
 						coll.Location, coll.Title, spec.Domain),
-					dlErr,
+					err,
 				)
 			}
 
 			name := specFileName(spec.Domain, coll.Title, coll.Location)
-			savePath, saveErr := s.ws.SaveSpec(name, data)
-			if saveErr != nil {
+			sp, err := s.ws.SaveSpec(name, data)
+			if err != nil {
 				return ImportResponse{}, NewValidationError(
 					fmt.Sprintf("Failed to save spec as %q for collection %q in spec %q. "+
 						"The filename may already exist in the specs/ directory.",
 						name, coll.Title, spec.Domain),
-					saveErr,
+					err,
 				)
 			}
 
@@ -246,7 +246,7 @@ func (s *Service) importSpecs(ctx context.Context, req ImportRequest) (ImportRes
 			imported = append(imported, ImportedFile{
 				Source:    coll.Location,
 				Name:      name,
-				SavedPath: savePath,
+				SavedPath: sp,
 			})
 		}
 	}
@@ -258,10 +258,10 @@ func (s *Service) importSpecs(ctx context.Context, req ImportRequest) (ImportRes
 		)
 	}
 
-	if saveCfgErr := config.Save(cfg, req.ConfFilepath); saveCfgErr != nil {
+	if err := config.Save(cfg, req.ConfFilePath); err != nil {
 		return ImportResponse{}, NewInvokeError(
-			fmt.Sprintf("Failed to save updated configuration to %q.", req.ConfFilepath),
-			saveCfgErr,
+			fmt.Sprintf("Failed to save updated configuration to %q.", req.ConfFilePath),
+			err,
 		)
 	}
 

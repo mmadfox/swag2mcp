@@ -3,6 +3,8 @@ package config
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.yaml.in/yaml/v3"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
@@ -12,84 +14,52 @@ func TestAuth_UnmarshalYAML_none(t *testing.T) {
 	t.Parallel()
 
 	var a Auth
-	if err := yaml.Unmarshal([]byte("type: none"), &a); err != nil {
-		t.Fatal(err)
-	}
-	if a.Client == nil {
-		t.Fatal("Client is nil")
-	}
-	if _, ok := a.Client.(auth.NoAuthClient); !ok {
-		t.Fatalf("expected auth.NoAuthClient, got %T", a.Client)
-	}
+	require.NoError(t, yaml.Unmarshal([]byte("type: none"), &a))
+	require.NotNil(t, a.Client)
+	_, ok := a.Client.(auth.NoAuthClient)
+	assert.True(t, ok, "expected auth.NoAuthClient")
 }
 
 func TestAuth_UnmarshalYAML_none_empty(t *testing.T) {
 	t.Parallel()
 
 	var a Auth
-	if err := yaml.Unmarshal([]byte("type:"), &a); err != nil {
-		t.Fatal(err)
-	}
-	if a.Client == nil {
-		t.Fatal("Client is nil")
-	}
-	if _, ok := a.Client.(auth.NoAuthClient); !ok {
-		t.Fatalf("expected auth.NoAuthClient, got %T", a.Client)
-	}
+	require.NoError(t, yaml.Unmarshal([]byte("type:"), &a))
+	require.NotNil(t, a.Client)
+	_, ok := a.Client.(auth.NoAuthClient)
+	assert.True(t, ok, "expected auth.NoAuthClient")
 }
 
 func TestAuth_UnmarshalYAML_basic(t *testing.T) {
 	t.Parallel()
 
 	var a Auth
-	if err := yaml.Unmarshal([]byte("type: basic\nconfig:\n  username: myuser\n  password: secret"), &a); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, yaml.Unmarshal([]byte("type: basic\nconfig:\n  username: myuser\n  password: secret"), &a))
 	c, ok := a.Client.(*auth.BasicAuthClient)
-	if !ok {
-		t.Fatalf("expected *auth.BasicAuthClient, got %T", a.Client)
-	}
-	if c.Username != "myuser" {
-		t.Errorf("Username = %q, want %q", c.Username, "myuser")
-	}
-	if c.Password != "secret" {
-		t.Errorf("Password = %q, want %q", c.Password, "secret")
-	}
+	require.True(t, ok, "expected *auth.BasicAuthClient")
+	assert.Equal(t, "myuser", c.Username)
+	assert.Equal(t, "secret", c.Password)
 }
 
 func TestAuth_UnmarshalYAML_bearer(t *testing.T) {
 	t.Parallel()
 
 	var a Auth
-	if err := yaml.Unmarshal([]byte("type: bearer\nconfig:\n  token: mytoken"), &a); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, yaml.Unmarshal([]byte("type: bearer\nconfig:\n  token: mytoken"), &a))
 	c, ok := a.Client.(*auth.BearerTokenAuthClient)
-	if !ok {
-		t.Fatalf("expected *auth.BearerTokenAuthClient, got %T", a.Client)
-	}
-	if c.Token != "mytoken" {
-		t.Errorf("Token = %q, want %q", c.Token, "mytoken")
-	}
+	require.True(t, ok, "expected *auth.BearerTokenAuthClient")
+	assert.Equal(t, "mytoken", c.Token)
 }
 
 func TestAuth_UnmarshalYAML_digest(t *testing.T) {
 	t.Parallel()
 
 	var a Auth
-	if err := yaml.Unmarshal([]byte("type: digest\nconfig:\n  username: u\n  password: p"), &a); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, yaml.Unmarshal([]byte("type: digest\nconfig:\n  username: u\n  password: p"), &a))
 	c, ok := a.Client.(*auth.DigestAuthClient)
-	if !ok {
-		t.Fatalf("expected *auth.DigestAuthClient, got %T", a.Client)
-	}
-	if c.Username != "u" {
-		t.Errorf("Username = %q, want %q", c.Username, "u")
-	}
-	if c.Password != "p" {
-		t.Errorf("Password = %q, want %q", c.Password, "p")
-	}
+	require.True(t, ok, "expected *auth.DigestAuthClient")
+	assert.Equal(t, "u", c.Username)
+	assert.Equal(t, "p", c.Password)
 }
 
 func TestAuth_UnmarshalYAML_oauth2_cc(t *testing.T) {
@@ -97,25 +67,13 @@ func TestAuth_UnmarshalYAML_oauth2_cc(t *testing.T) {
 
 	y := "type: oauth2-cc\nconfig:\n  client_id: cid\n  client_secret: cs\n  token_url: https://example.com/token\n  scopes:\n    - read\n    - write"
 	var a Auth
-	if err := yaml.Unmarshal([]byte(y), &a); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, yaml.Unmarshal([]byte(y), &a))
 	c, ok := a.Client.(*auth.OAuth2ClientCredentialsAuthClient)
-	if !ok {
-		t.Fatalf("expected *auth.OAuth2ClientCredentialsAuthClient, got %T", a.Client)
-	}
-	if c.ClientID != "cid" {
-		t.Errorf("ClientID = %q, want %q", c.ClientID, "cid")
-	}
-	if c.ClientSecret != "cs" {
-		t.Errorf("ClientSecret = %q, want %q", c.ClientSecret, "cs")
-	}
-	if c.TokenURL != "https://example.com/token" {
-		t.Errorf("TokenURL = %q, want %q", c.TokenURL, "https://example.com/token")
-	}
-	if len(c.Scopes) != 2 || c.Scopes[0] != "read" || c.Scopes[1] != "write" {
-		t.Errorf("Scopes = %v, want [read write]", c.Scopes)
-	}
+	require.True(t, ok, "expected *auth.OAuth2ClientCredentialsAuthClient")
+	assert.Equal(t, "cid", c.ClientID)
+	assert.Equal(t, "cs", c.ClientSecret)
+	assert.Equal(t, "https://example.com/token", c.TokenURL)
+	assert.Equal(t, []string{"read", "write"}, c.Scopes)
 }
 
 func TestAuth_UnmarshalYAML_oauth2_pwd(t *testing.T) {
@@ -123,31 +81,15 @@ func TestAuth_UnmarshalYAML_oauth2_pwd(t *testing.T) {
 
 	y := "type: oauth2-pwd\nconfig:\n  username: u\n  password: p\n  client_id: cid\n  client_secret: cs\n  token_url: https://example.com/token"
 	var a Auth
-	if err := yaml.Unmarshal([]byte(y), &a); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, yaml.Unmarshal([]byte(y), &a))
 	c, ok := a.Client.(*auth.OAuth2PasswordAuthClient)
-	if !ok {
-		t.Fatalf("expected *auth.OAuth2PasswordAuthClient, got %T", a.Client)
-	}
-	if c.Username != "u" {
-		t.Errorf("Username = %q, want %q", c.Username, "u")
-	}
-	if c.Password != "p" {
-		t.Errorf("Password = %q, want %q", c.Password, "p")
-	}
-	if c.ClientID != "cid" {
-		t.Errorf("ClientID = %q, want %q", c.ClientID, "cid")
-	}
-	if c.ClientSecret != "cs" {
-		t.Errorf("ClientSecret = %q, want %q", c.ClientSecret, "cs")
-	}
-	if c.TokenURL != "https://example.com/token" {
-		t.Errorf("TokenURL = %q, want %q", c.TokenURL, "https://example.com/token")
-	}
-	if c.Scopes != nil {
-		t.Errorf("Scopes = %v, want nil", c.Scopes)
-	}
+	require.True(t, ok, "expected *auth.OAuth2PasswordAuthClient")
+	assert.Equal(t, "u", c.Username)
+	assert.Equal(t, "p", c.Password)
+	assert.Equal(t, "cid", c.ClientID)
+	assert.Equal(t, "cs", c.ClientSecret)
+	assert.Equal(t, "https://example.com/token", c.TokenURL)
+	assert.Nil(t, c.Scopes)
 }
 
 func TestAuth_UnmarshalYAML_api_key(t *testing.T) {
@@ -155,38 +97,22 @@ func TestAuth_UnmarshalYAML_api_key(t *testing.T) {
 
 	var a Auth
 	y := "type: api-key\nconfig:\n  key: X-API-Key\n  value: abc123\n  in: header"
-	if err := yaml.Unmarshal([]byte(y), &a); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, yaml.Unmarshal([]byte(y), &a))
 	c, ok := a.Client.(*auth.APIKeyAuthClient)
-	if !ok {
-		t.Fatalf("expected *auth.APIKeyAuthClient, got %T", a.Client)
-	}
-	if c.Key != "X-API-Key" {
-		t.Errorf("Key = %q, want %q", c.Key, "X-API-Key")
-	}
-	if c.Value != "abc123" {
-		t.Errorf("Value = %q, want %q", c.Value, "abc123")
-	}
-	if c.In != "header" {
-		t.Errorf("In = %q, want %q", c.In, "header")
-	}
+	require.True(t, ok, "expected *auth.APIKeyAuthClient")
+	assert.Equal(t, "X-API-Key", c.Key)
+	assert.Equal(t, "abc123", c.Value)
+	assert.Equal(t, "header", c.In)
 }
 
 func TestAuth_UnmarshalYAML_script(t *testing.T) {
 	t.Parallel()
 
 	var a Auth
-	if err := yaml.Unmarshal([]byte("type: script\nconfig:\n  domain: my-api"), &a); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, yaml.Unmarshal([]byte("type: script\nconfig:\n  domain: my-api"), &a))
 	c, ok := a.Client.(*auth.ScriptAuthClient)
-	if !ok {
-		t.Fatalf("expected *auth.ScriptAuthClient, got %T", a.Client)
-	}
-	if c.Domain != "my-api" {
-		t.Errorf("Domain = %q, want %q", c.Domain, "my-api")
-	}
+	require.True(t, ok, "expected *auth.ScriptAuthClient")
+	assert.Equal(t, "my-api", c.Domain)
 }
 
 func TestAuth_UnmarshalYAML_hmac(t *testing.T) {
@@ -194,19 +120,11 @@ func TestAuth_UnmarshalYAML_hmac(t *testing.T) {
 
 	var a Auth
 	y := "type: hmac\nconfig:\n  api_key: my-api-key\n  secret_key: my-secret-key"
-	if err := yaml.Unmarshal([]byte(y), &a); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, yaml.Unmarshal([]byte(y), &a))
 	c, ok := a.Client.(*auth.HMACAuthClient)
-	if !ok {
-		t.Fatalf("expected *auth.HMACAuthClient, got %T", a.Client)
-	}
-	if c.APIKey != "my-api-key" {
-		t.Errorf("APIKey = %q, want %q", c.APIKey, "my-api-key")
-	}
-	if c.SecretKey != "my-secret-key" {
-		t.Errorf("SecretKey = %q, want %q", c.SecretKey, "my-secret-key")
-	}
+	require.True(t, ok, "expected *auth.HMACAuthClient")
+	assert.Equal(t, "my-api-key", c.APIKey)
+	assert.Equal(t, "my-secret-key", c.SecretKey)
 }
 
 func TestAuth_UnmarshalYAML_underscore_type(t *testing.T) {
@@ -214,12 +132,9 @@ func TestAuth_UnmarshalYAML_underscore_type(t *testing.T) {
 
 	y := "type: oauth2_cc\nconfig:\n  client_id: cid\n  client_secret: cs\n  token_url: https://example.com/token"
 	var a Auth
-	if err := yaml.Unmarshal([]byte(y), &a); err != nil {
-		t.Fatal(err)
-	}
-	if _, ok := a.Client.(*auth.OAuth2ClientCredentialsAuthClient); !ok {
-		t.Fatalf("expected *auth.OAuth2ClientCredentialsAuthClient, got %T", a.Client)
-	}
+	require.NoError(t, yaml.Unmarshal([]byte(y), &a))
+	_, ok := a.Client.(*auth.OAuth2ClientCredentialsAuthClient)
+	assert.True(t, ok, "expected *auth.OAuth2ClientCredentialsAuthClient")
 }
 
 func TestAuth_UnmarshalYAML_empty_config_error(t *testing.T) {
@@ -227,12 +142,8 @@ func TestAuth_UnmarshalYAML_empty_config_error(t *testing.T) {
 
 	var a Auth
 	err := yaml.Unmarshal([]byte("type: basic"), &a)
-	if err == nil {
-		t.Fatal("expected error, got nil")
-	}
-	if err.Error() != "auth config is required for this type" {
-		t.Errorf("error = %q, want %q", err.Error(), "auth config is required for this type")
-	}
+	require.Error(t, err)
+	assert.Equal(t, "auth config is required for this type", err.Error())
 }
 
 func TestAuth_UnmarshalYAML_unknown_type(t *testing.T) {
@@ -240,12 +151,8 @@ func TestAuth_UnmarshalYAML_unknown_type(t *testing.T) {
 
 	var a Auth
 	err := yaml.Unmarshal([]byte("type: unknown\nconfig: {}"), &a)
-	if err == nil {
-		t.Fatal("expected error, got nil")
-	}
-	if err.Error() != `unsupported auth type "unknown"` {
-		t.Errorf("error = %q, want %q", err.Error(), `unsupported auth type "unknown"`)
-	}
+	require.Error(t, err)
+	assert.Equal(t, `unsupported auth type "unknown"`, err.Error())
 }
 
 func TestAuth_UnmarshalYAML_decode_error(t *testing.T) {
@@ -270,9 +177,7 @@ func TestAuth_UnmarshalYAML_decode_error(t *testing.T) {
 			t.Parallel()
 			var a Auth
 			err := yaml.Unmarshal([]byte(tt.yaml), &a)
-			if err == nil {
-				t.Fatal("expected decode error, got nil")
-			}
+			require.Error(t, err, "expected decode error")
 		})
 	}
 }
@@ -282,7 +187,5 @@ func TestAuth_UnmarshalYAML_top_level_decode_error(t *testing.T) {
 
 	var a Auth
 	err := yaml.Unmarshal([]byte("type:\n  - broken"), &a)
-	if err == nil {
-		t.Fatal("expected error for malformed YAML")
-	}
+	require.Error(t, err, "expected error for malformed YAML")
 }

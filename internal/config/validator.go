@@ -35,6 +35,7 @@ type validationError struct {
 // validationErrors collects multiple validation errors.
 type validationErrors []validationError
 
+// Error returns a formatted string listing all validation errors.
 func (ve validationErrors) Error() string {
 	if len(ve) == 0 {
 		return "no validation errors"
@@ -82,13 +83,10 @@ func ValidateConfig(cfg *Config, opts ValidateOptions) error {
 	}
 
 	errs = append(errs, validateDuplicateDomains(cfg)...)
-
 	if cfg.MockEnabled {
 		errs = append(errs, validateMockPorts(cfg, filter)...)
 	}
-
 	errs = append(errs, validateSpecLocations(cfg, filter, opts.Cache)...)
-
 	errs = append(errs, validateGlobalHTTPClient(cfg)...)
 
 	if len(errs) == 0 {
@@ -97,6 +95,7 @@ func ValidateConfig(cfg *Config, opts ValidateOptions) error {
 	return errs
 }
 
+// validateDuplicateDomains checks that no two active specs share the same domain.
 func validateDuplicateDomains(cfg *Config) []validationError {
 	var errs []validationError
 	seen := make(map[string]int)
@@ -108,7 +107,8 @@ func validateDuplicateDomains(cfg *Config) []validationError {
 			errs = append(errs, validationError{
 				spec:    spec.Domain,
 				errType: "config",
-				message: fmt.Sprintf("duplicate domain %q (specs #%d and #%d)", spec.Domain, j+1, i+1),
+				message: fmt.Sprintf("duplicate domain %q (specs #%d and #%d)",
+					spec.Domain, j+1, i+1),
 			})
 		} else {
 			seen[spec.Domain] = i
@@ -117,6 +117,7 @@ func validateDuplicateDomains(cfg *Config) []validationError {
 	return errs
 }
 
+// validateMockPorts checks for duplicate ports across mock auth config and collection base_mock_url values.
 func validateMockPorts(cfg *Config, filter *Filter) []validationError {
 	var errs []validationError
 	usedPorts := make(map[int]string)
@@ -163,6 +164,7 @@ func validateMockPorts(cfg *Config, filter *Filter) []validationError {
 	return errs
 }
 
+// validateSpecLocations checks that all collection spec locations are accessible.
 func validateSpecLocations(cfg *Config, filter *Filter, cacheInstance *cache.Cache) []validationError {
 	var errs []validationError
 	for _, spec := range cfg.Specs {
@@ -203,6 +205,7 @@ func validateSpecLocations(cfg *Config, filter *Filter, cacheInstance *cache.Cac
 	return errs
 }
 
+// validateGlobalHTTPClient validates the global HTTP client configuration.
 func validateGlobalHTTPClient(cfg *Config) []validationError {
 	var errs []validationError
 	if cfg.HTTPClient == nil {
@@ -235,6 +238,7 @@ func extractPort(addr string) int {
 	return port
 }
 
+// getValidator returns the singleton config validator, initializing it on first call.
 func getValidator() (*validator.Validate, error) {
 	configValidatorMu.Lock()
 	defer configValidatorMu.Unlock()
@@ -324,18 +328,22 @@ func mockAddrFormatValidation(fl validator.FieldLevel) bool {
 	return true
 }
 
+// domainFormatValidation validates that a domain matches the allowed pattern.
 func domainFormatValidation(fl validator.FieldLevel) bool {
 	return domainRegex.MatchString(fl.Field().String())
 }
 
+// titleFormatValidation validates that a title contains only allowed characters.
 func titleFormatValidation(fl validator.FieldLevel) bool {
 	return titleRegex.MatchString(fl.Field().String())
 }
 
+// instructionFormatValidation validates that an instruction contains only allowed characters.
 func instructionFormatValidation(fl validator.FieldLevel) bool {
 	return instructionRegex.MatchString(fl.Field().String())
 }
 
+// humanReadableError converts a validator field error into a human-readable message.
 func humanReadableError(fe validator.FieldError) string {
 	switch fe.Tag() {
 	case "required":
@@ -363,6 +371,7 @@ func humanReadableError(fe validator.FieldError) string {
 	}
 }
 
+// requiredFieldError returns a human-readable message for a required field validation error.
 func requiredFieldError(field string) string {
 	switch field {
 	case "Domain":
@@ -378,6 +387,7 @@ func requiredFieldError(field string) string {
 	}
 }
 
+// minFieldError returns a human-readable message for a min-length validation error.
 func minFieldError(field, param string) string {
 	switch field {
 	case "LLMTitle":
@@ -395,6 +405,7 @@ func minFieldError(field, param string) string {
 	}
 }
 
+// maxFieldError returns a human-readable message for a max-length validation error.
 func maxFieldError(field, param string) string {
 	switch field {
 	case "LLMTitle":
@@ -417,11 +428,11 @@ func maxFieldError(field, param string) string {
 // collectStructErrors runs the validator on a struct and collects all field errors.
 func collectStructErrors(prefix string, v any) []validationError {
 	var errs []validationError
-	val, valErr := getValidator()
-	if valErr != nil {
+	val, err := getValidator()
+	if err != nil {
 		errs = append(errs, validationError{
 			field:   prefix,
-			message: fmt.Sprintf("validator initialization failed: %s", valErr),
+			message: fmt.Sprintf("validator initialization failed: %s", err),
 		})
 		return errs
 	}

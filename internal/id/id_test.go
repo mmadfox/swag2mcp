@@ -2,6 +2,8 @@ package id
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDomain(t *testing.T) {
@@ -27,9 +29,7 @@ func TestDomain(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			result := Domain(tt.input)
-			if result != tt.expected {
-				t.Errorf("Domain(%s) = %s; want %s", tt.input, result, tt.expected)
-			}
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
@@ -60,9 +60,7 @@ func TestCollection(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			result := Collection(tt.domain, tt.spec)
-			if result != tt.expected {
-				t.Errorf("Collection(%s, %s) = %s; want %s", tt.domain, tt.spec, result, tt.expected)
-			}
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
@@ -96,9 +94,7 @@ func TestTag(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			result := Tag(tt.domain, tt.collection, tt.tag)
-			if result != tt.expected {
-				t.Errorf("Tag(%s, %s, %s) = %s; want %s", tt.domain, tt.collection, tt.tag, result, tt.expected)
-			}
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
@@ -138,18 +134,7 @@ func TestMethod(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			result := Method(tt.domain, tt.collection, "", tt.method, tt.path, tt.opID)
-			if result != tt.expected {
-				t.Errorf(
-					"Method(%s, %s, %s, %s, %s) = %s; want %s",
-					tt.domain,
-					tt.collection,
-					tt.method,
-					tt.path,
-					tt.opID,
-					result,
-					tt.expected,
-				)
-			}
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }

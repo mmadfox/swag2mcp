@@ -6,28 +6,26 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/httpclient"
+	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/mmadfox/swag2mcp/internal/spec"
-	"github.com/mmadfox/swag2mcp/internal/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestResolveMaxResponseSize_NilConfig(t *testing.T) {
 	t.Parallel()
 
 	size := resolveMaxResponseSize(nil)
-	if size != defaultMaxResponseSize {
-		t.Errorf("got %d, want %d", size, defaultMaxResponseSize)
-	}
+	require.Equal(t, defaultMaxResponseSize, size)
 }
 
 func TestResolveMaxResponseSize_NilField(t *testing.T) {
 	t.Parallel()
 
 	size := resolveMaxResponseSize(nil)
-	if size != defaultMaxResponseSize {
-		t.Errorf("got %d, want %d", size, defaultMaxResponseSize)
-	}
+	require.Equal(t, defaultMaxResponseSize, size)
 }
 
 func TestResolveMaxResponseSize_Custom(t *testing.T) {
@@ -35,19 +33,15 @@ func TestResolveMaxResponseSize_Custom(t *testing.T) {
 
 	val := 4096
 	size := resolveMaxResponseSize(&val)
-	if size != 4096 {
-		t.Errorf("got %d, want %d", size, 4096)
-	}
+	require.Equal(t, 4096, size)
 }
 
 func TestResolveMaxResponseSize_ExceedsMax(t *testing.T) {
 	t.Parallel()
 
-	val := 2 * 1024 * 1024 // 2 MB
+	val := 2 * 1024 * 1024
 	size := resolveMaxResponseSize(&val)
-	if size != maxMaxResponseSize {
-		t.Errorf("got %d, want %d", size, maxMaxResponseSize)
-	}
+	require.Equal(t, maxMaxResponseSize, size)
 }
 
 func TestResolveMaxResponseSize_Zero(t *testing.T) {
@@ -55,9 +49,7 @@ func TestResolveMaxResponseSize_Zero(t *testing.T) {
 
 	val := 0
 	size := resolveMaxResponseSize(&val)
-	if size != defaultMaxResponseSize {
-		t.Errorf("got %d, want %d", size, defaultMaxResponseSize)
-	}
+	require.Equal(t, defaultMaxResponseSize, size)
 }
 
 func TestResolveMaxResponseSize_Negative(t *testing.T) {
@@ -65,9 +57,7 @@ func TestResolveMaxResponseSize_Negative(t *testing.T) {
 
 	val := -100
 	size := resolveMaxResponseSize(&val)
-	if size != defaultMaxResponseSize {
-		t.Errorf("got %d, want %d", size, defaultMaxResponseSize)
-	}
+	require.Equal(t, defaultMaxResponseSize, size)
 }
 
 func TestOpenCommand_Darwin(t *testing.T) {
@@ -76,9 +66,7 @@ func TestOpenCommand_Darwin(t *testing.T) {
 	}
 
 	cmd := openCommand("/tmp/test.json")
-	if cmd != "open /tmp/test.json" {
-		t.Errorf("got %q, want %q", cmd, "open /tmp/test.json")
-	}
+	require.Equal(t, "open /tmp/test.json", cmd)
 }
 
 func TestOpenCommand_Linux(t *testing.T) {
@@ -87,9 +75,7 @@ func TestOpenCommand_Linux(t *testing.T) {
 	}
 
 	cmd := openCommand("/tmp/test.json")
-	if cmd != "xdg-open /tmp/test.json" {
-		t.Errorf("got %q, want %q", cmd, "xdg-open /tmp/test.json")
-	}
+	require.Equal(t, "xdg-open /tmp/test.json", cmd)
 }
 
 func TestOpenCommand_Windows(t *testing.T) {
@@ -98,58 +84,44 @@ func TestOpenCommand_Windows(t *testing.T) {
 	}
 
 	cmd := openCommand("C:\\test.json")
-	if cmd != "start C:\\test.json" {
-		t.Errorf("got %q, want %q", cmd, "start C:\\test.json")
-	}
+	require.Equal(t, "start C:\\test.json", cmd)
 }
 
 func TestFormatSize_Bytes(t *testing.T) {
 	t.Parallel()
 
-	if s := formatSize(500); s != "500 B" {
-		t.Errorf("got %q, want %q", s, "500 B")
-	}
+	require.Equal(t, "500 B", formatSize(500))
 }
 
 func TestFormatSize_KB(t *testing.T) {
 	t.Parallel()
 
-	if s := formatSize(2048); s != "2.0 KB" {
-		t.Errorf("got %q, want %q", s, "2.0 KB")
-	}
+	require.Equal(t, "2.0 KB", formatSize(2048))
 }
 
 func TestFormatSize_MB(t *testing.T) {
 	t.Parallel()
 
-	if s := formatSize(1048576); s != "1.0 MB" {
-		t.Errorf("got %q, want %q", s, "1.0 MB")
-	}
+	require.Equal(t, "1.0 MB", formatSize(1048576))
 }
 
 func TestFormatSize_GB(t *testing.T) {
 	t.Parallel()
 
-	if s := formatSize(1073741824); s != "1.0 GB" {
-		t.Errorf("got %q, want %q", s, "1.0 GB")
-	}
+	require.Equal(t, "1.0 GB", formatSize(1073741824))
 }
 
 func TestFormatSize_Zero(t *testing.T) {
 	t.Parallel()
 
-	if s := formatSize(0); s != "0 B" {
-		t.Errorf("got %q, want %q", s, "0 B")
-	}
+	require.Equal(t, "0 B", formatSize(0))
 }
 
 func TestRandomSuffix_Length(t *testing.T) {
 	t.Parallel()
 
 	suffix := randomSuffix(6)
-	if len(suffix) != 6 {
-		t.Errorf("len = %d, want %d", len(suffix), 6)
-	}
+	require.Len(t, suffix, 6)
 }
 
 func TestRandomSuffix_HexChars(t *testing.T) {
@@ -157,9 +129,7 @@ func TestRandomSuffix_HexChars(t *testing.T) {
 
 	suffix := randomSuffix(12)
 	for _, c := range suffix {
-		if !strings.ContainsRune("0123456789abcdef", c) {
-			t.Errorf("unexpected char %c in suffix %q", c, suffix)
-		}
+		require.Contains(t, "0123456789abcdef", string(c))
 	}
 }
 
@@ -168,9 +138,7 @@ func TestRandomSuffix_Unique(t *testing.T) {
 
 	s1 := randomSuffix(6)
 	s2 := randomSuffix(6)
-	if s1 == s2 {
-		t.Error("two random suffixes are identical")
-	}
+	require.NotEqual(t, s1, s2)
 }
 
 func TestSaveLargeResponse(t *testing.T) {
@@ -185,41 +153,23 @@ func TestSaveLargeResponse(t *testing.T) {
 		Header:     http.Header{"Content-Type": []string{"application/json"}},
 	}
 
-	endpoint := &types.Endpoint{
+	endpoint := &model.Endpoint{
 		Name: "GET",
 		Path: "/test",
 	}
 
 	resp, err := svc.saveLargeResponse(response, body, t.Name(), endpoint, 2048)
-	if err != nil {
-		t.Fatalf("saveLargeResponse() = %v", err)
-	}
+	require.NoError(t, err)
+	require.NotNil(t, resp.FileRef)
+	require.Equal(t, 10000, resp.FileRef.Size)
+	require.NotEmpty(t, resp.FileRef.SizeHint)
+	require.NotEmpty(t, resp.FileRef.MaxSizeHint)
+	require.NotEmpty(t, resp.FileRef.Message)
+	require.NotEmpty(t, resp.FileRef.OpenCmd)
+	require.True(t, strings.HasPrefix(resp.FileRef.Path, svc.ws.ResponsesDir()))
 
-	if resp.FileRef == nil {
-		t.Fatal("FileRef is nil")
-	}
-	if resp.FileRef.Size != 10000 {
-		t.Errorf("Size = %d, want %d", resp.FileRef.Size, 10000)
-	}
-	if resp.FileRef.SizeHint == "" {
-		t.Error("SizeHint is empty")
-	}
-	if resp.FileRef.MaxSizeHint == "" {
-		t.Error("MaxSizeHint is empty")
-	}
-	if resp.FileRef.Message == "" {
-		t.Error("Message is empty")
-	}
-	if resp.FileRef.OpenCmd == "" {
-		t.Error("OpenCmd is empty")
-	}
-	if !strings.HasPrefix(resp.FileRef.Path, svc.ws.ResponsesDir()) {
-		t.Errorf("Path %q not in responses dir %q", resp.FileRef.Path, svc.ws.ResponsesDir())
-	}
-
-	if _, statErr := os.Stat(resp.FileRef.Path); os.IsNotExist(statErr) {
-		t.Error("response file was not created on disk")
-	}
+	_, statErr := os.Stat(resp.FileRef.Path)
+	require.False(t, os.IsNotExist(statErr))
 }
 
 func TestSaveLargeResponse_FileContent(t *testing.T) {
@@ -234,26 +184,18 @@ func TestSaveLargeResponse_FileContent(t *testing.T) {
 		Header:     http.Header{},
 	}
 
-	endpoint := &types.Endpoint{
+	endpoint := &model.Endpoint{
 		Name: "GET",
 		Path: "/test",
 	}
 
 	resp, err := svc.saveLargeResponse(response, body, t.Name(), endpoint, 100)
-	if err != nil {
-		t.Fatalf("saveLargeResponse() = %v", err)
-	}
+	require.NoError(t, err)
 
 	data, err := os.ReadFile(resp.FileRef.Path)
-	if err != nil {
-		t.Fatalf("ReadFile() = %v", err)
-	}
-	if string(data) != string(body) {
-		t.Errorf("file content = %q, want %q", string(data), string(body))
-	}
+	require.NoError(t, err)
+	require.Equal(t, body, data)
 }
-
-// --- validateParameters tests ---
 
 func TestValidateParameters_UnknownParameter(t *testing.T) {
 	t.Parallel()
@@ -264,9 +206,7 @@ func TestValidateParameters_UnknownParameter(t *testing.T) {
 		},
 	}
 	err := validateParameters(op, map[string]any{"unknown": "val"})
-	if err == nil {
-		t.Fatal("expected error for unknown parameter")
-	}
+	require.Error(t, err)
 }
 
 func TestValidateParameters_MissingRequired(t *testing.T) {
@@ -279,9 +219,7 @@ func TestValidateParameters_MissingRequired(t *testing.T) {
 		},
 	}
 	err := validateParameters(op, map[string]any{"name": "test"})
-	if err == nil {
-		t.Fatal("expected error for missing required parameter")
-	}
+	require.Error(t, err)
 }
 
 func TestValidateParameters_AllValid(t *testing.T) {
@@ -294,9 +232,7 @@ func TestValidateParameters_AllValid(t *testing.T) {
 		},
 	}
 	err := validateParameters(op, map[string]any{"id": "123", "name": "test"})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestValidateParameters_NoDeclaredParams(t *testing.T) {
@@ -304,9 +240,7 @@ func TestValidateParameters_NoDeclaredParams(t *testing.T) {
 
 	op := &spec.Operation{}
 	err := validateParameters(op, map[string]any{"id": "123"})
-	if err == nil {
-		t.Fatal("expected error for unknown parameter with no declared params")
-	}
+	require.Error(t, err)
 }
 
 func TestValidateParameters_NilParams(t *testing.T) {
@@ -318,21 +252,15 @@ func TestValidateParameters_NilParams(t *testing.T) {
 		},
 	}
 	err := validateParameters(op, nil)
-	if err == nil {
-		t.Fatal("expected error for nil params with required parameter")
-	}
+	require.Error(t, err)
 }
-
-// --- validateRequestBody tests ---
 
 func TestValidateRequestBody_NilOperationBody(t *testing.T) {
 	t.Parallel()
 
 	op := &spec.Operation{}
 	err := validateRequestBody(op, map[string]any{"key": "val"})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestValidateRequestBody_RequiredBodyNil(t *testing.T) {
@@ -345,9 +273,7 @@ func TestValidateRequestBody_RequiredBodyNil(t *testing.T) {
 		},
 	}
 	err := validateRequestBody(op, nil)
-	if err == nil {
-		t.Fatal("expected error for required body with nil")
-	}
+	require.Error(t, err)
 }
 
 func TestValidateRequestBody_NotRequiredBodyNil(t *testing.T) {
@@ -359,9 +285,7 @@ func TestValidateRequestBody_NotRequiredBodyNil(t *testing.T) {
 		},
 	}
 	err := validateRequestBody(op, nil)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestValidateRequestBody_ValidBody(t *testing.T) {
@@ -383,9 +307,7 @@ func TestValidateRequestBody_ValidBody(t *testing.T) {
 		},
 	}
 	err := validateRequestBody(op, map[string]any{"name": "test"})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestValidateRequestBody_MissingRequiredField(t *testing.T) {
@@ -408,9 +330,7 @@ func TestValidateRequestBody_MissingRequiredField(t *testing.T) {
 		},
 	}
 	err := validateRequestBody(op, map[string]any{})
-	if err == nil {
-		t.Fatal("expected error for missing required field")
-	}
+	require.Error(t, err)
 }
 
 func TestValidateRequestBody_UnknownField(t *testing.T) {
@@ -432,9 +352,7 @@ func TestValidateRequestBody_UnknownField(t *testing.T) {
 		},
 	}
 	err := validateRequestBody(op, map[string]any{"name": "test", "unknown": "val"})
-	if err == nil {
-		t.Fatal("expected error for unknown field")
-	}
+	require.Error(t, err)
 }
 
 func TestValidateRequestBody_NestedObject(t *testing.T) {
@@ -462,9 +380,7 @@ func TestValidateRequestBody_NestedObject(t *testing.T) {
 		},
 	}
 	err := validateRequestBody(op, map[string]any{"address": map[string]any{}})
-	if err == nil {
-		t.Fatal("expected error for missing nested required field")
-	}
+	require.Error(t, err)
 }
 
 func TestValidateRequestBody_NestedArray(t *testing.T) {
@@ -495,29 +411,21 @@ func TestValidateRequestBody_NestedArray(t *testing.T) {
 		},
 	}
 	err := validateRequestBody(op, map[string]any{"items": []any{map[string]any{}}})
-	if err == nil {
-		t.Fatal("expected error for missing nested array item required field")
-	}
+	require.Error(t, err)
 }
-
-// --- schemaForContentType tests ---
 
 func TestSchemaForContentType_NilContent(t *testing.T) {
 	t.Parallel()
 
 	schema := schemaForContentType(nil)
-	if schema != nil {
-		t.Fatal("expected nil")
-	}
+	require.Nil(t, schema)
 }
 
 func TestSchemaForContentType_EmptyContent(t *testing.T) {
 	t.Parallel()
 
 	schema := schemaForContentType(map[string]*spec.MediaType{})
-	if schema != nil {
-		t.Fatal("expected nil")
-	}
+	require.Nil(t, schema)
 }
 
 func TestSchemaForContentType_NonJSONContent(t *testing.T) {
@@ -526,9 +434,7 @@ func TestSchemaForContentType_NonJSONContent(t *testing.T) {
 	schema := schemaForContentType(map[string]*spec.MediaType{
 		"text/plain": {Schema: &spec.Schema{Type: "string"}},
 	})
-	if schema != nil {
-		t.Fatal("expected nil for non-json content type")
-	}
+	require.Nil(t, schema)
 }
 
 func TestSchemaForContentType_JSONWithNilSchema(t *testing.T) {
@@ -537,9 +443,7 @@ func TestSchemaForContentType_JSONWithNilSchema(t *testing.T) {
 	schema := schemaForContentType(map[string]*spec.MediaType{
 		"application/json": nil,
 	})
-	if schema != nil {
-		t.Fatal("expected nil when media type is nil")
-	}
+	require.Nil(t, schema)
 }
 
 func TestSchemaForContentType_JSONWithSchema(t *testing.T) {
@@ -549,20 +453,14 @@ func TestSchemaForContentType_JSONWithSchema(t *testing.T) {
 	schema := schemaForContentType(map[string]*spec.MediaType{
 		"application/json": {Schema: expected},
 	})
-	if schema != expected {
-		t.Fatal("expected the schema to be returned")
-	}
+	require.Equal(t, expected, schema)
 }
-
-// --- validateSchemaValue tests ---
 
 func TestValidateSchemaValue_NilSchema(t *testing.T) {
 	t.Parallel()
 
 	err := validateSchemaValue(nil, "value", "$")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestValidateSchemaValue_ObjectType(t *testing.T) {
@@ -576,9 +474,7 @@ func TestValidateSchemaValue_ObjectType(t *testing.T) {
 		},
 	}
 	err := validateSchemaValue(schema, map[string]any{}, "$")
-	if err == nil {
-		t.Fatal("expected error for missing required field")
-	}
+	require.Error(t, err)
 }
 
 func TestValidateSchemaValue_ArrayType(t *testing.T) {
@@ -595,9 +491,7 @@ func TestValidateSchemaValue_ArrayType(t *testing.T) {
 		},
 	}
 	err := validateSchemaValue(schema, []any{map[string]any{}}, "$")
-	if err == nil {
-		t.Fatal("expected error for missing required field in array item")
-	}
+	require.Error(t, err)
 }
 
 func TestValidateSchemaValue_UnknownType(t *testing.T) {
@@ -605,21 +499,15 @@ func TestValidateSchemaValue_UnknownType(t *testing.T) {
 
 	schema := &spec.Schema{Type: "string"}
 	err := validateSchemaValue(schema, "hello", "$")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err)
 }
-
-// --- validateObjectSchema tests ---
 
 func TestValidateObjectSchema_ValueNotMap(t *testing.T) {
 	t.Parallel()
 
 	schema := &spec.Schema{Type: "object"}
 	err := validateObjectSchema(schema, "not-a-map", "$")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestValidateObjectSchema_MissingRequired(t *testing.T) {
@@ -632,9 +520,7 @@ func TestValidateObjectSchema_MissingRequired(t *testing.T) {
 		},
 	}
 	err := validateObjectSchema(schema, map[string]any{}, "$")
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestValidateObjectSchema_UnknownField(t *testing.T) {
@@ -646,9 +532,7 @@ func TestValidateObjectSchema_UnknownField(t *testing.T) {
 		},
 	}
 	err := validateObjectSchema(schema, map[string]any{"name": "test", "unknown": "val"}, "$")
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestValidateObjectSchema_NestedValidation(t *testing.T) {
@@ -666,21 +550,15 @@ func TestValidateObjectSchema_NestedValidation(t *testing.T) {
 		},
 	}
 	err := validateObjectSchema(schema, map[string]any{"child": map[string]any{}}, "$")
-	if err == nil {
-		t.Fatal("expected error for nested missing required field")
-	}
+	require.Error(t, err)
 }
-
-// --- validateArraySchema tests ---
 
 func TestValidateArraySchema_ValueNotSlice(t *testing.T) {
 	t.Parallel()
 
 	schema := &spec.Schema{Type: "array"}
 	err := validateArraySchema(schema, "not-a-slice", "$")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestValidateArraySchema_ItemValidationSuccess(t *testing.T) {
@@ -696,9 +574,7 @@ func TestValidateArraySchema_ItemValidationSuccess(t *testing.T) {
 		},
 	}
 	err := validateArraySchema(schema, []any{map[string]any{"id": "1"}}, "$")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestValidateArraySchema_ItemValidationFailure(t *testing.T) {
@@ -715,38 +591,24 @@ func TestValidateArraySchema_ItemValidationFailure(t *testing.T) {
 		},
 	}
 	err := validateArraySchema(schema, []any{map[string]any{}}, "$")
-	if err == nil {
-		t.Fatal("expected error for missing required field in item")
-	}
+	require.Error(t, err)
 }
-
-// --- httpclient.New tests ---
 
 func TestNewHTTPClient_NilConfig(t *testing.T) {
 	t.Parallel()
 
 	client, err := httpclient.New(httpclient.Config{})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client == nil {
-		t.Fatal("client is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, client)
 }
 
 func TestNewHTTPClient_WithTimeout(t *testing.T) {
 	t.Parallel()
 
-	client, err := httpclient.New(httpclient.Config{Timeout: 30})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client == nil {
-		t.Fatal("client is nil")
-	}
-	if client.Timeout != 30 {
-		t.Errorf("Timeout = %v, want %v", client.Timeout, 30)
-	}
+	client, err := httpclient.New(httpclient.Config{Timeout: 30 * time.Second})
+	require.NoError(t, err)
+	require.NotNil(t, client)
+	require.Equal(t, 30*time.Second, client.Timeout)
 }
 
 func TestNewHTTPClient_NoFollowRedirects(t *testing.T) {
@@ -754,15 +616,9 @@ func TestNewHTTPClient_NoFollowRedirects(t *testing.T) {
 
 	follow := false
 	client, err := httpclient.New(httpclient.Config{FollowRedirects: &follow})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client == nil {
-		t.Fatal("client is nil")
-	}
-	if client.CheckRedirect == nil {
-		t.Fatal("CheckRedirect is nil, expected ErrUseLastResponse")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, client)
+	require.NotNil(t, client.CheckRedirect)
 }
 
 func TestNewHTTPClient_MaxRedirects(t *testing.T) {
@@ -770,39 +626,25 @@ func TestNewHTTPClient_MaxRedirects(t *testing.T) {
 
 	maxRedirects := 3
 	client, err := httpclient.New(httpclient.Config{MaxRedirects: &maxRedirects})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client == nil {
-		t.Fatal("client is nil")
-	}
-	if client.CheckRedirect == nil {
-		t.Fatal("CheckRedirect is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, client)
+	require.NotNil(t, client.CheckRedirect)
 }
 
 func TestNewHTTPClient_TimeoutZero(t *testing.T) {
 	t.Parallel()
 
 	client, err := httpclient.New(httpclient.Config{Timeout: 0})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client.Timeout == 0 {
-		t.Error("Timeout should have default value")
-	}
+	require.NoError(t, err)
+	require.NotZero(t, client.Timeout)
 }
 
 func TestNewHTTPClient_RedirectsNoop(t *testing.T) {
 	t.Parallel()
 
 	client, err := httpclient.New(httpclient.Config{})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client.CheckRedirect != nil {
-		t.Fatal("CheckRedirect should be nil when both fields are nil")
-	}
+	require.NoError(t, err)
+	require.Nil(t, client.CheckRedirect)
 }
 
 func TestNewHTTPClient_FollowRedirectsFalse(t *testing.T) {
@@ -810,12 +652,8 @@ func TestNewHTTPClient_FollowRedirectsFalse(t *testing.T) {
 
 	follow := false
 	client, err := httpclient.New(httpclient.Config{FollowRedirects: &follow})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client.CheckRedirect == nil {
-		t.Fatal("CheckRedirect is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, client.CheckRedirect)
 }
 
 func TestNewHTTPClient_MaxRedirectsSet(t *testing.T) {
@@ -823,12 +661,8 @@ func TestNewHTTPClient_MaxRedirectsSet(t *testing.T) {
 
 	maxRedirects := 5
 	client, err := httpclient.New(httpclient.Config{MaxRedirects: &maxRedirects})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client.CheckRedirect == nil {
-		t.Fatal("CheckRedirect is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, client.CheckRedirect)
 }
 
 func TestNewHTTPClient_BothSet(t *testing.T) {
@@ -837,15 +671,9 @@ func TestNewHTTPClient_BothSet(t *testing.T) {
 	follow := true
 	maxRedirects := 5
 	client, err := httpclient.New(httpclient.Config{FollowRedirects: &follow, MaxRedirects: &maxRedirects})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client.CheckRedirect == nil {
-		t.Fatal("CheckRedirect is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, client.CheckRedirect)
 }
-
-// --- dumpRequest tests ---
 
 func TestDumpRequest_EmptyDumpDir(t *testing.T) {
 	t.Parallel()
@@ -853,7 +681,6 @@ func TestDumpRequest_EmptyDumpDir(t *testing.T) {
 	svc := newTestService(t)
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
 	svc.dumpRequest(req, "test-domain")
-	// Should not panic or write anything
 }
 
 func TestDumpRequest_WithDumpDir(t *testing.T) {
@@ -864,40 +691,31 @@ func TestDumpRequest_WithDumpDir(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
 	svc.dumpRequest(req, "test-domain")
 
-	// Check that a file was created in the dump dir
 	entries, err := os.ReadDir(tmpDir)
-	if err != nil {
-		t.Fatalf("ReadDir() = %v", err)
-	}
-	if len(entries) == 0 {
-		t.Fatal("no dump files created")
-	}
+	require.NoError(t, err)
+	require.NotEmpty(t, entries)
 }
 
 func TestResolveBaseURL_CollectionOverride(t *testing.T) {
 	t.Parallel()
 
 	builder := &requestBuilder{
-		spec:       &types.Spec{BaseURL: "https://spec.example.com"},
-		collection: &types.Collection{BaseURL: "https://collection.example.com"},
+		spec:       &model.Spec{BaseURL: "https://spec.example.com"},
+		collection: &model.Collection{BaseURL: "https://collection.example.com"},
 	}
 	url := builder.resolveBaseURL()
-	if url != "https://collection.example.com" {
-		t.Errorf("got %q, want %q", url, "https://collection.example.com")
-	}
+	require.Equal(t, "https://collection.example.com", url)
 }
 
 func TestResolveBaseURL_SpecFallback(t *testing.T) {
 	t.Parallel()
 
 	builder := &requestBuilder{
-		spec:       &types.Spec{BaseURL: "https://spec.example.com"},
-		collection: &types.Collection{},
+		spec:       &model.Spec{BaseURL: "https://spec.example.com"},
+		collection: &model.Collection{},
 	}
 	url := builder.resolveBaseURL()
-	if url != "https://spec.example.com" {
-		t.Errorf("got %q, want %q", url, "https://spec.example.com")
-	}
+	require.Equal(t, "https://spec.example.com", url)
 }
 
 func TestSaveLargeResponse_StatusCode(t *testing.T) {
@@ -912,16 +730,12 @@ func TestSaveLargeResponse_StatusCode(t *testing.T) {
 		Header:     http.Header{},
 	}
 
-	endpoint := &types.Endpoint{
+	endpoint := &model.Endpoint{
 		Name: "GET",
 		Path: "/test",
 	}
 
 	resp, err := svc.saveLargeResponse(response, body, t.Name(), endpoint, 100)
-	if err != nil {
-		t.Fatalf("saveLargeResponse() = %v", err)
-	}
-	if resp.StatusCode != http.StatusNotFound {
-		t.Errorf("StatusCode = %d, want %d", resp.StatusCode, http.StatusNotFound)
-	}
+	require.NoError(t, err)
+	require.Equal(t, http.StatusNotFound, resp.StatusCode)
 }

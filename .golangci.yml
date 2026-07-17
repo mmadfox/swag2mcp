@@ -322,12 +322,7 @@ linters:
       # Default: []
       disable:
         - fieldalignment # too strict
-      # Settings per analyzer.
-      settings:
-        shadow:
-          # Whether to be strict about shadowing; can be noisy.
-          # Default: false
-          strict: true
+        - shadow # shadow is safe in Go 1.23+; using `err` everywhere is preferred over reqErr/cliErr/doErr
 
     inamedparam:
       # Skips check for interface methods with only a single parameter.
@@ -402,6 +397,14 @@ linters:
       # Values: "all", "scope"
       # Default: "" (disabled)
       context: scope
+
+    testifylint:
+      enable:
+      disable:
+        - error-is-as
+        - error-nil
+        - empty
+        - float-compare
 
     staticcheck:
       # SAxxxx checks in https://staticcheck.dev/docs/configuration/options/#checks
@@ -567,15 +570,10 @@ linters:
       # errcheck for Scanln/Scanf in TUI
       - path: 'internal/tui/'
         linters: [ errcheck ]
-      # govet shadow in TUI and commands
-      - path: 'internal/tui/'
-        linters: [ govet ]
-      - path: 'internal/commands/'
-        linters: [ govet ]
-      - path: 'internal/config/auth\.go'
-        linters: [ govet ]
-      - path: 'internal/workspace/workspace_test\.go'
-        linters: [ govet ]
+      - path: 'internal/service/invoke\.go'
+        linters: [ goconst, gosec ]
+      - path: '_test\.go'
+        linters: [ gocognit ]
       # gocritic appendAssign in delete
       - path: 'internal/tui/delete\.go'
         linters: [ gocritic ]

@@ -15,22 +15,25 @@ type fileMeta struct {
 	TTLSec     int       `json:"ttl_sec"`
 }
 
+// IsExpired reports whether the cached file has exceeded its TTL.
 func (m fileMeta) IsExpired() bool {
 	return time.Since(m.CachedAt) > time.Duration(m.TTLSec)*time.Second
 }
 
+// readMeta reads and parses a fileMeta from the given path.
 func readMeta(path string) (fileMeta, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return fileMeta{}, err
 	}
 	var m fileMeta
-	if uErr := json.Unmarshal(data, &m); uErr != nil {
-		return fileMeta{}, uErr
+	if err := json.Unmarshal(data, &m); err != nil {
+		return fileMeta{}, err
 	}
 	return m, nil
 }
 
+// writeMeta serializes a fileMeta and writes it to the given path.
 func writeMeta(path string, m fileMeta) error {
 	data, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {

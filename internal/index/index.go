@@ -16,11 +16,12 @@ import (
 	"github.com/blugelabs/bluge/analysis/tokenizer"
 	"github.com/blugelabs/bluge/search"
 	querystring "github.com/blugelabs/query_string"
-	"github.com/mmadfox/swag2mcp/internal/types"
+	"github.com/mmadfox/swag2mcp/internal/model"
 )
 
 const initialSpecsCapacity = 8
 
+// newAnalyzer creates a default text analyzer with unicode tokenizer and lower-case filter.
 func newAnalyzer() *analysis.Analyzer {
 	return &analysis.Analyzer{
 		Tokenizer: tokenizer.NewUnicodeTokenizer(),
@@ -32,39 +33,39 @@ func newAnalyzer() *analysis.Analyzer {
 
 // EndpointCursor represents a position in the index.
 type EndpointCursor struct {
-	Spec       *types.Spec
-	Tag        *types.Tag
-	Endpoint   *types.Endpoint
-	Collection *types.Collection
+	Spec       *model.Spec
+	Tag        *model.Tag
+	Endpoint   *model.Endpoint
+	Collection *model.Collection
 }
 
 // TagCursor represents a position in the index.
 type TagCursor struct {
-	Spec       *types.Spec
-	Tag        *types.Tag
-	Collection *types.Collection
+	Spec       *model.Spec
+	Tag        *model.Tag
+	Collection *model.Collection
 }
 
 // CollectionCursor represents a position in the index.
 type CollectionCursor struct {
-	Spec       *types.Spec
-	Collection *types.Collection
+	Spec       *model.Spec
+	Collection *model.Collection
 }
 
 // Index represents the in-memory index structure.
 type Index struct {
 	mu                    sync.RWMutex
-	specs                 map[string]*types.Spec         // specID -> Spec
-	allSpecs              []*types.Spec                  // all specs
-	collectionsBySpec     map[string][]*types.Collection // specID -> []Collection
-	collectionByID        map[string]*types.Collection   // collectionID -> Collection
-	tagsByCollection      map[string][]*types.Tag        // collectionID -> []Tag
-	tagByID               map[string]*types.Tag          // tagID -> Tag
-	tagBySpec             map[string][]*types.Tag        // specID -> []Tag
-	endpointsByTag        map[string][]*types.Endpoint   // tagID -> []Endpoint
-	endpointsBySpec       map[string][]*types.Endpoint   // specID -> []Endpoint
-	endpointsByCollection map[string][]*types.Endpoint   // collectionID -> []Endpoint
-	endpointByID          map[string]*types.Endpoint     // endpointID -> Endpoint
+	specs                 map[string]*model.Spec         // specID -> Spec
+	allSpecs              []*model.Spec                  // all specs
+	collectionsBySpec     map[string][]*model.Collection // specID -> []Collection
+	collectionByID        map[string]*model.Collection   // collectionID -> Collection
+	tagsByCollection      map[string][]*model.Tag        // collectionID -> []Tag
+	tagByID               map[string]*model.Tag          // tagID -> Tag
+	tagBySpec             map[string][]*model.Tag        // specID -> []Tag
+	endpointsByTag        map[string][]*model.Endpoint   // tagID -> []Endpoint
+	endpointsBySpec       map[string][]*model.Endpoint   // specID -> []Endpoint
+	endpointsByCollection map[string][]*model.Endpoint   // collectionID -> []Endpoint
+	endpointByID          map[string]*model.Endpoint     // endpointID -> Endpoint
 	blugeWriter           *bluge.Writer
 	blugeReader           atomic.Pointer[bluge.Reader]
 	analyzer              *analysis.Analyzer
@@ -90,17 +91,17 @@ func New(opts ...NewOption) (*Index, error) {
 	}
 	idx := &Index{
 		blugeWriter:           writer,
-		specs:                 make(map[string]*types.Spec),
-		collectionsBySpec:     make(map[string][]*types.Collection),
-		collectionByID:        make(map[string]*types.Collection),
-		tagsByCollection:      make(map[string][]*types.Tag),
-		tagByID:               make(map[string]*types.Tag),
-		tagBySpec:             make(map[string][]*types.Tag),
-		endpointsByTag:        make(map[string][]*types.Endpoint),
-		endpointsBySpec:       make(map[string][]*types.Endpoint),
-		endpointsByCollection: make(map[string][]*types.Endpoint),
-		endpointByID:          make(map[string]*types.Endpoint),
-		allSpecs:              make([]*types.Spec, 0, initialSpecsCapacity),
+		specs:                 make(map[string]*model.Spec),
+		collectionsBySpec:     make(map[string][]*model.Collection),
+		collectionByID:        make(map[string]*model.Collection),
+		tagsByCollection:      make(map[string][]*model.Tag),
+		tagByID:               make(map[string]*model.Tag),
+		tagBySpec:             make(map[string][]*model.Tag),
+		endpointsByTag:        make(map[string][]*model.Endpoint),
+		endpointsBySpec:       make(map[string][]*model.Endpoint),
+		endpointsByCollection: make(map[string][]*model.Endpoint),
+		endpointByID:          make(map[string]*model.Endpoint),
+		allSpecs:              make([]*model.Spec, 0, initialSpecsCapacity),
 		analyzer:              newAnalyzer(),
 	}
 	for _, opt := range opts {
@@ -111,10 +112,10 @@ func New(opts ...NewOption) (*Index, error) {
 
 // EnsureIndex indexes all provided data: (spec, collections, tags, endpoints).
 func (idx *Index) EnsureIndex(
-	spec *types.Spec,
-	colls []*types.Collection,
-	tags []*types.Tag,
-	endpoints []*types.Endpoint,
+	spec *model.Spec,
+	colls []*model.Collection,
+	tags []*model.Tag,
+	endpoints []*model.Endpoint,
 ) error {
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
@@ -142,7 +143,7 @@ func (idx *Index) EnsureIndex(
 }
 
 // indexSpec indexes a spec.
-func (idx *Index) indexSpec(spec *types.Spec) error {
+func (idx *Index) indexSpec(spec *model.Spec) error {
 	if _, exists := idx.specs[spec.ID]; exists {
 		return fmt.Errorf("spec-%q(%s) already exists", spec.ID, spec.Domain)
 	}
@@ -152,7 +153,7 @@ func (idx *Index) indexSpec(spec *types.Spec) error {
 }
 
 // indexCollections indexes collections.
-func (idx *Index) indexCollections(colls []*types.Collection) error {
+func (idx *Index) indexCollections(colls []*model.Collection) error {
 	for _, coll := range colls {
 		if _, exists := idx.specs[coll.SpecID]; !exists {
 			return fmt.Errorf("spec-%q(%s) not found", coll.SpecID, coll.LLMTitle)
@@ -169,7 +170,7 @@ func (idx *Index) indexCollections(colls []*types.Collection) error {
 }
 
 // indexTags indexes tags.
-func (idx *Index) indexTags(tags []*types.Tag) error {
+func (idx *Index) indexTags(tags []*model.Tag) error {
 	for _, tag := range tags {
 		if _, exists := idx.specs[tag.SpecID]; !exists {
 			return fmt.Errorf("spec-%q not found", tag.SpecID)
@@ -191,14 +192,14 @@ func (idx *Index) indexTags(tags []*types.Tag) error {
 }
 
 // indexEndpoints indexes endpoints.
-func (idx *Index) indexEndpoints(endpoints []*types.Endpoint) error {
+func (idx *Index) indexEndpoints(endpoints []*model.Endpoint) error {
 	for _, ep := range endpoints {
 		if _, exists := idx.specs[ep.SpecID]; !exists {
 			return fmt.Errorf("spec-%q not found", ep.SpecID)
 		}
 
 		if _, exists := idx.collectionByID[ep.CollectionID]; !exists {
-			return fmt.Errorf("collection-%q not foudn", ep.ID)
+			return fmt.Errorf("collection-%q not found", ep.ID)
 		}
 
 		if _, exists := idx.tagByID[ep.TagID]; !exists {
@@ -218,7 +219,7 @@ func (idx *Index) indexEndpoints(endpoints []*types.Endpoint) error {
 }
 
 // index indexes the full-text search endpoints.
-func (idx *Index) index(endpoints []*types.Endpoint) error {
+func (idx *Index) index(endpoints []*model.Endpoint) error {
 	batch := bluge.NewBatch()
 	for _, ep := range endpoints {
 		summary := strings.ToLower(ep.SummaryOrFallback())
@@ -240,7 +241,7 @@ func (idx *Index) index(endpoints []*types.Endpoint) error {
 }
 
 // AllSpecs returns all indexed specs.
-func (idx *Index) AllSpecs() []*types.Spec {
+func (idx *Index) AllSpecs() []*model.Spec {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
@@ -248,7 +249,7 @@ func (idx *Index) AllSpecs() []*types.Spec {
 }
 
 // SpecByID returns a spec by its ID.
-func (idx *Index) SpecByID(specID string) (*types.Spec, error) {
+func (idx *Index) SpecByID(specID string) (*model.Spec, error) {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
@@ -260,7 +261,7 @@ func (idx *Index) SpecByID(specID string) (*types.Spec, error) {
 }
 
 // CollectionByID returns a collection by its ID.
-func (idx *Index) CollectionByID(collectionID string) (*types.Collection, error) {
+func (idx *Index) CollectionByID(collectionID string) (*model.Collection, error) {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
@@ -272,7 +273,7 @@ func (idx *Index) CollectionByID(collectionID string) (*types.Collection, error)
 }
 
 // CollectionsBySpec returns all collections for a given spec ID.
-func (idx *Index) CollectionsBySpec(specID string) ([]*types.Collection, error) {
+func (idx *Index) CollectionsBySpec(specID string) ([]*model.Collection, error) {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
@@ -284,7 +285,7 @@ func (idx *Index) CollectionsBySpec(specID string) ([]*types.Collection, error) 
 }
 
 // TagByID returns a tag by its ID.
-func (idx *Index) TagByID(tagID string) (*types.Tag, error) {
+func (idx *Index) TagByID(tagID string) (*model.Tag, error) {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
@@ -296,7 +297,7 @@ func (idx *Index) TagByID(tagID string) (*types.Tag, error) {
 }
 
 // TagsByCollection returns all tags for a given collection ID.
-func (idx *Index) TagsByCollection(collectionID string) ([]*types.Tag, error) {
+func (idx *Index) TagsByCollection(collectionID string) ([]*model.Tag, error) {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
@@ -308,7 +309,7 @@ func (idx *Index) TagsByCollection(collectionID string) ([]*types.Tag, error) {
 }
 
 // TagsBySpec returns all tags for a given spec ID.
-func (idx *Index) TagsBySpec(specID string) ([]*types.Tag, error) {
+func (idx *Index) TagsBySpec(specID string) ([]*model.Tag, error) {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
@@ -320,7 +321,7 @@ func (idx *Index) TagsBySpec(specID string) ([]*types.Tag, error) {
 }
 
 // EndpointsByTag returns all endpoints for a given tag ID.
-func (idx *Index) EndpointsByTag(tagID string) ([]*types.Endpoint, error) {
+func (idx *Index) EndpointsByTag(tagID string) ([]*model.Endpoint, error) {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
@@ -332,7 +333,7 @@ func (idx *Index) EndpointsByTag(tagID string) ([]*types.Endpoint, error) {
 }
 
 // EndpointsBySpec returns all endpoints for a given spec ID.
-func (idx *Index) EndpointsBySpec(specID string) ([]*types.Endpoint, error) {
+func (idx *Index) EndpointsBySpec(specID string) ([]*model.Endpoint, error) {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
@@ -344,7 +345,7 @@ func (idx *Index) EndpointsBySpec(specID string) ([]*types.Endpoint, error) {
 }
 
 // EndpointByCollection returns all endpoints for a given collection ID.
-func (idx *Index) EndpointByCollection(collectionID string) ([]*types.Endpoint, error) {
+func (idx *Index) EndpointByCollection(collectionID string) ([]*model.Endpoint, error) {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
@@ -356,7 +357,7 @@ func (idx *Index) EndpointByCollection(collectionID string) ([]*types.Endpoint, 
 }
 
 // EndpointByID returns an endpoint by its ID.
-func (idx *Index) EndpointByID(id string) (*types.Endpoint, error) {
+func (idx *Index) EndpointByID(id string) (*model.Endpoint, error) {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
@@ -431,7 +432,7 @@ func (idx *Index) IterateByCollections() iter.Seq[*CollectionCursor] {
 }
 
 // Search returns endpoints matching the query.
-func (idx *Index) Search(ctx context.Context, q string, limit int) ([]*types.Endpoint, error) {
+func (idx *Index) Search(ctx context.Context, q string, limit int) ([]*model.Endpoint, error) {
 	if len(q) == 0 {
 		return nil, errors.New("query string is required")
 	}
@@ -449,6 +450,7 @@ func (idx *Index) Search(ctx context.Context, q string, limit int) ([]*types.End
 	return idx.collectResults(ctx, r, query, limit)
 }
 
+// buildQuery parses a query string into a bluge query, falling back to a match-all or match query.
 func (idx *Index) buildQuery(q string) bluge.Query {
 	if q == "*" {
 		return bluge.NewMatchAllQuery()
@@ -466,6 +468,7 @@ func (idx *Index) buildQuery(q string) bluge.Query {
 	return bluge.NewMatchQuery(q).SetField("_all").SetAnalyzer(idx.analyzer)
 }
 
+// reader returns a bluge reader, lazily initializing it via CAS on first call.
 func (idx *Index) reader() (*bluge.Reader, error) {
 	r := idx.blugeReader.Load()
 	if r != nil {
@@ -486,12 +489,13 @@ func (idx *Index) reader() (*bluge.Reader, error) {
 	return idx.blugeReader.Load(), nil
 }
 
+// collectResults iterates search results and maps document IDs to indexed endpoints.
 func (idx *Index) collectResults(
 	ctx context.Context,
 	r *bluge.Reader,
 	query bluge.Query,
 	limit int,
-) ([]*types.Endpoint, error) {
+) ([]*model.Endpoint, error) {
 	req := bluge.NewTopNSearch(limit, query)
 	itr, err := r.Search(ctx, req)
 	if err != nil {
@@ -501,7 +505,7 @@ func (idx *Index) collectResults(
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
-	out := make([]*types.Endpoint, 0, limit)
+	out := make([]*model.Endpoint, 0, limit)
 	match, iterErr := itr.Next()
 	for iterErr == nil && match != nil {
 		docID := extractDocID(match)
@@ -519,6 +523,7 @@ func (idx *Index) collectResults(
 	return out, nil
 }
 
+// extractDocID reads the _id stored field from a bluge document match.
 func extractDocID(match *search.DocumentMatch) string {
 	var docID string
 	if err := match.VisitStoredFields(func(field string, value []byte) bool {
@@ -596,9 +601,9 @@ func (idx *Index) RemoveTag(tagID string) {
 func (idx *Index) RemoveAllTags() {
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
-	idx.tagByID = make(map[string]*types.Tag)
-	idx.tagsByCollection = make(map[string][]*types.Tag)
-	idx.tagBySpec = make(map[string][]*types.Tag)
+	idx.tagByID = make(map[string]*model.Tag)
+	idx.tagsByCollection = make(map[string][]*model.Tag)
+	idx.tagBySpec = make(map[string][]*model.Tag)
 }
 
 // RemoveCollectionsBySpec removes all collections for a given spec ID.
@@ -609,7 +614,7 @@ func (idx *Index) RemoveCollectionsBySpec(specID string) {
 }
 
 // AddCollection adds a collection to the index.
-func (idx *Index) AddCollection(coll *types.Collection) {
+func (idx *Index) AddCollection(coll *model.Collection) {
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
 	idx.collectionByID[coll.ID] = coll

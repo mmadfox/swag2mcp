@@ -8,6 +8,9 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // digestTestServer simulates a real HTTP server that challenges with Digest auth.
@@ -39,7 +42,7 @@ func newDigestTestServer(t *testing.T, username, password string) *digestTestSer
 	ds.srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ds.reqCount.Add(1)
 
-		authHeader := r.Header.Get("Authorization")
+		authHeader := r.Header.Get(headerAuthorization)
 		if authHeader == "" {
 			w.Header().Set("WWW-Authenticate",
 				fmt.Sprintf(`Digest realm="%s", nonce="%s", opaque="%s", qop="%s", algorithm="%s"`,
@@ -113,7 +116,6 @@ func (ds *digestTestServer) computeResponse(params map[string]string, method, ur
 	return md5hex(respInput)
 }
 
-//nolint:gocognit,gocyclo,cyclop // test table with many sub-tests
 func TestDigestAuthClient_Apply(t *testing.T) {
 	t.Parallel()
 
@@ -126,52 +128,27 @@ func TestDigestAuthClient_Apply(t *testing.T) {
 			Username: "digest-user",
 			Password: "digest-pass",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := http.NewRequest(http.MethodGet, ds.srv.URL+"/api/resource", nil)
 		var info Info
-		if err := client.Apply(req, &info); err != nil {
-			t.Fatalf("Apply() = %v", err)
-		}
+		require.NoError(t, client.Apply(req, &info), "Apply()")
 
-		auth := req.Header.Get("Authorization")
-		if !strings.HasPrefix(auth, "Digest ") {
-			t.Fatalf("Authorization = %q, want Digest prefix", auth)
-		}
-		if !strings.Contains(auth, `username="digest-user"`) {
-			t.Errorf("Authorization missing username: %s", auth)
-		}
-		if !strings.Contains(auth, `realm="test-realm"`) {
-			t.Errorf("Authorization missing realm: %s", auth)
-		}
-		if !strings.Contains(auth, `nonce="test-nonce-abc123"`) {
-			t.Errorf("Authorization missing nonce: %s", auth)
-		}
-		if !strings.Contains(auth, `opaque="test-opaque-xyz789"`) {
-			t.Errorf("Authorization missing opaque: %s", auth)
-		}
-		if !strings.Contains(auth, `response="`) {
-			t.Errorf("Authorization missing response: %s", auth)
-		}
-		if !strings.Contains(auth, `qop=auth`) {
-			t.Errorf("Authorization missing qop: %s", auth)
-		}
-		if !strings.Contains(auth, `nc=`) {
-			t.Errorf("Authorization missing nc: %s", auth)
-		}
-		if !strings.Contains(auth, `cnonce="`) {
-			t.Errorf("Authorization missing cnonce: %s", auth)
-		}
+		auth := req.Header.Get(headerAuthorization)
+		require.True(t, strings.HasPrefix(auth, "Digest "), "Authorization should have Digest prefix")
 
-		if v := info.Headers["Authorization"]; v != auth {
-			t.Errorf("info.Headers[Authorization] = %q, want %q", v, auth)
-		}
+		assert.Contains(t, auth, `username="digest-user"`)
+		assert.Contains(t, auth, `realm="test-realm"`)
+		assert.Contains(t, auth, `nonce="test-nonce-abc123"`)
+		assert.Contains(t, auth, `opaque="test-opaque-xyz789"`)
+		assert.Contains(t, auth, `response="`)
+		assert.Contains(t, auth, `qop=auth`)
+		assert.Contains(t, auth, `nc=`)
+		assert.Contains(t, auth, `cnonce="`)
 
-		if ds.reqCount.Load() != 1 {
-			t.Errorf("expected 1 request (401 challenge), got %d", ds.reqCount.Load())
-		}
+		assert.Equal(t, auth, info.Headers[headerAuthorization])
+
+		assert.Equal(t, int32(1), ds.reqCount.Load(), "expected 1 request (401 challenge)")
 	})
 
 	t.Run("caches challenge and reuses on second Apply", func(t *testing.T) {
@@ -183,29 +160,19 @@ func TestDigestAuthClient_Apply(t *testing.T) {
 			Username: "user",
 			Password: "pass",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req1, _ := http.NewRequest(http.MethodGet, ds.srv.URL+"/api", nil)
-		if err := client.Apply(req1, nil); err != nil {
-			t.Fatalf("Apply #1 = %v", err)
-		}
+		require.NoError(t, client.Apply(req1, nil), "Apply #1")
 
 		req2, _ := http.NewRequest(http.MethodGet, ds.srv.URL+"/api", nil)
-		if err := client.Apply(req2, nil); err != nil {
-			t.Fatalf("Apply #2 = %v", err)
-		}
+		require.NoError(t, client.Apply(req2, nil), "Apply #2")
 
 		// First Apply: 2 requests (401 + authed). Second Apply: 0 requests (cached).
-		if ds.reqCount.Load() != 1 {
-			t.Errorf("expected 1 total request (cached), got %d", ds.reqCount.Load())
-		}
+		assert.Equal(t, int32(1), ds.reqCount.Load(), "expected 1 total request (cached)")
 
-		auth := req2.Header.Get("Authorization")
-		if !strings.HasPrefix(auth, "Digest ") {
-			t.Fatalf("Authorization = %q, want Digest prefix", auth)
-		}
+		auth := req2.Header.Get(headerAuthorization)
+		assert.True(t, strings.HasPrefix(auth, "Digest "), "Authorization should have Digest prefix")
 	})
 
 	t.Run("refetches challenge after nonce TTL expires", func(t *testing.T) {
@@ -217,14 +184,10 @@ func TestDigestAuthClient_Apply(t *testing.T) {
 			Username: "user",
 			Password: "pass",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req1, _ := http.NewRequest(http.MethodGet, ds.srv.URL+"/api", nil)
-		if err := client.Apply(req1, nil); err != nil {
-			t.Fatalf("Apply #1 = %v", err)
-		}
+		require.NoError(t, client.Apply(req1, nil), "Apply #1")
 
 		// Override cachedAt to force expiration
 		client.mu.Lock()
@@ -232,14 +195,10 @@ func TestDigestAuthClient_Apply(t *testing.T) {
 		client.mu.Unlock()
 
 		req2, _ := http.NewRequest(http.MethodGet, ds.srv.URL+"/api", nil)
-		if err := client.Apply(req2, nil); err != nil {
-			t.Fatalf("Apply #2 = %v", err)
-		}
+		require.NoError(t, client.Apply(req2, nil), "Apply #2")
 
 		// Each Apply makes 2 requests (401 + authed) = 4 total
-		if ds.reqCount.Load() != 2 {
-			t.Errorf("expected 2 total requests (1 per Apply), got %d", ds.reqCount.Load())
-		}
+		assert.Equal(t, int32(2), ds.reqCount.Load(), "expected 2 total requests (1 per Apply)")
 	})
 
 	t.Run("increments nonce count on each Apply", func(t *testing.T) {
@@ -251,35 +210,23 @@ func TestDigestAuthClient_Apply(t *testing.T) {
 			Username: "user",
 			Password: "pass",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req1, _ := http.NewRequest(http.MethodGet, ds.srv.URL+"/api", nil)
-		if err := client.Apply(req1, nil); err != nil {
-			t.Fatalf("Apply #1 = %v", err)
-		}
+		require.NoError(t, client.Apply(req1, nil), "Apply #1")
 
 		req2, _ := http.NewRequest(http.MethodGet, ds.srv.URL+"/api", nil)
-		if err := client.Apply(req2, nil); err != nil {
-			t.Fatalf("Apply #2 = %v", err)
-		}
+		require.NoError(t, client.Apply(req2, nil), "Apply #2")
 
-		auth1 := req1.Header.Get("Authorization")
-		auth2 := req2.Header.Get("Authorization")
+		auth1 := req1.Header.Get(headerAuthorization)
+		auth2 := req2.Header.Get(headerAuthorization)
 
 		nc1 := extractNCDigest(t, auth1)
 		nc2 := extractNCDigest(t, auth2)
 
-		if nc1 == "" {
-			t.Fatal("nc not found in first auth header")
-		}
-		if nc2 == "" {
-			t.Fatal("nc not found in second auth header")
-		}
-		if nc1 == nc2 {
-			t.Errorf("nc should increment, got %s both times", nc1)
-		}
+		require.NotEmpty(t, nc1, "nc not found in first auth header")
+		require.NotEmpty(t, nc2, "nc not found in second auth header")
+		assert.NotEqual(t, nc1, nc2, "nc should increment")
 	})
 
 	t.Run("returns error on non-401 challenge response", func(t *testing.T) {
@@ -294,14 +241,11 @@ func TestDigestAuthClient_Apply(t *testing.T) {
 			Username: "u",
 			Password: "p",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := http.NewRequest(http.MethodGet, srv.URL+"/api", nil)
-		if err := client.Apply(req, nil); err == nil {
-			t.Fatal("expected error for non-401 response, got nil")
-		}
+		err := client.Apply(req, nil)
+		require.Error(t, err, "expected error for non-401 response")
 	})
 
 	t.Run("returns error on missing WWW-Authenticate header", func(t *testing.T) {
@@ -316,14 +260,11 @@ func TestDigestAuthClient_Apply(t *testing.T) {
 			Username: "u",
 			Password: "p",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := http.NewRequest(http.MethodGet, srv.URL+"/api", nil)
-		if err := client.Apply(req, nil); err == nil {
-			t.Fatal("expected error for missing WWW-Authenticate, got nil")
-		}
+		err := client.Apply(req, nil)
+		require.Error(t, err, "expected error for missing WWW-Authenticate")
 	})
 }
 

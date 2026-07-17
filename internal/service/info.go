@@ -131,129 +131,129 @@ func (s *Service) buildSnapshot() {
 	s.snapshot.Store(snap)
 }
 
-func (s *Service) buildSpecsSummary(cfg *config.Config) SpecsSummary {
-	summary := SpecsSummary{}
+func (s *Service) buildSpecsSummary(c *config.Config) SpecsSummary {
+	sum := SpecsSummary{}
 
-	if cfg != nil {
-		for i := range cfg.Specs {
-			spec := &cfg.Specs[i]
-			summary.Total++
-			if spec.Disable {
-				summary.Disabled++
+	if c != nil {
+		for i := range c.Specs {
+			sp := &c.Specs[i]
+			sum.Total++
+			if sp.Disable {
+				sum.Disabled++
 			} else {
-				summary.Active++
+				sum.Active++
 			}
 		}
 	}
 
 	specs := s.index.AllSpecs()
-	for _, spec := range specs {
-		summary.Collections += spec.Stats.Collections
-		summary.Endpoints += spec.Stats.Methods
+	for _, sp := range specs {
+		sum.Collections += sp.Stats.Collections
+		sum.Endpoints += sp.Stats.Methods
 	}
 
-	return summary
+	return sum
 }
 
-func (s *Service) buildHTTPClientInfo(cfg *config.Config) HTTPClientInfo {
-	info := HTTPClientInfo{
+func (s *Service) buildHTTPClientInfo(c *config.Config) HTTPClientInfo {
+	inf := HTTPClientInfo{
 		MaxResponseSize: s.maxResponseSize,
 	}
 
-	if cfg == nil || cfg.HTTPClient == nil {
-		return info
+	if c == nil || c.HTTPClient == nil {
+		return inf
 	}
 
-	g := cfg.HTTPClient
-	info.Randomize = s.httpClientConfig.Randomize
-	info.UserAgent = s.httpClientConfig.UserAgent
-	if info.UserAgent == "" {
-		info.UserAgent = g.UserAgent
+	gc := c.HTTPClient
+	inf.Randomize = s.httpClientConfig.Randomize
+	inf.UserAgent = s.httpClientConfig.UserAgent
+	if inf.UserAgent == "" {
+		inf.UserAgent = gc.UserAgent
 	}
-	if g.Timeout > 0 {
-		info.Timeout = g.Timeout.String()
+	if gc.Timeout > 0 {
+		inf.Timeout = gc.Timeout.String()
 	}
-	info.FollowRedirects = g.FollowRedirects
-	info.MaxRedirects = g.MaxRedirects
-	if g.MaxResponseSize != nil {
-		info.MaxResponseSize = *g.MaxResponseSize
-	}
-
-	if len(g.Headers) > 0 {
-		info.Headers = make(map[string]string, len(g.Headers))
-		maps.Copy(info.Headers, g.Headers)
+	inf.FollowRedirects = gc.FollowRedirects
+	inf.MaxRedirects = gc.MaxRedirects
+	if gc.MaxResponseSize != nil {
+		inf.MaxResponseSize = *gc.MaxResponseSize
 	}
 
-	if len(g.Cookies) > 0 {
-		info.Cookies = make([]CookieInfo, 0, len(g.Cookies))
-		for _, c := range g.Cookies {
-			info.Cookies = append(info.Cookies, CookieInfo{
-				Name:     c.Name,
-				Domain:   c.Domain,
-				Path:     c.Path,
-				Secure:   c.Secure,
-				HTTPOnly: c.HTTPOnly,
+	if len(gc.Headers) > 0 {
+		inf.Headers = make(map[string]string, len(gc.Headers))
+		maps.Copy(inf.Headers, gc.Headers)
+	}
+
+	if len(gc.Cookies) > 0 {
+		inf.Cookies = make([]CookieInfo, 0, len(gc.Cookies))
+		for _, ck := range gc.Cookies {
+			inf.Cookies = append(inf.Cookies, CookieInfo{
+				Name:     ck.Name,
+				Domain:   ck.Domain,
+				Path:     ck.Path,
+				Secure:   ck.Secure,
+				HTTPOnly: ck.HTTPOnly,
 			})
 		}
 	}
 
-	if g.Proxy != nil {
-		info.Proxy = &ProxyInfo{
-			URL:      g.Proxy.URL,
-			Username: g.Proxy.Username,
-			Bypass:   append([]string{}, g.Proxy.Bypass...),
+	if gc.Proxy != nil {
+		inf.Proxy = &ProxyInfo{
+			URL:      gc.Proxy.URL,
+			Username: gc.Proxy.Username,
+			Bypass:   append([]string{}, gc.Proxy.Bypass...),
 		}
 	}
 
-	return info
+	return inf
 }
 
-func (s *Service) buildMCPInfo(cfg *config.Config) MCPInfo {
-	info := MCPInfo{Transport: defaultMCPTransport}
+func (s *Service) buildMCPInfo(c *config.Config) MCPInfo {
+	inf := MCPInfo{Transport: defaultMCPTransport}
 
-	if cfg == nil || cfg.MCP == nil {
-		return info
+	if c == nil || c.MCP == nil {
+		return inf
 	}
 
-	m := cfg.MCP
-	if m.Transport != "" {
-		info.Transport = m.Transport
+	mt := c.MCP
+	if mt.Transport != "" {
+		inf.Transport = mt.Transport
 	}
-	info.Addr = m.Addr
-	info.Path = m.Path
-	info.AuthEnabled = m.Auth != nil && m.Auth.Token != ""
+	inf.Addr = mt.Addr
+	inf.Path = mt.Path
+	inf.AuthEnabled = mt.Auth != nil && mt.Auth.Token != ""
 
-	return info
+	return inf
 }
 
-func (s *Service) buildAuthInfo(cfg *config.Config) AuthInfo {
-	seen := make(map[string]struct{})
+func (s *Service) buildAuthInfo(c *config.Config) AuthInfo {
+	m := make(map[string]struct{})
 
-	if cfg != nil {
-		for i := range cfg.Specs {
-			spec := &cfg.Specs[i]
-			if spec.Disable || spec.Auth.Client == nil {
+	if c != nil {
+		for i := range c.Specs {
+			sp := &c.Specs[i]
+			if sp.Disable || sp.Auth.Client == nil {
 				continue
 			}
-			t := string(spec.Auth.Client.Type())
-			if t == string(auth.NoAuth) {
+			tp := string(sp.Auth.Client.Type())
+			if tp == string(auth.NoAuth) {
 				continue
 			}
-			if _, ok := seen[t]; !ok {
-				seen[t] = struct{}{}
+			if _, ok := m[tp]; !ok {
+				m[tp] = struct{}{}
 			}
 		}
 	}
 
-	if len(seen) == 0 {
+	if len(m) == 0 {
 		return AuthInfo{}
 	}
 
-	methods := make([]string, 0, len(seen))
-	for m := range seen {
-		methods = append(methods, m)
+	ms := make([]string, 0, len(m))
+	for k := range m {
+		ms = append(ms, k)
 	}
-	return AuthInfo{Methods: methods}
+	return AuthInfo{Methods: ms}
 }
 
 const (

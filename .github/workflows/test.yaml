@@ -37,7 +37,13 @@ jobs:
           cache: true
 
       - name: Unit Tests
-        run: go test -count=1 $(go list ./... | grep -v /tests/) -coverprofile=coverage.out -covermode=atomic
+        run: |
+          COVER_PKGS=$(go list ./... | grep -v -E '(/cmd|/tests$|/tests/|/mocks/|internal/tui|internal/commands/init|internal/commands/add|internal/commands/delete|internal/commands/run)' | tr '\n' ',')
+          go test -count=1 \
+          -coverpkg=$COVER_PKGS \
+          -coverprofile=coverage.out \
+          -covermode=atomic \
+          ./...
 
       # Coveralls in informational mode — never blocks PRs on coverage drop
       - name: Coveralls

@@ -9,33 +9,30 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHMACAuthClient_Type(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{}
-	if client.Type() != HMACAuth {
-		t.Errorf("Type() = %q, want %q", client.Type(), HMACAuth)
-	}
+	assert.Equal(t, HMACAuth, client.Type())
 }
 
 func TestHMACAuthClient_Validate(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.Validate(); err != nil {
-		t.Errorf("Validate() = %v", err)
-	}
+	require.NoError(t, client.Validate())
 }
 
 func TestHMACAuthClient_Validate_Empty(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{}
-	if err := client.Validate(); err == nil {
-		t.Error("expected validation error for empty hmac auth")
-	}
+	require.Error(t, client.Validate())
 }
 
 func TestHMACAuthClient_New_EnvVars(t *testing.T) {
@@ -46,24 +43,16 @@ func TestHMACAuthClient_New_EnvVars(t *testing.T) {
 		APIKey:    "$(TEST_HMAC_KEY)",
 		SecretKey: "$(TEST_HMAC_SECRET)",
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client.APIKey != "env-key" {
-		t.Errorf("APIKey = %q, want %q", client.APIKey, "env-key")
-	}
-	if client.SecretKey != "env-secret" {
-		t.Errorf("SecretKey = %q, want %q", client.SecretKey, "env-secret")
-	}
+	require.NoError(t, client.New(), "New()")
+	assert.Equal(t, "env-key", client.APIKey)
+	assert.Equal(t, "env-secret", client.SecretKey)
 }
 
 func TestHMACAuthClient_Apply_SetsAPIKeyHeader(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "test-api-key", SecretKey: "test-secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(
 		http.MethodGet,
@@ -71,53 +60,38 @@ func TestHMACAuthClient_Apply_SetsAPIKeyHeader(t *testing.T) {
 		nil,
 	)
 	var info Info
-	if err := client.Apply(req, &info); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, &info), "Apply()")
 
-	if v := req.Header.Get("X-MBX-APIKEY"); v != "test-api-key" {
-		t.Errorf("X-MBX-APIKEY header = %q, want %q", v, "test-api-key")
-	}
-	if v := info.Headers["X-MBX-APIKEY"]; v != "test-api-key" {
-		t.Errorf("info.Headers[X-MBX-APIKEY] = %q, want %q", v, "test-api-key")
-	}
+	assert.Equal(t, "test-api-key", req.Header.Get("X-MBX-APIKEY"))
+	assert.Equal(t, "test-api-key", info.Headers["X-MBX-APIKEY"])
 }
 
 func TestHMACAuthClient_Apply_AddsTimestamp(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	before := time.Now().UnixMilli()
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 	after := time.Now().UnixMilli()
 
 	ts := req.URL.Query().Get("timestamp")
-	if ts == "" {
-		t.Fatal("timestamp query param is missing")
-	}
+	require.NotEmpty(t, ts, "timestamp query param is missing")
+
 	tsInt, err := strconv.ParseInt(ts, 10, 64)
-	if err != nil {
-		t.Fatalf("timestamp is not a valid int: %v", err)
-	}
-	if tsInt < before || tsInt > after {
-		t.Errorf("timestamp %d should be between %d and %d", tsInt, before, after)
-	}
+	require.NoError(t, err, "timestamp is not a valid int")
+
+	assert.GreaterOrEqual(t, tsInt, before)
+	assert.LessOrEqual(t, tsInt, after)
 }
 
 func TestHMACAuthClient_Apply_AddsSignature(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(
 		http.MethodGet,
@@ -125,39 +99,29 @@ func TestHMACAuthClient_Apply_AddsSignature(t *testing.T) {
 		nil,
 	)
 	var info Info
-	if err := client.Apply(req, &info); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, &info), "Apply()")
 
 	sig := req.URL.Query().Get("signature")
-	if sig == "" {
-		t.Fatal("signature query param is missing")
-	}
-	if _, err := hex.DecodeString(sig); err != nil {
-		t.Errorf("signature is not valid hex: %v", err)
-	}
+	require.NotEmpty(t, sig, "signature query param is missing")
 
-	if v := info.QueryParams["signature"]; v != sig {
-		t.Errorf("info.QueryParams[signature] = %q, want %q", v, sig)
-	}
+	_, err := hex.DecodeString(sig)
+	require.NoError(t, err, "signature is not valid hex")
+
+	assert.Equal(t, sig, info.QueryParams["signature"])
 }
 
 func TestHMACAuthClient_Apply_SignatureIsValid(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(
 		http.MethodGet,
 		"http://example.com/api?symbol=BTCUSDT",
 		nil,
 	)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 
 	q := req.URL.Query()
 	sig := q.Get("signature")
@@ -168,133 +132,91 @@ func TestHMACAuthClient_Apply_SignatureIsValid(t *testing.T) {
 	mac.Write([]byte(expectedQuery))
 	expectedSig := hex.EncodeToString(mac.Sum(nil))
 
-	if sig != expectedSig {
-		t.Errorf("signature = %q, want %q", sig, expectedSig)
-	}
+	assert.Equal(t, expectedSig, sig)
 }
 
 func TestHMACAuthClient_Apply_PreservesExistingQueryParams(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(
 		http.MethodGet,
 		"http://example.com/api?symbol=BTCUSDT&limit=10",
 		nil,
 	)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 
 	q := req.URL.Query()
-	if q.Get("symbol") != "BTCUSDT" {
-		t.Errorf("symbol = %q, want %q", q.Get("symbol"), "BTCUSDT")
-	}
-	if q.Get("limit") != "10" {
-		t.Errorf("limit = %q, want %q", q.Get("limit"), "10")
-	}
+	assert.Equal(t, "BTCUSDT", q.Get("symbol"))
+	assert.Equal(t, "10", q.Get("limit"))
 }
 
 func TestHMACAuthClient_Apply_InfoHasTimestamp(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
 	var info Info
-	if err := client.Apply(req, &info); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, &info), "Apply()")
 
-	if _, ok := info.QueryParams["timestamp"]; !ok {
-		t.Error("info.QueryParams should contain timestamp")
-	}
+	assert.Contains(t, info.QueryParams, "timestamp")
 }
 
 func TestHMACAuthClient_Apply_NoExistingQueryParams(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 
 	q := req.URL.Query()
-	if q.Get("timestamp") == "" {
-		t.Error("timestamp should be present")
-	}
-	if q.Get("signature") == "" {
-		t.Error("signature should be present")
-	}
+	assert.NotEmpty(t, q.Get("timestamp"), "timestamp should be present")
+	assert.NotEmpty(t, q.Get("signature"), "signature should be present")
 }
 
 func TestHMACAuthClient_Apply_EmptyAPIKey(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 
-	if v := req.Header.Get("X-MBX-APIKEY"); v != "" {
-		t.Errorf("X-MBX-APIKEY header should be empty, got %q", v)
-	}
+	assert.Empty(t, req.Header.Get("X-MBX-APIKEY"))
 }
 
 func TestHMACAuthClient_Apply_InfoNil(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 
-	if v := req.Header.Get("X-MBX-APIKEY"); v != "key" {
-		t.Errorf("X-MBX-APIKEY = %q, want %q", v, "key")
-	}
-	if req.URL.Query().Get("signature") == "" {
-		t.Error("signature should be present")
-	}
+	assert.Equal(t, "key", req.Header.Get("X-MBX-APIKEY"))
+	assert.NotEmpty(t, req.URL.Query().Get("signature"), "signature should be present")
 }
 
 func TestHMACAuthClient_Apply_QueryParamsSorted(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(
 		http.MethodGet,
 		"http://example.com/api?z=last&a=first&m=middle",
 		nil,
 	)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 
 	q := req.URL.Query()
 	keys := make([]string, 0, len(q))
@@ -302,18 +224,14 @@ func TestHMACAuthClient_Apply_QueryParamsSorted(t *testing.T) {
 		keys = append(keys, k)
 	}
 
-	if len(keys) < 3 {
-		t.Fatalf("expected at least 3 query params, got %d", len(keys))
-	}
+	require.GreaterOrEqual(t, len(keys), 3, "expected at least 3 query params")
 }
 
 func TestHMACAuthClient_Apply_DeterministicSignature(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req1, _ := http.NewRequest(
 		http.MethodGet,
@@ -326,43 +244,31 @@ func TestHMACAuthClient_Apply_DeterministicSignature(t *testing.T) {
 		nil,
 	)
 
-	if err := client.Apply(req1, nil); err != nil {
-		t.Fatalf("Apply req1 = %v", err)
-	}
+	require.NoError(t, client.Apply(req1, nil), "Apply req1")
 	time.Sleep(2 * time.Millisecond)
-	if err := client.Apply(req2, nil); err != nil {
-		t.Fatalf("Apply req2 = %v", err)
-	}
+	require.NoError(t, client.Apply(req2, nil), "Apply req2")
 
 	sig1 := req1.URL.Query().Get("signature")
 	sig2 := req2.URL.Query().Get("signature")
 
-	if sig1 == sig2 {
-		t.Error("signatures should differ due to different timestamps")
-	}
+	assert.NotEqual(t, sig1, sig2, "signatures should differ due to different timestamps")
 }
 
 func TestHMACAuthClient_Apply_NoPanicOnNilOut(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 }
 
 func TestHMACAuthClient_Apply_InfoQueryParamsPopulated(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(
 		http.MethodGet,
@@ -370,213 +276,141 @@ func TestHMACAuthClient_Apply_InfoQueryParamsPopulated(t *testing.T) {
 		nil,
 	)
 	var info Info
-	if err := client.Apply(req, &info); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, &info), "Apply()")
 
-	if info.QueryParams == nil {
-		t.Fatal("info.QueryParams should not be nil")
-	}
-	if _, ok := info.QueryParams["signature"]; !ok {
-		t.Error("info.QueryParams should contain signature")
-	}
-	if _, ok := info.QueryParams["timestamp"]; !ok {
-		t.Error("info.QueryParams should contain timestamp")
-	}
+	require.NotNil(t, info.QueryParams, "info.QueryParams should not be nil")
+	assert.Contains(t, info.QueryParams, "signature")
+	assert.Contains(t, info.QueryParams, "timestamp")
 }
 
 func TestHMACAuthClient_Apply_InfoHeadersPopulated(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
 	var info Info
-	if err := client.Apply(req, &info); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, &info), "Apply()")
 
-	if info.Headers == nil {
-		t.Fatal("info.Headers should not be nil")
-	}
-	if _, ok := info.Headers["X-MBX-APIKEY"]; !ok {
-		t.Error("info.Headers should contain X-MBX-APIKEY")
-	}
+	require.NotNil(t, info.Headers, "info.Headers should not be nil")
+	assert.Contains(t, info.Headers, "X-MBX-APIKEY")
 }
 
 func TestHMACAuthClient_Apply_EmptySecretKey(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: ""}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 
 	sig := req.URL.Query().Get("signature")
-	if sig == "" {
-		t.Fatal("signature should be present even with empty secret")
-	}
+	require.NotEmpty(t, sig, "signature should be present even with empty secret")
 }
 
 func TestHMACAuthClient_Apply_ComplexQueryString(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(
 		http.MethodGet,
 		"http://example.com/api?symbol=BTCUSDT&side=BUY&type=LIMIT&timeInForce=GTC&quantity=1&price=0.1&recvWindow=5000",
 		nil,
 	)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 
 	q := req.URL.Query()
-	if q.Get("symbol") != "BTCUSDT" {
-		t.Errorf("symbol = %q, want %q", q.Get("symbol"), "BTCUSDT")
-	}
-	if q.Get("side") != "BUY" {
-		t.Errorf("side = %q, want %q", q.Get("side"), "BUY")
-	}
-	if q.Get("signature") == "" {
-		t.Error("signature should be present")
-	}
+	assert.Equal(t, "BTCUSDT", q.Get("symbol"))
+	assert.Equal(t, "BUY", q.Get("side"))
+	assert.NotEmpty(t, q.Get("signature"), "signature should be present")
 }
 
 func TestHMACAuthClient_Apply_NoQueryString(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 
 	q := req.URL.Query()
-	if q.Get("timestamp") == "" {
-		t.Error("timestamp should be present")
-	}
-	if q.Get("signature") == "" {
-		t.Error("signature should be present")
-	}
+	assert.NotEmpty(t, q.Get("timestamp"), "timestamp should be present")
+	assert.NotEmpty(t, q.Get("signature"), "signature should be present")
 }
 
 func TestHMACAuthClient_Apply_InfoTimestampIsString(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
 	var info Info
-	if err := client.Apply(req, &info); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, &info), "Apply()")
 
 	ts, ok := info.QueryParams["timestamp"]
-	if !ok {
-		t.Fatal("info.QueryParams should contain timestamp")
-	}
-	if _, err := strconv.ParseInt(ts, 10, 64); err != nil {
-		t.Errorf("timestamp should be a valid int string: %v", err)
-	}
+	require.True(t, ok, "info.QueryParams should contain timestamp")
+	_, err := strconv.ParseInt(ts, 10, 64)
+	require.NoError(t, err, "timestamp should be a valid int string")
 }
 
 func TestHMACAuthClient_Apply_InfoSignatureIsHex(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
 	var info Info
-	if err := client.Apply(req, &info); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, &info), "Apply()")
 
 	sig, ok := info.QueryParams["signature"]
-	if !ok {
-		t.Fatal("info.QueryParams should contain signature")
-	}
-	if _, err := hex.DecodeString(sig); err != nil {
-		t.Errorf("signature should be valid hex: %v", err)
-	}
+	require.True(t, ok, "info.QueryParams should contain signature")
+	_, err := hex.DecodeString(sig)
+	require.NoError(t, err, "signature should be valid hex")
 }
 
 func TestHMACAuthClient_Apply_HeaderAndQueryConsistent(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "test-key", SecretKey: "test-secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
 	var info Info
-	if err := client.Apply(req, &info); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, &info), "Apply()")
 
-	if info.Headers["X-MBX-APIKEY"] != "test-key" {
-		t.Errorf("header mismatch: got %q", info.Headers["X-MBX-APIKEY"])
-	}
-	if info.QueryParams["signature"] == "" {
-		t.Error("signature missing from info")
-	}
-	if info.QueryParams["timestamp"] == "" {
-		t.Error("timestamp missing from info")
-	}
+	assert.Equal(t, "test-key", info.Headers["X-MBX-APIKEY"])
+	assert.NotEmpty(t, info.QueryParams["signature"], "signature missing from info")
+	assert.NotEmpty(t, info.QueryParams["timestamp"], "timestamp missing from info")
 }
 
 func TestHMACAuthClient_Apply_DoesNotModifyMethod(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequest(
 		http.MethodPost,
 		"http://example.com/api",
 		strings.NewReader(`{"key":"value"}`),
 	)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 
-	if req.Method != http.MethodPost {
-		t.Errorf("Method = %q, want %q", req.Method, http.MethodPost)
-	}
+	assert.Equal(t, http.MethodPost, req.Method)
 }
 
 func TestHMACAuthClient_Apply_DoesNotModifyBody(t *testing.T) {
 	t.Parallel()
 
 	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	body := `{"symbol":"BTCUSDT","side":"BUY"}`
 	req, _ := http.NewRequest(
@@ -584,14 +418,8 @@ func TestHMACAuthClient_Apply_DoesNotModifyBody(t *testing.T) {
 		"http://example.com/api",
 		strings.NewReader(body),
 	)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 
-	if req.Header.Get("X-MBX-APIKEY") != "key" {
-		t.Errorf("X-MBX-APIKEY = %q, want %q", req.Header.Get("X-MBX-APIKEY"), "key")
-	}
-	if req.URL.Query().Get("signature") == "" {
-		t.Error("signature should be present")
-	}
+	assert.Equal(t, "key", req.Header.Get("X-MBX-APIKEY"))
+	assert.NotEmpty(t, req.URL.Query().Get("signature"), "signature should be present")
 }

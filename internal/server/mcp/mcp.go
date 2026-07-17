@@ -18,8 +18,11 @@ import (
 type TransportType int
 
 const (
+	// TransportStdio uses stdin/stdout for MCP communication.
 	TransportStdio TransportType = iota
+	// TransportSSE uses Server-Sent Events for MCP communication.
 	TransportSSE
+	// TransportStreamableHTTP uses the Streamable HTTP transport for MCP communication.
 	TransportStreamableHTTP
 )
 
@@ -47,6 +50,7 @@ type Options struct {
 	AuthVerifier TokenVerifier
 }
 
+// httpAddr returns the HTTP address, defaulting to ":8080".
 func (o Options) httpAddr() string {
 	if o.HTTPAddr != "" {
 		return o.HTTPAddr
@@ -54,6 +58,7 @@ func (o Options) httpAddr() string {
 	return ":8080"
 }
 
+// httpPath returns the HTTP path, defaulting to "/mcp".
 func (o Options) httpPath() string {
 	if o.HTTPPath != "" {
 		return o.HTTPPath
@@ -86,6 +91,7 @@ func Serve(ctx context.Context, opts Options) error {
 	}
 }
 
+// serveStdio starts the MCP server over stdin/stdout.
 func serveStdio(ctx context.Context, defs service.ToolDefinitions, opts Options) error {
 	mcpServer := newServer(defs, opts)
 	h := handler{service: opts.Service}
@@ -100,6 +106,7 @@ func serveStdio(ctx context.Context, defs service.ToolDefinitions, opts Options)
 	return mcpServer.Run(ctx, transport)
 }
 
+// newStdioTransport creates a stdio transport, optionally wrapped with logging.
 func newStdioTransport(opts Options) sdkmcp.Transport {
 	t := &sdkmcp.StdioTransport{}
 	if opts.Logger != nil {
@@ -111,6 +118,7 @@ func newStdioTransport(opts Options) sdkmcp.Transport {
 	return t
 }
 
+// serveHTTP starts the MCP server over HTTP (SSE or Streamable HTTP).
 func serveHTTP(ctx context.Context, defs service.ToolDefinitions, opts Options) error {
 	getServer := func(_ *http.Request) *sdkmcp.Server {
 		srv := newServer(defs, opts)
@@ -166,6 +174,7 @@ func serveHTTP(ctx context.Context, defs service.ToolDefinitions, opts Options) 
 	return srv.ListenAndServe()
 }
 
+// applyAuthMiddleware wraps the handler with bearer token auth if configured.
 func applyAuthMiddleware(next http.Handler, opts Options) http.Handler {
 	if opts.AuthVerifier != nil {
 		return auth.RequireBearerToken(
@@ -189,6 +198,7 @@ func applyAuthMiddleware(next http.Handler, opts Options) http.Handler {
 	return next
 }
 
+// withLogging wraps an [http.Handler] with request logging.
 func withLogging(next http.Handler, logger *slog.Logger) http.Handler {
 	if logger == nil {
 		return next
@@ -203,6 +213,7 @@ func withLogging(next http.Handler, logger *slog.Logger) http.Handler {
 	})
 }
 
+// newSlogWriter creates an [io.Writer] that writes to the given logger.
 func newSlogWriter(logger *slog.Logger) io.Writer {
 	return &slogWriter{logger: logger}
 }
@@ -211,15 +222,18 @@ type slogWriter struct {
 	logger *slog.Logger
 }
 
+// Write logs the given bytes as an info-level log message.
 func (w *slogWriter) Write(p []byte) (int, error) {
 	w.logger.Info(string(p))
 	return len(p), nil
 }
 
+// newTransport creates a transport for the MCP server (defaults to stdio).
 func newTransport(opts Options) sdkmcp.Transport {
 	return newStdioTransport(opts)
 }
 
+// newServer creates a new MCP server with the given tool definitions and options.
 func newServer(defs service.ToolDefinitions, opts Options) *sdkmcp.Server {
 	return sdkmcp.NewServer(&sdkmcp.Implementation{
 		Name:    service.Name,
@@ -230,6 +244,8 @@ func newServer(defs service.ToolDefinitions, opts Options) *sdkmcp.Server {
 	})
 }
 
+// registerTools registers all service tools with the MCP server, marking
+// read-only tools with idempotent/read-only annotations.
 func registerTools(mcpServer *sdkmcp.Server, tools []service.Tool, h handler) {
 	type reg struct {
 		add      func(t *sdkmcp.Tool)
@@ -324,6 +340,7 @@ func registerTools(mcpServer *sdkmcp.Server, tools []service.Tool, h handler) {
 	}
 }
 
+// addTool creates a closure that registers a typed tool handler on the MCP server.
 func addTool[In any](
 	s *sdkmcp.Server,
 	fn func(context.Context, *sdkmcp.CallToolRequest, In) (*sdkmcp.CallToolResult, any, error),

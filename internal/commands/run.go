@@ -56,7 +56,7 @@ func runRun(basePath string, ctx context.Context) error {
 	}
 
 	if err := svc.Bootstrap(ctx, service.BootstrapRequest{
-		ConfFilepath: configFile,
+		ConfFilePath: configFile,
 	}); err != nil {
 		return err
 	}

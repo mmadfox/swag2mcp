@@ -3,6 +3,8 @@ package workspace
 import (
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestConstants(t *testing.T) {
@@ -19,15 +21,12 @@ func TestConstants(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.value != tt.want {
-				t.Errorf("%s = %q, want %q", tt.name, tt.value, tt.want)
-			}
+			assert.Equal(t, tt.want, tt.value, "%s = %q, want %q", tt.name, tt.value, tt.want)
 		})
 	}
 }
 
 func TestDefaultResponseMaxAge(t *testing.T) {
-	if DefaultResponseMaxAge != 48*time.Hour {
-		t.Errorf("DefaultResponseMaxAge = %v, want %v", DefaultResponseMaxAge, 48*time.Hour)
-	}
+	assert.Equal(t, 48*time.Hour, DefaultResponseMaxAge,
+		"DefaultResponseMaxAge = %v, want %v", DefaultResponseMaxAge, 48*time.Hour)
 }

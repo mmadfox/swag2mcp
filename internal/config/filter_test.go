@@ -2,40 +2,34 @@ package config
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFilter_MatchSpec_Empty(t *testing.T) {
 	t.Parallel()
 
 	f := NewFilter(nil)
-	if !f.MatchSpec("anything") {
-		t.Error("MatchSpec() = false, want true for empty filter")
-	}
+	assert.True(t, f.MatchSpec("anything"), "MatchSpec() = false, want true for empty filter")
 }
 
 func TestFilter_MatchSpec_Match(t *testing.T) {
 	t.Parallel()
 
 	f := NewFilter([]string{"public", "demo"})
-	if !f.MatchSpec("public") {
-		t.Error("MatchSpec(public) = false, want true")
-	}
+	assert.True(t, f.MatchSpec("public"))
 }
 
 func TestFilter_MatchSpec_NoMatch(t *testing.T) {
 	t.Parallel()
 
 	f := NewFilter([]string{"public"})
-	if f.MatchSpec("internal") {
-		t.Error("MatchSpec(internal) = true, want false")
-	}
+	assert.False(t, f.MatchSpec("internal"))
 }
 
 func TestFilter_MatchSpec_MultipleSpecTags(t *testing.T) {
 	t.Parallel()
 
 	f := NewFilter([]string{"public"})
-	if !f.MatchSpec("internal", "public") {
-		t.Error("MatchSpec(internal, public) = false, want true")
-	}
+	assert.True(t, f.MatchSpec("internal", "public"))
 }

@@ -124,7 +124,7 @@ func runMCP(basePath, version string, opts *mcpCmdOpts, cmd *cobra.Command) erro
 	}
 
 	if bootErr := svc.Bootstrap(cmd.Context(), service.BootstrapRequest{
-		ConfFilepath: configFile,
+		ConfFilePath: configFile,
 		Tags:         tags,
 	}); bootErr != nil {
 		return fmt.Errorf("failed to bootstrap service: %w", bootErr)

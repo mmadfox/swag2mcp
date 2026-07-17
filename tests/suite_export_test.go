@@ -6,12 +6,15 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 )
 
-func TestScript_Export_Success(t *testing.T) {
-	ws := newTestWorkspace(t)
-	initWorkspace(t, ws)
+type ExportSuite struct {
+	BaseSuite
+}
 
+func (s *ExportSuite) specServer() (*httptest.Server, string) {
 	specContent := `openapi: 3.0.0
 info:
   title: Test API
@@ -26,7 +29,13 @@ paths:
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(specContent))
 	}))
-	t.Cleanup(srv.Close)
+	s.T().Cleanup(srv.Close)
+	return srv, specContent
+}
+
+func (s *ExportSuite) TestSuccess() {
+	s.InitWorkspace()
+	srv, _ := s.specServer()
 
 	configContent := `specs:
   - domain: petstore
@@ -36,44 +45,25 @@ paths:
       - title: Pets
         location: ` + srv.URL + `
 `
-	writeConfig(t, ws, configContent)
+	s.WriteConfig(configContent)
 
-	outputPath := filepath.Join(ws, "backup.zip")
-	stdout, stderr, code := runCommand(t, "export", ws, outputPath)
-	assertEqual(t, "exit code", code, 0)
-	assertContains(t, "output", stdout+stderr, "Exported")
+	outputPath := filepath.Join(s.Workspace, "backup.zip")
+	stdout, stderr, code := s.RunCommand("export", s.Workspace, outputPath)
+	s.Equal(0, code)
+	s.Contains(stdout+stderr, "Exported")
 
-	if _, err := os.Stat(outputPath); os.IsNotExist(err) {
-		t.Errorf("zip file not created at %s", outputPath)
-	}
+	_, err := os.Stat(outputPath)
+	s.Require().NoError(err, "zip file not created at %s", outputPath)
 }
 
-func TestScript_Export_NoConfig(t *testing.T) {
-	ws := newTestWorkspace(t)
-
-	_, _, code := runCommand(t, "export", ws)
-	assertNotEqual(t, "exit code", code, 0)
+func (s *ExportSuite) TestNoConfig() {
+	_, _, code := s.RunCommand("export", s.Workspace)
+	s.NotEqual(0, code)
 }
 
-func TestScript_Export_DefaultOutputPath(t *testing.T) {
-	ws := newTestWorkspace(t)
-	initWorkspace(t, ws)
-
-	specContent := `openapi: 3.0.0
-info:
-  title: Test API
-  version: 1.0.0
-paths:
-  /pets:
-    get:
-      operationId: listPets
-      summary: List all pets
-`
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(specContent))
-	}))
-	t.Cleanup(srv.Close)
+func (s *ExportSuite) TestDefaultOutputPath() {
+	s.InitWorkspace()
+	srv, _ := s.specServer()
 
 	configContent := `specs:
   - domain: petstore
@@ -83,33 +73,35 @@ paths:
       - title: Pets
         location: ` + srv.URL + `
 `
-	writeConfig(t, ws, configContent)
+	s.WriteConfig(configContent)
 
-	// Run export with CWD set to workspace so default output lands inside ws (temp dir)
-	stdout, stderr, code := runCommandInWS(t, ws, "export", ".")
-	assertEqual(t, "exit code", code, 0)
-	assertContains(t, "output", stdout+stderr, ".zip")
+	stdout, stderr, code := s.RunCommandInWS("export", ".")
+	s.Equal(0, code)
+	s.Contains(stdout+stderr, ".zip")
 }
 
-func TestScript_Export_WithSpecFilter(t *testing.T) {
-	ws := newTestWorkspace(t)
-	initWorkspace(t, ws)
+func (s *ExportSuite) TestWithPathOnly() {
+	s.InitWorkspace()
+	srv, _ := s.specServer()
 
-	specContent := `openapi: 3.0.0
-info:
-  title: Test API
-  version: 1.0.0
-paths:
-  /pets:
-    get:
-      operationId: listPets
-      summary: List all pets
+	configContent := `specs:
+  - domain: petstore
+    llm_title: Petstore API
+    base_url: https://api.petstore.com
+    collections:
+      - title: Pets
+        location: ` + srv.URL + `
 `
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(specContent))
-	}))
-	t.Cleanup(srv.Close)
+	s.WriteConfig(configContent)
+
+	stdout, stderr, code := s.RunCommand("export", s.Workspace)
+	s.Equal(0, code)
+	s.Contains(stdout+stderr, ".zip")
+}
+
+func (s *ExportSuite) TestWithSpecFilter() {
+	s.InitWorkspace()
+	srv, _ := s.specServer()
 
 	configContent := `specs:
   - domain: petstore
@@ -125,33 +117,43 @@ paths:
       - title: Products
         location: ` + srv.URL + `
 `
-	writeConfig(t, ws, configContent)
+	s.WriteConfig(configContent)
 
-	outputPath := filepath.Join(ws, "backup.zip")
-	stdout, stderr, code := runCommand(t, "export", ws, outputPath, "--spec", "petstore")
-	assertEqual(t, "exit code", code, 0)
-	assertContains(t, "output", stdout+stderr, "Exported")
+	outputPath := filepath.Join(s.Workspace, "backup.zip")
+	stdout, stderr, code := s.RunCommand("export", s.Workspace, outputPath, "--spec", "petstore")
+	s.Equal(0, code)
+	s.Contains(stdout+stderr, "Exported")
 }
 
-func TestScript_Export_ProducesValidSwag2mcpZip(t *testing.T) {
-	ws := newTestWorkspace(t)
-	initWorkspace(t, ws)
+func (s *ExportSuite) TestWithMultipleSpecFilter() {
+	s.InitWorkspace()
+	srv, _ := s.specServer()
 
-	specContent := `openapi: 3.0.0
-info:
-  title: Test API
-  version: 1.0.0
-paths:
-  /pets:
-    get:
-      operationId: listPets
-      summary: List all pets
+	configContent := `specs:
+  - domain: petstore
+    llm_title: Petstore API
+    base_url: https://api.petstore.com
+    collections:
+      - title: Pets
+        location: ` + srv.URL + `
+  - domain: store
+    llm_title: Store API
+    base_url: https://api.store.com
+    collections:
+      - title: Products
+        location: ` + srv.URL + `
 `
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(specContent))
-	}))
-	t.Cleanup(srv.Close)
+	s.WriteConfig(configContent)
+
+	outputPath := filepath.Join(s.Workspace, "backup.zip")
+	stdout, stderr, code := s.RunCommand("export", s.Workspace, outputPath, "--spec", "petstore,store")
+	s.Equal(0, code)
+	s.Contains(stdout+stderr, "Exported")
+}
+
+func (s *ExportSuite) TestWithPathOutputAndSpec() {
+	s.InitWorkspace()
+	srv, _ := s.specServer()
 
 	configContent := `specs:
   - domain: petstore
@@ -161,14 +163,56 @@ paths:
       - title: Pets
         location: ` + srv.URL + `
 `
-	writeConfig(t, ws, configContent)
+	s.WriteConfig(configContent)
 
-	outputPath := filepath.Join(ws, "backup.zip")
-	runCommand(t, "export", ws, outputPath)
+	outputPath := filepath.Join(s.Workspace, "backup.zip")
+	stdout, stderr, code := s.RunCommand("export", s.Workspace, outputPath, "--spec", "petstore")
+	s.Equal(0, code)
+	s.Contains(stdout+stderr, "Exported")
+}
 
-	// Verify the zip is a valid swag2mcp backup by importing it
-	restoreWS := newTestWorkspace(t)
-	stdout, stderr, code := runCommand(t, "import", restoreWS, "--from-zip", outputPath)
-	assertEqual(t, "import exit code", code, 0)
-	assertContains(t, "import output", stdout+stderr, "Restored")
+func (s *ExportSuite) TestWithSpecFilterNoMatch() {
+	s.InitWorkspace()
+	srv, _ := s.specServer()
+
+	configContent := `specs:
+  - domain: petstore
+    llm_title: Petstore API
+    base_url: https://api.petstore.com
+    collections:
+      - title: Pets
+        location: ` + srv.URL + `
+`
+	s.WriteConfig(configContent)
+
+	outputPath := filepath.Join(s.Workspace, "backup.zip")
+	_, _, code := s.RunCommand("export", s.Workspace, outputPath, "--spec", "nonexistent")
+	s.NotEqual(0, code)
+}
+
+func (s *ExportSuite) TestProducesValidSwag2mcpZip() {
+	s.InitWorkspace()
+	srv, _ := s.specServer()
+
+	configContent := `specs:
+  - domain: petstore
+    llm_title: Petstore API
+    base_url: https://api.petstore.com
+    collections:
+      - title: Pets
+        location: ` + srv.URL + `
+`
+	s.WriteConfig(configContent)
+
+	outputPath := filepath.Join(s.Workspace, "backup.zip")
+	s.RunCommand("export", s.Workspace, outputPath)
+
+	restoreWS := s.newTestWorkspace()
+	stdout, stderr, code := s.RunCommand("import", restoreWS, "--from-zip", outputPath)
+	s.Equal(0, code, "import exit code")
+	s.Contains(stdout+stderr, "Restored")
+}
+
+func TestExportSuite(t *testing.T) {
+	suite.Run(t, new(ExportSuite))
 }

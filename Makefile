@@ -16,17 +16,12 @@ lint:
 
 # Full coverage across all packages (including commands, tui, mockserver)
 cover:
-	go test ./... -coverprofile=coverage.out -covermode=atomic && \
-	go tool cover -html=coverage.out -o coverage.html && \
-	go tool cover -func=coverage.out | tail -1 && \
-	rm -f coverage.out
-
-# Coverage for core packages only — quick quality check
-cover-core:
-	go test $(CORE_PACKAGES) -coverprofile=coverage.out -covermode=atomic && \
-	go tool cover -html=coverage.out -o coverage.html && \
-	go tool cover -func=coverage.out | tail -1 && \
-	rm -f coverage.out
+	COVER_PKGS=$$(go list ./... | grep -v -E '(/cmd|/tests$$|/tests/|/mocks/|internal/tui|internal/commands/init|internal/commands/add|internal/commands/delete|internal/commands/run)' | tr '\n' ',') ; \
+	go test -count=1 \
+	  -coverpkg=$$COVER_PKGS \
+	  -coverprofile=coverage.out \
+	  -covermode=atomic \
+	  ./...
 
 integration-tests:
 	go test -v -count=1 -timeout 600s ./tests/...

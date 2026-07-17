@@ -40,5 +40,6 @@ Thumbs.db
 *.log
 .gigacode/
 .swag2mcp
+.opencode
 main
 tmp

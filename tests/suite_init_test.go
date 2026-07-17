@@ -4,58 +4,59 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 )
 
-func TestScript_Init_CreatesWorkspace(t *testing.T) {
-	ws := newTestWorkspace(t)
-	_, stderr, code := runCommand(t, "init", ws)
-	assertEqual(t, "exit code", code, 0)
-	assertContains(t, "stderr", stderr, "initialized")
+type InitSuite struct {
+	BaseSuite
+}
 
-	root := wsDir(ws)
+func (s *InitSuite) TestCreatesWorkspace() {
+	_, stderr, code := s.RunCommand("init", s.Workspace)
+	s.Equal(0, code)
+	s.Contains(stderr, "initialized")
+
+	root := s.Workspace
 	dirs := []string{"cache", "specs", "responses", "auth_scripts"}
 	for _, d := range dirs {
 		info, err := os.Stat(filepath.Join(root, d))
-		if err != nil {
-			t.Errorf("missing directory %s: %v", d, err)
-			continue
-		}
-		if !info.IsDir() {
-			t.Errorf("%s is not a directory", d)
+		if s.NoError(err, "missing directory %s", d) {
+			s.True(info.IsDir(), "%s is not a directory", d)
 		}
 	}
 
 	configPath := filepath.Join(root, "swag2mcp.yaml")
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		t.Errorf("missing swag2mcp.yaml")
-	}
+	_, err := os.Stat(configPath)
+	s.Require().NoError(err, "missing swag2mcp.yaml")
 }
 
-func TestScript_Init_ForceOverwrite(t *testing.T) {
-	ws := newTestWorkspace(t)
-	runCommand(t, "init", ws)
+func (s *InitSuite) TestForceOverwrite() {
+	s.RunCommand("init", s.Workspace)
 
-	_, stderr, code := runCommand(t, "init", ws)
-	assertNotEqual(t, "exit code without -f", code, 0)
-	assertContains(t, "stderr", stderr, "not empty")
+	_, stderr, code := s.RunCommand("init", s.Workspace)
+	s.NotEqual(0, code, "expected failure without -f")
+	s.Contains(stderr, "not empty")
 
-	_, _, code = runCommand(t, "init", "-f", ws)
-	assertEqual(t, "exit code with -f", code, 0)
+	_, _, code = s.RunCommand("init", "-f", s.Workspace)
+	s.Equal(0, code, "expected success with -f")
 }
 
-func TestScript_Init_Interactive(t *testing.T) {
-	t.Skip("requires TTY")
+func (s *InitSuite) TestInteractive() {
+	s.T().Skip("requires TTY")
 }
 
-func TestScript_Init_CustomPath(t *testing.T) {
-	ws := newTestWorkspace(t)
-	customPath := filepath.Join(ws, "custom", "nested", "workspace")
-	stdout, stderr, code := runCommand(t, "init", customPath)
-	assertEqual(t, "exit code", code, 0)
-	assertContains(t, "stdout", stdout+stderr, "initialized")
+func (s *InitSuite) TestCustomPath() {
+	customPath := filepath.Join(s.Workspace, "custom", "nested", "workspace")
+	stdout, stderr, code := s.RunCommand("init", customPath)
+	s.Equal(0, code)
+	s.Contains(stdout+stderr, "initialized")
 
 	configPath := filepath.Join(customPath, "swag2mcp.yaml")
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		t.Errorf("config not created at custom path: %s", configPath)
-	}
+	_, err := os.Stat(configPath)
+	s.Require().NoError(err, "config not created at custom path: %s", configPath)
+}
+
+func TestInitSuite(t *testing.T) {
+	suite.Run(t, new(InitSuite))
 }

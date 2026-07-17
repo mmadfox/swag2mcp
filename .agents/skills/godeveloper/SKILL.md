@@ -66,6 +66,27 @@ This document defines how to write Go code for the **swag2mcp** project. It synt
 
 - PascalCase for exported, camelCase for unexported.
 - Enums use `iota` with descriptive names: `validationFailedErrCode`, `notFoundErrCode`.
+- **String and duration constants** — every string literal or duration expression (`30*time.Second`, `5*time.Minute`) used in more than one file within a package must be defined as a named constant in the package's main file (e.g. `auth.go`, `config.go`, `service.go`). Each constant must have a doc comment explaining where and how it is used:
+
+```go
+// headerAuthorization is the HTTP Authorization header name used by
+// bearer, basic, digest, oauth2-cc, oauth2-pwd, and script auth clients.
+const headerAuthorization = "Authorization"
+
+// headerValueBearer is the Bearer token prefix used by bearer, oauth2-cc,
+// oauth2-pwd, and script auth clients.
+const headerValueBearer = "Bearer "
+
+// paramInQuery is the value of the In field for API key auth placed in the
+// query string. Used by APIKeyAuthClient.Apply.
+const paramInQuery = "query"
+
+// tokenRequestTimeout is the timeout for external HTTP requests
+// (token endpoints, digest challenges) and script execution.
+const tokenRequestTimeout = 30 * time.Second
+```
+
+Rationale: single source of truth prevents typos, enables grep-based auditing, and makes future changes (e.g. renaming a header or adjusting a timeout) safe and local.
 
 ### 1.9 Receivers
 
@@ -152,9 +173,118 @@ if err != nil {
 }
 ```
 
+**Guard clause for empty/zero values** — check the negative condition first and return early, so the happy path stays flat:
+
+```go
+// Good
+func (c *BearerTokenAuthClient) Apply(req *http.Request, out *Info) error {
+    if c.Token == "" {
+        return nil
+    }
+    setAuthHeader(req, out, "Authorization", "Bearer "+c.Token)
+    return nil
+}
+
+// Bad — wraps the entire logic in an if block
+func (c *BearerTokenAuthClient) Apply(req *http.Request, out *Info) error {
+    if c.Token != "" {
+        setAuthHeader(req, out, "Authorization", "Bearer "+c.Token)
+    }
+    return nil
+}
+```
+
+**Guard clause for `out == nil`** — when a function accepts an optional output parameter, check `if out == nil { return nil }` early instead of wrapping the entire output logic in `if out != nil { ... }`:
+
+```go
+// Good
+func (c *BasicAuthClient) Apply(req *http.Request, out *Info) error {
+    if c.Username == "" || c.Password == "" {
+        return nil
+    }
+    req.SetBasicAuth(c.Username, c.Password)
+    if out == nil {
+        return nil
+    }
+    val := req.Header.Get(headerAuthorization)
+    if out.Headers == nil {
+        out.Headers = make(map[string]string)
+    }
+    out.Headers[headerAuthorization] = val
+    return nil
+}
+
+// Bad — wraps the entire output logic in an if block
+func (c *BasicAuthClient) Apply(req *http.Request, out *Info) error {
+    req.SetBasicAuth(c.Username, c.Password)
+    if out != nil {
+        val := req.Header.Get(headerAuthorization)
+        if out.Headers == nil {
+            out.Headers = make(map[string]string)
+        }
+        out.Headers[headerAuthorization] = val
+    }
+    return nil
+}
+```
+
 ### 2.6 Unnecessary Else
 
 If the `if` branch returns/breaks/continues, omit the `else`.
+
+### 2.7 Mutex Granularity
+
+Keep `Lock`/`Unlock` pairs in small, focused methods. Never spread a single lock across a long function with multiple unlock points — it's error-prone and hard to review.
+
+```go
+// Good — Lock/Unlock encapsulated in tiny methods, Apply is flat
+func (c *ScriptAuthClient) Apply(req *http.Request, out *Info) error {
+    if token, ok := c.readCachedToken(); ok {
+        setAuthHeader(req, out, headerAuthorization, bearerToken(token))
+        return nil
+    }
+    token, expiresIn, err := c.execute()
+    if err != nil {
+        return fmt.Errorf("script auth: %w", err)
+    }
+    c.writeToken(token, expiresIn)
+    setAuthHeader(req, out, headerAuthorization, bearerToken(token))
+    return nil
+}
+
+func (c *ScriptAuthClient) readCachedToken() (string, bool) {
+    c.mu.Lock()
+    defer c.mu.Unlock()
+    if c.token != "" && time.Now().Before(c.expiresAt) {
+        return c.token, true
+    }
+    return "", false
+}
+
+func (c *ScriptAuthClient) writeToken(token string, expiresIn int) {
+    c.mu.Lock()
+    defer c.mu.Unlock()
+    c.token = token
+    c.expiresAt = time.Now().Add(time.Duration(expiresIn) * time.Second)
+}
+
+// Bad — Lock/Unlock spread across the function, manual unlock in multiple places
+func (c *ScriptAuthClient) Apply(req *http.Request, out *Info) error {
+    c.mu.Lock()
+    if c.token != "" && time.Now().Before(c.expiresAt) {
+        setAuthHeader(req, out, headerAuthorization, bearerToken(c.token))
+        c.mu.Unlock()
+        return nil
+    }
+    c.mu.Unlock()
+    // ... fetch token ...
+    c.mu.Lock()
+    c.token = token
+    c.expiresAt = time.Now().Add(time.Duration(expiresIn) * time.Second)
+    c.mu.Unlock()
+    return nil
+}
+```
 
 ### 2.7 Variable Declarations
 
@@ -724,7 +854,28 @@ All code must pass linters in `.golangci.yml` (120-line limit, strict linters):
 
 This project uses **Go 1.23+**. Use Go 1.23+ features: `iter.Seq2`, generics, `t.Context()`, `slices`, `maps`, `cmp`.
 
-### 11.12 Coverage Strategy
+### 11.12 Zip Slip Protection
+
+Always use `filepath.Rel` to validate extracted paths, never `strings.HasPrefix`:
+
+```go
+// BAD — vulnerable to path traversal
+if !strings.HasPrefix(filepath.Clean(fpath), filepath.Clean(destDir)+string(filepath.Separator)) {
+    return fmt.Errorf("illegal file path: %s", f.Name)
+}
+
+// GOOD — safe
+destDir := filepath.Clean(destDir)
+fpath := filepath.Join(destDir, f.Name)
+rel, err := filepath.Rel(destDir, fpath)
+if err != nil || strings.HasPrefix(rel, "..") {
+    return fmt.Errorf("zip slip detected: %s", f.Name)
+}
+```
+
+`filepath.Rel` returns a relative path; if it starts with `..` the file would escape the destination directory. This is the standard Go idiom for zip slip prevention.
+
+### 11.13 Coverage Strategy
 
 - **Core packages** (`auth`, `cache`, `config`, `env`, `httpclient`, `id`, `index`, `server/mcp`, `service`, `spec`, `types`, `workspace`) — target 80%+
 - **Integration packages** (`commands`, `tui`, `mockserver`) — informational only

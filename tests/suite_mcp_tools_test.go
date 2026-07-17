@@ -4,11 +4,15 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 )
 
-func TestScript_MCP_SpecList(t *testing.T) {
-	ws := newTestWorkspace(t)
+type MCPToolsSuite struct {
+	BaseSuite
+}
 
+func (s *MCPToolsSuite) TestSpecList() {
 	configContent := `specs:
   - domain: petstore
     llm_title: Petstore API
@@ -17,18 +21,16 @@ func TestScript_MCP_SpecList(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
-	result := client.listTools(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
+	result := client.listTools(s.T())
 
 	var toolsResp struct {
 		Tools []struct {
 			Name string `json:"name"`
 		} `json:"tools"`
 	}
-	if err := json.Unmarshal(result, &toolsResp); err != nil {
-		t.Fatalf("parse tools: %v", err)
-	}
+	s.Require().NoError(json.Unmarshal(result, &toolsResp))
 
 	toolNames := make(map[string]bool)
 	for _, t := range toolsResp.Tools {
@@ -42,15 +44,11 @@ func TestScript_MCP_SpecList(t *testing.T) {
 		"search", "inspect", "invoke", "auth",
 	}
 	for _, name := range expectedTools {
-		if !toolNames[name] {
-			t.Errorf("missing tool: %s", name)
-		}
+		s.True(toolNames[name], "missing tool: %s", name)
 	}
 }
 
-func TestScript_MCP_SpecList_NoAuthTool(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestSpecListNoAuthTool() {
 	configContent := `specs:
   - domain: petstore
     llm_title: Petstore API
@@ -59,29 +57,23 @@ func TestScript_MCP_SpecList_NoAuthTool(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth")
-	client.initialize(t)
-	result := client.listTools(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth")
+	client.initialize(s.T())
+	result := client.listTools(s.T())
 
 	var toolsResp struct {
 		Tools []struct {
 			Name string `json:"name"`
 		} `json:"tools"`
 	}
-	if err := json.Unmarshal(result, &toolsResp); err != nil {
-		t.Fatalf("parse tools: %v", err)
-	}
+	s.Require().NoError(json.Unmarshal(result, &toolsResp))
 
 	for _, tool := range toolsResp.Tools {
-		if tool.Name == "auth" {
-			t.Errorf("auth tool should be disabled with --disable-llm-auth")
-		}
+		s.NotEqual("auth", tool.Name, "auth tool should be disabled with --disable-llm-auth")
 	}
 }
 
-func TestScript_MCP_SpecList_Empty(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestSpecListEmpty() {
 	configContent := `specs:
   - domain: test-api
     llm_title: Test API
@@ -90,27 +82,21 @@ func TestScript_MCP_SpecList_Empty(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
-	result := client.callTool(t, "spec_list", map[string]interface{}{})
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
+	result := client.callTool(s.T(), "spec_list", map[string]interface{}{})
 
 	var specsResp struct {
 		Specs []struct {
 			Domain string `json:"domain"`
 		} `json:"specs"`
 	}
-	if err := json.Unmarshal(result, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v\nstderr: %s", err, client.stderr.String())
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatalf("expected at least 1 spec\nstderr: %s", client.stderr.String())
-	}
-	assertEqual(t, "domain", specsResp.Specs[0].Domain, "test-api")
+	s.Require().NoError(json.Unmarshal(result, &specsResp))
+	s.Require().NotEmpty(specsResp.Specs, "expected at least 1 spec")
+	s.Equal("test-api", specsResp.Specs[0].Domain)
 }
 
-func TestScript_MCP_SpecByID(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestSpecByID() {
 	configContent := `specs:
   - domain: petstore
     llm_title: Petstore API
@@ -119,25 +105,11 @@ func TestScript_MCP_SpecByID(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID     string `json:"id"`
-			Domain string `json:"domain"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-
-	specID := specsResp.Specs[0].ID
-	result := client.callTool(t, "spec_by_id", map[string]interface{}{
+	specID := s.GetSpecID(client)
+	result := client.callTool(s.T(), "spec_by_id", map[string]interface{}{
 		"id": specID,
 	})
 
@@ -147,16 +119,12 @@ func TestScript_MCP_SpecByID(t *testing.T) {
 			Domain string `json:"domain"`
 		} `json:"spec"`
 	}
-	if err := json.Unmarshal(result, &specResp); err != nil {
-		t.Fatalf("parse spec_by_id: %v", err)
-	}
-	assertEqual(t, "spec.id", specResp.Spec.ID, specID)
-	assertEqual(t, "spec.domain", specResp.Spec.Domain, "petstore")
+	s.Require().NoError(json.Unmarshal(result, &specResp))
+	s.Equal(specID, specResp.Spec.ID)
+	s.Equal("petstore", specResp.Spec.Domain)
 }
 
-func TestScript_MCP_SpecByID_NotFound(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestSpecByIDNotFound() {
 	configContent := `specs:
   - domain: test-api
     llm_title: Test API
@@ -165,16 +133,14 @@ func TestScript_MCP_SpecByID_NotFound(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
-	_ = client.callTool(t, "spec_by_id", map[string]interface{}{
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
+	_ = client.callTool(s.T(), "spec_by_id", map[string]interface{}{
 		"id": "00000000000000000000000000000000",
 	})
 }
 
-func TestScript_MCP_CollectionBySpec(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestCollectionBySpec() {
 	configContent := `specs:
   - domain: petstore
     llm_title: Petstore API
@@ -185,24 +151,12 @@ func TestScript_MCP_CollectionBySpec(t *testing.T) {
       - title: Store
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-
-	result := client.callTool(t, "collection_by_spec", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
+	specID := s.GetSpecID(client)
+	result := client.callTool(s.T(), "collection_by_spec", map[string]interface{}{
+		"specId": specID,
 	})
 
 	var collResp struct {
@@ -210,17 +164,11 @@ func TestScript_MCP_CollectionBySpec(t *testing.T) {
 			Title string `json:"title"`
 		} `json:"collections"`
 	}
-	if err := json.Unmarshal(result, &collResp); err != nil {
-		t.Fatalf("parse collection_by_spec: %v", err)
-	}
-	if len(collResp.Collections) != 1 {
-		t.Errorf("expected 1 collection, got %d", len(collResp.Collections))
-	}
+	s.Require().NoError(json.Unmarshal(result, &collResp))
+	s.Len(collResp.Collections, 1)
 }
 
-func TestScript_MCP_CollectionByID(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestCollectionByID() {
 	configContent := `specs:
   - domain: petstore
     llm_title: Petstore API
@@ -229,24 +177,12 @@ func TestScript_MCP_CollectionByID(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-
-	collsResult := client.callTool(t, "collection_by_spec", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
+	specID := s.GetSpecID(client)
+	collsResult := client.callTool(s.T(), "collection_by_spec", map[string]interface{}{
+		"specId": specID,
 	})
 	var collsResp struct {
 		Collections []struct {
@@ -254,14 +190,10 @@ func TestScript_MCP_CollectionByID(t *testing.T) {
 			Title string `json:"title"`
 		} `json:"collections"`
 	}
-	if err := json.Unmarshal(collsResult, &collsResp); err != nil {
-		t.Fatalf("parse collections: %v", err)
-	}
-	if len(collsResp.Collections) == 0 {
-		t.Fatal("no collections found")
-	}
+	s.Require().NoError(json.Unmarshal(collsResult, &collsResp))
+	s.Require().NotEmpty(collsResp.Collections, "no collections found")
 
-	result := client.callTool(t, "collection_by_id", map[string]interface{}{
+	result := client.callTool(s.T(), "collection_by_id", map[string]interface{}{
 		"id": collsResp.Collections[0].ID,
 	})
 
@@ -271,15 +203,11 @@ func TestScript_MCP_CollectionByID(t *testing.T) {
 			Title string `json:"title"`
 		} `json:"collection"`
 	}
-	if err := json.Unmarshal(result, &collResp); err != nil {
-		t.Fatalf("parse collection_by_id: %v", err)
-	}
-	assertEqual(t, "collection.title", collResp.Collection.Title, "Petstore API")
+	s.Require().NoError(json.Unmarshal(result, &collResp))
+	s.Equal("Petstore API", collResp.Collection.Title)
 }
 
-func TestScript_MCP_TagBySpec(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestTagBySpec() {
 	configContent := `specs:
   - domain: petstore
     llm_title: Petstore API
@@ -288,24 +216,12 @@ func TestScript_MCP_TagBySpec(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-
-	result := client.callTool(t, "tag_by_spec", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
+	specID := s.GetSpecID(client)
+	result := client.callTool(s.T(), "tag_by_spec", map[string]interface{}{
+		"specId": specID,
 	})
 
 	var tagsResp struct {
@@ -313,17 +229,11 @@ func TestScript_MCP_TagBySpec(t *testing.T) {
 			Name string `json:"name"`
 		} `json:"tags"`
 	}
-	if err := json.Unmarshal(result, &tagsResp); err != nil {
-		t.Fatalf("parse tag_by_spec: %v", err)
-	}
-	if len(tagsResp.Tags) == 0 {
-		t.Errorf("expected at least 1 tag")
-	}
+	s.Require().NoError(json.Unmarshal(result, &tagsResp))
+	s.NotEmpty(tagsResp.Tags, "expected at least 1 tag")
 }
 
-func TestScript_MCP_EndpointBySpec(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestEndpointBySpec() {
 	configContent := `specs:
   - domain: petstore
     llm_title: Petstore API
@@ -332,43 +242,25 @@ func TestScript_MCP_EndpointBySpec(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-
-	result := client.callTool(t, "endpoint_by_spec", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
+	specID := s.GetSpecID(client)
+	result := client.callTool(s.T(), "endpoint_by_spec", map[string]interface{}{
+		"specId": specID,
 	})
 
 	var endpointsResp struct {
 		Endpoints []struct {
 			Method string `json:"method"`
-			Path string `json:"path"`
+			Path   string `json:"path"`
 		} `json:"endpoints"`
 	}
-	if err := json.Unmarshal(result, &endpointsResp); err != nil {
-		t.Fatalf("parse endpoint_by_spec: %v", err)
-	}
-	if len(endpointsResp.Endpoints) == 0 {
-		t.Errorf("expected at least 1 endpoint")
-	}
+	s.Require().NoError(json.Unmarshal(result, &endpointsResp))
+	s.NotEmpty(endpointsResp.Endpoints, "expected at least 1 endpoint")
 }
 
-func TestScript_MCP_EndpointByID(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestEndpointByID() {
 	configContent := `specs:
   - domain: petstore
     llm_title: Petstore API
@@ -377,59 +269,28 @@ func TestScript_MCP_EndpointByID(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
 
-	epResult := client.callTool(t, "endpoint_by_spec", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
-	})
-	var epResp struct {
-		Endpoints []struct {
-			ID   string `json:"id"`
-			Method string `json:"method"`
-			Path string `json:"path"`
-		} `json:"endpoints"`
-	}
-	if err := json.Unmarshal(epResult, &epResp); err != nil {
-		t.Fatalf("parse endpoints: %v", err)
-	}
-	if len(epResp.Endpoints) == 0 {
-		t.Fatal("no endpoints found")
-	}
-
-	result := client.callTool(t, "endpoint_by_id", map[string]interface{}{
-		"id": epResp.Endpoints[0].ID,
+	result := client.callTool(s.T(), "endpoint_by_id", map[string]interface{}{
+		"id": endpointID,
 	})
 
 	var epByIDResp struct {
 		Endpoint struct {
-			ID   string `json:"id"`
+			ID     string `json:"id"`
 			Method string `json:"method"`
-			Path string `json:"path"`
+			Path   string `json:"path"`
 		} `json:"endpoint"`
 	}
-	if err := json.Unmarshal(result, &epByIDResp); err != nil {
-		t.Fatalf("parse endpoint_by_id: %v", err)
-	}
-	assertEqual(t, "endpoint.id", epByIDResp.Endpoint.ID, epResp.Endpoints[0].ID)
+	s.Require().NoError(json.Unmarshal(result, &epByIDResp))
+	s.Equal(endpointID, epByIDResp.Endpoint.ID)
 }
 
-func TestScript_MCP_Inspect(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestInspect() {
 	configContent := `specs:
   - domain: petstore
     llm_title: Petstore API
@@ -438,62 +299,31 @@ func TestScript_MCP_Inspect(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
 
-	epResult := client.callTool(t, "endpoint_by_spec", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
-	})
-	var epResp struct {
-		Endpoints []struct {
-			ID string `json:"id"`
-		} `json:"endpoints"`
-	}
-	if err := json.Unmarshal(epResult, &epResp); err != nil {
-		t.Fatalf("parse endpoints: %v", err)
-	}
-	if len(epResp.Endpoints) == 0 {
-		t.Fatal("no endpoints found")
-	}
-
-	result := client.callTool(t, "inspect", map[string]interface{}{
-		"endpointId": epResp.Endpoints[0].ID,
+	result := client.callTool(s.T(), "inspect", map[string]interface{}{
+		"endpointId": endpointID,
 	})
 
 	var inspectResp struct {
 		Operation interface{} `json:"operation"`
 	}
-	if err := json.Unmarshal(result, &inspectResp); err != nil {
-		t.Fatalf("parse inspect: %v", err)
-	}
-	if inspectResp.Operation == nil {
-		t.Errorf("expected operation to be present")
-	}
+	s.Require().NoError(json.Unmarshal(result, &inspectResp))
+	s.NotNil(inspectResp.Operation, "expected operation to be present")
 }
 
-func TestScript_MCP_Invoke(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestInvoke() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[{"id":1,"name":"Fluffy","status":"available"}]`))
 	})
-	srv := startHTTPServer(t, mux)
+	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
   - domain: petstore
@@ -503,68 +333,24 @@ func TestScript_MCP_Invoke(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
 
-	epResult := client.callTool(t, "endpoint_by_spec", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
-	})
-	var epResp struct {
-		Endpoints []struct {
-			ID   string `json:"id"`
-			Method string `json:"method"`
-			Path string `json:"path"`
-		} `json:"endpoints"`
-	}
-	if err := json.Unmarshal(epResult, &epResp); err != nil {
-		t.Fatalf("parse endpoints: %v", err)
-	}
-	if len(epResp.Endpoints) == 0 {
-		t.Fatal("no endpoints found")
-	}
-
-	var getEndpointID string
-	for _, ep := range epResp.Endpoints {
-		if ep.Method == "GET" && ep.Path == "/pets" {
-			getEndpointID = ep.ID
-			break
-		}
-	}
-	if getEndpointID == "" {
-		t.Fatal("GET /pets endpoint not found")
-	}
-
-	result := client.callTool(t, "invoke", map[string]interface{}{
-		"endpointId": getEndpointID,
+	result := client.callTool(s.T(), "invoke", map[string]interface{}{
+		"endpointId": endpointID,
 	})
 
 	var invokeResp struct {
-		StatusCode int               `json:"statusCode"`
-		Headers    map[string]string `json:"headers"`
-		Body       json.RawMessage  `json:"body"`
+		StatusCode int `json:"statusCode"`
 	}
-	if err := json.Unmarshal(result, &invokeResp); err != nil {
-		t.Fatalf("parse invoke: %v", err)
-	}
-	assertEqual(t, "statusCode", invokeResp.StatusCode, 200)
+	s.Require().NoError(json.Unmarshal(result, &invokeResp))
+	s.Equal(200, invokeResp.StatusCode)
 }
 
-func TestScript_MCP_Invoke_WithQueryParams(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestInvokeWithQueryParams() {
 	var capturedQuery string
 	mux := http.NewServeMux()
 	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
@@ -573,7 +359,7 @@ func TestScript_MCP_Invoke_WithQueryParams(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[]`))
 	})
-	srv := startHTTPServer(t, mux)
+	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
   - domain: petstore
@@ -583,63 +369,25 @@ func TestScript_MCP_Invoke_WithQueryParams(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
 
-	epResult := client.callTool(t, "endpoint_by_spec", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
-	})
-	var epResp struct {
-		Endpoints []struct {
-			ID   string `json:"id"`
-			Method string `json:"method"`
-			Path string `json:"path"`
-		} `json:"endpoints"`
-	}
-	if err := json.Unmarshal(epResult, &epResp); err != nil {
-		t.Fatalf("parse endpoints: %v", err)
-	}
-
-	var getEndpointID string
-	for _, ep := range epResp.Endpoints {
-		if ep.Method == "GET" && ep.Path == "/pets" {
-			getEndpointID = ep.ID
-			break
-		}
-	}
-	if getEndpointID == "" {
-		t.Fatal("GET /pets endpoint not found")
-	}
-
-	client.callTool(t, "invoke", map[string]interface{}{
-		"endpointId": getEndpointID,
+	client.callTool(s.T(), "invoke", map[string]interface{}{
+		"endpointId": endpointID,
 		"parameters": map[string]interface{}{
 			"limit":  "5",
 			"status": "available",
 		},
 	})
 
-	if capturedQuery != "limit=5&status=available" && capturedQuery != "status=available&limit=5" {
-		t.Errorf("unexpected query: %s", capturedQuery)
-	}
+	s.Contains(capturedQuery, "limit=5")
+	s.Contains(capturedQuery, "status=available")
 }
 
-func TestScript_MCP_Invoke_WithPathParams(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestInvokeWithPathParams() {
 	var capturedPath string
 	mux := http.NewServeMux()
 	mux.HandleFunc("/pets/42", func(w http.ResponseWriter, r *http.Request) {
@@ -648,7 +396,7 @@ func TestScript_MCP_Invoke_WithPathParams(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"id":42,"name":"Fluffy"}`))
 	})
-	srv := startHTTPServer(t, mux)
+	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
   - domain: petstore
@@ -658,60 +406,23 @@ func TestScript_MCP_Invoke_WithPathParams(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/pets/{petId}")
 
-	epResult := client.callTool(t, "endpoint_by_spec", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
-	})
-	var epResp struct {
-		Endpoints []struct {
-			ID   string `json:"id"`
-			Method string `json:"method"`
-			Path string `json:"path"`
-		} `json:"endpoints"`
-	}
-	if err := json.Unmarshal(epResult, &epResp); err != nil {
-		t.Fatalf("parse endpoints: %v", err)
-	}
-
-	var getByIDEndpointID string
-	for _, ep := range epResp.Endpoints {
-		if ep.Method == "GET" && ep.Path == "/pets/{petId}" {
-			getByIDEndpointID = ep.ID
-			break
-		}
-	}
-	if getByIDEndpointID == "" {
-		t.Fatal("GET /pets/{petId} endpoint not found")
-	}
-
-	client.callTool(t, "invoke", map[string]interface{}{
-		"endpointId": getByIDEndpointID,
+	client.callTool(s.T(), "invoke", map[string]interface{}{
+		"endpointId": endpointID,
 		"parameters": map[string]interface{}{
 			"petId": "42",
 		},
 	})
 
-	assertEqual(t, "captured path", capturedPath, "/pets/42")
+	s.Equal("/pets/42", capturedPath)
 }
 
-func TestScript_MCP_Invoke_WithRequestBody(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestInvokeWithRequestBody() {
 	var capturedBody string
 	mux := http.NewServeMux()
 	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
@@ -721,7 +432,7 @@ func TestScript_MCP_Invoke_WithRequestBody(t *testing.T) {
 		w.WriteHeader(http.StatusCreated)
 		_, _ = w.Write([]byte(`{"id":1}`))
 	})
-	srv := startHTTPServer(t, mux)
+	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
   - domain: petstore
@@ -731,67 +442,30 @@ func TestScript_MCP_Invoke_WithRequestBody(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "POST", "/pets")
 
-	epResult := client.callTool(t, "endpoint_by_spec", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
-	})
-	var epResp struct {
-		Endpoints []struct {
-			ID   string `json:"id"`
-			Method string `json:"method"`
-			Path string `json:"path"`
-		} `json:"endpoints"`
-	}
-	if err := json.Unmarshal(epResult, &epResp); err != nil {
-		t.Fatalf("parse endpoints: %v", err)
-	}
-
-	var postEndpointID string
-	for _, ep := range epResp.Endpoints {
-		if ep.Method == "POST" && ep.Path == "/pets" {
-			postEndpointID = ep.ID
-			break
-		}
-	}
-	if postEndpointID == "" {
-		t.Fatal("POST /pets endpoint not found")
-	}
-
-	client.callTool(t, "invoke", map[string]interface{}{
-		"endpointId": postEndpointID,
+	client.callTool(s.T(), "invoke", map[string]interface{}{
+		"endpointId": endpointID,
 		"requestBody": map[string]interface{}{
 			"name":   "Fluffy",
 			"status": "available",
 		},
 	})
 
-	assertContains(t, "request body", capturedBody, "Fluffy")
+	s.Contains(capturedBody, "Fluffy")
 }
 
-func TestScript_MCP_Invoke_ServerError(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestInvokeServerError() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte(`{"error":"internal error"}`))
 	})
-	srv := startHTTPServer(t, mux)
+	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
   - domain: petstore
@@ -801,64 +475,24 @@ func TestScript_MCP_Invoke_ServerError(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
 
-	epResult := client.callTool(t, "endpoint_by_spec", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
-	})
-	var epResp struct {
-		Endpoints []struct {
-			ID   string `json:"id"`
-			Method string `json:"method"`
-			Path string `json:"path"`
-		} `json:"endpoints"`
-	}
-	if err := json.Unmarshal(epResult, &epResp); err != nil {
-		t.Fatalf("parse endpoints: %v", err)
-	}
-
-	var getEndpointID string
-	for _, ep := range epResp.Endpoints {
-		if ep.Method == "GET" && ep.Path == "/pets" {
-			getEndpointID = ep.ID
-			break
-		}
-	}
-	if getEndpointID == "" {
-		t.Fatal("GET /pets endpoint not found")
-	}
-
-	result := client.callTool(t, "invoke", map[string]interface{}{
-		"endpointId": getEndpointID,
+	result := client.callTool(s.T(), "invoke", map[string]interface{}{
+		"endpointId": endpointID,
 	})
 
 	var invokeResp struct {
-		StatusCode int         `json:"statusCode"`
-		Body       interface{} `json:"body"`
+		StatusCode int `json:"statusCode"`
 	}
-	if err := json.Unmarshal(result, &invokeResp); err != nil {
-		t.Fatalf("parse invoke: %v", err)
-	}
-	assertEqual(t, "statusCode", invokeResp.StatusCode, 500)
+	s.Require().NoError(json.Unmarshal(result, &invokeResp))
+	s.Equal(500, invokeResp.StatusCode)
 }
 
-func TestScript_MCP_Auth(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestAuth() {
 	configContent := `specs:
   - domain: secured-api
     llm_title: Secured API
@@ -871,39 +505,22 @@ func TestScript_MCP_Auth(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-
-	result := client.callTool(t, "auth", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
+	specID := s.GetSpecID(client)
+	result := client.callTool(s.T(), "auth", map[string]interface{}{
+		"specId": specID,
 	})
 
 	var authResp struct {
-		Token   string            `json:"token"`
-		Headers map[string]string `json:"headers"`
+		Token string `json:"token"`
 	}
-	if err := json.Unmarshal(result, &authResp); err != nil {
-		t.Fatalf("parse auth: %v", err)
-	}
-	assertEqual(t, "token", authResp.Token, "Bearer test-token-123")
+	s.Require().NoError(json.Unmarshal(result, &authResp))
+	s.Equal("Bearer test-token-123", authResp.Token)
 }
 
-func TestScript_MCP_TagFilter(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *MCPToolsSuite) TestTagFilter() {
 	configContent := `specs:
   - domain: public-api
     llm_title: Public API
@@ -920,21 +537,21 @@ func TestScript_MCP_TagFilter(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "-t", "public")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "-t", "public")
+	client.initialize(s.T())
 
-	result := client.callTool(t, "spec_list", map[string]interface{}{})
+	result := client.callTool(s.T(), "spec_list", map[string]interface{}{})
 
 	var specsResp struct {
 		Specs []struct {
 			Domain string `json:"domain"`
 		} `json:"specs"`
 	}
-	if err := json.Unmarshal(result, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) != 1 {
-		t.Fatalf("expected 1 spec, got %d", len(specsResp.Specs))
-	}
-	assertEqual(t, "domain", specsResp.Specs[0].Domain, "public-api")
+	s.Require().NoError(json.Unmarshal(result, &specsResp))
+	s.Require().Len(specsResp.Specs, 1, "expected 1 spec")
+	s.Equal("public-api", specsResp.Specs[0].Domain)
+}
+
+func TestMCPToolsSuite(t *testing.T) {
+	suite.Run(t, new(MCPToolsSuite))
 }

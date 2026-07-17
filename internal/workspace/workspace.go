@@ -282,6 +282,7 @@ func (w *Workspace) DownloadSpec(ctx context.Context, source string) ([]byte, er
 	}
 }
 
+// downloadFromFileURL reads a file from a file:// URL.
 func (w *Workspace) downloadFromFileURL(rawURL string) ([]byte, error) {
 	u, err := url.Parse(rawURL)
 	if err != nil {
@@ -301,6 +302,7 @@ func (w *Workspace) downloadFromFileURL(rawURL string) ([]byte, error) {
 	return data, nil
 }
 
+// downloadFromHTTP downloads a spec file from an HTTP(S) URL.
 func (w *Workspace) downloadFromHTTP(ctx context.Context, source string) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, source, nil)
 	if err != nil {
@@ -321,6 +323,7 @@ func (w *Workspace) downloadFromHTTP(ctx context.Context, source string) ([]byte
 	return data, nil
 }
 
+// downloadFromLocalPath reads a spec file from a local filesystem path.
 func (w *Workspace) downloadFromLocalPath(source string) ([]byte, error) {
 	path := source
 	if !filepath.IsAbs(path) {

@@ -143,6 +143,7 @@ const (
 	defaultHMACPort   = 9092
 )
 
+// startAuthServers creates and registers auth mock servers (OAuth2, Digest, HMAC).
 func (m *MockServer) startAuthServers() {
 	oauth2Port := defaultOAuth2Port
 	digestPort := defaultDigestPort
@@ -159,25 +160,16 @@ func (m *MockServer) startAuthServers() {
 		}
 	}
 
-	addr := fmt.Sprintf("127.0.0.1:%d", oauth2Port)
-	server := newAuthMockServer(authServerOAuth2, addr, m.tlsConfig, m.logger)
 	m.mu.Lock()
-	m.authServers = append(m.authServers, server)
-	m.mu.Unlock()
-
-	addr = fmt.Sprintf("127.0.0.1:%d", digestPort)
-	server = newAuthMockServer(authServerDigest, addr, m.tlsConfig, m.logger)
-	m.mu.Lock()
-	m.authServers = append(m.authServers, server)
-	m.mu.Unlock()
-
-	addr = fmt.Sprintf("127.0.0.1:%d", hmacPort)
-	server = newAuthMockServer(authServerHMAC, addr, m.tlsConfig, m.logger)
-	m.mu.Lock()
-	m.authServers = append(m.authServers, server)
+	m.authServers = append(m.authServers,
+		newAuthMockServer(authServerOAuth2, fmt.Sprintf("127.0.0.1:%d", oauth2Port), m.tlsConfig, m.logger),
+		newAuthMockServer(authServerDigest, fmt.Sprintf("127.0.0.1:%d", digestPort), m.tlsConfig, m.logger),
+		newAuthMockServer(authServerHMAC, fmt.Sprintf("127.0.0.1:%d", hmacPort), m.tlsConfig, m.logger),
+	)
 	m.mu.Unlock()
 }
 
+// startAPIServers creates and registers API mock servers for each enabled collection.
 func (m *MockServer) startAPIServers() {
 	for specIndex := range m.options.Config.Specs {
 		specConfig := &m.options.Config.Specs[specIndex]
@@ -191,12 +183,10 @@ func (m *MockServer) startAPIServers() {
 				continue
 			}
 
-			mockAddr := collectionConfig.BaseMockURL
-
 			apiServer := newAPIMockServer(
 				specConfig,
 				collectionConfig,
-				mockAddr,
+				collectionConfig.BaseMockURL,
 				m.tlsConfig,
 				m.logger,
 				m.options.Workspace,
@@ -212,6 +202,7 @@ func (m *MockServer) startAPIServers() {
 	}
 }
 
+// startAll launches all registered auth and API mock servers.
 func (m *MockServer) startAll(ctx context.Context) {
 	for _, authServer := range m.authServers {
 		authServer.start(ctx)
@@ -222,6 +213,7 @@ func (m *MockServer) startAll(ctx context.Context) {
 	}
 }
 
+// shutdownAll gracefully stops all registered auth and API mock servers.
 func (m *MockServer) shutdownAll() {
 	for _, authServer := range m.authServers {
 		authServer.shutdown()
@@ -231,6 +223,7 @@ func (m *MockServer) shutdownAll() {
 	}
 }
 
+// printSummary prints a summary of all running mock servers to stdout.
 func (m *MockServer) printSummary() {
 	var output strings.Builder
 

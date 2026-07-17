@@ -6,13 +6,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log/slog"
 	"math/rand/v2"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/mmadfox/swag2mcp/internal/env"
 )
 
 const (
@@ -24,6 +25,10 @@ const (
 	MaxTTL = 48 * time.Hour
 	// MinTTL is the minimum time-to-live for cached spec files.
 	MinTTL = 1 * time.Hour
+	// defaultHTTPTimeout is the timeout for HTTP requests to download spec files.
+	defaultHTTPTimeout = 30 * time.Second
+	// fallbackTimeout is the timeout for HEAD requests in Exists.
+	fallbackTimeout = 10 * time.Second
 )
 
 type sourceType string
@@ -85,8 +90,8 @@ func (c *Cache) Resolve(ctx context.Context, location string) (string, error) {
 		}
 	}
 
-	if mkdirErr := os.MkdirAll(c.dir, 0750); mkdirErr != nil {
-		return "", fmt.Errorf("create cache dir: %w", mkdirErr)
+	if err := os.MkdirAll(c.dir, 0750); err != nil {
+		return "", fmt.Errorf("create cache dir: %w", err)
 	}
 
 	hash := cacheKey(normalized)
@@ -102,8 +107,8 @@ func (c *Cache) Resolve(ctx context.Context, location string) (string, error) {
 		return "", err
 	}
 
-	if writeErr := os.WriteFile(filepath.Clean(specPath), data, 0600); writeErr != nil {
-		return "", fmt.Errorf("write cache file: %w", writeErr)
+	if err := os.WriteFile(filepath.Clean(specPath), data, 0600); err != nil {
+		return "", fmt.Errorf("write cache file: %w", err)
 	}
 
 	ttl := randomTTL()
@@ -114,13 +119,14 @@ func (c *Cache) Resolve(ctx context.Context, location string) (string, error) {
 		ModTime:    modTime,
 		TTLSec:     int(ttl.Seconds()),
 	}
-	if metaErr := writeMeta(metaPath, meta); metaErr != nil {
-		return "", fmt.Errorf("write meta file: %w", metaErr)
+	if err := writeMeta(metaPath, meta); err != nil {
+		return "", fmt.Errorf("write meta file: %w", err)
 	}
 
 	return specPath, nil
 }
 
+// isInsideSpecs reports whether the given path is inside the specs directory.
 func (c *Cache) isInsideSpecs(path string) bool {
 	if c.specsDir == "" {
 		return false
@@ -145,44 +151,46 @@ func (c *Cache) resolveSpecsPath(location string) (string, bool) {
 	return resolved, true
 }
 
+// hitCache checks whether a valid cached copy of the source exists on disk.
 func (c *Cache) hitCache(normalized string, stype sourceType, metaPath, specPath string) bool {
-	meta, readErr := readMeta(metaPath)
-	if readErr != nil || meta.IsExpired() {
+	meta, err := readMeta(metaPath)
+	if err != nil || meta.IsExpired() {
 		return false
 	}
 
 	switch stype {
 	case sourceLocal:
-		fi, statErr := os.Stat(normalized)
-		if statErr != nil || fi.ModTime().After(meta.ModTime) {
+		fi, err := os.Stat(normalized)
+		if err != nil || fi.ModTime().After(meta.ModTime) {
 			return false
 		}
 	case sourceURL:
 	}
 
-	if _, specErr := os.Stat(specPath); specErr != nil {
+	if _, err := os.Stat(specPath); err != nil {
 		return false
 	}
 	return true
 }
 
+// loadSource fetches the spec data from a local path or URL.
 func (c *Cache) loadSource(ctx context.Context, normalized string, stype sourceType) ([]byte, time.Time, error) {
 	switch stype {
 	case sourceLocal:
-		fi, statErr := os.Stat(normalized)
-		if statErr != nil {
-			return nil, time.Time{}, fmt.Errorf("stat %s: %w", normalized, statErr)
+		fi, err := os.Stat(normalized)
+		if err != nil {
+			return nil, time.Time{}, fmt.Errorf("stat %s: %w", normalized, err)
 		}
-		data, readErr := os.ReadFile(normalized)
-		if readErr != nil {
-			return nil, time.Time{}, fmt.Errorf("read %s: %w", normalized, readErr)
+		data, err := os.ReadFile(normalized)
+		if err != nil {
+			return nil, time.Time{}, fmt.Errorf("read %s: %w", normalized, err)
 		}
 		return data, fi.ModTime(), nil
 
 	case sourceURL:
-		data, getErr := c.cli.Get(ctx, normalized)
-		if getErr != nil {
-			return nil, time.Time{}, fmt.Errorf("download %s: %w", normalized, getErr)
+		data, err := c.cli.Get(ctx, normalized)
+		if err != nil {
+			return nil, time.Time{}, fmt.Errorf("download %s: %w", normalized, err)
 		}
 		return data, time.Time{}, nil
 
@@ -201,46 +209,24 @@ func (c *Cache) Exists(ctx context.Context, location string) error {
 		return errors.New("empty location")
 	}
 
-	isURL := strings.HasPrefix(location, "https://") || strings.HasPrefix(location, "http://")
-	isFileURL := strings.HasPrefix(location, "file://")
+	stype, path, err := classifyLocation(location)
+	if err != nil {
+		return err
+	}
 
-	switch {
-	case isFileURL:
-		path, pathErr := fileURIToPath(location)
-		if pathErr != nil {
-			return &LocationError{Location: location, Type: "file", Err: pathErr}
-		}
-		if resolved, ok := c.resolveSpecsPath(path); ok {
-			path = resolved
-		}
-		if _, statErr := os.Stat(path); os.IsNotExist(statErr) {
-			return &LocationError{Location: location, Type: "file", Err: fmt.Errorf("file not found at %s", path)}
-		}
-		return nil
-
-	case isURL:
-		return c.existsURL(ctx, location)
-
+	switch stype {
+	case sourceLocal:
+		return c.existsFile(path)
+	case sourceURL:
+		return c.existsURL(ctx, path)
 	default:
-		path := expandTilde(location)
-		if resolved, ok := c.resolveSpecsPath(path); ok {
-			path = resolved
-		}
-		if !filepath.IsAbs(path) {
-			absPath, absErr := filepath.Abs(path)
-			if absErr == nil {
-				path = absPath
-			}
-		}
-		if _, statErr := os.Stat(path); os.IsNotExist(statErr) {
-			return &LocationError{Location: location, Type: "file", Err: fmt.Errorf("file not found at %s", path)}
-		}
-		return nil
+		return &LocationError{Location: location, Type: "file", Err: errors.New("unknown location type")}
 	}
 }
 
-// normalizeLocation converts any location to a canonical absolute path or URL.
-func normalizeLocation(location string) (string, sourceType, error) {
+// classifyLocation parses a location string and returns its type and canonical path/URL.
+// Supports http(s):// URLs, file:// URLs, and local paths (absolute or relative with ~ expansion).
+func classifyLocation(location string) (sourceType, string, error) {
 	isURL := strings.HasPrefix(location, "https://") || strings.HasPrefix(location, "http://")
 	isFileURL := strings.HasPrefix(location, "file://")
 
@@ -248,39 +234,56 @@ func normalizeLocation(location string) (string, sourceType, error) {
 	case isFileURL:
 		path, err := fileURIToPath(location)
 		if err != nil {
-			return "", "", fmt.Errorf("file URL: %w", err)
+			return "", "", &LocationError{Location: location, Type: "file", Err: err}
 		}
-		return path, sourceLocal, nil
+		return sourceLocal, path, nil
 	case isURL:
-		return location, sourceURL, nil
+		return sourceURL, location, nil
 	default:
-		path := expandTilde(location)
+		path := env.ExpandTilde(location)
+		return sourceLocal, path, nil
+	}
+}
+
+func (c *Cache) existsFile(path string) error {
+	if resolved, ok := c.resolveSpecsPath(path); ok {
+		path = resolved
+	}
+	if !filepath.IsAbs(path) {
+		absPath, err := filepath.Abs(path)
+		if err == nil {
+			path = absPath
+		}
+	}
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return &LocationError{Location: path, Type: "file", Err: fmt.Errorf("file not found at %s", path)}
+	}
+	return nil
+}
+
+// normalizeLocation converts any location to a canonical absolute path or URL.
+func normalizeLocation(location string) (string, sourceType, error) {
+	stype, path, err := classifyLocation(location)
+	if err != nil {
+		return "", "", err
+	}
+	if stype == sourceLocal {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
 			return "", "", fmt.Errorf("convert to absolute path: %w", err)
 		}
 		return absPath, sourceLocal, nil
 	}
+	return path, sourceURL, nil
 }
 
-// expandTilde replaces ~/ and ~\ prefix with the user's home directory.
-// Works on both Unix and Windows.
-func expandTilde(path string) string {
-	if strings.HasPrefix(path, "~/") || strings.HasPrefix(path, "~\\") {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return path
-		}
-		return filepath.Join(home, path[2:])
-	}
-	return path
-}
-
+// cacheKey returns a hex hash of the raw location string for use as a cache filename.
 func cacheKey(raw string) string {
 	h := sha256.Sum256([]byte(raw))
 	return hex.EncodeToString(h[:16])
 }
 
+// randomTTL returns a random duration between MinTTL and MaxTTL.
 func randomTTL() time.Duration {
 	n := rand.Int64N(int64(MaxTTL - MinTTL))
 	return MinTTL + time.Duration(n)
@@ -288,27 +291,20 @@ func randomTTL() time.Duration {
 
 // existsURL checks if a URL is accessible, using cache if available.
 func (c *Cache) existsURL(ctx context.Context, url string) error {
-	// Check cache first
 	if c.dir != "" {
 		hash := cacheKey(url)
 		specPath := filepath.Join(c.dir, hash+".spec")
 		metaPath := filepath.Join(c.dir, hash+".meta")
 
-		meta, readErr := readMeta(metaPath)
-		if readErr == nil && !meta.IsExpired() {
-			if _, statErr := os.Stat(specPath); statErr == nil {
+		meta, err := readMeta(metaPath)
+		if err == nil && !meta.IsExpired() {
+			if _, err := os.Stat(specPath); err == nil {
 				return nil
 			}
 		}
 	}
 
-	const fallbackTimeout = 10 * time.Second
-
-	// HEAD request as fallback
-	headCtx, cancel := context.WithTimeout(
-		ctx,
-		fallbackTimeout,
-	)
+	headCtx, cancel := context.WithTimeout(ctx, fallbackTimeout)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(headCtx, http.MethodHead, url, nil)
@@ -320,9 +316,7 @@ func (c *Cache) existsURL(ctx context.Context, url string) error {
 	if err != nil {
 		return &LocationError{Location: url, Type: "url", Err: fmt.Errorf("unreachable: %w", err)}
 	}
-	if closeErr := resp.Body.Close(); closeErr != nil {
-		slog.Default().DebugContext(headCtx, "closing response body", "error", closeErr)
-	}
+	_ = resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return &LocationError{Location: url, Type: "url", Err: fmt.Errorf("unexpected status %d", resp.StatusCode)}

@@ -227,7 +227,7 @@ func (m *apiMockServer) findResponseSchema(operation *spec.Operation) *spec.Sche
 }
 
 // schemaForContentType extracts the JSON schema from a content map,
-// preferring application/json and */* content types.
+// preferring application/json and */* content model.
 func schemaForContentType(content map[string]*spec.MediaType) *spec.Schema {
 	if content == nil {
 		return nil

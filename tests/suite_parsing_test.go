@@ -4,17 +4,21 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 )
 
-func TestScript_Parsing_OpenAPI300(t *testing.T) {
-	ws := newTestWorkspace(t)
+type ParsingSuite struct {
+	BaseSuite
+}
 
+func (s *ParsingSuite) TestOpenAPI300() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[]`))
 	})
-	srv := startHTTPServer(t, mux)
+	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
   - domain: oas300
@@ -24,33 +28,27 @@ func TestScript_Parsing_OpenAPI300(t *testing.T) {
       - title: Users
         location: ./internal/service/testdata/valid_v300_openapi.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	result := client.callTool(t, "spec_list", map[string]interface{}{})
+	result := client.callTool(s.T(), "spec_list", map[string]interface{}{})
 	var specsResp struct {
 		Specs []struct {
 			Domain string `json:"domain"`
 		} `json:"specs"`
 	}
-	if err := json.Unmarshal(result, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-	assertEqual(t, "domain", specsResp.Specs[0].Domain, "oas300")
+	s.Require().NoError(json.Unmarshal(result, &specsResp))
+	s.Require().NotEmpty(specsResp.Specs, "no specs found")
+	s.Equal("oas300", specsResp.Specs[0].Domain)
 }
 
-func TestScript_Parsing_OpenAPI311(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ParsingSuite) TestOpenAPI311() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/orders", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[]`))
 	})
-	srv := startHTTPServer(t, mux)
+	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
   - domain: oas311
@@ -60,33 +58,27 @@ func TestScript_Parsing_OpenAPI311(t *testing.T) {
       - title: Orders
         location: ./internal/service/testdata/valid_v311_openapi.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	result := client.callTool(t, "spec_list", map[string]interface{}{})
+	result := client.callTool(s.T(), "spec_list", map[string]interface{}{})
 	var specsResp struct {
 		Specs []struct {
 			Domain string `json:"domain"`
 		} `json:"specs"`
 	}
-	if err := json.Unmarshal(result, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-	assertEqual(t, "domain", specsResp.Specs[0].Domain, "oas311")
+	s.Require().NoError(json.Unmarshal(result, &specsResp))
+	s.Require().NotEmpty(specsResp.Specs, "no specs found")
+	s.Equal("oas311", specsResp.Specs[0].Domain)
 }
 
-func TestScript_Parsing_Swagger20(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ParsingSuite) TestSwagger20() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[]`))
 	})
-	srv := startHTTPServer(t, mux)
+	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
   - domain: swagger20
@@ -96,27 +88,22 @@ func TestScript_Parsing_Swagger20(t *testing.T) {
       - title: Users
         location: ./internal/service/testdata/valid_v20_swagger.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	result := client.callTool(t, "spec_list", map[string]interface{}{})
+	result := client.callTool(s.T(), "spec_list", map[string]interface{}{})
 	var specsResp struct {
 		Specs []struct {
 			Domain string `json:"domain"`
 		} `json:"specs"`
 	}
-	if err := json.Unmarshal(result, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-	assertEqual(t, "domain", specsResp.Specs[0].Domain, "swagger20")
+	s.Require().NoError(json.Unmarshal(result, &specsResp))
+	s.Require().NotEmpty(specsResp.Specs, "no specs found")
+	s.Equal("swagger20", specsResp.Specs[0].Domain)
 }
 
-func TestScript_Parsing_InvalidSpec(t *testing.T) {
-	ws := newTestWorkspace(t)
-	initWorkspace(t, ws)
+func (s *ParsingSuite) TestInvalidSpec() {
+	s.InitWorkspace()
 
 	configContent := `specs:
   - domain: invalid-spec
@@ -126,24 +113,20 @@ func TestScript_Parsing_InvalidSpec(t *testing.T) {
       - title: Bad
         location: ./tests/testdata/invalid.yaml
 `
-	writeConfig(t, ws, configContent)
+	s.WriteConfig(configContent)
 
-	_, _, code := runCommandInWS(t, ws, "validate", ".")
-	if code == 0 {
-		t.Errorf("expected validation to fail with invalid spec")
-	}
+	_, _, code := s.RunCommandInWS("validate", ".")
+	s.NotEqual(0, code, "expected validation to fail with invalid spec")
 }
 
-func TestScript_Parsing_EmptySpec(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *ParsingSuite) TestEmptySpec() {
 	emptySpec := `openapi: 3.0.0
 info:
   title: Empty
   version: 1.0.0
 paths: {}
 `
-	writeSpec(t, ws, "empty.yaml", emptySpec)
+	s.WriteSpec("empty.yaml", emptySpec)
 
 	configContent := `specs:
   - domain: empty-spec
@@ -153,24 +136,20 @@ paths: {}
       - title: Empty
         location: ./empty.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	result := client.callTool(t, "spec_list", map[string]interface{}{})
+	result := client.callTool(s.T(), "spec_list", map[string]interface{}{})
 	var specsResp struct {
 		Specs []struct {
 			ID     string `json:"id"`
 			Domain string `json:"domain"`
 		} `json:"specs"`
 	}
-	if err := json.Unmarshal(result, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
+	s.Require().NoError(json.Unmarshal(result, &specsResp))
+	s.Require().NotEmpty(specsResp.Specs, "no specs found")
 
-	epResult := client.callTool(t, "endpoint_by_spec", map[string]interface{}{
+	epResult := client.callTool(s.T(), "endpoint_by_spec", map[string]interface{}{
 		"specId": specsResp.Specs[0].ID,
 	})
 	if len(epResult) == 0 {
@@ -179,10 +158,10 @@ paths: {}
 	var epResp struct {
 		Endpoints []interface{} `json:"endpoints"`
 	}
-	if err := json.Unmarshal(epResult, &epResp); err != nil {
-		t.Fatalf("parse endpoints: %v", err)
-	}
-	if len(epResp.Endpoints) != 0 {
-		t.Errorf("expected 0 endpoints for empty spec, got %d", len(epResp.Endpoints))
-	}
+	s.Require().NoError(json.Unmarshal(epResult, &epResp))
+	s.Empty(epResp.Endpoints, "expected 0 endpoints for empty spec")
+}
+
+func TestParsingSuite(t *testing.T) {
+	suite.Run(t, new(ParsingSuite))
 }

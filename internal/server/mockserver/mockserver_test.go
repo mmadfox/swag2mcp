@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/config"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewMockServer_NoServers(t *testing.T) {
@@ -14,9 +16,7 @@ func TestNewMockServer_NoServers(t *testing.T) {
 		Config: &config.Config{},
 	})
 	err := server.Start(context.Background())
-	if err == nil {
-		t.Error("expected error when mock_enabled is false")
-	}
+	require.Error(t, err, "expected error when mock_enabled is false")
 }
 
 func TestNewMockServer_MockDisabled(t *testing.T) {
@@ -42,9 +42,7 @@ func TestNewMockServer_MockDisabled(t *testing.T) {
 		},
 	})
 	err := server.Start(context.Background())
-	if err == nil {
-		t.Error("expected error when mock_enabled is false")
-	}
+	require.Error(t, err, "expected error when mock_enabled is false")
 }
 
 func TestExtractHostPort(t *testing.T) {
@@ -66,9 +64,7 @@ func TestExtractHostPort(t *testing.T) {
 		t.Run(tt.addr, func(t *testing.T) {
 			t.Parallel()
 			got := extractHostPort(tt.addr)
-			if got != tt.want {
-				t.Errorf("extractHostPort(%q) = %q, want %q", tt.addr, got, tt.want)
-			}
+			assert.Equal(t, tt.want, got, "extractHostPort(%q)", tt.addr)
 		})
 	}
 }

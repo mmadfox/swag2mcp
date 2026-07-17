@@ -166,7 +166,7 @@ func TestImport_WithSpecFilter(t *testing.T) {
 
 	resp, err := svc.Import(context.Background(), ImportRequest{
 		SpecFilter:   []string{"petstore"},
-		ConfFilepath: cfgPath,
+		ConfFilePath: cfgPath,
 	})
 	if err != nil {
 		t.Fatalf("Import() = %v", err)
@@ -212,7 +212,7 @@ func TestImport_WithSpecFilter_UpdatesConfig(t *testing.T) {
 
 	_, err := svc.Import(context.Background(), ImportRequest{
 		SpecFilter:   []string{"petstore"},
-		ConfFilepath: cfgPath,
+		ConfFilePath: cfgPath,
 	})
 	if err != nil {
 		t.Fatalf("Import() = %v", err)
@@ -253,21 +253,21 @@ func TestImport_WithSpecFilter_NoMatch(t *testing.T) {
 
 	_, err := svc.Import(context.Background(), ImportRequest{
 		SpecFilter:   []string{"nonexistent"},
-		ConfFilepath: cfgPath,
+		ConfFilePath: cfgPath,
 	})
 	if err == nil {
 		t.Fatal("Import() expected error for no matching specs, got nil")
 	}
 }
 
-func TestImport_WithSpecFilter_EmptyConfFilepath(t *testing.T) {
+func TestImport_WithSpecFilter_EmptyConfFilePath(t *testing.T) {
 	t.Parallel()
 
 	svc := newTestService(t)
 
 	_, err := svc.Import(context.Background(), ImportRequest{
 		SpecFilter:   []string{"petstore"},
-		ConfFilepath: "",
+		ConfFilePath: "",
 	})
 	if err == nil {
 		t.Fatal("Import() expected error for empty confFilepath, got nil")

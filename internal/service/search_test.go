@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/mmadfox/swag2mcp/internal/types"
+	"github.com/mmadfox/swag2mcp/internal/model"
 )
 
 func TestSearch_ByMethod(t *testing.T) {
@@ -117,7 +117,7 @@ func TestMapEndpointsToSearchItems_Success(t *testing.T) {
 	svc := newTestService(t)
 	_, _, _, endpointInfo := seedTestData(t, svc, t.Name())
 
-	items, err := svc.mapEndpointsToSearchItems([]*types.Endpoint{endpointInfo})
+	items, err := svc.mapEndpointsToSearchItems([]*model.Endpoint{endpointInfo})
 	if err != nil {
 		t.Fatalf("mapEndpointsToSearchItems() = %v", err)
 	}
@@ -157,14 +157,14 @@ func TestMapEndpointsToSearchItems_OrphanSpec(t *testing.T) {
 	svc := newTestService(t)
 	seedTestData(t, svc, t.Name())
 
-	orphanEndpoint := &types.Endpoint{
+	orphanEndpoint := &model.Endpoint{
 		ID:           "orphan",
 		SpecID:       "00000000000000000000000000000000",
 		CollectionID: "00000000000000000000000000000000",
 		TagID:        "00000000000000000000000000000000",
 	}
 
-	_, err := svc.mapEndpointsToSearchItems([]*types.Endpoint{orphanEndpoint})
+	_, err := svc.mapEndpointsToSearchItems([]*model.Endpoint{orphanEndpoint})
 	if err == nil {
 		t.Fatal("expected error for orphan spec")
 	}
@@ -176,14 +176,14 @@ func TestMapEndpointsToSearchItems_OrphanCollection(t *testing.T) {
 	svc := newTestService(t)
 	specInfo, _, _, _ := seedTestData(t, svc, t.Name())
 
-	orphanEndpoint := &types.Endpoint{
+	orphanEndpoint := &model.Endpoint{
 		ID:           "orphan",
 		SpecID:       specInfo.ID,
 		CollectionID: "00000000000000000000000000000000",
 		TagID:        "00000000000000000000000000000000",
 	}
 
-	_, err := svc.mapEndpointsToSearchItems([]*types.Endpoint{orphanEndpoint})
+	_, err := svc.mapEndpointsToSearchItems([]*model.Endpoint{orphanEndpoint})
 	if err == nil {
 		t.Fatal("expected error for orphan collection")
 	}
@@ -195,14 +195,14 @@ func TestMapEndpointsToSearchItems_OrphanTag(t *testing.T) {
 	svc := newTestService(t)
 	specInfo, collectionInfo, _, _ := seedTestData(t, svc, t.Name())
 
-	orphanEndpoint := &types.Endpoint{
+	orphanEndpoint := &model.Endpoint{
 		ID:           "orphan",
 		SpecID:       specInfo.ID,
 		CollectionID: collectionInfo.ID,
 		TagID:        "00000000000000000000000000000000",
 	}
 
-	_, err := svc.mapEndpointsToSearchItems([]*types.Endpoint{orphanEndpoint})
+	_, err := svc.mapEndpointsToSearchItems([]*model.Endpoint{orphanEndpoint})
 	if err == nil {
 		t.Fatal("expected error for orphan tag")
 	}

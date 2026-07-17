@@ -111,14 +111,17 @@ const (
 	langRegionLen = 5
 )
 
+// randomUserAgent returns a random browser User-Agent string.
 func randomUserAgent() string {
 	return userAgents[rand.IntN(len(userAgents))]
 }
 
+// randomReferer returns a random Referer URL.
 func randomReferer() string {
 	return referers[rand.IntN(len(referers))]
 }
 
+// randomAccept returns a random Accept header value based on content type.
 func randomAccept(isJSON bool) string {
 	if isJSON {
 		return acceptJSON[rand.IntN(len(acceptJSON))]
@@ -126,30 +129,38 @@ func randomAccept(isJSON bool) string {
 	return acceptHTML[rand.IntN(len(acceptHTML))]
 }
 
+// randomAcceptEncoding returns a random Accept-Encoding header value.
 func randomAcceptEncoding() string {
 	return acceptEncodings[rand.IntN(len(acceptEncodings))]
 }
 
+// randomSecChUa returns a random Sec-Ch-Ua header value.
 func randomSecChUa() string {
 	return secChUa[rand.IntN(len(secChUa))]
 }
 
+// randomSecChUaPlatform returns a random Sec-Ch-Ua-Platform header value.
 func randomSecChUaPlatform() string {
 	return secChUaPlatform[rand.IntN(len(secChUaPlatform))]
 }
 
+// randomSecFetchSite returns a random Sec-Fetch-Site header value.
 func randomSecFetchSite() string {
 	return secFetchSites[rand.IntN(len(secFetchSites))]
 }
 
+// randomSecFetchMode returns a random Sec-Fetch-Mode header value.
 func randomSecFetchMode() string {
 	return secFetchModes[rand.IntN(len(secFetchModes))]
 }
 
+// randomSecFetchDest returns a random Sec-Fetch-Dest header value.
 func randomSecFetchDest() string {
 	return secFetchDests[rand.IntN(len(secFetchDests))]
 }
 
+// detectSystemLanguage detects the system language from environment variables.
+// Falls back to en_US.UTF-8 if none are set. Caches the result.
 func detectSystemLanguage() string {
 	if cachedSystemLang != "" {
 		return cachedSystemLang
@@ -170,6 +181,7 @@ func detectSystemLanguage() string {
 	return lang
 }
 
+// randomAcceptLanguage returns a random Accept-Language header value based on system language.
 func randomAcceptLanguage() string {
 	lang := detectSystemLanguage()
 
@@ -217,6 +229,7 @@ func randomAcceptLanguage() string {
 	}
 }
 
+// randomSecHeaders returns a map of random Sec-* headers.
 func randomSecHeaders() map[string]string {
 	return map[string]string{
 		"Sec-Ch-Ua":          randomSecChUa(),

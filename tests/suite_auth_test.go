@@ -6,11 +6,15 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 )
 
-func TestScript_Auth_None(t *testing.T) {
-	ws := newTestWorkspace(t)
+type AuthSuite struct {
+	BaseSuite
+}
 
+func (s *AuthSuite) TestNone() {
 	configContent := `specs:
   - domain: noauth-api
     llm_title: No Auth API
@@ -21,39 +25,22 @@ func TestScript_Auth_None(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-
-	result := client.callTool(t, "auth", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
+	specID := s.GetSpecID(client)
+	result := client.callTool(s.T(), "auth", map[string]interface{}{
+		"specId": specID,
 	})
 
 	var authResp struct {
-		Token   string            `json:"token"`
-		Headers map[string]string `json:"headers"`
+		Token string `json:"token"`
 	}
-	if err := json.Unmarshal(result, &authResp); err != nil {
-		t.Fatalf("parse auth: %v", err)
-	}
-	assertEqual(t, "token", authResp.Token, "")
+	s.Require().NoError(json.Unmarshal(result, &authResp))
+	s.Empty(authResp.Token)
 }
 
-func TestScript_Auth_Basic(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *AuthSuite) TestBasic() {
 	configContent := `specs:
   - domain: basic-api
     llm_title: Basic Auth API
@@ -67,41 +54,24 @@ func TestScript_Auth_Basic(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-
-	result := client.callTool(t, "auth", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
+	specID := s.GetSpecID(client)
+	result := client.callTool(s.T(), "auth", map[string]interface{}{
+		"specId": specID,
 	})
 
 	var authResp struct {
-		Token   string            `json:"token"`
 		Headers map[string]string `json:"headers"`
 	}
-	if err := json.Unmarshal(result, &authResp); err != nil {
-		t.Fatalf("parse auth: %v", err)
-	}
+	s.Require().NoError(json.Unmarshal(result, &authResp))
 
 	expectedAuth := "Basic " + base64.StdEncoding.EncodeToString([]byte("testuser:testpass"))
-	assertEqual(t, "Authorization header", authResp.Headers["Authorization"], expectedAuth)
+	s.Equal(expectedAuth, authResp.Headers["Authorization"])
 }
 
-func TestScript_Auth_Bearer(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *AuthSuite) TestBearer() {
 	configContent := `specs:
   - domain: bearer-api
     llm_title: Bearer Auth API
@@ -114,41 +84,24 @@ func TestScript_Auth_Bearer(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-
-	result := client.callTool(t, "auth", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
+	specID := s.GetSpecID(client)
+	result := client.callTool(s.T(), "auth", map[string]interface{}{
+		"specId": specID,
 	})
 
 	var authResp struct {
 		Token   string            `json:"token"`
 		Headers map[string]string `json:"headers"`
 	}
-	if err := json.Unmarshal(result, &authResp); err != nil {
-		t.Fatalf("parse auth: %v", err)
-	}
-
-	assertEqual(t, "token", authResp.Token, "Bearer my-bearer-token")
-	assertEqual(t, "Authorization header", authResp.Headers["Authorization"], "Bearer my-bearer-token")
+	s.Require().NoError(json.Unmarshal(result, &authResp))
+	s.Equal("Bearer my-bearer-token", authResp.Token)
+	s.Equal("Bearer my-bearer-token", authResp.Headers["Authorization"])
 }
 
-func TestScript_Auth_APIKey_Header(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *AuthSuite) TestAPIKeyHeader() {
 	configContent := `specs:
   - domain: apikey-api
     llm_title: API Key Auth API
@@ -163,41 +116,22 @@ func TestScript_Auth_APIKey_Header(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-
-	result := client.callTool(t, "auth", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
+	specID := s.GetSpecID(client)
+	result := client.callTool(s.T(), "auth", map[string]interface{}{
+		"specId": specID,
 	})
 
 	var authResp struct {
-		Token       string            `json:"token"`
-		Headers     map[string]string `json:"headers"`
-		QueryParams map[string]string `json:"queryParams"`
+		Headers map[string]string `json:"headers"`
 	}
-	if err := json.Unmarshal(result, &authResp); err != nil {
-		t.Fatalf("parse auth: %v", err)
-	}
-
-	assertEqual(t, "X-API-Key header", authResp.Headers["X-API-Key"], "my-api-key-value")
+	s.Require().NoError(json.Unmarshal(result, &authResp))
+	s.Equal("my-api-key-value", authResp.Headers["X-API-Key"])
 }
 
-func TestScript_Auth_APIKey_Query(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *AuthSuite) TestAPIKeyQuery() {
 	configContent := `specs:
   - domain: apikey-query-api
     llm_title: API Key Query Auth API
@@ -212,41 +146,23 @@ func TestScript_Auth_APIKey_Query(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-
-	result := client.callTool(t, "auth", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
+	specID := s.GetSpecID(client)
+	result := client.callTool(s.T(), "auth", map[string]interface{}{
+		"specId": specID,
 	})
 
 	var authResp struct {
-		Token       string            `json:"token"`
-		Headers     map[string]string `json:"headers"`
 		QueryParams map[string]string `json:"queryParams"`
 	}
-	if err := json.Unmarshal(result, &authResp); err != nil {
-		t.Fatalf("parse auth: %v", err)
-	}
-
-	assertEqual(t, "api_key query param", authResp.QueryParams["api_key"], "query-key-value")
+	s.Require().NoError(json.Unmarshal(result, &authResp))
+	s.Equal("query-key-value", authResp.QueryParams["api_key"])
 }
 
-func TestScript_Auth_EnvVarResolution(t *testing.T) {
-	ws := newTestWorkspace(t)
-	t.Setenv("AUTH_TOKEN", "resolved-token-value")
+func (s *AuthSuite) TestEnvVarResolution() {
+	s.T().Setenv("AUTH_TOKEN", "resolved-token-value")
 
 	configContent := `specs:
   - domain: env-auth-api
@@ -260,40 +176,22 @@ func TestScript_Auth_EnvVarResolution(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-
-	result := client.callTool(t, "auth", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
+	specID := s.GetSpecID(client)
+	result := client.callTool(s.T(), "auth", map[string]interface{}{
+		"specId": specID,
 	})
 
 	var authResp struct {
-		Token   string            `json:"token"`
-		Headers map[string]string `json:"headers"`
+		Token string `json:"token"`
 	}
-	if err := json.Unmarshal(result, &authResp); err != nil {
-		t.Fatalf("parse auth: %v", err)
-	}
-
-	assertEqual(t, "token", authResp.Token, "Bearer resolved-token-value")
+	s.Require().NoError(json.Unmarshal(result, &authResp))
+	s.Equal("Bearer resolved-token-value", authResp.Token)
 }
 
-func TestScript_Auth_InvokeWithBearer(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *AuthSuite) TestInvokeWithBearer() {
 	var authHeader string
 	mux := http.NewServeMux()
 	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
@@ -302,7 +200,7 @@ func TestScript_Auth_InvokeWithBearer(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[]`))
 	})
-	srv := startHTTPServer(t, mux)
+	srv := s.StartHTTPServer(mux)
 
 	configContent := fmt.Sprintf(`specs:
   - domain: invoke-auth-api
@@ -316,57 +214,20 @@ func TestScript_Auth_InvokeWithBearer(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `, srv.URL)
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
 
-	epResult := client.callTool(t, "endpoint_by_spec", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
-	})
-	var epResp struct {
-		Endpoints []struct {
-			ID   string `json:"id"`
-			Method string `json:"method"`
-			Path string `json:"path"`
-		} `json:"endpoints"`
-	}
-	if err := json.Unmarshal(epResult, &epResp); err != nil {
-		t.Fatalf("parse endpoints: %v", err)
-	}
-
-	var getEndpointID string
-	for _, ep := range epResp.Endpoints {
-		if ep.Method == "GET" && ep.Path == "/pets" {
-			getEndpointID = ep.ID
-			break
-		}
-	}
-	if getEndpointID == "" {
-		t.Fatal("GET /pets endpoint not found")
-	}
-
-	client.callTool(t, "invoke", map[string]interface{}{
-		"endpointId": getEndpointID,
+	client.callTool(s.T(), "invoke", map[string]interface{}{
+		"endpointId": endpointID,
 	})
 
-	assertEqual(t, "Authorization header", authHeader, "Bearer invoke-bearer-token")
+	s.Equal("Bearer invoke-bearer-token", authHeader)
 }
 
-func TestScript_Auth_HMAC(t *testing.T) {
-	ws := newTestWorkspace(t)
-
+func (s *AuthSuite) TestHMAC() {
 	configContent := `specs:
   - domain: hmac-api
     llm_title: HMAC Auth API
@@ -380,40 +241,24 @@ func TestScript_Auth_HMAC(t *testing.T) {
       - title: Pets
         location: ./testdata/petstore.yaml
 `
-	client := startMCPStdio(t, ws, configContent, "--disable-llm-auth=false")
-	client.initialize(t)
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
 
-	specsResult := client.callTool(t, "spec_list", map[string]interface{}{})
-	var specsResp struct {
-		Specs []struct {
-			ID string `json:"id"`
-		} `json:"specs"`
-	}
-	if err := json.Unmarshal(specsResult, &specsResp); err != nil {
-		t.Fatalf("parse spec_list: %v", err)
-	}
-	if len(specsResp.Specs) == 0 {
-		t.Fatal("no specs found")
-	}
-
-	result := client.callTool(t, "auth", map[string]interface{}{
-		"specId": specsResp.Specs[0].ID,
+	specID := s.GetSpecID(client)
+	result := client.callTool(s.T(), "auth", map[string]interface{}{
+		"specId": specID,
 	})
 
 	var authResp struct {
-		Token       string            `json:"token"`
 		Headers     map[string]string `json:"headers"`
 		QueryParams map[string]string `json:"queryParams"`
 	}
-	if err := json.Unmarshal(result, &authResp); err != nil {
-		t.Fatalf("parse auth: %v", err)
-	}
+	s.Require().NoError(json.Unmarshal(result, &authResp))
+	s.Equal("test-api-key", authResp.Headers["X-MBX-APIKEY"])
+	s.NotEmpty(authResp.QueryParams["signature"])
+	s.NotEmpty(authResp.QueryParams["timestamp"])
+}
 
-	assertEqual(t, "X-MBX-APIKEY header", authResp.Headers["X-MBX-APIKEY"], "test-api-key")
-	if authResp.QueryParams["signature"] == "" {
-		t.Error("signature query param should not be empty")
-	}
-	if authResp.QueryParams["timestamp"] == "" {
-		t.Error("timestamp query param should not be empty")
-	}
+func TestAuthSuite(t *testing.T) {
+	suite.Run(t, new(AuthSuite))
 }

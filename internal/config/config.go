@@ -178,7 +178,7 @@ func (c *Config) Iterate(f *Filter) iter.Seq[*Spec] {
 	}
 }
 
-//nolint:gocognit // Validation requires many checks for different field types.
+//nolint:gocognit // Validation requires many checks for different field model.
 func (c *Config) Validate(f *Filter) error {
 	var errs validationErrors
 

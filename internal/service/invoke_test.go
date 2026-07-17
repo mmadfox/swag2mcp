@@ -14,8 +14,8 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/httpclient"
 	"github.com/mmadfox/swag2mcp/internal/id"
 	"github.com/mmadfox/swag2mcp/internal/index"
+	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/mmadfox/swag2mcp/internal/spec"
-	"github.com/mmadfox/swag2mcp/internal/types"
 )
 
 //go:embed testdata/invoke/*.yaml
@@ -263,7 +263,7 @@ func TestInvoke_CollectionHeaders(t *testing.T) {
 	// Override collection headers
 	collectionID := id.Collection(specInfo.ID, t.Name()+"/collection")
 	collection, _ := serviceInstance.index.CollectionByID(collectionID)
-	collection.HTTPClient = &types.HTTPClientConfig{
+	collection.HTTPClient = &model.HTTPClientConfig{
 		Headers: map[string]string{
 			"X-Region": "us-east-1",
 		},
@@ -587,7 +587,7 @@ func TestInvoke_Cookies(t *testing.T) {
 
 	collectionID := id.Collection(specInfo.ID, t.Name()+"/collection")
 	collection, _ := serviceInstance.index.CollectionByID(collectionID)
-	collection.HTTPClient = &types.HTTPClientConfig{
+	collection.HTTPClient = &model.HTTPClientConfig{
 		Cookies: []httpclient.Cookie{
 			{Name: "session_id", Value: "abc123"},
 			{Name: "theme", Value: "dark"},
@@ -630,7 +630,7 @@ func TestInvoke_HTTPClientConfigHeaders(t *testing.T) {
 
 	collectionID := id.Collection(specInfo.ID, t.Name()+"/collection")
 	collection, _ := serviceInstance.index.CollectionByID(collectionID)
-	collection.HTTPClient = &types.HTTPClientConfig{
+	collection.HTTPClient = &model.HTTPClientConfig{
 		Headers: map[string]string{
 			"X-Custom-Header": "custom-value",
 		},
@@ -850,7 +850,7 @@ func TestInvoke_NilOperation(t *testing.T) {
 	seedTestData(t, svc, t.Name())
 
 	// Create an endpoint with a valid Operation first, then set it to nil after indexing
-	nilOpEndpoint := &types.Endpoint{
+	nilOpEndpoint := &model.Endpoint{
 		ID:           "00000000000000000000000000000001",
 		SpecID:       "00000000000000000000000000000002",
 		CollectionID: "00000000000000000000000000000003",
@@ -860,10 +860,10 @@ func TestInvoke_NilOperation(t *testing.T) {
 		Operation:    &spec.Operation{ID: "nilOp", Summary: "nil op"},
 	}
 	if err := svc.index.EnsureIndex(
-		&types.Spec{ID: "00000000000000000000000000000002", Domain: "nil-op-spec"},
-		[]*types.Collection{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000002"}},
-		[]*types.Tag{{ID: "00000000000000000000000000000004", SpecID: "00000000000000000000000000000002", CollectionID: "00000000000000000000000000000003"}},
-		[]*types.Endpoint{nilOpEndpoint},
+		&model.Spec{ID: "00000000000000000000000000000002", Domain: "nil-op-spec"},
+		[]*model.Collection{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000002"}},
+		[]*model.Tag{{ID: "00000000000000000000000000000004", SpecID: "00000000000000000000000000000002", CollectionID: "00000000000000000000000000000003"}},
+		[]*model.Endpoint{nilOpEndpoint},
 	); err != nil {
 		t.Fatalf("EnsureIndex() = %v", err)
 	}
@@ -890,7 +890,7 @@ func TestInvoke_OrphanSpec(t *testing.T) {
 	if idxErr != nil {
 		t.Fatalf("index.New() = %v", idxErr)
 	}
-	orphanEndpoint := &types.Endpoint{
+	orphanEndpoint := &model.Endpoint{
 		ID:           "00000000000000000000000000000001",
 		SpecID:       "00000000000000000000000000000000",
 		CollectionID: "00000000000000000000000000000002",
@@ -900,10 +900,10 @@ func TestInvoke_OrphanSpec(t *testing.T) {
 		Operation:    &spec.Operation{ID: "orphanOp"},
 	}
 	if idxErr = orphanIdx.EnsureIndex(
-		&types.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
-		[]*types.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
-		[]*types.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
-		[]*types.Endpoint{orphanEndpoint},
+		&model.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
+		[]*model.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
+		[]*model.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
+		[]*model.Endpoint{orphanEndpoint},
 	); idxErr != nil {
 		t.Fatalf("EnsureIndex() = %v", idxErr)
 	}
@@ -930,7 +930,7 @@ func TestInvoke_OrphanCollection(t *testing.T) {
 	if idxErr != nil {
 		t.Fatalf("index.New() = %v", idxErr)
 	}
-	orphanEndpoint := &types.Endpoint{
+	orphanEndpoint := &model.Endpoint{
 		ID:           "00000000000000000000000000000001",
 		SpecID:       "00000000000000000000000000000000",
 		CollectionID: "00000000000000000000000000000002",
@@ -940,10 +940,10 @@ func TestInvoke_OrphanCollection(t *testing.T) {
 		Operation:    &spec.Operation{ID: "orphanOp"},
 	}
 	if idxErr = orphanIdx.EnsureIndex(
-		&types.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
-		[]*types.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
-		[]*types.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
-		[]*types.Endpoint{orphanEndpoint},
+		&model.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
+		[]*model.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
+		[]*model.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
+		[]*model.Endpoint{orphanEndpoint},
 	); idxErr != nil {
 		t.Fatalf("EnsureIndex() = %v", idxErr)
 	}
@@ -1064,7 +1064,7 @@ type testServerConfig struct {
 
 // newTestServer creates an [httptest.Server] that validates incoming requests against the config.
 //
-//nolint:gocognit
+
 func newTestServer(t *testing.T, config testServerConfig) *httptest.Server {
 	t.Helper()
 
@@ -1293,20 +1293,20 @@ func buildTestService(t *testing.T, _ string, specDoc *spec.Doc, specHeaders map
 	serviceInstance.index = newIndex
 
 	specID := id.Domain(uniqueDomain)
-	specInfo := &types.Spec{
+	specInfo := &model.Spec{
 		ID:      specID,
 		Domain:  uniqueDomain,
 		BaseURL: "http://test-server",
 		Auth:    authenticator,
 	}
 	if len(specHeaders) > 0 {
-		specInfo.HTTPClient = &types.HTTPClientConfig{
+		specInfo.HTTPClient = &model.HTTPClientConfig{
 			Headers: specHeaders,
 		}
 	}
 
 	collectionID := id.Collection(specID, uniqueDomain+"/collection")
-	collectionInfo := &types.Collection{
+	collectionInfo := &model.Collection{
 		ID:     collectionID,
 		SpecID: specID,
 	}
@@ -1314,8 +1314,8 @@ func buildTestService(t *testing.T, _ string, specDoc *spec.Doc, specHeaders map
 		collectionInfo.HTTPClient = specInfo.HTTPClient
 	}
 
-	var allTags []*types.Tag
-	var allEndpoints []*types.Endpoint
+	var allTags []*model.Tag
+	var allEndpoints []*model.Endpoint
 
 	for index, pathItem := range specDoc.PathItems {
 		operation := pathItem.Operation
@@ -1325,7 +1325,7 @@ func buildTestService(t *testing.T, _ string, specDoc *spec.Doc, specHeaders map
 
 		tagName := fmt.Sprintf("%s-tag-%d", uniqueDomain, index)
 		tagID := id.Tag(specID, collectionID, tagName)
-		tagInfo := &types.Tag{
+		tagInfo := &model.Tag{
 			ID:           tagID,
 			SpecID:       specID,
 			CollectionID: collectionID,
@@ -1333,7 +1333,7 @@ func buildTestService(t *testing.T, _ string, specDoc *spec.Doc, specHeaders map
 		}
 		allTags = append(allTags, tagInfo)
 
-		endpoint := &types.Endpoint{
+		endpoint := &model.Endpoint{
 			ID: id.Method(
 				specID,
 				collectionID,
@@ -1353,7 +1353,7 @@ func buildTestService(t *testing.T, _ string, specDoc *spec.Doc, specHeaders map
 		allEndpoints = append(allEndpoints, endpoint)
 	}
 
-	if ensureError := serviceInstance.index.EnsureIndex(specInfo, []*types.Collection{collectionInfo}, allTags, allEndpoints); ensureError != nil {
+	if ensureError := serviceInstance.index.EnsureIndex(specInfo, []*model.Collection{collectionInfo}, allTags, allEndpoints); ensureError != nil {
 		t.Fatalf("failed to index: %v", ensureError)
 	}
 

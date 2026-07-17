@@ -19,6 +19,7 @@ type mockServerCmdOptions struct {
 	TLSKey  string
 }
 
+// NewMockServerCmd creates the mockserver subcommand that starts mock servers for all API specs.
 func NewMockServerCmd() *cobra.Command {
 	options := mockServerCmdOptions{}
 

@@ -6,8 +6,8 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/id"
 	"github.com/mmadfox/swag2mcp/internal/index"
+	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/mmadfox/swag2mcp/internal/spec"
-	"github.com/mmadfox/swag2mcp/internal/types"
 )
 
 // newTestService creates a Service with a fresh index and a single spec/collection/tag/endpoint.
@@ -31,18 +31,18 @@ func newTestService(t *testing.T, opts ...NewOption) *Service {
 
 // seedTestData populates the service index with a spec, collection, tag, and endpoint.
 // Returns the spec, collection, tag, and endpoint for use in tests.
-func seedTestData(t *testing.T, svc *Service, domain string) (*types.Spec, *types.Collection, *types.Tag, *types.Endpoint) {
+func seedTestData(t *testing.T, svc *Service, domain string) (*model.Spec, *model.Collection, *model.Tag, *model.Endpoint) {
 	t.Helper()
 
 	specID := id.Domain(domain)
-	specInfo := &types.Spec{
+	specInfo := &model.Spec{
 		ID:      specID,
 		Domain:  domain,
 		BaseURL: "https://api.example.com",
 	}
 
 	collectionID := id.Collection(specID, domain+"/collection")
-	collectionInfo := &types.Collection{
+	collectionInfo := &model.Collection{
 		ID:     collectionID,
 		SpecID: specID,
 		Title:  "Test Collection",
@@ -53,7 +53,7 @@ func seedTestData(t *testing.T, svc *Service, domain string) (*types.Spec, *type
 	}
 
 	tagID := id.Tag(specID, collectionID, "test-tag")
-	tagInfo := &types.Tag{
+	tagInfo := &model.Tag{
 		ID:           tagID,
 		SpecID:       specID,
 		CollectionID: collectionID,
@@ -64,7 +64,7 @@ func seedTestData(t *testing.T, svc *Service, domain string) (*types.Spec, *type
 	}
 
 	endpointID := id.Method(specID, collectionID, tagID, "GET", "/test", "testOp")
-	endpointInfo := &types.Endpoint{
+	endpointInfo := &model.Endpoint{
 		ID:           endpointID,
 		SpecID:       specID,
 		CollectionID: collectionID,
@@ -82,7 +82,7 @@ func seedTestData(t *testing.T, svc *Service, domain string) (*types.Spec, *type
 		},
 	}
 
-	if err := svc.index.EnsureIndex(specInfo, []*types.Collection{collectionInfo}, []*types.Tag{tagInfo}, []*types.Endpoint{endpointInfo}); err != nil {
+	if err := svc.index.EnsureIndex(specInfo, []*model.Collection{collectionInfo}, []*model.Tag{tagInfo}, []*model.Endpoint{endpointInfo}); err != nil {
 		t.Fatalf("EnsureIndex() = %v", err)
 	}
 
@@ -93,7 +93,7 @@ func seedTestData(t *testing.T, svc *Service, domain string) (*types.Spec, *type
 }
 
 // seedTestDataWithAuth is like seedTestData but also sets an authenticator on the spec.
-func seedTestDataWithAuth(t *testing.T, svc *Service, domain string, authenticator auth.Authenticator) (*types.Spec, *types.Collection, *types.Tag, *types.Endpoint) {
+func seedTestDataWithAuth(t *testing.T, svc *Service, domain string, authenticator auth.Authenticator) (*model.Spec, *model.Collection, *model.Tag, *model.Endpoint) {
 	t.Helper()
 
 	specInfo, collectionInfo, tagInfo, endpointInfo := seedTestData(t, svc, domain)

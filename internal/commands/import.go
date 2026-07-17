@@ -136,7 +136,7 @@ func runImport(basePath, source, name, zipSource string, specs []string, cmd *co
 
 		resp, importErr := svc.Import(cmd.Context(), service.ImportRequest{
 			SpecFilter:   specs,
-			ConfFilepath: cfgPath,
+			ConfFilePath: cfgPath,
 		})
 		if importErr != nil {
 			return importErr

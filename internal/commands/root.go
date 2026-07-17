@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewRootCmd creates the root swag2mcp command with all subcommands attached.
 func NewRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "swag2mcp",

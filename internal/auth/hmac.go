@@ -53,13 +53,14 @@ func (c *HMACAuthClient) Apply(req *http.Request, out *Info) error {
 	q.Set(hmacSignatureKey, signature)
 	req.URL.RawQuery = q.Encode()
 
-	if out != nil {
-		if out.QueryParams == nil {
-			out.QueryParams = make(map[string]string)
-		}
-		out.QueryParams[hmacSignatureKey] = signature
-		out.QueryParams[hmacTimestampKey] = q.Get(hmacTimestampKey)
+	if out == nil {
+		return nil
 	}
+	if out.QueryParams == nil {
+		out.QueryParams = make(map[string]string)
+	}
+	out.QueryParams[hmacSignatureKey] = signature
+	out.QueryParams[hmacTimestampKey] = q.Get(hmacTimestampKey)
 
 	return nil
 }

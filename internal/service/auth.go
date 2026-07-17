@@ -8,13 +8,15 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/auth"
 )
 
+// AuthRequest contains the parameters needed to retrieve authentication
+// information for a given spec.
 type (
-	// AuthRequest is the request body for auth requests.
 	AuthRequest struct {
 		SpecID string `json:"specId" validate:"required,md5" jsonschema:"required,The 32-character MD5 hash ID of the spec/domain to get an auth token for"`
 	}
 
-	// AuthResponse contains a JWT token.
+	// AuthResponse contains the authentication token, headers, and query
+	// parameters returned after applying the spec's auth configuration.
 	AuthResponse struct {
 		Token       string            `json:"token"`
 		Headers     map[string]string `json:"headers,omitempty"`
@@ -22,29 +24,31 @@ type (
 	}
 )
 
-// Auth returns the authentication response.
-func (s *Service) Auth(ctx context.Context, req AuthRequest) (AuthResponse, error) {
+// Auth retrieves authentication information for the spec identified by the
+// request SpecID. It applies the spec's auth configuration and returns the
+// resulting token, headers, and query parameters.
+func (s *Service) Auth(ctx context.Context, rq AuthRequest) (AuthResponse, error) {
 	if s.disableLLMAuth.Load() {
 		return AuthResponse{}, nil
 	}
 
-	spec, err := s.index.SpecByID(req.SpecID)
+	sp, err := s.index.SpecByID(rq.SpecID)
 	if err != nil {
-		return AuthResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", req.SpecID), err)
+		return AuthResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", rq.SpecID), err)
 	}
 
-	if spec.Auth == nil {
+	if sp.Auth == nil {
 		return AuthResponse{}, nil
 	}
 
-	dummyReq, reqErr := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost", nil)
-	if reqErr != nil {
-		return AuthResponse{}, fmt.Errorf("failed to create dummy request: %w", reqErr)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost", nil)
+	if err != nil {
+		return AuthResponse{}, fmt.Errorf("failed to create dummy request: %w", err)
 	}
 
 	var info auth.Info
-	if aErr := spec.Auth.Apply(dummyReq, &info); aErr != nil {
-		return AuthResponse{}, fmt.Errorf("failed to apply auth: %w", aErr)
+	if err := sp.Auth.Apply(req, &info); err != nil {
+		return AuthResponse{}, fmt.Errorf("failed to apply auth: %w", err)
 	}
 
 	return AuthResponse{

@@ -7,176 +7,118 @@ import (
 	"testing"
 
 	"github.com/go-openapi/spec"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParse_swaggerHost(t *testing.T) {
 	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "valid_v20_swagger.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	doc, err := Parse(data)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if len(doc.Servers) == 0 {
-		t.Fatal("expected at least 1 server from swagger host")
-	}
+	require.NotEmpty(t, doc.Servers, "expected at least 1 server from swagger host")
 
-	if doc.Servers[0].URL != "https://api.example.com/v1" {
-		t.Errorf("got server URL %q, want %q", doc.Servers[0].URL, "https://api.example.com/v1")
-	}
+	assert.Equal(t, "https://api.example.com/v1", doc.Servers[0].URL)
 }
 
 func TestParse_operationMetadata(t *testing.T) {
 	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "valid_v20_swagger.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	doc, err := Parse(data)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	var found bool
 	for _, pi := range doc.PathItems {
 		if pi.Path == "/users" && pi.Method == http.MethodGet {
 			found = true
 			op := pi.Operation
-			if op.Summary != "Список пользователей" {
-				t.Errorf("got summary %q, want %q", op.Summary, "List users")
-			}
-			if len(op.Parameters) == 0 {
-				t.Fatal("expected parameters")
-			}
-			if op.Parameters[0].Name != "limit" {
-				t.Errorf("got param name %q, want %q", op.Parameters[0].Name, "limit")
-			}
-			if op.Parameters[0].In != "query" {
-				t.Errorf("got param in %q, want %q", op.Parameters[0].In, "query")
-			}
+			assert.Equal(t, "Список пользователей", op.Summary)
+			require.NotEmpty(t, op.Parameters, "expected parameters")
+			assert.Equal(t, "limit", op.Parameters[0].Name)
+			assert.Equal(t, "query", op.Parameters[0].In)
 			break
 		}
 	}
-	if !found {
-		t.Fatal("GET /users not found in parsed doc")
-	}
+	require.True(t, found, "GET /users not found in parsed doc")
 }
 
 func TestParse_requestBody(t *testing.T) {
 	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "valid_v20_swagger.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	doc, err := Parse(data)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	var found bool
 	for _, pi := range doc.PathItems {
 		if pi.Path == "/users" && pi.Method == http.MethodPost {
 			found = true
 			op := pi.Operation
-			if op.RequestBody == nil {
-				t.Fatal("expected request body")
-			}
-			if !op.RequestBody.Required {
-				t.Error("expected required request body")
-			}
-			if op.RequestBody.Content == nil {
-				t.Fatal("expected request body content")
-			}
+			require.NotNil(t, op.RequestBody, "expected request body")
+			assert.True(t, op.RequestBody.Required, "expected required request body")
+			require.NotNil(t, op.RequestBody.Content, "expected request body content")
 			break
 		}
 	}
-	if !found {
-		t.Fatal("POST /users not found")
-	}
+	require.True(t, found, "POST /users not found")
 }
 
 func TestParse_responses(t *testing.T) {
 	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "valid_v20_swagger.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	doc, err := Parse(data)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	var found bool
 	for _, pi := range doc.PathItems {
 		if pi.Path == "/users" && pi.Method == http.MethodGet {
 			found = true
 			op := pi.Operation
-			if len(op.Responses) == 0 {
-				t.Fatal("expected responses")
-			}
+			require.NotEmpty(t, op.Responses, "expected responses")
 			resp, ok := op.Responses["200"]
-			if !ok {
-				t.Fatal("expected 200 response")
-			}
-			if resp.Description != "OK" {
-				t.Errorf("got description %q, want %q", resp.Description, "OK")
-			}
+			require.True(t, ok, "expected 200 response")
+			assert.Equal(t, "OK", resp.Description)
 			break
 		}
 	}
-	if !found {
-		t.Fatal("GET /users not found")
-	}
+	require.True(t, found, "GET /users not found")
 }
 
 func TestParse_swaggerFileUpload(t *testing.T) {
 	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "valid_v20_swagger.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	doc, err := Parse(data)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	var found bool
 	for _, pi := range doc.PathItems {
 		if pi.Path == "/files/upload" && pi.Method == http.MethodPost {
 			found = true
 			op := pi.Operation
-			if len(op.Parameters) == 0 {
-				t.Fatal("expected parameters")
-			}
-			if op.Parameters[0].Name != "file" {
-				t.Errorf("got param name %q, want %q", op.Parameters[0].Name, "file")
-			}
-			if op.Parameters[0].In != "formData" {
-				t.Errorf("got param in %q, want %q", op.Parameters[0].In, "formData")
-			}
+			require.NotEmpty(t, op.Parameters, "expected parameters")
+			assert.Equal(t, "file", op.Parameters[0].Name)
+			assert.Equal(t, "formData", op.Parameters[0].In)
 			break
 		}
 	}
-	if !found {
-		t.Fatal("POST /files/upload not found")
-	}
+	require.True(t, found, "POST /files/upload not found")
 }
 
 func TestParseV2_InvalidJSON(t *testing.T) {
 	t.Parallel()
 
 	_, err := parseV2([]byte("{invalid}"))
-	if err == nil {
-		t.Fatal("expected error for invalid JSON")
-	}
+	require.Error(t, err, "expected error for invalid JSON")
 }
 
 func TestParseV2_EmptyHost(t *testing.T) {
@@ -184,21 +126,15 @@ func TestParseV2_EmptyHost(t *testing.T) {
 
 	jsonData := []byte(`{"swagger":"2.0","info":{"title":"Test","version":"1.0"},"paths":{}}`)
 	result, err := parseV2(jsonData)
-	if err != nil {
-		t.Fatalf("parseV2() = %v", err)
-	}
-	if len(result.Servers) != 0 {
-		t.Errorf("Servers = %d, want 0", len(result.Servers))
-	}
+	require.NoError(t, err, "parseV2() failed")
+	assert.Empty(t, result.Servers)
 }
 
 func TestSwaggerSchemaToSchema_Nil(t *testing.T) {
 	t.Parallel()
 
 	s := swaggerSchemaToSchema(nil)
-	if s != nil {
-		t.Fatal("expected nil")
-	}
+	require.Nil(t, s, "expected nil")
 }
 
 func TestSwaggerSchemaToSchema_Ref(t *testing.T) {
@@ -209,12 +145,8 @@ func TestSwaggerSchemaToSchema_Ref(t *testing.T) {
 			Ref: spec.MustCreateRef("#/definitions/Pet"),
 		},
 	})
-	if s == nil {
-		t.Fatal("schema is nil")
-	}
-	if s.Ref != "#/definitions/Pet" {
-		t.Errorf("Ref = %q, want %q", s.Ref, "#/definitions/Pet")
-	}
+	require.NotNil(t, s, "schema is nil")
+	assert.Equal(t, "#/definitions/Pet", s.Ref)
 }
 
 func TestSwaggerSchemaToSchema_Items(t *testing.T) {
@@ -231,15 +163,9 @@ func TestSwaggerSchemaToSchema_Items(t *testing.T) {
 			},
 		},
 	})
-	if s == nil {
-		t.Fatal("schema is nil")
-	}
-	if s.Items == nil {
-		t.Fatal("Items is nil")
-	}
-	if s.Items.Type != "string" {
-		t.Errorf("Items.Type = %q, want %q", s.Items.Type, "string")
-	}
+	require.NotNil(t, s, "schema is nil")
+	require.NotNil(t, s.Items, "Items is nil")
+	assert.Equal(t, "string", s.Items.Type)
 }
 
 func TestSwaggerSchemaToSchema_Properties(t *testing.T) {
@@ -252,15 +178,9 @@ func TestSwaggerSchemaToSchema_Properties(t *testing.T) {
 			},
 		},
 	})
-	if s == nil {
-		t.Fatal("schema is nil")
-	}
-	if len(s.Properties) != 1 {
-		t.Fatalf("Properties = %d, want 1", len(s.Properties))
-	}
-	if s.Properties["name"].Type != "string" {
-		t.Errorf("Properties[name].Type = %q, want %q", s.Properties["name"].Type, "string")
-	}
+	require.NotNil(t, s, "schema is nil")
+	require.Len(t, s.Properties, 1)
+	assert.Equal(t, "string", s.Properties["name"].Type)
 }
 
 func TestSwaggerSchemaToSchema_OneOfAnyOfAllOf(t *testing.T) {
@@ -279,18 +199,13 @@ func TestSwaggerSchemaToSchema_OneOfAnyOfAllOf(t *testing.T) {
 			},
 		},
 	})
-	if s == nil {
-		t.Fatal("schema is nil")
-	}
-	if len(s.OneOf) != 1 || s.OneOf[0].Type != "string" {
-		t.Error("OneOf not preserved")
-	}
-	if len(s.AnyOf) != 1 || s.AnyOf[0].Type != "integer" {
-		t.Error("AnyOf not preserved")
-	}
-	if len(s.AllOf) != 1 || s.AllOf[0].Type != "number" {
-		t.Error("AllOf not preserved")
-	}
+	require.NotNil(t, s, "schema is nil")
+	require.Len(t, s.OneOf, 1)
+	assert.Equal(t, "string", s.OneOf[0].Type)
+	require.Len(t, s.AnyOf, 1)
+	assert.Equal(t, "integer", s.AnyOf[0].Type)
+	require.Len(t, s.AllOf, 1)
+	assert.Equal(t, "number", s.AllOf[0].Type)
 }
 
 func TestSwaggerOpToOp_DefaultResponse(t *testing.T) {
@@ -310,14 +225,8 @@ func TestSwaggerOpToOp_DefaultResponse(t *testing.T) {
 			},
 		},
 	})
-	if op == nil {
-		t.Fatal("op is nil")
-	}
+	require.NotNil(t, op, "op is nil")
 	resp, ok := op.Responses["default"]
-	if !ok {
-		t.Fatal("default response not found")
-	}
-	if resp.Description != "Default response" {
-		t.Errorf("Description = %q, want %q", resp.Description, "Default response")
-	}
+	require.True(t, ok, "default response not found")
+	assert.Equal(t, "Default response", resp.Description)
 }

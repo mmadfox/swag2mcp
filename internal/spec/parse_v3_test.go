@@ -4,15 +4,15 @@ import (
 	"testing"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseV3_InvalidJSON(t *testing.T) {
 	t.Parallel()
 
 	_, err := parseV3([]byte(`{"openapi":"3.0.0","paths":"not-an-object"}`))
-	if err == nil {
-		t.Fatal("expected error for invalid OpenAPI document")
-	}
+	require.Error(t, err, "expected error for invalid OpenAPI document")
 }
 
 func TestOpenapi3OpToOp_NilValue(t *testing.T) {
@@ -25,12 +25,8 @@ func TestOpenapi3OpToOp_NilValue(t *testing.T) {
 			{Value: nil},
 		},
 	})
-	if op == nil {
-		t.Fatal("op is nil")
-	}
-	if len(op.Parameters) != 0 {
-		t.Errorf("Parameters = %d, want 0", len(op.Parameters))
-	}
+	require.NotNil(t, op, "op is nil")
+	assert.Empty(t, op.Parameters)
 }
 
 func TestOpenapi3OpToOp_NilDescription(t *testing.T) {
@@ -47,25 +43,17 @@ func TestOpenapi3OpToOp_NilDescription(t *testing.T) {
 		OperationID: "testOp",
 		Responses:   responses,
 	})
-	if op == nil {
-		t.Fatal("op is nil")
-	}
+	require.NotNil(t, op, "op is nil")
 	resp, ok := op.Responses["200"]
-	if !ok {
-		t.Fatal("200 response not found")
-	}
-	if resp.Description != "" {
-		t.Errorf("Description = %q, want empty", resp.Description)
-	}
+	require.True(t, ok, "200 response not found")
+	assert.Empty(t, resp.Description)
 }
 
 func TestSchemaRefToSchema_Nil(t *testing.T) {
 	t.Parallel()
 
 	s := schemaRefToSchema(nil)
-	if s != nil {
-		t.Fatal("expected nil")
-	}
+	require.Nil(t, s, "expected nil")
 }
 
 func TestSchemaRefToSchema_MultipleTypes(t *testing.T) {
@@ -76,12 +64,8 @@ func TestSchemaRefToSchema_MultipleTypes(t *testing.T) {
 			Type: &openapi3.Types{"string", "null"},
 		},
 	})
-	if s == nil {
-		t.Fatal("schema is nil")
-	}
-	if s.Type != "string" {
-		t.Errorf("Type = %q, want %q", s.Type, "string")
-	}
+	require.NotNil(t, s, "schema is nil")
+	assert.Equal(t, "string", s.Type)
 }
 
 func TestSchemaRefToSchema_Items(t *testing.T) {
@@ -96,15 +80,9 @@ func TestSchemaRefToSchema_Items(t *testing.T) {
 			},
 		},
 	})
-	if s == nil {
-		t.Fatal("schema is nil")
-	}
-	if s.Items == nil {
-		t.Fatal("Items is nil")
-	}
-	if s.Items.Type != "string" {
-		t.Errorf("Items.Type = %q, want %q", s.Items.Type, "string")
-	}
+	require.NotNil(t, s, "schema is nil")
+	require.NotNil(t, s.Items, "Items is nil")
+	assert.Equal(t, "string", s.Items.Type)
 }
 
 func TestSchemaRefToSchema_Composition(t *testing.T) {
@@ -123,16 +101,11 @@ func TestSchemaRefToSchema_Composition(t *testing.T) {
 			},
 		},
 	})
-	if s == nil {
-		t.Fatal("schema is nil")
-	}
-	if len(s.OneOf) != 1 || s.OneOf[0].Type != "string" {
-		t.Error("OneOf not preserved")
-	}
-	if len(s.AnyOf) != 1 || s.AnyOf[0].Type != "integer" {
-		t.Error("AnyOf not preserved")
-	}
-	if len(s.AllOf) != 1 || s.AllOf[0].Type != "number" {
-		t.Error("AllOf not preserved")
-	}
+	require.NotNil(t, s, "schema is nil")
+	require.Len(t, s.OneOf, 1)
+	assert.Equal(t, "string", s.OneOf[0].Type)
+	require.Len(t, s.AnyOf, 1)
+	assert.Equal(t, "integer", s.AnyOf[0].Type)
+	require.Len(t, s.AllOf, 1)
+	assert.Equal(t, "number", s.AllOf[0].Type)
 }

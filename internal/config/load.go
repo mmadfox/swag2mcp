@@ -11,9 +11,11 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/mmadfox/swag2mcp/internal/env"
 	"go.yaml.in/yaml/v3"
 )
 
+// Load reads a YAML configuration from the given file path, HTTP URL, or file URL.
 func Load(confFilepath string) (*Config, error) {
 	isURL := strings.HasPrefix(confFilepath, "https://") || strings.HasPrefix(confFilepath, "http://")
 	isFileURL := strings.HasPrefix(confFilepath, "file://")
@@ -34,33 +36,35 @@ func Load(confFilepath string) (*Config, error) {
 	}
 }
 
+// loadPath reads a config file from a local path, expanding ~ if present.
 func loadPath(filepathSpec string) (*Config, error) {
-	filepathSpec = expandTilde(filepathSpec)
+	filepathSpec = env.ExpandTilde(filepathSpec)
 
-	data, readErr := os.ReadFile(filepathSpec)
-	if readErr != nil {
-		return nil, fmt.Errorf("failed to read config file '%s': %w", filepathSpec, readErr)
+	data, err := os.ReadFile(filepathSpec)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read config file '%s': %w", filepathSpec, err)
 	}
 
 	var cfg Config
-	if parseErr := yaml.Unmarshal(data, &cfg); parseErr != nil {
-		return nil, fmt.Errorf("failed to parse config file '%s': %w", filepathSpec, parseErr)
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, fmt.Errorf("failed to parse config file '%s': %w", filepathSpec, err)
 	}
 
 	return &cfg, nil
 }
 
+// loadFromHTTPURL fetches and parses a config from an HTTP(S) URL.
 func loadFromHTTPURL(urlStr string) (*Config, error) {
-	if _, parseErr := url.Parse(urlStr); parseErr != nil {
-		return nil, fmt.Errorf("invalid URL '%s': %w", urlStr, parseErr)
+	if _, err := url.Parse(urlStr); err != nil {
+		return nil, fmt.Errorf("invalid URL '%s': %w", urlStr, err)
 	}
-	req, reqErr := http.NewRequestWithContext(context.Background(), http.MethodGet, urlStr, nil)
-	if reqErr != nil {
-		return nil, fmt.Errorf("failed to create request: %w", reqErr)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, urlStr, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	resp, getErr := http.DefaultClient.Do(req)
-	if getErr != nil {
-		return nil, fmt.Errorf("failed to GET from URL '%s': %w", urlStr, getErr)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to GET from URL '%s': %w", urlStr, err)
 	}
 	defer resp.Body.Close()
 
@@ -68,19 +72,20 @@ func loadFromHTTPURL(urlStr string) (*Config, error) {
 		return nil, fmt.Errorf("unexpected HTTP status %d for URL '%s'", resp.StatusCode, urlStr)
 	}
 
-	data, readErr := io.ReadAll(resp.Body)
-	if readErr != nil {
-		return nil, fmt.Errorf("failed to read HTTP response body: %w", readErr)
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read HTTP response body: %w", err)
 	}
 
 	var cfg Config
-	if parseErr := yaml.Unmarshal(data, &cfg); parseErr != nil {
-		return nil, fmt.Errorf("failed to parse YAML from URL '%s': %w", urlStr, parseErr)
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, fmt.Errorf("failed to parse YAML from URL '%s': %w", urlStr, err)
 	}
 
 	return &cfg, nil
 }
 
+// loadFromFileURL parses a file:// URL and loads the config from the local path.
 func loadFromFileURL(rawURL string) (*Config, error) {
 	u, err := url.Parse(rawURL)
 	if err != nil {
@@ -104,19 +109,20 @@ func loadFromFileURL(rawURL string) (*Config, error) {
 	return loadFromAbsolutePath(filepath.FromSlash(path))
 }
 
+// loadFromAbsolutePath reads a config file from an absolute local path.
 func loadFromAbsolutePath(path string) (*Config, error) {
 	if !filepath.IsAbs(path) {
 		return nil, fmt.Errorf("path must be absolute: %s", path)
 	}
 
-	data, readErr := os.ReadFile(path)
-	if readErr != nil {
-		return nil, fmt.Errorf("failed to read config file at absolute path '%s': %w", path, readErr)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read config file at absolute path '%s': %w", path, err)
 	}
 
 	var cfg Config
-	if parseErr := yaml.Unmarshal(data, &cfg); parseErr != nil {
-		return nil, fmt.Errorf("failed to parse config file at absolute path '%s': %w", path, parseErr)
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, fmt.Errorf("failed to parse config file at absolute path '%s': %w", path, err)
 	}
 
 	return &cfg, nil
@@ -128,21 +134,8 @@ func Save(cfg *Config, path string) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
-	if writeErr := os.WriteFile(path, data, 0600); writeErr != nil {
-		return fmt.Errorf("failed to write config to %q: %w", path, writeErr)
+	if err := os.WriteFile(path, data, 0600); err != nil {
+		return fmt.Errorf("failed to write config to %q: %w", path, err)
 	}
 	return nil
-}
-
-// expandTilde replaces ~/ and ~\ prefix with the user's home directory.
-// Works on both Unix and Windows.
-func expandTilde(path string) string {
-	if strings.HasPrefix(path, "~/") || strings.HasPrefix(path, "~\\") {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return path
-		}
-		return filepath.Join(home, path[2:])
-	}
-	return path
 }

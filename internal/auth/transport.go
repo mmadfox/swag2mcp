@@ -17,9 +17,9 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return t.Base.RoundTrip(req)
 }
 
-// NewHTTPClient returns an [http.Client] that applies the given authentication
+// newHTTPClient returns an [http.Client] that applies the given authentication
 // to every outgoing request.
-func NewHTTPClient(auth Authenticator) *http.Client {
+func newHTTPClient(auth Authenticator) *http.Client {
 	return &http.Client{
 		Transport: &Transport{
 			Base: http.DefaultTransport,

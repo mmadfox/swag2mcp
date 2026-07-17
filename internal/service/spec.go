@@ -6,79 +6,81 @@ import (
 	"sort"
 )
 
+// SpecByIDRequest contains the spec ID used to look up a specific
+// specification and its collections.
 type (
-	// SpecByIDRequest is the request for SpecByID.
 	SpecByIDRequest struct {
 		ID string `json:"id" validate:"required,md5" jsonschema:"required,A unique 32-character MD5 hash identifier for the spec,pattern=^[0-9a-f]{32}$"`
 	}
 
-	// SpecByIDResponse is the response for SpecByID.
+	// SpecByIDResponse contains the requested spec and its associated collections.
 	SpecByIDResponse struct {
 		Spec        Spec             `json:"spec"        jsonschema:"required,Specification"`
 		Collections []CollectionItem `json:"collections" jsonschema:"required,List of collections associated with the spec"`
 	}
 
-	// SpecsResponse is the response for Specs.
+	// SpecsResponse contains the list of all available specifications.
 	SpecsResponse struct {
 		Specs []SpecItem `json:"specs" jsonschema:"required,List of specifications"`
 	}
 )
 
-// Specs returns a list of all available openapi/swagger specifications.
+// Specs returns a list of all available specifications.
 func (s *Service) Specs(_ context.Context) (SpecsResponse, error) {
 	allSpecs := s.index.AllSpecs()
-	resp := SpecsResponse{
+	r := SpecsResponse{
 		Specs: make([]SpecItem, len(allSpecs)),
 	}
 
-	for i, spec := range allSpecs {
-		resp.Specs[i] = SpecItem{
-			ID:     spec.ID,
-			Domain: spec.Domain,
+	for i, sp := range allSpecs {
+		r.Specs[i] = SpecItem{
+			ID:     sp.ID,
+			Domain: sp.Domain,
 		}
 	}
 
-	sort.Slice(resp.Specs, func(i, j int) bool {
-		return resp.Specs[i].ID < resp.Specs[j].ID
+	sort.Slice(r.Specs, func(i, j int) bool {
+		return r.Specs[i].ID < r.Specs[j].ID
 	})
 
-	return resp, nil
+	return r, nil
 }
 
-// SpecByID returns a specification by its ID.
-func (s *Service) SpecByID(_ context.Context, req SpecByIDRequest) (SpecByIDResponse, error) {
-	if err := s.validateRequest(req); err != nil {
+// SpecByID returns the specification identified by the given spec ID,
+// along with its associated collections.
+func (s *Service) SpecByID(_ context.Context, rq SpecByIDRequest) (SpecByIDResponse, error) {
+	if err := s.validateRequest(rq); err != nil {
 		return SpecByIDResponse{}, NewValidationError(
 			"The spec ID is invalid — it must be a 32-character hex string. Use spec_list to find available specs.",
 			err,
 		)
 	}
 
-	var resp SpecByIDResponse
-	spec, err := s.index.SpecByID(req.ID)
+	var r SpecByIDResponse
+	sp, err := s.index.SpecByID(rq.ID)
 	if err != nil {
-		return SpecByIDResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", req.ID), err)
+		return SpecByIDResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", rq.ID), err)
 	}
-	resp.Spec = Spec{
-		ID:     spec.ID,
-		Domain: spec.Domain,
+	r.Spec = Spec{
+		ID:     sp.ID,
+		Domain: sp.Domain,
 	}
 
-	collections, err := s.index.CollectionsBySpec(req.ID)
+	colls, err := s.index.CollectionsBySpec(rq.ID)
 	if err == nil {
-		resp.Collections = make([]CollectionItem, 0, len(collections))
-		for _, c := range collections {
-			resp.Collections = append(resp.Collections, CollectionItem{
+		r.Collections = make([]CollectionItem, 0, len(colls))
+		for _, c := range colls {
+			r.Collections = append(r.Collections, CollectionItem{
 				ID:           c.ID,
 				Title:        c.Title,
 				CountTags:    c.Stats.Tags,
 				CountMethods: c.Stats.Methods,
 			})
 		}
-		sort.Slice(resp.Collections, func(i, j int) bool {
-			return resp.Collections[i].ID < resp.Collections[j].ID
+		sort.Slice(r.Collections, func(i, j int) bool {
+			return r.Collections[i].ID < r.Collections[j].ID
 		})
 	}
 
-	return resp, nil
+	return r, nil
 }

@@ -5,14 +5,15 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParse_validSpecs(t *testing.T) {
 	t.Parallel()
 	entries, dirErr := os.ReadDir("testdata")
-	if dirErr != nil {
-		t.Fatal(dirErr)
-	}
+	require.NoError(t, dirErr)
 
 	for _, e := range entries {
 		if e.IsDir() {
@@ -30,18 +31,12 @@ func TestParse_validSpecs(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			data, err := os.ReadFile(filepath.Join("testdata", name))
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			doc, err := Parse(data)
-			if err != nil {
-				t.Fatalf("Parse(%s) failed: %v", name, err)
-			}
+			require.NoError(t, err, "Parse(%s) failed", name)
 
-			if doc.Version == "" {
-				t.Error("version is empty")
-			}
+			assert.NotEmpty(t, doc.Version, "version is empty")
 		})
 	}
 }
@@ -57,13 +52,9 @@ func TestParse_invalidSpecs_structural(t *testing.T) {
 		t.Run(file, func(t *testing.T) {
 			t.Parallel()
 			data, err := os.ReadFile(filepath.Join("testdata", file))
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 			_, err = Parse(data)
-			if err == nil {
-				t.Error("expected parse error, got nil")
-			}
+			require.Error(t, err, "expected parse error, got nil")
 		})
 	}
 }
@@ -86,13 +77,9 @@ func TestParse_invalidSpecs_semantic(t *testing.T) {
 		t.Run(file, func(t *testing.T) {
 			t.Parallel()
 			data, err := os.ReadFile(filepath.Join("testdata", file))
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 			_, err = Parse(data)
-			if err != nil {
-				t.Fatalf("Parse(%s) should have succeeded (lenient parser): %v", file, err)
-			}
+			require.NoError(t, err, "Parse(%s) should have succeeded (lenient parser)", file)
 		})
 	}
 }
@@ -117,18 +104,12 @@ func TestParse_versionDetection(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			data, err := os.ReadFile(filepath.Join("testdata", tt.file))
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			doc, err := Parse(data)
-			if err != nil {
-				t.Fatalf("Parse(%s) failed: %v", tt.file, err)
-			}
+			require.NoError(t, err, "Parse(%s) failed", tt.file)
 
-			if doc.Version != tt.wantVer {
-				t.Errorf("got version %q, want %q", doc.Version, tt.wantVer)
-			}
+			assert.Equal(t, tt.wantVer, doc.Version)
 		})
 	}
 }
@@ -136,9 +117,7 @@ func TestParse_versionDetection(t *testing.T) {
 func TestParse_emptyDoc(t *testing.T) {
 	t.Parallel()
 	_, err := Parse([]byte{})
-	if err == nil {
-		t.Error("expected error for empty document")
-	}
+	require.Error(t, err, "expected error for empty document")
 }
 
 func TestVersion(t *testing.T) {
@@ -160,16 +139,12 @@ func TestVersion(t *testing.T) {
 		t.Run(tt.file, func(t *testing.T) {
 			t.Parallel()
 			data, err := os.ReadFile(filepath.Join("testdata", tt.file))
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 			doc, err := Parse(data)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if !strings.HasPrefix(doc.Version, tt.wantPre) {
-				t.Errorf("got version %q, want %q prefix", doc.Version, tt.wantPre)
-			}
+			require.NoError(t, err)
+			assert.True(t,
+				strings.HasPrefix(doc.Version, tt.wantPre),
+				"got version %q, want %q prefix", doc.Version, tt.wantPre)
 		})
 	}
 }
@@ -178,51 +153,37 @@ func TestToJSON_Empty(t *testing.T) {
 	t.Parallel()
 
 	_, err := toJSON([]byte{})
-	if err == nil {
-		t.Fatal("expected error for empty data")
-	}
+	require.Error(t, err, "expected error for empty data")
 }
 
 func TestToJSON_InvalidYAML(t *testing.T) {
 	t.Parallel()
 
 	_, err := toJSON([]byte("invalid: [yaml: broken"))
-	if err == nil {
-		t.Fatal("expected error for invalid YAML")
-	}
+	require.Error(t, err, "expected error for invalid YAML")
 }
 
 func TestToJSON_JSON(t *testing.T) {
 	t.Parallel()
 
 	data, err := toJSON([]byte(`{"openapi":"3.0.0","info":{"title":"Test"}}`))
-	if err != nil {
-		t.Fatalf("toJSON() = %v", err)
-	}
-	if len(data) == 0 {
-		t.Fatal("data is empty")
-	}
+	require.NoError(t, err, "toJSON() failed")
+	require.NotEmpty(t, data, "data is empty")
 }
 
 func TestToJSON_YAML(t *testing.T) {
 	t.Parallel()
 
 	data, err := toJSON([]byte("openapi: 3.0.0\ninfo:\n  title: Test\n"))
-	if err != nil {
-		t.Fatalf("toJSON() = %v", err)
-	}
-	if len(data) == 0 {
-		t.Fatal("data is empty")
-	}
+	require.NoError(t, err, "toJSON() failed")
+	require.NotEmpty(t, data, "data is empty")
 }
 
 func TestPreprocessV3_InvalidJSON(t *testing.T) {
 	t.Parallel()
 
 	result := preprocessV3([]byte("{invalid json"))
-	if string(result) != "{invalid json" {
-		t.Error("expected original data to be returned unchanged")
-	}
+	assert.Equal(t, "{invalid json", string(result), "expected original data to be returned unchanged")
 }
 
 func TestPreprocessV3_ItemsFalse(t *testing.T) {
@@ -230,9 +191,7 @@ func TestPreprocessV3_ItemsFalse(t *testing.T) {
 
 	input := []byte(`{"openapi":"3.1.0","paths":{"/test":{"get":{"parameters":[{"schema":{"items":false}}]}}}}`)
 	result := preprocessV3(input)
-	if !strings.Contains(string(result), `"items":{}`) {
-		t.Error("expected items:false to be replaced with items:{}")
-	}
+	assert.Contains(t, string(result), `"items":{}`, "expected items:false to be replaced with items:{}")
 }
 
 func TestPreprocessV3_ItemsTrue(t *testing.T) {
@@ -240,7 +199,5 @@ func TestPreprocessV3_ItemsTrue(t *testing.T) {
 
 	input := []byte(`{"openapi":"3.1.0","paths":{"/test":{"get":{"parameters":[{"schema":{"items":true}}]}}}}`)
 	result := preprocessV3(input)
-	if !strings.Contains(string(result), `"items":{}`) {
-		t.Error("expected items:true to be replaced with items:{}")
-	}
+	assert.Contains(t, string(result), `"items":{}`, "expected items:true to be replaced with items:{}")
 }

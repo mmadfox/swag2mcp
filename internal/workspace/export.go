@@ -53,17 +53,17 @@ func WriteSpecToExport(exportDir, name string, data []byte) error {
 
 // CopyAuthScriptsToExport copies all auth scripts from the workspace to the export directory.
 func (w *Workspace) CopyAuthScriptsToExport(exportDir string) error {
-	entries, readErr := os.ReadDir(w.AuthScriptsDir())
-	if os.IsNotExist(readErr) {
+	entries, err := os.ReadDir(w.AuthScriptsDir())
+	if os.IsNotExist(err) {
 		return nil
 	}
-	if readErr != nil {
-		return fmt.Errorf("read auth_scripts dir: %w", readErr)
+	if err != nil {
+		return fmt.Errorf("read auth_scripts dir: %w", err)
 	}
 
 	authDir := filepath.Join(exportDir, DirAuthScripts)
-	if mkdirErr := os.MkdirAll(authDir, 0750); mkdirErr != nil {
-		return fmt.Errorf("create auth_scripts dir in export: %w", mkdirErr)
+	if err := os.MkdirAll(authDir, 0750); err != nil {
+		return fmt.Errorf("create auth_scripts dir in export: %w", err)
 	}
 
 	for _, entry := range entries {
@@ -72,12 +72,12 @@ func (w *Workspace) CopyAuthScriptsToExport(exportDir string) error {
 		}
 		src := filepath.Join(w.AuthScriptsDir(), entry.Name())
 		dst := filepath.Join(authDir, entry.Name())
-		data, readFileErr := os.ReadFile(src)
-		if readFileErr != nil {
-			return fmt.Errorf("read auth script %s: %w", entry.Name(), readFileErr)
+		data, err := os.ReadFile(src)
+		if err != nil {
+			return fmt.Errorf("read auth script %s: %w", entry.Name(), err)
 		}
-		if writeErr := os.WriteFile(filepath.Clean(dst), data, 0600); writeErr != nil {
-			return fmt.Errorf("write auth script %s: %w", entry.Name(), writeErr)
+		if err := os.WriteFile(filepath.Clean(dst), data, 0600); err != nil {
+			return fmt.Errorf("write auth script %s: %w", entry.Name(), err)
 		}
 	}
 	return nil
@@ -90,13 +90,13 @@ func CreateMetaFile(exportDir, version string) error {
 		Version: version,
 		Created: time.Now().UTC().Format(time.RFC3339),
 	}
-	data, marshalErr := json.Marshal(meta)
-	if marshalErr != nil {
-		return fmt.Errorf("marshal meta: %w", marshalErr)
+	data, err := json.Marshal(meta)
+	if err != nil {
+		return fmt.Errorf("marshal meta: %w", err)
 	}
 	path := filepath.Join(exportDir, MetaFileName)
-	if writeErr := os.WriteFile(filepath.Clean(path), data, 0600); writeErr != nil {
-		return fmt.Errorf("write meta file: %w", writeErr)
+	if err := os.WriteFile(filepath.Clean(path), data, 0600); err != nil {
+		return fmt.Errorf("write meta file: %w", err)
 	}
 	return nil
 }
@@ -105,50 +105,50 @@ func CreateMetaFile(exportDir, version string) error {
 func CreateZip(sourceDir, outputPath string) error {
 	outputPath = ensureZipExt(outputPath)
 
-	f, createErr := os.Create(filepath.Clean(outputPath))
-	if createErr != nil {
-		return fmt.Errorf("create zip file: %w", createErr)
+	f, err := os.Create(filepath.Clean(outputPath))
+	if err != nil {
+		return fmt.Errorf("create zip file: %w", err)
 	}
 	defer f.Close()
 
 	zw := zip.NewWriter(f)
 	defer zw.Close()
 
-	walkErr := filepath.Walk(sourceDir, func(path string, info os.FileInfo, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
+	err = filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
 		}
 		if path == sourceDir {
 			return nil
 		}
 
-		rel, relErr := filepath.Rel(sourceDir, path)
-		if relErr != nil {
-			return fmt.Errorf("relative path: %w", relErr)
+		rel, err := filepath.Rel(sourceDir, path)
+		if err != nil {
+			return fmt.Errorf("relative path: %w", err)
 		}
 
 		if info.IsDir() {
-			_, zipErr := zw.Create(rel + "/")
-			return zipErr
+			_, err := zw.Create(rel + "/")
+			return err
 		}
 
-		w, zipErr := zw.Create(rel)
-		if zipErr != nil {
-			return fmt.Errorf("create zip entry %s: %w", rel, zipErr)
+		w, err := zw.Create(rel)
+		if err != nil {
+			return fmt.Errorf("create zip entry %s: %w", rel, err)
 		}
 
-		data, readErr := os.ReadFile(filepath.Clean(path))
-		if readErr != nil {
-			return fmt.Errorf("read %s: %w", path, readErr)
+		data, err := os.ReadFile(filepath.Clean(path))
+		if err != nil {
+			return fmt.Errorf("read %s: %w", path, err)
 		}
 
-		if _, writeErr := w.Write(data); writeErr != nil {
-			return fmt.Errorf("write %s to zip: %w", rel, writeErr)
+		if _, err := w.Write(data); err != nil {
+			return fmt.Errorf("write %s to zip: %w", rel, err)
 		}
 		return nil
 	})
-	if walkErr != nil {
-		return fmt.Errorf("walk source dir: %w", walkErr)
+	if err != nil {
+		return fmt.Errorf("walk source dir: %w", err)
 	}
 
 	return nil
@@ -165,19 +165,19 @@ func ValidateZip(path string) (bool, error) {
 
 	for _, f := range r.File {
 		if f.Name == MetaFileName {
-			rc, openErr := f.Open()
-			if openErr != nil {
-				return false, fmt.Errorf("open meta file in zip: %w", openErr)
+			rc, err := f.Open()
+			if err != nil {
+				return false, fmt.Errorf("open meta file in zip: %w", err)
 			}
 			defer rc.Close()
 
-			data, readErr := io.ReadAll(rc)
-			if readErr != nil {
-				return false, fmt.Errorf("read meta file: %w", readErr)
+			data, err := io.ReadAll(rc)
+			if err != nil {
+				return false, fmt.Errorf("read meta file: %w", err)
 			}
 
 			var meta Meta
-			if unmarshalErr := json.Unmarshal(data, &meta); unmarshalErr != nil {
+			if err := json.Unmarshal(data, &meta); err != nil {
 				return false, nil
 			}
 			return meta.Type == MetaType, nil
@@ -194,37 +194,40 @@ func ExtractZip(path, destDir string) error {
 	}
 	defer r.Close()
 
+	destDir = filepath.Clean(destDir)
+
 	for _, f := range r.File {
 		fpath := filepath.Join(destDir, f.Name)
 
-		if !strings.HasPrefix(filepath.Clean(fpath), filepath.Clean(destDir)+string(filepath.Separator)) {
-			return fmt.Errorf("illegal file path in zip: %s", f.Name)
+		rel, err := filepath.Rel(destDir, fpath)
+		if err != nil || strings.HasPrefix(rel, "..") {
+			return fmt.Errorf("zip slip detected: %s", f.Name)
 		}
 
 		if f.FileInfo().IsDir() {
-			if mkdirErr := os.MkdirAll(fpath, 0750); mkdirErr != nil {
-				return fmt.Errorf("create dir %s: %w", fpath, mkdirErr)
+			if err := os.MkdirAll(fpath, 0750); err != nil {
+				return fmt.Errorf("create dir %s: %w", fpath, err)
 			}
 			continue
 		}
 
-		if mkdirErr := os.MkdirAll(filepath.Dir(fpath), 0750); mkdirErr != nil {
-			return fmt.Errorf("create parent dir for %s: %w", fpath, mkdirErr)
+		if err := os.MkdirAll(filepath.Dir(fpath), 0750); err != nil {
+			return fmt.Errorf("create parent dir for %s: %w", fpath, err)
 		}
 
-		rc, openErr := f.Open()
-		if openErr != nil {
-			return fmt.Errorf("open zip entry %s: %w", f.Name, openErr)
+		rc, err := f.Open()
+		if err != nil {
+			return fmt.Errorf("open zip entry %s: %w", f.Name, err)
 		}
 
-		data, readErr := io.ReadAll(rc)
+		data, err := io.ReadAll(rc)
 		rc.Close()
-		if readErr != nil {
-			return fmt.Errorf("read zip entry %s: %w", f.Name, readErr)
+		if err != nil {
+			return fmt.Errorf("read zip entry %s: %w", f.Name, err)
 		}
 
-		if writeErr := os.WriteFile(filepath.Clean(fpath), data, 0600); writeErr != nil {
-			return fmt.Errorf("write %s: %w", fpath, writeErr)
+		if err := os.WriteFile(filepath.Clean(fpath), data, 0600); err != nil {
+			return fmt.Errorf("write %s: %w", fpath, err)
 		}
 	}
 	return nil
@@ -263,20 +266,20 @@ func ReadMetaFromZip(path string) (*Meta, error) {
 
 	for _, f := range r.File {
 		if f.Name == MetaFileName {
-			rc, openErr := f.Open()
-			if openErr != nil {
-				return nil, fmt.Errorf("open meta file: %w", openErr)
+			rc, err := f.Open()
+			if err != nil {
+				return nil, fmt.Errorf("open meta file: %w", err)
 			}
 			defer rc.Close()
 
-			data, readErr := io.ReadAll(rc)
-			if readErr != nil {
-				return nil, fmt.Errorf("read meta file: %w", readErr)
+			data, err := io.ReadAll(rc)
+			if err != nil {
+				return nil, fmt.Errorf("read meta file: %w", err)
 			}
 
 			var meta Meta
-			if unmarshalErr := json.Unmarshal(data, &meta); unmarshalErr != nil {
-				return nil, fmt.Errorf("unmarshal meta: %w", unmarshalErr)
+			if err := json.Unmarshal(data, &meta); err != nil {
+				return nil, fmt.Errorf("unmarshal meta: %w", err)
 			}
 			return &meta, nil
 		}
@@ -296,14 +299,14 @@ func CreateEmptyDirsInExport(exportDir string) error {
 }
 
 // CopyConfigToExport copies the config file to the export directory.
-func (w *Workspace) CopyConfigToExport(exportDir string) error {
+func (w *Workspace) copyConfigToExport(exportDir string) error {
 	data, err := os.ReadFile(w.ConfigPath())
 	if err != nil {
 		return fmt.Errorf("read config: %w", err)
 	}
 	dst := filepath.Join(exportDir, "swag2mcp.yaml")
-	if writeErr := os.WriteFile(filepath.Clean(dst), data, 0600); writeErr != nil {
-		return fmt.Errorf("write config to export: %w", writeErr)
+	if err := os.WriteFile(filepath.Clean(dst), data, 0600); err != nil {
+		return fmt.Errorf("write config to export: %w", err)
 	}
 	return nil
 }
@@ -334,12 +337,12 @@ func (w *Workspace) CopySpecsToWorkspace(exportDir string) error {
 			continue
 		}
 		src := filepath.Join(srcDir, entry.Name())
-		data, readErr := os.ReadFile(src)
-		if readErr != nil {
-			return fmt.Errorf("read spec %s: %w", entry.Name(), readErr)
+		data, err := os.ReadFile(src)
+		if err != nil {
+			return fmt.Errorf("read spec %s: %w", entry.Name(), err)
 		}
-		if _, saveErr := w.SaveSpec(entry.Name(), data); saveErr != nil {
-			return fmt.Errorf("save spec %s: %w", entry.Name(), saveErr)
+		if _, err := w.SaveSpec(entry.Name(), data); err != nil {
+			return fmt.Errorf("save spec %s: %w", entry.Name(), err)
 		}
 	}
 	return nil
@@ -348,12 +351,12 @@ func (w *Workspace) CopySpecsToWorkspace(exportDir string) error {
 // CopyAuthScriptsToWorkspace copies all auth scripts from the export to the workspace.
 func (w *Workspace) CopyAuthScriptsToWorkspace(exportDir string) error {
 	srcDir := filepath.Join(exportDir, DirAuthScripts)
-	entries, readErr := os.ReadDir(srcDir)
-	if os.IsNotExist(readErr) {
+	entries, err := os.ReadDir(srcDir)
+	if os.IsNotExist(err) {
 		return nil
 	}
-	if readErr != nil {
-		return fmt.Errorf("read export auth_scripts dir: %w", readErr)
+	if err != nil {
+		return fmt.Errorf("read export auth_scripts dir: %w", err)
 	}
 
 	for _, entry := range entries {
@@ -361,13 +364,13 @@ func (w *Workspace) CopyAuthScriptsToWorkspace(exportDir string) error {
 			continue
 		}
 		src := filepath.Join(srcDir, entry.Name())
-		data, readFileErr := os.ReadFile(src)
-		if readFileErr != nil {
-			return fmt.Errorf("read auth script %s: %w", entry.Name(), readFileErr)
+		data, err := os.ReadFile(src)
+		if err != nil {
+			return fmt.Errorf("read auth script %s: %w", entry.Name(), err)
 		}
 		dst := filepath.Join(w.AuthScriptsDir(), entry.Name())
-		if writeErr := os.WriteFile(filepath.Clean(dst), data, 0600); writeErr != nil {
-			return fmt.Errorf("write auth script %s: %w", entry.Name(), writeErr)
+		if err := os.WriteFile(filepath.Clean(dst), data, 0600); err != nil {
+			return fmt.Errorf("write auth script %s: %w", entry.Name(), err)
 		}
 	}
 	return nil

@@ -2,7 +2,7 @@ package config
 
 import (
 	"github.com/mmadfox/swag2mcp/internal/auth"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // SpecAddRequest wraps Spec for the add spec command.
@@ -55,7 +55,7 @@ func ExampleCollectionAddYAML() []byte {
 }
 
 // ExampleMCPStdioYAML returns a YAML example for MCP with stdio transport.
-func ExampleMCPStdioYAML() []byte {
+func exampleMCPStdioYAML() []byte {
 	data, _ := yaml.Marshal(map[string]any{
 		"mcp": map[string]any{
 			"transport": "stdio",
@@ -65,7 +65,7 @@ func ExampleMCPStdioYAML() []byte {
 }
 
 // ExampleMCPSSEYAML returns a YAML example for MCP with SSE transport and auth.
-func ExampleMCPSSEYAML() []byte {
+func exampleMCPSSEYAML() []byte {
 	data, _ := yaml.Marshal(map[string]any{
 		"mcp": map[string]any{
 			"transport": "sse",
@@ -80,7 +80,7 @@ func ExampleMCPSSEYAML() []byte {
 }
 
 // ExampleMCPStreamableHTTPYAML returns a YAML example for MCP with streamable HTTP transport and auth.
-func ExampleMCPStreamableHTTPYAML() []byte {
+func exampleMCPStreamableHTTPYAML() []byte {
 	data, _ := yaml.Marshal(map[string]any{
 		"mcp": map[string]any{
 			"transport": "streamable-http",
@@ -95,7 +95,7 @@ func ExampleMCPStreamableHTTPYAML() []byte {
 }
 
 // ExampleMockConfigYAML returns a YAML example for mock server configuration.
-func ExampleMockConfigYAML() []byte {
+func exampleMockConfigYAML() []byte {
 	data, _ := yaml.Marshal(map[string]any{
 		"mock_enabled": true,
 		"specs": []map[string]any{

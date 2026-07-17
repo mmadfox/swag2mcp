@@ -93,7 +93,7 @@ func (s *Service) MakeToolDefinitions() (ToolDefinitions, error) {
 		tools = append(tools, loadedTool)
 	}
 
-	availableSpecs := s.makeAvaliablesSpecs()
+	availableSpecs := s.makeAvailableSpecs()
 
 	if err != nil {
 		return ToolDefinitions{}, fmt.Errorf("failed to make available specs: %w", err)
@@ -172,8 +172,8 @@ func loadToolFromEmbed(filename string) (Tool, error) {
 	}, nil
 }
 
-// makeAvaliablesSpecs generates a structured, readable string of available specs and their collections.
-func (s *Service) makeAvaliablesSpecs() string {
+// makeAvailableSpecs generates a structured string of available specs and their collections.
+func (s *Service) makeAvailableSpecs() string {
 	var sb strings.Builder
 	specs := s.index.AllSpecs()
 	if len(specs) == 0 {

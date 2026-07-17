@@ -13,6 +13,8 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/service"
 	"github.com/modelcontextprotocol/go-sdk/auth"
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -23,9 +25,7 @@ func TestServe_NoService(t *testing.T) {
 	t.Parallel()
 
 	err := Serve(context.Background(), Options{Service: nil})
-	if err == nil {
-		t.Fatal("expected error for nil service")
-	}
+	require.Error(t, err, "expected error for nil service")
 }
 
 func TestServe_MakeToolDefinitionsError(t *testing.T) {
@@ -40,9 +40,7 @@ func TestServe_MakeToolDefinitionsError(t *testing.T) {
 	)
 
 	err := Serve(context.Background(), Options{Service: mock})
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestNewTransport_WithLogger(t *testing.T) {
@@ -53,10 +51,7 @@ func TestNewTransport_WithLogger(t *testing.T) {
 	opts := Options{Logger: logger}
 	transport := newTransport(opts)
 
-	_, ok := transport.(*sdkmcp.LoggingTransport)
-	if !ok {
-		t.Fatalf("expected *LoggingTransport, got %T", transport)
-	}
+	require.IsType(t, &sdkmcp.LoggingTransport{}, transport)
 }
 
 func TestNewTransport_WithoutLogger(t *testing.T) {
@@ -65,10 +60,7 @@ func TestNewTransport_WithoutLogger(t *testing.T) {
 	opts := Options{}
 	transport := newTransport(opts)
 
-	_, ok := transport.(*sdkmcp.StdioTransport)
-	if !ok {
-		t.Fatalf("expected *StdioTransport, got %T", transport)
-	}
+	require.IsType(t, &sdkmcp.StdioTransport{}, transport)
 }
 
 func TestNewServer(t *testing.T) {
@@ -80,9 +72,7 @@ func TestNewServer(t *testing.T) {
 	opts := Options{Version: "v1.0.0"}
 
 	srv := newServer(defs, opts)
-	if srv == nil {
-		t.Fatal("newServer() returned nil")
-	}
+	require.NotNil(t, srv, "newServer() returned nil")
 }
 
 func TestRegisterTools_AllTools(t *testing.T) {
@@ -120,9 +110,7 @@ func TestRegisterTools_AllTools(t *testing.T) {
 	cancel()
 
 	err := Serve(ctx, Options{Service: mock})
-	if err == nil {
-		t.Fatal("expected context canceled error, not nil")
-	}
+	require.Error(t, err, "expected context canceled error, not nil")
 }
 
 func TestRegisterTools_UnknownTool(t *testing.T) {
@@ -145,9 +133,7 @@ func TestRegisterTools_UnknownTool(t *testing.T) {
 	cancel()
 
 	err := Serve(ctx, Options{Service: mock})
-	if err == nil {
-		t.Fatal("expected context canceled error, not nil")
-	}
+	require.Error(t, err, "expected context canceled error, not nil")
 }
 
 func TestServe_WithLogger(t *testing.T) {
@@ -170,9 +156,7 @@ func TestServe_WithLogger(t *testing.T) {
 	cancel()
 
 	err := Serve(ctx, Options{Service: mock, Logger: logger})
-	if err == nil {
-		t.Fatal("expected context canceled error, not nil")
-	}
+	require.Error(t, err, "expected context canceled error, not nil")
 }
 
 func TestServe_WithVersion(t *testing.T) {
@@ -193,9 +177,7 @@ func TestServe_WithVersion(t *testing.T) {
 	cancel()
 
 	err := Serve(ctx, Options{Service: mock, Version: "v2.0.0"})
-	if err == nil {
-		t.Fatal("expected context canceled error, not nil")
-	}
+	require.Error(t, err, "expected context canceled error, not nil")
 }
 
 func TestServe_UnsupportedTransport(t *testing.T) {
@@ -216,9 +198,7 @@ func TestServe_UnsupportedTransport(t *testing.T) {
 		Service:   mock,
 		Transport: TransportType(999),
 	})
-	if err == nil {
-		t.Fatal("expected error for unsupported transport")
-	}
+	require.Error(t, err, "expected error for unsupported transport")
 }
 
 func TestApplyAuthMiddleware_NoAuth(t *testing.T) {
@@ -231,9 +211,7 @@ func TestApplyAuthMiddleware_NoAuth(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
-	if w.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", w.Code)
-	}
+	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestApplyAuthMiddleware_StaticToken_Valid(t *testing.T) {
@@ -247,9 +225,7 @@ func TestApplyAuthMiddleware_StaticToken_Valid(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer secret")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
-	if w.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", w.Code)
-	}
+	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestApplyAuthMiddleware_StaticToken_Invalid(t *testing.T) {
@@ -263,9 +239,7 @@ func TestApplyAuthMiddleware_StaticToken_Invalid(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer wrong")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
-	if w.Code != http.StatusUnauthorized {
-		t.Errorf("expected 401, got %d", w.Code)
-	}
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
 func TestApplyAuthMiddleware_CustomVerifier_Valid(t *testing.T) {
@@ -286,9 +260,7 @@ func TestApplyAuthMiddleware_CustomVerifier_Valid(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer custom-token")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
-	if w.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", w.Code)
-	}
+	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestApplyAuthMiddleware_CustomVerifier_Invalid(t *testing.T) {
@@ -306,9 +278,7 @@ func TestApplyAuthMiddleware_CustomVerifier_Invalid(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer any-token")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
-	if w.Code != http.StatusUnauthorized {
-		t.Errorf("expected 401, got %d", w.Code)
-	}
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
 func TestWithLogging_NilLogger(t *testing.T) {
@@ -321,9 +291,7 @@ func TestWithLogging_NilLogger(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
-	if w.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", w.Code)
-	}
+	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestSlogWriter(t *testing.T) {
@@ -334,27 +302,17 @@ func TestSlogWriter(t *testing.T) {
 	w := newSlogWriter(logger)
 
 	n, err := w.Write([]byte("test message"))
-	if err != nil {
-		t.Fatalf("Write() = %v", err)
-	}
-	if n != 12 {
-		t.Errorf("written = %d, want 12", n)
-	}
-	if buf.Len() == 0 {
-		t.Error("expected log output")
-	}
+	require.NoError(t, err)
+	assert.Equal(t, 12, n, "written bytes")
+	assert.NotZero(t, buf.Len(), "expected log output")
 }
 
 func TestOptions_Defaults(t *testing.T) {
 	t.Parallel()
 
 	opts := Options{}
-	if opts.httpAddr() != ":8080" {
-		t.Errorf("httpAddr = %q, want %q", opts.httpAddr(), ":8080")
-	}
-	if opts.httpPath() != "/mcp" {
-		t.Errorf("httpPath = %q, want %q", opts.httpPath(), "/mcp")
-	}
+	assert.Equal(t, ":8080", opts.httpAddr())
+	assert.Equal(t, "/mcp", opts.httpPath())
 }
 
 func TestOptions_CustomAddr(t *testing.T) {
@@ -384,12 +342,8 @@ func TestHandler_SpecList_Success(t *testing.T) {
 
 	h := handler{service: mock}
 	result, _, err := h.handleSpecList(context.Background(), nil, nil)
-	if err != nil {
-		t.Fatalf("handleSpecList() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_SpecList_Error(t *testing.T) {
@@ -405,9 +359,7 @@ func TestHandler_SpecList_Error(t *testing.T) {
 
 	h := handler{service: mock}
 	_, _, err := h.handleSpecList(context.Background(), nil, nil)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_SpecByID_Success(t *testing.T) {
@@ -427,12 +379,8 @@ func TestHandler_SpecByID_Success(t *testing.T) {
 	result, _, err := h.handleSpecByID(
 		context.Background(), nil, service.SpecByIDRequest{ID: "abc"},
 	)
-	if err != nil {
-		t.Fatalf("handleSpecByID() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_SpecByID_Error(t *testing.T) {
@@ -450,9 +398,7 @@ func TestHandler_SpecByID_Error(t *testing.T) {
 	_, _, err := h.handleSpecByID(
 		context.Background(), nil, service.SpecByIDRequest{ID: "abc"},
 	)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_CollectionByID_Success(t *testing.T) {
@@ -472,12 +418,8 @@ func TestHandler_CollectionByID_Success(t *testing.T) {
 	result, _, err := h.handleCollectionByID(
 		context.Background(), nil, service.CollectionByIDRequest{ID: "coll-1"},
 	)
-	if err != nil {
-		t.Fatalf("handleCollectionByID() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_CollectionByID_Error(t *testing.T) {
@@ -495,9 +437,7 @@ func TestHandler_CollectionByID_Error(t *testing.T) {
 	_, _, err := h.handleCollectionByID(
 		context.Background(), nil, service.CollectionByIDRequest{ID: "coll-1"},
 	)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_CollectionBySpec_Success(t *testing.T) {
@@ -517,12 +457,8 @@ func TestHandler_CollectionBySpec_Success(t *testing.T) {
 	result, _, err := h.handleCollectionBySpec(
 		context.Background(), nil, service.CollectionsRequest{SpecID: "spec-1"},
 	)
-	if err != nil {
-		t.Fatalf("handleCollectionBySpec() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_CollectionBySpec_Error(t *testing.T) {
@@ -540,9 +476,7 @@ func TestHandler_CollectionBySpec_Error(t *testing.T) {
 	_, _, err := h.handleCollectionBySpec(
 		context.Background(), nil, service.CollectionsRequest{SpecID: "spec-1"},
 	)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_TagsByCollection_Success(t *testing.T) {
@@ -562,12 +496,8 @@ func TestHandler_TagsByCollection_Success(t *testing.T) {
 	result, _, err := h.handleTagsByCollection(
 		context.Background(), nil, service.TagsByCollectionRequest{CollectionID: "coll-1"},
 	)
-	if err != nil {
-		t.Fatalf("handleTagsByCollection() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_TagsByCollection_Error(t *testing.T) {
@@ -585,9 +515,7 @@ func TestHandler_TagsByCollection_Error(t *testing.T) {
 	_, _, err := h.handleTagsByCollection(
 		context.Background(), nil, service.TagsByCollectionRequest{CollectionID: "coll-1"},
 	)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_TagsBySpec_Success(t *testing.T) {
@@ -607,12 +535,8 @@ func TestHandler_TagsBySpec_Success(t *testing.T) {
 	result, _, err := h.handleTagsBySpec(
 		context.Background(), nil, service.TagsBySpecRequest{SpecID: "spec-1"},
 	)
-	if err != nil {
-		t.Fatalf("handleTagsBySpec() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_TagsBySpec_Error(t *testing.T) {
@@ -630,9 +554,7 @@ func TestHandler_TagsBySpec_Error(t *testing.T) {
 	_, _, err := h.handleTagsBySpec(
 		context.Background(), nil, service.TagsBySpecRequest{SpecID: "spec-1"},
 	)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_TagByID_Success(t *testing.T) {
@@ -652,12 +574,8 @@ func TestHandler_TagByID_Success(t *testing.T) {
 	result, _, err := h.handleTagByID(
 		context.Background(), nil, service.TagByIDRequest{ID: "tag-1"},
 	)
-	if err != nil {
-		t.Fatalf("handleTagByID() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_TagByID_Error(t *testing.T) {
@@ -675,9 +593,7 @@ func TestHandler_TagByID_Error(t *testing.T) {
 	_, _, err := h.handleTagByID(
 		context.Background(), nil, service.TagByIDRequest{ID: "tag-1"},
 	)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_EndpointByID_Success(t *testing.T) {
@@ -697,12 +613,8 @@ func TestHandler_EndpointByID_Success(t *testing.T) {
 	result, _, err := h.handleEndpointByID(
 		context.Background(), nil, service.EndpointByIDRequest{ID: "ep-1"},
 	)
-	if err != nil {
-		t.Fatalf("handleEndpointByID() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_EndpointByID_Error(t *testing.T) {
@@ -720,9 +632,7 @@ func TestHandler_EndpointByID_Error(t *testing.T) {
 	_, _, err := h.handleEndpointByID(
 		context.Background(), nil, service.EndpointByIDRequest{ID: "ep-1"},
 	)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_EndpointsByTag_Success(t *testing.T) {
@@ -742,12 +652,8 @@ func TestHandler_EndpointsByTag_Success(t *testing.T) {
 	result, _, err := h.handleEndpointsByTag(
 		context.Background(), nil, service.EndpointsByTagRequest{TagID: "tag-1"},
 	)
-	if err != nil {
-		t.Fatalf("handleEndpointsByTag() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_EndpointsByTag_Error(t *testing.T) {
@@ -765,9 +671,7 @@ func TestHandler_EndpointsByTag_Error(t *testing.T) {
 	_, _, err := h.handleEndpointsByTag(
 		context.Background(), nil, service.EndpointsByTagRequest{TagID: "tag-1"},
 	)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_EndpointsByCollection_Success(t *testing.T) {
@@ -787,12 +691,8 @@ func TestHandler_EndpointsByCollection_Success(t *testing.T) {
 	result, _, err := h.handleEndpointsByCollection(
 		context.Background(), nil, service.EndpointsByCollectionRequest{CollectionID: "coll-1"},
 	)
-	if err != nil {
-		t.Fatalf("handleEndpointsByCollection() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_EndpointsByCollection_Error(t *testing.T) {
@@ -810,9 +710,7 @@ func TestHandler_EndpointsByCollection_Error(t *testing.T) {
 	_, _, err := h.handleEndpointsByCollection(
 		context.Background(), nil, service.EndpointsByCollectionRequest{CollectionID: "coll-1"},
 	)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_EndpointsBySpec_Success(t *testing.T) {
@@ -832,12 +730,8 @@ func TestHandler_EndpointsBySpec_Success(t *testing.T) {
 	result, _, err := h.handleEndpointsBySpec(
 		context.Background(), nil, service.EndpointsBySpecRequest{SpecID: "spec-1"},
 	)
-	if err != nil {
-		t.Fatalf("handleEndpointsBySpec() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_EndpointsBySpec_Error(t *testing.T) {
@@ -855,9 +749,7 @@ func TestHandler_EndpointsBySpec_Error(t *testing.T) {
 	_, _, err := h.handleEndpointsBySpec(
 		context.Background(), nil, service.EndpointsBySpecRequest{SpecID: "spec-1"},
 	)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_Search_Success(t *testing.T) {
@@ -877,12 +769,8 @@ func TestHandler_Search_Success(t *testing.T) {
 	result, _, err := h.handleSearch(
 		context.Background(), nil, service.SearchRequest{Query: "test", Limit: 10},
 	)
-	if err != nil {
-		t.Fatalf("handleSearch() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_Search_Error(t *testing.T) {
@@ -900,9 +788,7 @@ func TestHandler_Search_Error(t *testing.T) {
 	_, _, err := h.handleSearch(
 		context.Background(), nil, service.SearchRequest{Query: "test", Limit: 10},
 	)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_Inspect_Success(t *testing.T) {
@@ -924,12 +810,8 @@ func TestHandler_Inspect_Success(t *testing.T) {
 	result, _, err := h.handleInspect(
 		context.Background(), nil, service.InspectRequest{EndpointID: "ep-1"},
 	)
-	if err != nil {
-		t.Fatalf("handleInspect() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_Inspect_Error(t *testing.T) {
@@ -947,9 +829,7 @@ func TestHandler_Inspect_Error(t *testing.T) {
 	_, _, err := h.handleInspect(
 		context.Background(), nil, service.InspectRequest{EndpointID: "ep-1"},
 	)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_Invoke_Success(t *testing.T) {
@@ -970,12 +850,8 @@ func TestHandler_Invoke_Success(t *testing.T) {
 	result, _, err := h.handleInvoke(
 		context.Background(), nil, service.InvokeRequest{EndpointID: "ep-1"},
 	)
-	if err != nil {
-		t.Fatalf("handleInvoke() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_Invoke_Error(t *testing.T) {
@@ -993,9 +869,7 @@ func TestHandler_Invoke_Error(t *testing.T) {
 	_, _, err := h.handleInvoke(
 		context.Background(), nil, service.InvokeRequest{EndpointID: "ep-1"},
 	)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_Auth_Success(t *testing.T) {
@@ -1015,12 +889,8 @@ func TestHandler_Auth_Success(t *testing.T) {
 	result, _, err := h.handleAuth(
 		context.Background(), nil, service.AuthRequest{SpecID: "spec-1"},
 	)
-	if err != nil {
-		t.Fatalf("handleAuth() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_Auth_Error(t *testing.T) {
@@ -1038,9 +908,7 @@ func TestHandler_Auth_Error(t *testing.T) {
 	_, _, err := h.handleAuth(
 		context.Background(), nil, service.AuthRequest{SpecID: "spec-1"},
 	)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_Info_Success(t *testing.T) {
@@ -1068,12 +936,8 @@ func TestHandler_Info_Success(t *testing.T) {
 
 	h := handler{service: mock}
 	result, _, err := h.handleInfo(context.Background(), nil, nil)
-	if err != nil {
-		t.Fatalf("handleInfo() = %v", err)
-	}
-	if result == nil {
-		t.Fatal("result is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 }
 
 func TestHandler_Info_Error(t *testing.T) {
@@ -1089,9 +953,7 @@ func TestHandler_Info_Error(t *testing.T) {
 
 	h := handler{service: mock}
 	_, _, err := h.handleInfo(context.Background(), nil, nil)
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestHandler_StructuredContent(t *testing.T) {
@@ -1109,10 +971,6 @@ func TestHandler_StructuredContent(t *testing.T) {
 
 	h := handler{service: mock}
 	result, _, err := h.handleSpecList(context.Background(), nil, nil)
-	if err != nil {
-		t.Fatalf("handleSpecList() = %v", err)
-	}
-	if result.StructuredContent == nil {
-		t.Fatal("StructuredContent is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result.StructuredContent)
 }

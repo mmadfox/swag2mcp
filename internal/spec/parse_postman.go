@@ -97,6 +97,7 @@ type postmanURLEncoded struct {
 	Description string `json:"description,omitempty"`
 }
 
+// parsePostman parses a Postman collection into a unified Doc.
 func parsePostman(data []byte) (*Doc, error) {
 	var col postmanCollection
 	if err := json.Unmarshal(data, &col); err != nil {
@@ -120,6 +121,7 @@ func parsePostman(data []byte) (*Doc, error) {
 	return doc, nil
 }
 
+// flattenPostmanItems recursively flattens nested Postman items into path items.
 func flattenPostmanItems(folderNames []string, items []postmanItem, doc *Doc) error {
 	for _, item := range items {
 		if item.Request != nil {
@@ -136,6 +138,7 @@ func flattenPostmanItems(folderNames []string, items []postmanItem, doc *Doc) er
 	return nil
 }
 
+// postmanItemToPathItem converts a Postman item to a unified PathItem.
 func postmanItemToPathItem(item postmanItem, folderNames []string) *PathItem {
 	req := item.Request
 
@@ -174,6 +177,7 @@ func postmanItemToPathItem(item postmanItem, folderNames []string) *PathItem {
 	}
 }
 
+// extractPostmanPath extracts the API path from a Postman URL (string or structured).
 func extractPostmanPath(rawURL json.RawMessage) string {
 	if rawURL == nil {
 		return "/"
@@ -219,6 +223,7 @@ func extractPostmanPath(rawURL json.RawMessage) string {
 	return "/"
 }
 
+// extractPathFromURLString extracts the path portion from a URL string, converting :param to {param}.
 func extractPathFromURLString(rawURL string) string {
 	if !strings.Contains(rawURL, "://") {
 		rawURL = "http://" + rawURL
@@ -241,6 +246,7 @@ func extractPathFromURLString(rawURL string) string {
 	return strings.Join(segments, "/")
 }
 
+// appendPostmanURLParams extracts path variables and query parameters from a Postman URL.
 func appendPostmanURLParams(rawURL json.RawMessage, op *Operation) {
 	var u postmanURL
 	if err := json.Unmarshal(rawURL, &u); err != nil {
@@ -270,6 +276,7 @@ func appendPostmanURLParams(rawURL json.RawMessage, op *Operation) {
 	}
 }
 
+// appendPostmanHeaders extracts header parameters from a Postman request.
 func appendPostmanHeaders(headers []postmanHeader, op *Operation) {
 	for _, h := range headers {
 		if h.Disabled {
@@ -284,6 +291,7 @@ func appendPostmanHeaders(headers []postmanHeader, op *Operation) {
 	}
 }
 
+// appendPostmanBody extracts the request body from a Postman request.
 func appendPostmanBody(body *postmanBody, op *Operation, method string) {
 	if body == nil {
 		return
@@ -357,6 +365,7 @@ func appendPostmanBody(body *postmanBody, op *Operation, method string) {
 	}
 }
 
+// postmanTag returns the tag for a Postman item, using the last folder name if available.
 func postmanTag(itemName string, folders []string) string {
 	if len(folders) > 0 {
 		return sanitizePostmanTag(folders[len(folders)-1])
@@ -364,6 +373,7 @@ func postmanTag(itemName string, folders []string) string {
 	return sanitizePostmanTag(itemName)
 }
 
+// sanitizePostmanTag converts a tag name to lowercase with hyphens replacing non-alphanumeric chars.
 func sanitizePostmanTag(name string) string {
 	tag := strings.ToLower(name)
 	tag = strings.Map(func(r rune) rune {
@@ -375,6 +385,7 @@ func sanitizePostmanTag(name string) string {
 	return strings.Trim(tag, "-")
 }
 
+// guessPostmanContentType guesses the content type from the raw body text.
 func guessPostmanContentType(body *postmanBody) string {
 	if body == nil || body.Raw == "" {
 		return mediaTypeJSON

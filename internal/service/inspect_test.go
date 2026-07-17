@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/index"
+	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/mmadfox/swag2mcp/internal/spec"
-	"github.com/mmadfox/swag2mcp/internal/types"
 )
 
 func TestInspect_Success(t *testing.T) {
@@ -76,7 +76,7 @@ func TestInspect_OrphanSpec(t *testing.T) {
 	if idxErr != nil {
 		t.Fatalf("index.New() = %v", idxErr)
 	}
-	orphanEndpoint := &types.Endpoint{
+	orphanEndpoint := &model.Endpoint{
 		ID:           "00000000000000000000000000000001",
 		SpecID:       "00000000000000000000000000000000",
 		CollectionID: "00000000000000000000000000000002",
@@ -86,10 +86,10 @@ func TestInspect_OrphanSpec(t *testing.T) {
 		Operation:    &spec.Operation{ID: "orphanOp"},
 	}
 	if idxErr = orphanIdx.EnsureIndex(
-		&types.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
-		[]*types.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
-		[]*types.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
-		[]*types.Endpoint{orphanEndpoint},
+		&model.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
+		[]*model.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
+		[]*model.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
+		[]*model.Endpoint{orphanEndpoint},
 	); idxErr != nil {
 		t.Fatalf("EnsureIndex() = %v", idxErr)
 	}
@@ -113,7 +113,7 @@ func TestInspect_OrphanCollection(t *testing.T) {
 	if idxErr != nil {
 		t.Fatalf("index.New() = %v", idxErr)
 	}
-	orphanEndpoint := &types.Endpoint{
+	orphanEndpoint := &model.Endpoint{
 		ID:           "00000000000000000000000000000001",
 		SpecID:       "00000000000000000000000000000000",
 		CollectionID: "00000000000000000000000000000002",
@@ -123,10 +123,10 @@ func TestInspect_OrphanCollection(t *testing.T) {
 		Operation:    &spec.Operation{ID: "orphanOp"},
 	}
 	if idxErr = orphanIdx.EnsureIndex(
-		&types.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
-		[]*types.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
-		[]*types.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
-		[]*types.Endpoint{orphanEndpoint},
+		&model.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
+		[]*model.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
+		[]*model.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
+		[]*model.Endpoint{orphanEndpoint},
 	); idxErr != nil {
 		t.Fatalf("EnsureIndex() = %v", idxErr)
 	}

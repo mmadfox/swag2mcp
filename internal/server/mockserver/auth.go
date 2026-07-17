@@ -44,6 +44,7 @@ type authMockServer struct {
 	nonceTime  time.Time
 }
 
+// newAuthMockServer creates a new auth mock server of the given type.
 func newAuthMockServer(
 	serverType authServerType,
 	addr string,
@@ -61,6 +62,7 @@ func newAuthMockServer(
 	}
 }
 
+// start begins listening for HTTP requests on the configured address.
 func (m *authMockServer) start(ctx context.Context) {
 	mux := http.NewServeMux()
 
@@ -109,6 +111,7 @@ func (m *authMockServer) start(ctx context.Context) {
 	)
 }
 
+// shutdown gracefully stops the auth mock server.
 func (m *authMockServer) shutdown() {
 	if m.server != nil {
 		shutdownContext, shutdownCancel := context.WithTimeout(
@@ -122,6 +125,7 @@ func (m *authMockServer) shutdown() {
 	}
 }
 
+// handleOAuth2 handles OAuth2 token requests (client_credentials and password grants).
 func (m *authMockServer) handleOAuth2(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		m.logger.WarnContext(request.Context(), "oauth2 mock: method not allowed",
@@ -161,6 +165,7 @@ func (m *authMockServer) handleOAuth2(responseWriter http.ResponseWriter, reques
 	}
 }
 
+// handleOAuth2CC handles client_credentials grant type requests.
 func (m *authMockServer) handleOAuth2CC(responseWriter http.ResponseWriter, request *http.Request) {
 	clientID := request.FormValue("client_id")
 	if clientID == "" {
@@ -190,6 +195,7 @@ func (m *authMockServer) handleOAuth2CC(responseWriter http.ResponseWriter, requ
 	}
 }
 
+// handleOAuth2Password handles password grant type requests.
 func (m *authMockServer) handleOAuth2Password(responseWriter http.ResponseWriter, request *http.Request) {
 	username := request.FormValue("username")
 	password := request.FormValue("password")
@@ -222,6 +228,7 @@ func (m *authMockServer) handleOAuth2Password(responseWriter http.ResponseWriter
 	}
 }
 
+// handleDigest handles Digest authentication requests, sending a challenge or validating credentials.
 func (m *authMockServer) handleDigest(responseWriter http.ResponseWriter, request *http.Request) {
 	authorization := request.Header.Get("Authorization")
 
@@ -250,6 +257,7 @@ func (m *authMockServer) handleDigest(responseWriter http.ResponseWriter, reques
 	}
 }
 
+// handleHMAC handles HMAC authentication requests, validating API key, signature, and timestamp.
 func (m *authMockServer) handleHMAC(responseWriter http.ResponseWriter, request *http.Request) {
 	apiKey := request.Header.Get("X-MBX-APIKEY")
 	if apiKey == "" {
@@ -283,6 +291,7 @@ func (m *authMockServer) handleHMAC(responseWriter http.ResponseWriter, request 
 	}
 }
 
+// generateDigestChallenge sends a WWW-Authenticate Digest challenge to the client.
 func (m *authMockServer) generateDigestChallenge(responseWriter http.ResponseWriter) {
 	m.mu.Lock()
 	now := time.Now()
@@ -312,6 +321,7 @@ func (m *authMockServer) generateDigestChallenge(responseWriter http.ResponseWri
 	http.Error(responseWriter, "Unauthorized", http.StatusUnauthorized)
 }
 
+// parseDigestAuthorization parses a Digest authorization header into key-value pairs.
 func (m *authMockServer) parseDigestAuthorization(authorization string) map[string]string {
 	parameters := make(map[string]string)
 	headerValue := strings.TrimPrefix(authorization, "Digest ")

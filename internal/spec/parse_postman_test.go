@@ -6,32 +6,23 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-//
-//nolint:gocognit
 func TestParse_postmanCollection(t *testing.T) {
 	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "postman_petstore.json"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	doc, err := Parse(data)
-	if err != nil {
-		t.Fatalf("Parse(postman) failed: %v", err)
-	}
+	require.NoError(t, err, "Parse(postman) failed")
 
-	if doc.Version != "2.x" {
-		t.Errorf("got version %q, want %q", doc.Version, "2.x")
-	}
-	if doc.Title != "Petstore API" {
-		t.Errorf("got title %q, want %q", doc.Title, "Petstore API")
-	}
+	assert.Equal(t, "2.x", doc.Version)
+	assert.Equal(t, "Petstore API", doc.Title)
 
-	if len(doc.PathItems) != 4 {
-		t.Fatalf("got %d path items, want 4", len(doc.PathItems))
-	}
+	require.Len(t, doc.PathItems, 4)
 
 	var listPets, createPet, getPet, health bool
 	for _, pi := range doc.PathItems {
@@ -41,30 +32,20 @@ func TestParse_postmanCollection(t *testing.T) {
 			case http.MethodGet:
 				listPets = true
 				op := pi.Operation
-				if op.Summary != "List all pets" {
-					t.Errorf("got summary %q, want %q", op.Summary, "List all pets")
-				}
-				if len(op.Parameters) == 0 {
-					t.Fatal("expected query params on list pets")
-				}
+				assert.Equal(t, "List all pets", op.Summary)
+				require.NotEmpty(t, op.Parameters, "expected query params on list pets")
 				var hasLimit bool
 				for _, p := range op.Parameters {
 					if p.Name == "limit" && p.In == "query" {
 						hasLimit = true
 					}
 				}
-				if !hasLimit {
-					t.Error("expected limit query param")
-				}
+				assert.True(t, hasLimit, "expected limit query param")
 			case http.MethodPost:
 				createPet = true
 				op := pi.Operation
-				if op.RequestBody == nil {
-					t.Fatal("expected request body")
-				}
-				if op.RequestBody.Content["application/json"] == nil {
-					t.Error("expected JSON content type")
-				}
+				require.NotNil(t, op.RequestBody, "expected request body")
+				require.NotNil(t, op.RequestBody.Content["application/json"], "expected JSON content type")
 			}
 		case "/v1/pets/{petId}":
 			getPet = true
@@ -75,39 +56,25 @@ func TestParse_postmanCollection(t *testing.T) {
 					hasID = true
 				}
 			}
-			if !hasID {
-				t.Error("expected petId path param")
-			}
+			assert.True(t, hasID, "expected petId path param")
 		case "/health":
 			health = true
 		}
 	}
 
-	if !listPets {
-		t.Error("GET /v1/pets not found")
-	}
-	if !createPet {
-		t.Error("POST /v1/pets not found")
-	}
-	if !getPet {
-		t.Error("GET /v1/pets/{petId} not found")
-	}
-	if !health {
-		t.Error("GET /health not found")
-	}
+	assert.True(t, listPets, "GET /v1/pets not found")
+	assert.True(t, createPet, "POST /v1/pets not found")
+	assert.True(t, getPet, "GET /v1/pets/{petId} not found")
+	assert.True(t, health, "GET /health not found")
 }
 
 func TestParse_postmanHeaders(t *testing.T) {
 	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "postman_petstore.json"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	doc, err := Parse(data)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	for _, pi := range doc.PathItems {
 		if pi.Path == "/v1/pets" && pi.Method == http.MethodGet {
@@ -118,9 +85,7 @@ func TestParse_postmanHeaders(t *testing.T) {
 					hasAuth = true
 				}
 			}
-			if !hasAuth {
-				t.Error("expected Authorization header")
-			}
+			assert.True(t, hasAuth, "expected Authorization header")
 			break
 		}
 	}
@@ -161,9 +126,7 @@ func TestParse_isPostman(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got := isPostman(tt.data)
-			if got != tt.want {
-				t.Errorf("isPostman = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -171,18 +134,12 @@ func TestParse_isPostman(t *testing.T) {
 func TestParse_openapiServers(t *testing.T) {
 	t.Parallel()
 	data, err := os.ReadFile(filepath.Join("testdata", "valid_v300_openapi.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	doc, err := Parse(data)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if len(doc.Servers) == 0 {
-		t.Fatal("expected at least 1 server from openapi servers")
-	}
+	require.NotEmpty(t, doc.Servers, "expected at least 1 server from openapi servers")
 }
 
 func TestParse_tagHierarchies(t *testing.T) {
@@ -201,16 +158,10 @@ func TestParse_tagHierarchies(t *testing.T) {
 		t.Run(file, func(t *testing.T) {
 			t.Parallel()
 			data, err := os.ReadFile(filepath.Join("testdata", file))
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 			doc, err := Parse(data)
-			if err != nil {
-				t.Fatalf("Parse(%s) failed: %v", file, err)
-			}
-			if len(doc.PathItems) == 0 {
-				t.Error("no path items")
-			}
+			require.NoError(t, err, "Parse(%s) failed", file)
+			assert.NotEmpty(t, doc.PathItems, "no path items")
 		})
 	}
 }
@@ -231,16 +182,10 @@ func TestParse_multiTags(t *testing.T) {
 		t.Run(file, func(t *testing.T) {
 			t.Parallel()
 			data, err := os.ReadFile(filepath.Join("testdata", file))
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 			doc, err := Parse(data)
-			if err != nil {
-				t.Fatalf("Parse(%s) failed: %v", file, err)
-			}
-			if len(doc.PathItems) == 0 {
-				t.Error("no path items")
-			}
+			require.NoError(t, err, "Parse(%s) failed", file)
+			assert.NotEmpty(t, doc.PathItems, "no path items")
 		})
 	}
 }
@@ -249,18 +194,14 @@ func TestPostmanTag_WithFolders(t *testing.T) {
 	t.Parallel()
 
 	tag := postmanTag("Get Pet", []string{"Pets", "Store"})
-	if tag != "store" {
-		t.Errorf("got %q, want %q", tag, "store")
-	}
+	assert.Equal(t, "store", tag)
 }
 
 func TestPostmanTag_WithoutFolders(t *testing.T) {
 	t.Parallel()
 
 	tag := postmanTag("Get Pet", nil)
-	if tag != "get-pet" {
-		t.Errorf("got %q, want %q", tag, "get-pet")
-	}
+	assert.Equal(t, "get-pet", tag)
 }
 
 func TestSanitizePostmanTag(t *testing.T) {
@@ -278,9 +219,7 @@ func TestSanitizePostmanTag(t *testing.T) {
 	}
 	for _, tt := range tests {
 		got := sanitizePostmanTag(tt.input)
-		if got != tt.want {
-			t.Errorf("sanitizePostmanTag(%q) = %q, want %q", tt.input, got, tt.want)
-		}
+		assert.Equal(t, tt.want, got, "sanitizePostmanTag(%q)", tt.input)
 	}
 }
 
@@ -288,45 +227,35 @@ func TestExtractPathFromURLString_NoScheme(t *testing.T) {
 	t.Parallel()
 
 	path := extractPathFromURLString("example.com/api/v1/pets")
-	if path != "/api/v1/pets" {
-		t.Errorf("got %q, want %q", path, "/api/v1/pets")
-	}
+	assert.Equal(t, "/api/v1/pets", path)
 }
 
 func TestExtractPathFromURLString_ColonParam(t *testing.T) {
 	t.Parallel()
 
 	path := extractPathFromURLString("http://example.com/api/v1/pets/:petId")
-	if path != "/api/v1/pets/{petId}" {
-		t.Errorf("got %q, want %q", path, "/api/v1/pets/{petId}")
-	}
+	assert.Equal(t, "/api/v1/pets/{petId}", path)
 }
 
 func TestExtractPathFromURLString_EmptyPath(t *testing.T) {
 	t.Parallel()
 
 	path := extractPathFromURLString("http://example.com")
-	if path != "/" {
-		t.Errorf("got %q, want %q", path, "/")
-	}
+	assert.Equal(t, "/", path)
 }
 
 func TestExtractPathFromURLString_InvalidURL(t *testing.T) {
 	t.Parallel()
 
 	path := extractPathFromURLString("http://[invalid]")
-	if path != "http://[invalid]" {
-		t.Errorf("got %q, want original", path)
-	}
+	assert.Equal(t, "http://[invalid]", path)
 }
 
 func TestExtractPostmanPath_NilURL(t *testing.T) {
 	t.Parallel()
 
 	path := extractPostmanPath(nil)
-	if path != "/" {
-		t.Errorf("got %q, want %q", path, "/")
-	}
+	assert.Equal(t, "/", path)
 }
 
 func TestExtractPostmanPath_StringURL(t *testing.T) {
@@ -334,9 +263,7 @@ func TestExtractPostmanPath_StringURL(t *testing.T) {
 
 	raw, _ := json.Marshal("http://example.com/api/v1/pets")
 	path := extractPostmanPath(raw)
-	if path != "/api/v1/pets" {
-		t.Errorf("got %q, want %q", path, "/api/v1/pets")
-	}
+	assert.Equal(t, "/api/v1/pets", path)
 }
 
 func TestExtractPostmanPath_StructuredPath(t *testing.T) {
@@ -347,9 +274,7 @@ func TestExtractPostmanPath_StructuredPath(t *testing.T) {
 		Path: []json.RawMessage{json.RawMessage(`"api"`), json.RawMessage(`"v1"`), json.RawMessage(`"pets"`)},
 	})
 	path := extractPostmanPath(raw)
-	if path != "/api/v1/pets" {
-		t.Errorf("got %q, want %q", path, "/api/v1/pets")
-	}
+	assert.Equal(t, "/api/v1/pets", path)
 }
 
 func TestExtractPostmanPath_PathVariable(t *testing.T) {
@@ -360,18 +285,14 @@ func TestExtractPostmanPath_PathVariable(t *testing.T) {
 		Path: []json.RawMessage{json.RawMessage(`"pets"`), json.RawMessage(`{"type":"string","value":"petId"}`)},
 	})
 	path := extractPostmanPath(raw)
-	if path != "/pets/{petId}" {
-		t.Errorf("got %q, want %q", path, "/pets/{petId}")
-	}
+	assert.Equal(t, "/pets/{petId}", path)
 }
 
 func TestExtractPostmanPath_InvalidJSON(t *testing.T) {
 	t.Parallel()
 
 	path := extractPostmanPath(json.RawMessage("{invalid}"))
-	if path != "/" {
-		t.Errorf("got %q, want %q", path, "/")
-	}
+	assert.Equal(t, "/", path)
 }
 
 func TestAppendPostmanHeaders_Disabled(t *testing.T) {
@@ -382,9 +303,7 @@ func TestAppendPostmanHeaders_Disabled(t *testing.T) {
 		{Key: "Authorization", Value: "Bearer token", Disabled: true},
 	}
 	appendPostmanHeaders(headers, op)
-	if len(op.Parameters) != 0 {
-		t.Errorf("Parameters = %d, want 0 (disabled header should be skipped)", len(op.Parameters))
-	}
+	assert.Empty(t, op.Parameters, "disabled header should be skipped")
 }
 
 func TestAppendPostmanBody_Nil(t *testing.T) {
@@ -392,9 +311,7 @@ func TestAppendPostmanBody_Nil(t *testing.T) {
 
 	op := &Operation{}
 	appendPostmanBody(nil, op, http.MethodPost)
-	if op.RequestBody != nil {
-		t.Fatal("RequestBody should be nil for nil body")
-	}
+	require.Nil(t, op.RequestBody, "RequestBody should be nil for nil body")
 }
 
 func TestAppendPostmanBody_GetMethod(t *testing.T) {
@@ -402,9 +319,7 @@ func TestAppendPostmanBody_GetMethod(t *testing.T) {
 
 	op := &Operation{}
 	appendPostmanBody(&postmanBody{Mode: "raw", Raw: `{"key":"value"}`}, op, http.MethodGet)
-	if op.RequestBody != nil {
-		t.Fatal("RequestBody should be nil for GET")
-	}
+	require.Nil(t, op.RequestBody, "RequestBody should be nil for GET")
 }
 
 func TestAppendPostmanBody_HeadMethod(t *testing.T) {
@@ -412,9 +327,7 @@ func TestAppendPostmanBody_HeadMethod(t *testing.T) {
 
 	op := &Operation{}
 	appendPostmanBody(&postmanBody{Mode: "raw", Raw: `{"key":"value"}`}, op, http.MethodHead)
-	if op.RequestBody != nil {
-		t.Fatal("RequestBody should be nil for HEAD")
-	}
+	require.Nil(t, op.RequestBody, "RequestBody should be nil for HEAD")
 }
 
 func TestAppendPostmanBody_DeleteMethod(t *testing.T) {
@@ -422,9 +335,7 @@ func TestAppendPostmanBody_DeleteMethod(t *testing.T) {
 
 	op := &Operation{}
 	appendPostmanBody(&postmanBody{Mode: "raw", Raw: `{"key":"value"}`}, op, http.MethodDelete)
-	if op.RequestBody != nil {
-		t.Fatal("RequestBody should be nil for DELETE")
-	}
+	require.Nil(t, op.RequestBody, "RequestBody should be nil for DELETE")
 }
 
 func TestAppendPostmanBody_OptionsMethod(t *testing.T) {
@@ -432,9 +343,7 @@ func TestAppendPostmanBody_OptionsMethod(t *testing.T) {
 
 	op := &Operation{}
 	appendPostmanBody(&postmanBody{Mode: "raw", Raw: `{"key":"value"}`}, op, http.MethodOptions)
-	if op.RequestBody != nil {
-		t.Fatal("RequestBody should be nil for OPTIONS")
-	}
+	require.Nil(t, op.RequestBody, "RequestBody should be nil for OPTIONS")
 }
 
 func TestAppendPostmanBody_RawJSON(t *testing.T) {
@@ -442,12 +351,8 @@ func TestAppendPostmanBody_RawJSON(t *testing.T) {
 
 	op := &Operation{Parameters: make([]*Parameter, 0)}
 	appendPostmanBody(&postmanBody{Mode: "raw", Raw: `{"key":"value"}`}, op, http.MethodPost)
-	if op.RequestBody == nil {
-		t.Fatal("RequestBody is nil")
-	}
-	if op.RequestBody.Content["application/json"] == nil {
-		t.Error("expected application/json content type")
-	}
+	require.NotNil(t, op.RequestBody, "RequestBody is nil")
+	require.NotNil(t, op.RequestBody.Content["application/json"], "expected application/json content type")
 }
 
 func TestAppendPostmanBody_RawXML(t *testing.T) {
@@ -455,12 +360,8 @@ func TestAppendPostmanBody_RawXML(t *testing.T) {
 
 	op := &Operation{Parameters: make([]*Parameter, 0)}
 	appendPostmanBody(&postmanBody{Mode: "raw", Raw: "<xml>data</xml>"}, op, http.MethodPost)
-	if op.RequestBody == nil {
-		t.Fatal("RequestBody is nil")
-	}
-	if op.RequestBody.Content["application/xml"] == nil {
-		t.Error("expected application/xml content type")
-	}
+	require.NotNil(t, op.RequestBody, "RequestBody is nil")
+	require.NotNil(t, op.RequestBody.Content["application/xml"], "expected application/xml content type")
 }
 
 func TestAppendPostmanBody_RawText(t *testing.T) {
@@ -468,12 +369,8 @@ func TestAppendPostmanBody_RawText(t *testing.T) {
 
 	op := &Operation{Parameters: make([]*Parameter, 0)}
 	appendPostmanBody(&postmanBody{Mode: "raw", Raw: "plain text"}, op, http.MethodPost)
-	if op.RequestBody == nil {
-		t.Fatal("RequestBody is nil")
-	}
-	if op.RequestBody.Content["text/plain"] == nil {
-		t.Error("expected text/plain content type")
-	}
+	require.NotNil(t, op.RequestBody, "RequestBody is nil")
+	require.NotNil(t, op.RequestBody.Content["text/plain"], "expected text/plain content type")
 }
 
 func TestAppendPostmanBody_URLEncoded(t *testing.T) {
@@ -487,19 +384,11 @@ func TestAppendPostmanBody_URLEncoded(t *testing.T) {
 			{Key: "disabled_field", Value: "skip", Disabled: true},
 		},
 	}, op, http.MethodPost)
-	if op.RequestBody == nil {
-		t.Fatal("RequestBody is nil")
-	}
+	require.NotNil(t, op.RequestBody, "RequestBody is nil")
 	mt := op.RequestBody.Content["application/x-www-form-urlencoded"]
-	if mt == nil {
-		t.Fatal("expected urlencoded content type")
-	}
-	if mt.Schema.Properties["name"] == nil {
-		t.Error("expected name property")
-	}
-	if mt.Schema.Properties["disabled_field"] != nil {
-		t.Error("disabled field should not be present")
-	}
+	require.NotNil(t, mt, "expected urlencoded content type")
+	require.NotNil(t, mt.Schema.Properties["name"], "expected name property")
+	require.Nil(t, mt.Schema.Properties["disabled_field"], "disabled field should not be present")
 }
 
 func TestAppendPostmanBody_FormData(t *testing.T) {
@@ -514,22 +403,12 @@ func TestAppendPostmanBody_FormData(t *testing.T) {
 			{Key: "disabled_field", Value: "skip", Disabled: true},
 		},
 	}, op, http.MethodPost)
-	if op.RequestBody == nil {
-		t.Fatal("RequestBody is nil")
-	}
+	require.NotNil(t, op.RequestBody, "RequestBody is nil")
 	mt := op.RequestBody.Content["multipart/form-data"]
-	if mt == nil {
-		t.Fatal("expected multipart/form-data content type")
-	}
-	if mt.Schema.Properties["file"].Type != "file" {
-		t.Errorf("file type = %q, want %q", mt.Schema.Properties["file"].Type, "file")
-	}
-	if mt.Schema.Properties["name"].Type != "string" {
-		t.Errorf("name type = %q, want %q", mt.Schema.Properties["name"].Type, "string")
-	}
-	if mt.Schema.Properties["disabled_field"] != nil {
-		t.Error("disabled field should not be present")
-	}
+	require.NotNil(t, mt, "expected multipart/form-data content type")
+	assert.Equal(t, "file", mt.Schema.Properties["file"].Type)
+	assert.Equal(t, "string", mt.Schema.Properties["name"].Type)
+	require.Nil(t, mt.Schema.Properties["disabled_field"], "disabled field should not be present")
 }
 
 func TestAppendPostmanBody_GraphQL(t *testing.T) {
@@ -537,12 +416,8 @@ func TestAppendPostmanBody_GraphQL(t *testing.T) {
 
 	op := &Operation{Parameters: make([]*Parameter, 0)}
 	appendPostmanBody(&postmanBody{Mode: "graphql"}, op, http.MethodPost)
-	if op.RequestBody == nil {
-		t.Fatal("RequestBody is nil")
-	}
-	if op.RequestBody.Content["application/json"] == nil {
-		t.Error("expected application/json content type")
-	}
+	require.NotNil(t, op.RequestBody, "RequestBody is nil")
+	require.NotNil(t, op.RequestBody.Content["application/json"], "expected application/json content type")
 }
 
 func TestAppendPostmanBody_UnknownMode(t *testing.T) {
@@ -550,63 +425,49 @@ func TestAppendPostmanBody_UnknownMode(t *testing.T) {
 
 	op := &Operation{Parameters: make([]*Parameter, 0)}
 	appendPostmanBody(&postmanBody{Mode: "unknown"}, op, http.MethodPost)
-	if op.RequestBody != nil {
-		t.Fatal("RequestBody should be nil for unknown mode")
-	}
+	require.Nil(t, op.RequestBody, "RequestBody should be nil for unknown mode")
 }
 
 func TestGuessPostmanContentType_NilBody(t *testing.T) {
 	t.Parallel()
 
 	ct := guessPostmanContentType(nil)
-	if ct != mediaTypeJSON {
-		t.Errorf("got %q, want %q", ct, mediaTypeJSON)
-	}
+	assert.Equal(t, "application/json", ct)
 }
 
 func TestGuessPostmanContentType_EmptyRaw(t *testing.T) {
 	t.Parallel()
 
 	ct := guessPostmanContentType(&postmanBody{Raw: ""})
-	if ct != mediaTypeJSON {
-		t.Errorf("got %q, want %q", ct, mediaTypeJSON)
-	}
+	assert.Equal(t, "application/json", ct)
 }
 
 func TestGuessPostmanContentType_Array(t *testing.T) {
 	t.Parallel()
 
 	ct := guessPostmanContentType(&postmanBody{Raw: "[1,2,3]"})
-	if ct != mediaTypeJSON {
-		t.Errorf("got %q, want %q", ct, mediaTypeJSON)
-	}
+	assert.Equal(t, "application/json", ct)
 }
 
 func TestGuessPostmanContentType_XML(t *testing.T) {
 	t.Parallel()
 
 	ct := guessPostmanContentType(&postmanBody{Raw: "<root><item/></root>"})
-	if ct != "application/xml" {
-		t.Errorf("got %q, want %q", ct, "application/xml")
-	}
+	assert.Equal(t, "application/xml", ct)
 }
 
 func TestGuessPostmanContentType_Text(t *testing.T) {
 	t.Parallel()
 
 	ct := guessPostmanContentType(&postmanBody{Raw: "plain text"})
-	if ct != "text/plain" {
-		t.Errorf("got %q, want %q", ct, "text/plain")
-	}
+	assert.Equal(t, "text/plain", ct)
 }
 
 func TestParsePostman_InvalidJSON(t *testing.T) {
 	t.Parallel()
 
 	_, err := parsePostman([]byte("{invalid}"))
-	if err == nil {
-		t.Fatal("expected error for invalid JSON")
-	}
+	require.Error(t, err, "expected error for invalid JSON")
 }
 
 func TestParsePostman_EmptyCollection(t *testing.T) {
@@ -614,34 +475,28 @@ func TestParsePostman_EmptyCollection(t *testing.T) {
 
 	input := `{"info":{"name":"Test","schema":"https://schema.getpostman.com/collection/v2.1.0/collection.json"},"item":[]}`
 	_, err := parsePostman([]byte(input))
-	if err == nil {
-		t.Fatal("expected error for empty collection")
-	}
+	require.Error(t, err, "expected error for empty collection")
 }
 
 func TestIsPostman_InvalidJSON(t *testing.T) {
 	t.Parallel()
 
-	if isPostman([]byte("{invalid}")) {
-		t.Error("expected false for invalid JSON")
-	}
+	assert.False(t, isPostman([]byte("{invalid}")), "expected false for invalid JSON")
 }
 
 func TestIsPostman_NoPostmanSchema(t *testing.T) {
 	t.Parallel()
 
-	if isPostman([]byte(`{"info":{"schema":"https://example.com/schema.json"},"item":[{}]}`)) {
-		t.Error("expected false for non-postman schema")
-	}
+	assert.False(t,
+		isPostman([]byte(`{"info":{"schema":"https://example.com/schema.json"},"item":[{}]}`)),
+		"expected false for non-postman schema")
 }
 
 func TestIsPostman_EmptyItems(t *testing.T) {
 	t.Parallel()
 
 	input := `{"info":{"schema":"https://schema.getpostman.com/collection/v2.1.0/collection.json"},"item":[]}`
-	if isPostman([]byte(input)) {
-		t.Error("expected false for empty items")
-	}
+	assert.False(t, isPostman([]byte(input)), "expected false for empty items")
 }
 
 func TestFlattenPostmanItems_NestedFolders(t *testing.T) {
@@ -663,15 +518,9 @@ func TestFlattenPostmanItems_NestedFolders(t *testing.T) {
 		},
 	}
 	err := flattenPostmanItems(nil, items, doc)
-	if err != nil {
-		t.Fatalf("flattenPostmanItems() = %v", err)
-	}
-	if len(doc.PathItems) != 1 {
-		t.Fatalf("PathItems = %d, want 1", len(doc.PathItems))
-	}
-	if doc.PathItems[0].Operation.Tags[0] != "folder1" {
-		t.Errorf("Tag = %q, want %q", doc.PathItems[0].Operation.Tags[0], "folder1")
-	}
+	require.NoError(t, err, "flattenPostmanItems() failed")
+	require.Len(t, doc.PathItems, 1)
+	assert.Equal(t, "folder1", doc.PathItems[0].Operation.Tags[0])
 }
 
 func TestPostmanItemToPathItem_EmptyMethod(t *testing.T) {
@@ -684,9 +533,7 @@ func TestPostmanItemToPathItem_EmptyMethod(t *testing.T) {
 			URL:    json.RawMessage(`"http://example.com/api"`),
 		},
 	}, nil)
-	if pi.Method != http.MethodGet {
-		t.Errorf("Method = %q, want %q", pi.Method, http.MethodGet)
-	}
+	assert.Equal(t, http.MethodGet, pi.Method)
 }
 
 func TestPostmanItemToPathItem_EmptyPath(t *testing.T) {
@@ -699,9 +546,7 @@ func TestPostmanItemToPathItem_EmptyPath(t *testing.T) {
 			URL:    nil,
 		},
 	}, nil)
-	if pi.Path != "/" {
-		t.Errorf("Path = %q, want %q", pi.Path, "/")
-	}
+	assert.Equal(t, "/", pi.Path)
 }
 
 func TestAppendPostmanURLParams_InvalidURL(t *testing.T) {
@@ -709,9 +554,7 @@ func TestAppendPostmanURLParams_InvalidURL(t *testing.T) {
 
 	op := &Operation{Parameters: make([]*Parameter, 0)}
 	appendPostmanURLParams(json.RawMessage("{invalid}"), op)
-	if len(op.Parameters) != 0 {
-		t.Errorf("Parameters = %d, want 0", len(op.Parameters))
-	}
+	assert.Empty(t, op.Parameters)
 }
 
 func TestAppendPostmanURLParams_WithVariables(t *testing.T) {
@@ -725,15 +568,9 @@ func TestAppendPostmanURLParams_WithVariables(t *testing.T) {
 	})
 	op := &Operation{Parameters: make([]*Parameter, 0)}
 	appendPostmanURLParams(raw, op)
-	if len(op.Parameters) != 1 {
-		t.Fatalf("Parameters = %d, want 1", len(op.Parameters))
-	}
-	if op.Parameters[0].Name != "petId" {
-		t.Errorf("Name = %q, want %q", op.Parameters[0].Name, "petId")
-	}
-	if op.Parameters[0].In != "path" {
-		t.Errorf("In = %q, want %q", op.Parameters[0].In, "path")
-	}
+	require.Len(t, op.Parameters, 1)
+	assert.Equal(t, "petId", op.Parameters[0].Name)
+	assert.Equal(t, "path", op.Parameters[0].In)
 }
 
 func TestAppendPostmanURLParams_WithQuery(t *testing.T) {
@@ -748,13 +585,7 @@ func TestAppendPostmanURLParams_WithQuery(t *testing.T) {
 	})
 	op := &Operation{Parameters: make([]*Parameter, 0)}
 	appendPostmanURLParams(raw, op)
-	if len(op.Parameters) != 1 {
-		t.Fatalf("Parameters = %d, want 1", len(op.Parameters))
-	}
-	if op.Parameters[0].Name != "limit" {
-		t.Errorf("Name = %q, want %q", op.Parameters[0].Name, "limit")
-	}
-	if op.Parameters[0].In != "query" {
-		t.Errorf("In = %q, want %q", op.Parameters[0].In, "query")
-	}
+	require.Len(t, op.Parameters, 1)
+	assert.Equal(t, "limit", op.Parameters[0].Name)
+	assert.Equal(t, "query", op.Parameters[0].In)
 }

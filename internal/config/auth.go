@@ -34,71 +34,102 @@ func (a *Auth) UnmarshalYAML(value *yaml.Node) error {
 
 	raw.Type = strings.ReplaceAll(raw.Type, "_", "-")
 
-	switch raw.Type {
-	case auth.NoAuth.String(), "":
-		a.Client = auth.NewNoAuthClient()
-
-	case auth.BasicAuth.String():
-		var client auth.BasicAuthClient
-		if err := decodeConfig(&raw.Config, &client); err != nil {
-			return err
-		}
-		a.Client = &client
-
-	case auth.BearerTokenAuth.String():
-		var client auth.BearerTokenAuthClient
-		if err := decodeConfig(&raw.Config, &client); err != nil {
-			return err
-		}
-		a.Client = &client
-
-	case auth.DigestAuth.String():
-		var client auth.DigestAuthClient
-		if err := decodeConfig(&raw.Config, &client); err != nil {
-			return err
-		}
-		a.Client = &client
-
-	case auth.OAuth2ClientCredentials.String():
-		var client auth.OAuth2ClientCredentialsAuthClient
-		if err := decodeConfig(&raw.Config, &client); err != nil {
-			return err
-		}
-		a.Client = &client
-
-	case auth.OAuth2Password.String():
-		var client auth.OAuth2PasswordAuthClient
-		if err := decodeConfig(&raw.Config, &client); err != nil {
-			return err
-		}
-		a.Client = &client
-
-	case auth.APIKeyAuth.String():
-		var client auth.APIKeyAuthClient
-		if err := decodeConfig(&raw.Config, &client); err != nil {
-			return err
-		}
-		a.Client = &client
-
-	case auth.ScriptAuth.String():
-		var client auth.ScriptAuthClient
-		if err := decodeConfig(&raw.Config, &client); err != nil {
-			return err
-		}
-		a.Client = &client
-
-	case auth.HMACAuth.String():
-		var client auth.HMACAuthClient
-		if err := decodeConfig(&raw.Config, &client); err != nil {
-			return err
-		}
-		a.Client = &client
-
-	default:
+	fn, ok := authDecoders[raw.Type]
+	if !ok {
 		return fmt.Errorf("unsupported auth type %q", raw.Type)
 	}
 
+	client, err := fn(&raw.Config)
+	if err != nil {
+		return err
+	}
+	a.Client = client
 	return nil
+}
+
+// authDecoder decodes a YAML config node into an auth.Authenticator.
+type authDecoder func(*yaml.Node) (auth.Authenticator, error)
+
+// authDecoders maps auth type strings to their config decoders.
+var authDecoders = map[string]authDecoder{ //nolint:gochecknoglobals // Static registry.
+	"":                                    decodeNoAuth,
+	auth.NoAuth.String():                  decodeNoAuth,
+	auth.BasicAuth.String():               decodeBasicAuth,
+	auth.BearerTokenAuth.String():         decodeBearerAuth,
+	auth.DigestAuth.String():              decodeDigestAuth,
+	auth.OAuth2ClientCredentials.String(): decodeOAuth2CC,
+	auth.OAuth2Password.String():          decodeOAuth2Pwd,
+	auth.APIKeyAuth.String():              decodeAPIKeyAuth,
+	auth.ScriptAuth.String():              decodeScriptAuth,
+	auth.HMACAuth.String():                decodeHMACAuth,
+}
+
+func decodeNoAuth(_ *yaml.Node) (auth.Authenticator, error) {
+	return auth.NewNoAuthClient(), nil
+}
+
+func decodeBasicAuth(node *yaml.Node) (auth.Authenticator, error) {
+	var client auth.BasicAuthClient
+	if err := decodeConfig(node, &client); err != nil {
+		return nil, err
+	}
+	return &client, nil
+}
+
+func decodeBearerAuth(node *yaml.Node) (auth.Authenticator, error) {
+	var client auth.BearerTokenAuthClient
+	if err := decodeConfig(node, &client); err != nil {
+		return nil, err
+	}
+	return &client, nil
+}
+
+func decodeDigestAuth(node *yaml.Node) (auth.Authenticator, error) {
+	var client auth.DigestAuthClient
+	if err := decodeConfig(node, &client); err != nil {
+		return nil, err
+	}
+	return &client, nil
+}
+
+func decodeOAuth2CC(node *yaml.Node) (auth.Authenticator, error) {
+	var client auth.OAuth2ClientCredentialsAuthClient
+	if err := decodeConfig(node, &client); err != nil {
+		return nil, err
+	}
+	return &client, nil
+}
+
+func decodeOAuth2Pwd(node *yaml.Node) (auth.Authenticator, error) {
+	var client auth.OAuth2PasswordAuthClient
+	if err := decodeConfig(node, &client); err != nil {
+		return nil, err
+	}
+	return &client, nil
+}
+
+func decodeAPIKeyAuth(node *yaml.Node) (auth.Authenticator, error) {
+	var client auth.APIKeyAuthClient
+	if err := decodeConfig(node, &client); err != nil {
+		return nil, err
+	}
+	return &client, nil
+}
+
+func decodeScriptAuth(node *yaml.Node) (auth.Authenticator, error) {
+	var client auth.ScriptAuthClient
+	if err := decodeConfig(node, &client); err != nil {
+		return nil, err
+	}
+	return &client, nil
+}
+
+func decodeHMACAuth(node *yaml.Node) (auth.Authenticator, error) {
+	var client auth.HMACAuthClient
+	if err := decodeConfig(node, &client); err != nil {
+		return nil, err
+	}
+	return &client, nil
 }
 
 // decodeConfig decodes a YAML node into the provided config struct.

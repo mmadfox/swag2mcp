@@ -3,6 +3,9 @@ package config
 import (
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConfig_Validate_NoSpecs(t *testing.T) {
@@ -10,9 +13,7 @@ func TestConfig_Validate_NoSpecs(t *testing.T) {
 
 	cfg := &Config{}
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for empty config")
-	}
+	require.Error(t, err, "expected error for empty config")
 }
 
 func TestConfig_Validate_ValidSpec(t *testing.T) {
@@ -34,9 +35,7 @@ func TestConfig_Validate_ValidSpec(t *testing.T) {
 		},
 	}
 	err := cfg.Validate(nil)
-	if err != nil {
-		t.Fatalf("Validate() = %v, want nil", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestConfig_Validate_DisabledSpec(t *testing.T) {
@@ -59,9 +58,7 @@ func TestConfig_Validate_DisabledSpec(t *testing.T) {
 		},
 	}
 	err := cfg.Validate(nil)
-	if err != nil {
-		t.Fatalf("Validate() = %v, want nil (disabled specs are skipped)", err)
-	}
+	require.NoError(t, err, "disabled specs are skipped")
 }
 
 func TestConfig_Validate_InvalidDomain(t *testing.T) {
@@ -83,9 +80,7 @@ func TestConfig_Validate_InvalidDomain(t *testing.T) {
 		},
 	}
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected validation error")
-	}
+	require.Error(t, err, "expected validation error")
 }
 
 func TestConfig_Validate_InvalidBaseURL(t *testing.T) {
@@ -107,9 +102,7 @@ func TestConfig_Validate_InvalidBaseURL(t *testing.T) {
 		},
 	}
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected validation error")
-	}
+	require.Error(t, err, "expected validation error")
 }
 
 func TestConfig_Validate_WithFilter(t *testing.T) {
@@ -145,9 +138,7 @@ func TestConfig_Validate_WithFilter(t *testing.T) {
 	}
 	filter := NewFilter([]string{"public"})
 	err := cfg.Validate(filter)
-	if err != nil {
-		t.Fatalf("Validate() with filter = %v, want nil", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestConfig_Iterate_All(t *testing.T) {
@@ -177,9 +168,7 @@ func TestConfig_Iterate_All(t *testing.T) {
 	for range cfg.Iterate(nil) {
 		count++
 	}
-	if count != 2 {
-		t.Errorf("Iterate count = %d, want 2", count)
-	}
+	assert.Equal(t, 2, count)
 }
 
 func TestConfig_Iterate_SkipDisabled(t *testing.T) {
@@ -210,9 +199,7 @@ func TestConfig_Iterate_SkipDisabled(t *testing.T) {
 	for range cfg.Iterate(nil) {
 		count++
 	}
-	if count != 1 {
-		t.Errorf("Iterate count = %d, want 1", count)
-	}
+	assert.Equal(t, 1, count)
 }
 
 func TestConfig_Iterate_WithFilter(t *testing.T) {
@@ -245,9 +232,7 @@ func TestConfig_Iterate_WithFilter(t *testing.T) {
 	for range cfg.Iterate(filter) {
 		count++
 	}
-	if count != 1 {
-		t.Errorf("Iterate count = %d, want 1", count)
-	}
+	assert.Equal(t, 1, count)
 }
 
 func TestConfig_Iterate_Empty(t *testing.T) {
@@ -258,9 +243,7 @@ func TestConfig_Iterate_Empty(t *testing.T) {
 	for range cfg.Iterate(nil) {
 		count++
 	}
-	if count != 0 {
-		t.Errorf("Iterate count = %d, want 0", count)
-	}
+	assert.Equal(t, 0, count)
 }
 
 func TestHTTPClientConfig_MaxResponseSize(t *testing.T) {
@@ -273,12 +256,8 @@ func TestHTTPClientConfig_MaxResponseSize(t *testing.T) {
 		},
 	}
 
-	if cfg.HTTPClient.MaxResponseSize == nil {
-		t.Fatal("MaxResponseSize is nil")
-	}
-	if *cfg.HTTPClient.MaxResponseSize != 4096 {
-		t.Errorf("MaxResponseSize = %d, want %d", *cfg.HTTPClient.MaxResponseSize, 4096)
-	}
+	require.NotNil(t, cfg.HTTPClient.MaxResponseSize)
+	assert.Equal(t, 4096, *cfg.HTTPClient.MaxResponseSize)
 }
 
 func TestHTTPClientConfig_MaxResponseSize_Nil(t *testing.T) {
@@ -287,9 +266,7 @@ func TestHTTPClientConfig_MaxResponseSize_Nil(t *testing.T) {
 	cfg := &Config{
 		HTTPClient: &GlobalHTTPClientConfig{},
 	}
-	if cfg.HTTPClient.MaxResponseSize != nil {
-		t.Error("MaxResponseSize should be nil by default")
-	}
+	assert.Nil(t, cfg.HTTPClient.MaxResponseSize, "MaxResponseSize should be nil by default")
 }
 
 func TestMCPAuthConfig_Resolve_Nil(t *testing.T) {
@@ -304,18 +281,14 @@ func TestMCPAuthConfig_Resolve_NoEnv(t *testing.T) {
 
 	c := &MCPAuthConfig{Token: "static-token"}
 	c.Resolve()
-	if c.Token != "static-token" {
-		t.Errorf("Token = %q, want %q", c.Token, "static-token")
-	}
+	assert.Equal(t, "static-token", c.Token)
 }
 
 func TestMCPAuthConfig_Resolve_WithEnv(t *testing.T) {
 	t.Setenv("MCP_TOKEN", "resolved-token")
 	c := &MCPAuthConfig{Token: "$(MCP_TOKEN)"}
 	c.Resolve()
-	if c.Token != "resolved-token" {
-		t.Errorf("Token = %q, want %q", c.Token, "resolved-token")
-	}
+	assert.Equal(t, "resolved-token", c.Token)
 }
 
 func TestMCPConfig_Defaults(t *testing.T) {
@@ -328,15 +301,9 @@ func TestMCPConfig_Defaults(t *testing.T) {
 			Path:      "/api/mcp",
 		},
 	}
-	if cfg.MCP.Transport != "sse" {
-		t.Errorf("Transport = %q, want %q", cfg.MCP.Transport, "sse")
-	}
-	if cfg.MCP.Addr != ":9090" {
-		t.Errorf("Addr = %q, want %q", cfg.MCP.Addr, ":9090")
-	}
-	if cfg.MCP.Path != "/api/mcp" {
-		t.Errorf("Path = %q, want %q", cfg.MCP.Path, "/api/mcp")
-	}
+	assert.Equal(t, "sse", cfg.MCP.Transport)
+	assert.Equal(t, ":9090", cfg.MCP.Addr)
+	assert.Equal(t, "/api/mcp", cfg.MCP.Path)
 }
 
 func TestConfig_Validate_MockEnabled_RequiresBaseMockURL(t *testing.T) {
@@ -359,9 +326,7 @@ func TestConfig_Validate_MockEnabled_RequiresBaseMockURL(t *testing.T) {
 		},
 	}
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error when mock_enabled is true but collection BaseMockURL is empty")
-	}
+	require.Error(t, err, "expected error when mock_enabled is true but collection BaseMockURL is empty")
 }
 
 func TestConfig_Validate_MockEnabled_Valid(t *testing.T) {
@@ -385,9 +350,7 @@ func TestConfig_Validate_MockEnabled_Valid(t *testing.T) {
 		},
 	}
 	err := cfg.Validate(nil)
-	if err != nil {
-		t.Fatalf("Validate() = %v, want nil", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestConfig_Validate_MockEnabled_CollectionRequiresBaseMockURL(t *testing.T) {
@@ -410,9 +373,7 @@ func TestConfig_Validate_MockEnabled_CollectionRequiresBaseMockURL(t *testing.T)
 		},
 	}
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error when mock_enabled is true but collection BaseMockURL is empty")
-	}
+	require.Error(t, err, "expected error when mock_enabled is true but collection BaseMockURL is empty")
 }
 
 func TestConfig_Validate_BaseMockURL_InvalidFormat(t *testing.T) {
@@ -435,9 +396,7 @@ func TestConfig_Validate_BaseMockURL_InvalidFormat(t *testing.T) {
 		},
 	}
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for invalid BaseMockURL format")
-	}
+	require.Error(t, err, "expected error for invalid BaseMockURL format")
 }
 
 func TestConfig_Validate_BaseMockURL_ValidFormats(t *testing.T) {
@@ -474,9 +433,7 @@ func TestConfig_Validate_BaseMockURL_ValidFormats(t *testing.T) {
 				},
 			}
 			err := cfg.Validate(nil)
-			if err != nil {
-				t.Errorf("Validate() with addr %q = %v, want nil", addr, err)
-			}
+			require.NoError(t, err, "Validate() with addr %q", addr)
 		})
 	}
 }
@@ -515,9 +472,7 @@ func TestConfig_Validate_BaseMockURL_InvalidFormats(t *testing.T) {
 				},
 			}
 			err := cfg.Validate(nil)
-			if err == nil {
-				t.Errorf("expected error for invalid addr %q", addr)
-			}
+			require.Error(t, err, "expected error for invalid addr %q", addr)
 		})
 	}
 }
@@ -543,9 +498,7 @@ func TestConfig_Validate_MockEnabled_DisabledSpecSkipped(t *testing.T) {
 		},
 	}
 	err := cfg.Validate(nil)
-	if err != nil {
-		t.Fatalf("Validate() = %v, want nil (disabled specs are skipped)", err)
-	}
+	require.NoError(t, err, "disabled specs are skipped")
 }
 
 func TestConfig_Validate_MockEnabled_DisabledCollectionSkipped(t *testing.T) {
@@ -574,9 +527,7 @@ func TestConfig_Validate_MockEnabled_DisabledCollectionSkipped(t *testing.T) {
 		},
 	}
 	err := cfg.Validate(nil)
-	if err != nil {
-		t.Fatalf("Validate() = %v, want nil", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestGlobalHTTPClientConfig_SetDefaults(t *testing.T) {
@@ -585,21 +536,14 @@ func TestGlobalHTTPClientConfig_SetDefaults(t *testing.T) {
 	cfg := &GlobalHTTPClientConfig{}
 	cfg.SetDefaults()
 
-	if cfg.UserAgent != "swag2mcp-global/1.0" {
-		t.Errorf("UserAgent = %q, want %q", cfg.UserAgent, "swag2mcp-global/1.0")
-	}
-	if cfg.Timeout != 30*time.Second {
-		t.Errorf("Timeout = %v, want %v", cfg.Timeout, 30*time.Second)
-	}
-	if cfg.FollowRedirects == nil || !*cfg.FollowRedirects {
-		t.Error("FollowRedirects should be true")
-	}
-	if cfg.MaxRedirects == nil || *cfg.MaxRedirects != 10 {
-		t.Errorf("MaxRedirects = %v, want 10", *cfg.MaxRedirects)
-	}
-	if cfg.MaxResponseSize == nil || *cfg.MaxResponseSize != 2048 {
-		t.Errorf("MaxResponseSize = %v, want 2048", *cfg.MaxResponseSize)
-	}
+	assert.Equal(t, "swag2mcp-global/1.0", cfg.UserAgent)
+	assert.Equal(t, 30*time.Second, cfg.Timeout)
+	require.NotNil(t, cfg.FollowRedirects)
+	assert.True(t, *cfg.FollowRedirects)
+	require.NotNil(t, cfg.MaxRedirects)
+	assert.Equal(t, 10, *cfg.MaxRedirects)
+	require.NotNil(t, cfg.MaxResponseSize)
+	assert.Equal(t, 2048, *cfg.MaxResponseSize)
 }
 
 func TestGlobalHTTPClientConfig_SetDefaults_Nil(t *testing.T) {
@@ -626,21 +570,11 @@ func TestGlobalHTTPClientConfig_SetDefaults_DoesNotOverwrite(t *testing.T) {
 	}
 	cfg.SetDefaults()
 
-	if cfg.UserAgent != "custom-agent/1.0" {
-		t.Errorf("UserAgent = %q, want %q", cfg.UserAgent, "custom-agent/1.0")
-	}
-	if cfg.Timeout != timeout {
-		t.Errorf("Timeout = %v, want %v", cfg.Timeout, timeout)
-	}
-	if *cfg.FollowRedirects != follow {
-		t.Errorf("FollowRedirects = %v, want %v", *cfg.FollowRedirects, follow)
-	}
-	if *cfg.MaxRedirects != maxRedir {
-		t.Errorf("MaxRedirects = %d, want %d", *cfg.MaxRedirects, maxRedir)
-	}
-	if *cfg.MaxResponseSize != maxSize {
-		t.Errorf("MaxResponseSize = %d, want %d", *cfg.MaxResponseSize, maxSize)
-	}
+	assert.Equal(t, "custom-agent/1.0", cfg.UserAgent)
+	assert.Equal(t, timeout, cfg.Timeout)
+	assert.Equal(t, follow, *cfg.FollowRedirects)
+	assert.Equal(t, maxRedir, *cfg.MaxRedirects)
+	assert.Equal(t, maxSize, *cfg.MaxResponseSize)
 }
 
 func TestGlobalHTTPClientConfig_SetDefaults_WithRandomize(t *testing.T) {
@@ -651,7 +585,5 @@ func TestGlobalHTTPClientConfig_SetDefaults_WithRandomize(t *testing.T) {
 	}
 	cfg.SetDefaults()
 
-	if cfg.UserAgent != "" {
-		t.Errorf("UserAgent should be empty when Randomize is true, got %q", cfg.UserAgent)
-	}
+	assert.Empty(t, cfg.UserAgent, "UserAgent should be empty when Randomize is true")
 }

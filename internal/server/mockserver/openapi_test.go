@@ -6,24 +6,22 @@ import (
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/spec"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSchemaForContentType_Nil(t *testing.T) {
 	t.Parallel()
 
 	result := schemaForContentType(nil)
-	if result != nil {
-		t.Errorf("expected nil, got %v", result)
-	}
+	assert.Nil(t, result, "expected nil")
 }
 
 func TestSchemaForContentType_Empty(t *testing.T) {
 	t.Parallel()
 
 	result := schemaForContentType(make(map[string]*spec.MediaType))
-	if result != nil {
-		t.Errorf("expected nil, got %v", result)
-	}
+	assert.Nil(t, result, "expected nil")
 }
 
 func TestSchemaForContentType_PrefersJSON(t *testing.T) {
@@ -37,9 +35,7 @@ func TestSchemaForContentType_PrefersJSON(t *testing.T) {
 		"application/json": {Schema: jsonSchema},
 	}
 	result := schemaForContentType(content)
-	if result != jsonSchema {
-		t.Error("expected application/json schema to be returned")
-	}
+	assert.Equal(t, jsonSchema, result, "expected application/json schema to be returned")
 }
 
 func TestSchemaForContentType_Fallback(t *testing.T) {
@@ -50,9 +46,7 @@ func TestSchemaForContentType_Fallback(t *testing.T) {
 		"application/xml": {Schema: xmlSchema},
 	}
 	result := schemaForContentType(content)
-	if result != xmlSchema {
-		t.Error("expected fallback schema to be returned")
-	}
+	assert.Equal(t, xmlSchema, result, "expected fallback schema to be returned")
 }
 
 func TestFindResponseSchema_NilOperation(t *testing.T) {
@@ -60,9 +54,7 @@ func TestFindResponseSchema_NilOperation(t *testing.T) {
 
 	server := &apiMockServer{}
 	result := server.findResponseSchema(nil)
-	if result != nil {
-		t.Errorf("expected nil, got %v", result)
-	}
+	assert.Nil(t, result, "expected nil")
 }
 
 func TestFindResponseSchema_Prefers200(t *testing.T) {
@@ -84,9 +76,8 @@ func TestFindResponseSchema_Prefers200(t *testing.T) {
 		},
 	}
 	result := server.findResponseSchema(operation)
-	if result == nil || result.Type != "string" {
-		t.Errorf("expected string schema from 200 response, got %v", result)
-	}
+	require.NotNil(t, result, "expected string schema from 200 response")
+	assert.Equal(t, "string", result.Type, "expected string schema from 200 response")
 }
 
 func TestFindResponseSchema_FallbackToDefault(t *testing.T) {
@@ -103,9 +94,8 @@ func TestFindResponseSchema_FallbackToDefault(t *testing.T) {
 		},
 	}
 	result := server.findResponseSchema(operation)
-	if result == nil || result.Type != "integer" {
-		t.Errorf("expected integer schema from default response, got %v", result)
-	}
+	require.NotNil(t, result, "expected integer schema from default response")
+	assert.Equal(t, "integer", result.Type, "expected integer schema from default response")
 }
 
 func TestCreateEndpointHandler_EmptyOperation(t *testing.T) {
@@ -120,9 +110,7 @@ func TestCreateEndpointHandler_EmptyOperation(t *testing.T) {
 
 	handler(responseRecorder, request)
 
-	if responseRecorder.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", responseRecorder.Code)
-	}
+	assert.Equal(t, http.StatusOK, responseRecorder.Code, "expected 200")
 }
 
 func TestCreateEndpointHandler_WithSchema(t *testing.T) {
@@ -153,7 +141,5 @@ func TestCreateEndpointHandler_WithSchema(t *testing.T) {
 
 	handler(responseRecorder, request)
 
-	if responseRecorder.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", responseRecorder.Code)
-	}
+	assert.Equal(t, http.StatusOK, responseRecorder.Code, "expected 200")
 }

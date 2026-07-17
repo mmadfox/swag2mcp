@@ -1,4 +1,4 @@
-package types
+package model
 
 import (
 	"github.com/mmadfox/swag2mcp/internal/auth"
@@ -28,6 +28,7 @@ type Spec struct {
 	}
 }
 
+// InitAuthenticator initializes the spec's authenticator, if one is configured.
 func (s *Spec) InitAuthenticator() error {
 	if s.Auth == nil {
 		return nil
@@ -74,6 +75,7 @@ type Endpoint struct {
 	Operation    *spec.Operation `json:"operation"`
 }
 
+// SummaryOrFallback returns the endpoint summary, falling back to description, then "Method /path".
 func (e *Endpoint) SummaryOrFallback() string {
 	if e.Operation.Summary != "" {
 		return e.Operation.Summary

@@ -63,7 +63,7 @@ func runInfo(basePath string, w io.Writer, ctx context.Context) error {
 	}
 
 	if err := svc.Bootstrap(ctx, service.BootstrapRequest{
-		ConfFilepath: configPath,
+		ConfFilePath: configPath,
 	}); err != nil {
 		return fmt.Errorf("failed to bootstrap: %w", err)
 	}

@@ -1,9 +1,12 @@
-package types
+package model
 
 import (
 	"errors"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/httpclient"
@@ -35,9 +38,7 @@ func TestInitAuthenticator_Nil(t *testing.T) {
 
 	s := &Spec{}
 	err := s.InitAuthenticator()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestInitAuthenticator_Success(t *testing.T) {
@@ -47,9 +48,7 @@ func TestInitAuthenticator_Success(t *testing.T) {
 		Auth: &mockAuth{newFunc: func() error { return nil }},
 	}
 	err := s.InitAuthenticator()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestInitAuthenticator_Error(t *testing.T) {
@@ -60,9 +59,7 @@ func TestInitAuthenticator_Error(t *testing.T) {
 		Auth: &mockAuth{newFunc: func() error { return expectedErr }},
 	}
 	err := s.InitAuthenticator()
-	if err == nil {
-		t.Fatal("expected error")
-	}
+	require.Error(t, err)
 }
 
 func TestSummaryOrFallback_Summary(t *testing.T) {
@@ -77,9 +74,7 @@ func TestSummaryOrFallback_Summary(t *testing.T) {
 		},
 	}
 	result := e.SummaryOrFallback()
-	if result != "List all users" {
-		t.Errorf("got %q, want %q", result, "List all users")
-	}
+	assert.Equal(t, "List all users", result)
 }
 
 func TestSummaryOrFallback_Description(t *testing.T) {
@@ -94,9 +89,7 @@ func TestSummaryOrFallback_Description(t *testing.T) {
 		},
 	}
 	result := e.SummaryOrFallback()
-	if result != "Returns a list of all users" {
-		t.Errorf("got %q, want %q", result, "Returns a list of all users")
-	}
+	assert.Equal(t, "Returns a list of all users", result)
 }
 
 func TestSummaryOrFallback_Fallback(t *testing.T) {
@@ -111,9 +104,7 @@ func TestSummaryOrFallback_Fallback(t *testing.T) {
 		},
 	}
 	result := e.SummaryOrFallback()
-	if result != "POST /orders" {
-		t.Errorf("got %q, want %q", result, "POST /orders")
-	}
+	assert.Equal(t, "POST /orders", result)
 }
 
 func TestSummaryOrFallback_EmptySummary(t *testing.T) {
@@ -128,9 +119,7 @@ func TestSummaryOrFallback_EmptySummary(t *testing.T) {
 		},
 	}
 	result := e.SummaryOrFallback()
-	if result != "Delete a user by ID" {
-		t.Errorf("got %q, want %q", result, "Delete a user by ID")
-	}
+	assert.Equal(t, "Delete a user by ID", result)
 }
 
 func TestCookie_Fields(t *testing.T) {
@@ -144,24 +133,12 @@ func TestCookie_Fields(t *testing.T) {
 		Secure:   true,
 		HTTPOnly: true,
 	}
-	if c.Name != "session" {
-		t.Errorf("Name = %q", c.Name)
-	}
-	if c.Value != "abc123" {
-		t.Errorf("Value = %q", c.Value)
-	}
-	if c.Domain != "example.com" {
-		t.Errorf("Domain = %q", c.Domain)
-	}
-	if c.Path != "/" {
-		t.Errorf("Path = %q", c.Path)
-	}
-	if !c.Secure {
-		t.Error("Secure should be true")
-	}
-	if !c.HTTPOnly {
-		t.Error("HTTPOnly should be true")
-	}
+	assert.Equal(t, "session", c.Name)
+	assert.Equal(t, "abc123", c.Value)
+	assert.Equal(t, "example.com", c.Domain)
+	assert.Equal(t, "/", c.Path)
+	assert.True(t, c.Secure)
+	assert.True(t, c.HTTPOnly)
 }
 
 func TestHTTPClientConfig_Fields(t *testing.T) {
@@ -171,12 +148,8 @@ func TestHTTPClientConfig_Fields(t *testing.T) {
 		Headers: map[string]string{"X-Custom": "val"},
 		Cookies: []httpclient.Cookie{{Name: "c", Value: "v"}},
 	}
-	if cfg.Headers["X-Custom"] != "val" {
-		t.Error("Headers not set")
-	}
-	if len(cfg.Cookies) != 1 {
-		t.Error("Cookies not set")
-	}
+	assert.Equal(t, "val", cfg.Headers["X-Custom"])
+	assert.Len(t, cfg.Cookies, 1)
 }
 
 func TestSpec_Fields(t *testing.T) {
@@ -189,21 +162,11 @@ func TestSpec_Fields(t *testing.T) {
 		LLMInstruction: "Test instruction",
 		BaseURL:        "https://api.example.com",
 	}
-	if s.ID != "spec-1" {
-		t.Errorf("ID = %q", s.ID)
-	}
-	if s.Domain != "test-api" {
-		t.Errorf("Domain = %q", s.Domain)
-	}
-	if s.LLMTitle != "Test API" {
-		t.Errorf("LLMTitle = %q", s.LLMTitle)
-	}
-	if s.LLMInstruction != "Test instruction" {
-		t.Errorf("LLMInstruction = %q", s.LLMInstruction)
-	}
-	if s.BaseURL != "https://api.example.com" {
-		t.Errorf("BaseURL = %q", s.BaseURL)
-	}
+	assert.Equal(t, "spec-1", s.ID)
+	assert.Equal(t, "test-api", s.Domain)
+	assert.Equal(t, "Test API", s.LLMTitle)
+	assert.Equal(t, "Test instruction", s.LLMInstruction)
+	assert.Equal(t, "https://api.example.com", s.BaseURL)
 }
 
 func TestSpec_Stats(t *testing.T) {
@@ -213,15 +176,9 @@ func TestSpec_Stats(t *testing.T) {
 	s.Stats.Collections = 3
 	s.Stats.Tags = 10
 	s.Stats.Methods = 25
-	if s.Stats.Collections != 3 {
-		t.Errorf("Collections = %d", s.Stats.Collections)
-	}
-	if s.Stats.Tags != 10 {
-		t.Errorf("Tags = %d", s.Stats.Tags)
-	}
-	if s.Stats.Methods != 25 {
-		t.Errorf("Methods = %d", s.Stats.Methods)
-	}
+	assert.Equal(t, 3, s.Stats.Collections)
+	assert.Equal(t, 10, s.Stats.Tags)
+	assert.Equal(t, 25, s.Stats.Methods)
 }
 
 func TestCollection_Fields(t *testing.T) {
@@ -235,24 +192,12 @@ func TestCollection_Fields(t *testing.T) {
 		Title:          "My Collection Title",
 		BaseURL:        "https://coll.example.com",
 	}
-	if c.ID != "coll-1" {
-		t.Errorf("ID = %q", c.ID)
-	}
-	if c.SpecID != "spec-1" {
-		t.Errorf("SpecID = %q", c.SpecID)
-	}
-	if c.LLMTitle != "My Collection" {
-		t.Errorf("LLMTitle = %q", c.LLMTitle)
-	}
-	if c.LLMInstruction != "Collection instruction" {
-		t.Errorf("LLMInstruction = %q", c.LLMInstruction)
-	}
-	if c.Title != "My Collection Title" {
-		t.Errorf("Title = %q", c.Title)
-	}
-	if c.BaseURL != "https://coll.example.com" {
-		t.Errorf("BaseURL = %q", c.BaseURL)
-	}
+	assert.Equal(t, "coll-1", c.ID)
+	assert.Equal(t, "spec-1", c.SpecID)
+	assert.Equal(t, "My Collection", c.LLMTitle)
+	assert.Equal(t, "Collection instruction", c.LLMInstruction)
+	assert.Equal(t, "My Collection Title", c.Title)
+	assert.Equal(t, "https://coll.example.com", c.BaseURL)
 }
 
 func TestCollection_Stats(t *testing.T) {
@@ -261,12 +206,8 @@ func TestCollection_Stats(t *testing.T) {
 	c := &Collection{}
 	c.Stats.Tags = 5
 	c.Stats.Methods = 15
-	if c.Stats.Tags != 5 {
-		t.Errorf("Tags = %d", c.Stats.Tags)
-	}
-	if c.Stats.Methods != 15 {
-		t.Errorf("Methods = %d", c.Stats.Methods)
-	}
+	assert.Equal(t, 5, c.Stats.Tags)
+	assert.Equal(t, 15, c.Stats.Methods)
 }
 
 func TestTag_Fields(t *testing.T) {
@@ -278,18 +219,10 @@ func TestTag_Fields(t *testing.T) {
 		SpecID:       "spec-1",
 		Name:         "pets",
 	}
-	if tg.ID != "tag-1" {
-		t.Errorf("ID = %q", tg.ID)
-	}
-	if tg.CollectionID != "coll-1" {
-		t.Errorf("CollectionID = %q", tg.CollectionID)
-	}
-	if tg.SpecID != "spec-1" {
-		t.Errorf("SpecID = %q", tg.SpecID)
-	}
-	if tg.Name != "pets" {
-		t.Errorf("Name = %q", tg.Name)
-	}
+	assert.Equal(t, "tag-1", tg.ID)
+	assert.Equal(t, "coll-1", tg.CollectionID)
+	assert.Equal(t, "spec-1", tg.SpecID)
+	assert.Equal(t, "pets", tg.Name)
 }
 
 func TestTag_Stats(t *testing.T) {
@@ -297,9 +230,7 @@ func TestTag_Stats(t *testing.T) {
 
 	tg := &Tag{}
 	tg.Stats.Methods = 7
-	if tg.Stats.Methods != 7 {
-		t.Errorf("Methods = %d", tg.Stats.Methods)
-	}
+	assert.Equal(t, 7, tg.Stats.Methods)
 }
 
 func TestEndpoint_Fields(t *testing.T) {
@@ -315,31 +246,13 @@ func TestEndpoint_Fields(t *testing.T) {
 		Tag:          "users-tag",
 		Operation:    &spec.Operation{ID: "getUsers"},
 	}
-	if e.ID != "ep-1" {
-		t.Errorf("ID = %q", e.ID)
-	}
-	if e.TagID != "tag-1" {
-		t.Errorf("TagID = %q", e.TagID)
-	}
-	if e.CollectionID != "coll-1" {
-		t.Errorf("CollectionID = %q", e.CollectionID)
-	}
-	if e.SpecID != "spec-1" {
-		t.Errorf("SpecID = %q", e.SpecID)
-	}
-	if e.Name != "GET" {
-		t.Errorf("Name = %q", e.Name)
-	}
-	if e.Path != "/users" {
-		t.Errorf("Path = %q", e.Path)
-	}
-	if e.Tag != "users-tag" {
-		t.Errorf("Tag = %q", e.Tag)
-	}
-	if e.Operation == nil {
-		t.Fatal("Operation is nil")
-	}
-	if e.Operation.ID != "getUsers" {
-		t.Errorf("Operation.ID = %q", e.Operation.ID)
-	}
+	assert.Equal(t, "ep-1", e.ID)
+	assert.Equal(t, "tag-1", e.TagID)
+	assert.Equal(t, "coll-1", e.CollectionID)
+	assert.Equal(t, "spec-1", e.SpecID)
+	assert.Equal(t, "GET", e.Name)
+	assert.Equal(t, "/users", e.Path)
+	assert.Equal(t, "users-tag", e.Tag)
+	require.NotNil(t, e.Operation)
+	assert.Equal(t, "getUsers", e.Operation.ID)
 }
