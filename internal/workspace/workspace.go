@@ -1,10 +1,16 @@
 package workspace
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 )
@@ -254,6 +260,143 @@ echo '{"token": "your-token-here", "expires_in": 3600}'
 	}
 
 	return nil
+}
+
+// DownloadSpec downloads a spec file from a URL or reads it from a local path.
+// Returns the raw file data.
+func (w *Workspace) DownloadSpec(ctx context.Context, source string) ([]byte, error) {
+	if source == "" {
+		return nil, errors.New("source is empty")
+	}
+
+	isURL := strings.HasPrefix(source, "https://") || strings.HasPrefix(source, "http://")
+	isFileURL := strings.HasPrefix(source, "file://")
+
+	switch {
+	case isFileURL:
+		return w.downloadFromFileURL(source)
+	case isURL:
+		return w.downloadFromHTTP(ctx, source)
+	default:
+		return w.downloadFromLocalPath(source)
+	}
+}
+
+func (w *Workspace) downloadFromFileURL(rawURL string) ([]byte, error) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid file URL: %w", err)
+	}
+	path, err := url.PathUnescape(u.Path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unescape URL path: %w", err)
+	}
+	if runtime.GOOS == osWindows && len(path) > 0 && path[0] == '/' {
+		path = path[1:]
+	}
+	data, err := os.ReadFile(filepath.FromSlash(path))
+	if err != nil {
+		return nil, fmt.Errorf("read file %q: %w", path, err)
+	}
+	return data, nil
+}
+
+func (w *Workspace) downloadFromHTTP(ctx context.Context, source string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, source, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("download %q: %w", source, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("unexpected HTTP status %d for %q", resp.StatusCode, source)
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response body: %w", err)
+	}
+	return data, nil
+}
+
+func (w *Workspace) downloadFromLocalPath(source string) ([]byte, error) {
+	path := source
+	if !filepath.IsAbs(path) {
+		abs, err := filepath.Abs(path)
+		if err != nil {
+			return nil, fmt.Errorf("resolve path: %w", err)
+		}
+		path = abs
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read file %q: %w", path, err)
+	}
+	return data, nil
+}
+
+// SpecPath returns the full path to a spec file in the specs/ directory.
+func (w *Workspace) SpecPath(name string) string {
+	return filepath.Join(w.SpecsDir(), name)
+}
+
+// ListSpecs returns the filenames of all files in the specs/ directory.
+func (w *Workspace) ListSpecs() ([]string, error) {
+	entries, err := os.ReadDir(w.SpecsDir())
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("read specs dir: %w", err)
+	}
+	names := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		names = append(names, entry.Name())
+	}
+	return names, nil
+}
+
+// specNameExists checks if a filename already exists in the specs/ directory.
+func (w *Workspace) specNameExists(name string) (bool, error) {
+	names, err := w.ListSpecs()
+	if err != nil {
+		return false, err
+	}
+	return slices.Contains(names, name), nil
+}
+
+// SaveSpec saves spec data to the specs/ directory with the given name.
+// Returns an error if a file with that name already exists.
+func (w *Workspace) SaveSpec(name string, data []byte) (string, error) {
+	if name == "" {
+		return "", errors.New("name is empty")
+	}
+	if len(data) == 0 {
+		return "", errors.New("data is empty")
+	}
+
+	if err := os.MkdirAll(w.SpecsDir(), 0750); err != nil {
+		return "", fmt.Errorf("create specs dir: %w", err)
+	}
+
+	exists, existsErr := w.specNameExists(name)
+	if existsErr != nil {
+		return "", existsErr
+	}
+	if exists {
+		return "", fmt.Errorf("spec file %q already exists in %s", name, w.SpecsDir())
+	}
+
+	path := w.SpecPath(name)
+	if writeErr := os.WriteFile(filepath.Clean(path), data, 0600); writeErr != nil {
+		return "", fmt.Errorf("write spec file %q: %w", path, writeErr)
+	}
+	return path, nil
 }
 
 // RemoveOrphanAuthScripts removes auth script files for domains not in the active list.

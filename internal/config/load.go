@@ -122,6 +122,18 @@ func loadFromAbsolutePath(path string) (*Config, error) {
 	return &cfg, nil
 }
 
+// Save writes the config to the given file path as YAML.
+func Save(cfg *Config, path string) error {
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+	if writeErr := os.WriteFile(path, data, 0600); writeErr != nil {
+		return fmt.Errorf("failed to write config to %q: %w", path, writeErr)
+	}
+	return nil
+}
+
 // expandTilde replaces ~/ and ~\ prefix with the user's home directory.
 // Works on both Unix and Windows.
 func expandTilde(path string) string {

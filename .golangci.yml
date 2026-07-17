@@ -612,6 +612,11 @@ linters:
       # gosec for exec.Command in script auth (intentional)
       - path: 'internal/auth/script\.go'
         linters: [ gosec ]
+      # gosec for workspace export/zip operations (controlled paths)
+      - path: 'internal/workspace/export\.go'
+        linters: [ gosec ]
+      - path: 'internal/workspace/workspace\.go'
+        linters: [ gosec ]
       # canonicalheader for X-MBX-APIKEY in HMAC auth (Binance requires exact header name)
       - path: 'internal/auth/hmac\.go'
         linters: [ canonicalheader ]

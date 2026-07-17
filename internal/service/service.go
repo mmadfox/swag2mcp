@@ -67,6 +67,14 @@ func WithIndexNoFullText() NewOption {
 	}
 }
 
+// WithWorkspace sets a custom workspace for the service.
+func WithWorkspace(ws *workspace.Workspace) NewOption {
+	return func(s *Service) {
+		s.ws = ws
+		s.cache = cache.New(ws.Root())
+	}
+}
+
 // New creates a new Service with the given options.
 func New(opts ...NewOption) (*Service, error) {
 	s := &Service{
@@ -90,12 +98,16 @@ func New(opts ...NewOption) (*Service, error) {
 	}
 	s.index = idx
 
-	ws, err := workspace.New("")
-	if err != nil {
-		return nil, fmt.Errorf("failed to create workspace: %w", err)
+	if s.ws == nil {
+		ws, wsErr := workspace.New("")
+		if wsErr != nil {
+			return nil, fmt.Errorf("failed to create workspace: %w", wsErr)
+		}
+		s.ws = ws
 	}
-	s.ws = ws
-	s.cache = cache.New(ws.Root())
+	if s.cache == nil {
+		s.cache = cache.New(s.ws.Root())
+	}
 
 	return s, nil
 }
