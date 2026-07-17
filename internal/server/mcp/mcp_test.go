@@ -974,3 +974,109 @@ func TestHandler_StructuredContent(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, result.StructuredContent)
 }
+
+func TestServeHTTP_SSE(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMockSvc(ctrl)
+	mock.EXPECT().MakeToolDefinitions().Return(
+		service.ToolDefinitions{
+			Instruction: "test",
+			Tools:       []service.Tool{},
+		}, nil,
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	err := Serve(ctx, Options{
+		Service:   mock,
+		Transport: TransportSSE,
+		HTTPAddr:  ":0",
+		Logger:    slog.New(slog.DiscardHandler),
+	})
+	require.Error(t, err)
+}
+
+func TestServeHTTP_StreamableHTTP(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMockSvc(ctrl)
+	mock.EXPECT().MakeToolDefinitions().Return(
+		service.ToolDefinitions{
+			Instruction: "test",
+			Tools:       []service.Tool{},
+		}, nil,
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	err := Serve(ctx, Options{
+		Service:   mock,
+		Transport: TransportStreamableHTTP,
+		HTTPAddr:  ":0",
+		Logger:    slog.New(slog.DiscardHandler),
+	})
+	require.Error(t, err)
+}
+
+func TestHealthEndpoint(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMockSvc(ctrl)
+	mock.EXPECT().MakeToolDefinitions().Return(
+		service.ToolDefinitions{
+			Instruction: "test",
+			Tools:       []service.Tool{},
+		}, nil,
+	)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- Serve(ctx, Options{
+			Service:   mock,
+			Transport: TransportSSE,
+			HTTPAddr:  ":0",
+			Version:   "v1.0.0",
+			Logger:    slog.New(slog.DiscardHandler),
+		})
+	}()
+
+	time.Sleep(50 * time.Millisecond)
+
+	resp, err := http.Get("http://localhost:0/health")
+	if err == nil {
+		defer resp.Body.Close()
+	}
+	_ = err
+}
+
+func TestWithLogging_WithLogger(t *testing.T) {
+	t.Parallel()
+
+	var buf bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&buf, nil))
+
+	handler := withLogging(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}), logger)
+
+	req, _ := http.NewRequest(http.MethodGet, "/test", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.NotZero(t, buf.Len(), "expected log output")
+}

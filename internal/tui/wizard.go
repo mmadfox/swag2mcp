@@ -624,8 +624,8 @@ func (m model) mcpPathHint() string {
 	return " " + m.workspaceDir
 }
 
-// RunTUI starts the interactive initialization wizard.
-func RunTUI() (configPath, workspaceDir string, specs []SpecInput, err error) {
+// Run starts the interactive initialization wizard.
+func Run() (configPath, workspaceDir string, specs []SpecInput, err error) {
 	p := tea.NewProgram(initialModel())
 	final, runErr := p.Run()
 	if runErr != nil {

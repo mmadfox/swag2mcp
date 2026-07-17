@@ -915,3 +915,22 @@ if err != nil || strings.HasPrefix(rel, "..") {
 | Lint command | `make lint` |
 | Test command | `go test ./...` |
 | Generate command | `go generate ./...` |
+
+### 11.13 Variable Groups
+
+Group consecutive `var` declarations with `var ( ... )`. Single declarations are fine.
+
+```go
+// Good
+var (
+    workspaceDir string
+    configPath   string
+)
+
+// Good (single)
+var version string
+
+// Bad
+var workspaceDir string
+var configPath string
+```

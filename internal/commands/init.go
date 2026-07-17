@@ -49,7 +49,7 @@ func newInitCmd() *cobra.Command {
 
 func runInit(basePath string, interactive, force bool, cmd *cobra.Command) error {
 	if interactive {
-		cfgPath, wsDir, _, err := tui.RunTUI()
+		cfgPath, wsDir, _, err := tui.Run()
 		if err != nil {
 			return fmt.Errorf("init wizard: %w", err)
 		}
@@ -64,8 +64,10 @@ func runInit(basePath string, interactive, force bool, cmd *cobra.Command) error
 		return nil
 	}
 
-	var workspaceDir string
-	var configPath string
+	var (
+		workspaceDir string
+		configPath   string
+	)
 
 	if basePath == "" {
 		ws, wsErr := workspace.New("")

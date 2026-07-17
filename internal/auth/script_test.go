@@ -15,8 +15,10 @@ import (
 func writeScript(t *testing.T, dir, content string) {
 	t.Helper()
 
-	var ext string
-	var header string
+	var (
+		ext    string
+		header string
+	)
 	if runtime.GOOS == "windows" {
 		ext = ".bat"
 		header = "@echo off\n"
