@@ -399,7 +399,7 @@ linters:
       context: scope
 
     testifylint:
-      enable:
+      enable: []
       disable:
         - error-is-as
         - error-nil
