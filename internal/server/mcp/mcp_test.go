@@ -40,7 +40,7 @@ func TestServe_MakeToolDefinitionsError(t *testing.T) {
 	)
 
 	err := Serve(context.Background(), Options{Service: mock})
-	require.Error(t, err)
+	require.Error(t, err, "expected error for nil service")
 }
 
 func TestNewTransport_WithLogger(t *testing.T) {
@@ -925,7 +925,7 @@ func TestHandler_Info_Success(t *testing.T) {
 				Total: 2, Active: 1, Disabled: 1, Collections: 3, Endpoints: 42,
 			},
 			HTTPClient: service.HTTPClientInfo{
-				Randomize: true, MaxResponseSize: 2048,
+				Randomize: true, MaxResponseSize: "2 KB",
 			},
 			MCP: service.MCPInfo{
 				Transport: "sse", AuthEnabled: true,

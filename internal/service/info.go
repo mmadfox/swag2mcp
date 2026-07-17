@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"maps"
 	"time"
 
@@ -24,9 +25,9 @@ type InfoSnapshot struct {
 
 // InfoResponse holds the complete runtime and configuration summary.
 type InfoResponse struct {
-	Version    string         `json:"version"`
+	Version    string         `json:"version,omitempty"`
 	Workspace  string         `json:"workspace"`
-	Uptime     string         `json:"uptime"`
+	Uptime     string         `json:"uptime,omitempty"`
 	Specs      SpecsSummary   `json:"specs"`
 	HTTPClient HTTPClientInfo `json:"http_client"`
 	MCP        MCPInfo        `json:"mcp"`
@@ -50,7 +51,7 @@ type HTTPClientInfo struct {
 	Timeout         string            `json:"timeout,omitempty"`
 	FollowRedirects *bool             `json:"follow_redirects,omitempty"`
 	MaxRedirects    *int              `json:"max_redirects,omitempty"`
-	MaxResponseSize int               `json:"max_response_size"`
+	MaxResponseSize string            `json:"max_response_size"`
 	Proxy           *ProxyInfo        `json:"proxy,omitempty"`
 	Headers         map[string]string `json:"headers,omitempty"`
 	Cookies         []CookieInfo      `json:"cookies,omitempty"`
@@ -94,10 +95,19 @@ type MockInfo struct {
 func (s *Service) Info(_ context.Context) (InfoResponse, error) {
 	snap, ok := s.snapshot.Load().(*InfoSnapshot)
 	if ok && snap != nil {
+		uptime := time.Since(s.startedAt).Round(time.Second)
+		uptimeStr := ""
+		if uptime > 0 {
+			uptimeStr = uptime.String()
+		}
+		version := snap.Version
+		if version == "dev" {
+			version = ""
+		}
 		return InfoResponse{
-			Version:    snap.Version,
+			Version:    version,
 			Workspace:  snap.Workspace,
-			Uptime:     time.Since(s.startedAt).Round(time.Second).String(),
+			Uptime:     uptimeStr,
 			Specs:      snap.Specs,
 			HTTPClient: snap.HTTPClient,
 			MCP:        snap.MCP,
@@ -106,10 +116,13 @@ func (s *Service) Info(_ context.Context) (InfoResponse, error) {
 		}, nil
 	}
 
+	version := s.version
+	if version == "dev" {
+		version = ""
+	}
 	return InfoResponse{
-		Version:   s.version,
+		Version:   version,
 		Workspace: s.ws.Root(),
-		Uptime:    time.Since(s.startedAt).Round(time.Second).String(),
 	}, nil
 }
 
@@ -157,7 +170,7 @@ func (s *Service) buildSpecsSummary(c *config.Config) SpecsSummary {
 
 func (s *Service) buildHTTPClientInfo(c *config.Config) HTTPClientInfo {
 	inf := HTTPClientInfo{
-		MaxResponseSize: s.maxResponseSize,
+		MaxResponseSize: humanizeBytes(s.maxResponseSize),
 	}
 
 	if c == nil || c.HTTPClient == nil {
@@ -176,7 +189,7 @@ func (s *Service) buildHTTPClientInfo(c *config.Config) HTTPClientInfo {
 	inf.FollowRedirects = gc.FollowRedirects
 	inf.MaxRedirects = gc.MaxRedirects
 	if gc.MaxResponseSize != nil {
-		inf.MaxResponseSize = *gc.MaxResponseSize
+		inf.MaxResponseSize = humanizeBytes(*gc.MaxResponseSize)
 	}
 
 	if len(gc.Headers) > 0 {
@@ -258,4 +271,18 @@ func (s *Service) buildAuthInfo(c *config.Config) AuthInfo {
 
 const (
 	defaultMCPTransport = "stdio"
+	mbInBytes           = 1048576
+	kbInBytes           = 1024
 )
+
+// humanizeBytes converts a byte count to a human-readable string (e.g. 2048 → "2 KB").
+func humanizeBytes(b int) string {
+	switch {
+	case b >= mbInBytes:
+		return fmt.Sprintf("%d MB", b/mbInBytes)
+	case b >= kbInBytes:
+		return fmt.Sprintf("%d KB", b/kbInBytes)
+	default:
+		return fmt.Sprintf("%d B", b)
+	}
+}

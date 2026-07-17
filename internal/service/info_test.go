@@ -88,8 +88,8 @@ func TestInfo_WithConfig(t *testing.T) {
 	if info.HTTPClient.Timeout != "30s" {
 		t.Errorf("HTTPClient.Timeout = %q, want %q", info.HTTPClient.Timeout, "30s")
 	}
-	if info.HTTPClient.MaxResponseSize != 4096 {
-		t.Errorf("HTTPClient.MaxResponseSize = %d, want 4096", info.HTTPClient.MaxResponseSize)
+	if info.HTTPClient.MaxResponseSize != "4 KB" {
+		t.Errorf("HTTPClient.MaxResponseSize = %q, want %q", info.HTTPClient.MaxResponseSize, "4 KB")
 	}
 	if info.HTTPClient.Headers == nil || info.HTTPClient.Headers["X-Custom"] != "value" {
 		t.Error("HTTPClient.Headers missing X-Custom")
@@ -151,8 +151,8 @@ func TestInfo_WithNilHTTPClient(t *testing.T) {
 		t.Fatalf("Info() = %v", err)
 	}
 
-	if info.HTTPClient.MaxResponseSize != defaultMaxResponseSize {
-		t.Errorf("MaxResponseSize = %d, want %d", info.HTTPClient.MaxResponseSize, defaultMaxResponseSize)
+	if info.HTTPClient.MaxResponseSize != "1 KB" {
+		t.Errorf("MaxResponseSize = %q, want %q", info.HTTPClient.MaxResponseSize, "1 KB")
 	}
 }
 
@@ -407,8 +407,8 @@ func TestInfo_WithFullHTTPClientConfig(t *testing.T) {
 	if info.HTTPClient.MaxRedirects == nil || *info.HTTPClient.MaxRedirects != 10 {
 		t.Error("MaxRedirects = nil or wrong value, want 10")
 	}
-	if info.HTTPClient.MaxResponseSize != 8192 {
-		t.Errorf("MaxResponseSize = %d, want 8192", info.HTTPClient.MaxResponseSize)
+	if info.HTTPClient.MaxResponseSize != "8 KB" {
+		t.Errorf("MaxResponseSize = %q, want %q", info.HTTPClient.MaxResponseSize, "8 KB")
 	}
 	if info.HTTPClient.Headers["X-Api-Key"] != "123" {
 		t.Errorf("Headers missing X-Api-Key")
@@ -512,8 +512,8 @@ func TestInfo_Uptime(t *testing.T) {
 		t.Fatalf("Info() = %v", err)
 	}
 
-	if info.Uptime == "" {
-		t.Error("Uptime is empty")
+	if info.Uptime != "" {
+		t.Errorf("Uptime = %q, want empty (CLI mode)", info.Uptime)
 	}
 }
 

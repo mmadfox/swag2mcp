@@ -1,121 +1,12 @@
-# swag2mcp — example configuration
+# swag2mcp — configuration
 # Replace the values below with your own API specifications.
 mcp:
   transport: stdio
-  
+
 # specs:
-#   - domain: train-booking
-#     disable: true
-#     base_url: https://api.trains-railway.com
-#     http_client:
-#       headers:
-#         X-Request-ID: generated-request-id
-#         X-User-Agent: mobile-app-v2.5
-# 
-#     llm_title: Railway Ticket Booking System API
-#     llm_instruction: |
-#       This API provides comprehensive functionality for booking train tickets,
-#       managing reservations, and viewing train schedules across the national railway network.
-#       Use this for passenger travel planning and ticket purchase operations.
-# 
-#     auth:
-#       type: bearer
-#       config:
-#         token: $(TOKEN_AUTH)
-# 
+#   - domain: my-api
+#     llm_title: My API
+#     base_url: https://api.example.com
 #     collections:
-#       - llm_title: Train Schedules and Availability
-#         location: /some/path/to/spec/train-schedules.json
-#         disable: true
-#       - llm_title: Booking and Reservations
-#         location: /some/path/to/spec/train-bookings.json
-#       - llm_title: Passenger Services
-#         location: /some/path/to/spec/train-passengers.json
-# 
-#     tags:
-#       - trains
-#       - transportation
-#       - booking
-#       - public-transport
-# 
-#   - domain: petfood-shop
-#     base_url: https://shop.petfood.local
-#     http_client:
-#       headers:
-#         X-Shop-ID: petshop-main
-#         X-Currency: USD
-# 
-#     llm_title: Pet Food E-Commerce Platform
-#     llm_instruction: |
-#       Complete e-commerce solution for pet food and accessories.
-#       Handles product catalog, orders, inventory management, and customer accounts
-#       for pet owners and veterinary clinics.
-# 
-#     collections:
-#       - llm_title: Product Catalog and Inventory
-#         location: /some/path/to/spec/petfood-products.json
-#       - llm_title: Customer Orders and Cart
-#         location: /some/path/to/spec/petfood-orders.json
-#       - llm_title: Customer Accounts and Profiles
-#         location: /some/path/to/spec/petfood-customers.json
-#       - llm_title: Recommendations and Loyalty
-#         location: /some/path/to/spec/petfood-rewards.json
-# 
-#     tags:
-#       - e-commerce
-#       - pet-care
-#       - retail
-#       - subscription
-# 
-#   - domain: music-stream
-#     base_url: https://stream.music.global
-#     http_client:
-#       headers:
-#         X-Device-ID: device-{{device_uuid}}
-#         X-App-Version: 4.2.1
-# 
-#     llm_title: Global Music Streaming Service
-#     llm_instruction: |
-#       Modern music streaming platform with personalized recommendations,
-#       playlist management, and social features. Supports premium and free tiers
-#       with ad-supported listening options.
-# 
-#     collections:
-#       - llm_title: Music Library and Playback
-#         location: /some/path/to/spec/music-library.json
-#       - llm_title: Playlists and Favorites
-#         location: /some/path/to/spec/music-playlists.json
-#       - llm_title: User Profiles and Social
-#         location: /some/path/to/spec/music-social.json
-#       - llm_title: Recommendations and Discovery
-#         location: /some/path/to/spec/music-discovery.json
-# 
-#     tags:
-#       - music
-#       - entertainment
-#       - streaming
-#       - social
-# 
-#   - domain: cinema-tickets
-#     base_url: https://tickets.cinema.world
-#     llm_title: Cinema Ticket Booking Platform
-#     llm_instruction: |
-#       Comprehensive cinema management and ticket booking system.
-#       Handles movie schedules, seat selection, theater management,
-#       and concession ordering for movie theaters worldwide.
-# 
-#     collections:
-#       - llm_title: Movie Schedule and Selection
-#         location: /some/path/to/spec/cinema-movies.json
-#       - llm_title: Theater Management and Seating
-#         location: /some/path/to/spec/cinema-theaters.json
-#       - llm_title: Ticket Sales and Concessions
-#         location: /some/path/to/spec/cinema-sales.json
-#       - llm_title: Membership and Loyalty Programs
-#         location: /some/path/to/spec/cinema-membership.json
-# 
-#     tags:
-#       - cinema
-#       - entertainment
-#       - events
-#       - ticketing
+#       - llm_title: Main Collection
+#         location: ./specs/openapi.json

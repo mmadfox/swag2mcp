@@ -261,7 +261,7 @@ func (s *ConfigSuite) TestUpdateReCachesSpecs() {
 	s.WriteConfig(configContent)
 	_, stderr, code := s.RunCommandInWS("update", ".")
 	s.Equal(0, code)
-	s.Contains(stderr, "updated")
+	s.Contains(stderr, "processed")
 }
 
 func (s *ConfigSuite) TestUpdateInvalidConfig() {

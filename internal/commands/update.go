@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -34,7 +35,7 @@ func newUpdateCmd() *cobra.Command {
 				return err
 			}
 
-			cmd.Printf("✅ Cache updated (%d specs cached)\n", total)
+			cmd.Printf("✅ %d specs processed\n", total)
 			return nil
 		},
 	}
@@ -76,7 +77,7 @@ func runUpdate(basePath string) (int, error) {
 		return 0, fmt.Errorf("clean cache: %w", err)
 	}
 
-	total, err := cacheSpecs(cfg, ca, ws)
+	remote, local, err := cacheSpecs(cfg, ca, ws)
 	if err != nil {
 		return 0, err
 	}
@@ -85,29 +86,37 @@ func runUpdate(basePath string) (int, error) {
 		return 0, err
 	}
 
-	return total, nil
+	return remote + local, nil
 }
 
-func cacheSpecs(cfg *config.Config, ca *cache.Cache, ws *workspace.Workspace) (int, error) {
-	var total int
+func cacheSpecs(cfg *config.Config, ca *cache.Cache, ws *workspace.Workspace) (int, int, error) {
+	var remote, local int
 	for spec := range cfg.Iterate(nil) {
 		for _, col := range spec.Collections {
 			if col.Disable {
 				continue
 			}
 			if _, rErr := ca.Resolve(context.Background(), col.Location); rErr != nil {
-				return 0, fmt.Errorf("cache %s: %w", col.Location, rErr)
+				return 0, 0, fmt.Errorf("cache %s: %w", col.Location, rErr)
 			}
-			total++
+			if isRemoteLocation(col.Location) {
+				remote++
+			} else {
+				local++
+			}
 		}
 
 		if spec.Auth.Client != nil && spec.Auth.Client.Type() == auth.ScriptAuth {
 			if sErr := ws.EnsureAuthScript(spec.Domain); sErr != nil {
-				return 0, fmt.Errorf("auth script %s: %w", spec.Domain, sErr)
+				return 0, 0, fmt.Errorf("auth script %s: %w", spec.Domain, sErr)
 			}
 		}
 	}
-	return total, nil
+	return remote, local, nil
+}
+
+func isRemoteLocation(location string) bool {
+	return strings.HasPrefix(location, "http://") || strings.HasPrefix(location, "https://")
 }
 
 func cleanOrphanAuthScripts(cfg *config.Config, ws *workspace.Workspace) error {

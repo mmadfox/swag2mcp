@@ -13,7 +13,19 @@ import (
 // Auth holds the parsed authentication configuration for a spec.
 // It is populated during YAML unmarshalling by reading the "type" and "config" keys.
 type Auth struct {
-	Client auth.Authenticator `yaml:"client,omitempty"`
+	Client auth.Authenticator `yaml:"-"`
+}
+
+// MarshalYAML implements yaml.Marshaler.
+// It serialises the auth config as "type" and "config" keys matching the input format.
+func (a Auth) MarshalYAML() (any, error) {
+	if a.Client == nil {
+		return nil, nil
+	}
+	return map[string]any{
+		"type":   a.Client.Type().String(),
+		"config": a.Client,
+	}, nil
 }
 
 // authRaw is the intermediate YAML structure used to extract the type

@@ -2,11 +2,13 @@ package mcp
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/service"
@@ -142,6 +144,13 @@ func serveHTTP(ctx context.Context, defs service.ToolDefinitions, opts Options) 
 	handler = applyAuthMiddleware(handler, opts)
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"status":  "ok",
+			"version": opts.Version,
+		})
+	})
 	mux.Handle(opts.httpPath(), handler)
 
 	srv := &http.Server{
@@ -170,6 +179,8 @@ func serveHTTP(ctx context.Context, defs service.ToolDefinitions, opts Options) 
 		"path", opts.httpPath(),
 		"auth", opts.AuthToken != "" || opts.AuthVerifier != nil,
 	)
+
+	fmt.Fprintf(os.Stdout, "MCP server listening on http://%s%s\n", opts.httpAddr(), opts.httpPath())
 
 	return srv.ListenAndServe()
 }

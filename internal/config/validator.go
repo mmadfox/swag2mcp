@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 	"sync"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/mmadfox/swag2mcp/internal/cache"
+	"github.com/mmadfox/swag2mcp/internal/spec"
 )
 
 var (
@@ -99,19 +101,19 @@ func ValidateConfig(cfg *Config, opts ValidateOptions) error {
 func validateDuplicateDomains(cfg *Config) []validationError {
 	var errs []validationError
 	seen := make(map[string]int)
-	for i, spec := range cfg.Specs {
-		if spec.Disable {
+	for i, sp := range cfg.Specs {
+		if sp.Disable {
 			continue
 		}
-		if j, ok := seen[spec.Domain]; ok {
+		if j, ok := seen[sp.Domain]; ok {
 			errs = append(errs, validationError{
-				spec:    spec.Domain,
+				spec:    sp.Domain,
 				errType: "config",
 				message: fmt.Sprintf("duplicate domain %q (specs #%d and #%d)",
-					spec.Domain, j+1, i+1),
+					sp.Domain, j+1, i+1),
 			})
 		} else {
-			seen[spec.Domain] = i
+			seen[sp.Domain] = i
 		}
 	}
 	return errs
@@ -131,25 +133,25 @@ func validateMockPorts(cfg *Config, filter *Filter) []validationError {
 		}
 	}
 
-	for _, spec := range cfg.Specs {
-		if spec.Disable {
+	for _, sp := range cfg.Specs {
+		if sp.Disable {
 			continue
 		}
-		if !filter.MatchSpec(spec.Tags...) {
+		if !filter.MatchSpec(sp.Tags...) {
 			continue
 		}
 
-		for _, col := range spec.Collections {
+		for _, col := range sp.Collections {
 			if col.Disable {
 				continue
 			}
 			if col.BaseMockURL != "" {
 				port := extractPort(col.BaseMockURL)
 				if port > 0 {
-					label := spec.Domain + "/" + col.LLMTitle
+					label := sp.Domain + "/" + col.LLMTitle
 					if existing, ok := usedPorts[port]; ok {
 						errs = append(errs, validationError{
-							spec:       spec.Domain,
+							spec:       sp.Domain,
 							collection: col.LLMTitle,
 							errType:    "config",
 							message:    fmt.Sprintf("duplicate mock port %d: used by %q and %q", port, existing, label),
@@ -164,18 +166,19 @@ func validateMockPorts(cfg *Config, filter *Filter) []validationError {
 	return errs
 }
 
-// validateSpecLocations checks that all collection spec locations are accessible.
+// validateSpecLocations checks that all collection spec locations are accessible
+// and contain a valid OpenAPI/Swagger/Postman document.
 func validateSpecLocations(cfg *Config, filter *Filter, cacheInstance *cache.Cache) []validationError {
 	var errs []validationError
-	for _, spec := range cfg.Specs {
-		if spec.Disable {
+	for _, sp := range cfg.Specs {
+		if sp.Disable {
 			continue
 		}
-		if !filter.MatchSpec(spec.Tags...) {
+		if !filter.MatchSpec(sp.Tags...) {
 			continue
 		}
 
-		for _, col := range spec.Collections {
+		for _, col := range sp.Collections {
 			if col.Disable {
 				continue
 			}
@@ -188,7 +191,7 @@ func validateSpecLocations(cfg *Config, filter *Filter, cacheInstance *cache.Cac
 			err := cacheInstance.Exists(context.Background(), loc)
 			if err != nil {
 				ve := validationError{
-					spec:       spec.Domain,
+					spec:       sp.Domain,
 					collection: col.LLMTitle,
 					location:   loc,
 					errType:    "file",
@@ -197,8 +200,32 @@ func validateSpecLocations(cfg *Config, filter *Filter, cacheInstance *cache.Cac
 				var locErr *cache.LocationError
 				if errors.As(err, &locErr) {
 					ve.errType = locErr.Type
+					if locErr.Type == "url" {
+						ve.message += "\n    Ensure the URL points to a raw OpenAPI/Swagger JSON or YAML file (e.g. https://example.com/openapi.json)"
+					}
 				}
 				errs = append(errs, ve)
+				continue
+			}
+
+			specPath, rErr := cacheInstance.Resolve(context.Background(), loc)
+			if rErr != nil {
+				continue
+			}
+
+			data, rErr := os.ReadFile(specPath)
+			if rErr != nil {
+				continue
+			}
+
+			if _, pErr := spec.Parse(data); pErr != nil {
+				errs = append(errs, validationError{
+					spec:       sp.Domain,
+					collection: col.LLMTitle,
+					location:   loc,
+					errType:    "file",
+					message:    fmt.Sprintf("location does not appear to be a valid OpenAPI/Swagger spec — expected OpenAPI 3.x, Swagger 2.0, or Postman collection: %s", pErr),
+				})
 			}
 		}
 	}

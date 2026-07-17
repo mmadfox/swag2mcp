@@ -66,12 +66,12 @@ func TestCacheSpecs(t *testing.T) {
 	}
 
 	ca := cache.New(tmpDir)
-	total, err := cacheSpecs(cfg, ca, ws)
+	remote, local, err := cacheSpecs(cfg, ca, ws)
 	if err != nil {
 		t.Fatalf("cacheSpecs() = %v", err)
 	}
-	if total != 1 {
-		t.Errorf("total = %d, want 1", total)
+	if remote+local != 1 {
+		t.Errorf("total = %d, want 1", remote+local)
 	}
 }
 
@@ -96,12 +96,12 @@ func TestCacheSpecs_DisabledCollection(t *testing.T) {
 	}
 
 	ca := cache.New(tmpDir)
-	total, err := cacheSpecs(cfg, ca, ws)
+	remote, local, err := cacheSpecs(cfg, ca, ws)
 	if err != nil {
 		t.Fatalf("cacheSpecs() = %v", err)
 	}
-	if total != 0 {
-		t.Errorf("total = %d, want 0", total)
+	if remote+local != 0 {
+		t.Errorf("total = %d, want 0", remote+local)
 	}
 }
 
@@ -134,12 +134,12 @@ func TestCacheSpecs_ScriptAuth(t *testing.T) {
 	}
 
 	ca := cache.New(tmpDir)
-	total, err := cacheSpecs(cfg, ca, ws)
+	remote, local, err := cacheSpecs(cfg, ca, ws)
 	if err != nil {
 		t.Fatalf("cacheSpecs() = %v", err)
 	}
-	if total != 1 {
-		t.Errorf("total = %d, want 1", total)
+	if remote+local != 1 {
+		t.Errorf("total = %d, want 1", remote+local)
 	}
 
 	scriptPath := ws.AuthScriptPath("script-api")
