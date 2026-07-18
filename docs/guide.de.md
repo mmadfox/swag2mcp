@@ -327,7 +327,7 @@ mcp:
 
 ## MCP Server
 
-Der MCP Server stellt 16 Tools über stdio oder HTTP Transport bereit. LLM-Agenten (Opencode, Cursor, Claude, Copilot, etc.) verbinden sich automatisch nach der Konfiguration.
+Der MCP Server stellt 16 Tools über stdio oder HTTP Transport bereit. LLM-Agenten (Opencode, Cursor, Claude, Copilot, Crush, etc.) verbinden sich automatisch nach der Konfiguration.
 
 ### Tool-Hierarchie
 

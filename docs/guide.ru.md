@@ -1,6 +1,6 @@
 # swag2mcp
 
-**swag2mcp** — это CLI-инструмент и MCP (Model Context Protocol) сервер, который связывает OpenAPI/Swagger/Postman спецификации с LLM-агентами (Opencode, Cursor, Claude, Copilot и другими).
+**swag2mcp** — это CLI-инструмент и MCP (Model Context Protocol) сервер, который связывает OpenAPI/Swagger/Postman спецификации с LLM-агентами (Opencode, Cursor, Claude, Copilot, Crush и другими).
 
 Он индексирует ваши API-спецификации в полнотекстовый поисковый движок, предоставляет **16 MCP-инструментов** и позволяет LLM находить, изучать и вызывать реальные API-эндпоинты — без единой строки интеграционного кода.
 
@@ -332,7 +332,7 @@ MCP сервер сам применяет настроенные credentials к
 
 ## MCP Сервер
 
-MCP сервер предоставляет **16 инструментов** через stdio или HTTP транспорт. LLM-агенты (Opencode, Cursor, Claude, Copilot и др.) подключаются автоматически после настройки.
+MCP сервер предоставляет **16 инструментов** через stdio или HTTP транспорт. LLM-агенты (Opencode, Cursor, Claude, Copilot, Crush и др.) подключаются автоматически после настройки.
 
 ### Иерархия инструментов
 

@@ -37,7 +37,7 @@
 
 ### For AI Agents
 
-This path is for users who want to use swag2mcp through an AI agent (Opencode, Cursor, Claude, Copilot, etc.).
+This path is for users who want to use swag2mcp through an AI agent (Opencode, Cursor, Claude, Copilot, Crush, etc.).
 
 **Step 1 — Install the swag2mcp-cli skill**
 

@@ -327,7 +327,7 @@ mcp:
 
 ## Serveur MCP
 
-Le serveur MCP expose 16 outils via le transport stdio ou HTTP. Les agents LLM (Opencode, Cursor, Claude, Copilot, etc.) se connectent automatiquement une fois configurés.
+Le serveur MCP expose 16 outils via le transport stdio ou HTTP. Les agents LLM (Opencode, Cursor, Claude, Copilot, Crush, etc.) se connectent automatiquement une fois configurés.
 
 ### Hiérarchie des outils
 
