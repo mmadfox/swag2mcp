@@ -2,6 +2,11 @@
 # Ready-to-use specs from the repository.
 # Uncomment or modify as needed.
 disable_ratelimiter: true
+
+http_client:
+  headers:
+    Accept: application/json
+    
 mcp:
   transport: stdio
 

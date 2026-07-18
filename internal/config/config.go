@@ -43,7 +43,7 @@ type GlobalHTTPClientConfig struct {
 	Timeout         time.Duration     `yaml:"timeout,omitempty"            validate:"omitempty,min=1000000000,max=300000000000"`
 	FollowRedirects *bool             `yaml:"follow_redirects,omitempty"`
 	MaxRedirects    *int              `yaml:"max_redirects,omitempty"      validate:"omitempty,min=0,max=50"`
-	MaxResponseSize *int              `yaml:"max_response_size,omitempty"   validate:"omitempty,min=256,max=1048576"`
+	MaxResponseSize *int              `yaml:"max_response_size,omitempty"   validate:"omitempty,min=256,max=10485760"`
 }
 
 // MockAuthConfig holds port configuration for mock auth servers.
@@ -71,7 +71,7 @@ const (
 	defaultUserAgent       = "swag2mcp-global/1.0"
 	defaultTimeout         = 30 * time.Second
 	defaultMaxRedirects    = 10
-	defaultMaxResponseSize = 2048
+	defaultMaxResponseSize = 1048576
 )
 
 // SetDefaults fills nil/zero fields with sensible defaults.

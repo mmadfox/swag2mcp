@@ -151,8 +151,8 @@ func TestInfo_WithNilHTTPClient(t *testing.T) {
 		t.Fatalf("Info() = %v", err)
 	}
 
-	if info.HTTPClient.MaxResponseSize != "1 KB" {
-		t.Errorf("MaxResponseSize = %q, want %q", info.HTTPClient.MaxResponseSize, "1 KB")
+	if info.HTTPClient.MaxResponseSize != "1 MB" {
+		t.Errorf("MaxResponseSize = %q, want %q", info.HTTPClient.MaxResponseSize, "1 MB")
 	}
 }
 

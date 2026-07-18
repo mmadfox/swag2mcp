@@ -39,9 +39,9 @@ func TestResolveMaxResponseSize_Custom(t *testing.T) {
 func TestResolveMaxResponseSize_ExceedsMax(t *testing.T) {
 	t.Parallel()
 
-	val := 2 * 1024 * 1024
+	val := 20 * 1024 * 1024
 	size := resolveMaxResponseSize(&val)
-	require.Equal(t, maxMaxResponseSize, size)
+	require.Equal(t, maxAllowedResponseSize, size)
 }
 
 func TestResolveMaxResponseSize_Zero(t *testing.T) {

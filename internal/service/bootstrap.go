@@ -52,6 +52,9 @@ func (s *Service) Bootstrap(ctx context.Context, request BootstrapRequest) error
 	s.httpClient = client
 	s.httpClientConfig = httpCfg
 	s.maxResponseSize = resolveMaxResponseSize(httpCfg.MaxResponseSize)
+	s.globalHeaders = httpCfg.Headers
+	s.globalUserAgent = httpCfg.UserAgent
+	s.globalCookies = httpCfg.Cookies
 
 	httpclient.SetGlobalConfig(httpCfg)
 

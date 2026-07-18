@@ -22,6 +22,8 @@ Always use `inspect` first to understand the required parameters, headers, and r
 - `endpointId` (required): The 32-character MD5 hash ID of the endpoint to invoke
 - `parameters` (optional): Object containing path, query, and header parameters as key-value pairs
 - `requestBody` (optional): The request body for POST/PUT/PATCH requests. Provide as a JSON object matching the schema from `inspect`
+- `headers` (optional): Additional HTTP headers to send with the request. These override any headers from the config or operation spec
+- `cookies` (optional): Additional HTTP cookies to send with the request. These are added on top of any cookies from the config
 
 ## Returns
 

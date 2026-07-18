@@ -21,13 +21,14 @@ import (
 	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/mmadfox/swag2mcp/internal/spec"
 )
 
 const (
-	defaultMaxResponseSize = 1048    // 1 KB
-	maxMaxResponseSize     = 1048576 // 1 MB
+	defaultMaxResponseSize = 1048576  // 1 MB
+	maxAllowedResponseSize = 10485760 // 10 MB
 	randSuffixLen          = 6
 
 	schemaTypeObject = "object"
@@ -36,9 +37,11 @@ const (
 
 // InvokeRequest represents a request to invoke an API endpoint.
 type InvokeRequest struct {
-	EndpointID  string         `json:"endpointId"            validate:"required,md5" jsonschema:"required,The 32-character MD5 hash ID of the endpoint to invoke"`
-	Parameters  map[string]any `json:"parameters,omitempty"                          jsonschema:"optional,Path, query, and header parameters as key-value pairs"`
-	RequestBody map[string]any `json:"requestBody,omitempty"                         jsonschema:"optional,Request body for POST/PUT/PATCH requests"`
+	EndpointID  string            `json:"endpointId"            validate:"required,md5" jsonschema:"required,The 32-character MD5 hash ID of the endpoint to invoke"`
+	Parameters  map[string]any    `json:"parameters,omitempty"                          jsonschema:"optional,Path, query, and header parameters as key-value pairs"`
+	RequestBody map[string]any    `json:"requestBody,omitempty"                         jsonschema:"optional,Request body for POST/PUT/PATCH requests"`
+	Headers     map[string]string `json:"headers,omitempty"                             jsonschema:"optional,Additional HTTP headers to send with the request"`
+	Cookies     map[string]string `json:"cookies,omitempty"                             jsonschema:"optional,Additional HTTP cookies to send with the request"`
 }
 
 // FileReference holds information about a response saved to disk.
@@ -136,6 +139,11 @@ func (s *Service) Invoke(ctx context.Context, rq InvokeRequest) (InvokeResponse,
 		withParameters(rq.Parameters),
 		withBody(rq.RequestBody),
 		withHTTPConfig(mergeHTTPClientConfigs(sp.HTTPClient, coll.HTTPClient)),
+		withInvokeHeaders(rq.Headers),
+		withInvokeCookies(rq.Cookies),
+		withGlobalHeaders(s.globalHeaders),
+		withGlobalUserAgent(s.globalUserAgent),
+		withGlobalCookies(s.globalCookies),
 	).build()
 	if err != nil {
 		return InvokeResponse{}, NewInvokeError(
@@ -189,13 +197,18 @@ func (s *Service) Invoke(ctx context.Context, rq InvokeRequest) (InvokeResponse,
 
 // requestBuilder builds an [http.Request] from spec, collection, endpoint, and parameters.
 type requestBuilder struct {
-	context    context.Context
-	spec       *model.Spec
-	collection *model.Collection
-	endpoint   *model.Endpoint
-	parameters map[string]any
-	body       map[string]any
-	httpConfig *model.HTTPClientConfig
+	context         context.Context
+	spec            *model.Spec
+	collection      *model.Collection
+	endpoint        *model.Endpoint
+	parameters      map[string]any
+	body            map[string]any
+	httpConfig      *model.HTTPClientConfig
+	invokeHeaders   map[string]string
+	invokeCookies   map[string]string
+	globalHeaders   map[string]string
+	globalUserAgent string
+	globalCookies   []httpclient.Cookie
 }
 
 // requestOption is a functional option for configuring a requestBuilder.
@@ -259,6 +272,41 @@ func withBody(body map[string]any) requestOption {
 func withHTTPConfig(config *model.HTTPClientConfig) requestOption {
 	return func(builder *requestBuilder) {
 		builder.httpConfig = config
+	}
+}
+
+// withInvokeHeaders sets additional headers from the invoke request.
+func withInvokeHeaders(headers map[string]string) requestOption {
+	return func(builder *requestBuilder) {
+		builder.invokeHeaders = headers
+	}
+}
+
+// withInvokeCookies sets additional cookies from the invoke request.
+func withInvokeCookies(cookies map[string]string) requestOption {
+	return func(builder *requestBuilder) {
+		builder.invokeCookies = cookies
+	}
+}
+
+// withGlobalHeaders sets global HTTP client headers.
+func withGlobalHeaders(headers map[string]string) requestOption {
+	return func(builder *requestBuilder) {
+		builder.globalHeaders = headers
+	}
+}
+
+// withGlobalUserAgent sets the global User-Agent string.
+func withGlobalUserAgent(ua string) requestOption {
+	return func(builder *requestBuilder) {
+		builder.globalUserAgent = ua
+	}
+}
+
+// withGlobalCookies sets global HTTP client cookies.
+func withGlobalCookies(cookies []httpclient.Cookie) requestOption {
+	return func(builder *requestBuilder) {
+		builder.globalCookies = cookies
 	}
 }
 
@@ -352,20 +400,33 @@ func (builder *requestBuilder) applyHeaders(req *http.Request) {
 	if builder.body != nil && req.Header.Get("Content-Type") == "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
-
-	if req.Header.Get("Accept") == "" {
-		isJSON := builder.body != nil ||
-			req.Header.Get("Content-Type") == "application/json"
-		if isJSON {
-			req.Header.Set("Accept", "application/json, text/plain, */*")
-		} else {
-			req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-		}
-	}
 }
 
 // applyHTTPClientConfig applies per-request HTTP config (headers, cookies) to the request.
 func (builder *requestBuilder) applyHTTPClientConfig(req *http.Request) {
+	builder.applyGlobalConfig(req)
+	builder.applySpecConfig(req)
+	builder.applyDefaultAccept(req)
+	builder.applyInvokeOverrides(req)
+}
+
+func (builder *requestBuilder) applyGlobalConfig(req *http.Request) {
+	for name, val := range builder.globalHeaders {
+		if req.Header.Get(name) == "" {
+			req.Header.Set(name, val)
+		}
+	}
+
+	if req.Header.Get("User-Agent") == "" && builder.globalUserAgent != "" {
+		req.Header.Set("User-Agent", builder.globalUserAgent)
+	}
+
+	for _, c := range builder.globalCookies {
+		req.AddCookie(&http.Cookie{Name: c.Name, Value: c.Value, Domain: c.Domain, Path: c.Path, Secure: c.Secure, HttpOnly: c.HTTPOnly})
+	}
+}
+
+func (builder *requestBuilder) applySpecConfig(req *http.Request) {
 	if builder.httpConfig == nil {
 		return
 	}
@@ -374,17 +435,39 @@ func (builder *requestBuilder) applyHTTPClientConfig(req *http.Request) {
 		req.Header.Set(name, val)
 	}
 
-	if len(builder.httpConfig.Cookies) > 0 {
-		for _, cookie := range builder.httpConfig.Cookies {
-			req.AddCookie(&http.Cookie{
-				Name:     cookie.Name,
-				Value:    cookie.Value,
-				Domain:   cookie.Domain,
-				Path:     cookie.Path,
-				Secure:   cookie.Secure,
-				HttpOnly: cookie.HTTPOnly,
-			})
-		}
+	for _, cookie := range builder.httpConfig.Cookies {
+		req.AddCookie(&http.Cookie{
+			Name:     cookie.Name,
+			Value:    cookie.Value,
+			Domain:   cookie.Domain,
+			Path:     cookie.Path,
+			Secure:   cookie.Secure,
+			HttpOnly: cookie.HTTPOnly,
+		})
+	}
+}
+
+func (builder *requestBuilder) applyDefaultAccept(req *http.Request) {
+	if req.Header.Get("Accept") != "" {
+		return
+	}
+
+	isJSON := builder.body != nil ||
+		req.Header.Get("Content-Type") == "application/json"
+	if isJSON {
+		req.Header.Set("Accept", "application/json, text/plain, */*")
+	} else {
+		req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	}
+}
+
+func (builder *requestBuilder) applyInvokeOverrides(req *http.Request) {
+	for name, val := range builder.invokeHeaders {
+		req.Header.Set(name, val)
+	}
+
+	for name, val := range builder.invokeCookies {
+		req.AddCookie(&http.Cookie{Name: name, Value: val})
 	}
 }
 
@@ -469,18 +552,18 @@ func (s *Service) saveLargeResponse(
 }
 
 // resolveMaxResponseSize returns the effective max response size.
-// Default is 2 KB, maximum is 1 MB.
-func resolveMaxResponseSize(maxResponseSize *int) int {
-	if maxResponseSize == nil {
+// Default is 1 MB, maximum is 10 MB.
+func resolveMaxResponseSize(size *int) int {
+	if size == nil {
 		return defaultMaxResponseSize
 	}
-	if *maxResponseSize > maxMaxResponseSize {
-		return maxMaxResponseSize
+	if *size > maxAllowedResponseSize {
+		return maxAllowedResponseSize
 	}
-	if *maxResponseSize <= 0 {
+	if *size <= 0 {
 		return defaultMaxResponseSize
 	}
-	return *maxResponseSize
+	return *size
 }
 
 // openCommand returns the OS-specific command to open a file.

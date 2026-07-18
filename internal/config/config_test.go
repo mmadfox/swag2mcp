@@ -543,7 +543,7 @@ func TestGlobalHTTPClientConfig_SetDefaults(t *testing.T) {
 	require.NotNil(t, cfg.MaxRedirects)
 	assert.Equal(t, 10, *cfg.MaxRedirects)
 	require.NotNil(t, cfg.MaxResponseSize)
-	assert.Equal(t, 2048, *cfg.MaxResponseSize)
+	assert.Equal(t, 1048576, *cfg.MaxResponseSize)
 }
 
 func TestGlobalHTTPClientConfig_SetDefaults_Nil(t *testing.T) {

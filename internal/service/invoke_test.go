@@ -1378,3 +1378,225 @@ func specIDForTest(t *testing.T) string {
 	t.Helper()
 	return id.Domain(t.Name())
 }
+
+// TestInvoke_CustomHeadersPassedThrough verifies that custom headers from InvokeRequest.Headers
+// are sent with the HTTP request.
+func TestInvoke_CustomHeadersPassedThrough(t *testing.T) {
+	t.Parallel()
+
+	var capturedHeaders http.Header
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedHeaders = r.Header
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	t.Cleanup(testServer.Close)
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+		Headers:    map[string]string{"X-Custom-Header": "custom-value", "X-Another": "another-value"},
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	if capturedHeaders.Get("X-Custom-Header") != "custom-value" {
+		t.Errorf("X-Custom-Header = %q, want %q", capturedHeaders.Get("X-Custom-Header"), "custom-value")
+	}
+	if capturedHeaders.Get("X-Another") != "another-value" {
+		t.Errorf("X-Another = %q, want %q", capturedHeaders.Get("X-Another"), "another-value")
+	}
+}
+
+// TestInvoke_CustomCookiesPassedThrough verifies that custom cookies from InvokeRequest.Cookies
+// are sent with the HTTP request.
+func TestInvoke_CustomCookiesPassedThrough(t *testing.T) {
+	t.Parallel()
+
+	var capturedCookies []string
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedCookies = r.Header.Values("Cookie")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	t.Cleanup(testServer.Close)
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+		Cookies:    map[string]string{"session": "abc123", "theme": "dark"},
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	cookieStr := strings.Join(capturedCookies, "; ")
+	if !strings.Contains(cookieStr, "session=abc123") {
+		t.Errorf("Cookie 'session=abc123' not found in: %s", cookieStr)
+	}
+	if !strings.Contains(cookieStr, "theme=dark") {
+		t.Errorf("Cookie 'theme=dark' not found in: %s", cookieStr)
+	}
+}
+
+// TestInvoke_HeadersWithAuth verifies that both auth headers and custom invoke headers
+// are present in the HTTP request.
+func TestInvoke_HeadersWithAuth(t *testing.T) {
+	t.Parallel()
+
+	var capturedAuthHeader, capturedCustomHeader string
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedAuthHeader = r.Header.Get("Authorization")
+		capturedCustomHeader = r.Header.Get("X-Custom-Header")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	t.Cleanup(testServer.Close)
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	authenticator := &auth.BearerTokenAuthClient{Token: "test-bearer-token"}
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, authenticator)
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+		Headers:    map[string]string{"X-Custom-Header": "custom-value"},
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	if capturedAuthHeader != "Bearer test-bearer-token" {
+		t.Errorf("Authorization = %q, want %q", capturedAuthHeader, "Bearer test-bearer-token")
+	}
+	if capturedCustomHeader != "custom-value" {
+		t.Errorf("X-Custom-Header = %q, want %q", capturedCustomHeader, "custom-value")
+	}
+}
+
+// TestInvoke_AuthHeaderOverridesInvoke verifies that the auth transport's Authorization header
+// takes precedence over an Authorization header passed via InvokeRequest.Headers.
+func TestInvoke_AuthHeaderOverridesInvoke(t *testing.T) {
+	t.Parallel()
+
+	var capturedAuthHeader string
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedAuthHeader = r.Header.Get("Authorization")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	t.Cleanup(testServer.Close)
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	authenticator := &auth.BearerTokenAuthClient{Token: "correct-token"}
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, authenticator)
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+		Headers:    map[string]string{"Authorization": "Bearer wrong-token"},
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	if capturedAuthHeader != "Bearer correct-token" {
+		t.Errorf("Authorization = %q, want %q", capturedAuthHeader, "Bearer correct-token")
+	}
+}
+
+// TestInvoke_GlobalHeadersApplied verifies that global http_client headers and User-Agent
+// are applied to the HTTP request even when Randomize is false.
+func TestInvoke_GlobalHeadersApplied(t *testing.T) {
+	t.Parallel()
+
+	var capturedAccept, capturedUA string
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedAccept = r.Header.Get("Accept")
+		capturedUA = r.Header.Get("User-Agent")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	t.Cleanup(testServer.Close)
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+	serviceInstance.globalHeaders = map[string]string{"Accept": "application/json"}
+	serviceInstance.globalUserAgent = "swag2mcp-test/1.0"
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	if capturedAccept != "application/json" {
+		t.Errorf("Accept = %q, want %q", capturedAccept, "application/json")
+	}
+	if capturedUA != "swag2mcp-test/1.0" {
+		t.Errorf("User-Agent = %q, want %q", capturedUA, "swag2mcp-test/1.0")
+	}
+}
+
+// TestInvoke_GlobalCookiesApplied verifies that global http_client cookies
+// are applied to the HTTP request.
+func TestInvoke_GlobalCookiesApplied(t *testing.T) {
+	t.Parallel()
+
+	var capturedCookies string
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedCookies = r.Header.Get("Cookie")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	t.Cleanup(testServer.Close)
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+	serviceInstance.globalCookies = []httpclient.Cookie{
+		{Name: "global-session", Value: "abc"},
+		{Name: "global-theme", Value: "dark"},
+	}
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	if !strings.Contains(capturedCookies, "global-session=abc") {
+		t.Errorf("Cookie 'global-session=abc' not found in: %s", capturedCookies)
+	}
+	if !strings.Contains(capturedCookies, "global-theme=dark") {
+		t.Errorf("Cookie 'global-theme=dark' not found in: %s", capturedCookies)
+	}
+}

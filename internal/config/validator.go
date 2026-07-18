@@ -446,7 +446,7 @@ func maxFieldError(field, param string) string {
 	case "MaxRedirects":
 		return "MaxRedirects must be at most 50 — too many redirects may cause infinite loops"
 	case "MaxResponseSize":
-		return "MaxResponseSize must be at most 1 MB (1048576 bytes) — the maximum response size limit"
+		return "MaxResponseSize must be at most 10 MB (10485760 bytes) — the maximum response size limit"
 	default:
 		return fmt.Sprintf("%s must be at most %s", field, param)
 	}

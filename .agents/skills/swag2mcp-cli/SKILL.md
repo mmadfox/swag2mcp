@@ -15,6 +15,47 @@ metadata:
 
 This document describes every CLI command in swag2mcp. Use it when you need to tell a user how to interact with the tool from the terminal.
 
+## When this skill activates
+
+This skill activates when the user asks to:
+
+- Set up swag2mcp or initialize a workspace
+- Connect an API to an AI agent / LLM
+- Add, configure, or manage API specifications (OpenAPI/Swagger)
+- Start an MCP server for API access
+- Explore, search, or invoke API endpoints through MCP tools
+- Work with Petstore, Binance, PokéAPI, icanhazdadjoke, or similar APIs
+
+### Example user requests that trigger this skill
+
+| User says | What the skill does |
+|-----------|-------------------|
+| "Set up swag2mcp with the Petstore API" | Runs `swag2mcp init .`, `add spec`, configures MCP |
+| "I want to connect my API to you" | Guides through `swag2mcp init .` + `add spec` |
+| "Initialize a workspace for my APIs" | Runs `swag2mcp init .` in current directory |
+| "Add the Binance API so I can check prices" | Runs `add spec` with binance spec |
+| "Start the MCP server for my specs" | Runs `swag2mcp mcp` |
+| "Show me what APIs are available" | Calls `spec_list` MCP tool |
+| "Find an endpoint to get BTC price" | Calls `search` MCP tool |
+| "Call the API to get a random dad joke" | Calls `invoke` MCP tool |
+| "How do I add authentication to my API?" | Guides through auth config in YAML |
+| "Export my workspace as a backup" | Runs `swag2mcp export` |
+
+---
+
+## Workspace creation rules
+
+When the user asks to create a project or workspace, create it in a `.swag2mcp` subdirectory of the current folder:
+
+| User says | Command |
+|-----------|---------|
+| "Create a project in the current folder" | `mkdir -p .swag2mcp && swag2mcp init ./.swag2mcp` |
+| "Create a project called my-api" | `mkdir -p my-api/.swag2mcp && swag2mcp init ./my-api/.swag2mcp` |
+| "Set up swag2mcp" (no path) | `mkdir -p .swag2mcp && swag2mcp init ./.swag2mcp` |
+| "Initialize a workspace for my APIs" | `mkdir -p .swag2mcp && swag2mcp init ./.swag2mcp` |
+
+Always create the workspace in a `.swag2mcp` subdirectory of the user's current directory unless they specify a custom path. This creates `swag2mcp.yaml`, `cache/`, `specs/`, `responses/`, and `auth_scripts/` inside `.swag2mcp/`.
+
 ---
 
 ## Installation

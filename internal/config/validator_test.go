@@ -896,7 +896,7 @@ func TestValidateConfig_HTTPClient_MaxResponseSizeTooSmall(t *testing.T) {
 func TestValidateConfig_HTTPClient_MaxResponseSizeTooLarge(t *testing.T) {
 	t.Parallel()
 
-	val := 2_000_000
+	val := 20_000_000
 	cfg := &Config{
 		HTTPClient: &GlobalHTTPClientConfig{
 			MaxResponseSize: &val,
@@ -917,7 +917,7 @@ func TestValidateConfig_HTTPClient_MaxResponseSizeTooLarge(t *testing.T) {
 	}
 
 	err := ValidateConfig(cfg, ValidateOptions{})
-	require.Error(t, err, "expected error for MaxResponseSize > 1MB")
+	require.Error(t, err, "expected error for MaxResponseSize > 10MB")
 }
 
 func TestValidateConfig_HTTPClient_MaxRedirectsTooLarge(t *testing.T) {
@@ -1027,5 +1027,5 @@ func TestValidateConfig_HTTPClient_DefaultsApplied(t *testing.T) {
 	require.NotNil(t, cfg.HTTPClient.MaxRedirects)
 	assert.Equal(t, 10, *cfg.HTTPClient.MaxRedirects)
 	require.NotNil(t, cfg.HTTPClient.MaxResponseSize)
-	assert.Equal(t, 2048, *cfg.HTTPClient.MaxResponseSize)
+	assert.Equal(t, 1048576, *cfg.HTTPClient.MaxResponseSize)
 }

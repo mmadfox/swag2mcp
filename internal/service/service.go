@@ -33,6 +33,9 @@ type Service struct {
 	disableRateLimiter atomic.Bool
 	indexNoFullText    bool
 	snapshot           atomic.Value // stores *InfoSnapshot
+	globalHeaders      map[string]string
+	globalUserAgent    string
+	globalCookies      []httpclient.Cookie
 }
 
 // NewOption is a functional option for configuring a Service.

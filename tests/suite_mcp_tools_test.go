@@ -552,6 +552,121 @@ func (s *MCPToolsSuite) TestTagFilter() {
 	s.Equal("public-api", specsResp.Specs[0].Domain)
 }
 
+func (s *MCPToolsSuite) TestInvokeWithCustomHeaders() {
+	var capturedHeaders map[string]string
+	mux := http.NewServeMux()
+	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+		capturedHeaders = map[string]string{
+			"X-Custom-Header": r.Header.Get("X-Custom-Header"),
+			"X-Another":       r.Header.Get("X-Another"),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`[]`))
+	})
+	srv := s.StartHTTPServer(mux)
+
+	configContent := `specs:
+  - domain: petstore
+    llm_title: Petstore API
+    base_url: ` + srv.URL + `
+    collections:
+      - title: Pets
+        location: ./testdata/petstore.yaml
+`
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
+
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+
+	client.callTool(s.T(), "invoke", map[string]interface{}{
+		"endpointId": endpointID,
+		"headers": map[string]interface{}{
+			"X-Custom-Header": "custom-value",
+			"X-Another":       "another-value",
+		},
+	})
+
+	s.Equal("custom-value", capturedHeaders["X-Custom-Header"], "X-Custom-Header should be passed through")
+	s.Equal("another-value", capturedHeaders["X-Another"], "X-Another should be passed through")
+}
+
+func (s *MCPToolsSuite) TestInvokeWithCustomCookies() {
+	var capturedCookies string
+	mux := http.NewServeMux()
+	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+		capturedCookies = r.Header.Get("Cookie")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`[]`))
+	})
+	srv := s.StartHTTPServer(mux)
+
+	configContent := `specs:
+  - domain: petstore
+    llm_title: Petstore API
+    base_url: ` + srv.URL + `
+    collections:
+      - title: Pets
+        location: ./testdata/petstore.yaml
+`
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
+
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+
+	client.callTool(s.T(), "invoke", map[string]interface{}{
+		"endpointId": endpointID,
+		"cookies": map[string]interface{}{
+			"session": "abc123",
+			"theme":   "dark",
+		},
+	})
+
+	s.Contains(capturedCookies, "session=abc123", "session cookie should be passed through")
+	s.Contains(capturedCookies, "theme=dark", "theme cookie should be passed through")
+}
+
+func (s *MCPToolsSuite) TestInvokeWithGlobalHeaders() {
+	var capturedAccept, capturedUA string
+	mux := http.NewServeMux()
+	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+		capturedAccept = r.Header.Get("Accept")
+		capturedUA = r.Header.Get("User-Agent")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`[]`))
+	})
+	srv := s.StartHTTPServer(mux)
+
+	configContent := `http_client:
+  headers:
+    Accept: application/json
+  user_agent: swag2mcp-test/1.0
+specs:
+  - domain: petstore
+    llm_title: Petstore API
+    base_url: ` + srv.URL + `
+    collections:
+      - title: Pets
+        location: ./testdata/petstore.yaml
+`
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
+
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+
+	client.callTool(s.T(), "invoke", map[string]interface{}{
+		"endpointId": endpointID,
+	})
+
+	s.Equal("application/json", capturedAccept, "Accept should come from global http_client.headers")
+	s.Equal("swag2mcp-test/1.0", capturedUA, "User-Agent should come from global http_client.user_agent")
+}
+
 func TestMCPToolsSuite(t *testing.T) {
 	suite.Run(t, new(MCPToolsSuite))
 }
