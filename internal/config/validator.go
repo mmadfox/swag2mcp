@@ -20,8 +20,8 @@ var (
 	configValidator   *validator.Validate //nolint:gochecknoglobals // Lazily initialized singleton.
 	configValidatorMu sync.Mutex          //nolint:gochecknoglobals // Guards lazy validator initialization.
 	domainRegex       = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,60}$`)
-	titleRegex        = regexp.MustCompile(`^[\p{L}\p{N} #*_` + "`" + `~>\[\]()|.,!?;:'"\\-]+$`)
-	instructionRegex  = regexp.MustCompile(`^[\p{L}\p{N}\s#*_` + "`" + `~>\[\]()|.,!?;:'"\\-]+$`)
+	titleRegex        = regexp.MustCompile(`^[\p{L}\p{N} #*_` + "`" + `~>\[\]()|.,!?;:'"\\–—\-]+$`)
+	instructionRegex  = regexp.MustCompile(`^[\p{L}\p{N}\s#*_` + "`" + `~>\[\]()|.,!?;:'"\\–—\-]+$`)
 )
 
 // validationError describes a single validation issue.
