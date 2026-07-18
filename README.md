@@ -56,16 +56,21 @@ Or configure it manually — refer to your IDE's documentation on how to add cus
 
 **Option A — Fully automated (agent does everything)**
 
-Tell your agent:
+**Step 1** — Tell your agent:
 
-> "Set up swag2mcp with the Petstore API"
+> "Set up swag2mcp"
 
-The agent will:
-1. Download the latest release from GitHub
-2. Run `swag2mcp init` to create a workspace
-3. Add specs via `swag2mcp add spec --yaml '...'`
-4. Configure your IDE (see [Integration](#integration) below) — the IDE will start swag2mcp automatically
-5. Use MCP tools to discover and invoke APIs
+The agent will download and install swag2mcp, then create a workspace.
+
+**Step 2** — Tell your agent:
+
+> "Add the Petstore API"
+
+The agent will add the spec via `swag2mcp add spec --yaml '...'`.
+
+**Step 3** — Configure your IDE (see [Integration](#integration) below) — the IDE will start swag2mcp automatically.
+
+**Step 4** — Use MCP tools to discover and invoke APIs.
 
 **Option B — You install, agent connects**
 
@@ -182,6 +187,7 @@ After setup, try asking your agent:
 
 | Query | What happens |
 |-------|-------------|
+| "Add the Petstore API" | `add spec` — adds petstore spec from the repository |
 | "Show me all available APIs" | `spec_list` — lists petstore, binance, dadjoke, pokeapi |
 | "What endpoints does Binance have?" | `endpoint_by_spec` — shows 4 market data endpoints |
 | "Find endpoints related to pets" | `search("pet")` — finds petstore endpoints |

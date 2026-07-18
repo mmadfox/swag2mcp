@@ -30,7 +30,8 @@ This skill activates when the user asks to:
 
 | User says | What the skill does |
 |-----------|-------------------|
-| "Set up swag2mcp with the Petstore API" | Runs `swag2mcp init .`, `add spec`, configures MCP |
+| "Set up swag2mcp" | Downloads and installs swag2mcp, runs `swag2mcp init .` |
+| "Add the Petstore API" | Runs `add spec` with petstore spec from the repository |
 | "I want to connect my API to you" | Guides through `swag2mcp init .` + `add spec` |
 | "Initialize a workspace for my APIs" | Runs `swag2mcp init .` in current directory |
 | "Add the Binance API so I can check prices" | Runs `add spec` with binance spec |
