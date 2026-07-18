@@ -8,7 +8,7 @@ specs:
   - domain: petstore
     llm_title: Petstore API
     llm_instruction: |
-      Classic Petstore API. Use this to manage pets — list, create, and find by ID.
+      Classic Petstore API. Use this to manage pets, list, create, and find by ID.
     base_url: https://petstore.swagger.io/v2
     collections:
       - llm_title: Petstore
@@ -27,7 +27,7 @@ specs:
   - domain: countries
     llm_title: REST Countries API
     llm_instruction: |
-      Get information about countries — names, capitals, currencies, languages, and regions.
+      Get information about countries, names, capitals, currencies, languages, and regions.
     base_url: https://restcountries.com
     collections:
       - llm_title: Countries

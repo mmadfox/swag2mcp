@@ -21,11 +21,50 @@ t**swag2mcp** 是一个 CLI 工具和 MCP（模型上下文协议）服务器，
 
 ## 快速开始
 
-```bash
-# 安装
-go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
+### 选项1 — 从 GitHub Releases 下载（推荐）
 
-# 初始化工作目录
+1. 打开 https://github.com/mmadfox/swag2mcp/releases/latest
+2. 找到适合您系统的压缩包：
+
+   | 操作系统 | 架构 | 压缩包 |
+   |---------|------|--------|
+   | Linux | x86_64 | `swag2mcp_<version>_linux_amd64.tar.gz` |
+   | Linux | ARM64 | `swag2mcp_<version>_linux_arm64.tar.gz` |
+   | macOS | Intel | `swag2mcp_<version>_darwin_amd64.tar.gz` |
+   | macOS | Apple Silicon | `swag2mcp_<version>_darwin_arm64.tar.gz` |
+   | Windows | x86_64 | `swag2mcp_<version>_windows_amd64.zip` |
+
+3. 下载并安装：
+
+   **Linux / macOS:**
+   ```bash
+   tar -xzf swag2mcp_<version>_<os>_<arch>.tar.gz
+   sudo mv swag2mcp /usr/local/bin/
+   swag2mcp --version
+   ```
+
+   **Windows (PowerShell):**
+   ```powershell
+   Expand-Archive swag2mcp_<version>_windows_amd64.zip -DestinationPath .
+   move swag2mcp.exe C:\Windows\System32\
+   swag2mcp --version
+   ```
+
+4. （可选）对 mock 服务器重复相同步骤 — 下载 `swag2mcp-mock_<version>_<os>_<arch>.tar.gz`
+
+### 选项2 — 使用 Go 安装
+
+如果已安装 Go：
+
+```bash
+go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
+go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
+```
+
+### 安装后
+
+```bash
+# 初始化工作空间
 swag2mcp init
 
 # 启动 MCP 服务器（用于 LLM 代理）
@@ -33,11 +72,7 @@ swag2mcp mcp
 
 # 或使用交互式浏览器
 swag2mcp run
-```
-
-
-
----
+```---
 
 ## Example LLM Queries
 

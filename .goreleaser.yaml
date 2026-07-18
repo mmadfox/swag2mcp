@@ -7,7 +7,8 @@ before:
     - go mod tidy
 
 builds:
-  - main: ./cmd/swag2mcp
+  - id: swag2mcp
+    main: ./cmd/swag2mcp
     binary: swag2mcp
     env:
       - CGO_ENABLED=0
@@ -24,10 +25,42 @@ builds:
       - goos: windows
         goarch: arm64
 
+  - id: swag2mcp-mock
+    main: ./cmd/swag2mcp-mock
+    binary: swag2mcp-mock
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X github.com/mmadfox/swag2mcp/internal/commands.Version={{ .Version }}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+
 archives:
-  - formats: [tar.gz]
+  - id: swag2mcp
+    builds: [swag2mcp]
+    formats: [tar.gz]
     name_template: >-
-      {{ .ProjectName }}_
+      swag2mcp_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+  - id: swag2mcp-mock
+    builds: [swag2mcp-mock]
+    formats: [tar.gz]
+    name_template: >-
+      swag2mcp-mock_
       {{- .Version }}_
       {{- .Os }}_
       {{- .Arch }}

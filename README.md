@@ -24,6 +24,7 @@
 ## Table of Contents
 
 - [Installation](#installation)
+- [Example LLM Queries](#example-llm-queries)
 - [Documentation](#documentation)
 - [Integration](#integration)
 - [CLI Commands](#cli-commands)
@@ -60,7 +61,7 @@ Tell your agent:
 > "Set up swag2mcp with the Petstore API"
 
 The agent will:
-1. Install swag2mcp via `go install`
+1. Download the latest release from GitHub
 2. Run `swag2mcp init` to create a workspace
 3. Add specs via `swag2mcp add spec --yaml '...'`
 4. Configure your IDE (see [Integration](#integration) below) — the IDE will start swag2mcp automatically
@@ -69,8 +70,8 @@ The agent will:
 **Option B — You install, agent connects**
 
 ```bash
-# Install swag2mcp
-go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
+# Download the latest release from:
+# https://github.com/mmadfox/swag2mcp/releases/latest
 ```
 
 Then configure your IDE (see [Integration](#integration) below).
@@ -79,9 +80,50 @@ Then configure your IDE (see [Integration](#integration) below).
 
 Prefer the command line? Here's the manual setup.
 
+**Option 1 — Download from GitHub Releases (recommended)**
+
+1. Open [github.com/mmadfox/swag2mcp/releases/latest](https://github.com/mmadfox/swag2mcp/releases/latest)
+2. Find the archive for your system:
+
+   | OS | Architecture | Archive |
+   |----|-------------|---------|
+   | Linux | x86_64 | `swag2mcp_<version>_linux_amd64.tar.gz` |
+   | Linux | ARM64 | `swag2mcp_<version>_linux_arm64.tar.gz` |
+   | macOS | Intel | `swag2mcp_<version>_darwin_amd64.tar.gz` |
+   | macOS | Apple Silicon | `swag2mcp_<version>_darwin_arm64.tar.gz` |
+   | Windows | x86_64 | `swag2mcp_<version>_windows_amd64.zip` |
+
+3. Download and install:
+
+   **Linux / macOS:**
+   ```bash
+   tar -xzf swag2mcp_<version>_<os>_<arch>.tar.gz
+   sudo mv swag2mcp /usr/local/bin/
+   swag2mcp --version
+   ```
+
+   **Windows (PowerShell):**
+   ```powershell
+   Expand-Archive swag2mcp_<version>_windows_amd64.zip -DestinationPath .
+   move swag2mcp.exe C:\Windows\System32\
+   swag2mcp --version
+   ```
+
+4. (Optional) Repeat for mock server — download `swag2mcp-mock_<version>_<os>_<arch>.tar.gz`
+
+**Option 2 — Install with Go**
+
+If you have Go installed:
+
 ```bash
-# 1. Install
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
+go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
+```
+
+**After installation:**
+
+```bash
+# 1. Initialize workspace
 
 # 2. Initialize workspace
 swag2mcp init

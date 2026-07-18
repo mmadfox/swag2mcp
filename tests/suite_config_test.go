@@ -100,6 +100,7 @@ func (s *ConfigSuite) TestValidateTagFilter() {
 }
 
 func (s *ConfigSuite) TestAddSpecFromYAML() {
+	s.WriteConfig("specs: []")
 	yamlData := `domain: added-spec
 llm_title: Added Spec
 base_url: https://api.example.com
@@ -116,6 +117,7 @@ collections:
 }
 
 func (s *ConfigSuite) TestAddSpecFromStdin() {
+	s.WriteConfig("specs: []")
 	yamlData := `domain: stdin-spec
 llm_title: Stdin Spec
 base_url: https://api.example.com
@@ -137,6 +139,7 @@ func (s *ConfigSuite) TestAddSpecInvalidYAML() {
 }
 
 func (s *ConfigSuite) TestAddCollectionFromYAML() {
+	s.WriteConfig("specs: []")
 	specYAML := `domain: test-api
 llm_title: Test API
 base_url: https://api.example.com
@@ -159,6 +162,7 @@ location: ./testdata/petstore.yaml
 }
 
 func (s *ConfigSuite) TestDeleteSpec() {
+	s.WriteConfig("specs: []")
 	specYAML := `domain: to-delete
 llm_title: To Delete
 base_url: https://api.example.com
@@ -190,6 +194,7 @@ collections:
 }
 
 func (s *ConfigSuite) TestDeleteSpecCancel() {
+	s.WriteConfig("specs: []")
 	specYAML := `domain: keep-me
 llm_title: Keep Me
 base_url: https://api.example.com
@@ -205,6 +210,7 @@ collections:
 }
 
 func (s *ConfigSuite) TestListSpecs() {
+	s.WriteConfig("specs: []")
 	specYAML := `domain: list-test
 llm_title: List Test
 base_url: https://api.example.com

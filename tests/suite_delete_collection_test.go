@@ -11,6 +11,7 @@ type DeleteCollectionSuite struct {
 }
 
 func (s *DeleteCollectionSuite) TestByIndex() {
+	s.WriteConfig("specs: []")
 	specYAML := `domain: test-api
 llm_title: Test API
 base_url: https://api.example.com

@@ -17,6 +17,50 @@ This document describes every CLI command in swag2mcp. Use it when you need to t
 
 ---
 
+## Installation
+
+### Option 1 — Download from GitHub Releases (recommended)
+
+1. Open https://github.com/mmadfox/swag2mcp/releases/latest
+2. Find the archive for the user's system:
+
+   | OS | Architecture | Archive |
+   |----|-------------|---------|
+   | Linux | x86_64 | `swag2mcp_<version>_linux_amd64.tar.gz` |
+   | Linux | ARM64 | `swag2mcp_<version>_linux_arm64.tar.gz` |
+   | macOS | Intel | `swag2mcp_<version>_darwin_amd64.tar.gz` |
+   | macOS | Apple Silicon | `swag2mcp_<version>_darwin_arm64.tar.gz` |
+   | Windows | x86_64 | `swag2mcp_<version>_windows_amd64.zip` |
+
+3. Download and install:
+
+   **Linux / macOS:**
+   ```sh
+   tar -xzf swag2mcp_<version>_<os>_<arch>.tar.gz
+   sudo mv swag2mcp /usr/local/bin/
+   swag2mcp --version
+   ```
+
+   **Windows (PowerShell):**
+   ```powershell
+   Expand-Archive swag2mcp_<version>_windows_amd64.zip -DestinationPath .
+   move swag2mcp.exe C:\Windows\System32\
+   swag2mcp --version
+   ```
+
+4. (Optional) Repeat for mock server — download `swag2mcp-mock_<version>_<os>_<arch>.tar.gz`
+
+### Option 2 — Install with Go
+
+If Go is installed:
+
+```sh
+go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
+go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
+```
+
+---
+
 ## Quick Start
 
 ```sh

@@ -21,10 +21,49 @@ Il indexe vos spécifications API dans un moteur de recherche en texte intégral
 
 ## Démarrage rapide
 
-```bash
-# Installation
-go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
+### Option 1 — Télécharger depuis GitHub Releases (recommandé)
 
+1. Ouvrez https://github.com/mmadfox/swag2mcp/releases/latest
+2. Trouvez l'archive pour votre système :
+
+   | OS | Architecture | Archive |
+   |----|-------------|---------|
+   | Linux | x86_64 | `swag2mcp_<version>_linux_amd64.tar.gz` |
+   | Linux | ARM64 | `swag2mcp_<version>_linux_arm64.tar.gz` |
+   | macOS | Intel | `swag2mcp_<version>_darwin_amd64.tar.gz` |
+   | macOS | Apple Silicon | `swag2mcp_<version>_darwin_arm64.tar.gz` |
+   | Windows | x86_64 | `swag2mcp_<version>_windows_amd64.zip` |
+
+3. Téléchargez et installez :
+
+   **Linux / macOS :**
+   ```bash
+   tar -xzf swag2mcp_<version>_<os>_<arch>.tar.gz
+   sudo mv swag2mcp /usr/local/bin/
+   swag2mcp --version
+   ```
+
+   **Windows (PowerShell) :**
+   ```powershell
+   Expand-Archive swag2mcp_<version>_windows_amd64.zip -DestinationPath .
+   move swag2mcp.exe C:\Windows\System32\
+   swag2mcp --version
+   ```
+
+4. (Optionnel) Répétez pour le serveur mock — téléchargez `swag2mcp-mock_<version>_<os>_<arch>.tar.gz`
+
+### Option 2 — Installer avec Go
+
+Si Go est installé :
+
+```bash
+go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
+go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
+```
+
+### Après l'installation
+
+```bash
 # Initialiser l'espace de travail
 swag2mcp init
 
@@ -33,9 +72,7 @@ swag2mcp mcp
 
 # Ou utiliser l'explorateur interactif
 swag2mcp run
-```
-
----
+```---
 
 ## Example LLM Queries
 

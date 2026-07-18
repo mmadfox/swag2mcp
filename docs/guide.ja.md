@@ -21,23 +21,58 @@ API仕様を全文検索エンジンにインデックスし、16のMCPツール
 
 ## クイックスタート
 
-```bash
-# インストール
-go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
+### オプション1 — GitHub Releasesからダウンロード（推奨）
 
-# ワークスペースの初期化
+1. https://github.com/mmadfox/swag2mcp/releases/latest を開く
+2. お使いのシステムに合ったアーカイブを見つける：
+
+   | OS | アーキテクチャ | アーカイブ |
+   |----|-------------|-----------|
+   | Linux | x86_64 | `swag2mcp_<version>_linux_amd64.tar.gz` |
+   | Linux | ARM64 | `swag2mcp_<version>_linux_arm64.tar.gz` |
+   | macOS | Intel | `swag2mcp_<version>_darwin_amd64.tar.gz` |
+   | macOS | Apple Silicon | `swag2mcp_<version>_darwin_arm64.tar.gz` |
+   | Windows | x86_64 | `swag2mcp_<version>_windows_amd64.zip` |
+
+3. ダウンロードしてインストール：
+
+   **Linux / macOS:**
+   ```bash
+   tar -xzf swag2mcp_<version>_<os>_<arch>.tar.gz
+   sudo mv swag2mcp /usr/local/bin/
+   swag2mcp --version
+   ```
+
+   **Windows (PowerShell):**
+   ```powershell
+   Expand-Archive swag2mcp_<version>_windows_amd64.zip -DestinationPath .
+   move swag2mcp.exe C:\Windows\System32\
+   swag2mcp --version
+   ```
+
+4. （オプション）モックサーバーも同様に — `swag2mcp-mock_<version>_<os>_<arch>.tar.gz` をダウンロード
+
+### オプション2 — Goでインストール
+
+Goがインストールされている場合：
+
+```bash
+go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
+go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
+```
+
+### インストール後
+
+```bash
+# ワークスペースを初期化
 swag2mcp init
 
-# MCPサーバーの起動（LLMエージェント用）
+# MCPサーバーを起動（LLMエージェント用）
 swag2mcp mcp
 
 # またはインタラクティブエクスプローラー
 swag2mcp run
-```
-
-
-
----
+```---
 
 ## Example LLM Queries
 
