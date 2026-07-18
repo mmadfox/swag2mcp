@@ -505,3 +505,27 @@ func TestSpecFileNameBase(t *testing.T) {
 		})
 	}
 }
+
+func TestSpecFileName(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		domain   string
+		title    string
+		location string
+		want     string
+	}{
+		{name: "title matches domain", domain: "pokeapi", title: "PokéAPI", location: "https://example.com/pokeapi.yaml", want: "pokeapi.yaml"},
+		{name: "title differs from domain", domain: "petstore", title: "Pet Operations", location: "https://example.com/pet.yaml", want: "petstore-pet-operations.yaml"},
+		{name: "empty title falls back to location base", domain: "weather", title: "", location: "https://example.com/forecast.json", want: "weather-forecast.json"},
+		{name: "title differs by case only", domain: "pokeapi", title: "pokeapi", location: "https://example.com/pokeapi.yaml", want: "pokeapi.yaml"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := specFileName(tt.domain, tt.title, tt.location)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}

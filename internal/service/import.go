@@ -8,9 +8,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
 
 	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 // ImportRequest is the request for the Import method.
@@ -307,8 +311,19 @@ func specFileName(domain, title, location string) string {
 		"_", "-",
 		".", "-",
 	).Replace(sanitized)
+	sanitized = removeDiacritics(sanitized)
+
+	if sanitized == domain {
+		return fmt.Sprintf("%s%s", domain, ext)
+	}
 
 	return fmt.Sprintf("%s-%s%s", domain, sanitized, ext)
+}
+
+func removeDiacritics(s string) string {
+	t := transform.Chain(norm.NFD, runes.Remove(runes.Predicate(unicode.IsMark)), norm.NFC)
+	result, _, _ := transform.String(t, s)
+	return result
 }
 
 const defaultSpecName = "spec"
