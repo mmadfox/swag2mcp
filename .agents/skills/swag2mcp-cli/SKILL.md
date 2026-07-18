@@ -138,11 +138,13 @@ Initialize a workspace directory with the default config file.
 **Examples:**
 ```sh
 swag2mcp init                    # create ~/.swag2mcp/swag2mcp.yaml
-swag2mcp init ./                 # create ./swag2mcp.yaml
+swag2mcp init ./                 # create ./swag2mcp.yaml (in current directory!)
 swag2mcp init path/to            # create path/to/swag2mcp.yaml
 swag2mcp init -i                 # interactive wizard
 swag2mcp init -f                 # force overwrite
 ```
+
+> **Note:** `swag2mcp init ./` creates `swag2mcp.yaml` directly in the current directory, NOT inside a `.swag2mcp/` subdirectory. For the recommended layout (`.swag2mcp/` subdirectory), use the workspace creation rules in the "Workspace creation rules" section above: `mkdir -p .swag2mcp && swag2mcp init ./.swag2mcp`.
 
 **Behavior:** Creates `cache/`, `specs/`, `responses/`, `auth_scripts/` subdirectories and a `swag2mcp.yaml` config file. After init, prints a hint: `"Next step: edit swag2mcp.yaml or run 'swag2mcp ls' to list configured specs"`.
 
@@ -152,6 +154,8 @@ swag2mcp init -f                 # force overwrite
 
 Add a new API specification to the config.
 
+> **`[path]` is the workspace directory** containing `swag2mcp.yaml`, NOT the path to a spec file or URL. If omitted, swag2mcp resolves the workspace using the path resolution rules (see "Path Resolution" section below).
+
 | Flag | Shorthand | Type | Default | Description |
 |------|-----------|------|---------|-------------|
 | `--yaml` | `-y` | string | `""` | YAML input inline or `-` for stdin |
@@ -160,13 +164,28 @@ Add a new API specification to the config.
 **Examples:**
 ```sh
 swag2mcp add spec --example
+
+# Inline YAML (simple spec, no special chars in values)
 swag2mcp add spec --yaml 'domain: petstore
 llm_title: Petstore API
 base_url: https://petstore.swagger.io/v2
 collections:
   - llm_title: Pets
     location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json'
+
+# Safer: pipe from file or heredoc (avoids shell quoting issues with colons, &, #)
 cat spec.yaml | swag2mcp add spec --yaml -
+
+# Heredoc — recommended for complex YAML with special characters
+swag2mcp add spec --yaml - <<EOF
+domain: my-api
+llm_title: My API
+llm_instruction: "Use this API for X & Y # important"
+base_url: https://api.example.com/v1
+collections:
+  - llm_title: Main
+    location: https://raw.githubusercontent.com/org/repo/main/spec.yaml
+EOF
 ```
 
 **YAML format:**
@@ -191,6 +210,8 @@ collections:
 
 Add a new collection to an existing spec.
 
+> **`[path]` is the workspace directory** containing `swag2mcp.yaml`, NOT the path to a collection spec file. If omitted, swag2mcp resolves the workspace using the path resolution rules (see "Path Resolution" section below).
+
 | Flag | Shorthand | Type | Default | Description |
 |------|-----------|------|---------|-------------|
 | `--yaml` | `-y` | string | `""` | YAML input inline or `-` for stdin |
@@ -199,10 +220,20 @@ Add a new collection to an existing spec.
 **Examples:**
 ```sh
 swag2mcp add collection --example
+
+# Inline YAML
 swag2mcp add collection --yaml 'spec_domain: petstore
 llm_title: Orders Collection
 location: https://petstore.example.com/orders.json'
+
+# Safer: pipe from file or heredoc
 cat collection.yaml | swag2mcp add collection --yaml -
+
+swag2mcp add collection --yaml - <<EOF
+spec_domain: petstore
+llm_title: Orders Collection
+location: https://petstore.example.com/orders.json
+EOF
 ```
 
 **YAML format:**
@@ -218,6 +249,8 @@ location: https://petstore.example.com/orders.json
 
 Delete a specification interactively. No flags. Prompts for selection and confirmation.
 
+> **Requires a TTY (interactive terminal).** This command will not work in CI/CD pipelines, cron jobs, or non-interactive scripts because it requires user input for selection and confirmation. There is no `--force` or `--yes` flag to skip prompts.
+
 ```sh
 swag2mcp delete spec
 swag2mcp delete spec ./
@@ -228,6 +261,8 @@ swag2mcp delete spec ./
 ## 5. `swag2mcp delete collection [path]`
 
 Delete a collection interactively. No flags. Prompts for spec selection, collection selection, and confirmation.
+
+> **Requires a TTY (interactive terminal).** This command will not work in CI/CD pipelines, cron jobs, or non-interactive scripts because it requires user input for selection and confirmation. There is no `--force` or `--yes` flag to skip prompts.
 
 ```sh
 swag2mcp delete collection
@@ -292,6 +327,12 @@ swag2mcp validate --tags=public
 - `location` points to a valid OpenAPI/Swagger/Postman file
 - Remote URLs are reachable
 - Auth config is valid for the selected type
+
+**What `validate` does NOT check:**
+- Authentication endpoints (it validates auth config syntax, but does not test login/token exchange)
+- Runtime availability of API endpoints (only spec URL reachability)
+- Correctness of `base_url` (it validates format, but does not make test requests)
+- Mock server configuration (`base_mock_url` is not verified for connectivity)
 
 Prints `"Configuration is valid."` or detailed error messages.
 
@@ -363,6 +404,55 @@ swag2mcp mcp --dump-dir ./dumps
 
 > **Note:** If the workspace was initialized at a custom path (e.g. `swag2mcp init ./my-project`), specify the path when starting the MCP server: `swag2mcp mcp ./my-project`. The IDE configuration must also use the full path to the config file.
 
+> **Path resolution warning:** When `[path]` is omitted, `swag2mcp mcp` searches for `swag2mcp.yaml` in the current directory first, then falls back to `~/.swag2mcp/`. If you run the command from the wrong directory, it may load a different workspace than intended. **Always specify `[path]` explicitly when running as a service or in IDE config.**
+
+### IDE Configuration Examples
+
+**VS Code** (`.vscode/settings.json` or global settings):
+```json
+{
+  "mcp": {
+    "servers": {
+      "swag2mcp": {
+        "command": "swag2mcp",
+        "args": ["mcp", "/absolute/path/to/.swag2mcp"]
+      }
+    }
+  }
+}
+```
+
+**Cursor / Windsurf** (`~/.cursor/mcp.json` or project `.cursor/mcp.json`):
+```json
+{
+  "mcpServers": {
+    "swag2mcp": {
+      "command": "swag2mcp",
+      "args": ["mcp", "/absolute/path/to/.swag2mcp"]
+    }
+  }
+}
+```
+
+**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+```json
+{
+  "mcpServers": {
+    "swag2mcp": {
+      "command": "swag2mcp",
+      "args": ["mcp", "/absolute/path/to/.swag2mcp"]
+    }
+  }
+}
+```
+
+**JetBrains IDEs** (Settings → Tools → MCP):
+- Name: `swag2mcp`
+- Command: `swag2mcp`
+- Arguments: `mcp /absolute/path/to/.swag2mcp`
+
+> Always use an **absolute path** to the workspace directory in IDE config. Relative paths may fail depending on the IDE's working directory.
+
 **Behavior:**
 - Requires existing config (does NOT auto-init)
 - Applies MCP settings from YAML config as fallback
@@ -424,20 +514,29 @@ Import spec files into the workspace. Three modes of operation.
 | `--spec` | `-s` | stringSlice | `nil` | Import collections from specified specs (comma-separated) |
 | `--from-zip` | | string | `""` | Restore workspace from a swag2mcp backup ZIP |
 
-**Mode 1 — Single import:**
+> **`[path]` is the workspace directory** containing `swag2mcp.yaml`. `[source]` is a URL or local path to an OpenAPI/Swagger/Postman spec file. `[name]` is the domain name for the new spec.
+
+### Mode 1 — Single import from URL or file
+
+Import a spec file (URL or local path) and assign it a domain name:
 ```sh
 swag2mcp import https://example.com/spec.yaml myspec
 swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
 swag2mcp import ./local-spec.yaml myspec
 ```
 
-**Mode 2 — Bulk import from config:**
+### Mode 2 — Bulk import from existing config
+
+Import all collections for the specified domains from the configured spec URLs:
 ```sh
 swag2mcp import --spec petstore
 swag2mcp import /path/to/workspace --spec petstore,store
 ```
 
-**Mode 3 — Restore from backup:**
+### Mode 3 — Restore from backup
+
+> **The `--from-zip` file must be a ZIP created by `swag2mcp export`.** Arbitrary ZIP files or ZIPs from other tools will not work — the archive has a specific internal structure (`swag2mcp.yaml`, `specs/`, `auth_scripts/`).
+
 ```sh
 swag2mcp import --from-zip /path/to/backup.zip
 swag2mcp import /path/to/workspace /path/to/backup.zip
@@ -453,21 +552,45 @@ Export workspace as a portable ZIP backup.
 |------|-----------|------|---------|-------------|
 | `--spec` | `-s` | stringSlice | `nil` | Export only specified specs (comma-separated) |
 
+**IMPORTANT:** The `[output]` argument must be a **full file path ending in `.zip`** (e.g. `/path/to/backup.zip`). Do NOT pass a directory — the command will not create a ZIP archive if given a directory path.
+
 ```sh
-swag2mcp export
-swag2mcp export /path/to/workspace
+# ✅ Correct — full .zip file path
 swag2mcp export /path/to/workspace /path/to/backup.zip
+
+# ❌ Wrong — directory, NOT a file path (no ZIP will be created)
+swag2mcp export /path/to/workspace /some/directory
+
+# No output arg — creates swag2mcp-backup-<timestamp>.zip in current directory
+swag2mcp export /path/to/workspace
+
+# Filter by spec
 swag2mcp export --spec petstore
 swag2mcp export --spec petstore,store
 ```
 
 **Behavior:** Creates a ZIP with all spec files, config, and auth scripts. Default output: `swag2mcp-backup-<timestamp>.zip` in current directory.
 
+**Post-command verification:** After running `export`, always verify the ZIP file was created:
+```sh
+ls -la swag2mcp-backup-*.zip
+# or for a custom output path:
+ls -la /path/to/backup.zip
+```
+
 ---
 
 ## 16. `swag2mcp-mock mockserver [path]`
 
-Start mock servers for all API specs (separate binary). Mock servers generate fake responses based on the OpenAPI schema — useful for testing without hitting real APIs.
+Start mock servers for all API specs. **This is a separate binary** — `swag2mcp-mock` is not included in the main `swag2mcp` package and must be installed independently:
+
+```sh
+# Option 1: Download from GitHub Releases (separate archive: swag2mcp-mock_<version>_<os>_<arch>.tar.gz)
+# Option 2: Install with Go
+go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
+```
+
+Mock servers generate fake responses based on the OpenAPI schema — useful for testing without hitting real APIs.
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
@@ -506,6 +629,90 @@ swag2mcp-mock ./
 curl http://localhost:8081/pets
 # → [{"id":1,"name":"Pet_name","status":"available"}]
 ```
+
+---
+
+## Post-Command Verification
+
+Always verify that file-creating commands succeeded by checking the result. This prevents silent failures where a command reports success but the expected output is missing.
+
+| Command | What to verify |
+|---------|---------------|
+| `swag2mcp init` | `ls <path>/swag2mcp.yaml` — config file exists |
+| `swag2mcp export` | `ls -la <output>.zip` or `ls -la swag2mcp-backup-*.zip` — ZIP file exists |
+| `swag2mcp import` | `swag2mcp ls <path>` — new spec appears in list |
+| `swag2mcp add spec` | `swag2mcp ls <path>` — new spec appears in list |
+| `swag2mcp add collection` | `swag2mcp ls <path>` — new collection appears under spec |
+| `swag2mcp clean` | `ls <path>/cache <path>/responses` — directories removed |
+| `swag2mcp update` | `swag2mcp ls <path>` — specs still listed and reachable |
+| `swag2mcp delete spec/collection` | `swag2mcp ls <path>` — removed item no longer appears |
+
+**General rule:** After any command that creates, modifies, or deletes files on disk, run a quick check (`ls`, `swag2mcp ls`, or `swag2mcp validate`) to confirm the expected result before reporting success to the user.
+
+---
+
+## Troubleshooting / Common Issues
+
+### `swag2mcp: command not found`
+
+swag2mcp is not installed or not in `$PATH`. Install it (see "Installation" section) or verify the binary location:
+```sh
+which swag2mcp
+# If empty, add the install location to PATH or use the full path:
+/usr/local/bin/swag2mcp --version
+```
+
+### `Configuration file not found` or wrong workspace loaded
+
+swag2mcp resolves the config file using the "Path Resolution" rules above. If you get this error:
+1. Verify you're in the correct directory, OR
+2. Pass the workspace path explicitly: `swag2mcp ls /path/to/.swag2mcp`
+
+### Spec URL returns 403 / 404 / CORS error
+
+- **403 / 404:** The `location` URL is incorrect or the file was moved. Verify the URL in a browser.
+- **CORS error when using `swag2mcp mcp`:** CORS only affects browser-based requests. The MCP server makes server-side requests and is not affected by CORS. If you see CORS errors, check that you're not confusing `location` (the spec file URL) with `base_url` (the API endpoint).
+
+### YAML parse errors
+
+swag2mcp requires valid YAML with correct indentation. Common mistakes:
+- Tabs instead of spaces (YAML requires spaces)
+- Missing indentation for nested fields (`collections`, `auth`, `http_client`)
+- Unquoted strings with special characters (`:`, `#`, `&`, `{`)
+
+Validate with: `swag2mcp validate /path/to/.swag2mcp`
+
+### MCP server starts but tools/list returns nothing
+
+- Verify the workspace path matches between `swag2mcp init` and `swag2mcp mcp`
+- Check that `disable: true` is not set on all specs
+- For HTTP transport, ensure the handshake sequence is completed (see "MCP HTTP Transport — Handshake Protocol")
+
+### Port already in use (HTTP transport)
+
+If `swag2mcp mcp --transport sse --http-addr :8080` fails with "address already in use":
+```sh
+# Find the process using port 8080
+lsof -i :8080
+# Use a different port
+swag2mcp mcp --transport sse --http-addr :8081
+```
+
+---
+
+## Path Resolution
+
+Many swag2mcp commands accept an optional `[path]` argument — the workspace directory containing `swag2mcp.yaml`. Understanding how this path is resolved is critical to avoid loading the wrong config.
+
+**Resolution order:**
+1. **Explicit `[path]` argument** — if provided, swag2mcp uses it directly
+2. **Current directory** — looks for `./swag2mcp.yaml`
+3. **Default home directory** — falls back to `~/.swag2mcp/swag2mcp.yaml`
+
+**Common pitfalls:**
+- Running `swag2mcp mcp` without `[path]` from a random directory may load `~/.swag2mcp/` instead of your project's `.swag2mcp/`
+- `swag2mcp init ./` creates `swag2mcp.yaml` in the current directory, NOT inside a `.swag2mcp/` subdirectory (see "Workspace creation rules" for the recommended pattern)
+- **Always pass an explicit `[path]`** when running as a service or configuring an IDE
 
 ---
 
@@ -613,32 +820,32 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
 ```
 
-### Example 3: icanhazdadjoke (public, no auth)n
-n
-```yamln
-specs:n
-  - domain: dadjoken
-    llm_title: icanhazdadjoke APIn
-    llm_instruction: |n
-      The largest selection of dad jokes on the internet.n
-      Use this to get random jokes, search by term, or find a specific joke by ID.n
-    base_url: https://icanhazdadjoke.comn
-    collections:n
-      - llm_title: Jokesn
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yamln
-```n
-n
-### Example 7: PokéAPI (public, no auth)n
-n
-```yamln
-specs:n
-  - domain: pokeapin
-    llm_title: PokéAPIn
-    llm_instruction: |n
-      The RESTful Pokémon API. Use this to get Pokémon data,n
-      list Pokémon, search by type, and find Pokémon by ID or name.n
-    base_url: https://pokeapi.con
-    collections:n
-      - llm_title: Pokémonn
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/pokeapi.yamln
+### Example 3: icanhazdadjoke (public, no auth)
+
+```yaml
+specs:
+  - domain: dadjoke
+    llm_title: icanhazdadjoke API
+    llm_instruction: |
+      The largest selection of dad jokes on the internet.
+      Use this to get random jokes, search by term, or find a specific joke by ID.
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
+```
+
+### Example 4: PokéAPI (public, no auth)
+
+```yaml
+specs:
+  - domain: pokeapi
+    llm_title: PokéAPI
+    llm_instruction: |
+      The RESTful Pokémon API. Use this to get Pokémon data,
+      list Pokémon, search by type, and find Pokémon by ID or name.
+    base_url: https://pokeapi.co
+    collections:
+      - llm_title: Pokémon
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/pokeapi.yaml
 ```
