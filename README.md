@@ -40,7 +40,7 @@
 
 This path is for users who want to use swag2mcp through an AI agent (Opencode, Cursor, Claude, Copilot, Crush, etc.).
 
-**Step 1 — Install the swag2mcp-cli skill**
+**Step 1 — Install the `swag2mcp-cli` skill**
 
 The skill teaches your agent all commands, flags, config format, and real-world examples. Without it, the agent won't know how to use swag2mcp.
 
@@ -66,9 +66,9 @@ PROMPT> "Install the swag2mcp-cli skill"
 PROMPT> "Set up swag2mcp"
 ```
 
-The agent will download and install swag2mcp, then create a workspace with ready-to-use specs.
+The agent will download and install `swag2mcp`, then create a workspace with ready-to-use specs.
 
-**Step 2** — Configure your IDE (see [Integration](#integration) below) — the IDE will start swag2mcp automatically.
+**Step 2** — Configure your IDE (see [Integration](#integration) below) — the IDE will start `swag2mcp` automatically.
 
 **Step 3** — Use MCP tools to discover and invoke APIs.
 
