@@ -48,6 +48,9 @@ You can ask your agent to install the skill by providing this link:
 
 > "Add the swag2mcp-cli skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
 
+> "Add the swag2mcp-format skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md"
+
+
 Or configure it manually — refer to your IDE's documentation on how to add custom skills.
 
 > **Note:** Some IDEs require a restart after adding a new skill for it to take effect.
