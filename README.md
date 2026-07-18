@@ -62,8 +62,8 @@ Or configure it manually — refer to your IDE's documentation on how to add cus
 **Step 1** — Tell your agent:
 
 ```bash
-PROMPT> "Install the swag2mcp-cli skill"
-PROMPT> "Install the swag2mcp-format skill"
+PROMPT> "Load the swag2mcp-cli skill"
+PROMPT> "Load the swag2mcp-format skill"
 PROMPT> "Set up swag2mcp"
 ```
 
