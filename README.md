@@ -58,9 +58,10 @@ Or configure it manually — refer to your IDE's documentation on how to add cus
 
 **Step 1** — Tell your agent:
 
+> "Install the swag2mcp-cli skill"
 > "Set up swag2mcp"
 
-The agent will download and install swag2mcp, then create a workspace.
+The agent will download and install swag2mcp, then create a workspace with ready-to-use specs.
 
 **Step 2** — Configure your IDE (see [Integration](#integration) below) — the IDE will start swag2mcp automatically.
 
