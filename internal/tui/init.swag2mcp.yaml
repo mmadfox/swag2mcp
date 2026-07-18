@@ -1,12 +1,34 @@
 # swag2mcp — configuration
-# Replace the values below with your own API specifications.
+# Ready-to-use specs from the repository.
+# Uncomment or modify as needed.
 mcp:
   transport: stdio
 
-# specs:
-#   - domain: my-api
-#     llm_title: My API
-#     base_url: https://api.example.com
-#     collections:
-#       - llm_title: Main Collection
-#         location: ./specs/openapi.json
+specs:
+  - domain: petstore
+    llm_title: Petstore API
+    llm_instruction: |
+      Classic Petstore API. Use this to manage pets — list, create, and find by ID.
+    base_url: https://petstore.swagger.io/v2
+    collections:
+      - llm_title: Petstore
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+
+  - domain: binance
+    llm_title: Binance Market Data API
+    llm_instruction: |
+      Binance cryptocurrency exchange public market data.
+      Use this to get prices, klines, exchange info, and 24hr ticker.
+    base_url: https://api.binance.com
+    collections:
+      - llm_title: Market Data
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
+
+  - domain: countries
+    llm_title: REST Countries API
+    llm_instruction: |
+      Get information about countries — names, capitals, currencies, languages, and regions.
+    base_url: https://restcountries.com
+    collections:
+      - llm_title: Countries
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/countries.yaml

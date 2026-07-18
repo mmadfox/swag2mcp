@@ -35,6 +35,26 @@ swag2mcp mcp
 swag2mcp run
 ```
 
+
+
+---
+
+## Example LLM Queries
+
+After setup, try asking your agent:
+
+| Query | What happens |
+|-------|-------------|
+| "Show me all available APIs" | `spec_list` — lists petstore, binance, countries |
+| "What endpoints does Binance have?" | `endpoint_by_spec` — shows 4 market data endpoints |
+| "Find endpoints related to pets" | `search("pet")` — finds petstore endpoints |
+| "What tags are in the Petstore API?" | `tag_by_spec` — shows "pets" tag |
+| "Show me the GET /pets endpoint details" | `inspect` — shows parameters and response schema |
+| "Get the current BTC price from Binance" | `invoke` — real API call to Binance |
+| "Find countries in Europe" | `invoke` — calls REST Countries API |
+
+---
+
 ---
 
 ## Configuración
