@@ -186,7 +186,7 @@ If the agent lists swag2mcp tools (spec_list, search, invoke, etc.) — everythi
 
 **< PROMPT >**
 ```bash
-"Connect swag2mcp MCP in my IDE"
+"Load swag2mcp MCP"
 ```
 
 After setup, try asking your agent:
