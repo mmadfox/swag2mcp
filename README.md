@@ -59,6 +59,7 @@ Or configure it manually — refer to your IDE's documentation on how to add cus
 **Step 1** — Tell your agent:
 
 > "Install the swag2mcp-cli skill"
+
 > "Set up swag2mcp"
 
 The agent will download and install swag2mcp, then create a workspace with ready-to-use specs.
@@ -71,7 +72,7 @@ The agent will download and install swag2mcp, then create a workspace with ready
 
 ```bash
 # Download the latest release from:
-# https://github.com/mmadfox/swag2mcp/releases/latest
+https://github.com/mmadfox/swag2mcp/releases/latest
 ```
 
 Then configure your IDE (see [Integration](#integration) below).
@@ -123,12 +124,7 @@ go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 **After installation:**
 
 ```bash
-# 1. Initialize workspace
-
-# 2. Initialize workspace
 swag2mcp init
-
-# 3. Add API specifications
 
 Via CLI:
 swag2mcp add spec --yaml 'domain: binance
