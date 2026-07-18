@@ -81,13 +81,13 @@ After setup, try asking your agent:
 
 | Query | What happens |
 |-------|-------------|
-| "Show me all available APIs" | `spec_list` — lists petstore, binance, countries |
+| "Show me all available APIs" | `spec_list` — lists petstore, binance, dadjoke, pokeapi |
 | "What endpoints does Binance have?" | `endpoint_by_spec` — shows 4 market data endpoints |
 | "Find endpoints related to pets" | `search("pet")` — finds petstore endpoints |
 | "What tags are in the Petstore API?" | `tag_by_spec` — shows "pets" tag |
 | "Show me the GET /pets endpoint details" | `inspect` — shows parameters and response schema |
 | "Get the current BTC price from Binance" | `invoke` — real API call to Binance |
-| "Find countries in Europe" | `invoke` — calls REST Countries API |
+| "Get a random dad joke" | `invoke` — calls icanhazdadjoke API |
 
 ---
 
@@ -301,6 +301,8 @@ swag2mcp mcp --disable-llm-auth=false
 swag2mcp mcp --dump-dir=/tmp/dump
 swag2mcp mcp --transport streamable-http --http-addr :9090  # удалённый агент
 ```
+
+> **Note:** If you initialized the workspace at a custom path (e.g. `swag2mcp init ./my-project`), you must specify the path when starting the MCP server: `swag2mcp mcp ./my-project`. The IDE configuration must also use the full path to the config file.
 
 ### `version`
 

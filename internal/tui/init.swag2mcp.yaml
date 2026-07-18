@@ -1,6 +1,7 @@
 # swag2mcp — configuration
 # Ready-to-use specs from the repository.
 # Uncomment or modify as needed.
+disable_ratelimiter: true
 mcp:
   transport: stdio
 
@@ -24,11 +25,22 @@ specs:
       - llm_title: Market Data
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
 
-  - domain: countries
-    llm_title: REST Countries API
+  - domain: dadjoke
+    llm_title: icanhazdadjoke API
     llm_instruction: |
-      Get information about countries, names, capitals, currencies, languages, and regions.
-    base_url: https://restcountries.com
+      The largest selection of dad jokes on the internet.
+      Use this to get random jokes, search by term, or find a specific joke by ID.
+    base_url: https://icanhazdadjoke.com
     collections:
-      - llm_title: Countries
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/countries.yaml
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
+
+  - domain: pokeapi
+    llm_title: PokéAPI
+    llm_instruction: |
+      The RESTful Pokémon API. Use this to get Pokémon data,
+      list Pokémon, search by type, and find Pokémon by ID or name.
+    base_url: https://pokeapi.co
+    collections:
+      - llm_title: Pokémon
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/pokeapi.yaml

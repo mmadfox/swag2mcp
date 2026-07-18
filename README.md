@@ -168,17 +168,27 @@ swag2mcp run
 
 ## Example LLM Queries
 
+Before asking your agent, make sure swag2mcp MCP is connected in your IDE (see [Integration](#integration) above). The agent needs access to the MCP tools to discover and invoke APIs.
+
+It is recommended to always start with this question to verify swag2mcp is connected:
+
+> "What MCP tools do you support?"
+
+If the agent lists swag2mcp tools (spec_list, search, invoke, etc.) — everything is working. If not, ask the agent to connect swag2mcp:
+
+> "Connect swag2mcp MCP in my IDE"
+
 After setup, try asking your agent:
 
 | Query | What happens |
 |-------|-------------|
-| "Show me all available APIs" | `spec_list` — lists petstore, binance, countries |
+| "Show me all available APIs" | `spec_list` — lists petstore, binance, dadjoke, pokeapi |
 | "What endpoints does Binance have?" | `endpoint_by_spec` — shows 4 market data endpoints |
 | "Find endpoints related to pets" | `search("pet")` — finds petstore endpoints |
 | "What tags are in the Petstore API?" | `tag_by_spec` — shows "pets" tag |
 | "Show me the GET /pets endpoint details" | `inspect` — shows parameters and response schema |
 | "Get the current BTC price from Binance" | `invoke` — real API call to Binance |
-| "Find countries in Europe" | `invoke` — calls REST Countries API |
+| "Get a random dad joke" | `invoke` — calls icanhazdadjoke API |
 
 ---
 
@@ -206,6 +216,8 @@ After setup, try asking your agent:
 ## Integration
 
 swag2mcp speaks the Model Context Protocol (MCP) and works with any MCP-compatible client. All settings (tags, transport, auth) are configured in `swag2mcp.yaml` — see [examples](examples/).
+
+> **Note:** If you initialized the workspace at a custom path (e.g. `swag2mcp init ./my-project`), you must specify the path when starting the MCP server: `swag2mcp mcp ./my-project`. The IDE configuration must also use the full path to the config file.
 
 ### Local (stdio) — agent on the same machine
 
