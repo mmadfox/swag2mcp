@@ -62,15 +62,9 @@ Or configure it manually — refer to your IDE's documentation on how to add cus
 
 The agent will download and install swag2mcp, then create a workspace.
 
-**Step 2** — Tell your agent:
+**Step 2** — Configure your IDE (see [Integration](#integration) below) — the IDE will start swag2mcp automatically.
 
-> "Add the Petstore API"
-
-The agent will add the spec via `swag2mcp add spec --yaml '...'`.
-
-**Step 3** — Configure your IDE (see [Integration](#integration) below) — the IDE will start swag2mcp automatically.
-
-**Step 4** — Use MCP tools to discover and invoke APIs.
+**Step 3** — Use MCP tools to discover and invoke APIs.
 
 **Option B — You install, agent connects**
 
