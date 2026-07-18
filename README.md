@@ -28,7 +28,7 @@
 - [Integration](#integration)
 - [CLI Commands](#cli-commands)
 - [Mock Server](#mock-server)
-- [Examples](#examples)
+- [Configuration Examples](#configuration-examples)
 - [License](#license)
 
 ---
