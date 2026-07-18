@@ -46,7 +46,7 @@ The skill teaches your agent all commands, flags, config format, and real-world 
 
 You can ask your agent to install the skill by providing this link:
 
-PROMPTs>
+**< PROMPTS >:**
 ```bash
 1. "Add the swag2mcp-cli skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
 2. "Add the swag2mcp-format skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md"
@@ -62,7 +62,7 @@ Or configure it manually — refer to your IDE's documentation on how to add cus
 
 **Step 1** — Tell your agent:
 
-PROMPTs>
+**< PROMPTS >**
 ```bash
 1. "Load the swag2mcp-cli skill"
 2. "Load the swag2mcp-format skill"
@@ -177,21 +177,21 @@ Before asking your agent, make sure swag2mcp MCP is connected in your IDE (see [
 
 It is recommended to always start with this question to verify swag2mcp is connected:
 
-PROMPT>
+**< PROMPT >**
 ```bash
 "What MCP tools do you support?"
 ```
 
 If the agent lists swag2mcp tools (spec_list, search, invoke, etc.) — everything is working. If not, ask the agent to connect swag2mcp:
 
-PROMPT>
+**< PROMPT >**
 ```bash
 "Connect swag2mcp MCP in my IDE"
 ```
 
 After setup, try asking your agent:
 
-| PROMPT> | What happens |
+| < PROMPT > | What happens |
 |-------|-------------|
 | "List my configured APIs" | `spec_list` — lists available specs |
 | "Show me all available APIs" | `spec_list` — lists petstore, binance, dadjoke, pokeapi |
