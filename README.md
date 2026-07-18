@@ -46,7 +46,7 @@ The skill teaches your agent all commands, flags, config format, and real-world 
 
 You can ask your agent to install the skill by providing this link:
 
-**< PROMPTS >:**
+**< PROMPTS >**
 ```bash
 1. "Add the swag2mcp-cli skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
 2. "Add the swag2mcp-format skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md"
