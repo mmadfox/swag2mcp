@@ -328,6 +328,18 @@ func registerTools(mcpServer *sdkmcp.Server, tools []service.Tool, h handler) {
 			addTool[any](mcpServer, h.handleInfo),
 			true,
 		},
+		service.ResponseOutline: {
+			addTool[service.ResponseOutlineRequest](mcpServer, h.handleResponseOutline),
+			true,
+		},
+		service.ResponseCompress: {
+			addTool[service.ResponseCompressRequest](mcpServer, h.handleResponseCompress),
+			true,
+		},
+		service.ResponseSlice: {
+			addTool[service.ResponseSliceRequest](mcpServer, h.handleResponseSlice),
+			true,
+		},
 	}
 
 	for _, deftool := range tools {

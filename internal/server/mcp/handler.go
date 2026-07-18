@@ -28,6 +28,9 @@ type Svc interface {
 	Invoke(_ context.Context, req service.InvokeRequest) (service.InvokeResponse, error)
 	Auth(_ context.Context, req service.AuthRequest) (service.AuthResponse, error)
 	Info(_ context.Context) (service.InfoResponse, error)
+	ResponseOutline(_ context.Context, req service.ResponseOutlineRequest) (service.ResponseOutlineResponse, error)
+	ResponseCompress(_ context.Context, req service.ResponseCompressRequest) (service.ResponseCompressResponse, error)
+	ResponseSlice(_ context.Context, req service.ResponseSliceRequest) (service.ResponseSliceResponse, error)
 	MakeToolDefinitions() (service.ToolDefinitions, error)
 }
 
@@ -251,6 +254,48 @@ func (h *handler) handleInfo(
 	_ any,
 ) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.Info(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &sdkmcp.CallToolResult{
+		StructuredContent: resp,
+	}, nil, nil
+}
+
+func (h *handler) handleResponseOutline(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.ResponseOutlineRequest,
+) (*sdkmcp.CallToolResult, any, error) {
+	resp, err := h.service.ResponseOutline(ctx, req)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &sdkmcp.CallToolResult{
+		StructuredContent: resp,
+	}, nil, nil
+}
+
+func (h *handler) handleResponseCompress(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.ResponseCompressRequest,
+) (*sdkmcp.CallToolResult, any, error) {
+	resp, err := h.service.ResponseCompress(ctx, req)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &sdkmcp.CallToolResult{
+		StructuredContent: resp,
+	}, nil, nil
+}
+
+func (h *handler) handleResponseSlice(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.ResponseSliceRequest,
+) (*sdkmcp.CallToolResult, any, error) {
+	resp, err := h.service.ResponseSlice(ctx, req)
 	if err != nil {
 		return nil, nil, err
 	}

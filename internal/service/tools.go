@@ -42,6 +42,12 @@ const (
 	Auth = "auth"
 	// Info is the name of the info tool.
 	Info = "info"
+	// ResponseOutline is the name of the response_outline tool.
+	ResponseOutline = "response_outline"
+	// ResponseCompress is the name of the response_compress tool.
+	ResponseCompress = "response_compress"
+	// ResponseSlice is the name of the response_slice tool.
+	ResponseSlice = "response_slice"
 )
 
 //go:embed definitions/*.md

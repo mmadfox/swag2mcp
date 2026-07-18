@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mmadfox/swag2mcp/internal/reader"
 	"github.com/mmadfox/swag2mcp/internal/service"
 	"github.com/modelcontextprotocol/go-sdk/auth"
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -953,6 +954,143 @@ func TestHandler_Info_Error(t *testing.T) {
 
 	h := handler{service: mock}
 	_, _, err := h.handleInfo(context.Background(), nil, nil)
+	require.Error(t, err)
+}
+
+func TestHandler_ResponseOutline_Success(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMockSvc(ctrl)
+	mock.EXPECT().ResponseOutline(gomock.Any(), gomock.Any()).Return(
+		service.ResponseOutlineResponse{
+			Outline: reader.Outline{Type: "object", LineCount: 10},
+		}, nil,
+	)
+
+	h := handler{service: mock}
+	result, _, err := h.handleResponseOutline(
+		context.Background(), nil, service.ResponseOutlineRequest{Path: "/tmp/resp.json"},
+	)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+}
+
+func TestHandler_ResponseOutline_Error(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMockSvc(ctrl)
+	mock.EXPECT().ResponseOutline(gomock.Any(), gomock.Any()).Return(
+		service.ResponseOutlineResponse{}, errors.New("not found"),
+	)
+
+	h := handler{service: mock}
+	_, _, err := h.handleResponseOutline(
+		context.Background(), nil, service.ResponseOutlineRequest{Path: "/tmp/resp.json"},
+	)
+	require.Error(t, err)
+}
+
+func TestHandler_ResponseCompress_Success(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMockSvc(ctrl)
+	mock.EXPECT().ResponseCompress(gomock.Any(), gomock.Any()).Return(
+		service.ResponseCompressResponse{
+			Body: map[string]any{"compressed": map[string]any{"type": "array"}},
+		}, nil,
+	)
+
+	h := handler{service: mock}
+	result, _, err := h.handleResponseCompress(
+		context.Background(), nil,
+		service.ResponseCompressRequest{
+			Path: "/tmp/resp.json",
+			Mode: "first_of_array",
+		},
+	)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+}
+
+func TestHandler_ResponseCompress_Error(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMockSvc(ctrl)
+	mock.EXPECT().ResponseCompress(gomock.Any(), gomock.Any()).Return(
+		service.ResponseCompressResponse{}, errors.New("compress error"),
+	)
+
+	h := handler{service: mock}
+	_, _, err := h.handleResponseCompress(
+		context.Background(), nil,
+		service.ResponseCompressRequest{
+			Path: "/tmp/resp.json",
+			Mode: "first_of_array",
+		},
+	)
+	require.Error(t, err)
+}
+
+func TestHandler_ResponseSlice_Success(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMockSvc(ctrl)
+	mock.EXPECT().ResponseSlice(gomock.Any(), gomock.Any()).Return(
+		service.ResponseSliceResponse{
+			Slice: reader.Slice{
+				JSONPath: "data.0",
+				Context:  "object",
+				Value:    map[string]any{"id": 1},
+			},
+		}, nil,
+	)
+
+	h := handler{service: mock}
+	result, _, err := h.handleResponseSlice(
+		context.Background(), nil,
+		service.ResponseSliceRequest{
+			Path:     "/tmp/resp.json",
+			JSONPath: "data.0",
+		},
+	)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+}
+
+func TestHandler_ResponseSlice_Error(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := NewMockSvc(ctrl)
+	mock.EXPECT().ResponseSlice(gomock.Any(), gomock.Any()).Return(
+		service.ResponseSliceResponse{}, errors.New("slice error"),
+	)
+
+	h := handler{service: mock}
+	_, _, err := h.handleResponseSlice(
+		context.Background(), nil,
+		service.ResponseSliceRequest{
+			Path:     "/tmp/resp.json",
+			JSONPath: "data.0",
+		},
+	)
 	require.Error(t, err)
 }
 

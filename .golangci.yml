@@ -585,8 +585,10 @@ linters:
         linters: [ gocognit, funlen ]
       - path: 'internal/commands/validate\.go'
         linters: [ gocognit ]
-      # funlen in service invoke
+      # funlen in service invoke and mcp tool registration
       - path: 'internal/service/invoke\.go'
+        linters: [ funlen ]
+      - path: 'internal/server/mcp/mcp\.go'
         linters: [ funlen ]
       # httpclient transport cookies are user-configured
       - path: 'internal/httpclient/transport\.go'
