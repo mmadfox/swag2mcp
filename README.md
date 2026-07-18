@@ -94,7 +94,8 @@ llm_title: Binance Market Data API
 base_url: https://api.binance.com
 collections:
   - llm_title: Market Data
-    location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml'
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
+```
 
 Or edit `swag2mcp.yaml` manually:
 
@@ -108,6 +109,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
 ```
 
+```bash
 # 4. Validate and update
 swag2mcp validate
 swag2mcp update
