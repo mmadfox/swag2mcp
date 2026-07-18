@@ -373,9 +373,74 @@ Find pet by ID. Returns a single pet by its ID.
 
 ---
 
-## 5. Invoke Response (Sections)
+## 5. Invoke Response
 
-### 5.1 `invoke` → `InvokeResponse` (normal)
+**Default rule:** show only the response body. Do not show HTTP status or headers unless the response is not 2xx or the user explicitly asks for full details.
+
+### 5.1 `invoke` → `InvokeResponse` (success, 2xx)
+
+Default output:
+
+```
+Курс биткоина (BTCUSDT): $63,999.00
+```
+
+JSON body:
+
+```json
+{
+  "price": 63999.00,
+  "symbol": "BTCUSDT"
+}
+```
+
+Empty body (e.g. 204):
+
+```
+No Content
+```
+
+**Format:**
+- Show only the body.
+- JSON: ` ```json ` block with pretty-printed JSON.
+- Text/HTML/XML: ` ``` ` block with raw text.
+- Empty: `No Content`.
+
+### 5.2 `invoke` → `InvokeResponse` (non-2xx)
+
+```
+**404 Not Found**
+
+`content-type: application/json`
+
+```json
+{
+  "error": "not found"
+}
+```
+```
+
+**Format:**
+- Status line: `**{code} {text}**` (e.g., `**404 Not Found**`, `**500 Internal Server Error**`).
+- Headers: inline in backticks, separated by ` · `. Omit `Content-Length`, `Date`, `Connection`, `Keep-Alive`.
+  - If no headers: omit the headers line entirely.
+- Body: ` ```json ` block, ` ``` ` block, or `—` for empty body.
+
+### 5.3 `invoke` → `InvokeResponse` (large response with FileReference)
+
+```
+📄 Response body (2.5 KB) exceeds max size (1 KB). Saved to:
+`~/.swag2mcp/responses/petstore-get-pet-findByStatus-abc123.json`
+```
+
+**Format:**
+- One compact line: `📄 Response body ({size}) exceeds max size ({maxSize}). Saved to:`
+- File path in backticks on the next line.
+- Do not show status or headers unless the user asks for full details.
+
+### 5.4 Full details on explicit request
+
+If the user asks for details (`show full response`, `show headers`, `what was the status?`, etc.):
 
 ```
 **200 OK** · 2 headers · 48 B body
@@ -392,28 +457,9 @@ Find pet by ID. Returns a single pet by its ID.
 ```
 
 **Format:**
-- Status line: `**{code} {text}**` (e.g., `**200 OK**`, `**404 Not Found**`). Do not use color markers.
-- Headers: inline in backticks, separated by ` · `. Omit `Content-Length`, `Date`, `Connection`, `Keep-Alive`.
-  - If no headers: omit the headers line entirely.
-- Body: ` ```json ` block with pretty-printed JSON, ` ``` ` block for raw text, or `—` for empty body.
-
-### 5.2 `invoke` → `InvokeResponse` (large response with FileReference)
-
-```
-**200 OK** · 1 header · body saved to file
-
-`content-type: application/json`
-
-📄 Response body (2.5 KB) exceeds max size (1 KB). Saved to:
-`~/.swag2mcp/responses/petstore-get-pet-findByStatus-abc123.json`
-```
-
-**Format:**
-- Status line: same as normal.
-- Headers: same as normal.
-- Body section:
-  - One compact line: `📄 Response body ({size}) exceeds max size ({maxSize}). Saved to:`
-  - File path in backticks on the next line.
+- Status line: `**{code} {text}** · {headerCount} headers · {bodySize} body`.
+- Headers: inline in backticks, separated by ` · `.
+- Body: ` ```json ` block, ` ``` ` block, or `—`.
 
 ---
 
