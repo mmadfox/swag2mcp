@@ -87,12 +87,26 @@ go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 swag2mcp init
 
 # 3. Add API specifications
+
+Via CLI:
 swag2mcp add spec --yaml 'domain: binance
 llm_title: Binance Market Data API
 base_url: https://api.binance.com
 collections:
   - llm_title: Market Data
     location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml'
+
+Or edit `swag2mcp.yaml` manually:
+
+```yaml
+specs:
+  - domain: binance
+    llm_title: Binance Market Data API
+    base_url: https://api.binance.com
+    collections:
+      - llm_title: Market Data
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
+```
 
 # 4. Validate and update
 swag2mcp validate
@@ -234,7 +248,7 @@ specs:
 
 ---
 
-## Examples
+## Configuration Examples
 
 Browse ready-to-use configuration examples:
 
