@@ -46,9 +46,10 @@ The skill teaches your agent all commands, flags, config format, and real-world 
 
 You can ask your agent to install the skill by providing this link:
 
+PROMPTs>
 ```bash
-PROMPT> "Add the swag2mcp-cli skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
-PROMPT> "Add the swag2mcp-format skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md"
+1. "Add the swag2mcp-cli skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
+2. "Add the swag2mcp-format skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md"
 ```
 
 Or configure it manually — refer to your IDE's documentation on how to add custom skills.
@@ -61,10 +62,11 @@ Or configure it manually — refer to your IDE's documentation on how to add cus
 
 **Step 1** — Tell your agent:
 
+PROMPTs>
 ```bash
-PROMPT> "Load the swag2mcp-cli skill"
-PROMPT> "Load the swag2mcp-format skill"
-PROMPT> "Set up swag2mcp"
+1. "Load the swag2mcp-cli skill"
+2. "Load the swag2mcp-format skill"
+3. "Set up swag2mcp"
 ```
 
 The agent will download and install `swag2mcp`, then create a workspace with ready-to-use specs.
@@ -175,14 +177,16 @@ Before asking your agent, make sure swag2mcp MCP is connected in your IDE (see [
 
 It is recommended to always start with this question to verify swag2mcp is connected:
 
+PROMPT>
 ```bash
-PROMPT> "What MCP tools do you support?"
+"What MCP tools do you support?"
 ```
 
 If the agent lists swag2mcp tools (spec_list, search, invoke, etc.) — everything is working. If not, ask the agent to connect swag2mcp:
 
+PROMPT>
 ```bash
-PROMPT> "Connect swag2mcp MCP in my IDE"
+"Connect swag2mcp MCP in my IDE"
 ```
 
 After setup, try asking your agent:
