@@ -46,10 +46,10 @@ The skill teaches your agent all commands, flags, config format, and real-world 
 
 You can ask your agent to install the skill by providing this link:
 
-> "Add the swag2mcp-cli skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
-
-> "Add the swag2mcp-format skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md"
-
+```bash
+PROMPT> "Add the swag2mcp-cli skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
+PROMPT> "Add the swag2mcp-format skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md"
+```
 
 Or configure it manually — refer to your IDE's documentation on how to add custom skills.
 
@@ -61,9 +61,10 @@ Or configure it manually — refer to your IDE's documentation on how to add cus
 
 **Step 1** — Tell your agent:
 
-> "Install the swag2mcp-cli skill"
-
-> "Set up swag2mcp"
+```bash
+PROMPT> "Install the swag2mcp-cli skill"
+PROMPT> "Set up swag2mcp"
+```
 
 The agent will download and install swag2mcp, then create a workspace with ready-to-use specs.
 
@@ -171,17 +172,21 @@ Before asking your agent, make sure swag2mcp MCP is connected in your IDE (see [
 
 It is recommended to always start with this question to verify swag2mcp is connected:
 
-> "What MCP tools do you support?"
+```bash
+PROMPT> "What MCP tools do you support?"
+```
 
 If the agent lists swag2mcp tools (spec_list, search, invoke, etc.) — everything is working. If not, ask the agent to connect swag2mcp:
 
-> "Connect swag2mcp MCP in my IDE"
+```bash
+PROMPT> "Connect swag2mcp MCP in my IDE"
+```
 
 After setup, try asking your agent:
 
-| Query | What happens |
+| PROMPT> | What happens |
 |-------|-------------|
-| "Add the Petstore API" | `add spec` — adds petstore spec from the repository |
+| "List my configured APIs" | `spec_list` — lists available specs |
 | "Show me all available APIs" | `spec_list` — lists petstore, binance, dadjoke, pokeapi |
 | "What endpoints does Binance have?" | `endpoint_by_spec` — shows 4 market data endpoints |
 | "Find endpoints related to pets" | `search("pet")` — finds petstore endpoints |
