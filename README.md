@@ -69,6 +69,8 @@ PROMPT> "Set up swag2mcp"
 
 The agent will download and install `swag2mcp`, then create a workspace with ready-to-use specs.
 
+> **Note:** If the `swag2mcp` MCP server is already running, restart it so the agent can pick up the new workspace. Otherwise, proceed to the next step.
+
 **Step 2** — Configure your IDE (see [Integration](#integration) below) — the IDE will start `swag2mcp` automatically.
 
 **Step 3** — Use MCP tools to discover and invoke APIs.
