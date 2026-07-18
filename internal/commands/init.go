@@ -112,7 +112,7 @@ func runInit(basePath string, interactive, force bool, cmd *cobra.Command) error
 
 	cmd.Printf("✅ Configuration written to %s\n", configPath)
 	cmd.Printf("✅ Workspace initialized at %s\n", workspaceDir)
-	cmd.Printf("\nNext step: edit %s or run 'swag2mcp add spec --yaml \"...\"'\n", filepath.Base(configPath))
+	cmd.Printf("\nNext step: edit %s or run 'swag2mcp ls' to list configured specs\n", filepath.Base(configPath))
 	return nil
 }
 

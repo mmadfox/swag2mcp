@@ -31,10 +31,8 @@ This skill activates when the user asks to:
 | User says | What the skill does |
 |-----------|-------------------|
 | "Set up swag2mcp" | Downloads and installs swag2mcp, runs `swag2mcp init .` |
-| "Add the Petstore API" | Runs `add spec` with petstore spec from the repository |
-| "I want to connect my API to you" | Guides through `swag2mcp init .` + `add spec` |
 | "Initialize a workspace for my APIs" | Runs `swag2mcp init .` in current directory |
-| "Add the Binance API so I can check prices" | Runs `add spec` with binance spec |
+| "List my configured APIs" | Runs `swag2mcp ls` |
 | "Start the MCP server for my specs" | Runs `swag2mcp mcp` |
 | "Show me what APIs are available" | Calls `spec_list` MCP tool |
 | "Find an endpoint to get BTC price" | Calls `search` MCP tool |
@@ -105,25 +103,12 @@ go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 
 ## Quick Start
 
-> **Important:** Always use `swag2mcp mcp` to start the MCP server. The agent needs the MCP server running to access API tools.
-
 ```sh
 # Initialize a workspace
 swag2mcp init ~/my-api
 
-# Add a spec (use local spec file from the repository)
-swag2mcp add spec --yaml 'domain: petstore
-llm_title: Petstore API
-base_url: https://petstore.swagger.io/v2
-collections:
-  - llm_title: Pets
-    location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json'
-
-# List specs
+# List configured specs
 swag2mcp ls
-
-# Start MCP server (for LLM tools)
-swag2mcp mcp
 ```
 
 ---
@@ -159,7 +144,7 @@ swag2mcp init -i                 # interactive wizard
 swag2mcp init -f                 # force overwrite
 ```
 
-**Behavior:** Creates `cache/`, `specs/`, `responses/`, `auth_scripts/` subdirectories and a `swag2mcp.yaml` config file. After init, prints a hint: `"Next step: edit swag2mcp.yaml or run 'swag2mcp add spec --yaml \"...\"'"`.
+**Behavior:** Creates `cache/`, `specs/`, `responses/`, `auth_scripts/` subdirectories and a `swag2mcp.yaml` config file. After init, prints a hint: `"Next step: edit swag2mcp.yaml or run 'swag2mcp ls' to list configured specs"`.
 
 ---
 
