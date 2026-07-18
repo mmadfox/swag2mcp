@@ -2,7 +2,7 @@
 
 **swag2mcp** は、OpenAPI/Swagger/Postman API仕様とLLMエージェント（Opencode、Crush、Copilot、Cursorなど）を橋渡しするCLIツールおよびMCP（Model Context Protocol）サーバーです。
 
-API仕様を全文検索エンジンにインデックスし、14のMCPツールとして公開し、LLMが実際のAPIエンドポイントを発見、検査、呼び出しできるようにします——統合コードを1行も書く必要はありません。
+API仕様を全文検索エンジンにインデックスし、16のMCPツールとして公開し、LLMが実際のAPIエンドポイントを発見、検査、呼び出しできるようにします——統合コードを1行も書く必要はありません。
 
 ---
 
@@ -74,7 +74,7 @@ specs:
         llm_instruction: |             # オプション、最大360文字
           Petstoreの主要エンドポイント
         title: ""                      # オプション、specから自動入力
-        location: https://petstore.swagger.io/v2/swagger.json  # 必須、5-250文字
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json  # 必須、5-250文字
         disable: false                  # オプション
         base_url: ""                    # オプション、specのbase_urlを上書き
         base_mock_url: localhost:8080   # オプション、形式 "host:port" または "host:port/path"
@@ -272,9 +272,60 @@ swag2mcp-mock --tls
 
 ---
 
+## インテグレーション
+
+swag2mcpはModel Context Protocol (MCP) に対応しており、MCP互換クライアントで動作します。
+
+### ローカル (stdio) — 同じマシンのエージェント
+
+サーバーを起動：
+
+```bash
+swag2mcp mcp
+```
+
+| クライアント | 設定ファイル | 内容 |
+|------------|-------------|------|
+| **OpenCode** | `opencode.json` | `{"mcp":{"swag2mcp":{"type":"local","command":["swag2mcp","mcp"]}}}` |
+| **Cursor** | `.cursor/mcp.json` | `{"mcpServers":{"swag2mcp":{"command":"swag2mcp","args":["mcp"]}}}` |
+| **Claude Desktop** | `claude_desktop_config.json` | `{"mcpServers":{"swag2mcp":{"command":"swag2mcp","args":["mcp"]}}}` |
+| **VS Code** | `.vscode/mcp.json` | `{"servers":{"swag2mcp":{"type":"stdio","command":"swag2mcp","args":["mcp"]}}}` |
+| **Crush** | `crush.json` | `{"mcp":{"swag2mcp":{"type":"stdio","command":"swag2mcp","args":["mcp"]}}}` |
+
+### リモート (HTTP) — クラウド / 別のマシンのエージェント
+
+HTTPトランスポートでサーバーを起動：
+
+```bash
+swag2mcp mcp --transport streamable-http --http-addr :8080 --auth-token my-secret
+```
+
+または `swag2mcp.yaml` で設定：
+
+```yaml
+mcp:
+  transport: streamable-http
+  addr: ":8080"
+  path: "/mcp"
+  auth_token: $(MCP_AUTH_TOKEN)
+```
+
+| クライアント | 設定ファイル | 内容 |
+|------------|-------------|------|
+| **OpenCode** | `opencode.json` | `{"mcp":{"swag2mcp":{"type":"remote","url":"http://localhost:8080/mcp","headers":{"Authorization":"Bearer ${MCP_AUTH_TOKEN}"}}}}` |
+| **VS Code** | `.vscode/mcp.json` | `{"servers":{"swag2mcp":{"type":"http","url":"http://localhost:8080/mcp"}}}` |
+
+> **ヘルスチェック**（MCPハンドシェイク不要）：
+> ```bash
+> curl http://localhost:8080/health
+> # → {"status":"ok","version":"v1.1.3"}
+> ```
+
+---
+
 ## MCPサーバー
 
-MCPサーバーは、stdioトランスポートを介して14のツールを公開します。LLMエージェント（Opencode、Crush、Copilot、Cursorなど）は、設定後に自動的に接続します。
+MCPサーバーは、stdioまたはHTTPトランスポートを介して16のツールを公開します。LLMエージェント（Opencode、Cursor、Claude、Copilotなど）は、設定後に自動的に接続します。
 
 ### ツール階層
 

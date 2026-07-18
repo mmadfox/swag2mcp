@@ -8,7 +8,7 @@ specs:
       - payments
     collections:
       - llm_title: Transactions
-        location: https://api.payments.example.com/openapi.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
 
   - domain: analytics-api
     base_url: https://api.analytics.example.com
@@ -18,7 +18,7 @@ specs:
       - analytics
     collections:
       - llm_title: Reports
-        location: https://api.analytics.example.com/openapi.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
 
   - domain: staging-api
     base_url: https://staging.example.com
@@ -27,7 +27,7 @@ specs:
       - staging
     collections:
       - llm_title: Test Endpoints
-        location: https://staging.example.com/openapi.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
 
   - domain: dev-api
     base_url: https://dev.example.com
@@ -36,4 +36,4 @@ specs:
       - development
     collections:
       - llm_title: Dev Endpoints
-        location: https://dev.example.com/openapi.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json

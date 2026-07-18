@@ -2,7 +2,7 @@
 
 t**swag2mcp** 是一个 CLI 工具和 MCP（模型上下文协议）服务器，用于将 OpenAPI/Swagger/Postman API 规范与 LLM 代理（Opencode、Crush、Copilot、Cursor 等）连接。
 
-它将您的 API 规范索引到全文检索引擎中，通过 14 个 MCP 工具暴露它们，并让 LLM 能够发现、检查和调用真实的 API 端点——无需编写任何集成代码。
+它将您的 API 规范索引到全文检索引擎中，通过 16 个 MCP 工具暴露它们，并让 LLM 能够发现、检查和调用真实的 API 端点——无需编写任何集成代码。
 
 ---
 
@@ -74,7 +74,7 @@ specs:
         llm_instruction: |             # 可选，最多 360 字符
           Petstore 主要端点
         title: ""                      # 可选，从 spec 自动填充
-        location: https://petstore.swagger.io/v2/swagger.json  # 必填，5-250 字符
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json  # 必填，5-250 字符
         disable: false                  # 可选
         base_url: ""                    # 可选，覆盖 spec 的 base_url
         base_mock_url: localhost:8080   # 可选，格式 "host:port" 或 "host:port/path"
@@ -272,9 +272,60 @@ MCP 服务器会自动将配置的凭据应用于每个请求。
 
 ---
 
+## 集成
+
+swag2mcp 支持模型上下文协议 (MCP)，可与任何 MCP 兼容客户端配合使用。
+
+### 本地 (stdio) — 同一台机器上的代理
+
+启动服务器：
+
+```bash
+swag2mcp mcp
+```
+
+| 客户端 | 配置文件 | 内容 |
+|--------|---------|------|
+| **OpenCode** | `opencode.json` | `{"mcp":{"swag2mcp":{"type":"local","command":["swag2mcp","mcp"]}}}` |
+| **Cursor** | `.cursor/mcp.json` | `{"mcpServers":{"swag2mcp":{"command":"swag2mcp","args":["mcp"]}}}` |
+| **Claude Desktop** | `claude_desktop_config.json` | `{"mcpServers":{"swag2mcp":{"command":"swag2mcp","args":["mcp"]}}}` |
+| **VS Code** | `.vscode/mcp.json` | `{"servers":{"swag2mcp":{"type":"stdio","command":"swag2mcp","args":["mcp"]}}}` |
+| **Crush** | `crush.json` | `{"mcp":{"swag2mcp":{"type":"stdio","command":"swag2mcp","args":["mcp"]}}}` |
+
+### 远程 (HTTP) — 云端 / 另一台机器上的代理
+
+使用 HTTP 传输启动服务器：
+
+```bash
+swag2mcp mcp --transport streamable-http --http-addr :8080 --auth-token my-secret
+```
+
+或在 `swag2mcp.yaml` 中配置：
+
+```yaml
+mcp:
+  transport: streamable-http
+  addr: ":8080"
+  path: "/mcp"
+  auth_token: $(MCP_AUTH_TOKEN)
+```
+
+| 客户端 | 配置文件 | 内容 |
+|--------|---------|------|
+| **OpenCode** | `opencode.json` | `{"mcp":{"swag2mcp":{"type":"remote","url":"http://localhost:8080/mcp","headers":{"Authorization":"Bearer ${MCP_AUTH_TOKEN}"}}}}` |
+| **VS Code** | `.vscode/mcp.json` | `{"servers":{"swag2mcp":{"type":"http","url":"http://localhost:8080/mcp"}}}` |
+
+> **健康检查**（无需 MCP 握手）：
+> ```bash
+> curl http://localhost:8080/health
+> # → {"status":"ok","version":"v1.1.3"}
+> ```
+
+---
+
 ## MCP 服务器
 
-MCP 服务器通过 stdio 传输暴露 14 个工具。LLM 代理（Opencode、Crush、Copilot、Cursor 等）在配置后自动连接。
+MCP 服务器通过 stdio 或 HTTP 传输暴露 16 个工具。LLM 代理（Opencode、Cursor、Claude、Copilot 等）在配置后自动连接。
 
 ### 工具层次结构
 

@@ -10,14 +10,14 @@ specs:
         X-API-Version: "2024-01"
     collections:
       - llm_title: US Region
-        location: https://api.example.com/openapi/us.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
         http_client:
           headers:
             X-Region: us-east-1
             X-Request-ID: us-req-001
 
       - llm_title: EU Region
-        location: https://api.example.com/openapi/eu.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
         http_client:
           headers:
             X-Region: eu-west-1

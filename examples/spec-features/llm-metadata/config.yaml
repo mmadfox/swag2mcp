@@ -12,9 +12,9 @@ specs:
         llm_instruction: |
           Browse and search products, get product details, and manage
           inventory levels. Use this for product-related queries.
-        location: https://api.shop.example.com/openapi/products.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
       - llm_title: Order Management
         llm_instruction: |
           Create, view, update, and cancel orders. Also handles
           shipping status and order history.
-        location: https://api.shop.example.com/openapi/orders.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json

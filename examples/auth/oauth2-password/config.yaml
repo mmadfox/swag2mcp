@@ -16,4 +16,4 @@ specs:
           - email
     collections:
       - llm_title: User Resources
-        location: https://api.user.example.com/openapi.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json

@@ -5,9 +5,9 @@ specs:
     llm_title: Active API
     collections:
       - llm_title: Maintenance Mode
-        location: https://api.active.example.com/openapi/maintenance.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
       - llm_title: Deprecated Endpoints
-        location: https://api.active.example.com/openapi/deprecated.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
         disable: true
 
   - domain: deprecated-api
@@ -16,4 +16,4 @@ specs:
     llm_title: Deprecated API
     collections:
       - llm_title: Old Endpoints
-        location: https://api.deprecated.example.com/openapi.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json

@@ -13,9 +13,9 @@ specs:
         X-Store-ID: main-001
     collections:
       - llm_title: Products
-        location: https://api.store.example.com/openapi/products.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
       - llm_title: Orders
-        location: https://api.store.example.com/openapi/orders.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
         http_client:
           cookies:
             - name: session

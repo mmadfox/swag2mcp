@@ -17,7 +17,7 @@ mock_enabled: true
 
 specs:
   - domain: petstore
-    base_url: https://petstore.swagger.io/v2
+    base_url: https://petstore.example.com/v1
     llm_title: Petstore API
     auth:
       type: bearer

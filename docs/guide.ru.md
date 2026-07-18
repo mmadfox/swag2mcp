@@ -1,8 +1,8 @@
 # swag2mcp
 
-**swag2mcp** — это CLI-инструмент и MCP (Model Context Protocol) сервер, который связывает OpenAPI/Swagger/Postman спецификации с LLM-агентами (Opencode, Crush, Copilot, Cursor и другими).
+**swag2mcp** — это CLI-инструмент и MCP (Model Context Protocol) сервер, который связывает OpenAPI/Swagger/Postman спецификации с LLM-агентами (Opencode, Cursor, Claude, Copilot и другими).
 
-Он индексирует ваши API-спецификации в полнотекстовый поисковый движок, предоставляет 14 MCP-инструментов и позволяет LLM находить, изучать и вызывать реальные API-эндпоинты — без единой строки интеграционного кода.
+Он индексирует ваши API-спецификации в полнотекстовый поисковый движок, предоставляет **16 MCP-инструментов** и позволяет LLM находить, изучать и вызывать реальные API-эндпоинты — без единой строки интеграционного кода.
 
 ---
 
@@ -12,6 +12,7 @@
 - [Конфигурация](#конфигурация)
 - [CLI Команды](#cli-команды)
 - [MCP Сервер](#mcp-сервер)
+- [Интеграция](#интеграция)
 - [Поиск](#поиск)
 - [Рабочая директория (Workspace)](#рабочая-директория-workspace)
 - [Кэширование](#кэширование)
@@ -45,6 +46,12 @@ swag2mcp run
 mock_enabled: true                    # опционально, включает режим мок-сервера
 
 http_client:                        # опционально, глобальные настройки HTTP
+  random: false                     # опционально, случайные browser-like заголовки
+  proxy:                            # опционально
+    url: socks5h://127.0.0.1:1080   # http, https, socks5, socks5h
+    username: ""                    # опционально
+    password: ""                    # опционально
+    bypass: []                      # опционально, напр. ["*.local", "10.0.0.0/8"]
   headers:                          # опционально
     X-API-Version: "2"
   cookies: []                       # опционально
@@ -74,7 +81,7 @@ specs:
         llm_instruction: |             # опционально, макс 360 символов
           Основные эндпоинты Petstore
         title: ""                      # опционально, авто-заполняется из spec
-        location: https://petstore.swagger.io/v2/swagger.json  # обязательно, 5-250 символов
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json  # обязательно, 5-250 символов
         disable: false                  # опционально
         base_url: ""                    # опционально, переопределяет base_url спецификации
         base_mock_url: localhost:8080   # опционально, формат "host:port" или "host:port/path"
@@ -219,26 +226,77 @@ swag2mcp update
 
 ### `mcp [path]`
 
-Запуск MCP сервера в headless-режиме (stdio транспорт). Основная production-команда для интеграции с LLM.
+Запуск MCP сервера в headless-режиме. Основная production-команда для интеграции с LLM.
 
 | Флаг | Сокращение | По умолчанию | Описание |
 |------|------------|--------------|----------|
 | `--logfile` | `-f` | `""` | Путь к лог-файлу |
 | `--tags` | `-t` | `""` | Фильтр спецификаций по тегам |
-| `--disable-llm-auth` | | `true` | `true` — аутентификация под капотом (LLM не видит токены). `false` — LLM может запрашивать токены через инструмент `auth` |
+| `--disable-llm-auth` | | `true` | `true` — аутентификация под капотом. `false` — LLM может запрашивать токены через `auth` |
 | `--dump-dir` | | `""` | Директория для дампа HTTP запросов (отладка) |
+| `--transport` | | `"stdio"` | Транспорт MCP: `stdio`, `sse`, `streamable-http` |
+| `--http-addr` | | `":8080"` | Адрес HTTP сервера (для sse/streamable-http) |
+| `--http-path` | | `"/mcp"` | Путь HTTP для MCP handler |
+| `--auth-token` | | `""` | Bearer токен для HTTP транспорта |
 
 ```bash
-swag2mcp mcp
+swag2mcp mcp                                    # stdio (локальный агент)
 swag2mcp mcp --tags=public --logfile=/var/log/swag2mcp.log
 swag2mcp mcp --disable-llm-auth=false
 swag2mcp mcp --dump-dir=/tmp/dump
+swag2mcp mcp --transport streamable-http --http-addr :9090  # удалённый агент
+```
+
+### `version`
+
+Показать версию swag2mcp. Также доступен как флаг `--version`.
+
+```bash
+swag2mcp version
+swag2mcp --version
+```
+
+### `info [path]`
+
+Показать детальную информацию о конфигурации и рантайме в формате JSON.
+
+```bash
+swag2mcp info
+swag2mcp info ./
+```
+
+### `import [path] [source] [name]`
+
+Импортировать spec-файлы в рабочую директорию.
+
+| Флаг | Сокращение | По умолчанию | Описание |
+|------|------------|--------------|----------|
+| `--spec` | `-s` | `nil` | Импорт коллекций из указанных spec'ов (через запятую) |
+| `--from-zip` | | `""` | Восстановить workspace из ZIP-архива |
+
+```bash
+swag2mcp import https://example.com/spec.yaml myspec
+swag2mcp import --spec petstore
+swag2mcp import --from-zip /path/to/backup.zip
+```
+
+### `export [path] [output]`
+
+Экспортировать workspace в ZIP-архив.
+
+| Флаг | Сокращение | По умолчанию | Описание |
+|------|------------|--------------|----------|
+| `--spec` | `-s` | `nil` | Экспортировать только указанные spec'ы (через запятую) |
+
+```bash
+swag2mcp export
+swag2mcp export /path/to/workspace /path/to/backup.zip
+swag2mcp export --spec petstore
 ```
 
 ### `mockserver [path]`
 
-Запускает мок-серверы для всех API спецификаций. Каждая коллекция получает
-свой HTTP-сервер, который генерирует случайные данные по OpenAPI схеме ответа.
+Запускает мок-серверы для всех API спецификаций (отдельный бинарник: `swag2mcp-mock`).
 
 | Флаг | По умолчанию | Описание |
 |------|-------------|----------|
@@ -274,7 +332,7 @@ MCP сервер сам применяет настроенные credentials к
 
 ## MCP Сервер
 
-MCP сервер предоставляет 14 инструментов через stdio транспорт. LLM-агенты (Opencode, Crush, Copilot, Cursor и др.) подключаются автоматически после настройки.
+MCP сервер предоставляет **16 инструментов** через stdio или HTTP транспорт. LLM-агенты (Opencode, Cursor, Claude, Copilot и др.) подключаются автоматически после настройки.
 
 ### Иерархия инструментов
 
@@ -309,6 +367,58 @@ search                          — полнотекстовый поиск по
 | `inspect` | `endpointId` | Full Operation | Полный объект OpenAPI операции |
 | `invoke` | `endpointId`, `parameters`, `requestBody` | Response | Выполнение реального API вызова |
 | `auth` | `specId` | Token | Получение auth токена для спецификации |
+| `info` | — | Runtime info | Версия swag2mcp, конфиг, статистика |
+
+---
+
+## Интеграция
+
+swag2mcp работает по протоколу MCP и совместим с любым MCP-клиентом.
+
+### Локально (stdio) — агент на той же машине
+
+Запустите сервер:
+
+```bash
+swag2mcp mcp
+```
+
+| Клиент | Файл конфига | Содержимое |
+|--------|-------------|------------|
+| **OpenCode** | `opencode.json` | `{"mcp":{"swag2mcp":{"type":"local","command":["swag2mcp","mcp"]}}}` |
+| **Cursor** | `.cursor/mcp.json` | `{"mcpServers":{"swag2mcp":{"command":"swag2mcp","args":["mcp"]}}}` |
+| **Claude Desktop** | `claude_desktop_config.json` | `{"mcpServers":{"swag2mcp":{"command":"swag2mcp","args":["mcp"]}}}` |
+| **VS Code** | `.vscode/mcp.json` | `{"servers":{"swag2mcp":{"type":"stdio","command":"swag2mcp","args":["mcp"]}}}` |
+| **Crush** | `crush.json` | `{"mcp":{"swag2mcp":{"type":"stdio","command":"swag2mcp","args":["mcp"]}}}` |
+
+### Удалённо (HTTP) — агент в облаке / на другой машине
+
+Запустите сервер с HTTP транспортом:
+
+```bash
+swag2mcp mcp --transport streamable-http --http-addr :8080 --auth-token my-secret
+```
+
+Или настройте в `swag2mcp.yaml`:
+
+```yaml
+mcp:
+  transport: streamable-http
+  addr: ":8080"
+  path: "/mcp"
+  auth_token: $(MCP_AUTH_TOKEN)
+```
+
+| Клиент | Файл конфига | Содержимое |
+|--------|-------------|------------|
+| **OpenCode** | `opencode.json` | `{"mcp":{"swag2mcp":{"type":"remote","url":"http://localhost:8080/mcp","headers":{"Authorization":"Bearer ${MCP_AUTH_TOKEN}"}}}}` |
+| **VS Code** | `.vscode/mcp.json` | `{"servers":{"swag2mcp":{"type":"http","url":"http://localhost:8080/mcp"}}}` |
+
+> **Проверка здоровья** (работает без MCP handshake):
+> ```bash
+> curl http://localhost:8080/health
+> # → {"status":"ok","version":"v1.1.3"}
+> ```
 
 ---
 
@@ -399,6 +509,8 @@ swag2mcp <command> path/to  → {cwd}/path/to/.swag2mcp/
 Все spec-файлы храните в `.swag2mcp/specs/` — это единственный способ гарантировать, что они не будут скопированы в кэш и будут использоваться напрямую.
 
 ---
+
+## Кэширование
 
 ### Правила
 

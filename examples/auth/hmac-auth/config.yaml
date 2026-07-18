@@ -10,4 +10,4 @@ specs:
         secret_key: $(BINANCE_SECRET_KEY)
     collections:
       - llm_title: Market Data
-        location: https://api.binance.com/openapi.yaml
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml

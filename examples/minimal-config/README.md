@@ -12,7 +12,7 @@ specification with one collection and no authentication.
 
 ## Expected behavior
 
-- The server starts and registers all 14 MCP tools
+- The server starts and registers all 16 MCP tools
 - The spec "weather-api" appears in `spec_list` and `spec_by_id`
 - The collection is discoverable via `collection_by_spec`
 - All endpoints from the OpenAPI spec are indexed and searchable

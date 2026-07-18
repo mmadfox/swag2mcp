@@ -16,5 +16,5 @@ specs:
         token: any-token
     collections:
       - llm_title: Petstore Swagger
-        location: specs/petstore.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
         base_mock_url: localhost:8080

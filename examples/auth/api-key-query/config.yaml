@@ -11,4 +11,4 @@ specs:
         in: query
     collections:
       - llm_title: Protected Resources
-        location: https://api.keyquery.example.com/openapi.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json

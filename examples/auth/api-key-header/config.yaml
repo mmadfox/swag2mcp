@@ -11,4 +11,4 @@ specs:
         in: header
     collections:
       - llm_title: Protected Resources
-        location: https://api.keyheader.example.com/openapi.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json

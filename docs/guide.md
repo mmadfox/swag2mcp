@@ -1,8 +1,8 @@
-# swag2mcp
+# swag2mcp Guide
 
-**swag2mcp** is a CLI tool and MCP (Model Context Protocol) server that bridges OpenAPI/Swagger/Postman API specifications with LLM agents (Opencode, Crush, Copilot, Cursor, etc.).
+**swag2mcp** is a CLI tool and MCP (Model Context Protocol) server that bridges OpenAPI/Swagger/Postman API specifications with LLM agents (Opencode, Cursor, Claude, Copilot, etc.).
 
-It indexes your API specs into a full-text search engine, exposes them through 14 MCP tools, and lets LLMs discover, inspect, and invoke real API endpoints — all without writing a single line of integration code.
+It indexes your API specs into a full-text search engine, exposes them through **16 MCP tools**, and lets LLMs discover, inspect, and invoke real API endpoints — all without writing a single line of integration code.
 
 ---
 
@@ -12,6 +12,7 @@ It indexes your API specs into a full-text search engine, exposes them through 1
 - [Configuration](#configuration)
 - [CLI Commands](#cli-commands)
 - [MCP Server](#mcp-server)
+- [Integration](#integration)
 - [Search](#search)
 - [Workspace](#workspace)
 - [Caching](#caching)
@@ -80,7 +81,7 @@ specs:
         llm_instruction: |             # optional, max 360 chars
           Main petstore endpoints
         title: ""                      # optional, auto-populated from spec
-        location: https://petstore.swagger.io/v2/swagger.json  # required, 5-250 chars
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json  # required, 5-250 chars
         disable: false                  # optional
         base_url: ""                    # optional, overrides spec base_url
         base_mock_url: localhost:8080   # optional, format "host:port" or "host:port/path"
@@ -233,18 +234,69 @@ Start the MCP server in headless mode (stdio transport). This is the primary pro
 | `--tags` | `-t` | `""` | Filter specs by tags |
 | `--disable-llm-auth` | | `true` | `true` — auth happens under the hood (LLM never sees tokens). `false` — LLM can request tokens via the `auth` tool |
 | `--dump-dir` | | `""` | Directory to dump HTTP requests for debugging |
+| `--transport` | | `"stdio"` | MCP transport: `stdio`, `sse`, `streamable-http` |
+| `--http-addr` | | `":8080"` | HTTP server address (for sse/streamable-http) |
+| `--http-path` | | `"/mcp"` | HTTP path for MCP handler |
+| `--auth-token` | | `""` | Bearer token for HTTP transport auth |
 
 ```bash
 swag2mcp mcp
 swag2mcp mcp --tags=public --logfile=/var/log/swag2mcp.log
 swag2mcp mcp --disable-llm-auth=false
 swag2mcp mcp --dump-dir=/tmp/dump
+swag2mcp mcp --transport streamable-http --http-addr :9090
+```
+
+### `version`
+
+Print the swag2mcp version. Also available as `--version` flag.
+
+```bash
+swag2mcp version
+swag2mcp --version
+```
+
+### `info [path]`
+
+Show detailed configuration and runtime information as JSON.
+
+```bash
+swag2mcp info
+swag2mcp info ./
+```
+
+### `import [path] [source] [name]`
+
+Import spec files into the workspace.
+
+| Flag | Short | Default | Description |
+|------|-------|---------|-------------|
+| `--spec` | `-s` | `nil` | Import collections from specified specs (comma-separated) |
+| `--from-zip` | | `""` | Restore workspace from a swag2mcp backup ZIP |
+
+```bash
+swag2mcp import https://example.com/spec.yaml myspec
+swag2mcp import --spec petstore
+swag2mcp import --from-zip /path/to/backup.zip
+```
+
+### `export [path] [output]`
+
+Export workspace as a portable ZIP backup.
+
+| Flag | Short | Default | Description |
+|------|-------|---------|-------------|
+| `--spec` | `-s` | `nil` | Export only specified specs (comma-separated) |
+
+```bash
+swag2mcp export
+swag2mcp export /path/to/workspace /path/to/backup.zip
+swag2mcp export --spec petstore
 ```
 
 ### `mockserver [path]`
 
-Start mock HTTP servers for all API specifications. Each collection gets its own
-HTTP server that generates random data matching the OpenAPI response schemas.
+Start mock HTTP servers for all API specifications (separate binary: `swag2mcp-mock`).
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -281,7 +333,7 @@ request automatically.
 
 ## MCP Server
 
-The MCP server exposes 14 tools over stdio transport. LLM agents (Opencode, Crush, Copilot, Cursor, etc.) connect automatically when configured.
+The MCP server exposes **16 tools** over stdio or HTTP transport. LLM agents (Opencode, Cursor, Claude, Copilot, etc.) connect automatically when configured.
 
 ### Tool Hierarchy
 
@@ -316,6 +368,58 @@ search                          — full-text search across all endpoints
 | `inspect` | `endpointId` | Full Operation | Complete OpenAPI operation object |
 | `invoke` | `endpointId`, `parameters`, `requestBody` | Response | Executes real API call |
 | `auth` | `specId` | Token | Get auth token for a spec |
+| `info` | — | Runtime info | Get swag2mcp version, config, stats |
+
+---
+
+## Integration
+
+swag2mcp speaks the Model Context Protocol (MCP) and works with any MCP-compatible client.
+
+### Local (stdio) — agent on the same machine
+
+Start the server:
+
+```bash
+swag2mcp mcp
+```
+
+| Client | Config File | Content |
+|--------|-------------|---------|
+| **OpenCode** | `opencode.json` | `{"mcp":{"swag2mcp":{"type":"local","command":["swag2mcp","mcp"]}}}` |
+| **Cursor** | `.cursor/mcp.json` | `{"mcpServers":{"swag2mcp":{"command":"swag2mcp","args":["mcp"]}}}` |
+| **Claude Desktop** | `claude_desktop_config.json` | `{"mcpServers":{"swag2mcp":{"command":"swag2mcp","args":["mcp"]}}}` |
+| **VS Code** | `.vscode/mcp.json` | `{"servers":{"swag2mcp":{"type":"stdio","command":"swag2mcp","args":["mcp"]}}}` |
+| **Crush** | `crush.json` | `{"mcp":{"swag2mcp":{"type":"stdio","command":"swag2mcp","args":["mcp"]}}}` |
+
+### Remote (HTTP) — agent in cloud / different machine
+
+Start the server with HTTP transport:
+
+```bash
+swag2mcp mcp --transport streamable-http --http-addr :8080 --auth-token my-secret
+```
+
+Or configure in `swag2mcp.yaml`:
+
+```yaml
+mcp:
+  transport: streamable-http
+  addr: ":8080"
+  path: "/mcp"
+  auth_token: $(MCP_AUTH_TOKEN)
+```
+
+| Client | Config File | Content |
+|--------|-------------|---------|
+| **OpenCode** | `opencode.json` | `{"mcp":{"swag2mcp":{"type":"remote","url":"http://localhost:8080/mcp","headers":{"Authorization":"Bearer ${MCP_AUTH_TOKEN}"}}}}` |
+| **VS Code** | `.vscode/mcp.json` | `{"servers":{"swag2mcp":{"type":"http","url":"http://localhost:8080/mcp"}}}` |
+
+> **Health check** (works without MCP handshake):
+> ```bash
+> curl http://localhost:8080/health
+> # → {"status":"ok","version":"v1.1.3"}
+> ```
 
 ---
 
@@ -406,6 +510,8 @@ The config `.swag2mcp/swag2mcp.yaml` and spec files in `.swag2mcp/specs/` **must
 Keep all spec files in `.swag2mcp/specs/` — this is the only way to ensure they are used directly without being copied to cache.
 
 ---
+
+## Caching
 
 ### Rules
 

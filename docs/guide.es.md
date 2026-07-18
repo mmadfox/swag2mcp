@@ -2,7 +2,7 @@
 
 **swag2mcp** es una herramienta CLI y servidor MCP (Model Context Protocol) que conecta especificaciones OpenAPI/Swagger/Postman con agentes LLM (Opencode, Crush, Copilot, Cursor, etc.).
 
-Indexa sus especificaciones API en un motor de búsqueda de texto completo, las expone a través de 14 herramientas MCP y permite a los LLM descubrir, inspeccionar e invocar endpoints API reales — sin escribir una sola línea de código de integración.
+Indexa sus especificaciones API en un motor de búsqueda de texto completo, las expone a través de 16 herramientas MCP y permite a los LLM descubrir, inspeccionar e invocar endpoints API reales — sin escribir una sola línea de código de integración.
 
 ---
 
@@ -74,7 +74,7 @@ specs:
         llm_instruction: |             # opcional, máx 360 car.
           Endpoints principales de Petstore
         title: ""                      # opcional, auto-rellenado desde la spec
-        location: https://petstore.swagger.io/v2/swagger.json  # obligatorio, 5-250 car.
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json  # obligatorio, 5-250 car.
         disable: false                  # opcional
         base_url: ""                    # opcional, sobrescribe base_url de la spec
         base_mock_url: localhost:8080   # opcional, formato "host:port" o "host:port/path"
@@ -274,9 +274,60 @@ solicitud automáticamente.
 
 ---
 
+## Integración
+
+swag2mcp habla el Protocolo de Contexto de Modelo (MCP) y funciona con cualquier cliente compatible con MCP.
+
+### Local (stdio) — agente en la misma máquina
+
+Iniciar el servidor:
+
+```bash
+swag2mcp mcp
+```
+
+| Cliente | Archivo de configuración | Contenido |
+|---------|-------------------------|-----------|
+| **OpenCode** | `opencode.json` | `{"mcp":{"swag2mcp":{"type":"local","command":["swag2mcp","mcp"]}}}` |
+| **Cursor** | `.cursor/mcp.json` | `{"mcpServers":{"swag2mcp":{"command":"swag2mcp","args":["mcp"]}}}` |
+| **Claude Desktop** | `claude_desktop_config.json` | `{"mcpServers":{"swag2mcp":{"command":"swag2mcp","args":["mcp"]}}}` |
+| **VS Code** | `.vscode/mcp.json` | `{"servers":{"swag2mcp":{"type":"stdio","command":"swag2mcp","args":["mcp"]}}}` |
+| **Crush** | `crush.json` | `{"mcp":{"swag2mcp":{"type":"stdio","command":"swag2mcp","args":["mcp"]}}}` |
+
+### Remoto (HTTP) — agente en la nube / otra máquina
+
+Iniciar el servidor con transporte HTTP:
+
+```bash
+swag2mcp mcp --transport streamable-http --http-addr :8080 --auth-token my-secret
+```
+
+O configurar en `swag2mcp.yaml`:
+
+```yaml
+mcp:
+  transport: streamable-http
+  addr: ":8080"
+  path: "/mcp"
+  auth_token: $(MCP_AUTH_TOKEN)
+```
+
+| Cliente | Archivo de configuración | Contenido |
+|---------|-------------------------|-----------|
+| **OpenCode** | `opencode.json` | `{"mcp":{"swag2mcp":{"type":"remote","url":"http://localhost:8080/mcp","headers":{"Authorization":"Bearer ${MCP_AUTH_TOKEN}"}}}}` |
+| **VS Code** | `.vscode/mcp.json` | `{"servers":{"swag2mcp":{"type":"http","url":"http://localhost:8080/mcp"}}}` |
+
+> **Verificación de salud** (funciona sin handshake MCP):
+> ```bash
+> curl http://localhost:8080/health
+> # → {"status":"ok","version":"v1.1.3"}
+> ```
+
+---
+
 ## Servidor MCP
 
-El servidor MCP expone 14 herramientas a través del transporte stdio. Los agentes LLM (Opencode, Crush, Copilot, Cursor, etc.) se conectan automáticamente cuando están configurados.
+El servidor MCP expone 16 herramientas a través del transporte stdio o HTTP. Los agentes LLM (Opencode, Cursor, Claude, Copilot, etc.) se conectan automáticamente cuando están configurados.
 
 ### Jerarquía de herramientas
 

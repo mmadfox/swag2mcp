@@ -5,10 +5,10 @@ specs:
     llm_title: CRM API
     collections:
       - llm_title: Contacts
-        location: https://api.crm.example.com/openapi/contacts.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
       - llm_title: Deals
-        location: https://api.crm.example.com/openapi/deals.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
       - llm_title: Tasks
-        location: https://api.crm.example.com/openapi/tasks.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
       - llm_title: Reports
-        location: https://api.crm.example.com/openapi/reports.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json

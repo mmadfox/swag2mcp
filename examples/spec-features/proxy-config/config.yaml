@@ -18,13 +18,13 @@ specs:
     llm_title: External API
     collections:
       - llm_title: Main
-        location: https://api.external.example.com/openapi.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
 
   - domain: internal-api
     base_url: https://internal.example.com
     llm_title: Internal API
     collections:
       - llm_title: Users
-        location: https://internal.example.com/openapi/users.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
       - llm_title: Billing
-        location: https://internal.example.com/openapi/billing.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json

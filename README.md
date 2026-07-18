@@ -15,158 +15,194 @@
 
 **swag2mcp** bridges OpenAPI/Swagger/Postman API specifications with LLM agents via the Model Context Protocol (MCP).
 
-- **For LLM agents**: 14 MCP tools for discovering, inspecting, and invoking APIs
-- **For humans**: Interactive TUI explorer with full-text search
-- **Zero integration code**: Just point to your specs and go
+- **16 MCP tools** for discovering, inspecting, and invoking APIs
+- **Interactive TUI explorer** with full-text search
+- **Zero integration code** — just point to your specs and go
+
+---
 
 ## Table of Contents
 
+- [Installation](#installation)
 - [Documentation](#documentation)
-- [Quick Start](#quick-start)
 - [Integration](#integration)
-  - [Stdio transport (local)](#stdio-transport-local)
-  - [SSE / Streamable HTTP transport (remote)](#sse--streamable-http-transport-remote)
+- [CLI Commands](#cli-commands)
 - [Mock Server](#mock-server)
 - [Examples](#examples)
-- [Available Skills](#available-skills-for-swag2mcp)
 - [License](#license)
+
+---
+
+## Installation ([For AI Agents](#for-ai-agents), [For Humans](#for-humans))
+
+### For AI Agents
+
+This path is for users who want to use swag2mcp through an AI agent (Opencode, Cursor, Claude, Copilot, etc.).
+
+**Step 1 — Install the swag2mcp-cli skill**
+
+The skill teaches your agent all commands, flags, config format, and real-world examples. Without it, the agent won't know how to use swag2mcp.
+
+You can ask your agent to install the skill by providing this link:
+
+> "Add the swag2mcp-cli skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
+
+Or configure it manually — refer to your IDE's documentation on how to add custom skills.
+
+> **Note:** Some IDEs require a restart after adding a new skill for it to take effect.
+
+**Step 2 — Choose a setup method**
+
+**Option A — Fully automated (agent does everything)**
+
+Tell your agent:
+
+> "Set up swag2mcp with the Petstore API"
+
+The agent will:
+1. Install swag2mcp via `go install`
+2. Run `swag2mcp init` to create a workspace
+3. Add specs via `swag2mcp add spec --yaml '...'`
+4. Configure your IDE (see [Integration](#integration) below) — the IDE will start swag2mcp automatically
+5. Use MCP tools to discover and invoke APIs
+
+**Option B — You install, agent connects**
+
+```bash
+# Install swag2mcp
+go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
+```
+
+Then configure your IDE (see [Integration](#integration) below).
+
+### For Humans
+
+Prefer the command line? Here's the manual setup.
+
+```bash
+# 1. Install
+go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
+
+# 2. Initialize workspace
+swag2mcp init
+
+# 3. Add API specifications
+swag2mcp add spec --yaml 'domain: binance
+llm_title: Binance Market Data API
+base_url: https://api.binance.com
+collections:
+  - llm_title: Market Data
+    location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml'
+
+# 4. Validate and update
+swag2mcp validate
+swag2mcp update
+
+# 5. Add to your IDE
+
+Configure your IDE to start swag2mcp automatically (see [Integration](#integration) below). The IDE will run `swag2mcp mcp` when needed.
+
+# 6. Explore interactively (optional)
+swag2mcp run
+```
+
+---
 
 ## Documentation
 
 | Language | File |
 |----------|------|
-| English | [docs/README.md](docs/README.md) |
-| Русский | [docs/README.ru.md](docs/README.ru.md) |
-| Deutsch | [docs/README.de.md](docs/README.de.md) |
-| Français | [docs/README.fr.md](docs/README.fr.md) |
-| Español | [docs/README.es.md](docs/README.es.md) |
-| 中文 | [docs/README.zh.md](docs/README.zh.md) |
-| 日本語 | [docs/README.ja.md](docs/README.ja.md) |
+| English | [docs/guide.md](docs/guide.md) |
+| Русский | [docs/guide.ru.md](docs/guide.ru.md) |
+| Deutsch | [docs/guide.de.md](docs/guide.de.md) |
+| Français | [docs/guide.fr.md](docs/guide.fr.md) |
+| Español | [docs/guide.es.md](docs/guide.es.md) |
+| 中文 | [docs/guide.zh.md](docs/guide.zh.md) |
+| 日本語 | [docs/guide.ja.md](docs/guide.ja.md) |
 
-## Quick Start
+### Agent Skills
 
-```bash
-$ go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
-$ swag2mcp init
-$ swag2mcp mcp
-OR
-$ swag2mcp mcp --tags=project-1,work,petstore
-```
+| Skill | Description |
+|-------|-------------|
+| [swag2mcp-cli](.agents/skills/swag2mcp-cli/SKILL.md) | Complete CLI reference — all commands, flags, config format, real-world examples |
+| [swag2mcp-format](https://github.com/mmadfox/skills#swag2mcp-format) | Formats MCP tool responses as human-readable markdown |
+
+---
 
 ## Integration
 
-swag2mcp speaks the Model Context Protocol (MCP) and works with any MCP-compatible client. All settings (tags, transport, auth) are configured in `swag2mcp.yaml` — see [examples/mcp-transport](examples/mcp-transport).
+swag2mcp speaks the Model Context Protocol (MCP) and works with any MCP-compatible client. All settings (tags, transport, auth) are configured in `swag2mcp.yaml` — see [examples](examples/).
 
-### Stdio transport (local)
+### Local (stdio) — agent on the same machine
 
-#### OpenCode — opencode.json
+| Client | Config File | Content |
+|--------|-------------|---------|
+| **OpenCode** | `opencode.json` | `{"mcp":{"swag2mcp":{"type":"local","command":["swag2mcp","mcp"]}}}` |
+| **Cursor** | `.cursor/mcp.json` | `{"mcpServers":{"swag2mcp":{"command":"swag2mcp","args":["mcp"]}}}` |
+| **Claude Desktop** | `claude_desktop_config.json` | `{"mcpServers":{"swag2mcp":{"command":"swag2mcp","args":["mcp"]}}}` |
+| **VS Code** | `.vscode/mcp.json` | `{"servers":{"swag2mcp":{"type":"stdio","command":"swag2mcp","args":["mcp"]}}}` |
+| **Crush** | `crush.json` | `{"mcp":{"swag2mcp":{"type":"stdio","command":"swag2mcp","args":["mcp"]}}}` |
 
-```json
-{
-  "mcp": {
-    "swag2mcp": {
-      "type": "local",
-      "command": ["swag2mcp", "mcp"]
-    }
-  }
-}
+### Remote (HTTP) — agent in cloud / different machine
+
+Start the server with HTTP transport:
+
+```bash
+swag2mcp mcp --transport streamable-http --http-addr :8080 --auth-token my-secret
 ```
 
-#### Crush — crush.json
-
-```json
-{
-  "mcp": {
-    "swag2mcp": {
-      "type": "stdio",
-      "command": "swag2mcp",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-#### Claude Desktop — claude_desktop_config.json
-
-```json
-{
-  "mcpServers": {
-    "swag2mcp": {
-      "command": "swag2mcp",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-#### Cursor — .cursor/mcp.json
-
-```json
-{
-  "mcpServers": {
-    "swag2mcp": {
-      "command": "swag2mcp",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-#### VS Code — .vscode/mcp.json
-
-```json
-{
-  "servers": {
-    "swag2mcp": {
-      "type": "stdio",
-      "command": "swag2mcp",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-### SSE / Streamable HTTP transport (remote)
-
-Start the server with the desired transport configured in `swag2mcp.yaml`:
+Or configure in `swag2mcp.yaml`:
 
 ```yaml
 mcp:
-  transport: sse
+  transport: streamable-http
   addr: ":8080"
   path: "/mcp"
-  auth:
-    token: $(MCP_AUTH_TOKEN)
+  auth_token: $(MCP_AUTH_TOKEN)
 ```
 
-#### OpenCode (remote) — opencode.json
+| Client | Config File | Content |
+|--------|-------------|---------|
+| **OpenCode** | `opencode.json` | `{"mcp":{"swag2mcp":{"type":"remote","url":"http://localhost:8080/mcp","headers":{"Authorization":"Bearer ${MCP_AUTH_TOKEN}"}}}}` |
+| **VS Code** | `.vscode/mcp.json` | `{"servers":{"swag2mcp":{"type":"http","url":"http://localhost:8080/mcp"}}}` |
 
-```json
-{
-  "mcp": {
-    "swag2mcp": {
-      "type": "remote",
-      "url": "http://localhost:8080/mcp",
-      "headers": {
-        "Authorization": "Bearer ${MCP_AUTH_TOKEN}"
-      }
-    }
-  }
-}
+> **Health check** (works without MCP handshake):
+> ```bash
+> curl http://localhost:8080/health
+> # → {"status":"ok","version":"v1.1.3"}
+> ```
+
+---
+
+## CLI Commands
+
+All commands that accept `[path]` use the same path resolution:
+
+```
+swag2mcp <command>          → ~/.swag2mcp/
+swag2mcp <command> ./       → {cwd}/.swag2mcp/
+swag2mcp <command> path/to  → {cwd}/path/to/.swag2mcp/
 ```
 
-#### VS Code (remote) — .vscode/mcp.json
+| Command | Description |
+|---------|-------------|
+| `init` | Initialize workspace and configuration |
+| `add spec` / `add collection` | Add a specification or collection |
+| `delete spec` / `delete collection` | Delete a specification or collection |
+| `ls` | List specifications and collections |
+| `run` | Interactive TUI API explorer |
+| `validate` | Validate configuration |
+| `clean` | Remove cache and responses |
+| `update` | Validate, clear cache, re-cache all specs |
+| `mcp` | Start MCP server |
+| `version` / `--version` | Print version |
+| `info` | Show runtime information |
+| `import` | Import spec files |
+| `export` | Export workspace as ZIP |
 
-```json
-{
-  "servers": {
-    "swag2mcp": {
-      "type": "http",
-      "url": "http://localhost:8080/mcp"
-    }
-  }
-}
-```
+See [docs/guide.md](docs/guide.md) for full reference.
+
+---
 
 ## Mock Server
 
@@ -177,16 +213,16 @@ Use it for development, testing, or when the real API is not available.
 
 ```bash
 # Install
-$ go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
+go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 
 # Start mock server (reads the same config as swag2mcp)
-$ swag2mcp-mock
+swag2mcp-mock
 
-# In another terminal, start MCP server — invoke uses mock URLs
-$ swag2mcp mcp
+# Add swag2mcp to your IDE (see Integration above) — invoke will use mock URLs
 ```
 
 To enable, add to your config:
+
 ```yaml
 mock_enabled: true
 specs:
@@ -196,10 +232,11 @@ specs:
         base_mock_url: localhost:8080
 ```
 
+---
+
 ## Examples
 
-This directory contains example configurations for swag2mcp. Each example
-demonstrates a specific feature or use case.
+Browse ready-to-use configuration examples:
 
 | Category | Example | Description |
 |----------|---------|-------------|
@@ -229,13 +266,7 @@ demonstrates a specific feature or use case.
 | | [streamable-http](examples/mcp-transport/streamable-http) | Streamable HTTP transport with HTTP and bearer token auth |
 | **Mock Server** | [mock-server](examples/mock-server) | Mock server with random data generation and auth mock |
 
-## Available Skills for swag2mcp
-
-Customize your experience with specialized skills that enhance swag2mcp MCP tool responses:
-
-- **swag2mcp-format** — Formats responses as human-readable markdown with pagination, HTTP method colorization, and structured schemas/headers/errors
-
-[Download](https://github.com/mmadfox/skills#swag2mcp-format)
+---
 
 ## License
 

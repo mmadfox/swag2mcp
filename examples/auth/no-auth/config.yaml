@@ -6,4 +6,4 @@ specs:
     # auth block is omitted — no authentication
     collections:
       - llm_title: Public Endpoints
-        location: https://api.public.example.com/openapi.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/countries.yaml
