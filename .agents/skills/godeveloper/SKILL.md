@@ -541,7 +541,14 @@ func TestSomething(t *testing.T) {
 - Use `t.Helper()` in helper functions.
 - Produce useful failure messages: `t.Errorf("Foo(%q) = %d; want %d", in, got, want)`.
 
-### 7.4 Mock Generation
+### 7.4 Coverage Targets
+
+- Aim for **90% or higher package-level test coverage** for core packages whenever practical.
+- Core packages include `auth`, `cache`, `config`, `env`, `httpclient`, `id`, `index`, `reader`, `server/mcp`, `service`, `spec`, `types`, and `workspace`.
+- Treat coverage as an informational guide, not a hard gate; some error paths and generated code may be impractical to cover.
+- Use `go test -coverprofile=coverage.out ./...` and inspect per-package coverage to identify gaps.
+
+### 7.5 Mock Generation
 
 ```go
 //go:generate go run go.uber.org/mock/mockgen -source=internal/server/mcp/handler.go -destination=internal/server/mcp/mock_svc_test.go -package=mcp
@@ -549,19 +556,19 @@ func TestSomething(t *testing.T) {
 
 Run `go generate ./...` after changing the `svc` interface.
 
-### 7.5 Build Tags
+### 7.6 Build Tags
 
 - `ci` — enables debug assertions
 - `integration` — integration tests
 
-### 7.6 Test File Naming
+### 7.7 Test File Naming
 
 - `*_test.go` alongside source files (white-box testing).
 - `*_test.go` in `package foo_test` for external tests.
 - `*_fuzz_test.go` for fuzz tests.
 - `*_benchmark_test.go` for benchmarks.
 
-### 7.7 Service Test Pattern
+### 7.8 Service Test Pattern
 
 Use `newTestService()` and `seedTestData()` helpers:
 

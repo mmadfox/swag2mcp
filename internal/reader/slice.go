@@ -98,7 +98,12 @@ func adjacentPath(path string, delta int) string {
 	}
 	idx := strings.LastIndexAny(path, "[.")
 	if idx == -1 {
-		return ""
+		// Pure numeric path such as root array index "1".
+		n, err := strconv.Atoi(path)
+		if err != nil {
+			return ""
+		}
+		return strconv.Itoa(n + delta)
 	}
 	if path[idx] == '[' {
 		end := strings.Index(path[idx:], "]")
