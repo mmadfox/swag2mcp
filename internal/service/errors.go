@@ -2,7 +2,10 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+
+	"github.com/mmadfox/swag2mcp/internal/reader"
 )
 
 const (
@@ -66,4 +69,45 @@ func formatError(err error) string {
 		return ""
 	}
 	return fmt.Sprintf("%v", err)
+}
+
+// mapReaderError converts reader errors into LLM-facing errors.
+func mapReaderError(err error) error {
+	switch {
+	case errors.Is(err, reader.ErrFileNotFound):
+		return NewNotFoundError(
+			"The response file was not found — invoke an endpoint first and use the fileRef.path returned.",
+			err,
+		)
+	case errors.Is(err, reader.ErrPathNotAllowed):
+		return NewValidationError(
+			"The path is not inside the responses directory — only saved response files may be read.",
+			err,
+		)
+	case errors.Is(err, reader.ErrInvalidJSONPath):
+		return NewValidationError(
+			"The jsonPath is invalid — use a dotted path such as data.0.name.",
+			err,
+		)
+	case errors.Is(err, reader.ErrPathNotFound):
+		return NewNotFoundError(
+			"The jsonPath did not match any value in the file — check the outline and try a different path.",
+			err,
+		)
+	case errors.Is(err, reader.ErrInvalidLineRange):
+		return NewValidationError(
+			"The line or range is invalid — use a 1-based line number or a start-end range.",
+			err,
+		)
+	case errors.Is(err, reader.ErrNotJSON):
+		return NewValidationError(
+			"The file is not valid JSON — only JSON response files can be outlined or sliced.",
+			err,
+		)
+	default:
+		return NewInvokeError(
+			"Failed to read the response file — verify the path and try again.",
+			err,
+		)
+	}
 }

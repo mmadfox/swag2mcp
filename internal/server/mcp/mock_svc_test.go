@@ -206,6 +206,51 @@ func (mr *MockSvcMockRecorder) MakeToolDefinitions() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeToolDefinitions", reflect.TypeOf((*MockSvc)(nil).MakeToolDefinitions))
 }
 
+// ResponseCompress mocks base method.
+func (m *MockSvc) ResponseCompress(arg0 context.Context, req service.ResponseCompressRequest) (service.ResponseCompressResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResponseCompress", arg0, req)
+	ret0, _ := ret[0].(service.ResponseCompressResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ResponseCompress indicates an expected call of ResponseCompress.
+func (mr *MockSvcMockRecorder) ResponseCompress(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResponseCompress", reflect.TypeOf((*MockSvc)(nil).ResponseCompress), arg0, req)
+}
+
+// ResponseOutline mocks base method.
+func (m *MockSvc) ResponseOutline(arg0 context.Context, req service.ResponseOutlineRequest) (service.ResponseOutlineResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResponseOutline", arg0, req)
+	ret0, _ := ret[0].(service.ResponseOutlineResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ResponseOutline indicates an expected call of ResponseOutline.
+func (mr *MockSvcMockRecorder) ResponseOutline(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResponseOutline", reflect.TypeOf((*MockSvc)(nil).ResponseOutline), arg0, req)
+}
+
+// ResponseSlice mocks base method.
+func (m *MockSvc) ResponseSlice(arg0 context.Context, req service.ResponseSliceRequest) (service.ResponseSliceResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResponseSlice", arg0, req)
+	ret0, _ := ret[0].(service.ResponseSliceResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ResponseSlice indicates an expected call of ResponseSlice.
+func (mr *MockSvcMockRecorder) ResponseSlice(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResponseSlice", reflect.TypeOf((*MockSvc)(nil).ResponseSlice), arg0, req)
+}
+
 // Search mocks base method.
 func (m *MockSvc) Search(ctx context.Context, req service.SearchRequest) (service.SearchResponse, error) {
 	m.ctrl.T.Helper()
