@@ -19,7 +19,7 @@ import (
 var (
 	configValidator   *validator.Validate //nolint:gochecknoglobals // Lazily initialized singleton.
 	configValidatorMu sync.Mutex          //nolint:gochecknoglobals // Guards lazy validator initialization.
-	domainRegex       = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,60}$`)
+	domainRegex       = regexp.MustCompile(`^[a-z0-9_-]{1,60}$`)
 	titleRegex        = regexp.MustCompile(`^[\p{L}\p{N} #*_` + "`" + `~>\[\]()|.,!?;:'"\\–—\-]+$`)
 	instructionRegex  = regexp.MustCompile(`^[\p{L}\p{N}\s#*_` + "`" + `~>\[\]()|.,!?;:'"\\–—\-]+$`)
 )
@@ -384,7 +384,7 @@ func humanReadableError(fe validator.FieldError) string {
 	case "oneof":
 		return fmt.Sprintf("%s must be one of: %s", fe.Field(), fe.Param())
 	case "domain_format":
-		return "Domain must be 1-60 characters using only letters, digits, hyphens, and underscores"
+		return "Domain must be 1-60 lowercase characters using only letters, digits, hyphens, and underscores"
 	case "title_format":
 		return "LLMTitle contains invalid characters — use letters, digits, spaces, and basic punctuation only"
 	case "instruction_format":
