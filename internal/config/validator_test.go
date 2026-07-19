@@ -1029,3 +1029,27 @@ func TestValidateConfig_HTTPClient_DefaultsApplied(t *testing.T) {
 	require.NotNil(t, cfg.HTTPClient.MaxResponseSize)
 	assert.Equal(t, 1048576, *cfg.HTTPClient.MaxResponseSize)
 }
+
+func TestConfig_Validate_UppercaseDomain(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		Specs: []Spec{
+			{
+				Domain:   "PETSTORE",
+				LLMTitle: "Petstore API",
+				BaseURL:  "https://petstore.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main",
+						Location: "https://petstore.example.com/openapi.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := cfg.Validate(nil)
+	require.Error(t, err, "expected error for uppercase domain")
+	require.Contains(t, err.Error(), "lowercase")
+}

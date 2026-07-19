@@ -123,7 +123,7 @@ func (c *MCPAuthConfig) Resolve() {
 // Spec defines a single API specification group.
 //
 // Validation rules:
-//   - Domain: required, 1-60 chars, letters/digits/underscore/hyphen only.
+//   - Domain: required, 1-60 lowercase chars, letters/digits/underscore/hyphen only.
 //   - LLMTitle: required, 20-120 chars, allows letters/digits/punctuation.
 //   - LLMInstruction: optional, max 500 chars, allows letters/digits/punctuation.
 //   - Collections: required, 1-30 collections per spec.
