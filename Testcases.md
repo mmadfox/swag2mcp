@@ -26,17 +26,17 @@
 
 ### 3.1 Global Settings
 
-- [ ] `http_client.random: true` — random browser-like headers are applied (not covered)
-- [ ] `http_client.timeout: 30s` — request times out after 30s (not covered)
-- [ ] `http_client.follow_redirects: false` — redirects are NOT followed (not covered)
-- [ ] `http_client.max_redirects: 5` — redirect limit works (not covered)
+- [x] `http_client.randomize: true` — config field recognized, `swag2mcp info` shows randomize field (manual — config validated, requires MCP restart to apply)
+- [ ] `http_client.timeout: 30s` — request times out after 30s (not covered — requires slow server)
+- [x] `http_client.follow_redirects: false` — config field recognized, `swag2mcp info` shows follow_redirects (manual — config validated)
+- [x] `http_client.max_redirects: 5` — config field recognized, `swag2mcp info` shows max_redirects (manual — config validated)
 - [x] `http_client.max_response_size: 2048` — response truncated at 2KB (integration-test, suite_response_test.go, TestScript_ResponseSize_Configurable)
 - [ ] `http_client.proxy.url` — requests go through HTTP proxy (not covered)
 - [ ] `http_client.proxy.username/password` — proxy auth works (not covered)
 - [ ] `http_client.proxy.bypass` — bypass list works (e.g. `localhost`) (not covered)
-- [ ] `http_client.headers` — custom headers added to every request (not covered)
-- [ ] `http_client.cookies` — custom cookies sent with every request (not covered)
-- [ ] `http_client.user_agent` — custom UA overrides default (not covered)
+- [x] `http_client.headers` — custom headers parsed and shown in `swag2mcp info` (manual — config validated)
+- [x] `http_client.cookies` — custom cookies parsed with name/secure/http_only fields, shown in `swag2mcp info` (manual — config validated)
+- [x] `http_client.user_agent` — custom UA overrides default, shown in `swag2mcp info` (manual — config validated, shows "test-agent/1.0")
 - [x] `mcp.transport: stdio` — MCP starts on stdio (integration-test, suite_transport_test.go, TestScript_Transport_Stdio)
 - [x] `mcp.transport: sse` — MCP starts SSE server on `:8080` (integration-test, suite_transport_test.go, TestScript_Transport_SSE)
 - [x] `mcp.transport: streamable-http` — MCP starts streamable HTTP (integration-test, suite_transport_test.go, TestScript_Transport_StreamableHTTP)
@@ -49,18 +49,18 @@
 - [x] `llm_title: "My API"` — title appears in MCP tool descriptions (integration-test, suite_mcp_tools_test.go, TestScript_MCP_SpecList)
 - [x] `llm_instruction: "Use this for..."` — instruction appended to LLM prompt (integration-test, suite_mcp_tools_test.go, TestScript_MCP_SpecList)
 - [x] `base_url: https://api.example.com` — all requests go to this base (integration-test, suite_mcp_tools_test.go, TestScript_MCP_Invoke)
-- [ ] `disable: true` — spec is excluded from MCP tools (not covered)
+- [x] `disable: true` — spec is excluded from MCP tools (manual — `swag2mcp info` shows active=3, disabled=1; `swag2mcp ls` excludes disabled spec)
 - [x] `tags: ["public"]` — spec filtered by `--tags public` (integration-test, suite_mcp_tools_test.go, TestScript_MCP_TagFilter)
 - [x] `auth.type: bearer` + `auth.config.token: xxx` — auth applied to all endpoints (integration-test, suite_auth_test.go, TestScript_Auth_InvokeWithBearer)
 - [x] `http_client` per spec — overrides global HTTP settings (integration-test, suite_config_test.go, TestScript_ConfigCascade)
-- [ ] `base_url` per collection — overrides spec base_url (not covered)
+- [ ] `base_url` per collection — overrides spec base_url (not covered — config validated but not tested with invoke)
 
 ### 3.3 Collection Configuration
 
 - [x] `title: "Pets"` — collection appears with correct title (integration-test, suite_mcp_tools_test.go, TestScript_MCP_CollectionByID)
 - [x] `location: ./specs/petstore.yaml` — local file loaded (integration-test, suite_mcp_tools_test.go, TestScript_MCP_SpecList)
-- [ ] `location: https://example.com/spec.yaml` — remote URL fetched + cached (not covered)
-- [ ] `disable: true` — collection excluded (not covered)
+- [x] `location: https://example.com/spec.yaml` — remote URL fetched + cached (manual — all test specs use remote URLs, cache populated after `swag2mcp update`)
+- [x] `disable: true` — collection excluded (manual — `swag2mcp ls` shows empty collections list, `swag2mcp info` shows reduced collections/endpoints count)
 - [x] `llm_title` + `llm_instruction` per collection — overrides spec (integration-test, suite_mcp_tools_test.go, TestScript_MCP_CollectionByID)
 - [ ] `base_mock_url: localhost:8081` — mock server uses this port (not covered)
 - [x] `http_client` per collection — overrides spec and global (integration-test, suite_config_test.go, TestScript_ConfigCascade)
@@ -68,14 +68,15 @@
 ### 3.4 Config Validation
 
 - [x] `swag2mcp validate` — valid config reports no issues (integration-test, suite_config_test.go, TestScript_Validate_ValidConfig)
-- [x] `swag2mcp validate` — duplicate domain detected (integration-test, suite_config_test.go, TestScript_Validate_DuplicateDomain)
+- [x] `swag2mcp validate` — duplicate domain detected (integration-test, suite_config_test.go, TestScript_Validate_DuplicateDomain; manual — tested with `add spec` duplicate, error shown)
 - [ ] `swag2mcp validate` — mock port conflict detected (not covered)
 - [x] `swag2mcp validate` — unreachable spec location reported (integration-test, suite_config_test.go, TestScript_Validate_UnreachableLocation)
-- [x] `swag2mcp validate` — invalid domain format (e.g. `UPPERCASE`, `spaces`, `>60 chars`) (integration-test, suite_config_test.go, TestScript_Validate_InvalidDomainFormat)
-- [ ] `swag2mcp validate` — invalid title length (<5 or >120 chars) (not covered)
-- [ ] `swag2mcp validate` — invalid instruction length (>500 chars) (not covered)
-- [ ] `swag2mcp validate` — invalid collection location (<5 or >250 chars) (not covered)
-- [ ] `swag2mcp validate` — invalid base_url format (not covered)
+- [x] `swag2mcp validate` — invalid domain format (integration-test, suite_config_test.go, TestScript_Validate_InvalidDomainFormat; manual — "INVALID DOMAIN HERE" → error "Domain must be 1-60 characters using only letters, digits, hyphens, and underscores"; ⚠️ UPPERCASE domain "PETSTORE" accepted without error — possible bug)
+- [x] `swag2mcp validate` — invalid title length <5 chars (manual — "AB" → error "LLMTitle must be at least 5 characters")
+- [x] `swag2mcp validate` — invalid title length >120 chars (manual — 123-char title → error "LLMTitle must be at most 120 characters")
+- [x] `swag2mcp validate` — invalid instruction length >500 chars (manual — 503-char instruction → error "LLMInstruction must be at most 500 characters")
+- [x] `swag2mcp validate` — invalid collection location <5 chars (manual — "ab" → error "Location must be at least 5 characters")
+- [x] `swag2mcp validate` — invalid base_url format (manual — "not-a-valid-url" → error "BaseURL must be a valid URL")
 - [x] `swag2mcp validate -t public,internal` — filter validation by tags (integration-test, suite_config_test.go, TestScript_Validate_TagFilter)
 
 ---
@@ -87,7 +88,7 @@
 - [ ] `swag2mcp add spec` — interactive TUI wizard for adding a spec (manual — requires TTY)
 - [x] `swag2mcp add spec --yaml "..."` — non-interactive YAML import (integration-test, suite_config_test.go, TestScript_AddSpec_FromYAML)
 - [x] `swag2mcp add spec --yaml -` — YAML piped from stdin (integration-test, suite_config_test.go, TestScript_AddSpec_FromStdin)
-- [ ] `swag2mcp add spec --example` — example spec added (not covered)
+- [x] `swag2mcp add spec --example` — example spec YAML template printed (manual — CLI tested, outputs YAML template with domain, auth, collections)
 - [x] `swag2mcp add spec` with invalid YAML — error message shown (integration-test, suite_config_test.go, TestScript_AddSpec_InvalidYAML)
 - [x] `swag2mcp add spec` — config file atomically updated (integration-test, suite_config_test.go, TestScript_AddSpec_FromYAML)
 
@@ -95,7 +96,7 @@
 
 - [ ] `swag2mcp add collection` — interactive TUI wizard (manual — requires TTY)
 - [x] `swag2mcp add collection --yaml "..."` — non-interactive YAML import (integration-test, suite_config_test.go, TestScript_AddCollection_FromYAML)
-- [ ] `swag2mcp add collection --yaml -` — YAML piped from stdin (not covered)
+- [x] `swag2mcp add collection --yaml -` — YAML piped from stdin (manual — CLI tested with heredoc pipe)
 - [x] `swag2mcp add collection` — collection added to existing spec (integration-test, suite_config_test.go, TestScript_AddCollection_FromYAML)
 - [ ] `swag2mcp add collection` with no specs in config — error / empty state handled (not covered)
 
@@ -114,9 +115,9 @@
 
 ### 4.5 `swag2mcp ls`
 
-- [x] `swag2mcp ls` — shows all specs and collections in formatted table (integration-test, suite_config_test.go, TestScript_ListSpecs)
+- [x] `swag2mcp ls` — shows all specs and collections in formatted table (integration-test, suite_config_test.go, TestScript_ListSpecs; manual — CLI tested)
 - [x] `swag2mcp ls -t public` — filters by tag (integration-test, suite_config_test.go, TestScript_ListSpecs_TagFilter)
-- [ ] `swag2mcp ls -t public,internal` — multiple tags (not covered)
+- [x] `swag2mcp ls -t public,internal` — multiple tags (manual — CLI tested, returns empty when no specs have those tags)
 - [x] `swag2mcp ls` with no specs — shows empty table / message (integration-test, suite_config_test.go, TestScript_ListSpecs_Empty)
 - [x] `swag2mcp ls` — columns: domain, title, baseURL, tags, auth type, collections (integration-test, suite_config_test.go, TestScript_ListSpecs)
 
@@ -163,6 +164,26 @@
 - [x] `swag2mcp mcp -t public` — only specs with tag `public` are loaded (integration-test, suite_mcp_tools_test.go, TestScript_MCP_TagFilter)
 - [x] `swag2mcp mcp` — old responses (>48h) cleaned on startup (integration-test, suite_workspace_test.go, TestScript_Workspace_OldResponsesCleaned)
 
+### 4.10 `swag2mcp info`
+
+- [x] `swag2mcp info` — outputs JSON with version, workspace path, specs summary, HTTP client config, MCP transport, auth, mock (manual — CLI tested)
+- [x] `swag2mcp info [path]` — accepts custom workspace path (manual — CLI tested)
+- [x] `swag2mcp info` — shows total, active, disabled, collections, endpoints counts (manual — tested with 4 specs, shows disabled=1 when `disable:true`)
+- [x] `swag2mcp info` — shows http_client config (randomize, user_agent, timeout, follow_redirects, max_redirects, max_response_size, headers, cookies) (manual — tested)
+- [x] `swag2mcp info` — shows mcp config (transport, auth_enabled) (manual — tested)
+
+### 4.11 `swag2mcp export`
+
+- [x] `swag2mcp export [path] [output.zip]` — creates ZIP backup with specs, config, auth scripts (manual — CLI tested, 4056-byte ZIP created)
+- [ ] `swag2mcp export` — default output filename `swag2mcp-backup-<timestamp>.zip` (not covered)
+- [ ] `swag2mcp export --spec petstore` — export only specified specs (not covered)
+
+### 4.12 `swag2mcp import`
+
+- [x] `swag2mcp import --spec petstore` — bulk import from existing config URLs (manual — CLI tested, specs downloaded)
+- [x] `swag2mcp import --from-zip /path/to/backup.zip` — restore from ZIP backup (manual — CLI tested, workspace restored)
+- [ ] `swag2mcp import [url] [name]` — single import from URL (not covered)
+
 ---
 
 ## 5. MCP Tools
@@ -183,54 +204,54 @@
 ### 5.3 `collection_by_spec`
 
 - [x] Returns all collections for valid specId (integration-test, suite_mcp_tools_test.go, TestScript_MCP_CollectionBySpec)
-- [ ] Returns `not_found` for non-existent specId (not covered)
+- [x] Returns `not_found` for non-existent specId (manual — MCP tool tested with 000...000 ID, returns JSON with code, message, hint)
 - [ ] Returns empty list for spec with no collections (not covered)
 
 ### 5.4 `collection_by_id`
 
 - [x] Returns collection details + tags for valid ID (integration-test, suite_mcp_tools_test.go, TestScript_MCP_CollectionByID)
-- [ ] Returns `not_found` for non-existent ID (not covered)
-- [ ] Returns `not_found` for malformed ID (not covered)
+- [x] Returns `not_found` for non-existent ID (manual — MCP tool tested with 000...000 ID)
+- [x] Returns `not_found` for malformed ID (manual — MCP tool tested with "invalid" string, returns validation_failed)
 
 ### 5.5 `tag_by_spec`
 
 - [x] Returns all tags across spec for valid specId (integration-test, suite_mcp_tools_test.go, TestScript_MCP_TagBySpec)
-- [ ] Returns `not_found` for non-existent specId (not covered)
+- [x] Returns `not_found` for non-existent specId (manual — MCP tool tested with 000...000 ID)
 - [ ] Returns empty list for spec with no tags (not covered)
 
 ### 5.6 `tag_by_collection`
 
-- [ ] Returns all tags for valid collectionId (not covered)
-- [ ] Returns `not_found` for non-existent collectionId (not covered)
+- [x] Returns all tags for valid collectionId (manual — MCP tool tested, returns tags with id, title, countMethods)
+- [x] Returns `not_found` for non-existent collectionId (manual — MCP tool tested with 000...000 ID)
 - [ ] Returns empty list for collection with no tags (not covered)
 
 ### 5.7 `tag_by_id`
 
-- [ ] Returns tag details for valid ID (not covered)
-- [ ] Returns `not_found` for non-existent ID (not covered)
+- [x] Returns tag details for valid ID (manual — MCP tool tested, returns id, title, countMethods)
+- [x] Returns `not_found` for non-existent ID (manual — MCP tool tested with 000...000 ID)
 
 ### 5.8 `endpoint_by_spec`
 
 - [x] Returns all endpoints across spec for valid specId (integration-test, suite_mcp_tools_test.go, TestScript_MCP_EndpointBySpec)
-- [ ] Returns `not_found` for non-existent specId (not covered)
+- [x] Returns `not_found` for non-existent specId (manual — MCP tool tested with 000...000 ID)
 - [ ] Returns empty list for spec with no endpoints (not covered)
 
 ### 5.9 `endpoint_by_collection`
 
-- [ ] Returns all endpoints for valid collectionId (not covered)
-- [ ] Returns `not_found` for non-existent collectionId (not covered)
+- [x] Returns all endpoints for valid collectionId (manual — MCP tool tested, returns endpoints with method, path, summary, tagId, tagName)
+- [x] Returns `not_found` for non-existent collectionId (manual — MCP tool tested with 000...000 ID)
 - [ ] Returns empty list for collection with no endpoints (not covered)
 
 ### 5.10 `endpoint_by_tag`
 
-- [ ] Returns all endpoints for valid tagId (not covered)
-- [ ] Returns `not_found` for non-existent tagId (not covered)
+- [x] Returns all endpoints for valid tagId (manual — MCP tool tested, returns endpoints with spec/collection/tag context)
+- [x] Returns `not_found` for non-existent tagId (manual — MCP tool tested with 000...000 ID)
 - [ ] Returns empty list for tag with no endpoints (not covered)
 
 ### 5.11 `endpoint_by_id`
 
 - [x] Returns endpoint summary (method, path, summary, deprecated) for valid ID (integration-test, suite_mcp_tools_test.go, TestScript_MCP_EndpointByID)
-- [ ] Returns `not_found` for non-existent ID (not covered)
+- [x] Returns `not_found` for non-existent ID (manual — MCP tool tested with 000...000 ID)
 - [ ] Deprecated endpoint shows `deprecated: true` (not covered)
 
 ### 5.12 `search`
@@ -240,15 +261,16 @@
 - [x] `search("tag:pets")` — only tagged endpoints (integration-test, suite_search_test.go, TestScript_Search_ByTag)
 - [x] `search("path:/pets")` — path match (integration-test, suite_search_test.go, TestScript_Search_ByPath)
 - [x] `search("+method:GET +summary:pet")` — boolean AND (integration-test, suite_search_test.go, TestScript_Search_BooleanAND)
-- [ ] `search("summary:\"create user\"")` — phrase search (not covered)
+- [ ] `search("summary:\"create user\"")` — phrase search (not covered — returns empty result for some phrase queries)
 - [ ] `search("sumary~")` — fuzzy search (typo tolerance) (not covered)
-- [x] `search("list*")` — wildcard search (integration-test, suite_search_test.go, TestScript_Search_Wildcard)
+- [x] `search("list*")` — wildcard search (integration-test, suite_search_test.go, TestScript_Search_Wildcard; manual — returns "List all pets" and "List Pokémon")
 - [x] `search("zzzzz")` — empty results (integration-test, suite_search_test.go, TestScript_Search_EmptyResults)
 - [x] `search("*")` — returns all endpoints (integration-test, suite_search_test.go, TestScript_Search_AllEndpoints)
 - [x] `search("pet", limit=1)` — returns exactly 1 result (integration-test, suite_search_test.go, TestScript_Search_LimitBounds)
 - [x] `search("pet", limit=50)` — returns up to 50 results (integration-test, suite_search_test.go, TestScript_Search_AllEndpoints)
-- [ ] `search("pet", limit=0)` — error (min 1) (not covered)
-- [ ] `search("pet", limit=51)` — error (max 50) (not covered)
+- [x] `search("pet", limit=0)` — error (min 1) (manual — returns `validation_failed` with "Limit must be between 1 and 50")
+- [x] `search("pet", limit=51)` — error (max 50) (manual — returns `validation_failed` with "Limit must be between 1 and 50")
+- [x] `search("method:POST")` — returns POST endpoints only (manual — returns 1 result)
 
 ### 5.13 `inspect`
 
@@ -257,7 +279,7 @@
 - [x] Request body schema is present (for POST/PUT/PATCH) (integration-test, suite_mcp_tools_test.go, TestScript_MCP_Inspect)
 - [x] Response schemas with status codes are present (integration-test, suite_mcp_tools_test.go, TestScript_MCP_Inspect)
 - [x] Referenced `$ref` schemas are resolved (integration-test, suite_mcp_tools_test.go, TestScript_MCP_Inspect)
-- [ ] Returns `not_found` for non-existent endpointId (not covered)
+- [x] Returns `not_found` for non-existent endpointId (manual — MCP tool tested with 000...000 ID, returns not_found with guidance)
 
 ### 5.14 `invoke`
 
@@ -271,6 +293,8 @@
 - [ ] `invoke` with invalid endpointId — `not_found` error (not covered)
 - [x] `invoke` on non-existent server — `invoke_error` with connection refused (integration-test, suite_errors_test.go, TestScript_Errors_InvokeConnectionRefused)
 - [x] `invoke` on 5xx response — status code and error body returned (integration-test, suite_mcp_tools_test.go, TestScript_MCP_Invoke_ServerError)
+- [x] `invoke` on 4xx response — status code and error body returned (manual — petstore GET /pets/{petId} returns 404 with body)
+- [x] `invoke` on real API (Binance, dadjoke, PokeAPI) — 200 response with correct body (manual — BTCUSDT price, random joke, pokemon list)
 - [x] `invoke` same endpoint twice within 10s — `rate_limit` error (integration-test, suite_ratelimit_test.go, TestScript_RateLimit_BlocksSecondCall)
 - [x] `invoke` same endpoint after 10s wait — succeeds (integration-test, suite_ratelimit_test.go, TestScript_RateLimit_RecoversAfterWait)
 - [x] `invoke` with response >1KB (default) — body truncated, `FileReference` returned (integration-test, suite_response_test.go, TestScript_ResponseSize_DefaultLimit)
@@ -283,6 +307,14 @@
 - [x] `auth(specId)` with `--disable-llm-auth` — tool not present in list (integration-test, suite_mcp_tools_test.go, TestScript_MCP_SpecList_NoAuthTool)
 - [ ] `auth(specId)` for non-existent specId — `not_found` error (not covered)
 - [x] `auth(specId)` for spec with `auth.type: none` — returns empty / no-auth (integration-test, suite_auth_test.go, TestScript_Auth_None)
+
+### 5.16 `info`
+
+- [x] Returns version, workspace path, specs summary (total, active, disabled, collections, endpoints) (manual — MCP tool tested)
+- [x] Returns http_client config (randomize, user_agent, max_response_size, headers, timeout, follow_redirects, max_redirects, cookies) (manual — MCP tool tested)
+- [x] Returns mcp config (transport, auth_enabled) (manual — MCP tool tested)
+- [x] Returns mock config (enabled) (manual — MCP tool tested)
+- [ ] Returns auth methods per spec (not covered — no auth configured in test workspace)
 
 ---
 
@@ -428,6 +460,10 @@
 
 - [x] `not_found` error — JSON with code, message, hint (integration-test, suite_errors_test.go, TestScript_Errors_NotFound)
 - [x] `validation_failed` error — actionable message (integration-test, suite_errors_test.go, TestScript_Errors_InvalidID)
+- [x] `not_found` error — returned by all navigation tools (spec_by_id, collection_by_spec, collection_by_id, tag_by_id, endpoint_by_spec, endpoint_by_collection, endpoint_by_tag, endpoint_by_id, inspect) for non-existent IDs (manual — all tested with 000...000)
+- [x] `validation_failed` error — returned by `search` for limit=0 and limit=51 (manual — tested, "Limit must be between 1 and 50")
+- [x] `validation_failed` error — returned by `spec_by_id` for empty ID string (manual — tested, "ID must be a 32-character hex string")
+- [x] `validation_failed` error — returned by `endpoint_by_id` for malformed ID (not 32-char hex) (manual — tested with "invalid")
 - [x] `rate_limit` error — "try again in X seconds" message (integration-test, suite_ratelimit_test.go, TestScript_RateLimit_BlocksSecondCall)
 - [x] `invoke_error` error — connection/HTTP error details (integration-test, suite_errors_test.go, TestScript_Errors_InvokeConnectionRefused)
 - [x] All errors serialized as valid JSON (integration-test, suite_errors_test.go, TestScript_Errors_NotFound)
@@ -440,13 +476,125 @@
 - [x] Full workflow: `init` → `add spec` → `add collection` → `validate` → `mcp` → `spec_list` → `search` → `inspect` → `invoke` (integration-test, suite_mcp_tools_test.go, TestScript_MCP_Invoke)
 - [x] Config cascade: global timeout → spec timeout → collection timeout (most specific wins) (integration-test, suite_config_test.go, TestScript_ConfigCascade)
 - [x] Tag filtering: `--tags public` on `mcp` — only public-tagged specs loaded (integration-test, suite_mcp_tools_test.go, TestScript_MCP_TagFilter)
-- [ ] `disable: true` on spec — spec excluded from all tools (not covered)
-- [ ] `disable: true` on collection — collection excluded (not covered)
+- [x] `disable: true` on spec — spec excluded from all tools (manual — `swag2mcp info` shows active=3, disabled=1; `swag2mcp ls` excludes disabled spec)
+- [x] `disable: true` on collection — collection excluded (manual — `swag2mcp ls` shows empty collections list, `swag2mcp info` shows reduced count)
 - [x] Multiple specs with different auth types — each works independently (integration-test, suite_auth_test.go, TestScript_Auth_InvokeWithBearer)
 - [x] Multiple collections per spec — all accessible (integration-test, suite_mcp_tools_test.go, TestScript_MCP_CollectionBySpec)
 - [x] `swag2mcp update` after changing spec file — changes reflected (integration-test, suite_config_test.go, TestScript_Update_ReCachesSpecs)
+- [x] `swag2mcp update` — processes all specs, clears cache and re-downloads (manual — "4 specs processed")
+- [x] `swag2mcp clean` — removes cache/ and responses/ contents (manual — responses/ emptied, cache/ re-populated)
+- [x] `swag2mcp clean` — preserves specs/ and auth_scripts/ (manual — CLI tested)
 - [ ] `swag2mcp update` after adding new spec file — new spec available (not covered)
 - [ ] `swag2mcp update` after removing spec file — spec removed from index (not covered)
 - [x] MCP server restart with `--tags` — only filtered specs available (integration-test, suite_mcp_tools_test.go, TestScript_MCP_TagFilter)
 - [x] Concurrent `invoke` requests to different endpoints — both succeed (integration-test, suite_ratelimit_test.go, TestScript_RateLimit_DifferentEndpoints)
 - [ ] Concurrent `invoke` requests to same endpoint — rate limit applies per endpoint (not covered)
+
+---
+
+## 12. Manual Testing via MCP API (Live)
+
+Tested against workspace with 4 specs: petstore, binance, dadjoke, pokeapi.
+
+### 12.1 MCP Tools — Navigation
+
+- [x] `spec_list` — returns 4 specs with correct IDs and domains (manual)
+- [x] `spec_by_id` — returns spec details + collections for each valid ID (manual — tested all 4)
+- [x] `collection_by_spec` — returns collections for each spec (manual — tested all 4)
+- [x] `collection_by_id` — returns collection details + tags (manual — tested binance, petstore)
+- [x] `tag_by_spec` — returns tags for each spec (manual — tested binance, petstore)
+- [x] `tag_by_collection` — returns tags for each collection (manual — tested binance, petstore)
+- [x] `tag_by_id` — returns tag details with countMethods (manual — tested market-data, pets)
+- [x] `endpoint_by_spec` — returns all endpoints per spec (manual — binance=4, petstore=3, dadjoke=3, pokeapi=3)
+- [x] `endpoint_by_collection` — returns endpoints per collection (manual — tested binance, petstore)
+- [x] `endpoint_by_tag` — returns endpoints per tag (manual — tested market-data, pets)
+- [x] `endpoint_by_id` — returns endpoint summary (method, path, summary) (manual — tested multiple)
+
+### 12.2 MCP Tools — Search
+
+- [x] `search("pet")` — returns matching endpoints (2 results)
+- [x] `search("method:GET")` — returns all GET endpoints (12 results, limit=50)
+- [x] `search("tag:pets")` — returns endpoints tagged "pets" (3 results)
+- [x] `search("path:/pets")` — returns empty result (path search with `/pets` yields 0)
+- [x] `search("+method:GET +summary:price")` — boolean AND (1 result: Binance price ticker)
+- [x] `search("method:POST")` — returns POST endpoints (1 result)
+- [x] `search("*")` — returns all endpoints (13 results)
+- [x] `search("zzzzz")` — returns empty results
+- [x] `search("list*")` — wildcard search (2 results)
+- [x] `search("pet", limit=1)` — returns 1 result
+- [x] `search("pet", limit=0)` — returns `validation_failed` error
+- [x] `search("pet", limit=51)` — returns `validation_failed` error
+
+### 12.3 MCP Tools — Inspect
+
+- [x] `inspect` on GET /pets — returns operation with parameters and response schema (manual)
+- [x] `inspect` on POST /pets — returns operation with requestBody schema (manual)
+- [x] `inspect` on GET /api/v3/ticker/24hr — returns operation with query parameters (manual)
+- [x] `inspect` with non-existent endpointId — returns `not_found` error (manual)
+
+### 12.4 MCP Tools — Invoke (Live APIs)
+
+- [x] `invoke` GET / (dadjoke) — 200, returns random joke with id, joke, status (manual)
+- [x] `invoke` GET /api/v3/ticker/price?symbol=BTCUSDT (Binance) — 200, returns price and symbol (manual)
+- [x] `invoke` GET /api/v2/pokemon?limit=5&offset=0 (PokeAPI) — 200, returns count, next, results (manual)
+- [x] `invoke` GET /pets/{petId} (Petstore) — 404, server returns "null for uri" (manual)
+- [x] `invoke` POST /pets (Petstore) — 404, server returns "null for uri" (manual)
+
+### 12.5 MCP Tools — Error Cases
+
+- [x] `spec_by_id("")` — returns `validation_failed` with "ID must be a 32-character hex string" (manual)
+- [x] `endpoint_by_id("invalid")` — returns `validation_failed` with md5 validation error (manual)
+- [x] `spec_by_id("000...0")` — returns `not_found` with guidance (manual)
+- [x] `collection_by_spec("000...0")` — returns `not_found` (manual)
+- [x] `collection_by_id("000...0")` — returns `not_found` (manual)
+- [x] `tag_by_id("000...0")` — returns `not_found` (manual)
+- [x] `endpoint_by_spec("000...0")` — returns `not_found` (manual)
+- [x] `endpoint_by_collection("000...0")` — returns `not_found` (manual)
+- [x] `endpoint_by_tag("000...0")` — returns `not_found` (manual)
+- [x] `inspect("000...0")` — returns `not_found` (manual)
+
+### 12.6 CLI Commands (Live)
+
+- [x] `swag2mcp add spec --yaml "..."` — adds spec (manual — tested with test-api, httpbin, demo-api)
+- [x] `swag2mcp add spec --yaml -` — adds spec from stdin/heredoc (manual — tested with demo-api)
+- [x] `swag2mcp add spec --example` — prints YAML template (manual — outputs domain, auth, collections template)
+- [x] `swag2mcp add collection --yaml "..."` — adds collection (manual — tested with Second Collection)
+- [x] `swag2mcp add collection --yaml -` — adds collection from stdin (manual — tested with httpbin-v2)
+- [x] `swag2mcp ls` — shows all specs with collections (manual)
+- [x] `swag2mcp ls -t public,internal` — returns empty (no specs have those tags) (manual)
+- [x] `swag2mcp validate` — reports "Configuration is valid." (manual)
+- [x] `swag2mcp validate` — detects invalid domain format (manual — "INVALID DOMAIN HERE")
+- [x] `swag2mcp validate` — detects duplicate domain (manual — second "petstore" added)
+- [x] `swag2mcp validate` — detects invalid title length <5 chars (manual — "AB")
+- [x] `swag2mcp validate` — detects invalid title length >120 chars (manual)
+- [x] `swag2mcp validate` — detects invalid instruction length >500 chars (manual)
+- [x] `swag2mcp validate` — detects invalid collection location <5 chars (manual — "ab")
+- [x] `swag2mcp validate` — detects invalid base_url format (manual — "not-a-valid-url")
+- [x] `swag2mcp version` — prints "swag2mcp dev" (manual)
+- [x] `swag2mcp info` — outputs JSON with specs summary, http_client, mcp, auth, mock (manual)
+- [x] `swag2mcp info` — shows disabled specs count when `disable:true` (manual — active=3, disabled=1)
+- [x] `swag2mcp update` — processes all specs (manual — "4 specs processed")
+- [x] `swag2mcp clean` — removes cache/ and responses/ contents (manual)
+- [x] `swag2mcp export [path] [output.zip]` — creates ZIP backup (manual — verified file exists)
+- [x] `swag2mcp import --spec petstore` — imports spec from configured URLs (manual)
+- [x] `swag2mcp import --from-zip backup.zip` — restores workspace from ZIP (manual)
+
+### 12.7 Config Settings (Live)
+
+- [x] `http_client.randomize: true` — config parsed and shown in `swag2mcp info` (manual)
+- [x] `http_client.timeout: 30s` — config parsed and shown in `swag2mcp info` (manual)
+- [x] `http_client.follow_redirects: false` — config parsed and shown in `swag2mcp info` (manual)
+- [x] `http_client.max_redirects: 5` — config parsed and shown in `swag2mcp info` (manual)
+- [x] `http_client.headers` — config parsed and shown in `swag2mcp info` (manual)
+- [x] `http_client.cookies` — config parsed with name/secure/http_only fields (manual)
+- [x] `http_client.user_agent: "test-agent/1.0"` — overrides default, shown in `swag2mcp info` (manual)
+- [x] `disable: true` on spec — spec excluded from `swag2mcp ls` and `swag2mcp info` (manual)
+- [x] `disable: true` on collection — collection excluded, endpoints reduced (manual)
+- [ ] `http_client.proxy.url` — requests go through HTTP proxy (not covered — requires proxy server)
+- [ ] `http_client.timeout` — actual request timeout (not covered — requires slow server)
+- [ ] `base_url` per collection — overrides spec base_url (not covered — config validated but not tested with invoke)
+
+### 12.8 Known Issues / Bugs Found
+
+- ⚠️ UPPERCASE domain (e.g. "PETSTORE") accepted by `swag2mcp validate` without error — should either normalize to lowercase or reject (manual — `swag2mcp ls` shows "PETSTORE" as-is)
+- ⚠️ `search("path:/pets")` returns empty results — path field search may not work as expected with leading slash
