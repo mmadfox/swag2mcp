@@ -8,7 +8,7 @@
 
 One line of config turns any OpenAPI/Swagger/Postman file into an MCP server. LLM agents discover, inspect, and invoke your APIs — zero integration code.
 
-<img src="architecture.svg" width="800" alt="swag2mcp architecture">
+<img src="/architecture.svg" width="700" alt="swag2mcp architecture">
 
 ## Stop writing wrappers
 

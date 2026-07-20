@@ -1,12 +1,11 @@
-name: Deploy MkDocs to GitHub Pages
-
+name: Deploy docs
 on:
   push:
     branches: [main]
     paths:
       - "docs/**"
-      - "mkdocs.yml"
-      - "requirements.txt"
+      - "package.json"
+      - ".github/workflows/docs.yml"
   workflow_dispatch:
 
 permissions:
@@ -22,24 +21,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          python-version: "3.x"
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Build MkDocs site
-        run: mkdocs build --site-dir site
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx vitepress build docs
+      - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: docs/.vitepress/dist
 
   deploy:
     environment:
@@ -48,6 +39,5 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v4

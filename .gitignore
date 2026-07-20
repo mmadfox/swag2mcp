@@ -44,3 +44,10 @@ Thumbs.db
 main
 tmp
 playground
+
+# MkDocs build output
+site/
+
+# VitePress build output
+docs/.vitepress/dist/
+node_modules

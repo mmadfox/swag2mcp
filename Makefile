@@ -6,10 +6,13 @@ CORE_PACKAGES = ./internal/auth/... ./internal/cache/... ./internal/config/... \
                 ./internal/service/... ./internal/spec/... \
                 ./internal/types/... ./internal/workspace/...
 
-.PHONY: lint cover cover-core integration-tests build testall
+.PHONY: lint cover cover-core integration-tests build testall docs
 
 build:
 	go build -ldflags "-X github.com/mmadfox/swag2mcp/internal/commands.Version=$(VERSION)" -o swag2mcp ./cmd/swag2mcp
+
+docs:
+	npm install --silent && npx vitepress build docs
 
 lint:
 	golangci-lint run ./...
