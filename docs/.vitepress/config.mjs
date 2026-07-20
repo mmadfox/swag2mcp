@@ -6,6 +6,7 @@ export default defineConfig({
   lang: 'en-US',
   lastUpdated: true,
   cleanUrls: true,
+  base: '/swag2mcp/',
 
   head: [
     ['link', { rel: 'icon', href: '/logo.svg' }],
