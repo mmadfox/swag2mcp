@@ -63,7 +63,7 @@ func (s *WorkspaceSuite) TestUpdateReCachesSpecs() {
     base_url: https://api.example.com
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
 `
 	s.WriteConfig(configContent)
 
@@ -105,7 +105,7 @@ func (s *WorkspaceSuite) TestOldResponsesCleaned() {
     base_url: https://api.example.com
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
 `
 	s.WriteConfig(configContent)
 
@@ -129,7 +129,7 @@ func (s *WorkspaceSuite) TestRecentResponsesPreserved() {
     base_url: https://api.example.com
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
 `
 	s.WriteConfig(configContent)
 

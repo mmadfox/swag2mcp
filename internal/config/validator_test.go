@@ -1037,12 +1037,12 @@ func TestConfig_Validate_UppercaseDomain(t *testing.T) {
 		Specs: []Spec{
 			{
 				Domain:   "PETSTORE",
-				LLMTitle: "Petstore API",
-				BaseURL:  "https://petstore.example.com",
+				LLMTitle: "Open-Meteo API",
+				BaseURL:  "https://meteo.example.com",
 				Collections: []Collection{
 					{
 						LLMTitle: "Main",
-						Location: "https://petstore.example.com/openapi.yaml",
+						Location: "https://meteo.example.com/openapi.yaml",
 					},
 				},
 			},

@@ -38,9 +38,9 @@ func (s *ExportSuite) TestSuccess() {
 	srv, _ := s.specServer()
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -66,9 +66,9 @@ func (s *ExportSuite) TestDefaultOutputPath() {
 	srv, _ := s.specServer()
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -85,9 +85,9 @@ func (s *ExportSuite) TestWithPathOnly() {
 	srv, _ := s.specServer()
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -104,9 +104,9 @@ func (s *ExportSuite) TestWithSpecFilter() {
 	srv, _ := s.specServer()
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -120,7 +120,7 @@ func (s *ExportSuite) TestWithSpecFilter() {
 	s.WriteConfig(configContent)
 
 	outputPath := filepath.Join(s.Workspace, "backup.zip")
-	stdout, stderr, code := s.RunCommand("export", s.Workspace, outputPath, "--spec", "petstore")
+	stdout, stderr, code := s.RunCommand("export", s.Workspace, outputPath, "--spec", "meteo")
 	s.Equal(0, code)
 	s.Contains(stdout+stderr, "Exported")
 }
@@ -130,9 +130,9 @@ func (s *ExportSuite) TestWithMultipleSpecFilter() {
 	srv, _ := s.specServer()
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -146,7 +146,7 @@ func (s *ExportSuite) TestWithMultipleSpecFilter() {
 	s.WriteConfig(configContent)
 
 	outputPath := filepath.Join(s.Workspace, "backup.zip")
-	stdout, stderr, code := s.RunCommand("export", s.Workspace, outputPath, "--spec", "petstore,store")
+	stdout, stderr, code := s.RunCommand("export", s.Workspace, outputPath, "--spec", "meteo,store")
 	s.Equal(0, code)
 	s.Contains(stdout+stderr, "Exported")
 }
@@ -156,9 +156,9 @@ func (s *ExportSuite) TestWithPathOutputAndSpec() {
 	srv, _ := s.specServer()
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -166,7 +166,7 @@ func (s *ExportSuite) TestWithPathOutputAndSpec() {
 	s.WriteConfig(configContent)
 
 	outputPath := filepath.Join(s.Workspace, "backup.zip")
-	stdout, stderr, code := s.RunCommand("export", s.Workspace, outputPath, "--spec", "petstore")
+	stdout, stderr, code := s.RunCommand("export", s.Workspace, outputPath, "--spec", "meteo")
 	s.Equal(0, code)
 	s.Contains(stdout+stderr, "Exported")
 }
@@ -176,9 +176,9 @@ func (s *ExportSuite) TestWithSpecFilterNoMatch() {
 	srv, _ := s.specServer()
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -195,9 +195,9 @@ func (s *ExportSuite) TestProducesValidSwag2mcpZip() {
 	srv, _ := s.specServer()
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `

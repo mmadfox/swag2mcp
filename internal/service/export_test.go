@@ -31,9 +31,9 @@ func TestExport_Success(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -67,9 +67,9 @@ func TestExport_WithSpecFilter(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -85,7 +85,7 @@ func TestExport_WithSpecFilter(t *testing.T) {
 	outputPath := filepath.Join(tmpDir, "backup.zip")
 	resp, err := svc.Export(context.Background(), ExportRequest{
 		OutputPath: outputPath,
-		SpecFilter: []string{"petstore"},
+		SpecFilter: []string{"meteo"},
 	})
 	require.NoError(t, err)
 	assert.Equal(t, 1, resp.FileCount)
@@ -113,9 +113,9 @@ func TestExport_NoCollections(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections: []
 `
 	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
@@ -142,9 +142,9 @@ func TestExport_DefaultOutputPath(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -177,9 +177,9 @@ func TestExport_ProducesValidSwag2mcpZip(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -219,9 +219,9 @@ func TestExport_DownloadSpecError(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: http://localhost:1/nonexistent
@@ -250,9 +250,9 @@ func TestExport_DisabledSpec(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     disable: true
     collections:
       - title: Pets
@@ -283,9 +283,9 @@ func TestExport_DisabledCollection(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -316,9 +316,9 @@ func TestExport_DuplicateLocation(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -351,9 +351,9 @@ func TestExport_CreateZipError(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `

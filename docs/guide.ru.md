@@ -81,11 +81,11 @@ After setup, try asking your agent:
 
 | Query | What happens |
 |-------|-------------|
-| "Show me all available APIs" | `spec_list` — lists petstore, binance, dadjoke, pokeapi |
+| "Show me all available APIs" | `spec_list` — lists meteo, rick-and-morty, binance, dadjoke, pokeapi |
 | "What endpoints does Binance have?" | `endpoint_by_spec` — shows 4 market data endpoints |
-| "Find endpoints related to pets" | `search("pet")` — finds petstore endpoints |
-| "What tags are in the Petstore API?" | `tag_by_spec` — shows "pets" tag |
-| "Show me the GET /pets endpoint details" | `inspect` — shows parameters and response schema |
+| "Find endpoints related to pets" | `search("weather")` — finds meteo endpoints |
+| "What tags are in the Open-Meteo API?" | `tag_by_spec` — shows "weather" tag |
+| "Show me the GET /v1/forecast endpoint details" | `inspect` — shows parameters and response schema |
 | "Get the current BTC price from Binance" | `invoke` — real API call to Binance |
 | "Get a random dad joke" | `invoke` — calls icanhazdadjoke API |
 
@@ -117,11 +117,11 @@ http_client:                        # опционально, глобальны
   max_response_size: 1048           # опционально, байт (по умолч. 1KB, макс 1MB)
 
 specs:
-  - domain: petstore                    # обязательно, 1-60 символов, [a-zA-Z0-9_-]
-    llm_title: Petstore API             # обязательно, 5-120 символов
+  - domain: meteo                    # обязательно, 1-60 символов, [a-zA-Z0-9_-]
+    llm_title: Open-Meteo API             # обязательно, 5-120 символов
     llm_instruction: |                  # опционально, макс 500 символов
       Используй это API для управления питомцами, заказами и пользователями.
-    base_url: https://petstore.swagger.io/v2  # обязательно, валидный URL
+    base_url: https://meteo.swagger.io/v2  # обязательно, валидный URL
     disable: false                      # опционально
     tags: [public, demo]                # опционально, для фильтрации
     http_client:                        # опционально, переопределяет глобальный
@@ -132,11 +132,11 @@ specs:
       config:
         token: $(TOKEN_AUTH)
     collections:
-      - llm_title: Petstore Swagger     # опционально, макс 120 символов
+      - llm_title: Open-Meteo Swagger     # опционально, макс 120 символов
         llm_instruction: |             # опционально, макс 360 символов
-          Основные эндпоинты Petstore
+          Основные эндпоинты Open-Meteo
         title: ""                      # опционально, авто-заполняется из spec
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json  # обязательно, 5-250 символов
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml  # обязательно, 5-250 символов
         disable: false                  # опционально
         base_url: ""                    # опционально, переопределяет base_url спецификации
         base_mock_url: localhost:8080   # опционально, формат "host:port" или "host:port/path"
@@ -215,7 +215,7 @@ swag2mcp init -i           # интерактивный мастер
 
 ```bash
 swag2mcp add spec
-swag2mcp add spec --yaml 'domain: petstore\nllm_title: Petstore API\nbase_url: https://...'
+swag2mcp add spec --yaml 'domain: meteo\nllm_title: Open-Meteo API\nbase_url: https://...'
 cat spec.yaml | swag2mcp add spec --yaml -
 swag2mcp add spec --example
 ```
@@ -333,7 +333,7 @@ swag2mcp info ./
 
 ```bash
 swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import --spec petstore
+swag2mcp import --spec meteo
 swag2mcp import --from-zip /path/to/backup.zip
 ```
 
@@ -348,7 +348,7 @@ swag2mcp import --from-zip /path/to/backup.zip
 ```bash
 swag2mcp export
 swag2mcp export /path/to/workspace /path/to/backup.zip
-swag2mcp export --spec petstore
+swag2mcp export --spec meteo
 ```
 
 ### `mockserver [path]`

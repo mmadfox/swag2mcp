@@ -30,8 +30,8 @@ Examples:
   swag2mcp export
   swag2mcp export /path/to/workspace
   swag2mcp export /path/to/workspace /path/to/backup.zip
-  swag2mcp export --spec petstore
-  swag2mcp export --spec petstore,store`,
+  swag2mcp export --spec meteo
+  swag2mcp export --spec meteo,store`,
 		Args: cobra.MaximumNArgs(exportMaxArgs),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			basePath, outputPath := parseExportArgs(args)

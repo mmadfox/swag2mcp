@@ -56,9 +56,9 @@ Interactive mode (default):
   swag2mcp add spec
 
 Non-interactive mode with YAML:
-  swag2mcp add spec --yaml 'domain: petstore
-  llm_title: Petstore API
-  base_url: https://petstore.swagger.io/v2'
+  swag2mcp add spec --yaml 'domain: meteo
+  llm_title: Open-Meteo API
+  base_url: https://meteo.swagger.io/v2'
 
   Or pipe from stdin:
   cat spec.yaml | swag2mcp add spec --yaml -
@@ -115,9 +115,9 @@ Interactive mode (default):
   swag2mcp add collection
 
 Non-interactive mode with YAML:
-  swag2mcp add collection --yaml 'spec_domain: petstore
+  swag2mcp add collection --yaml 'spec_domain: meteo
   llm_title: Orders Collection
-  location: https://petstore.example.com/orders.json'
+  location: https://meteo.example.com/orders.json'
 
   Or pipe from stdin:
   cat collection.yaml | swag2mcp add collection --yaml -

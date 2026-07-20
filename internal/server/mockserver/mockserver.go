@@ -100,10 +100,10 @@ func (m *MockServer) Start(ctx context.Context) error {
 				"Example:\n"+
 				"  mock_enabled: true\n"+
 				"  specs:\n"+
-				"    - domain: petstore\n"+
-				"      base_url: https://petstore.swagger.io/v2\n"+
+				"    - domain: meteo\n"+
+				"      base_url: https://meteo.swagger.io/v2\n"+
 				"      collections:\n"+
-				"        - location: specs/petstore.json\n"+
+				"        - location: specs/meteo.json\n"+
 				"          base_mock_url: localhost:8080",
 			m.options.ConfigPath,
 		)

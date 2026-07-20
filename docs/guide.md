@@ -81,11 +81,11 @@ After setup, try asking your agent:
 
 | Query | What happens |
 |-------|-------------|
-| "Show me all available APIs" | `spec_list` — lists petstore, binance, dadjoke, pokeapi |
+| "Show me all available APIs" | `spec_list` — lists meteo, rick-and-morty, binance, dadjoke, pokeapi |
 | "What endpoints does Binance have?" | `endpoint_by_spec` — shows 4 market data endpoints |
-| "Find endpoints related to pets" | `search("pet")` — finds petstore endpoints |
-| "What tags are in the Petstore API?" | `tag_by_spec` — shows "pets" tag |
-| "Show me the GET /pets endpoint details" | `inspect` — shows parameters and response schema |
+| "Find endpoints related to pets" | `search("weather")` — finds meteo endpoints |
+| "What tags are in the Open-Meteo API?" | `tag_by_spec` — shows "weather" tag |
+| "Show me the GET /v1/forecast endpoint details" | `inspect` — shows parameters and response schema |
 | "Get the current BTC price from Binance" | `invoke` — real API call to Binance |
 | "Get a random dad joke" | `invoke` — calls icanhazdadjoke API |
 
@@ -94,11 +94,11 @@ After setup, try asking your agent:
 ---
 
 -------|-------------|
-| "Show me all available APIs" | `spec_list` — lists petstore, binance, dadjoke, pokeapi |
+| "Show me all available APIs" | `spec_list` — lists meteo, rick-and-morty, binance, dadjoke, pokeapi |
 | "What endpoints does Binance have?" | `endpoint_by_spec` — shows 4 market data endpoints |
-| "Find endpoints related to pets" | `search("pet")` — finds petstore endpoints |
-| "What tags are in the Petstore API?" | `tag_by_spec` — shows "pets" tag |
-| "Show me the GET /pets endpoint details" | `inspect` — shows parameters and response schema |
+| "Find endpoints related to pets" | `search("weather")` — finds meteo endpoints |
+| "What tags are in the Open-Meteo API?" | `tag_by_spec` — shows "weather" tag |
+| "Show me the GET /v1/forecast endpoint details" | `inspect` — shows parameters and response schema |
 | "Get the current BTC price from Binance" | `invoke` — real API call to Binance |
 | "Get a random dad joke" | `invoke` — calls icanhazdadjoke API |
 
@@ -130,11 +130,11 @@ http_client:                        # optional, global HTTP defaults
   max_response_size: 1048           # optional, bytes (default 1KB, max 1MB)
 
 specs:
-  - domain: petstore                    # required, 1-60 chars, [a-zA-Z0-9_-]
-    llm_title: Petstore API             # required, 5-120 chars
+  - domain: meteo                    # required, 1-60 chars, [a-zA-Z0-9_-]
+    llm_title: Open-Meteo API             # required, 5-120 chars
     llm_instruction: |                  # optional, max 500 chars
       Use this API to manage pets, orders, and users.
-    base_url: https://petstore.swagger.io/v2  # required, valid URL
+    base_url: https://meteo.swagger.io/v2  # required, valid URL
     disable: false                      # optional
     tags: [public, demo]                # optional, for filtering
     http_client:                        # optional, overrides global (headers + cookies only)
@@ -145,11 +145,11 @@ specs:
       config:
         token: $(TOKEN_AUTH)
     collections:
-      - llm_title: Petstore Swagger     # optional, max 120 chars
+      - llm_title: Open-Meteo Swagger     # optional, max 120 chars
         llm_instruction: |             # optional, max 360 chars
-          Main petstore endpoints
+          Main meteo endpoints
         title: ""                      # optional, auto-populated from spec
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json  # required, 5-250 chars
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml  # required, 5-250 chars
         disable: false                  # optional
         base_url: ""                    # optional, overrides spec base_url
         base_mock_url: localhost:8080   # optional, format "host:port" or "host:port/path"
@@ -228,7 +228,7 @@ Add a specification or collection to the config.
 
 ```bash
 swag2mcp add spec
-swag2mcp add spec --yaml 'domain: petstore\nllm_title: Petstore API\nbase_url: https://...'
+swag2mcp add spec --yaml 'domain: meteo\nllm_title: Open-Meteo API\nbase_url: https://...'
 cat spec.yaml | swag2mcp add spec --yaml -
 swag2mcp add spec --example
 ```
@@ -346,7 +346,7 @@ Import spec files into the workspace.
 
 ```bash
 swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import --spec petstore
+swag2mcp import --spec meteo
 swag2mcp import --from-zip /path/to/backup.zip
 ```
 
@@ -361,7 +361,7 @@ Export workspace as a portable ZIP backup.
 ```bash
 swag2mcp export
 swag2mcp export /path/to/workspace /path/to/backup.zip
-swag2mcp export --spec petstore
+swag2mcp export --spec meteo
 ```
 
 ### `mockserver [path]`

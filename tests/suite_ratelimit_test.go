@@ -14,7 +14,7 @@ type RateLimitSuite struct {
 
 func (s *RateLimitSuite) TestBlocksSecondCall() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[{"id":1}]`))
@@ -22,18 +22,18 @@ func (s *RateLimitSuite) TestBlocksSecondCall() {
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
@@ -46,7 +46,7 @@ func (s *RateLimitSuite) TestBlocksSecondCall() {
 
 func (s *RateLimitSuite) TestRecoversAfterWait() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[{"id":1}]`))
@@ -54,18 +54,18 @@ func (s *RateLimitSuite) TestRecoversAfterWait() {
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
@@ -80,7 +80,7 @@ func (s *RateLimitSuite) TestRecoversAfterWait() {
 
 func (s *RateLimitSuite) TestDifferentEndpoints() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[{"id":1}]`))
@@ -93,23 +93,27 @@ func (s *RateLimitSuite) TestDifferentEndpoints() {
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
 
-	petsID := s.GetEndpointID(client, specID, "GET", "/pets")
+	petsID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 	inventoryID := s.GetEndpointID(client, specID, "GET", "/store/inventory")
 
 	client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": petsID,
+		"parameters": map[string]interface{}{
+			"latitude":  0.0,
+			"longitude": 0.0,
+		},
 	})
 
 	client.callTool(s.T(), "invoke", map[string]interface{}{

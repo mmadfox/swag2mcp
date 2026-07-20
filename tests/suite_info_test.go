@@ -19,7 +19,7 @@ func (s *InfoSuite) TestPrintsInfo() {
     base_url: https://api.example.com
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
 `
 	s.WriteConfig(configContent)
 

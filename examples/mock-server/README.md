@@ -16,16 +16,16 @@ random API responses without connecting to a real backend.
 mock_enabled: true
 
 specs:
-  - domain: petstore
-    base_url: https://petstore.example.com/v1
-    llm_title: Petstore API
+  - domain: meteo
+    base_url: https://meteo.example.com/v1
+    llm_title: Open-Meteo API
     auth:
       type: bearer
       config:
         token: any-token
     collections:
-      - llm_title: Petstore Swagger
-        location: specs/petstore.json
+      - llm_title: Open-Meteo Swagger
+        location: specs/meteo.json
         base_mock_url: localhost:8080
 ```
 

@@ -10,12 +10,12 @@ import (
 func TestBuildConfigYAML(t *testing.T) {
 	specs := []SpecInput{
 		{
-			Domain:      "petstore",
-			LLMTitle:    "Petstore API",
-			Instruction: "Use this API to manage pets.",
-			BaseURL:     "https://petstore.swagger.io/v2",
+			Domain:      "meteo",
+			LLMTitle:    "Open-Meteo Weather API",
+			Instruction: "Use the Open-Meteo API to get weather forecasts and related data.",
+			BaseURL:     "https://api.open-meteo.com",
 			Collections: []CollectionInput{
-				{Title: "Petstore Swagger", Location: "https://petstore.swagger.io/v2/swagger.json"},
+				{Title: "Forecast", Location: "https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml"},
 			},
 		},
 	}
@@ -26,16 +26,16 @@ func TestBuildConfigYAML(t *testing.T) {
 	}
 
 	content := string(data)
-	if !strings.Contains(content, "domain: \"petstore\"") {
+	if !strings.Contains(content, "domain: \"meteo\"") {
 		t.Error("missing domain")
 	}
-	if !strings.Contains(content, "llm_title: \"Petstore API\"") {
+	if !strings.Contains(content, "llm_title: \"Open-Meteo Weather API\"") {
 		t.Error("missing llm_title")
 	}
-	if !strings.Contains(content, "base_url: \"https://petstore.swagger.io/v2\"") {
+	if !strings.Contains(content, "base_url: \"https://api.open-meteo.com\"") {
 		t.Error("missing base_url")
 	}
-	if !strings.Contains(content, "location: \"https://petstore.swagger.io/v2/swagger.json\"") {
+	if !strings.Contains(content, "location: \"https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml\"") {
 		t.Error("missing collection location")
 	}
 }

@@ -80,11 +80,11 @@ After setup, try asking your agent:
 
 | Query | What happens |
 |-------|-------------|
-| "Show me all available APIs" | `spec_list` — lists petstore, binance, dadjoke, pokeapi |
+| "Show me all available APIs" | `spec_list` — lists meteo, rick-and-morty, binance, dadjoke, pokeapi |
 | "What endpoints does Binance have?" | `endpoint_by_spec` — shows 4 market data endpoints |
-| "Find endpoints related to pets" | `search("pet")` — finds petstore endpoints |
-| "What tags are in the Petstore API?" | `tag_by_spec` — shows "pets" tag |
-| "Show me the GET /pets endpoint details" | `inspect` — shows parameters and response schema |
+| "Find endpoints related to pets" | `search("weather")` — finds meteo endpoints |
+| "What tags are in the Open-Meteo API?" | `tag_by_spec` — shows "weather" tag |
+| "Show me the GET /v1/forecast endpoint details" | `inspect` — shows parameters and response schema |
 | "Get the current BTC price from Binance" | `invoke` — real API call to Binance |
 | "Get a random dad joke" | `invoke` — calls icanhazdadjoke API |
 
@@ -110,11 +110,11 @@ http_client:                        # 可选，全局 HTTP 默认设置
   max_response_size: 1048           # 可选，字节（默认 1KB，最大 1MB）
 
 specs:
-  - domain: petstore                    # 必填，1-60 字符，[a-zA-Z0-9_-]
-    llm_title: Petstore API             # 必填，5-120 字符
+  - domain: meteo                    # 必填，1-60 字符，[a-zA-Z0-9_-]
+    llm_title: Open-Meteo API             # 必填，5-120 字符
     llm_instruction: |                  # 可选，最多 500 字符
       使用此 API 管理宠物、订单和用户。
-    base_url: https://petstore.swagger.io/v2  # 必填，有效 URL
+    base_url: https://meteo.swagger.io/v2  # 必填，有效 URL
     disable: false                      # 可选
     tags: [public, demo]                # 可选，用于过滤
     http_client:                        # 可选，覆盖全局设置
@@ -125,11 +125,11 @@ specs:
       config:
         token: $(TOKEN_AUTH)
     collections:
-      - llm_title: Petstore Swagger     # 可选，最多 120 字符
+      - llm_title: Open-Meteo Swagger     # 可选，最多 120 字符
         llm_instruction: |             # 可选，最多 360 字符
-          Petstore 主要端点
+          Open-Meteo 主要端点
         title: ""                      # 可选，从 spec 自动填充
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json  # 必填，5-250 字符
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml  # 必填，5-250 字符
         disable: false                  # 可选
         base_url: ""                    # 可选，覆盖 spec 的 base_url
         base_mock_url: localhost:8080   # 可选，格式 "host:port" 或 "host:port/path"
@@ -208,7 +208,7 @@ swag2mcp init -i           # 交互式向导
 
 ```bash
 swag2mcp add spec
-swag2mcp add spec --yaml 'domain: petstore\nllm_title: Petstore API\nbase_url: https://...'
+swag2mcp add spec --yaml 'domain: meteo\nllm_title: Open-Meteo API\nbase_url: https://...'
 cat spec.yaml | swag2mcp add spec --yaml -
 swag2mcp add spec --example
 ```

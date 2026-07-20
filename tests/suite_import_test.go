@@ -37,11 +37,11 @@ func (s *ImportSuite) TestSingleFile() {
 	s.InitWorkspace()
 	srv, _ := s.specServer()
 
-	stdout, stderr, code := s.RunCommand("import", s.Workspace, srv.URL, "petstore.yaml")
+	stdout, stderr, code := s.RunCommand("import", s.Workspace, srv.URL, "meteo.yaml")
 	s.Equal(0, code)
-	s.Contains(stdout+stderr, "petstore.yaml")
+	s.Contains(stdout+stderr, "meteo.yaml")
 
-	specPath := filepath.Join(s.Workspace, "specs", "petstore.yaml")
+	specPath := filepath.Join(s.Workspace, "specs", "meteo.yaml")
 	_, err := os.Stat(specPath)
 	s.Require().NoError(err, "spec file not created at %s", specPath)
 }
@@ -50,7 +50,7 @@ func (s *ImportSuite) TestSingleFileDuplicate() {
 	s.InitWorkspace()
 
 	specDir := filepath.Join(s.Workspace, "specs")
-	s.Require().NoError(os.WriteFile(filepath.Join(specDir, "petstore.yaml"), []byte("existing"), 0600))
+	s.Require().NoError(os.WriteFile(filepath.Join(specDir, "meteo.yaml"), []byte("existing"), 0600))
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -58,7 +58,7 @@ func (s *ImportSuite) TestSingleFileDuplicate() {
 	}))
 	s.T().Cleanup(srv.Close)
 
-	_, _, code := s.RunCommand("import", s.Workspace, srv.URL, "petstore.yaml")
+	_, _, code := s.RunCommand("import", s.Workspace, srv.URL, "meteo.yaml")
 	s.NotEqual(0, code)
 }
 
@@ -66,9 +66,9 @@ func (s *ImportSuite) TestWithPath() {
 	s.InitWorkspace()
 	srv, _ := s.specServer()
 
-	stdout, stderr, code := s.RunCommand("import", s.Workspace, srv.URL, "petstore.yaml")
+	stdout, stderr, code := s.RunCommand("import", s.Workspace, srv.URL, "meteo.yaml")
 	s.Equal(0, code)
-	s.Contains(stdout+stderr, "petstore.yaml")
+	s.Contains(stdout+stderr, "meteo.yaml")
 }
 
 func (s *ImportSuite) TestLocalFile() {
@@ -101,16 +101,16 @@ func (s *ImportSuite) TestWithSpec() {
 	srv, _ := s.specServer()
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
 `
 	s.WriteConfig(configContent)
 
-	stdout, stderr, code := s.RunCommand("import", s.Workspace, "--spec", "petstore")
+	stdout, stderr, code := s.RunCommand("import", s.Workspace, "--spec", "meteo")
 	s.Equal(0, code)
 	s.Contains(stdout+stderr, "Imported")
 
@@ -125,16 +125,16 @@ func (s *ImportSuite) TestWithPathAndSpec() {
 	srv, _ := s.specServer()
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
 `
 	s.WriteConfig(configContent)
 
-	stdout, stderr, code := s.RunCommand("import", s.Workspace, "--spec", "petstore")
+	stdout, stderr, code := s.RunCommand("import", s.Workspace, "--spec", "meteo")
 	s.Equal(0, code)
 	s.Contains(stdout+stderr, "Imported")
 }
@@ -144,9 +144,9 @@ func (s *ImportSuite) TestWithMultipleSpecs() {
 	srv, _ := s.specServer()
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -159,7 +159,7 @@ func (s *ImportSuite) TestWithMultipleSpecs() {
 `
 	s.WriteConfig(configContent)
 
-	stdout, stderr, code := s.RunCommand("import", s.Workspace, "--spec", "petstore,store")
+	stdout, stderr, code := s.RunCommand("import", s.Workspace, "--spec", "meteo,store")
 	s.Equal(0, code)
 	s.Contains(stdout+stderr, "Imported")
 }
@@ -168,9 +168,9 @@ func (s *ImportSuite) TestWithSpecNoMatch() {
 	s.InitWorkspace()
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: https://example.com/spec.yaml
@@ -182,7 +182,7 @@ func (s *ImportSuite) TestWithSpecNoMatch() {
 }
 
 func (s *ImportSuite) TestWithSpecNoConfig() {
-	_, _, code := s.RunCommand("import", s.Workspace, "--spec", "petstore")
+	_, _, code := s.RunCommand("import", s.Workspace, "--spec", "meteo")
 	s.NotEqual(0, code)
 }
 

@@ -10,4 +10,4 @@ specs:
         password: $(DIGEST_PASS)
     collections:
       - llm_title: Protected Resources
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json

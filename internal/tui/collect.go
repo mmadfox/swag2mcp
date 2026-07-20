@@ -237,7 +237,7 @@ func (m collectModel) View() string {
 	case colDomain:
 		s += fmt.Sprintf("  Spec #%d — Domain\n", m.specNum)
 		s += "  ──────────────────\n\n"
-		s += "  A unique identifier for this API.\n  Examples: petstore, github-api, stripe.\n\n"
+		s += "  A unique identifier for this API.\n  Examples: meteo, rick-and-morty, github-api.\n\n"
 		s += "  Rules: 1–60 characters. Letters, digits, hyphens, and underscores only.\n\n"
 		s += "  ────\n\n"
 		s += "  [my-api]\n"

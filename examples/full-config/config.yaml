@@ -48,10 +48,10 @@ specs:
         token: $(PAYMENTS_API_TOKEN)
     collections:
       - llm_title: Transactions
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
         base_mock_url: localhost:8080
       - llm_title: Refunds
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
         disable: true
 
   # ─── Spec 2: Internal API with Basic auth ─────────────────────────────
@@ -86,7 +86,7 @@ specs:
     llm_title: Legacy API (Deprecated)
     collections:
       - llm_title: Old Endpoints
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
 
   # ─── Spec 4: OAuth2 Client Credentials ─────────────────────────────────
   - domain: analytics-api
@@ -109,6 +109,6 @@ specs:
           - analytics:write
     collections:
       - llm_title: Reports
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
       - llm_title: Dashboards
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json

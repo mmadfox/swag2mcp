@@ -14,4 +14,4 @@ specs:
           - api:write
     collections:
       - llm_title: API Resources
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json

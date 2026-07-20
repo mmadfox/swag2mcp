@@ -27,9 +27,9 @@ func TestRunExport_Success(t *testing.T) {
 	t.Cleanup(srv.Close)
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -83,9 +83,9 @@ func TestRunExport_DefaultOutputPath(t *testing.T) {
 	t.Cleanup(srv.Close)
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -127,9 +127,9 @@ func TestRunExport_WithSpecFilter(t *testing.T) {
 	t.Cleanup(srv.Close)
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -149,7 +149,7 @@ func TestRunExport_WithSpecFilter(t *testing.T) {
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)
 
-	err := runExport(tmpDir, outputPath, []string{"petstore"}, cmd)
+	err := runExport(tmpDir, outputPath, []string{"meteo"}, cmd)
 	if err != nil {
 		t.Fatalf("runExport() = %v", err)
 	}

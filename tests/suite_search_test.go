@@ -14,25 +14,25 @@ type SearchSuite struct {
 
 func (s *SearchSuite) TestBasic() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[]`))
 	})
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	result := client.callTool(s.T(), "search", map[string]interface{}{
-		"query": "pet",
+		"query": "forecast",
 		"limit": 10,
 	})
 
@@ -42,24 +42,24 @@ func (s *SearchSuite) TestBasic() {
 		} `json:"endpoints"`
 	}
 	s.Require().NoError(json.Unmarshal(result, &searchResp))
-	s.NotEmpty(searchResp.Endpoints, "expected at least 1 result for 'pet'")
+	s.NotEmpty(searchResp.Endpoints, "expected at least 1 result for 'forecast'")
 }
 
 func (s *SearchSuite) TestByMethod() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[]`))
 	})
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -82,25 +82,25 @@ func (s *SearchSuite) TestByMethod() {
 
 func (s *SearchSuite) TestByTag() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[]`))
 	})
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	result := client.callTool(s.T(), "search", map[string]interface{}{
-		"query": "tag:pets",
+		"query": "tag:weather",
 		"limit": 50,
 	})
 
@@ -110,33 +110,33 @@ func (s *SearchSuite) TestByTag() {
 		} `json:"endpoints"`
 	}
 	s.Require().NoError(json.Unmarshal(result, &searchResp))
-	s.NotEmpty(searchResp.Endpoints, "expected at least 1 result for tag:pets")
+	s.NotEmpty(searchResp.Endpoints, "expected at least 1 result for tag:weather")
 	for _, ep := range searchResp.Endpoints {
-		s.Equal("pets", ep.TagName, "expected only 'pets' tag")
+		s.Equal("weather", ep.TagName, "expected only 'weather' tag")
 	}
 }
 
 func (s *SearchSuite) TestByPath() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[]`))
 	})
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	result := client.callTool(s.T(), "search", map[string]interface{}{
-		"query": "/pets",
+		"query": "/v1/forecast",
 		"limit": 50,
 	})
 
@@ -146,30 +146,30 @@ func (s *SearchSuite) TestByPath() {
 		} `json:"endpoints"`
 	}
 	s.Require().NoError(json.Unmarshal(result, &searchResp))
-	s.NotEmpty(searchResp.Endpoints, "expected at least 1 result for /pets")
+	s.NotEmpty(searchResp.Endpoints, "expected at least 1 result for /v1/forecast")
 }
 
 func (s *SearchSuite) TestBooleanAND() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[]`))
 	})
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	result := client.callTool(s.T(), "search", map[string]interface{}{
-		"query": "+method:GET +summary:pet",
+		"query": "+method:GET +summary:forecast",
 		"limit": 50,
 	})
 
@@ -186,19 +186,19 @@ func (s *SearchSuite) TestBooleanAND() {
 
 func (s *SearchSuite) TestEmptyResults() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[]`))
 	})
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -217,25 +217,25 @@ func (s *SearchSuite) TestEmptyResults() {
 
 func (s *SearchSuite) TestWildcard() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[]`))
 	})
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	result := client.callTool(s.T(), "search", map[string]interface{}{
-		"query": "list*",
+		"query": "open*",
 		"limit": 10,
 	})
 
@@ -243,24 +243,24 @@ func (s *SearchSuite) TestWildcard() {
 		Endpoints []interface{} `json:"endpoints"`
 	}
 	s.Require().NoError(json.Unmarshal(result, &searchResp))
-	s.NotEmpty(searchResp.Endpoints, "expected at least 1 result for wildcard 'list*'")
+	s.NotEmpty(searchResp.Endpoints, "expected at least 1 result for wildcard 'open*'")
 }
 
 func (s *SearchSuite) TestAllEndpoints() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[]`))
 	})
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -279,25 +279,25 @@ func (s *SearchSuite) TestAllEndpoints() {
 
 func (s *SearchSuite) TestLimitBounds() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[]`))
 	})
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	result := client.callTool(s.T(), "search", map[string]interface{}{
-		"query": "pet",
+		"query": "forecast",
 		"limit": 1,
 	})
 
