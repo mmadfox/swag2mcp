@@ -49,6 +49,16 @@ When swag2mcp validates the config, these rules are checked for every spec:
 
 Validation runs on every `swag2mcp mcp` startup. If it fails, the MCP server will not start — in some IDEs this means the server simply won't connect, and the LLM receives a clear error message explaining what to fix.
 
+To diagnose issues before starting the server, use the [`validate`](../cli/validate.md) command:
+
+```bash
+# Validate default workspace (~/.swag2mcp)
+swag2mcp validate
+
+# Validate a custom project workspace
+swag2mcp validate ./my-project
+```
+
 ## LLM Instruction
 
 It is recommended to set `llm_instruction` on each spec — a short hint (up to 500 chars) that tells the LLM what this API is for and when to use it. This instruction is injected into the swag2mcp system prompt, helping the LLM understand the spec's purpose without extra context.
