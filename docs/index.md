@@ -1,7 +1,7 @@
 # swag2mcp
 
-<a href="https://www.youtube.com/watch?v=9CcvwmfTkds" target="_blank">
-  <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/assets/cover.png" width="600" alt="Watch video — swag2mcp in 2 minutes">
+<a href="https://www.youtube.com/watch?v=1Da4UmE2f9U" target="_blank">
+  <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/docs/cover.png" alt="Preview">
 </a>
 
 ## Your API speaks LLM
