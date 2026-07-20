@@ -2,7 +2,7 @@
 
 A spec is a logical container representing an API domain or service (e.g., YouTube, Binance, Open-Meteo). Each spec has a unique `domain`, a `base_url`, optional `auth`, and contains one or more collections.
 
-Collections point to OpenAPI/Swagger/Postman files — the spec itself is not a file, it's the grouping around them.
+[Collections](./collections) point to OpenAPI/Swagger/Postman files — the spec itself is not a file, it's the grouping around them.
 
 ## Domain — Naming Rules
 
@@ -20,17 +20,17 @@ The `domain` is the unique identifier of a spec. It is used as the primary key t
 
 ## Spec Fields
 
-| Field | YAML key | Required | Description | Reference |
-|-------|----------|----------|-------------|-----------|
-| Domain | `domain` | ✅ | Unique API identifier (1–60 chars, `a-z0-9_-`) | — |
-| LLM Title | `llm_title` | ✅ | Human-readable name the LLM uses to reference this API (5–120 chars) | — |
-| LLM Instruction | `llm_instruction` | ❌ | Short hint injected into the swag2mcp system prompt (max 500 chars) | [LLM Instruction](#llm-instruction) |
-| Base URL | `base_url` | ✅ | Base URL for all API requests (valid URL) | — |
-| Disable | `disable` | ❌ | Skip this spec during loading and indexing | [Disable](#disable) |
-| Tags | `tags` | ❌ | Tags for filtering (e.g., `["public", "demo"]`) | [Tags](#tags) |
-| Auth | `auth` | ❌ | Authentication configuration | [Auth Overview](../auth/overview.md) |
-| HTTP Client | `http_client` | ❌ | Per-spec HTTP settings (headers, cookies) | [HTTP Client](../configuration/http-client.md) |
-| Collections | `collections` | ✅ | List of 1–30 collections | [Collections](./collections) |
+| Field | YAML key | Required | Description |
+|-------|----------|----------|-------------|
+| [Domain](#domain--naming-rules) | `domain` | ✅ | Unique API identifier (1–60 chars, `a-z0-9_-`) |
+| [LLM Title](#validation) | `llm_title` | ✅ | Human-readable name the LLM uses to reference this API (5–120 chars) |
+| [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | Short hint injected into the swag2mcp system prompt (max 500 chars) |
+| [Base URL](#validation) | `base_url` | ✅ | Base URL for all API requests (valid URL) |
+| [Disable](#disable) | `disable` | ❌ | Skip this spec during loading and indexing |
+| [Tags](#tags) | `tags` | ❌ | Tags for filtering (e.g., `["public", "demo"]`) |
+| [Auth](#auth) | `auth` | ❌ | Authentication configuration |
+| [HTTP Client](#http-client) | `http_client` | ❌ | Per-spec HTTP settings (headers, cookies) |
+| [Collections](./collections) | `collections` | ✅ | List of 1–30 collections |
 
 ## Validation
 
@@ -47,7 +47,7 @@ When swag2mcp validates the config, these rules are checked for every spec:
 | **Auth** | Validated per auth type (e.g., bearer requires `token`, basic requires `username` + `password`) |
 | **Location** | Each collection's `location` must be a valid URL or file path (5–250 chars) |
 
-If validation fails, the LLM receives a clear error message explaining what to fix.
+Validation runs on every `swag2mcp mcp` startup. If it fails, the MCP server will not start — in some IDEs this means the server simply won't connect, and the LLM receives a clear error message explaining what to fix.
 
 ## LLM Instruction
 
@@ -72,15 +72,15 @@ Authentication is configured at the spec level and applies to all its collection
 
 | Method | YAML type | Key fields |
 |--------|-----------|------------|
-| None | `none` | — |
-| Basic | `basic` | `username`, `password` |
-| Bearer | `bearer` | `token` |
-| Digest | `digest` | `username`, `password` |
-| OAuth2 Client Credentials | `oauth2-cc` | `client_id`, `client_secret`, `token_url` |
-| OAuth2 Password | `oauth2-pwd` | `username`, `password`, `client_id`, `token_url` |
-| API Key | `api-key` | `key`, `value`, `in` (`header` or `query`) |
-| HMAC | `hmac` | `api_key`, `secret_key` |
-| Script | `script` | `domain` |
+| [None](../auth/none.md) | `none` | — |
+| [Basic](../auth/basic.md) | `basic` | `username`, `password` |
+| [Bearer](../auth/bearer.md) | `bearer` | `token` |
+| [Digest](../auth/digest.md) | `digest` | `username`, `password` |
+| [OAuth2 Client Credentials](../auth/oauth2-cc.md) | `oauth2-cc` | `client_id`, `client_secret`, `token_url` |
+| [OAuth2 Password](../auth/oauth2-pwd.md) | `oauth2-pwd` | `username`, `password`, `client_id`, `token_url` |
+| [API Key](../auth/api-key.md) | `api-key` | `key`, `value`, `in` (`header` or `query`) |
+| [HMAC](../auth/hmac.md) | `hmac` | `api_key`, `secret_key` |
+| [Script](../auth/script.md) | `script` | `domain` |
 
 See [Auth Overview](../auth/overview.md) for full details on each method.
 
