@@ -8,7 +8,7 @@ swag2mcp acts as a bridge between API specifications and LLM agents:
 
 ## Core Concepts
 
-**Spec** — a logical container representing an API domain or service (e.g., YouTube, Binance, Open-Meteo). Each spec has a unique `domain`, a `base_url`, optional `auth`, and contains one or more collections. Learn more: [Specs](./specs).
+**Spec** — a logical container representing an API domain or service (e.g., YouTube, Binance, Open-Meteo). Each spec has a unique `domain`, a `base_url`, optional `auth`, and contains one or more collections. You can also set `llm_instruction` — a short hint injected into the swag2mcp system prompt that tells the LLM what this spec is for and when to use it. Learn more: [Specs](./specs).
 
 **Collection** — a single OpenAPI/Swagger/Postman file describing a specific API. It points to a `location` (URL or local file path). One spec can have multiple collections — for example, the "meteo" spec might have "Forecast", "Air Quality", and "Marine" collections, each pointing to a different spec file. Learn more: [Collections](./collections).
 
@@ -20,7 +20,17 @@ swag2mcp acts as a bridge between API specifications and LLM agents:
 
 ## How It Works
 
-1. **Add a spec or collection** — via `swag2mcp add <url>`, the YAML config, or any other supported method.
+1. **Add a spec or collection** — define it in the YAML config (`~/.swag2mcp/swag2mcp.yaml`). For example:
+
+   ```yaml
+   specs:
+     - domain: jokes
+       llm_title: Dad Joke API
+       base_url: https://icanhazdadjoke.com
+       collections:
+         - llm_title: Jokes
+           location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
+   ```
 2. **swag2mcp parses each collection** — creates Tags and Endpoints, indexes them for search.
 3. **LLM finds the right endpoint** — through MCP tools (`search`, `endpoint_by_tag`, `inspect`) the LLM searches for a matching endpoint by description, reviews its parameters and request schema.
 4. **LLM invokes the endpoint** — via the MCP tool `invoke`, the LLM sends the request. swag2mcp validates every input parameter against the endpoint's OpenAPI schema (path params, query params, headers, request body) before making the call. If something doesn't match the schema, the LLM gets a clear error explaining what's wrong. Once validated, swag2mcp executes the real HTTP call and returns the result.

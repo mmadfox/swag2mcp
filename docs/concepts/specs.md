@@ -45,17 +45,19 @@ swag2mcp delete <id>
 swag2mcp update <id>
 ```
 
-## Spec Configuration
+## LLM Instruction
 
-In YAML config:
+It is recommended to set `llm_instruction` on each spec — a short hint (up to 500 chars) that tells the LLM what this API is for and when to use it. This instruction is injected into the swag2mcp system prompt, helping the LLM understand the spec's purpose without extra context.
 
 ```yaml
 specs:
   - domain: jokes
     llm_title: Dad Joke API
+    llm_instruction: "Use this API to get random dad jokes or search for specific jokes by keyword."
     base_url: https://icanhazdadjoke.com
-    disable: false
     collections:
       - llm_title: Jokes
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
+
+Collections can also have their own `llm_instruction` (up to 360 chars) for more specific guidance.
