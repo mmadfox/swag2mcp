@@ -1,10 +1,11 @@
-# swag2mcp
+![swag2mcp](docs/logo.svg)
 
 <p>
     <a href="https://github.com/mmadfox/swag2mcp/releases"><img src="https://img.shields.io/github/release/mmadfox/swag2mcp.svg" alt="Latest Release"></a>
     <a href="https://pkg.go.dev/github.com/mmadfox/swag2mcp?tab=doc"><img src="https://godoc.org/github.com/mmadfox/swag2mcp?status.svg" alt="GoDoc"></a>
     <a href="https://github.com/mmadfox/swag2mcp/actions"><img src="https://github.com/mmadfox/swag2mcp/actions/workflows/test.yml/badge.svg?branch=main" alt="Build Status"></a>
     <a href="https://coveralls.io/github/mmadfox/swag2mcp?branch=main"><img src="https://coveralls.io/repos/github/mmadfox/swag2mcp/badge.svg?branch=main&v=3" alt="Coverage Status"></a>
+    <a href="https://mmadfox.github.io/swag2mcp"><img src="https://img.shields.io/badge/docs-mkdocs%20material-blue" alt="Documentation"></a>
 </p>
 
 > ⚠️ **Work in progress** — API may change, contributions welcome.
@@ -208,15 +209,17 @@ After setup, try asking your agent:
 
 ## Documentation
 
-| Language | File |
-|----------|------|
-| English | [docs/guide.md](docs/guide.md) |
-| Русский | [docs/guide.ru.md](docs/guide.ru.md) |
-| Deutsch | [docs/guide.de.md](docs/guide.de.md) |
-| Français | [docs/guide.fr.md](docs/guide.fr.md) |
-| Español | [docs/guide.es.md](docs/guide.es.md) |
-| 中文 | [docs/guide.zh.md](docs/guide.zh.md) |
-| 日本語 | [docs/guide.ja.md](docs/guide.ja.md) |
+Full documentation site: **[mmadfox.github.io/swag2mcp](https://mmadfox.github.io/swag2mcp)**
+
+| Language | Site | File |
+|----------|------|------|
+| English | [docs](https://mmadfox.github.io/swag2mcp/en/) | [docs/guide.md](docs/guide.md) |
+| Русский | [документация](https://mmadfox.github.io/swag2mcp/ru/) | [docs/guide.ru.md](docs/guide.ru.md) |
+| Deutsch | [dokumentation](https://mmadfox.github.io/swag2mcp/de/) | [docs/guide.de.md](docs/guide.de.md) |
+| Français | [documentation](https://mmadfox.github.io/swag2mcp/fr/) | [docs/guide.fr.md](docs/guide.fr.md) |
+| Español | [documentación](https://mmadfox.github.io/swag2mcp/es/) | [docs/guide.es.md](docs/guide.es.md) |
+| 中文 | [文档](https://mmadfox.github.io/swag2mcp/zh/) | [docs/guide.zh.md](docs/guide.zh.md) |
+| 日本語 | [ドキュメント](https://mmadfox.github.io/swag2mcp/ja/) | [docs/guide.ja.md](docs/guide.ja.md) |
 
 ### Agent Skills
 
