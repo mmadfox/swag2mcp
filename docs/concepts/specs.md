@@ -4,46 +4,50 @@ A spec is a logical container representing an API domain or service (e.g., YouTu
 
 Collections point to OpenAPI/Swagger/Postman files — the spec itself is not a file, it's the grouping around them.
 
-## Supported Formats
+## Domain — Naming Rules
 
-Collections support three file formats:
+The `domain` is the unique identifier of a spec. It is used as the primary key throughout the system.
 
-| Format | Extensions | Versions |
-|--------|------------|----------|
-| OpenAPI 3.x | `.json`, `.yaml`, `.yml` | 3.0.0 – 3.1.1 |
-| Swagger 2.0 | `.json`, `.yaml`, `.yml` | 2.0 |
-| Postman Collection | `.json` | v2.1 |
+| Rule | Constraint |
+|------|------------|
+| Characters | `a-z`, `0-9`, `_`, `-` only |
+| Length | 1–60 characters |
+| Uniqueness | **No duplicates allowed** — two active specs cannot share the same domain |
 
-## Sources
+**Valid examples:** `meteo`, `binance`, `github-api`, `my_service`, `openai-v1`
 
-Collection files can be:
+**Invalid examples:** `Meteo` (uppercase), `my api` (space), `my.api` (dot), `a-very-long-domain-name-that-exceeds-sixty-characters` (too long)
 
-- **URL**: `https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml`
-- **Local file**: `./specs/my-api.yaml`
+## Spec Fields
 
-## Identification
+| Field | YAML key | Required | Description | Reference |
+|-------|----------|----------|-------------|-----------|
+| Domain | `domain` | ✅ | Unique API identifier (1–60 chars, `a-z0-9_-`) | — |
+| LLM Title | `llm_title` | ✅ | Human-readable name the LLM uses to reference this API (5–120 chars) | — |
+| LLM Instruction | `llm_instruction` | ❌ | Short hint injected into the swag2mcp system prompt (max 500 chars) | [LLM Instruction](#llm-instruction) |
+| Base URL | `base_url` | ✅ | Base URL for all API requests (valid URL) | — |
+| Disable | `disable` | ❌ | Skip this spec during loading and indexing | [Disable](#disable) |
+| Tags | `tags` | ❌ | Tags for filtering (e.g., `["public", "demo"]`) | [Tags](#tags) |
+| Auth | `auth` | ❌ | Authentication configuration | [Auth Overview](../auth/overview.md) |
+| HTTP Client | `http_client` | ❌ | Per-spec HTTP settings (headers, cookies) | [HTTP Client](../configuration/http-client.md) |
+| Collections | `collections` | ✅ | List of 1–30 collections | [Collections](./collections) |
 
-Each spec gets a unique MD5 hash based on its domain:
+## Validation
 
-```go
-id = md5(domain)
-```
+When swag2mcp validates the config, these rules are checked for every spec:
 
-## Management
+| Check | Rule |
+|-------|------|
+| **Duplicate domains** | No two active specs may share the same `domain` |
+| **Domain format** | Must match `^[a-z0-9_-]{1,60}$` |
+| **LLM Title** | Required, 5–120 characters, letters/digits/spaces/basic punctuation |
+| **LLM Instruction** | Max 500 characters, same character set as title |
+| **Base URL** | Required, must be a valid URL |
+| **Collections** | Required, 1–30 items |
+| **Auth** | Validated per auth type (e.g., bearer requires `token`, basic requires `username` + `password`) |
+| **Location** | Each collection's `location` must be a valid URL or file path (5–250 chars) |
 
-```bash
-# Add a spec
-swag2mcp add https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
-
-# List all specs
-swag2mcp ls
-
-# Delete a spec
-swag2mcp delete <id>
-
-# Update a spec
-swag2mcp update <id>
-```
+If validation fails, the LLM receives a clear error message explaining what to fix.
 
 ## LLM Instruction
 
@@ -61,3 +65,147 @@ specs:
 ```
 
 Collections can also have their own `llm_instruction` (up to 360 chars) for more specific guidance.
+
+## Auth
+
+Authentication is configured at the spec level and applies to all its collections. swag2mcp supports 9 auth methods:
+
+| Method | YAML type | Key fields |
+|--------|-----------|------------|
+| None | `none` | — |
+| Basic | `basic` | `username`, `password` |
+| Bearer | `bearer` | `token` |
+| Digest | `digest` | `username`, `password` |
+| OAuth2 Client Credentials | `oauth2-cc` | `client_id`, `client_secret`, `token_url` |
+| OAuth2 Password | `oauth2-pwd` | `username`, `password`, `client_id`, `token_url` |
+| API Key | `api-key` | `key`, `value`, `in` (`header` or `query`) |
+| HMAC | `hmac` | `api_key`, `secret_key` |
+| Script | `script` | `domain` |
+
+See [Auth Overview](../auth/overview.md) for full details on each method.
+
+## HTTP Client
+
+You can override HTTP settings at the spec level. These apply to all requests made by this spec's collections.
+
+```yaml
+specs:
+  - domain: slow-api
+    llm_title: Slow API
+    base_url: https://slow-api.example.com
+    http_client:
+      headers:
+        X-API-Version: "2"
+      cookies:
+        - name: session
+          value: abc123
+    collections:
+      - llm_title: Default
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
+```
+
+Settings cascade: global → spec → collection. See [Configuration Cascade](../configuration/cascade.md) for details.
+
+## Tags
+
+Tags let you filter specs by category. Use them with the `--tags` flag on `swag2mcp ls` or during bootstrap.
+
+```yaml
+specs:
+  - domain: meteo
+    llm_title: Open-Meteo Weather APIs
+    base_url: https://api.open-meteo.com
+    tags: ["weather", "public"]
+    collections:
+      - llm_title: Forecast
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
+```
+
+```bash
+# List only specs tagged "weather"
+swag2mcp ls --tags weather
+```
+
+## Disable
+
+Set `disable: true` to skip a spec entirely. It won't be loaded, indexed, or available to the LLM.
+
+```yaml
+specs:
+  - domain: old-api
+    llm_title: Old API (Deprecated)
+    base_url: https://old-api.example.com
+    disable: true
+    collections:
+      - llm_title: Default
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
+```
+
+## Examples
+
+### Minimal Spec
+
+```yaml
+specs:
+  - domain: dadjokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
+```
+
+### Spec with Auth
+
+```yaml
+specs:
+  - domain: binance
+    llm_title: Binance Market Data API
+    base_url: https://api.binance.com
+    auth:
+      type: hmac
+      config:
+        api_key: $(BINANCE_API_KEY)
+        secret_key: $(BINANCE_SECRET_KEY)
+    collections:
+      - llm_title: Market Data
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
+```
+
+### Spec with Multiple Collections
+
+```yaml
+specs:
+  - domain: meteo
+    llm_title: Open-Meteo Weather APIs
+    base_url: https://api.open-meteo.com
+    collections:
+      - llm_title: Forecast
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
+      - llm_title: Air Quality
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/air-quality.yml
+      - llm_title: Marine
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
+```
+
+### Spec with LLM Instruction and Tags
+
+```yaml
+specs:
+  - domain: rickandmorty
+    llm_title: Rick and Morty API
+    llm_instruction: "Use this API to get information about characters, episodes, and locations from the Rick and Morty show."
+    base_url: https://rickandmortyapi.com/api
+    tags: ["entertainment", "public"]
+    collections:
+      - llm_title: Characters
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/rick-and-morty.json
+```
+
+## Related
+
+- [Spec Settings (config)](../configuration/spec-settings.md) — full YAML reference
+- [Configuration Cascade](../configuration/cascade.md) — how settings override each other
+- [Auth Overview](../auth/overview.md) — all 9 auth methods
+- [HTTP Client](../configuration/http-client.md) — HTTP client configuration
+- [Collections](./collections) — spec files within a spec
