@@ -46,7 +46,20 @@ If you have a ready-made workspace (e.g., from a colleague):
 swag2mcp import --from-zip workspace.zip
 ```
 
-## 2. LLM Client / IDE Configuration
+## 2. Install Agent Skills (recommended)
+
+Install the swag2mcp skills to teach your AI agent all commands, flags, config format, and real-world examples.
+
+Ask your agent:
+
+```bash
+"Add the swag2mcp-cli skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
+"Add the swag2mcp-format skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md"
+```
+
+> Some IDEs require a restart after adding skills.
+
+## 3. LLM Client / IDE Configuration
 
 Configure your IDE to connect to swag2mcp. The IDE will start the MCP server automatically when needed.
 
@@ -96,7 +109,7 @@ For other IDEs (Cursor, VS Code, JetBrains) see the [Integration guide](../integ
 
 > **After any config change, restart the MCP server** for the changes to take effect.
 
-## 3. Start MCP Server
+## 4. Start MCP Server
 
 ### stdio (default) — for local IDE
 
@@ -156,20 +169,7 @@ If the agent lists swag2mcp tools (`spec_list`, `search`, `invoke`, etc.) — ev
 | "List all Pokémon" | `invoke` — calls PokéAPI list endpoint |
 | "What's the elevation of Mount Everest?" | `invoke` — calls Open-Meteo elevation API |
 
-## 5. Install Agent Skills (recommended)
-
-Install the swag2mcp skills to teach your AI agent all commands, flags, config format, and real-world examples.
-
-Ask your agent:
-
-```bash
-"Add the swag2mcp-cli skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
-"Add the swag2mcp-format skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md"
-```
-
-> Some IDEs require a restart after adding skills.
-
-## What's Next?
+## 5. What's Next?
 
 - [Concepts](../concepts/overview.md) — understand the architecture
 - [Configuration](../configuration/config-file.md) — customize settings
