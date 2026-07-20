@@ -193,14 +193,16 @@ After setup, try asking your agent:
 
 | < PROMPT > | What happens |
 |-------|-------------|
-| "List my configured APIs" | `spec_list` — lists available specs |
-| "Show me all available APIs" | `spec_list` — lists meteo, rick-and-morty, binance, dadjoke, pokeapi |
-| "What endpoints does Binance have?" | `endpoint_by_spec` — shows 4 market data endpoints |
-| "Find endpoints related to pets" | `search("weather")` — finds meteo endpoints |
-| "What tags are in the Open-Meteo API?" | `tag_by_spec` — shows "weather" tag |
-| "Show me the GET /v1/forecast endpoint details" | `inspect` — shows parameters and response schema |
-| "Get the current BTC price from Binance" | `invoke` — real API call to Binance |
-| "Get a random dad joke" | `invoke` — calls icanhazdadjoke API |
+| "What's the weather in New York?" | `invoke` — calls Open-Meteo forecast API |
+| "What's the current BTC price?" | `invoke` — calls Binance ticker API |
+| "Tell me a dad joke" | `invoke` — calls icanhazdadjoke API |
+| "Show me Pikachu" | `invoke` — calls PokéAPI by name |
+| "Who is Rick Sanchez?" | `invoke` — calls Rick and Morty character API |
+| "What's the air quality in Beijing?" | `invoke` — calls Open-Meteo air quality API |
+| "How high are the waves near Portugal?" | `invoke` — calls Open-Meteo marine API |
+| "Search for jokes about dogs" | `invoke` — calls dadjoke search endpoint |
+| "List all Pokémon" | `invoke` — calls PokéAPI list endpoint |
+| "What's the elevation of Mount Everest?" | `invoke` — calls Open-Meteo elevation API |
 
 ---
 
