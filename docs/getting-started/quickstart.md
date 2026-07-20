@@ -16,7 +16,7 @@ swag2mcp init
 ```
 
 ```powershell [Windows]
-swag2mcp init
+swag2mcp.exe init
 # Creates %USERPROFILE%\.swag2mcp\swag2mcp.yaml
 ```
 
@@ -33,7 +33,7 @@ mkdir -p ./swag2mcp && swag2mcp init ./swag2mcp
 ```
 
 ```powershell [Windows]
-mkdir ./swag2mcp; swag2mcp init ./swag2mcp
+mkdir ./swag2mcp; swag2mcp.exe init ./swag2mcp
 ```
 
 :::
@@ -46,120 +46,9 @@ If you have a ready-made workspace (e.g., from a colleague):
 swag2mcp import --from-zip workspace.zip
 ```
 
-## 2. Add an API
+## 2. LLM Client Configuration
 
-### Option A — via CLI with YAML
-
-Add a spec with all fields (domain, title, instruction, base URL, collections):
-
-::: code-group
-
-```bash [Home directory]
-swag2mcp add spec --yaml - <<EOF
-domain: meteo
-llm_title: Open-Meteo Weather APIs
-llm_instruction: "Use this API for weather forecasts and climate data"
-base_url: https://api.open-meteo.com
-collections:
-  - llm_title: Forecast
-    location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
-  - llm_title: Air Quality
-    base_url: https://air-quality-api.open-meteo.com
-    location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/air-quality.yml
-EOF
-```
-
-```bash [Project directory]
-swag2mcp add spec ./swag2mcp --yaml - <<EOF
-domain: meteo
-llm_title: Open-Meteo Weather APIs
-llm_instruction: "Use this API for weather forecasts and climate data"
-base_url: https://api.open-meteo.com
-collections:
-  - llm_title: Forecast
-    location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
-  - llm_title: Air Quality
-    base_url: https://air-quality-api.open-meteo.com
-    location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/air-quality.yml
-EOF
-```
-
-:::
-
-### Option B — edit YAML file directly
-
-Open the config file and add your spec:
-
-::: code-group
-
-```text [Home directory]
-~/.swag2mcp/swag2mcp.yaml
-```
-
-```text [Project directory]
-./swag2mcp/swag2mcp.yaml
-```
-
-:::
-
-```yaml
-specs:
-  - domain: meteo
-    llm_title: Open-Meteo Weather APIs
-    llm_instruction: "Use this API for weather forecasts and climate data"
-    base_url: https://api.open-meteo.com
-    collections:
-      - llm_title: Forecast
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
-```
-
-### Add more collections to an existing spec
-
-::: code-group
-
-```bash [Home directory]
-swag2mcp add collection --yaml - <<EOF
-spec_domain: meteo
-llm_title: Air Quality
-base_url: https://air-quality-api.open-meteo.com
-location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/air-quality.yml
-EOF
-```
-
-```bash [Project directory]
-swag2mcp add collection ./swag2mcp --yaml - <<EOF
-spec_domain: meteo
-llm_title: Air Quality
-base_url: https://air-quality-api.open-meteo.com
-location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/air-quality.yml
-EOF
-```
-
-:::
-
-## 3. Start MCP Server
-
-```bash
-swag2mcp mcp
-```
-
-Output:
-
-```
-MCP server listening on http://127.0.0.1:8080/mcp
-```
-
-## 4. Test It
-
-In another terminal:
-
-```bash
-curl -X POST http://127.0.0.1:8080/mcp \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"spec_list","arguments":{}}}'
-```
-
-## 5. LLM Client Configuration
+Configure your IDE to connect to swag2mcp. The IDE will start the MCP server automatically when needed.
 
 ::: code-group
 
@@ -197,6 +86,71 @@ curl -X POST http://127.0.0.1:8080/mcp \
 ```
 
 :::
+
+For other IDEs (VS Code, Crush, JetBrains) see the [Integration guide](../integration/opencode.md).
+
+> If you initialized the workspace at a custom path (e.g. `./swag2mcp`), use the full path in the command:
+> `"command": ["swag2mcp", "mcp", "/absolute/path/to/swag2mcp"]`
+
+## 3. Start MCP Server
+
+### stdio (default) — for local IDE
+
+Nothing to configure. Your IDE starts swag2mcp automatically via the config above.
+
+```bash
+swag2mcp mcp
+```
+
+### SSE / Streamable HTTP — for remote access
+
+```bash
+swag2mcp mcp --transport sse --http-addr :8080
+```
+
+Or configure in `swag2mcp.yaml`:
+
+```yaml
+mcp:
+  transport: sse
+  addr: ":8080"
+  path: "/mcp"
+```
+
+See [MCP Server reference](../configuration/mcp-server.md) for all flags.
+
+### Filter specs by tags
+
+```bash
+swag2mcp mcp --tags weather,public
+```
+
+Only specs with matching tags will be available to the LLM.
+
+### Verify it's working
+
+After connecting, ask your LLM agent:
+
+```bash
+"What MCP tools do you support?"
+```
+
+If the agent lists swag2mcp tools (`spec_list`, `search`, `invoke`, etc.) — everything is working.
+
+### Example queries to try
+
+| Ask your agent | What happens |
+|-------|-------------|
+| "What's the weather in New York?" | `invoke` — calls Open-Meteo forecast API |
+| "What's the current BTC price?" | `invoke` — calls Binance ticker API |
+| "Tell me a dad joke" | `invoke` — calls icanhazdadjoke API |
+| "Show me Pikachu" | `invoke` — calls PokéAPI by name |
+| "Who is Rick Sanchez?" | `invoke` — calls Rick and Morty character API |
+| "What's the air quality in Beijing?" | `invoke` — calls Open-Meteo air quality API |
+| "How high are the waves near Portugal?" | `invoke` — calls Open-Meteo marine API |
+| "Search for jokes about dogs" | `invoke` — calls dadjoke search endpoint |
+| "List all Pokémon" | `invoke` — calls PokéAPI list endpoint |
+| "What's the elevation of Mount Everest?" | `invoke` — calls Open-Meteo elevation API |
 
 ## What's Next?
 
