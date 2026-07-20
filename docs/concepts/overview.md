@@ -20,11 +20,11 @@ swag2mcp acts as a bridge between API specifications and LLM agents:
 
 ## How It Works
 
-1. **Add a spec** — via `swag2mcp add <url>` or in the YAML config, define a spec (domain) with one or more collections pointing to OpenAPI/Swagger/Postman files.
+1. **Add a spec or collection** — via `swag2mcp add <url>`, the YAML config, or any other supported method.
 2. **swag2mcp parses each collection** — creates Tags and Endpoints, indexes them for search.
 3. **LLM finds the right endpoint** — through MCP tools (`search`, `endpoint_by_tag`, `inspect`) the LLM searches for a matching endpoint by description, reviews its parameters and request schema.
 4. **LLM invokes the endpoint** — via the MCP tool `invoke`, the LLM sends the request. swag2mcp validates every input parameter against the endpoint's OpenAPI schema (path params, query params, headers, request body) before making the call. If something doesn't match the schema, the LLM gets a clear error explaining what's wrong. Once validated, swag2mcp executes the real HTTP call and returns the result.
-5. **Result goes back to the LLM** — the API response is passed back to the agent. Large responses are saved to the workspace and accessible via a file reference.
+5. **Result goes back to the LLM** — the API response is passed back to the agent. Large responses are saved to the workspace and can be explored with three dedicated MCP tools: `response_outline` (see the structure), `response_compress` (shrink to a representative sample), and `response_slice` (extract specific fragments).
 
 swag2mcp is a bridge between LLMs and the world of APIs. You add API specifications, and the LLM — through the MCP protocol — finds the right endpoints, inspects their documentation, and calls them. All you need to do is add a spec and start the MCP server.
 
