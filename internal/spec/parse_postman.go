@@ -199,6 +199,9 @@ func extractPostmanPath(rawURL json.RawMessage) string {
 		for _, seg := range u.Path {
 			var s string
 			if err := json.Unmarshal(seg, &s); err == nil {
+				if strings.HasPrefix(s, ":") {
+					s = "{" + s[1:] + "}"
+				}
 				segments = append(segments, s)
 				continue
 			}
