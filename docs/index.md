@@ -1,4 +1,5 @@
 # swag2mcp
+Bridges OpenAPI/Swagger/Postman API specifications with LLM agents via the Model Context Protocol (MCP).
 
 <a href="https://www.youtube.com/watch?v=1Da4UmE2f9U" target="_blank">
   <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/docs/cover.png" alt="Preview">
