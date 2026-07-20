@@ -4,39 +4,41 @@ Authentication via API key in header or query parameter.
 
 ## Configuration
 
-=== "Header"
-    ```yaml
-    specs:
-      - domain: jokes
-        llm_title: Dad Joke API
-        base_url: https://icanhazdadjoke.com
-        collections:
-          - llm_title: Jokes
-            location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
-        auth:
-          type: api-key
-          config:
-            key: "X-API-Key"
-            in: header
-            value: "{{API_KEY}}"
-    ```
+::: code-group
 
-=== "Query"
-    ```yaml
-    specs:
-      - domain: jokes
-        llm_title: Dad Joke API
-        base_url: https://icanhazdadjoke.com
-        collections:
-          - llm_title: Jokes
-            location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
-        auth:
-          type: api-key
-          config:
-            key: "api_key"
-            in: query
-            value: "{{API_KEY}}"
-    ```
+```yaml [Header]
+specs:
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
+    auth:
+      type: api-key
+      config:
+        key: "X-API-Key"
+        in: header
+        value: "{{API_KEY}}"
+```
+
+```yaml [Query]
+specs:
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
+    auth:
+      type: api-key
+      config:
+        key: "api_key"
+        in: query
+        value: "{{API_KEY}}"
+```
+
+:::
 
 ## Parameters
 

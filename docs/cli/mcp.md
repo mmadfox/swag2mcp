@@ -29,35 +29,33 @@ swag2mcp mcp [workspace] [flags]
 
 ## Usage
 
-=== "stdio (default)"
-    ```bash
-    swag2mcp mcp
-    ```
+::: code-group
 
-=== "HTTP SSE"
-    ```bash
-    swag2mcp mcp --transport sse --http-addr 127.0.0.1:8080
-    ```
+```bash [stdio (default)]
+swag2mcp mcp
+```
 
-=== "Streamable HTTP"
-    ```bash
-    swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
-    ```
+```bash [HTTP SSE]
+swag2mcp mcp --transport sse --http-addr 127.0.0.1:8080
+```
 
-=== "With auth"
-    ```bash
-    swag2mcp mcp --transport sse --auth-token "my-secret"
-    ```
+```bash [Streamable HTTP]
+swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
+```
 
-=== "Custom workspace"
-    ```bash
-    swag2mcp mcp ./my-workspace
-    ```
+```bash [With auth]
+swag2mcp mcp --transport sse --auth-token "my-secret"
+```
 
-=== "Disable auth tool"
-    ```bash
-    swag2mcp mcp --disable-llm-auth
-    ```
+```bash [Custom workspace]
+swag2mcp mcp ./my-workspace
+```
+
+```bash [Disable auth tool]
+swag2mcp mcp --disable-llm-auth
+```
+
+:::
 
 ## Output
 

@@ -38,22 +38,23 @@ swag2mcp import --from-zip backup.zip -f
 
 ## Use Cases
 
-=== "Backup"
-    ```bash
-    swag2mcp export --output swag2mcp-$(date +%Y-%m-%d).zip
-    ```
+::: code-group
 
-=== "Transfer to another machine"
-    ```bash
-    # On old machine
-    swag2mcp export --output swag2mcp.zip
+```bash [Backup]
+swag2mcp export --output swag2mcp-$(date +%Y-%m-%d).zip
+```
 
-    # On new machine
-    swag2mcp import --from-zip swag2mcp.zip
-    ```
+```bash [Transfer to another machine]
+# On old machine
+swag2mcp export --output swag2mcp.zip
 
-=== "Config template"
-    ```bash
-    swag2mcp init
-    swag2mcp export --output template.zip
-    ```
+# On new machine
+swag2mcp import --from-zip swag2mcp.zip
+```
+
+```bash [Config template]
+swag2mcp init
+swag2mcp export --output template.zip
+```
+
+:::

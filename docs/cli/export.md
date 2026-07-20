@@ -16,16 +16,18 @@ swag2mcp export [flags]
 
 ## Usage
 
-=== "Default"
-    ```bash
-    swag2mcp export
-    ```
-    Saves to `swag2mcp-export.zip`.
+::: code-group
 
-=== "Custom path"
-    ```bash
-    swag2mcp export --output ~/backups/swag2mcp-2024-01-01.zip
-    ```
+```bash [Default]
+swag2mcp export
+```
+Saves to `swag2mcp-export.zip`.
+
+```bash [Custom path]
+swag2mcp export --output ~/backups/swag2mcp-2024-01-01.zip
+```
+
+:::
 
 ## What's Exported
 

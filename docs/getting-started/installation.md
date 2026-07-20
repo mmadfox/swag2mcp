@@ -71,4 +71,3 @@ swag2mcp-mock mockserver
 ## Next Steps
 
 - [Quick Start](quickstart.md) — get running in 2 minutes
-- [First API](first-api.md) — add your first spec

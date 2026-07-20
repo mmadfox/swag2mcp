@@ -6,14 +6,21 @@ A collection is a logical group of endpoints within a spec. One spec can have mu
 
 Collections are created automatically when parsing a spec:
 
-=== "OpenAPI 3.x"
-    Each top-level `tag` becomes a collection.
+::: code-group
 
-=== "Swagger 2.0"
-    Each tag from the tags list becomes a collection.
+```text [OpenAPI 3.x]
+Each top-level `tag` becomes a collection.
+```
 
-=== "Postman"
-    Each top-level folder becomes a collection.
+```text [Swagger 2.0]
+Each tag from the tags list becomes a collection.
+```
+
+```text [Postman]
+Each top-level folder becomes a collection.
+```
+
+:::
 
 ## Example
 

@@ -22,15 +22,17 @@ swag2mcp update <id> [flags]
 
 ## Usage
 
-=== "Update from same source"
-    ```bash
-    swag2mcp update abc123...
-    ```
+::: code-group
 
-=== "Update with new URL"
-    ```bash
-    swag2mcp update abc123... --location https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/pokeapi.yaml
-    ```
+```bash [Update from same source]
+swag2mcp update abc123...
+```
+
+```bash [Update with new URL]
+swag2mcp update abc123... --location https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/pokeapi.yaml
+```
+
+:::
 
 ## What Happens
 

@@ -27,8 +27,7 @@ export default defineConfig({
         text: 'Getting Started',
         items: [
           { text: 'Installation', link: '/getting-started/installation' },
-          { text: 'Quick Start', link: '/getting-started/quickstart' },
-          { text: 'First API', link: '/getting-started/first-api' },
+                { text: 'Quick Start', link: '/getting-started/quickstart' },
         ],
       },
       {
@@ -178,7 +177,6 @@ export default defineConfig({
               items: [
                 { text: 'Установка', link: '/ru/getting-started/installation' },
                 { text: 'Быстрый старт', link: '/ru/getting-started/quickstart' },
-                { text: 'Первое API', link: '/ru/getting-started/first-api' },
               ],
             },
             {

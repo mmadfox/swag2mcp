@@ -17,15 +17,17 @@ swag2mcp import [flags]
 
 ## Usage
 
-=== "From ZIP"
-    ```bash
-    swag2mcp import --from-zip workspace.zip
-    ```
+::: code-group
 
-=== "With overwrite"
-    ```bash
-    swag2mcp import --from-zip workspace.zip -f
-    ```
+```bash [From ZIP]
+swag2mcp import --from-zip workspace.zip
+```
+
+```bash [With overwrite]
+swag2mcp import --from-zip workspace.zip -f
+```
+
+:::
 
 ## What's Imported
 

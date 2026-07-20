@@ -16,20 +16,21 @@ swag2mcp delete <id> [flags]
 
 ## Usage
 
-=== "Delete spec"
-    ```bash
-    swag2mcp delete abc123def456...
-    ```
+::: code-group
 
-=== "Delete collection"
-    ```bash
-    swag2mcp delete abc123def456.../collection123...
-    ```
+```bash [Delete spec]
+swag2mcp delete abc123def456...
+```
 
-=== "Interactive"
-    ```bash
-    swag2mcp delete
-    ```
+```bash [Delete collection]
+swag2mcp delete abc123def456.../collection123...
+```
+
+```bash [Interactive]
+swag2mcp delete
+```
+
+:::
 
 ## Finding IDs
 

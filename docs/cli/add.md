@@ -23,27 +23,27 @@ swag2mcp add [location] [flags]
 
 ## Usage
 
-=== "From URL"
-    ```bash
-    swag2mcp add https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
-    ```
+::: code-group
 
-=== "From local file"
-    ```bash
-    swag2mcp add ./specs/my-api.yaml
-    ```
+```bash [From URL]
+swag2mcp add https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
+```
 
-=== "With options"
-    ```bash
-    swag2mcp add https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml \
-      --name "forecast" \
-      --tags "weather"
-    ```
+```bash [From local file]
+swag2mcp add ./specs/my-api.yaml
+```
 
-=== "Interactive"
-    ```bash
-    swag2mcp add
-    ```
+```bash [With options]
+swag2mcp add https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml \
+  --name "forecast" \
+  --tags "weather"
+```
+
+```bash [Interactive]
+swag2mcp add
+```
+
+:::
 
 ## Result
 
