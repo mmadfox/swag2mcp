@@ -4,16 +4,15 @@ swag2mcp automatically manages API response sizes.
 
 ## How It Works
 
-1. **Limit**: default 2 KB (2048 bytes)
+1. **Limit**: default 1 MB (1048576 bytes)
 2. **Exceeded**: response is saved to disk
 3. **FileReference**: LLM gets a file reference instead of full response
 
 ## Configuration
 
 ```yaml
-global:
-  http_client:
-    max_response_size: 2048  # in bytes
+http_client:
+  max_response_size: 1048576  # in bytes (1 MB)
 ```
 
 ## FileReference

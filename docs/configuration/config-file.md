@@ -10,46 +10,54 @@ Default: `~/.swag2mcp/swag2mcp.yaml`
 
 ```yaml
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
+  - domain: meteo
+    llm_title: Open-Meteo Weather APIs
+    base_url: https://api.open-meteo.com
     collections:
-      - name: "default"
-        tags: ["*"]
+      - llm_title: Forecast
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
 ```
 
 ## Full Example
 
 ```yaml
-global:
-  http_client:
-    timeout: 30s
-    max_response_size: 2048
-    proxy: "http://proxy:8080"
-    headers:
-      "User-Agent": "swag2mcp/1.0"
-  mcp:
-    transport: "stdio"
-    http_addr: "127.0.0.1:8080"
-    http_path: "/mcp"
-    auth_token: "my-secret-token"
+http_client:
+  timeout: 30s
+  max_response_size: 1048576
+  headers:
+    "User-Agent": "swag2mcp/1.0"
+
+mcp:
+  transport: sse
+  addr: "127.0.0.1:8080"
+  path: "/mcp"
+  auth:
+    token: "my-secret-token"
 
 specs:
-  - domain: "petstore.swagger.io"
-    location: "https://petstore.swagger.io/v2/swagger.json"
-    disabled: false
-    headers:
-      "X-API-Key": "{{API_KEY}}"
+  - domain: meteo
+    llm_title: Open-Meteo Weather APIs
+    base_url: https://api.open-meteo.com
     collections:
-      - name: "pets"
-        tags: ["pet"]
-      - name: "store"
-        tags: ["store"]
+      - llm_title: Forecast
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
+      - llm_title: Air Quality
+        base_url: https://air-quality-api.open-meteo.com
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/air-quality.yml
+      - llm_title: Marine
+        base_url: https://marine-api.open-meteo.com
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
     auth:
-      type: api-key
-      api_key:
-        name: "X-API-Key"
-        in: header
-        value: "{{API_KEY}}"
+      type: bearer
+      config:
+        token: "{{TOKEN}}"
+
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
 ## Environment Variables
@@ -57,8 +65,9 @@ specs:
 Use `$(VAR_NAME)` syntax:
 
 ```yaml
-headers:
-  "Authorization": "Bearer $(MY_TOKEN)"
+http_client:
+  headers:
+    "Authorization": "Bearer $(MY_TOKEN)"
 ```
 
 ## Validation

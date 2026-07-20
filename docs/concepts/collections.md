@@ -17,51 +17,42 @@ Collections are created automatically when parsing a spec:
 
 ## Example
 
-From the Petstore spec:
+From the Dad Joke spec:
 
 ```yaml
 tags:
-  - name: pet
-    description: Everything about your Pets
-  - name: store
-    description: Access to Petstore orders
-  - name: user
-    description: Operations about user
+  - name: jokes
+    description: Everything about dad jokes
 ```
 
-Collections created: `pet`, `store`, `user`.
+Collection created: `jokes`.
 
-## Overriding Collections
+## Multiple Collections from One Spec
 
-In YAML config:
+In YAML config, you can add the same spec file under different domains with different base URLs:
 
 ```yaml
 specs:
-  - domain: "petstore.swagger.io"
-    location: "https://petstore.swagger.io/v2/swagger.json"
+  - domain: meteo-forecast
+    llm_title: Open-Meteo Forecast
+    base_url: https://api.open-meteo.com
     collections:
-      - name: "animals"
-        tags: ["pet"]
-      - name: "orders"
-        tags: ["store"]
-      - name: "accounts"
-        tags: ["user"]
-```
+      - llm_title: Forecast
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
 
-## Tag Filtering
+  - domain: meteo-air-quality
+    llm_title: Open-Meteo Air Quality
+    base_url: https://air-quality-api.open-meteo.com
+    collections:
+      - llm_title: Air Quality
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/air-quality.yml
 
-Limit endpoints in a collection:
-
-```yaml
-collections:
-  - name: "pets"
-    tags: ["pet", "pets"]
-    filter:
-      include:
-        - method: GET
-        - path: "/pet/*"
-      exclude:
-        - method: DELETE
+  - domain: meteo-marine
+    llm_title: Open-Meteo Marine
+    base_url: https://marine-api.open-meteo.com
+    collections:
+      - llm_title: Marine
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
 ## Management

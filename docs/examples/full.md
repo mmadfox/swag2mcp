@@ -4,50 +4,64 @@
 
 ```yaml
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
     collections:
-      - name: "default"
-        tags: ["*"]
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
-
-Full example in `examples/minimal-config/`.
 
 ## Full Configuration
 
 ```yaml
-global:
-  http_client:
-    timeout: 30s
-    max_response_size: 2048
-    proxy: ""
-    headers:
-      "User-Agent": "swag2mcp/1.0"
-  mcp:
-    transport: stdio
-    http_addr: "127.0.0.1:8080"
-    http_path: "/mcp"
+http_client:
+  timeout: 30s
+  max_response_size: 1048576
+  headers:
+    "User-Agent": "swag2mcp/1.0"
+
+mcp:
+  transport: sse
+  addr: "127.0.0.1:8080"
+  path: "/mcp"
 
 specs:
-  - domain: "petstore.swagger.io"
-    location: "https://petstore.swagger.io/v2/swagger.json"
-    disabled: false
-    headers:
-      "X-API-Key": "{{API_KEY}}"
+  - domain: meteo
+    llm_title: Open-Meteo Weather APIs
+    base_url: https://api.open-meteo.com
+    disable: false
+    http_client:
+      headers:
+        "X-Custom": "value"
     collections:
-      - name: "pets"
-        tags: ["pet"]
-      - name: "store"
-        tags: ["store"]
-      - name: "users"
-        tags: ["user"]
+      - llm_title: Forecast
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
+      - llm_title: Air Quality
+        base_url: https://air-quality-api.open-meteo.com
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/air-quality.yml
+      - llm_title: Marine
+        base_url: https://marine-api.open-meteo.com
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
     auth:
       type: bearer
-      bearer:
+      config:
         token: "{{TOKEN}}"
-```
 
-Full example in `examples/full-config/`.
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
+
+  - domain: pokemon
+    llm_title: PokeAPI
+    base_url: https://pokeapi.co
+    collections:
+      - llm_title: Pokemon
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/pokeapi.yaml
+```
 
 ## Authentication
 
@@ -77,11 +91,14 @@ Examples in `examples/mcp-transport/`:
 Example in `examples/mock-server/`:
 
 ```yaml
+mock_enabled: true
+
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
-    mock:
-      enabled: true
-      delay: 100ms
-      error_rate: 0.05
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
+        base_mock_url: "127.0.0.1:9090"
 ```

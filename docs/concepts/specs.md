@@ -14,9 +14,8 @@ A spec is a file describing an API. swag2mcp supports three formats.
 
 Specs can be:
 
-- **URL**: `https://api.example.com/openapi.json`
+- **URL**: `https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml`
 - **Local file**: `./specs/my-api.yaml`
-- **Local file outside workspace**: `/home/user/api.yaml`
 
 ## Identification
 
@@ -30,7 +29,7 @@ id = md5(domain)
 
 ```bash
 # Add a spec
-swag2mcp add https://api.example.com/openapi.json
+swag2mcp add https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 
 # List all specs
 swag2mcp ls
@@ -48,12 +47,11 @@ In YAML config:
 
 ```yaml
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    disable: false
     collections:
-      - name: "users"
-        tags: ["users", "auth"]
-    headers:
-      "X-API-Key": "{{API_KEY}}"
-    disabled: false
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```

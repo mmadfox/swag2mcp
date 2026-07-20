@@ -11,9 +11,9 @@ List all registered specs.
 **Example**:
 ```
 → spec_list()
-← petstore (15 endpoints)
+← dadjoke (3 endpoints)
   meteo (9 endpoints)
-  binance (24 endpoints)
+  binance (4 endpoints)
 ```
 
 ## spec_by_id
@@ -28,9 +28,9 @@ Detailed spec information.
 **Example**:
 ```
 → spec_by_id(id: "abc123")
-← Petstore API
-  Domain: petstore.swagger.io
-  Collections: pet (3), store (4), user (8)
+← Dad Joke API
+  Domain: dadjoke
+  Collections: jokes (3)
 ```
 
 ## collection_by_spec

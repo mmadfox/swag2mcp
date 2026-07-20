@@ -29,7 +29,7 @@ swag2mcp update <id> [flags]
 
 === "Update with new URL"
     ```bash
-    swag2mcp update abc123... --location https://new-api.example.com/openapi.json
+    swag2mcp update abc123... --location https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/pokeapi.yaml
     ```
 
 ## What Happens

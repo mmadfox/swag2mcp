@@ -1,5 +1,8 @@
 # Installation
 
+> [!WARNING]
+> **Work in Progress** — This section is being updated. The installation methods below are functional but documentation is under active development.
+
 ## Requirements
 
 - **Go 1.26+** (for building from source)

@@ -55,7 +55,7 @@ path:"/pet/findByStatus"
 
 ## MCP Tool
 
-```bash
+```
 → search(query: "find pet by status", limit: 5)
 ← GET /pet/findByStatus — Finds Pets by status
    GET /pet/{petId} — Find pet by ID

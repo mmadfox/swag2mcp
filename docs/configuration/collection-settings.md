@@ -2,17 +2,17 @@
 
 Collection settings override spec settings for a specific endpoint group.
 
-## collection Section
+## Collection Section
 
 ```yaml
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
+  - domain: meteo
+    llm_title: Open-Meteo Weather APIs
+    base_url: https://api.open-meteo.com
     collections:
-      - name: "users"
-        tags: ["users", "auth"]
-        headers:
-          "X-Role": "admin"
+      - llm_title: Forecast
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
+        llm_instruction: "Use for current and forecast weather data"
         http_client:
           timeout: 5s
 ```
@@ -21,56 +21,61 @@ specs:
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `name` | string | — | Collection name |
-| `tags` | array | `["*"]` | Tags to include |
-| `headers` | map | `{}` | Headers for this collection |
+| `llm_title` | string | — | Collection display name (max 120 chars) |
+| `llm_instruction` | string | `""` | Instructions for the LLM (max 360 chars) |
+| `title` | string | `""` | Original spec title override |
+| `location` | string | — | URL or path to spec file (5-250 chars) |
+| `disable` | bool | `false` | Disable this collection |
 | `http_client` | object | — | HTTP client override |
-| `filter` | object | — | Endpoint filter |
+| `base_url` | string | `""` | Override base URL for this collection |
+| `base_mock_url` | string | `""` | Mock server address (host:port) |
 
-## Tag Filtering
-
-```yaml
-collections:
-  - name: "public"
-    tags: ["public", "health"]
-  - name: "admin"
-    tags: ["admin", "management"]
-```
-
-## Endpoint Filter
-
-Include/exclude by method and path:
-
-```yaml
-collections:
-  - name: "read-only"
-    tags: ["*"]
-    filter:
-      include:
-        - method: GET
-      exclude:
-        - method: DELETE
-        - method: POST
-        - path: "/internal/*"
-```
-
-## Example: Splitting an API
+## Multiple Collections from One Spec
 
 ```yaml
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
+  - domain: meteo
+    llm_title: Open-Meteo Weather APIs
+    base_url: https://api.open-meteo.com
     collections:
-      - name: "users"
-        tags: ["users"]
-        headers:
-          "X-Scope": "users"
-      - name: "orders"
-        tags: ["orders"]
-        headers:
-          "X-Scope": "orders"
-      - name: "admin"
-        tags: ["admin"]
-        headers:
-          "X-API-Key": "{{ADMIN_KEY}}"
+      - llm_title: Forecast
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
+      - llm_title: Air Quality
+        base_url: https://air-quality-api.open-meteo.com
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/air-quality.yml
+      - llm_title: Marine
+        base_url: https://marine-api.open-meteo.com
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
+```
+
+## Disabling a Collection
+
+```yaml
+specs:
+  - domain: meteo
+    llm_title: Open-Meteo Weather APIs
+    base_url: https://api.open-meteo.com
+    collections:
+      - llm_title: Forecast
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
+      - llm_title: Air Quality
+        base_url: https://air-quality-api.open-meteo.com
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/air-quality.yml
+        disable: true
+```
+
+## HTTP Client Override
+
+```yaml
+specs:
+  - domain: meteo
+    llm_title: Open-Meteo Weather APIs
+    base_url: https://api.open-meteo.com
+    collections:
+      - llm_title: Forecast
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
+        http_client:
+          timeout: 5s
+          headers:
+            "X-Custom": "value"
 ```

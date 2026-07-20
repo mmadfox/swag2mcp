@@ -8,8 +8,8 @@ The workspace is the directory where swag2mcp stores all its data.
 ~/.swag2mcp/
 ├── swag2mcp.yaml          # Configuration file
 ├── cache/                  # Downloaded spec cache
-│   └── api.example.com/
-│       └── openapi.json
+│   └── raw.githubusercontent.com/
+│       └── dadjoke.yaml
 ├── specs/                  # Local spec copies
 │   └── my-api.yaml
 ├── responses/              # Saved API responses

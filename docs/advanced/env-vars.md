@@ -5,9 +5,10 @@ swag2mcp supports environment variables in configuration.
 ## Syntax
 
 ```yaml
-headers:
-  "Authorization": "Bearer $(MY_TOKEN)"
-  "X-API-Key": "$(API_KEY)"
+http_client:
+  headers:
+    "Authorization": "Bearer $(MY_TOKEN)"
+    "X-API-Key": "$(API_KEY)"
 ```
 
 Variables use `$(VAR_NAME)` format.

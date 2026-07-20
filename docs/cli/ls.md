@@ -22,11 +22,9 @@ swag2mcp ls [flags]
     ```
     ```
     Specifications:
-      petstore (https://petstore.swagger.io/v2/swagger.json)
-        pet (3 endpoints)
-        store (4 endpoints)
-        user (8 endpoints)
-      meteo (https://.../forecast.yml)
+      dadjoke (https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml)
+        jokes (3 endpoints)
+      meteo (https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml)
         forecast (5 endpoints)
     ```
 
@@ -35,8 +33,6 @@ swag2mcp ls [flags]
     swag2mcp ls --spec abc123...
     ```
     ```
-    Collections for petstore:
-      pet (3 endpoints, 2 tags)
-      store (4 endpoints, 1 tag)
-      user (8 endpoints, 3 tags)
+    Collections for dadjoke:
+      jokes (3 endpoints, 1 tag)
     ```

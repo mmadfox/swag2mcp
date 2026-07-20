@@ -25,7 +25,7 @@ swag2mcp add [location] [flags]
 
 === "From URL"
     ```bash
-    swag2mcp add https://petstore.swagger.io/v2/swagger.json
+    swag2mcp add https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     ```
 
 === "From local file"
@@ -35,9 +35,9 @@ swag2mcp add [location] [flags]
 
 === "With options"
     ```bash
-    swag2mcp add https://api.example.com/openapi.json \
-      --name "my-api" \
-      --tags "users,orders"
+    swag2mcp add https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml \
+      --name "forecast" \
+      --tags "weather"
     ```
 
 === "Interactive"

@@ -9,7 +9,7 @@ swag2mcp bridges OpenAPI/Swagger/Postman API specifications with LLM agents via 
 ### How is it different?
 
 - **Zero integration code** — no coding needed to connect APIs
-- **19 MCP tools** — complete API interaction toolkit
+- **16 MCP tools** — complete API interaction toolkit
 - **9 auth methods** — support for any API
 - **Full-text search** — fast endpoint discovery
 - **TUI** — interactive interface
@@ -37,7 +37,7 @@ No, you can download pre-built binaries from GitHub Releases.
 ### How to add an API?
 
 ```bash
-swag2mcp add https://api.example.com/openapi.json
+swag2mcp add https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
 ### How to start the MCP server?
@@ -65,7 +65,7 @@ Via config or environment variables:
 ```yaml
 auth:
   type: bearer
-  bearer:
+  config:
     token: "$(MY_TOKEN)"
 ```
 

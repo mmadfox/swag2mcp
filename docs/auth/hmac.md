@@ -6,11 +6,15 @@ HMAC-SHA256 authentication (Binance-style).
 
 ```yaml
 specs:
-  - domain: "api.binance.com"
-    location: "https://api.binance.com/openapi.json"
+  - domain: binance
+    llm_title: Binance Market Data
+    base_url: https://api.binance.com
+    collections:
+      - llm_title: Market Data
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
     auth:
       type: hmac
-      hmac:
+      config:
         api_key: "{{BINANCE_API_KEY}}"
         secret_key: "{{BINANCE_SECRET_KEY}}"
 ```

@@ -6,11 +6,15 @@ HTTP Digest Access Authentication.
 
 ```yaml
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: digest
-      digest:
+      config:
         username: "admin"
         password: "{{PASSWORD}}"
 ```
@@ -24,7 +28,16 @@ specs:
 ## Environment Variables
 
 ```yaml
-digest:
-  username: "admin"
-  password: "$(API_PASSWORD)"
+auth:
+  type: digest
+  config:
+    username: "admin"
+    password: "$(API_PASSWORD)"
 ```
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `username` | string | Username |
+| `password` | string | Password |

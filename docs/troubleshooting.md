@@ -50,7 +50,7 @@ swag2mcp validate
 
 ```bash
 # Check URL
-curl -I https://api.example.com/openapi.json
+curl -I https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 
 # Check path
 ls -la ./specs/my-api.yaml
@@ -120,25 +120,21 @@ OAuth2 tokens refresh automatically. Bearer tokens need manual update.
 swag2mcp ls
 
 # Try a different query
-search(query: "pet", limit: 10)
+swag2mcp search "pet"
 ```
 
 ## Performance
 
 ### Slow responses
 
-```bash
-# Increase timeout
-global:
-  http_client:
-    timeout: 60s
+```yaml
+http_client:
+  timeout: 60s
 ```
 
 ### Large responses
 
-```bash
-# Increase limit
-global:
-  http_client:
-    max_response_size: 8192
+```yaml
+http_client:
+  max_response_size: 8388608
 ```

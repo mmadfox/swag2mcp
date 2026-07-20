@@ -2,27 +2,25 @@
 
 Spec settings override global settings for a specific API.
 
-## spec Section
+## Spec Section
 
 ```yaml
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
-    disabled: false
-    headers:
-      "X-API-Key": "my-key"
-    cookies:
-      - name: "session"
-        value: "abc123"
+  - domain: meteo
+    llm_title: Open-Meteo Weather APIs
+    llm_instruction: "Use this API for weather forecasts and climate data"
+    base_url: https://api.open-meteo.com
+    disable: false
+    tags: ["weather", "climate"]
     http_client:
       timeout: 10s
       max_response_size: 1024
     collections:
-      - name: "default"
-        tags: ["*"]
+      - llm_title: Forecast
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
     auth:
       type: bearer
-      bearer:
+      config:
         token: "my-token"
 ```
 
@@ -30,22 +28,27 @@ specs:
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `domain` | string | — | Unique API identifier |
-| `location` | string | — | URL or path to spec |
-| `disabled` | bool | `false` | Disable this spec |
-| `headers` | map | `{}` | Headers for this API |
-| `cookies` | array | `[]` | Cookies for this API |
+| `domain` | string | — | Unique API identifier (a-z, 0-9, _, -, max 60 chars) |
+| `llm_title` | string | — | Human-readable title (5-120 chars) |
+| `llm_instruction` | string | `""` | Instructions for the LLM (max 500 chars) |
+| `base_url` | string | — | Base URL for API requests |
+| `disable` | bool | `false` | Disable this spec |
+| `tags` | array | `[]` | Tags for filtering |
 | `http_client` | object | — | HTTP client override |
-| `collections` | array | — | Collection list |
+| `collections` | array | — | Collection list (1-30 items) |
 | `auth` | object | — | Auth settings |
 
 ## Disabling a Spec
 
 ```yaml
 specs:
-  - domain: "old-api.example.com"
-    location: "https://old-api.example.com/swagger.json"
-    disabled: true
+  - domain: old-api
+    llm_title: Old API
+    base_url: https://old-api.example.com
+    disable: true
+    collections:
+      - llm_title: Default
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
 Disabled specs are not loaded or indexed.
@@ -54,9 +57,13 @@ Disabled specs are not loaded or indexed.
 
 ```yaml
 specs:
-  - domain: "slow-api.example.com"
-    location: "https://slow-api.example.com/openapi.json"
+  - domain: slow-api
+    llm_title: Slow API
+    base_url: https://slow-api.example.com
     http_client:
       timeout: 120s
-      max_response_size: 8192
+      max_response_size: 8388608
+    collections:
+      - llm_title: Default
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```

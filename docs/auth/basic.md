@@ -6,11 +6,15 @@ HTTP Basic Authentication.
 
 ```yaml
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: basic
-      basic:
+      config:
         username: "admin"
         password: "{{PASSWORD}}"
 ```
@@ -22,7 +26,16 @@ Header `Authorization: Basic base64(username:password)` is added to every reques
 ## Environment Variables
 
 ```yaml
-basic:
-  username: "admin"
-  password: "$(API_PASSWORD)"
+auth:
+  type: basic
+  config:
+    username: "admin"
+    password: "$(API_PASSWORD)"
 ```
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `username` | string | Username |
+| `password` | string | Password |

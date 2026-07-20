@@ -31,10 +31,13 @@ Every time you connect a new API to an LLM, you write the same boilerplate: spec
 
 ## Quick Start
 
+> [!WARNING]
+> **Work in Progress** — Installation and Quick Start sections are being updated. The commands below are functional but documentation is under active development.
+
 ```bash
 go install github.com/mmadfox/swag2mcp@latest
 swag2mcp init
-swag2mcp add https://petstore.swagger.io/v2/swagger.json
+swag2mcp add https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 swag2mcp mcp
 ```
 

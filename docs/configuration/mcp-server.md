@@ -15,9 +15,8 @@ Three transport types:
 ## stdio
 
 ```yaml
-global:
-  mcp:
-    transport: stdio
+mcp:
+  transport: stdio
 ```
 
 Default. LLM client runs swag2mcp as a child process.
@@ -25,11 +24,10 @@ Default. LLM client runs swag2mcp as a child process.
 ## SSE
 
 ```yaml
-global:
-  mcp:
-    transport: sse
-    http_addr: "127.0.0.1:8080"
-    http_path: "/mcp"
+mcp:
+  transport: sse
+  addr: "127.0.0.1:8080"
+  path: "/mcp"
 ```
 
 ```bash
@@ -39,19 +37,18 @@ swag2mcp mcp --transport sse --http-addr 127.0.0.1:8080
 ## Streamable HTTP
 
 ```yaml
-global:
-  mcp:
-    transport: streamable-http
-    http_addr: "127.0.0.1:8080"
-    http_path: "/mcp"
+mcp:
+  transport: streamable-http
+  addr: "127.0.0.1:8080"
+  path: "/mcp"
 ```
 
 ## HTTP Authentication
 
 ```yaml
-global:
-  mcp:
-    auth_token: "my-secret-token"
+mcp:
+  auth:
+    token: "my-secret-token"
 ```
 
 Or via flag:

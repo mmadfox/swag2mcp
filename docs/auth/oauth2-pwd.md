@@ -6,11 +6,15 @@ OAuth2 authentication via Password Grant (Resource Owner Password Credentials).
 
 ```yaml
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: oauth2-pwd
-      oauth2_pwd:
+      config:
         client_id: "{{CLIENT_ID}}"
         client_secret: "{{CLIENT_SECRET}}"
         username: "{{USERNAME}}"
@@ -34,7 +38,7 @@ specs:
 | `username` | string | Username |
 | `password` | string | Password |
 | `token_url` | string | Token endpoint URL |
-| `scopes` | array | Scope list |
+| `scopes` | array | Scope list (optional) |
 
 !!! tip "Public Client"
     `client_secret` is optional — public clients are supported (e.g., Keycloak).

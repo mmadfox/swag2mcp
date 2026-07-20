@@ -9,7 +9,7 @@ swag2mcp supports 9 authentication methods for calling protected APIs.
 | `none` | No authentication |
 | `basic` | HTTP Basic Auth |
 | `bearer` | Bearer Token (JWT) |
-| `api-key` | API Key (header, query, cookie) |
+| `api-key` | API Key (header or query) |
 | `digest` | HTTP Digest Auth |
 | `hmac` | HMAC-SHA256 (Binance-style) |
 | `oauth2-cc` | OAuth2 Client Credentials |
@@ -22,11 +22,15 @@ Auth is configured at the spec level:
 
 ```yaml
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: bearer
-      bearer:
+      config:
         token: "my-token"
 ```
 

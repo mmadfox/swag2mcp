@@ -20,10 +20,10 @@ swag2mcp caches downloaded specs for faster startup.
 
 ```
 ~/.swag2mcp/cache/
-├── api.example.com/
-│   └── openapi.json
-├── petstore.swagger.io/
-│   └── swagger.json
+├── raw.githubusercontent.com/
+│   └── dadjoke.yaml
+├── raw.githubusercontent.com/
+│   └── forecast.yml
 └── ...
 ```
 

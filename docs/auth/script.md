@@ -6,19 +6,21 @@ Authentication via external script.
 
 ```yaml
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: script
-      script:
-        path: "./auth_scripts/get-token.sh"
-        args: ["--env", "production"]
-        timeout: 10s
+      config:
+        domain: "auth.example.com"
 ```
 
 ## How It Works
 
-1. swag2mcp runs the specified script
+1. swag2mcp runs the specified script from `{workspace}/auth_scripts/`
 2. Script outputs auth headers to stdout
 3. Output is parsed and added to the request
 
@@ -41,10 +43,8 @@ echo "Authorization: Bearer $TOKEN"
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `path` | string | Script path |
-| `args` | array | Script arguments |
-| `timeout` | duration | Execution timeout (default 30s) |
+| `domain` | string | Domain identifier for the script |
 
 ## Script Location
 
-Scripts are stored in `{workspace}/auth_scripts/`.
+Scripts are stored in `{workspace}/auth_scripts/` and named by domain.

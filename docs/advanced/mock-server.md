@@ -13,23 +13,24 @@ swag2mcp-mock mockserver
 ## Configuration
 
 ```yaml
-# mock-config.yaml
+mock_enabled: true
+
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
-    mock:
-      enabled: true
-      delay: 100ms
-      error_rate: 0.05
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
+        base_mock_url: "127.0.0.1:9090"
 ```
 
 ## Parameters
 
 | Parameter | Description |
 |-----------|-------------|
-| `enabled` | Enable mock mode |
-| `delay` | Response delay |
-| `error_rate` | Error probability (0.0 - 1.0) |
+| `mock_enabled` | Enable mock mode globally |
+| `base_mock_url` | Mock server address per collection (host:port) |
 
 ## Flags
 

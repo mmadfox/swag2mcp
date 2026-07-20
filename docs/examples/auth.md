@@ -4,10 +4,15 @@
 
 ```yaml
 specs:
-  - domain: "api.example.com"
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: basic
-      basic:
+      config:
         username: "admin"
         password: "{{PASSWORD}}"
 ```
@@ -16,10 +21,15 @@ specs:
 
 ```yaml
 specs:
-  - domain: "api.example.com"
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: bearer
-      bearer:
+      config:
         token: "{{TOKEN}}"
 ```
 
@@ -27,11 +37,16 @@ specs:
 
 ```yaml
 specs:
-  - domain: "api.example.com"
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: api-key
-      api_key:
-        name: "X-API-Key"
+      config:
+        key: "X-API-Key"
         in: header
         value: "{{API_KEY}}"
 ```
@@ -40,10 +55,15 @@ specs:
 
 ```yaml
 specs:
-  - domain: "api.example.com"
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: oauth2-cc
-      oauth2_cc:
+      config:
         client_id: "{{CLIENT_ID}}"
         client_secret: "{{CLIENT_SECRET}}"
         token_url: "https://auth.example.com/oauth/token"
@@ -54,12 +74,15 @@ specs:
 
 ```yaml
 specs:
-  - domain: "api.binance.com"
+  - domain: binance
+    llm_title: Binance Market Data
+    base_url: https://api.binance.com
+    collections:
+      - llm_title: Market Data
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
     auth:
       type: hmac
-      hmac:
+      config:
         api_key: "{{API_KEY}}"
         secret_key: "{{SECRET_KEY}}"
 ```
-
-Full examples in `examples/auth/`.
