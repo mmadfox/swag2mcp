@@ -193,29 +193,8 @@ func extractPostmanPath(rawURL json.RawMessage) string {
 		return "/"
 	}
 
-	// Prefer structured path over raw — it handles path variables properly.
-	if len(u.Path) > 0 {
-		var segments []string
-		for _, seg := range u.Path {
-			var s string
-			if err := json.Unmarshal(seg, &s); err == nil {
-				if strings.HasPrefix(s, ":") {
-					s = "{" + s[1:] + "}"
-				}
-				segments = append(segments, s)
-				continue
-			}
-			var pv struct {
-				Type  string `json:"type"`
-				Value string `json:"value"`
-			}
-			if err := json.Unmarshal(seg, &pv); err == nil && pv.Value != "" {
-				segments = append(segments, "{"+pv.Value+"}")
-			}
-		}
-		if len(segments) > 0 {
-			return "/" + strings.Join(segments, "/")
-		}
+	if path := buildStructuredPath(u.Path); path != "" {
+		return path
 	}
 
 	// Fallback to raw
@@ -224,6 +203,31 @@ func extractPostmanPath(rawURL json.RawMessage) string {
 	}
 
 	return "/"
+}
+
+func buildStructuredPath(path []json.RawMessage) string {
+	var segments []string
+	for _, seg := range path {
+		var s string
+		if err := json.Unmarshal(seg, &s); err == nil {
+			if strings.HasPrefix(s, ":") {
+				s = "{" + s[1:] + "}"
+			}
+			segments = append(segments, s)
+			continue
+		}
+		var pv struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		}
+		if err := json.Unmarshal(seg, &pv); err == nil && pv.Value != "" {
+			segments = append(segments, "{"+pv.Value+"}")
+		}
+	}
+	if len(segments) == 0 {
+		return ""
+	}
+	return "/" + strings.Join(segments, "/")
 }
 
 // extractPathFromURLString extracts the path portion from a URL string, converting :param to {param}.
