@@ -26,7 +26,7 @@
 
 - [Installation](#installation)
 - [Example LLM Queries](#example-llm-queries)
-- [Documentation](#documentation)
+- [Documentation](https://mmadfox.github.io/swag2mcp) 📖
 - [Integration](#integration)
 - [CLI Commands](#cli-commands)
 - [Mock Server](#mock-server)
@@ -206,20 +206,6 @@ After setup, try asking your agent:
 | "What's the elevation of Mount Everest?" | `invoke` — calls Open-Meteo elevation API |
 
 ---
-
-## Documentation
-
-Full documentation site: **[mmadfox.github.io/swag2mcp](https://mmadfox.github.io/swag2mcp)**
-
-| Language | Site | File |
-|----------|------|------|
-| English | [docs](https://mmadfox.github.io/swag2mcp/en/) | [docs/guide.md](docs/guide.md) |
-| Русский | [документация](https://mmadfox.github.io/swag2mcp/ru/) | [docs/guide.ru.md](docs/guide.ru.md) |
-| Deutsch | [dokumentation](https://mmadfox.github.io/swag2mcp/de/) | [docs/guide.de.md](docs/guide.de.md) |
-| Français | [documentation](https://mmadfox.github.io/swag2mcp/fr/) | [docs/guide.fr.md](docs/guide.fr.md) |
-| Español | [documentación](https://mmadfox.github.io/swag2mcp/es/) | [docs/guide.es.md](docs/guide.es.md) |
-| 中文 | [文档](https://mmadfox.github.io/swag2mcp/zh/) | [docs/guide.zh.md](docs/guide.zh.md) |
-| 日本語 | [ドキュメント](https://mmadfox.github.io/swag2mcp/ja/) | [docs/guide.ja.md](docs/guide.ja.md) |
 
 ### Agent Skills
 
