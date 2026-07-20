@@ -82,9 +82,9 @@ func TestRunImport_WithSpec_Success(t *testing.T) {
 	t.Cleanup(srv.Close)
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -97,7 +97,7 @@ func TestRunImport_WithSpec_Success(t *testing.T) {
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)
 
-	err := runImport(tmpDir, "", "", "", []string{"petstore"}, cmd)
+	err := runImport(tmpDir, "", "", "", []string{"meteo"}, cmd)
 	if err != nil {
 		t.Fatalf("runImport() = %v", err)
 	}
@@ -113,7 +113,7 @@ func TestRunImport_WithSpec_NoConfig(t *testing.T) {
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)
 
-	err := runImport(tmpDir, "", "", "", []string{"petstore"}, cmd)
+	err := runImport(tmpDir, "", "", "", []string{"meteo"}, cmd)
 	if err == nil {
 		t.Fatal("runImport() expected error, got nil")
 	}
@@ -127,9 +127,9 @@ func TestRunImport_WithSpec_NoMatch(t *testing.T) {
 	}
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: https://example.com/spec.yaml
@@ -166,9 +166,9 @@ func TestRunImport_FromZip(t *testing.T) {
 	}
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -220,9 +220,9 @@ func TestRunImport_FromZip_DetectByExtension(t *testing.T) {
 	}
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `

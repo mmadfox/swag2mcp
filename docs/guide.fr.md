@@ -80,11 +80,11 @@ After setup, try asking your agent:
 
 | Query | What happens |
 |-------|-------------|
-| "Show me all available APIs" | `spec_list` — lists petstore, binance, dadjoke, pokeapi |
+| "Show me all available APIs" | `spec_list` — lists meteo, rick-and-morty, binance, dadjoke, pokeapi |
 | "What endpoints does Binance have?" | `endpoint_by_spec` — shows 4 market data endpoints |
-| "Find endpoints related to pets" | `search("pet")` — finds petstore endpoints |
-| "What tags are in the Petstore API?" | `tag_by_spec` — shows "pets" tag |
-| "Show me the GET /pets endpoint details" | `inspect` — shows parameters and response schema |
+| "Find endpoints related to pets" | `search("weather")` — finds meteo endpoints |
+| "What tags are in the Open-Meteo API?" | `tag_by_spec` — shows "weather" tag |
+| "Show me the GET /v1/forecast endpoint details" | `inspect` — shows parameters and response schema |
 | "Get the current BTC price from Binance" | `invoke` — real API call to Binance |
 | "Get a random dad joke" | `invoke` — calls icanhazdadjoke API |
 
@@ -93,11 +93,11 @@ After setup, try asking your agent:
 ---
 
 -------|-------------|
-| "Show me all available APIs" | `spec_list` — lists petstore, binance, dadjoke, pokeapi |
+| "Show me all available APIs" | `spec_list` — lists meteo, rick-and-morty, binance, dadjoke, pokeapi |
 | "What endpoints does Binance have?" | `endpoint_by_spec` — shows 4 market data endpoints |
-| "Find endpoints related to pets" | `search("pet")` — finds petstore endpoints |
-| "What tags are in the Petstore API?" | `tag_by_spec` — shows "pets" tag |
-| "Show me the GET /pets endpoint details" | `inspect` — shows parameters and response schema |
+| "Find endpoints related to pets" | `search("weather")` — finds meteo endpoints |
+| "What tags are in the Open-Meteo API?" | `tag_by_spec` — shows "weather" tag |
+| "Show me the GET /v1/forecast endpoint details" | `inspect` — shows parameters and response schema |
 | "Get the current BTC price from Binance" | `invoke` — real API call to Binance |
 | "Get a random dad joke" | `invoke` — calls icanhazdadjoke API |
 
@@ -123,11 +123,11 @@ http_client:                        # optionnel, paramètres HTTP globaux
   max_response_size: 1048           # optionnel, octets (défaut 1Ko, max 1Mo)
 
 specs:
-  - domain: petstore                    # obligatoire, 1-60 car., [a-zA-Z0-9_-]
-    llm_title: Petstore API             # obligatoire, 5-120 car.
+  - domain: meteo                    # obligatoire, 1-60 car., [a-zA-Z0-9_-]
+    llm_title: Open-Meteo API             # obligatoire, 5-120 car.
     llm_instruction: |                  # optionnel, max 500 car.
       Utilisez cette API pour gérer les animaux, commandes et utilisateurs.
-    base_url: https://petstore.swagger.io/v2  # obligatoire, URL valide
+    base_url: https://meteo.swagger.io/v2  # obligatoire, URL valide
     disable: false                      # optionnel
     tags: [public, demo]                # optionnel, pour le filtrage
     http_client:                        # optionnel, remplace le global
@@ -138,11 +138,11 @@ specs:
       config:
         token: $(TOKEN_AUTH)
     collections:
-      - llm_title: Petstore Swagger     # optionnel, max 120 car.
+      - llm_title: Open-Meteo Swagger     # optionnel, max 120 car.
         llm_instruction: |             # optionnel, max 360 car.
-          Points d'accès principaux de Petstore
+          Points d'accès principaux de Open-Meteo
         title: ""                      # optionnel, auto-rempli depuis la spec
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json  # obligatoire, 5-250 car.
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml  # obligatoire, 5-250 car.
         disable: false                  # optionnel
         base_url: ""                    # optionnel, remplace base_url de la spec
         base_mock_url: localhost:8080   # optionnel, format "host:port" ou "host:port/path"
@@ -221,7 +221,7 @@ Ajouter une spécification ou une collection à la configuration.
 
 ```bash
 swag2mcp add spec
-swag2mcp add spec --yaml 'domain: petstore\nllm_title: Petstore API\nbase_url: https://...'
+swag2mcp add spec --yaml 'domain: meteo\nllm_title: Open-Meteo API\nbase_url: https://...'
 cat spec.yaml | swag2mcp add spec --yaml -
 swag2mcp add spec --example
 ```

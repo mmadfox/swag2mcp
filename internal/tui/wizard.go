@@ -282,7 +282,7 @@ func (m model) handleEnter() (tea.Model, tea.Cmd) {
 		}
 		m.curSpec.BaseURL = val
 		m.input.SetValue("")
-		m.input.Placeholder = "petstore, public (comma-separated)"
+		m.input.Placeholder = "meteo, public (comma-separated)"
 		return m.transitionTo(stateSpecTags)
 
 	case stateSpecTags:
@@ -436,7 +436,7 @@ func (m model) currentHint() hint {
 	case stateSpecDomain:
 		return hint{
 			title:       fmt.Sprintf("Spec #%d — Domain", len(m.specs)+1),
-			description: "A unique identifier for this API.\n  Examples: petstore, github-api, stripe.",
+			description: "A unique identifier for this API.\n  Examples: meteo, rick-and-morty, github-api.",
 			placeholder: "my-api",
 			rules:       "Rules: 1–60 characters. Letters, digits, hyphens, and underscores only.",
 		}
@@ -549,7 +549,7 @@ func (m model) View() string {
 		s += "  Add an API specification?\n"
 		s += "  ─────────────────────────\n\n"
 		s += "  An API specification describes a set of related endpoints.\n"
-		s += "  You can add one or more specifications (e.g. petstore, github-api).\n\n"
+		s += "  You can add one or more specifications (e.g. meteo, rick-and-morty, github-api).\n\n"
 		s += "  Type y (yes) or n (no), then press Enter.  [B]ack\n"
 
 	case stateAskAddCollection:

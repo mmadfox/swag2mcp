@@ -58,7 +58,7 @@
 ### 3.3 Collection Configuration
 
 - [x] `title: "Pets"` — collection appears with correct title (integration-test, suite_mcp_tools_test.go, TestScript_MCP_CollectionByID)
-- [x] `location: ./specs/petstore.yaml` — local file loaded (integration-test, suite_mcp_tools_test.go, TestScript_MCP_SpecList)
+- [x] `location: ./specs/meteo.yaml` — local file loaded (integration-test, suite_mcp_tools_test.go, TestScript_MCP_SpecList)
 - [x] `location: https://example.com/spec.yaml` — remote URL fetched + cached (manual — all test specs use remote URLs, cache populated after `swag2mcp update`)
 - [x] `disable: true` — collection excluded (manual — `swag2mcp ls` shows empty collections list, `swag2mcp info` shows reduced collections/endpoints count)
 - [x] `llm_title` + `llm_instruction` per collection — overrides spec (integration-test, suite_mcp_tools_test.go, TestScript_MCP_CollectionByID)
@@ -176,11 +176,11 @@
 
 - [x] `swag2mcp export [path] [output.zip]` — creates ZIP backup with specs, config, auth scripts (manual — CLI tested, 4056-byte ZIP created)
 - [ ] `swag2mcp export` — default output filename `swag2mcp-backup-<timestamp>.zip` (not covered)
-- [ ] `swag2mcp export --spec petstore` — export only specified specs (not covered)
+- [ ] `swag2mcp export --spec meteo` — export only specified specs (not covered)
 
 ### 4.12 `swag2mcp import`
 
-- [x] `swag2mcp import --spec petstore` — bulk import from existing config URLs (manual — CLI tested, specs downloaded)
+- [x] `swag2mcp import --spec meteo` — bulk import from existing config URLs (manual — CLI tested, specs downloaded)
 - [x] `swag2mcp import --from-zip /path/to/backup.zip` — restore from ZIP backup (manual — CLI tested, workspace restored)
 - [ ] `swag2mcp import [url] [name]` — single import from URL (not covered)
 
@@ -293,7 +293,7 @@
 - [ ] `invoke` with invalid endpointId — `not_found` error (not covered)
 - [x] `invoke` on non-existent server — `invoke_error` with connection refused (integration-test, suite_errors_test.go, TestScript_Errors_InvokeConnectionRefused)
 - [x] `invoke` on 5xx response — status code and error body returned (integration-test, suite_mcp_tools_test.go, TestScript_MCP_Invoke_ServerError)
-- [x] `invoke` on 4xx response — status code and error body returned (manual — petstore GET /pets/{petId} returns 404 with body)
+- [x] `invoke` on 4xx response — status code and error body returned (manual — meteo GET /pets/{petId} returns 404 with body)
 - [x] `invoke` on real API (Binance, dadjoke, PokeAPI) — 200 response with correct body (manual — BTCUSDT price, random joke, pokemon list)
 - [x] `invoke` same endpoint twice within 10s — `rate_limit` error (integration-test, suite_ratelimit_test.go, TestScript_RateLimit_BlocksSecondCall)
 - [x] `invoke` same endpoint after 10s wait — succeeds (integration-test, suite_ratelimit_test.go, TestScript_RateLimit_RecoversAfterWait)
@@ -494,19 +494,19 @@
 
 ## 12. Manual Testing via MCP API (Live)
 
-Tested against workspace with 4 specs: petstore, binance, dadjoke, pokeapi.
+Tested against workspace with 4 specs: meteo, binance, dadjoke, pokeapi.
 
 ### 12.1 MCP Tools — Navigation
 
 - [x] `spec_list` — returns 4 specs with correct IDs and domains (manual)
 - [x] `spec_by_id` — returns spec details + collections for each valid ID (manual — tested all 4)
 - [x] `collection_by_spec` — returns collections for each spec (manual — tested all 4)
-- [x] `collection_by_id` — returns collection details + tags (manual — tested binance, petstore)
-- [x] `tag_by_spec` — returns tags for each spec (manual — tested binance, petstore)
-- [x] `tag_by_collection` — returns tags for each collection (manual — tested binance, petstore)
+- [x] `collection_by_id` — returns collection details + tags (manual — tested binance, meteo)
+- [x] `tag_by_spec` — returns tags for each spec (manual — tested binance, meteo)
+- [x] `tag_by_collection` — returns tags for each collection (manual — tested binance, meteo)
 - [x] `tag_by_id` — returns tag details with countMethods (manual — tested market-data, pets)
-- [x] `endpoint_by_spec` — returns all endpoints per spec (manual — binance=4, petstore=3, dadjoke=3, pokeapi=3)
-- [x] `endpoint_by_collection` — returns endpoints per collection (manual — tested binance, petstore)
+- [x] `endpoint_by_spec` — returns all endpoints per spec (manual — binance=4, meteo=3, dadjoke=3, pokeapi=3)
+- [x] `endpoint_by_collection` — returns endpoints per collection (manual — tested binance, meteo)
 - [x] `endpoint_by_tag` — returns endpoints per tag (manual — tested market-data, pets)
 - [x] `endpoint_by_id` — returns endpoint summary (method, path, summary) (manual — tested multiple)
 
@@ -537,8 +537,8 @@ Tested against workspace with 4 specs: petstore, binance, dadjoke, pokeapi.
 - [x] `invoke` GET / (dadjoke) — 200, returns random joke with id, joke, status (manual)
 - [x] `invoke` GET /api/v3/ticker/price?symbol=BTCUSDT (Binance) — 200, returns price and symbol (manual)
 - [x] `invoke` GET /api/v2/pokemon?limit=5&offset=0 (PokeAPI) — 200, returns count, next, results (manual)
-- [x] `invoke` GET /pets/{petId} (Petstore) — 404, server returns "null for uri" (manual)
-- [x] `invoke` POST /pets (Petstore) — 404, server returns "null for uri" (manual)
+- [x] `invoke` GET /pets/{petId} (Open-Meteo) — 404, server returns "null for uri" (manual)
+- [x] `invoke` POST /pets (Open-Meteo) — 404, server returns "null for uri" (manual)
 
 ### 12.5 MCP Tools — Error Cases
 
@@ -564,7 +564,7 @@ Tested against workspace with 4 specs: petstore, binance, dadjoke, pokeapi.
 - [x] `swag2mcp ls -t public,internal` — returns empty (no specs have those tags) (manual)
 - [x] `swag2mcp validate` — reports "Configuration is valid." (manual)
 - [x] `swag2mcp validate` — detects invalid domain format (manual — "INVALID DOMAIN HERE")
-- [x] `swag2mcp validate` — detects duplicate domain (manual — second "petstore" added)
+- [x] `swag2mcp validate` — detects duplicate domain (manual — second "meteo" added)
 - [x] `swag2mcp validate` — detects invalid title length <5 chars (manual — "AB")
 - [x] `swag2mcp validate` — detects invalid title length >120 chars (manual)
 - [x] `swag2mcp validate` — detects invalid instruction length >500 chars (manual)
@@ -576,7 +576,7 @@ Tested against workspace with 4 specs: petstore, binance, dadjoke, pokeapi.
 - [x] `swag2mcp update` — processes all specs (manual — "4 specs processed")
 - [x] `swag2mcp clean` — removes cache/ and responses/ contents (manual)
 - [x] `swag2mcp export [path] [output.zip]` — creates ZIP backup (manual — verified file exists)
-- [x] `swag2mcp import --spec petstore` — imports spec from configured URLs (manual)
+- [x] `swag2mcp import --spec meteo` — imports spec from configured URLs (manual)
 - [x] `swag2mcp import --from-zip backup.zip` — restores workspace from ZIP (manual)
 
 ### 12.7 Config Settings (Live)

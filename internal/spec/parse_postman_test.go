@@ -13,71 +13,71 @@ import (
 
 func TestParse_postmanCollection(t *testing.T) {
 	t.Parallel()
-	data, err := os.ReadFile(filepath.Join("testdata", "postman_petstore.json"))
+	data, err := os.ReadFile(filepath.Join("testdata", "postman_rick_and_morty.json"))
 	require.NoError(t, err)
 
 	doc, err := Parse(data)
 	require.NoError(t, err, "Parse(postman) failed")
 
 	assert.Equal(t, "2.x", doc.Version)
-	assert.Equal(t, "Petstore API", doc.Title)
+	assert.Equal(t, "Rick and Morty API", doc.Title)
 
 	require.Len(t, doc.PathItems, 4)
 
-	var listPets, createPet, getPet, health bool
+	var listChars, createChar, getChar, health bool
 	for _, pi := range doc.PathItems {
 		switch pi.Path {
-		case "/v1/pets":
+		case "/api/character":
 			switch pi.Method {
 			case http.MethodGet:
-				listPets = true
+				listChars = true
 				op := pi.Operation
-				assert.Equal(t, "List all pets", op.Summary)
-				require.NotEmpty(t, op.Parameters, "expected query params on list pets")
-				var hasLimit bool
+				assert.Equal(t, "List all characters", op.Summary)
+				require.NotEmpty(t, op.Parameters, "expected query params on list characters")
+				var hasPage bool
 				for _, p := range op.Parameters {
-					if p.Name == "limit" && p.In == "query" {
-						hasLimit = true
+					if p.Name == "page" && p.In == "query" {
+						hasPage = true
 					}
 				}
-				assert.True(t, hasLimit, "expected limit query param")
+				assert.True(t, hasPage, "expected page query param")
 			case http.MethodPost:
-				createPet = true
+				createChar = true
 				op := pi.Operation
 				require.NotNil(t, op.RequestBody, "expected request body")
 				require.NotNil(t, op.RequestBody.Content["application/json"], "expected JSON content type")
 			}
-		case "/v1/pets/{petId}":
-			getPet = true
+		case "/api/character/{characterId}":
+			getChar = true
 			op := pi.Operation
 			var hasID bool
 			for _, p := range op.Parameters {
-				if p.Name == "petId" && p.In == "path" {
+				if p.Name == "characterId" && p.In == "path" {
 					hasID = true
 				}
 			}
-			assert.True(t, hasID, "expected petId path param")
-		case "/health":
+			assert.True(t, hasID, "expected characterId path param")
+		case "/api/health":
 			health = true
 		}
 	}
 
-	assert.True(t, listPets, "GET /v1/pets not found")
-	assert.True(t, createPet, "POST /v1/pets not found")
-	assert.True(t, getPet, "GET /v1/pets/{petId} not found")
-	assert.True(t, health, "GET /health not found")
+	assert.True(t, listChars, "GET /api/character not found")
+	assert.True(t, createChar, "POST /api/character not found")
+	assert.True(t, getChar, "GET /api/character/{characterId} not found")
+	assert.True(t, health, "GET /api/health not found")
 }
 
 func TestParse_postmanHeaders(t *testing.T) {
 	t.Parallel()
-	data, err := os.ReadFile(filepath.Join("testdata", "postman_petstore.json"))
+	data, err := os.ReadFile(filepath.Join("testdata", "postman_rick_and_morty.json"))
 	require.NoError(t, err)
 
 	doc, err := Parse(data)
 	require.NoError(t, err)
 
 	for _, pi := range doc.PathItems {
-		if pi.Path == "/v1/pets" && pi.Method == http.MethodGet {
+		if pi.Path == "/api/character" && pi.Method == http.MethodGet {
 			op := pi.Operation
 			var hasAuth bool
 			for _, p := range op.Parameters {

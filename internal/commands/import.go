@@ -33,8 +33,8 @@ Single import (requires source and name):
   swag2mcp import ./local-spec.yaml myspec
 
 Bulk import (requires --spec flag):
-  swag2mcp import --spec petstore
-  swag2mcp import /path/to/workspace --spec petstore,store
+  swag2mcp import --spec meteo
+  swag2mcp import /path/to/workspace --spec meteo,store
 
 Restore from backup (--from-zip flag or .zip file as source):
   swag2mcp import --from-zip /path/to/backup.zip
@@ -155,8 +155,8 @@ func runImport(basePath, source, name, zipSource string, specs []string, cmd *co
 			"  swag2mcp import <source> <name>\n" +
 			"  swag2mcp import /path/to/workspace <source> <name>\n\n" +
 			"Bulk import:\n" +
-			"  swag2mcp import --spec petstore\n" +
-			"  swag2mcp import /path/to/workspace --spec petstore,store\n\n" +
+			"  swag2mcp import --spec meteo\n" +
+			"  swag2mcp import /path/to/workspace --spec meteo,store\n\n" +
 			"Restore from backup:\n" +
 			"  swag2mcp import --from-zip /path/to/backup.zip\n" +
 			"  swag2mcp import /path/to/workspace /path/to/backup.zip")

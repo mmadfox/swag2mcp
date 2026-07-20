@@ -9,4 +9,4 @@ specs:
         token: $(TOKEN_AUTH)
     collections:
       - llm_title: Protected Endpoints
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json

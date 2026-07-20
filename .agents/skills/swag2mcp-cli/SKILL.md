@@ -24,7 +24,7 @@ This skill activates when the user asks to:
 - Add, configure, or manage API specifications (OpenAPI/Swagger)
 - Start an MCP server for API access
 - Explore, search, or invoke API endpoints through MCP tools
-- Work with Petstore, Binance, PokéAPI, icanhazdadjoke, or similar APIs
+- Work with Open-Meteo, Binance, PokéAPI, icanhazdadjoke, or similar APIs
 
 ### Example user requests that trigger this skill
 
@@ -117,11 +117,11 @@ swag2mcp ls
 
 Before writing config, understand the two levels:
 
-- **Spec** = one API (a domain). Represents a logical service (e.g. "Petstore API", "Binance Market Data"). A spec can have multiple collections.
+- **Spec** = one API (a domain). Represents a logical service (e.g. "Open-Meteo API", "Binance Market Data"). A spec can have multiple collections.
 - **Collection** = one OpenAPI/Swagger file. If an API has multiple spec files (different versions, different microservices), each file is a separate collection under the same spec.
 
 **Important:** The `location` field in a collection must point to an **OpenAPI 3.x, Swagger 2.0, or Postman collection** file — not to the API endpoint itself. For example:
-- ✅ `location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json` — correct, this is an OpenAPI spec
+- ✅ `location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json` — correct, this is an OpenAPI spec
 - ❌ `location: https://api.example.com/v1/users` — wrong, this is a JSON response, not a spec
 
 ---
@@ -166,12 +166,12 @@ Add a new API specification to the config.
 swag2mcp add spec --example
 
 # Inline YAML (simple spec, no special chars in values)
-swag2mcp add spec --yaml 'domain: petstore
-llm_title: Petstore API
-base_url: https://petstore.swagger.io/v2
+swag2mcp add spec --yaml 'domain: meteo
+llm_title: Open-Meteo API
+base_url: https://meteo.swagger.io/v2
 collections:
   - llm_title: Pets
-    location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json'
+    location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json'
 
 # Safer: pipe from file or heredoc (avoids shell quoting issues with colons, &, #)
 cat spec.yaml | swag2mcp add spec --yaml -
@@ -190,18 +190,18 @@ EOF
 
 **YAML format:**
 ```yaml
-domain: petstore
-llm_title: Petstore API
+domain: meteo
+llm_title: Open-Meteo API
 llm_instruction: Use this API to manage pets.
-base_url: https://petstore.swagger.io/v2
+base_url: https://meteo.swagger.io/v2
 tags: [public, demo]
 auth:
   type: bearer
   config:
     token: $(TOKEN)
 collections:
-  - llm_title: Petstore Swagger
-    location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+  - llm_title: Open-Meteo Swagger
+    location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
 ```
 
 ---
@@ -222,25 +222,25 @@ Add a new collection to an existing spec.
 swag2mcp add collection --example
 
 # Inline YAML
-swag2mcp add collection --yaml 'spec_domain: petstore
+swag2mcp add collection --yaml 'spec_domain: meteo
 llm_title: Orders Collection
-location: https://petstore.example.com/orders.json'
+location: https://meteo.example.com/orders.json'
 
 # Safer: pipe from file or heredoc
 cat collection.yaml | swag2mcp add collection --yaml -
 
 swag2mcp add collection --yaml - <<EOF
-spec_domain: petstore
+spec_domain: meteo
 llm_title: Orders Collection
-location: https://petstore.example.com/orders.json
+location: https://meteo.example.com/orders.json
 EOF
 ```
 
 **YAML format:**
 ```yaml
-spec_domain: petstore
+spec_domain: meteo
 llm_title: Orders Collection
-location: https://petstore.example.com/orders.json
+location: https://meteo.example.com/orders.json
 ```
 
 ---
@@ -529,8 +529,8 @@ swag2mcp import ./local-spec.yaml myspec
 
 Import all collections for the specified domains from the configured spec URLs:
 ```sh
-swag2mcp import --spec petstore
-swag2mcp import /path/to/workspace --spec petstore,store
+swag2mcp import --spec meteo
+swag2mcp import /path/to/workspace --spec meteo,store
 ```
 
 ### Mode 3 — Restore from backup
@@ -565,8 +565,8 @@ swag2mcp export /path/to/workspace /some/directory
 swag2mcp export /path/to/workspace
 
 # Filter by spec
-swag2mcp export --spec petstore
-swag2mcp export --spec petstore,store
+swag2mcp export --spec meteo
+swag2mcp export --spec meteo,store
 ```
 
 **Behavior:** Creates a ZIP with all spec files, config, and auth scripts. Default output: `swag2mcp-backup-<timestamp>.zip` in current directory.
@@ -612,13 +612,13 @@ swag2mcp-mock --tls-cert cert.pem --tls-key key.pem
 ```yaml
 mock_enabled: true
 specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://petstore.swagger.io/v2
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://meteo.swagger.io/v2
     base_mock_url: localhost:8080
     collections:
-      - llm_title: Petstore
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+      - llm_title: Open-Meteo
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
         base_mock_url: localhost:8081
 ```
 
@@ -781,7 +781,7 @@ Every field in `swag2mcp.yaml` with type, required status, and description:
 ## Real-World YAML Examples
 
 > **Spec files** are included in the repository at `specs/` and available via raw GitHub URL:
-> - `https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json` — Petstore API (OpenAPI 3.0)
+> - `https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json` — Open-Meteo API (OpenAPI 3.0)
 > - `https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml` — Binance Market Data (OpenAPI 3.0)
 > - `https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml` — icanhazdadjoke (OpenAPI 3.0)
 > - `https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/pokeapi.yaml` — PokéAPI (OpenAPI 3.0)
@@ -790,19 +790,19 @@ Every field in `swag2mcp.yaml` with type, required status, and description:
 >
 > Full ready-to-run examples are in the `examples/` directory.
 
-### Example 1: Petstore (public, no auth)
+### Example 1: Open-Meteo (public, no auth)
 
 ```yaml
 specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     llm_instruction: |
-      Classic Swagger Petstore API. Use this to manage pets,
+      Classic Swagger Open-Meteo API. Use this to manage pets,
       store inventory, and user accounts.
-    base_url: https://petstore.swagger.io/v2
+    base_url: https://meteo.swagger.io/v2
     collections:
-      - llm_title: Petstore
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+      - llm_title: Open-Meteo
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
 ```
 
 ### Example 2: Binance Market Data (public, no auth)

@@ -19,7 +19,7 @@ func (s *ConfigSuite) TestValidateValidConfig() {
     base_url: https://api.example.com
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
 `
 	s.WriteConfig(configContent)
 	stdout, _, code := s.RunCommandInWS("validate", ".")
@@ -29,18 +29,18 @@ func (s *ConfigSuite) TestValidateValidConfig() {
 
 func (s *ConfigSuite) TestValidateDuplicateDomain() {
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: https://api.example.com
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
-  - domain: petstore
+        location: ./testdata/meteo.yaml
+  - domain: meteo
     llm_title: Duplicate
     base_url: https://api.example.com
     collections:
       - title: Store
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
 `
 	s.WriteConfig(configContent)
 	_, stderr, code := s.RunCommandInWS("validate", ".")
@@ -55,7 +55,7 @@ func (s *ConfigSuite) TestValidateInvalidDomainFormat() {
     base_url: https://api.example.com
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
 `
 	s.WriteConfig(configContent)
 	_, stderr, code := s.RunCommandInWS("validate", ".")
@@ -85,14 +85,14 @@ func (s *ConfigSuite) TestValidateTagFilter() {
     tags: ["public"]
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
   - domain: internal-api
     llm_title: Internal API
     base_url: https://api.example.com
     tags: ["internal"]
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
 `
 	s.WriteConfig(configContent)
 	_, _, code := s.RunCommandInWS("validate", "-t", "public", ".")
@@ -106,7 +106,7 @@ llm_title: Added Spec
 base_url: https://api.example.com
 collections:
   - title: Pets
-    location: ./testdata/petstore.yaml
+    location: ./testdata/meteo.yaml
 `
 	stdout, stderr, code := s.RunCommandInWS("add", "spec", "--yaml", yamlData, ".")
 	s.Equal(0, code)
@@ -123,7 +123,7 @@ llm_title: Stdin Spec
 base_url: https://api.example.com
 collections:
   - title: Pets
-    location: ./testdata/petstore.yaml
+    location: ./testdata/meteo.yaml
 `
 	stdout, stderr, code := s.RunCommandWithStdinInWS(yamlData, "add", "spec", "--yaml", "-", ".")
 	s.Equal(0, code)
@@ -145,13 +145,13 @@ llm_title: Test API
 base_url: https://api.example.com
 collections:
   - title: Existing
-    location: ./testdata/petstore.yaml
+    location: ./testdata/meteo.yaml
 `
 	s.RunCommandInWS("add", "spec", "--yaml", specYAML, ".")
 
 	collectionYAML := `spec_domain: test-api
 llm_title: Added Collection
-location: ./testdata/petstore.yaml
+location: ./testdata/meteo.yaml
 `
 	stdout, stderr, code := s.RunCommandInWS("add", "collection", "--yaml", collectionYAML, ".")
 	s.Equal(0, code)
@@ -168,7 +168,7 @@ llm_title: To Delete
 base_url: https://api.example.com
 collections:
   - title: Pets
-    location: ./testdata/petstore.yaml
+    location: ./testdata/meteo.yaml
 `
 	s.RunCommandInWS("add", "spec", "--yaml", specYAML, ".")
 
@@ -177,7 +177,7 @@ llm_title: Keep Me
 base_url: https://api.example.com
 collections:
   - title: Pets
-    location: ./testdata/petstore.yaml
+    location: ./testdata/meteo.yaml
 `
 	s.RunCommandInWS("add", "spec", "--yaml", specYAML2, ".")
 
@@ -200,7 +200,7 @@ llm_title: Keep Me
 base_url: https://api.example.com
 collections:
   - title: Pets
-    location: ./testdata/petstore.yaml
+    location: ./testdata/meteo.yaml
 `
 	s.RunCommandInWS("add", "spec", "--yaml", specYAML, ".")
 	s.RunCommandWithStdinInWS("n\n", "delete", "spec", ".")
@@ -216,7 +216,7 @@ llm_title: List Test
 base_url: https://api.example.com
 collections:
   - title: Pets
-    location: ./testdata/petstore.yaml
+    location: ./testdata/meteo.yaml
 `
 	s.RunCommandInWS("add", "spec", "--yaml", specYAML, ".")
 
@@ -224,7 +224,7 @@ collections:
 	s.Equal(0, code)
 	s.Contains(stdout, "list-test")
 	s.Contains(stdout, "List Test")
-	s.Contains(stdout, "petstore.yaml")
+	s.Contains(stdout, "meteo.yaml")
 }
 
 func (s *ConfigSuite) TestListSpecsEmpty() {
@@ -240,14 +240,14 @@ func (s *ConfigSuite) TestListSpecsTagFilter() {
     tags: ["public"]
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
   - domain: internal-api
     llm_title: Internal API
     base_url: https://api.example.com
     tags: ["internal"]
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
 `
 	s.WriteConfig(configContent)
 	stdout, _, _ := s.RunCommandInWS("ls", "-t", "public", ".")
@@ -262,7 +262,7 @@ func (s *ConfigSuite) TestUpdateReCachesSpecs() {
     base_url: https://api.example.com
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
 `
 	s.WriteConfig(configContent)
 	_, stderr, code := s.RunCommandInWS("update", ".")
@@ -328,7 +328,7 @@ func (s *ConfigSuite) TestEnvVarResolution() {
     base_url: https://env-test.example.com
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
 `
 	s.WriteConfig(configContent)
 	_, _, code := s.RunCommandInWS("validate", ".")
@@ -350,7 +350,7 @@ specs:
         X-Spec: "spec-only"
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
         http_client:
           headers:
             X-Collection: "collection-only"

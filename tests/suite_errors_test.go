@@ -17,8 +17,8 @@ func (s *ErrorsSuite) TestNotFound() {
     llm_title: Test API
     base_url: https://api.example.com
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -33,8 +33,8 @@ func (s *ErrorsSuite) TestInvalidID() {
     llm_title: Test API
     base_url: https://api.example.com
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -49,8 +49,8 @@ func (s *ErrorsSuite) TestEmptyID() {
     llm_title: Test API
     base_url: https://api.example.com
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -65,8 +65,8 @@ func (s *ErrorsSuite) TestInvokeConnectionRefused() {
     llm_title: Nowhere API
     base_url: http://localhost:1
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -94,12 +94,12 @@ func (s *ErrorsSuite) TestInvokeConnectionRefused() {
 
 	var getEndpointID string
 	for _, ep := range epResp.Endpoints {
-		if ep.Method == "GET" && ep.Path == "/pets" {
+		if ep.Method == "GET" && ep.Path == "/v1/forecast" {
 			getEndpointID = ep.ID
 			break
 		}
 	}
-	s.Require().NotEmpty(getEndpointID, "GET /pets endpoint not found")
+	s.Require().NotEmpty(getEndpointID, "GET /v1/forecast endpoint not found")
 
 	_ = client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": getEndpointID,
@@ -114,8 +114,8 @@ specs:
     llm_title: Slow API
     base_url: http://localhost:1
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -143,12 +143,12 @@ specs:
 
 	var getEndpointID string
 	for _, ep := range epResp.Endpoints {
-		if ep.Method == "GET" && ep.Path == "/pets" {
+		if ep.Method == "GET" && ep.Path == "/v1/forecast" {
 			getEndpointID = ep.ID
 			break
 		}
 	}
-	s.Require().NotEmpty(getEndpointID, "GET /pets endpoint not found")
+	s.Require().NotEmpty(getEndpointID, "GET /v1/forecast endpoint not found")
 
 	_ = client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": getEndpointID,

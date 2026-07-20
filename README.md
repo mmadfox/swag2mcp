@@ -194,11 +194,11 @@ After setup, try asking your agent:
 | < PROMPT > | What happens |
 |-------|-------------|
 | "List my configured APIs" | `spec_list` — lists available specs |
-| "Show me all available APIs" | `spec_list` — lists petstore, binance, dadjoke, pokeapi |
+| "Show me all available APIs" | `spec_list` — lists meteo, rick-and-morty, binance, dadjoke, pokeapi |
 | "What endpoints does Binance have?" | `endpoint_by_spec` — shows 4 market data endpoints |
-| "Find endpoints related to pets" | `search("pet")` — finds petstore endpoints |
-| "What tags are in the Petstore API?" | `tag_by_spec` — shows "pets" tag |
-| "Show me the GET /pets endpoint details" | `inspect` — shows parameters and response schema |
+| "Find endpoints related to pets" | `search("weather")` — finds meteo endpoints |
+| "What tags are in the Open-Meteo API?" | `tag_by_spec` — shows "weather" tag |
+| "Show me the GET /v1/forecast endpoint details" | `inspect` — shows parameters and response schema |
 | "Get the current BTC price from Binance" | `invoke` — real API call to Binance |
 | "Get a random dad joke" | `invoke` — calls icanhazdadjoke API |
 
@@ -324,9 +324,9 @@ To enable, add to your config:
 ```yaml
 mock_enabled: true
 specs:
-  - domain: petstore
+  - domain: meteo
     collections:
-      - location: specs/petstore.json
+      - location: specs/meteo/forecast.yml
         base_mock_url: localhost:8080
 ```
 

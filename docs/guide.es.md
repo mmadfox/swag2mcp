@@ -80,11 +80,11 @@ After setup, try asking your agent:
 
 | Query | What happens |
 |-------|-------------|
-| "Show me all available APIs" | `spec_list` — lists petstore, binance, dadjoke, pokeapi |
+| "Show me all available APIs" | `spec_list` — lists meteo, rick-and-morty, binance, dadjoke, pokeapi |
 | "What endpoints does Binance have?" | `endpoint_by_spec` — shows 4 market data endpoints |
-| "Find endpoints related to pets" | `search("pet")` — finds petstore endpoints |
-| "What tags are in the Petstore API?" | `tag_by_spec` — shows "pets" tag |
-| "Show me the GET /pets endpoint details" | `inspect` — shows parameters and response schema |
+| "Find endpoints related to pets" | `search("weather")` — finds meteo endpoints |
+| "What tags are in the Open-Meteo API?" | `tag_by_spec` — shows "weather" tag |
+| "Show me the GET /v1/forecast endpoint details" | `inspect` — shows parameters and response schema |
 | "Get the current BTC price from Binance" | `invoke` — real API call to Binance |
 | "Get a random dad joke" | `invoke` — calls icanhazdadjoke API |
 
@@ -110,11 +110,11 @@ http_client:                        # opcional, valores predeterminados HTTP glo
   max_response_size: 1048           # opcional, bytes (predet. 1KB, máx 1MB)
 
 specs:
-  - domain: petstore                    # obligatorio, 1-60 car., [a-zA-Z0-9_-]
-    llm_title: Petstore API             # obligatorio, 5-120 car.
+  - domain: meteo                    # obligatorio, 1-60 car., [a-zA-Z0-9_-]
+    llm_title: Open-Meteo API             # obligatorio, 5-120 car.
     llm_instruction: |                  # opcional, máx 500 car.
       Usa esta API para gestionar mascotas, pedidos y usuarios.
-    base_url: https://petstore.swagger.io/v2  # obligatorio, URL válida
+    base_url: https://meteo.swagger.io/v2  # obligatorio, URL válida
     disable: false                      # opcional
     tags: [public, demo]                # opcional, para filtrar
     http_client:                        # opcional, sobrescribe el global
@@ -125,11 +125,11 @@ specs:
       config:
         token: $(TOKEN_AUTH)
     collections:
-      - llm_title: Petstore Swagger     # opcional, máx 120 car.
+      - llm_title: Open-Meteo Swagger     # opcional, máx 120 car.
         llm_instruction: |             # opcional, máx 360 car.
-          Endpoints principales de Petstore
+          Endpoints principales de Open-Meteo
         title: ""                      # opcional, auto-rellenado desde la spec
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json  # obligatorio, 5-250 car.
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml  # obligatorio, 5-250 car.
         disable: false                  # opcional
         base_url: ""                    # opcional, sobrescribe base_url de la spec
         base_mock_url: localhost:8080   # opcional, formato "host:port" o "host:port/path"
@@ -208,7 +208,7 @@ Agregar una especificación o colección a la configuración.
 
 ```bash
 swag2mcp add spec
-swag2mcp add spec --yaml 'domain: petstore\nllm_title: Petstore API\nbase_url: https://...'
+swag2mcp add spec --yaml 'domain: meteo\nllm_title: Open-Meteo API\nbase_url: https://...'
 cat spec.yaml | swag2mcp add spec --yaml -
 swag2mcp add spec --example
 ```

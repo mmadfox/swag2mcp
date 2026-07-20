@@ -15,4 +15,4 @@ specs:
     llm_title: Weather Forecast API
     collections:
       - llm_title: Weather Data
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json

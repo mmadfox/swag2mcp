@@ -15,7 +15,7 @@ specs:
         X-API-Key: $(API_A_KEY)
     collections:
       - llm_title: Main
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
 
   - domain: api-b
     base_url: https://api-b.example.com
@@ -30,9 +30,9 @@ specs:
           http_only: true
     collections:
       - llm_title: Users
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
       - llm_title: Billing
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/petstore.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
         http_client:
           headers:
             X-Billing-Version: "2024-q1"

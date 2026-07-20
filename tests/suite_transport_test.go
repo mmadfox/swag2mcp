@@ -22,12 +22,12 @@ type TransportSuite struct {
 
 func (s *TransportSuite) TestStdio() {
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: https://api.example.com
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -44,12 +44,12 @@ func (s *TransportSuite) TestSSE() {
 	s.InitWorkspace()
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: https://api.example.com
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
 `
 	s.WriteConfig(configContent)
 
@@ -92,12 +92,12 @@ func (s *TransportSuite) TestAuthToken() {
 	s.InitWorkspace()
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: https://api.example.com
     collections:
       - title: Pets
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
 `
 	s.WriteConfig(configContent)
 
@@ -142,28 +142,32 @@ func (s *TransportSuite) TestDumpDir() {
 	s.Require().NoError(os.MkdirAll(dumpDir, 0755))
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`[]`))
+		_, _ = w.Write([]byte(`{"latitude": 0.0}`))
 	})
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false", "--dump-dir", dumpDir)
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
+		"parameters": map[string]interface{}{
+			"latitude":  0.0,
+			"longitude": 0.0,
+		},
 	})
 
 	entries, _ := os.ReadDir(dumpDir)

@@ -124,9 +124,9 @@ func TestImport_WithSpecFilter(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -141,12 +141,12 @@ func TestImport_WithSpecFilter(t *testing.T) {
 	require.NoError(t, os.WriteFile(cfgPath, []byte(cfgContent), 0600))
 
 	resp, err := svc.Import(context.Background(), ImportRequest{
-		SpecFilter:   []string{"petstore"},
+		SpecFilter:   []string{"meteo"},
 		ConfFilePath: cfgPath,
 	})
 	require.NoError(t, err)
 	require.Len(t, resp.Files, 1)
-	assert.Equal(t, "petstore-pets.yaml", resp.Files[0].Name)
+	assert.Equal(t, "meteo-pets.yaml", resp.Files[0].Name)
 }
 
 func TestImport_WithSpecFilter_UpdatesConfig(t *testing.T) {
@@ -165,9 +165,9 @@ func TestImport_WithSpecFilter_UpdatesConfig(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -176,14 +176,14 @@ func TestImport_WithSpecFilter_UpdatesConfig(t *testing.T) {
 	require.NoError(t, os.WriteFile(cfgPath, []byte(cfgContent), 0600))
 
 	_, err := svc.Import(context.Background(), ImportRequest{
-		SpecFilter:   []string{"petstore"},
+		SpecFilter:   []string{"meteo"},
 		ConfFilePath: cfgPath,
 	})
 	require.NoError(t, err)
 
 	cfg, err := os.ReadFile(cfgPath)
 	require.NoError(t, err)
-	assert.Contains(t, string(cfg), "specs/petstore-pets.yaml")
+	assert.Contains(t, string(cfg), "specs/meteo-pets.yaml")
 }
 
 func TestImport_WithSpecFilter_NoMatch(t *testing.T) {
@@ -195,9 +195,9 @@ func TestImport_WithSpecFilter_NoMatch(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: https://example.com/spec.yaml
@@ -218,7 +218,7 @@ func TestImport_WithSpecFilter_EmptyConfFilePath(t *testing.T) {
 	svc := newTestService(t)
 
 	_, err := svc.Import(context.Background(), ImportRequest{
-		SpecFilter:   []string{"petstore"},
+		SpecFilter:   []string{"meteo"},
 		ConfFilePath: "",
 	})
 	require.Error(t, err)
@@ -240,9 +240,9 @@ func TestImport_FromZip(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -327,9 +327,9 @@ func TestImport_FromZip_ExtractError(t *testing.T) {
 	require.NoError(t, exportSvc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -367,9 +367,9 @@ func TestImport_WithSpecFilter_DisabledSpec(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     disable: true
     collections:
       - title: Pets
@@ -379,7 +379,7 @@ func TestImport_WithSpecFilter_DisabledSpec(t *testing.T) {
 	require.NoError(t, os.WriteFile(cfgPath, []byte(cfgContent), 0600))
 
 	_, err := svc.Import(context.Background(), ImportRequest{
-		SpecFilter:   []string{"petstore"},
+		SpecFilter:   []string{"meteo"},
 		ConfFilePath: cfgPath,
 	})
 	require.Error(t, err)
@@ -402,9 +402,9 @@ func TestImport_WithSpecFilter_DisabledCollection(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -414,7 +414,7 @@ func TestImport_WithSpecFilter_DisabledCollection(t *testing.T) {
 	require.NoError(t, os.WriteFile(cfgPath, []byte(cfgContent), 0600))
 
 	_, err := svc.Import(context.Background(), ImportRequest{
-		SpecFilter:   []string{"petstore"},
+		SpecFilter:   []string{"meteo"},
 		ConfFilePath: cfgPath,
 	})
 	require.Error(t, err)
@@ -430,9 +430,9 @@ func TestImport_WithSpecFilter_DownloadError(t *testing.T) {
 	require.NoError(t, svc.ws.Init())
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: http://localhost:1/nonexistent
@@ -441,7 +441,7 @@ func TestImport_WithSpecFilter_DownloadError(t *testing.T) {
 	require.NoError(t, os.WriteFile(cfgPath, []byte(cfgContent), 0600))
 
 	_, err := svc.Import(context.Background(), ImportRequest{
-		SpecFilter:   []string{"petstore"},
+		SpecFilter:   []string{"meteo"},
 		ConfFilePath: cfgPath,
 	})
 	require.Error(t, err)
@@ -464,12 +464,12 @@ func TestImport_WithSpecFilter_SaveSpecError(t *testing.T) {
 
 	// Pre-create the file so SaveSpec fails with duplicate
 	specsDir := svc.ws.SpecsDir()
-	require.NoError(t, os.WriteFile(filepath.Join(specsDir, "petstore-pets.yaml"), []byte("existing"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(specsDir, "meteo-pets.yaml"), []byte("existing"), 0600))
 
 	cfgContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
-    base_url: https://api.petstore.com
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
     collections:
       - title: Pets
         location: ` + srv.URL + `
@@ -478,7 +478,7 @@ func TestImport_WithSpecFilter_SaveSpecError(t *testing.T) {
 	require.NoError(t, os.WriteFile(cfgPath, []byte(cfgContent), 0600))
 
 	_, err := svc.Import(context.Background(), ImportRequest{
-		SpecFilter:   []string{"petstore"},
+		SpecFilter:   []string{"meteo"},
 		ConfFilePath: cfgPath,
 	})
 	require.Error(t, err)
@@ -517,7 +517,7 @@ func TestSpecFileName(t *testing.T) {
 		want     string
 	}{
 		{name: "title matches domain", domain: "pokeapi", title: "PokéAPI", location: "https://example.com/pokeapi.yaml", want: "pokeapi.yaml"},
-		{name: "title differs from domain", domain: "petstore", title: "Pet Operations", location: "https://example.com/pet.yaml", want: "petstore-pet-operations.yaml"},
+		{name: "title differs from domain", domain: "meteo", title: "Pet Operations", location: "https://example.com/pet.yaml", want: "meteo-pet-operations.yaml"},
 		{name: "empty title falls back to location base", domain: "weather", title: "", location: "https://example.com/forecast.json", want: "weather-forecast.json"},
 		{name: "title differs by case only", domain: "pokeapi", title: "pokeapi", location: "https://example.com/pokeapi.yaml", want: "pokeapi.yaml"},
 	}

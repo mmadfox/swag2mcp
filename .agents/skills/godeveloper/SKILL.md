@@ -640,8 +640,8 @@ mcp:
   transport: stdio
   addr: ":8080"
 specs:
-  - domain: "petstore"
-    base_url: "https://petstore.swagger.io/v2"
+  - domain: "meteo"
+    base_url: "https://meteo.swagger.io/v2"
     auth:
       type: api-key
       config:
@@ -650,7 +650,7 @@ specs:
         in: header
     collections:
       - title: "Pet Operations"
-        location: "https://petstore.swagger.io/v2/swagger.json"
+        location: "https://meteo.swagger.io/v2/swagger.json"
 ```
 
 ### 9.2 Config Struct Tags
@@ -811,10 +811,10 @@ type FileReference struct {
 MD5-based deterministic IDs:
 
 ```go
-id.Domain("petstore")      // 32-char hex
-id.Collection("petstore", "Pet Operations")
-id.Tag("petstore", "Pet Operations", "pets")
-id.Method("petstore", "Pet Operations", "pets", "GET", "/v2/pet/{petId}")
+id.Domain("meteo")      // 32-char hex
+id.Collection("meteo", "Forecast")
+id.Tag("meteo", "Forecast", "pets")
+id.Method("meteo", "Forecast", "pets", "GET", "/v2/pet/{petId}")
 ```
 
 ### 11.8 Auth Package

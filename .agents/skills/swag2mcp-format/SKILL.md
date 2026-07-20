@@ -116,7 +116,7 @@ These responses contain flat lists of items. Always use a markdown table.
 
 | Domain | ID |
 |--------|----|
-| Petstore API | `a1b2c3` |
+| Open-Meteo API | `a1b2c3` |
 | Weather API | `e5f6g7` |
 ```
 
@@ -129,7 +129,7 @@ These responses contain flat lists of items. Always use a markdown table.
 ### 2.2 `collection_by_spec` → `CollectionsResponse`
 
 ```
-**Petstore API** · Collections (3)
+**Open-Meteo API** · Collections (3)
 
 | Collection | Tags | Methods | ID |
 |------------|------|---------|----|
@@ -147,7 +147,7 @@ These responses contain flat lists of items. Always use a markdown table.
 ### 2.3 `collection_by_id` → `CollectionByIDResponse`
 
 ```
-**Petstore API › Pet Operations** · 8 methods · `c1d2e3...`
+**Open-Meteo API › Pet Operations** · 8 methods · `c1d2e3...`
 
 **Tags (2)**
 
@@ -167,7 +167,7 @@ These responses contain flat lists of items. Always use a markdown table.
 Same format as `collection_by_id`:
 
 ```
-**Petstore API › Pet Operations** · 8 methods · `c1d2e3...`
+**Open-Meteo API › Pet Operations** · 8 methods · `c1d2e3...`
 
 **Tags (2)**
 
@@ -180,7 +180,7 @@ Same format as `collection_by_id`:
 ### 2.5 `tag_by_spec` → `TagsBySpecResponse`
 
 ```
-**Petstore API** · Tags (5)
+**Open-Meteo API** · Tags (5)
 
 | Tag | Methods | ID |
 |-----|---------|----|
@@ -206,7 +206,7 @@ Same format as `collection_by_id`:
 ### 2.7 `endpoint_by_tag` → `EndpointsByTagResponse`
 
 ```
-**Petstore API › Pet Operations › pets** · 5 endpoints
+**Open-Meteo API › Pet Operations › pets** · 5 endpoints
 
 | Method | Path | Summary | ID |
 |--------|------|---------|----|
@@ -227,7 +227,7 @@ Same format as `collection_by_id`:
 ### 2.8 `endpoint_by_collection` → `EndpointsByCollectionResponse`
 
 ```
-**Petstore API › Pet Operations** · 8 endpoints
+**Open-Meteo API › Pet Operations** · 8 endpoints
 
 | Method | Path | Summary | Tag · ID |
 |--------|------|---------|----------|
@@ -248,7 +248,7 @@ Same format as `collection_by_id`:
 ### 2.9 `endpoint_by_spec` → `EndpointsBySpecResponse`
 
 ```
-**Petstore API** · 14 endpoints
+**Open-Meteo API** · 14 endpoints
 
 | Method | Path | Summary | Collection · Tag · ID |
 |--------|------|---------|-----------------------|
@@ -272,9 +272,9 @@ Same format as `collection_by_id`:
 
 | Method | Path | Summary | Spec · Collection · Tag · ID |
 |--------|------|---------|------------------------------|
-| GET | /pet/{petId} | Find pet by ID | Petstore · Pet Operations · pets `e1f2g3` |
-| POST | /pet | Add a new pet | Petstore · Pet Operations · pets `m9n0o1` |
-| POST | /store/order | Place order | Petstore · Store · store `a1b2c3` |
+| GET | /pet/{petId} | Find pet by ID | Open-Meteo · Pet Operations · pets `e1f2g3` |
+| POST | /pet | Add a new pet | Open-Meteo · Pet Operations · pets `m9n0o1` |
+| POST | /store/order | Place order | Open-Meteo · Store · store `a1b2c3` |
 
 ▸ 5/14 · reply “more” to load next 5
 ```
@@ -292,7 +292,7 @@ Same format as `collection_by_id`:
 ### 3.1 `spec_by_id` → `SpecByIDResponse`
 
 ```
-**Petstore API** · `a1b2c3...`
+**Open-Meteo API** · `a1b2c3...`
 
 **Collections (3)**
 
@@ -311,7 +311,7 @@ Same format as `collection_by_id`:
 ### 3.2 `endpoint_by_id` → `EndpointByIDResponse`
 
 ```
-**Petstore API › Pet Operations › pets** · `e1f2g3...`
+**Open-Meteo API › Pet Operations › pets** · `e1f2g3...`
 
 | Method | Path | Summary |
 |--------|------|---------|
@@ -329,9 +329,9 @@ Same format as `collection_by_id`:
 ### 4.1 `inspect` → `InspectResponse`
 
 ```
-**GET /pet/{petId}** · Petstore API
+**GET /pet/{petId}** · Open-Meteo API
 
-`https://petstore.swagger.io/v2/pet/{petId}`
+`https://meteo.swagger.io/v2/pet/{petId}`
 
 Find pet by ID. Returns a single pet by its ID.
 
@@ -430,7 +430,7 @@ No Content
 
 ```
 📄 Response body (2.5 KB) exceeds max size (1 KB). Saved to:
-`~/.swag2mcp/responses/petstore-get-pet-findByStatus-abc123.json`
+`~/.swag2mcp/responses/meteo-get-pet-findByStatus-abc123.json`
 ```
 
 **Format:**

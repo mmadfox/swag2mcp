@@ -1,11 +1,11 @@
 specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     collections:
       - title: Pets
-        location: ./tests/testdata/petstore.yaml
-  - domain: petstore
-    llm_title: Duplicate Petstore
+        location: ./tests/testdata/meteo.yaml
+  - domain: meteo
+    llm_title: Duplicate Open-Meteo
     collections:
       - title: Store
-        location: ./tests/testdata/petstore.yaml
+        location: ./tests/testdata/meteo.yaml

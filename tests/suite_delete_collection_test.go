@@ -16,15 +16,15 @@ func (s *DeleteCollectionSuite) TestByIndex() {
 llm_title: Test API
 base_url: https://api.example.com
 collections:
-  - llm_title: Pets
-    location: ./testdata/petstore.yaml
+  - llm_title: Forecast
+    location: ./testdata/meteo.yaml
   - llm_title: Store
-    location: ./testdata/petstore.yaml
+    location: ./testdata/meteo.yaml
 `
 	s.RunCommandInWS("add", "spec", "--yaml", specYAML, ".")
 
 	stdout, _, _ := s.RunCommandInWS("ls", ".")
-	s.Contains(stdout, "Pets")
+	s.Contains(stdout, "Forecast")
 
 	_, _, code := s.RunCommandWithStdinInWS("1\n1\ny\n", "delete", "collection", ".")
 	s.Equal(0, code)
@@ -35,15 +35,15 @@ func (s *DeleteCollectionSuite) TestCancel() {
 llm_title: Test API
 base_url: https://api.example.com
 collections:
-  - llm_title: Pets
-    location: ./testdata/petstore.yaml
+  - llm_title: Forecast
+    location: ./testdata/meteo.yaml
 `
 	s.RunCommandInWS("add", "spec", "--yaml", specYAML, ".")
 
 	s.RunCommandWithStdinInWS("n\n", "delete", "collection", ".")
 
 	stdout, _, _ := s.RunCommandInWS("ls", ".")
-	s.Contains(stdout, "Pets")
+	s.Contains(stdout, "Forecast")
 }
 
 func TestDeleteCollectionSuite(t *testing.T) {

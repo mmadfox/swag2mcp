@@ -16,7 +16,7 @@ type ResponseSuite struct {
 
 func (s *ResponseSuite) TestDefaultLimit() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		largeBody := make([]byte, 2000)
@@ -28,21 +28,25 @@ func (s *ResponseSuite) TestDefaultLimit() {
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	result := client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
+		"parameters": map[string]interface{}{
+			"latitude":  0.0,
+			"longitude": 0.0,
+		},
 	})
 
 	var invokeResp struct {
@@ -64,7 +68,7 @@ func (s *ResponseSuite) TestDefaultLimit() {
 
 func (s *ResponseSuite) TestConfigurable() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[{"id":1,"name":"Fluffy"}]`))
@@ -74,21 +78,25 @@ func (s *ResponseSuite) TestConfigurable() {
 	configContent := `http_client:
   max_response_size: 300
 specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	result := client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
+		"parameters": map[string]interface{}{
+			"latitude":  0.0,
+			"longitude": 0.0,
+		},
 	})
 
 	var invokeResp struct {
@@ -100,7 +108,7 @@ specs:
 
 func (s *ResponseSuite) TestFileReference() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		largeBody := make([]byte, 50000)
@@ -114,21 +122,25 @@ func (s *ResponseSuite) TestFileReference() {
 	configContent := `http_client:
   max_response_size: 1000
 specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	result := client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
+		"parameters": map[string]interface{}{
+			"latitude":  0.0,
+			"longitude": 0.0,
+		},
 	})
 
 	var invokeResp struct {
@@ -149,7 +161,7 @@ specs:
 
 func (s *ResponseSuite) TestResponseReaderTools() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		items := ""
@@ -166,21 +178,25 @@ func (s *ResponseSuite) TestResponseReaderTools() {
 	configContent := `http_client:
   max_response_size: 256
 specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	invokeResult := client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
+		"parameters": map[string]interface{}{
+			"latitude":  0.0,
+			"longitude": 0.0,
+		},
 	})
 
 	var invokeResp struct {

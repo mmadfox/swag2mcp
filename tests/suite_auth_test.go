@@ -22,8 +22,8 @@ func (s *AuthSuite) TestNone() {
     auth:
       type: none
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -51,8 +51,8 @@ func (s *AuthSuite) TestBasic() {
         username: testuser
         password: testpass
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -81,8 +81,8 @@ func (s *AuthSuite) TestBearer() {
       config:
         token: my-bearer-token
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -113,8 +113,8 @@ func (s *AuthSuite) TestAPIKeyHeader() {
         value: my-api-key-value
         in: header
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -143,8 +143,8 @@ func (s *AuthSuite) TestAPIKeyQuery() {
         value: query-key-value
         in: query
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -173,8 +173,8 @@ func (s *AuthSuite) TestEnvVarResolution() {
       config:
         token: $(AUTH_TOKEN)
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -194,7 +194,7 @@ func (s *AuthSuite) TestEnvVarResolution() {
 func (s *AuthSuite) TestInvokeWithBearer() {
 	var authHeader string
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		authHeader = r.Header.Get("Authorization")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -211,17 +211,21 @@ func (s *AuthSuite) TestInvokeWithBearer() {
       config:
         token: invoke-bearer-token
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `, srv.URL)
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
+		"parameters": map[string]interface{}{
+			"latitude":  0.0,
+			"longitude": 0.0,
+		},
 	})
 
 	s.Equal("Bearer invoke-bearer-token", authHeader)
@@ -238,8 +242,8 @@ func (s *AuthSuite) TestHMAC() {
         api_key: test-api-key
         secret_key: test-secret-key
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())

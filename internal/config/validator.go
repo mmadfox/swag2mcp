@@ -402,7 +402,7 @@ func humanReadableError(fe validator.FieldError) string {
 func requiredFieldError(field string) string {
 	switch field {
 	case "Domain":
-		return "Domain is required — provide a unique identifier for this API (e.g. 'petstore', 'github-api')"
+		return "Domain is required — provide a unique identifier for this API (e.g. 'meteo', 'github-api')"
 	case "LLMTitle":
 		return "LLMTitle is required — provide a human-readable name the LLM will use to reference this API"
 	case "BaseURL":

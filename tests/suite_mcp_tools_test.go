@@ -14,12 +14,12 @@ type MCPToolsSuite struct {
 
 func (s *MCPToolsSuite) TestSpecList() {
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: https://api.example.com
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -50,12 +50,12 @@ func (s *MCPToolsSuite) TestSpecList() {
 
 func (s *MCPToolsSuite) TestSpecListNoAuthTool() {
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: https://api.example.com
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth")
 	client.initialize(s.T())
@@ -79,8 +79,8 @@ func (s *MCPToolsSuite) TestSpecListEmpty() {
     llm_title: Test API
     base_url: https://api.example.com
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -98,12 +98,12 @@ func (s *MCPToolsSuite) TestSpecListEmpty() {
 
 func (s *MCPToolsSuite) TestSpecByID() {
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: https://api.example.com
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -121,7 +121,7 @@ func (s *MCPToolsSuite) TestSpecByID() {
 	}
 	s.Require().NoError(json.Unmarshal(result, &specResp))
 	s.Equal(specID, specResp.Spec.ID)
-	s.Equal("petstore", specResp.Spec.Domain)
+	s.Equal("meteo", specResp.Spec.Domain)
 }
 
 func (s *MCPToolsSuite) TestSpecByIDNotFound() {
@@ -130,8 +130,8 @@ func (s *MCPToolsSuite) TestSpecByIDNotFound() {
     llm_title: Test API
     base_url: https://api.example.com
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -142,14 +142,14 @@ func (s *MCPToolsSuite) TestSpecByIDNotFound() {
 
 func (s *MCPToolsSuite) TestCollectionBySpec() {
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: https://api.example.com
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
       - title: Store
-        location: ./testdata/petstore.yaml
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -170,12 +170,12 @@ func (s *MCPToolsSuite) TestCollectionBySpec() {
 
 func (s *MCPToolsSuite) TestCollectionByID() {
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: https://api.example.com
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -204,17 +204,17 @@ func (s *MCPToolsSuite) TestCollectionByID() {
 		} `json:"collection"`
 	}
 	s.Require().NoError(json.Unmarshal(result, &collResp))
-	s.Equal("Petstore API", collResp.Collection.Title)
+	s.Equal("Open-Meteo Weather Forecast API", collResp.Collection.Title)
 }
 
 func (s *MCPToolsSuite) TestTagBySpec() {
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: https://api.example.com
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -235,12 +235,12 @@ func (s *MCPToolsSuite) TestTagBySpec() {
 
 func (s *MCPToolsSuite) TestEndpointBySpec() {
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: https://api.example.com
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -262,18 +262,18 @@ func (s *MCPToolsSuite) TestEndpointBySpec() {
 
 func (s *MCPToolsSuite) TestEndpointByID() {
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: https://api.example.com
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	result := client.callTool(s.T(), "endpoint_by_id", map[string]interface{}{
 		"id": endpointID,
@@ -292,18 +292,18 @@ func (s *MCPToolsSuite) TestEndpointByID() {
 
 func (s *MCPToolsSuite) TestInspect() {
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: https://api.example.com
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	result := client.callTool(s.T(), "inspect", map[string]interface{}{
 		"endpointId": endpointID,
@@ -318,7 +318,7 @@ func (s *MCPToolsSuite) TestInspect() {
 
 func (s *MCPToolsSuite) TestInvoke() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[{"id":1,"name":"Fluffy","status":"available"}]`))
@@ -326,21 +326,25 @@ func (s *MCPToolsSuite) TestInvoke() {
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	result := client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
+		"parameters": map[string]interface{}{
+			"latitude":  0.0,
+			"longitude": 0.0,
+		},
 	})
 
 	var invokeResp struct {
@@ -353,7 +357,7 @@ func (s *MCPToolsSuite) TestInvoke() {
 func (s *MCPToolsSuite) TestInvokeWithQueryParams() {
 	var capturedQuery string
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		capturedQuery = r.URL.RawQuery
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -362,35 +366,35 @@ func (s *MCPToolsSuite) TestInvokeWithQueryParams() {
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
 		"parameters": map[string]interface{}{
-			"limit":  "5",
-			"status": "available",
+			"latitude":  "5.0",
+			"longitude": "10.0",
 		},
 	})
 
-	s.Contains(capturedQuery, "limit=5")
-	s.Contains(capturedQuery, "status=available")
+	s.Contains(capturedQuery, "latitude=5.0")
+	s.Contains(capturedQuery, "longitude=10.0")
 }
 
 func (s *MCPToolsSuite) TestInvokeWithPathParams() {
 	var capturedPath string
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets/42", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast/42", func(w http.ResponseWriter, r *http.Request) {
 		capturedPath = r.URL.Path
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -399,33 +403,33 @@ func (s *MCPToolsSuite) TestInvokeWithPathParams() {
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets/{petId}")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast/{forecastId}")
 
 	client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
 		"parameters": map[string]interface{}{
-			"petId": "42",
+			"forecastId": "42",
 		},
 	})
 
-	s.Equal("/pets/42", capturedPath)
+	s.Equal("/v1/forecast/42", capturedPath)
 }
 
 func (s *MCPToolsSuite) TestInvokeWithRequestBody() {
 	var capturedBody string
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		buf := make([]byte, r.ContentLength)
 		_, _ = r.Body.Read(buf)
 		capturedBody = string(buf)
@@ -435,54 +439,58 @@ func (s *MCPToolsSuite) TestInvokeWithRequestBody() {
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "POST", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "POST", "/v1/forecast")
 
 	client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
 		"requestBody": map[string]interface{}{
-			"name":   "Fluffy",
-			"status": "available",
+			"latitude":  5.0,
+			"longitude": 10.0,
 		},
 	})
 
-	s.Contains(capturedBody, "Fluffy")
+	s.Contains(capturedBody, "latitude")
 }
 
 func (s *MCPToolsSuite) TestInvokeServerError() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte(`{"error":"internal error"}`))
 	})
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	result := client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
+		"parameters": map[string]interface{}{
+			"latitude":  0.0,
+			"longitude": 0.0,
+		},
 	})
 
 	var invokeResp struct {
@@ -502,8 +510,8 @@ func (s *MCPToolsSuite) TestAuth() {
       config:
         token: test-token-123
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
@@ -527,15 +535,15 @@ func (s *MCPToolsSuite) TestTagFilter() {
     base_url: https://api.example.com
     tags: ["public"]
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
   - domain: internal-api
     llm_title: Internal API
     base_url: https://api.example.com
     tags: ["internal"]
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "-t", "public")
 	client.initialize(s.T())
@@ -555,7 +563,7 @@ func (s *MCPToolsSuite) TestTagFilter() {
 func (s *MCPToolsSuite) TestInvokeWithCustomHeaders() {
 	var capturedHeaders map[string]string
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		capturedHeaders = map[string]string{
 			"X-Custom-Header": r.Header.Get("X-Custom-Header"),
 			"X-Another":       r.Header.Get("X-Another"),
@@ -567,21 +575,25 @@ func (s *MCPToolsSuite) TestInvokeWithCustomHeaders() {
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
+		"parameters": map[string]interface{}{
+			"latitude":  0.0,
+			"longitude": 0.0,
+		},
 		"headers": map[string]interface{}{
 			"X-Custom-Header": "custom-value",
 			"X-Another":       "another-value",
@@ -595,7 +607,7 @@ func (s *MCPToolsSuite) TestInvokeWithCustomHeaders() {
 func (s *MCPToolsSuite) TestInvokeWithCustomCookies() {
 	var capturedCookies string
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		capturedCookies = r.Header.Get("Cookie")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -604,21 +616,25 @@ func (s *MCPToolsSuite) TestInvokeWithCustomCookies() {
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
+		"parameters": map[string]interface{}{
+			"latitude":  0.0,
+			"longitude": 0.0,
+		},
 		"cookies": map[string]interface{}{
 			"session": "abc123",
 			"theme":   "dark",
@@ -632,7 +648,7 @@ func (s *MCPToolsSuite) TestInvokeWithCustomCookies() {
 func (s *MCPToolsSuite) TestInvokeWithGlobalHeaders() {
 	var capturedAccept, capturedUA string
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pets", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
 		capturedAccept = r.Header.Get("Accept")
 		capturedUA = r.Header.Get("User-Agent")
 		w.Header().Set("Content-Type", "application/json")
@@ -646,21 +662,25 @@ func (s *MCPToolsSuite) TestInvokeWithGlobalHeaders() {
     Accept: application/json
   user_agent: swag2mcp-test/1.0
 specs:
-  - domain: petstore
-    llm_title: Petstore API
+  - domain: meteo
+    llm_title: Open-Meteo API
     base_url: ` + srv.URL + `
     collections:
-      - title: Pets
-        location: ./testdata/petstore.yaml
+      - title: Forecast
+        location: ./testdata/meteo.yaml
 `
 	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
 	client.initialize(s.T())
 
 	specID := s.GetSpecID(client)
-	endpointID := s.GetEndpointID(client, specID, "GET", "/pets")
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
 
 	client.callTool(s.T(), "invoke", map[string]interface{}{
 		"endpointId": endpointID,
+		"parameters": map[string]interface{}{
+			"latitude":  0.0,
+			"longitude": 0.0,
+		},
 	})
 
 	s.Equal("application/json", capturedAccept, "Accept should come from global http_client.headers")
