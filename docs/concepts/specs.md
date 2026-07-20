@@ -23,9 +23,9 @@ The `domain` is the unique identifier of a spec. It is used as the primary key t
 | Field | YAML key | Required | Description |
 |-------|----------|----------|-------------|
 | [Domain](#domain--naming-rules) | `domain` | ✅ | Unique API identifier (1–60 chars, `a-z0-9_-`) |
-| [LLM Title](#validation) | `llm_title` | ✅ | Human-readable name the LLM uses to reference this API (5–120 chars) |
+| LLM Title | `llm_title` | ✅ | Human-readable name the LLM uses to reference this API (5–120 chars) |
 | [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | Short hint injected into the swag2mcp system prompt (max 500 chars) |
-| [Base URL](#validation) | `base_url` | ✅ | Base URL for all API requests (valid URL) |
+| Base URL | `base_url` | ✅ | Base URL for all API requests (valid URL) |
 | [Disable](#disable) | `disable` | ❌ | Skip this spec during loading and indexing |
 | [Tags](#tags) | `tags` | ❌ | Tags for filtering (e.g., `["public", "demo"]`) |
 | [Auth](#auth) | `auth` | ❌ | Authentication configuration |
