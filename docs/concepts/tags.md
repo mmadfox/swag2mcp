@@ -5,8 +5,8 @@ A tag is a category grouping related endpoints within a collection.
 ## Hierarchy
 
 ```
-Spec
-  └── Collection "pet"
+Spec (domain, e.g. "petstore")
+  └── Collection (spec file, e.g. petstore.yaml)
         └── Tag "pets"
               └── GET /pet
               └── POST /pet

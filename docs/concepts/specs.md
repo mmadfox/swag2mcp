@@ -1,8 +1,12 @@
 # Specs
 
-A spec is a file describing an API. swag2mcp supports three formats.
+A spec is a logical container representing an API domain or service (e.g., YouTube, Binance, Open-Meteo). Each spec has a unique `domain`, a `base_url`, optional `auth`, and contains one or more collections.
+
+Collections point to OpenAPI/Swagger/Postman files — the spec itself is not a file, it's the grouping around them.
 
 ## Supported Formats
+
+Collections support three file formats:
 
 | Format | Extensions | Versions |
 |--------|------------|----------|
@@ -12,7 +16,7 @@ A spec is a file describing an API. swag2mcp supports three formats.
 
 ## Sources
 
-Specs can be:
+Collection files can be:
 
 - **URL**: `https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml`
 - **Local file**: `./specs/my-api.yaml`

@@ -8,9 +8,9 @@ swag2mcp acts as a bridge between API specifications and LLM agents:
 
 ## Core Concepts
 
-**Spec** — an OpenAPI/Swagger/Postman file describing an API. You add a spec to swag2mcp, and it automatically parses it into its parts. Learn more: [Specs](./specs).
+**Spec** — a logical container representing an API domain or service (e.g., YouTube, Binance, Open-Meteo). Each spec has a unique `domain`, a `base_url`, optional `auth`, and contains one or more collections. Learn more: [Specs](./specs).
 
-**Collection** — a logical group of endpoints within a spec. One spec can have multiple collections. For example, a weather API spec might have "Forecast", "Air Quality", and "Marine" collections. Learn more: [Collections](./collections).
+**Collection** — a single OpenAPI/Swagger/Postman file describing a specific API. It points to a `location` (URL or local file path). One spec can have multiple collections — for example, the "meteo" spec might have "Forecast", "Air Quality", and "Marine" collections, each pointing to a different spec file. Learn more: [Collections](./collections).
 
 **Tag** — a category of endpoints inside a collection. Helps the LLM find the right operations more precisely. Learn more: [Tags](./tags).
 
@@ -20,8 +20,8 @@ swag2mcp acts as a bridge between API specifications and LLM agents:
 
 ## How It Works
 
-1. **Add a spec** — via `swag2mcp add <url>` or in the YAML config, point to an OpenAPI/Swagger/Postman file.
-2. **swag2mcp parses the spec** — creates Collections, Tags, and Endpoints, indexes them for search.
+1. **Add a spec** — via `swag2mcp add <url>` or in the YAML config, define a spec (domain) with one or more collections pointing to OpenAPI/Swagger/Postman files.
+2. **swag2mcp parses each collection** — creates Tags and Endpoints, indexes them for search.
 3. **LLM finds the right endpoint** — through MCP tools (`search`, `endpoint_by_tag`, `inspect`) the LLM searches for a matching endpoint by description, reviews its parameters and request schema.
 4. **LLM invokes the endpoint** — via the MCP tool `invoke`, the LLM sends the request. swag2mcp validates every input parameter against the endpoint's OpenAPI schema (path params, query params, headers, request body) before making the call. If something doesn't match the schema, the LLM gets a clear error explaining what's wrong. Once validated, swag2mcp executes the real HTTP call and returns the result.
 5. **Result goes back to the LLM** — the API response is passed back to the agent. Large responses are saved to the workspace and accessible via a file reference.
@@ -33,14 +33,14 @@ swag2mcp is a bridge between LLMs and the world of APIs. You add API specificati
 ## Hierarchy
 
 ```
-Spec (OpenAPI file)
-  └── Collection 1 (logical group)
+Spec (domain, e.g. "meteo")
+  └── Collection 1 (spec file, e.g. forecast.yml)
         └── Tag 1 (category)
-              └── Endpoint (GET /api/users)
-              └── Endpoint (POST /api/users)
+              └── Endpoint (GET /api/forecast)
+              └── Endpoint (POST /api/forecast)
         └── Tag 2
-              └── Endpoint (GET /api/users/{id})
-  └── Collection 2
+              └── Endpoint (GET /api/forecast/{id})
+  └── Collection 2 (spec file, e.g. air-quality.yml)
         └── Tag 3
-              └── Endpoint (DELETE /api/users/{id})
+              └── Endpoint (GET /api/air-quality)
 ```

@@ -1,30 +1,32 @@
 # Collections
 
-A collection is a logical group of endpoints within a spec. One spec can have multiple collections.
+A collection is a single OpenAPI/Swagger/Postman file that describes a specific API. It points to a `location` (URL or local file path) and belongs to a spec (domain).
 
-## How Collections Are Created
+One spec can have multiple collections — for example, the "meteo" spec might have "Forecast", "Air Quality", and "Marine" collections, each pointing to a different spec file.
 
-Collections are created automatically when parsing a spec:
+## How Collections Are Parsed
+
+When swag2mcp loads a collection file, it parses the OpenAPI/Swagger/Postman structure:
 
 ::: code-group
 
 ```text [OpenAPI 3.x]
-Each top-level `tag` becomes a collection.
+Each top-level `tag` becomes a category of endpoints.
 ```
 
 ```text [Swagger 2.0]
-Each tag from the tags list becomes a collection.
+Each tag from the tags list becomes a category of endpoints.
 ```
 
 ```text [Postman]
-Each top-level folder becomes a collection.
+Each top-level folder becomes a category of endpoints.
 ```
 
 :::
 
 ## Example
 
-From the Dad Joke spec:
+From the Dad Joke collection file:
 
 ```yaml
 tags:
@@ -32,7 +34,7 @@ tags:
     description: Everything about dad jokes
 ```
 
-Collection created: `jokes`.
+Parsed category: `jokes`.
 
 ## Multiple Collections from One Spec
 
