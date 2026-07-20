@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 320" width="700" height="309">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#666"/>
+    </marker>
+    <marker id="arrow-dash" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#999"/>
+    </marker>
+  </defs>
+  <!-- Spec -->
+  <rect x="20" y="80" width="140" height="80" rx="8" fill="#E8F5E9" stroke="#43A047" stroke-width="2"/>
+  <text x="90" y="110" text-anchor="middle" fill="#2E7D32" font-size="13" font-family="sans-serif" font-weight="bold">OpenAPI</text>
+  <text x="90" y="128" text-anchor="middle" fill="#2E7D32" font-size="13" font-family="sans-serif" font-weight="bold">Swagger</text>
+  <text x="90" y="146" text-anchor="middle" fill="#2E7D32" font-size="13" font-family="sans-serif" font-weight="bold">Postman</text>
+  <!-- Arrow 1 -->
+  <line x1="160" y1="120" x2="280" y2="120" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="220" y="110" text-anchor="middle" fill="#666" font-size="11" font-family="sans-serif">parses</text>
+  <!-- swag2mcp -->
+  <rect x="280" y="70" width="160" height="100" rx="10" fill="#E3F2FD" stroke="#1E88E5" stroke-width="2.5"/>
+  <text x="360" y="108" text-anchor="middle" fill="#1565C0" font-size="16" font-family="sans-serif" font-weight="bold">swag2mcp</text>
+  <text x="360" y="130" text-anchor="middle" fill="#1565C0" font-size="11" font-family="sans-serif">19 MCP tools</text>
+  <text x="360" y="146" text-anchor="middle" fill="#1565C0" font-size="11" font-family="sans-serif">9 auth methods</text>
+  <text x="360" y="162" text-anchor="middle" fill="#1565C0" font-size="11" font-family="sans-serif">Full-text search</text>
+  <!-- Arrow 2 -->
+  <line x1="440" y1="120" x2="560" y2="120" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="500" y="110" text-anchor="middle" fill="#666" font-size="11" font-family="sans-serif">exposes</text>
+  <!-- MCP Server -->
+  <rect x="560" y="70" width="160" height="100" rx="10" fill="#FFF3E0" stroke="#FB8C00" stroke-width="2.5"/>
+  <text x="640" y="108" text-anchor="middle" fill="#E65100" font-size="14" font-family="sans-serif" font-weight="bold">MCP Server</text>
+  <text x="640" y="130" text-anchor="middle" fill="#E65100" font-size="11" font-family="sans-serif">stdio · SSE · HTTP</text>
+  <text x="640" y="150" text-anchor="middle" fill="#E65100" font-size="11" font-family="sans-serif">invokes API</text>
+  <!-- Arrow 3: MCP Server → API -->
+  <line x1="640" y1="170" x2="640" y2="240" stroke="#999" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-dash)"/>
+  <text x="650" y="210" fill="#999" font-size="11" font-family="sans-serif">calls</text>
+  <!-- API -->
+  <rect x="560" y="240" width="160" height="80" rx="8" fill="#FFEBEE" stroke="#E53935" stroke-width="2"/>
+  <text x="640" y="275" text-anchor="middle" fill="#C62828" font-size="13" font-family="sans-serif" font-weight="bold">Your API</text>
+  <text x="640" y="295" text-anchor="middle" fill="#C62828" font-size="11" font-family="sans-serif">JSON / XML Response</text>
+  <!-- Arrow 4: API → MCP Server -->
+  <line x1="610" y1="280" x2="610" y2="170" stroke="#999" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-dash)"/>
+  <text x="600" y="230" text-anchor="end" fill="#999" font-size="11" font-family="sans-serif">responds</text>
+  <!-- Arrow 5: MCP Server ↔ LLM Agent -->
+  <line x1="720" y1="120" x2="820" y2="120" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="820" y1="100" x2="720" y2="100" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="770" y="95" text-anchor="middle" fill="#666" font-size="11" font-family="sans-serif">MCP protocol</text>
+  <!-- LLM Agent -->
+  <rect x="820" y="80" width="140" height="80" rx="8" fill="#F3E5F5" stroke="#8E24AA" stroke-width="2"/>
+  <text x="890" y="115" text-anchor="middle" fill="#6A1B9A" font-size="13" font-family="sans-serif" font-weight="bold">LLM Agent</text>
+  <text x="890" y="135" text-anchor="middle" fill="#6A1B9A" font-size="11" font-family="sans-serif">OpenCode · Cursor</text>
+  <text x="890" y="151" text-anchor="middle" fill="#6A1B9A" font-size="11" font-family="sans-serif">Claude · VS Code</text>
+</svg>

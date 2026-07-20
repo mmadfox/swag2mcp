@@ -26,7 +26,7 @@
 
 - [Installation](#installation)
 - [Example LLM Queries](#example-llm-queries)
-- [Documentation](https://mmadfox.github.io/swag2mcp) 📖
+- [Documentation](https://mmadfox.github.io/swag2mcp)
 - [Integration](#integration)
 - [CLI Commands](#cli-commands)
 - [Mock Server](#mock-server)
