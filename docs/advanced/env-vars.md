@@ -1,40 +1,42 @@
 # Environment Variables
 
-swag2mcp supports environment variables in configuration.
+swag2mcp supports environment variables in configuration using `$(VAR_NAME)` syntax.
 
 ## Syntax
 
 ```yaml
-http_client:
-  headers:
-    "Authorization": "Bearer $(MY_TOKEN)"
-    "X-API-Key": "$(API_KEY)"
-```
-
-Variables use `$(VAR_NAME)` format.
-
-## Example
-
-```bash
-export MY_TOKEN="eyJhbGciOiJIUzI1NiIs..."
-export API_KEY="abc123def456"
-
-swag2mcp mcp
+specs:
+  - domain: meteo
+    auth:
+      type: bearer
+      config:
+        token: "$(API_TOKEN)"
 ```
 
 ## Where Used
 
-- HTTP headers
-- Cookies
-- Auth parameters
-- Proxy URL
-- File paths
+`$(VAR)` is resolved in these fields:
 
-## Priority
+| Field | Example |
+|-------|---------|
+| Auth `token` (bearer) | `token: "$(API_TOKEN)"` |
+| Auth `username` / `password` (basic, digest) | `password: "$(API_PASSWORD)"` |
+| Auth `client_id` / `client_secret` (oauth2-cc, oauth2-pwd) | `client_secret: "$(OAUTH_SECRET)"` |
+| Auth `api_key` / `secret_key` (hmac) | `api_key: "$(BINANCE_API_KEY)"` |
+| Auth `domain` (script) | `domain: "$(AUTH_DOMAIN)"` |
+| MCP server token | `token: "$(MCP_TOKEN)"` |
 
-Environment variables take precedence over values in the YAML file.
+`$(VAR)` is **not** resolved in headers, cookies, proxy settings, base URLs, or collection locations.
+
+## Example
+
+```bash
+export API_TOKEN="eyJhbGciOiJIUzI1NiIs..."
+export MCP_TOKEN="my-secret-token"
+
+swag2mcp mcp
+```
 
 ## Security
 
-!!! warning
-    Do not store secrets in the YAML file. Use environment variables or external secret managers.
+Do not store secrets in the YAML file. Use environment variables or external secret managers.

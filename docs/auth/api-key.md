@@ -19,7 +19,7 @@ specs:
       config:
         key: "X-API-Key"
         in: header
-        value: "{{API_KEY}}"
+        value: "$(API_KEY)"
 ```
 
 ```yaml [Query]
@@ -35,7 +35,7 @@ specs:
       config:
         key: "api_key"
         in: query
-        value: "{{API_KEY}}"
+        value: "$(API_KEY)"
 ```
 
 :::

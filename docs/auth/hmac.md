@@ -15,8 +15,8 @@ specs:
     auth:
       type: hmac
       config:
-        api_key: "{{BINANCE_API_KEY}}"
-        secret_key: "{{BINANCE_SECRET_KEY}}"
+        api_key: "$(BINANCE_API_KEY)"
+        secret_key: "$(BINANCE_SECRET_KEY)"
 ```
 
 ## How It Works

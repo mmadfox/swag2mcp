@@ -14,7 +14,7 @@ specs:
       type: basic
       config:
         username: "admin"
-        password: "{{PASSWORD}}"
+        password: "$(PASSWORD)"
 ```
 
 ## Bearer Token
@@ -30,7 +30,7 @@ specs:
     auth:
       type: bearer
       config:
-        token: "{{TOKEN}}"
+        token: "$(TOKEN)"
 ```
 
 ## API Key (Header)
@@ -48,7 +48,7 @@ specs:
       config:
         key: "X-API-Key"
         in: header
-        value: "{{API_KEY}}"
+        value: "$(API_KEY)"
 ```
 
 ## OAuth2 Client Credentials
@@ -64,8 +64,8 @@ specs:
     auth:
       type: oauth2-cc
       config:
-        client_id: "{{CLIENT_ID}}"
-        client_secret: "{{CLIENT_SECRET}}"
+        client_id: "$(CLIENT_ID)"
+        client_secret: "$(CLIENT_SECRET)"
         token_url: "https://auth.example.com/oauth/token"
         scopes: ["read", "write"]
 ```
@@ -83,6 +83,6 @@ specs:
     auth:
       type: hmac
       config:
-        api_key: "{{API_KEY}}"
-        secret_key: "{{SECRET_KEY}}"
+        api_key: "$(API_KEY)"
+        secret_key: "$(SECRET_KEY)"
 ```

@@ -90,7 +90,7 @@ specs:
         - name: "session"
           value: "abc123"
         - name: "csrf"
-          value: "{{CSRF_TOKEN}}"
+          value: "$(CSRF_TOKEN)"
     collections:
       - llm_title: Default
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml

@@ -46,7 +46,7 @@ specs:
     auth:
       type: bearer
       config:
-        token: "{{TOKEN}}"
+        token: "$(TOKEN)"
 
   - domain: jokes
     llm_title: Dad Joke API

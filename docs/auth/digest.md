@@ -16,7 +16,7 @@ specs:
       type: digest
       config:
         username: "admin"
-        password: "{{PASSWORD}}"
+        password: "$(PASSWORD)"
 ```
 
 ## How It Works

@@ -4,7 +4,8 @@ swag2mcp uses a YAML configuration file. Created by `swag2mcp init`.
 
 ## Location
 
-Default: `~/.swag2mcp/swag2mcp.yaml`
+- **Linux/macOS**: `~/.swag2mcp/swag2mcp.yaml`
+- **Windows**: `%USERPROFILE%\.swag2mcp\swag2mcp.yaml`
 
 ## Basic Structure
 
@@ -50,7 +51,7 @@ specs:
     auth:
       type: bearer
       config:
-        token: "{{TOKEN}}"
+        token: "$(TOKEN)"
 
   - domain: jokes
     llm_title: Dad Joke API
@@ -62,13 +63,26 @@ specs:
 
 ## Environment Variables
 
-Use `$(VAR_NAME)` syntax:
+Use `$(VAR_NAME)` syntax in auth config fields and MCP server token:
 
 ```yaml
-http_client:
-  headers:
-    "Authorization": "Bearer $(MY_TOKEN)"
+specs:
+  - domain: meteo
+    auth:
+      type: bearer
+      config:
+        token: "$(API_TOKEN)"       # ✅ resolved
+
+mcp:
+  auth:
+    token: "$(MCP_TOKEN)"           # ✅ resolved
 ```
+
+`$(VAR)` is resolved in:
+- Auth config fields: `token`, `username`, `password`, `client_id`, `client_secret`, `api_key`, `secret_key`, `domain`
+- MCP server auth token: `mcp.auth.token`
+
+`$(VAR)` is **not** resolved in headers, cookies, proxy settings, base URLs, or collection locations.
 
 ## Validation
 

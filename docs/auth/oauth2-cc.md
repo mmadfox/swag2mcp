@@ -15,8 +15,8 @@ specs:
     auth:
       type: oauth2-cc
       config:
-        client_id: "{{CLIENT_ID}}"
-        client_secret: "{{CLIENT_SECRET}}"
+        client_id: "$(CLIENT_ID)"
+        client_secret: "$(CLIENT_SECRET)"
         token_url: "https://auth.example.com/oauth/token"
         scopes: ["read", "write"]
 ```

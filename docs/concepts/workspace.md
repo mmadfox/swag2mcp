@@ -168,11 +168,18 @@ Validates the config including all collection locations. See [CLI: validate](../
 ## Export and Import
 
 ```bash
-# Export workspace to ZIP
-swag2mcp export --output workspace.zip
+# Export workspace to ZIP (default name: swag2mcp-backup-{date}.zip)
+swag2mcp export
 
-# Import from ZIP
-swag2mcp import --from-zip workspace.zip
+# Export to a specific path
+swag2mcp export /path/to/workspace /path/to/backup.zip
+
+# Export only specific specs
+swag2mcp export --spec meteo
+
+# Restore from backup
+swag2mcp import --from-zip /path/to/backup.zip
+swag2mcp import /path/to/workspace /path/to/backup.zip
 ```
 
 Export includes: `swag2mcp.yaml`, `specs/`, `auth_scripts/`. Cache and responses are excluded (they are local data).

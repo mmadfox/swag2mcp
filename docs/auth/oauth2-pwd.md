@@ -15,10 +15,10 @@ specs:
     auth:
       type: oauth2-pwd
       config:
-        client_id: "{{CLIENT_ID}}"
-        client_secret: "{{CLIENT_SECRET}}"
-        username: "{{USERNAME}}"
-        password: "{{PASSWORD}}"
+        client_id: "$(CLIENT_ID)"
+        client_secret: "$(CLIENT_SECRET)"
+        username: "$(USERNAME)"
+        password: "$(PASSWORD)"
         token_url: "https://auth.example.com/oauth/token"
         scopes: ["openid", "profile"]
 ```
