@@ -1,76 +1,41 @@
 # Global Settings
 
-Global settings apply to all specs unless overridden at spec or collection level.
+Global settings are the top-level configuration blocks in `swag2mcp.yaml`. They apply to all specs unless overridden at the spec or collection level.
 
-## HTTP Client
+## Structure
+
+There are two global blocks:
 
 ```yaml
 http_client:
-  timeout: 30s
-  max_response_size: 1048576
-  proxy:
-    url: ""
-  headers: {}
-  cookies: []
-  user_agent: "swag2mcp/1.0"
-  follow_redirects: true
-  max_redirects: 10
-```
+  # HTTP client settings for all API calls
 
-## MCP Server
-
-```yaml
 mcp:
-  transport: stdio
-  addr: "127.0.0.1:8080"
-  path: "/mcp"
-  auth:
-    token: ""
+  # MCP server settings
 ```
-
-## Parameters
 
 ### HTTP Client
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `timeout` | duration | `30s` | Request timeout |
-| `max_response_size` | int | `1048576` | Max response size in bytes (1 MB) |
-| `user_agent` | string | `swag2mcp-global/1.0` | User-Agent header |
-| `follow_redirects` | bool | `true` | Follow HTTP redirects |
-| `max_redirects` | int | `10` | Max redirects to follow |
-| `proxy.url` | string | `""` | HTTP proxy URL |
-| `proxy.username` | string | `""` | Proxy username |
-| `proxy.password` | string | `""` | Proxy password |
-| `proxy.bypass` | array | `[]` | Domains to bypass proxy |
-| `headers` | map | `{}` | Headers for all requests |
-| `cookies` | array | `[]` | Cookies for all requests |
-| `random` | bool | `false` | Randomize browser-like headers |
+Controls how swag2mcp makes HTTP requests to APIs: timeout, response size limit, proxy, headers, cookies, redirects, and user-agent. These settings cascade down to specs and collections.
 
-### MCP
+See [HTTP Client](./http-client) for all parameters and examples.
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `transport` | string | `stdio` | Transport type (stdio, sse, streamable-http) |
-| `addr` | string | `127.0.0.1:8080` | HTTP server address |
-| `path` | string | `/mcp` | MCP endpoint path |
-| `auth.token` | string | `""` | Bearer token for HTTP auth |
+### MCP Server
 
-## Example
+Controls how the MCP server communicates with LLM agents: transport type (stdio, SSE, Streamable HTTP), address, path, and optional bearer token auth.
 
-```yaml
-http_client:
-  timeout: 60s
-  max_response_size: 4194304
-  proxy:
-    url: "http://corporate-proxy:8080"
-  headers:
-    "User-Agent": "MyApp/1.0"
+See [MCP Server](./mcp-server) for all parameters, transports, and startup flags.
 
-mcp:
-  transport: sse
-  addr: "0.0.0.0:8080"
-  path: "/api/mcp"
-  auth:
-    token: "my-secret-token"
+## Cascade
+
+Global settings can be overridden at the spec and collection levels:
+
 ```
+Global (http_client, mcp)
+    ↓ overrides
+Spec (specs[].http_client)
+    ↓ overrides
+Collection (specs[].collections[].http_client)
+```
+
+See [Configuration Cascade](./cascade) for details on what overrides what.

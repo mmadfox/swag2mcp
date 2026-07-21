@@ -87,5 +87,11 @@ mcp:
 ## Validation
 
 ```bash
+# Validate default workspace (~/.swag2mcp)
 swag2mcp validate
+
+# Validate a custom project workspace
+swag2mcp validate ./my-project
 ```
+
+If the workspace is not in the home directory (e.g., inside a project repository), always specify the path when running `validate`, `update`, `mcp`, or any other command. Otherwise swag2mcp will use the default `~/.swag2mcp` workspace.
