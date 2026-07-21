@@ -28,14 +28,14 @@ See [MCP Server](./mcp-server) for all parameters, transports, and startup flags
 
 ## Cascade
 
-Global settings can be overridden at the spec and collection levels:
+Global settings can be overridden at the spec and collection levels, but **only `headers` and `cookies`** can be overridden. All other HTTP settings (timeout, proxy, user-agent, redirects, response size, randomizer) are global only.
 
 ```
-Global (http_client, mcp)
-    ↓ overrides
+Global (http_client)
+    ↓ overrides (headers, cookies only)
 Spec (specs[].http_client)
-    ↓ overrides
+    ↓ overrides (headers only)
 Collection (specs[].collections[].http_client)
 ```
 
-See [Configuration Cascade](./cascade) for details on what overrides what.
+See [Configuration Cascade](./cascade) for details.
