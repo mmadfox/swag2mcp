@@ -8,14 +8,14 @@ One spec can have multiple collections — for example, the "meteo" spec might h
 
 | Field | YAML key | Required | Description |
 |-------|----------|----------|-------------|
-| [LLM Title](#llm-instruction) | `llm_title` | ❌ | Collection display name for the LLM (max 120 chars) |
-| [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | Short hint for the LLM (max 360 chars) |
+| [LLM Title](#llm-instruction) | `llm_title` | ❌ | Collection display name for the LLM (max 120 chars). Auto-populated from spec document if not set |
+| [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | Short hint for the LLM (max 360 chars). Auto-populated from spec document if not set |
 | Title | `title` | ❌ | Original spec title override (auto-populated from parsed document) |
 | [Location](#location--how-spec-files-are-resolved) | `location` | ✅ | URL or path to the spec file (5–250 chars) |
 | [Disable](#disable) | `disable` | ❌ | Skip this collection during loading |
 | [HTTP Client](#http-client-override) | `http_client` | ❌ | Per-collection HTTP settings (headers, cookies) |
 | [Base URL](#base-url-override) | `base_url` | ❌ | Override the spec's base URL for this collection |
-| [Mock Server](#mock-server) | `base_mock_url` | ❌ | Mock server address in `host:port` format |
+| [Mock Server](#mock-server) | `base_mock_url` | ❌ | Mock server address in `host:port` format. Required when `mock_enabled: true` |
 
 ## Location — How Spec Files Are Resolved
 
@@ -24,10 +24,10 @@ The `location` field tells swag2mcp where to find the OpenAPI/Swagger/Postman fi
 | Source | Example | Description |
 |--------|---------|-------------|
 | **Remote URL** | `https://raw.githubusercontent.com/.../spec.yaml` | Downloaded and cached |
-| **Local file (absolute)** | `/home/user/specs/my-api.yaml` | Read from filesystem |
-| **Local file (relative)** | `./specs/my-api.yaml` | Resolved from current directory |
-| **Workspace specs/** | `specs/my-api.yaml` | Stored in `~/.swag2mcp/specs/` |
-| **file:// URI** | `file:///home/user/spec.yaml` | Converted to local path |
+| **Local file (absolute)** | `/home/user/my-api.yaml` | Read from filesystem, cached |
+| **Local file (relative)** | `./my-api.yaml` | Resolved to absolute path, cached |
+| **Workspace local file** | `specs/my-api.yaml` | Stored in `~/.swag2mcp/specs/`, used directly (not cached) |
+| **file:// URI** | `file:///home/user/spec.yaml` | Converted to local path, cached |
 
 swag2mcp automatically detects the source type:
 
@@ -41,18 +41,20 @@ When you use a remote URL, swag2mcp downloads the file and caches it locally. Th
 
 ### Local Files
 
-Local files are read directly from the filesystem. If the file is outside the `specs/` directory, it is copied to the cache for consistency.
+Local files are read directly from the filesystem. If the file is outside the workspace `specs/` directory, it is copied to the cache for consistency.
 
-### Workspace specs/ Directory
+### Workspace Local Files
 
-The `specs/` directory inside the workspace (`~/.swag2mcp/specs/`) is the recommended place for local spec files. Files stored here are used directly without caching.
+The `specs/` directory inside the workspace (`~/.swag2mcp/specs/`) is the recommended place for local spec files. Files stored here are used directly without caching. Use a relative path starting with `specs/` to reference them.
+
+> **Note:** `specs/` is just a directory name (like `cache/` or `responses/`), not the concept of "spec". It stores the actual OpenAPI/Swagger/Postman files that collections point to.
 
 ```bash
 # Import a spec file into the workspace
-swag2mcp import https://example.com/api.yaml
+swag2mcp import https://example.com/api.yaml myspec
 
 # After import, the location becomes:
-# specs/api.yaml
+# specs/myspec.yaml
 ```
 
 ## Cache System
@@ -326,7 +328,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
-### Local File in specs/ Directory
+### Local File in Workspace (specs/ Directory)
 
 ```yaml
 specs:
