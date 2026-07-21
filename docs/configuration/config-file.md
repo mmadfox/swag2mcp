@@ -71,11 +71,11 @@ specs:
     auth:
       type: bearer
       config:
-        token: "$(API_TOKEN)"       # ✅ resolved
+        token: "$(API_TOKEN)"
 
 mcp:
   auth:
-    token: "$(MCP_TOKEN)"           # ✅ resolved
+    token: "$(MCP_TOKEN)"
 ```
 
 `$(VAR)` is resolved in:
