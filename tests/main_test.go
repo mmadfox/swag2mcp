@@ -131,17 +131,7 @@ func (c *mcpClient) callTool(t *testing.T, name string, params interface{}) json
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	req := jsonRPCRequest{
-		JSONRPC: "2.0",
-		ID:      1,
-		Method:  "tools/call",
-		Params: map[string]interface{}{
-			"name":      name,
-			"arguments": params,
-		},
-	}
-
-	reqData, err := json.Marshal(req)
+	reqData, err := c.writeCall(name, params)
 	if err != nil {
 		t.Fatalf("marshal request: %v", err)
 	}
@@ -168,6 +158,53 @@ func (c *mcpClient) callTool(t *testing.T, name string, params interface{}) json
 		t.Fatalf("parse tool result: %v", err)
 	}
 	return toolResult.StructuredContent
+}
+
+func (c *mcpClient) callToolRaw(t *testing.T, name string, params interface{}) (json.RawMessage, error) {
+	t.Helper()
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	reqData, err := c.writeCall(name, params)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = fmt.Fprintf(c.stdin, "%s\n", reqData)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp jsonRPCResponse
+	dec := json.NewDecoder(c.stdout)
+	if err := decodeWithTimeout(dec, &resp, mcpStartTimeout); err != nil {
+		return nil, err
+	}
+
+	if resp.Error != nil {
+		return nil, fmt.Errorf("tool %s error: code=%d message=%s", name, resp.Error.Code, resp.Error.Message)
+	}
+
+	var toolResult struct {
+		StructuredContent json.RawMessage `json:"structuredContent"`
+	}
+	if err := json.Unmarshal(resp.Result, &toolResult); err != nil {
+		return nil, err
+	}
+	return toolResult.StructuredContent, nil
+}
+
+func (c *mcpClient) writeCall(name string, params interface{}) ([]byte, error) {
+	req := jsonRPCRequest{
+		JSONRPC: "2.0",
+		ID:      1,
+		Method:  "tools/call",
+		Params: map[string]interface{}{
+			"name":      name,
+			"arguments": params,
+		},
+	}
+	return json.Marshal(req)
 }
 
 func (c *mcpClient) listTools(t *testing.T) json.RawMessage {

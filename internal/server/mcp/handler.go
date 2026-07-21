@@ -7,12 +7,12 @@ import (
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// Svc defines the service interface consumed by MCP tool handlers.
-type Svc interface {
+// CatalogReader provides read-only access to the API catalog (specs, collections, tags, endpoints).
+type CatalogReader interface {
 	Specs(_ context.Context) (service.SpecsResponse, error)
 	SpecByID(_ context.Context, req service.SpecByIDRequest) (service.SpecByIDResponse, error)
-	CollectionByID(_ context.Context, req service.CollectionByIDRequest) (service.CollectionByIDResponse, error)
 	CollectionsBySpec(_ context.Context, req service.CollectionsRequest) (service.CollectionsResponse, error)
+	CollectionByID(_ context.Context, req service.CollectionByIDRequest) (service.CollectionByIDResponse, error)
 	TagsByCollection(_ context.Context, req service.TagsByCollectionRequest) (service.TagsByCollectionResponse, error)
 	TagsBySpec(_ context.Context, req service.TagsBySpecRequest) (service.TagsBySpecResponse, error)
 	TagByID(_ context.Context, req service.TagByIDRequest) (service.TagByIDResponse, error)
@@ -23,15 +23,40 @@ type Svc interface {
 	) (service.EndpointsByCollectionResponse, error)
 	EndpointsBySpec(_ context.Context, req service.EndpointsBySpecRequest) (service.EndpointsBySpecResponse, error)
 	EndpointByID(_ context.Context, req service.EndpointByIDRequest) (service.EndpointByIDResponse, error)
+}
+
+// EndpointExplorer provides search and inspection capabilities.
+type EndpointExplorer interface {
 	Search(ctx context.Context, req service.SearchRequest) (service.SearchResponse, error)
 	Inspect(_ context.Context, req service.InspectRequest) (service.InspectResponse, error)
+}
+
+// EndpointExecutor provides API invocation and authentication.
+type EndpointExecutor interface {
 	Invoke(_ context.Context, req service.InvokeRequest) (service.InvokeResponse, error)
 	Auth(_ context.Context, req service.AuthRequest) (service.AuthResponse, error)
+}
+
+// SystemInfo provides runtime information and tool definitions.
+type SystemInfo interface {
 	Info(_ context.Context) (service.InfoResponse, error)
+	MakeToolDefinitions() (service.ToolDefinitions, error)
+}
+
+// ResponseManager provides access to saved response files.
+type ResponseManager interface {
 	ResponseOutline(_ context.Context, req service.ResponseOutlineRequest) (service.ResponseOutlineResponse, error)
 	ResponseCompress(_ context.Context, req service.ResponseCompressRequest) (service.ResponseCompressResponse, error)
 	ResponseSlice(_ context.Context, req service.ResponseSliceRequest) (service.ResponseSliceResponse, error)
-	MakeToolDefinitions() (service.ToolDefinitions, error)
+}
+
+// Svc is the combined service interface consumed by MCP tool handlers.
+type Svc interface {
+	CatalogReader
+	EndpointExplorer
+	EndpointExecutor
+	SystemInfo
+	ResponseManager
 }
 
 type handler struct {

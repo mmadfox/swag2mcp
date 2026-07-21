@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/httpclient"
 	"github.com/mmadfox/swag2mcp/internal/spec"
@@ -8,8 +10,15 @@ import (
 
 // HTTPClientConfig holds per-request HTTP settings for a spec or collection.
 type HTTPClientConfig struct {
-	Headers map[string]string   `json:"headers,omitempty"`
-	Cookies []httpclient.Cookie `json:"cookies,omitempty"`
+	Randomize       bool                    `json:"random,omitempty"`
+	Proxy           *httpclient.ProxyConfig `json:"proxy,omitempty"`
+	Headers         map[string]string       `json:"headers,omitempty"`
+	Cookies         []httpclient.Cookie     `json:"cookies,omitempty"`
+	UserAgent       string                  `json:"userAgent,omitempty"`
+	Timeout         time.Duration           `json:"timeout,omitempty"`
+	FollowRedirects *bool                   `json:"followRedirects,omitempty"`
+	MaxRedirects    *int                    `json:"maxRedirects,omitempty"`
+	MaxResponseSize *int                    `json:"maxResponseSize,omitempty"`
 }
 
 // Spec represents an API specification with its domain, metadata, authentication, and HTTP client config.

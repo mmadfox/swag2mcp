@@ -55,16 +55,30 @@ type ResponseSliceResponse struct {
 	FileRef *FileReference `json:"fileRef,omitempty"`
 }
 
+type responseService struct {
+	ctx *serviceContext
+	ws  WorkspaceOps
+	v   RequestValidator
+}
+
+func newResponseService(
+	ctx *serviceContext,
+	ws WorkspaceOps,
+	v RequestValidator,
+) *responseService {
+	return &responseService{ctx: ctx, ws: ws, v: v}
+}
+
 // ResponseOutline returns a high-level structural summary of a saved response.
-func (s *Service) ResponseOutline(_ context.Context, req ResponseOutlineRequest) (ResponseOutlineResponse, error) {
-	if err := s.validateRequest(req); err != nil {
+func (rs *responseService) ResponseOutline(_ context.Context, req ResponseOutlineRequest) (ResponseOutlineResponse, error) {
+	if err := rs.v.Struct(req); err != nil {
 		return ResponseOutlineResponse{}, NewValidationError(
-			"The request is invalid — ensure path is provided and points to a saved response file.",
+			"Request is invalid - path must point to a saved response file.",
 			err,
 		)
 	}
 
-	r := reader.New(s.ws.ResponsesDir())
+	r := reader.New(rs.ws.ResponsesDir())
 	outline, err := r.Outline(req.Path, reader.OutlineOptions{
 		MaxDepth:      req.MaxDepth,
 		MaxArrayItems: req.MaxArrayItems,
@@ -77,15 +91,15 @@ func (s *Service) ResponseOutline(_ context.Context, req ResponseOutlineRequest)
 }
 
 // ResponseCompress reduces a JSON value in a saved response file.
-func (s *Service) ResponseCompress(_ context.Context, req ResponseCompressRequest) (ResponseCompressResponse, error) {
-	if err := s.validateRequest(req); err != nil {
+func (rs *responseService) ResponseCompress(_ context.Context, req ResponseCompressRequest) (ResponseCompressResponse, error) {
+	if err := rs.v.Struct(req); err != nil {
 		return ResponseCompressResponse{}, NewValidationError(
-			"The request is invalid — ensure path and mode are provided.",
+			"Request is invalid - path and mode are required.",
 			err,
 		)
 	}
 
-	r := reader.New(s.ws.ResponsesDir())
+	r := reader.New(rs.ws.ResponsesDir())
 	result, err := r.Compress(req.Path, reader.CompressOptions{
 		JSONPath:   req.JSONPath,
 		Mode:       req.Mode,
@@ -93,17 +107,17 @@ func (s *Service) ResponseCompress(_ context.Context, req ResponseCompressReques
 		ArrayTail:  req.ArrayTail,
 		StringLen:  req.StringLen,
 		SelectKeys: req.SelectKeys,
-		Limit:      s.maxResponseSize,
+		Limit:      int(rs.ctx.maxResponseSize.Load()),
 	})
 	if err != nil {
 		return ResponseCompressResponse{}, mapReaderError(err)
 	}
 
 	if result.TooLarge {
-		ref, saveErr := s.saveReaderResult(req.Path, result.Body)
+		ref, saveErr := rs.saveReaderResult(req.Path, result.Body)
 		if saveErr != nil {
 			return ResponseCompressResponse{}, NewInvokeError(
-				"The compressed result is still too large and could not be saved to disk.",
+				"Compressed result is too large and could not be saved.",
 				saveErr,
 			)
 		}
@@ -114,32 +128,33 @@ func (s *Service) ResponseCompress(_ context.Context, req ResponseCompressReques
 }
 
 // ResponseSlice extracts a fragment of a saved response file.
-func (s *Service) ResponseSlice(_ context.Context, req ResponseSliceRequest) (ResponseSliceResponse, error) {
-	if err := s.validateRequest(req); err != nil {
+func (rs *responseService) ResponseSlice(_ context.Context, req ResponseSliceRequest) (ResponseSliceResponse, error) {
+	if err := rs.v.Struct(req); err != nil {
 		return ResponseSliceResponse{}, NewValidationError(
-			"The request is invalid — ensure path is provided and at least one of jsonPath, line, or range is set.",
+			"Request is invalid - provide path and jsonPath, line, or range.",
 			err,
 		)
 	}
 
-	r := reader.New(s.ws.ResponsesDir())
+	r := reader.New(rs.ws.ResponsesDir())
 	slice, err := r.Slice(req.Path, reader.SliceOptions{
 		JSONPath: req.JSONPath,
 		Line:     req.Line,
 		Range:    req.Range,
 		Around:   req.Around,
-		Limit:    s.maxResponseSize,
+		Limit:    int(rs.ctx.maxResponseSize.Load()),
 	})
 	if err != nil {
 		return ResponseSliceResponse{}, mapReaderError(err)
 	}
 
+	maxSize := int(rs.ctx.maxResponseSize.Load())
 	fragmentBytes, _ := json.Marshal(slice.Value)
-	if s.maxResponseSize > 0 && len(fragmentBytes) > s.maxResponseSize {
-		ref, saveErr := s.saveReaderResult(req.Path, fragmentBytes)
+	if maxSize > 0 && len(fragmentBytes) > maxSize {
+		ref, saveErr := rs.saveReaderResult(req.Path, fragmentBytes)
 		if saveErr != nil {
 			return ResponseSliceResponse{}, NewInvokeError(
-				"The extracted fragment is too large and could not be saved to disk.",
+				"Extracted fragment is too large and could not be saved.",
 				saveErr,
 			)
 		}
@@ -150,7 +165,7 @@ func (s *Service) ResponseSlice(_ context.Context, req ResponseSliceRequest) (Re
 }
 
 // saveReaderResult saves an extracted or compressed JSON fragment to disk.
-func (s *Service) saveReaderResult(_ string, data any) (FileReference, error) {
+func (rs *responseService) saveReaderResult(_ string, data any) (FileReference, error) {
 	var body []byte
 	switch v := data.(type) {
 	case []byte:
@@ -165,20 +180,20 @@ func (s *Service) saveReaderResult(_ string, data any) (FileReference, error) {
 		}
 	}
 
-	if err := os.MkdirAll(s.ws.ResponsesDir(), 0o750); err != nil {
+	if err := os.MkdirAll(rs.ws.ResponsesDir(), 0o750); err != nil {
 		return FileReference{}, fmt.Errorf("create responses dir: %w", err)
 	}
 
 	suf := randomSuffix(randSuffixLen)
 	fname := fmt.Sprintf("response-fragment-%s.json", suf)
-	fp := filepath.Join(s.ws.ResponsesDir(), fname)
+	fp := filepath.Join(rs.ws.ResponsesDir(), fname)
 
 	if err := os.WriteFile(fp, body, 0o600); err != nil {
 		return FileReference{}, fmt.Errorf("write response fragment file: %w", err)
 	}
 
 	size := formatSize(len(body))
-	maxSizeStr := formatSize(s.maxResponseSize)
+	maxSizeStr := formatSize(int(rs.ctx.maxResponseSize.Load()))
 	msg := fmt.Sprintf(
 		"Response fragment (%s) saved to disk. Use the path with response_slice or response_outline.",
 		size,

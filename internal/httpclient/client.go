@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/net/proxy"
@@ -21,16 +22,20 @@ const (
 	idleConnTimeout     = 90 * time.Second
 )
 
-var globalConfig Config
+var globalConfig atomic.Value
 
 // SetGlobalConfig stores the configuration used by NewDefault.
 func SetGlobalConfig(cfg Config) {
-	globalConfig = cfg
+	globalConfig.Store(cfg)
 }
 
 // NewDefault creates an HTTP client from the global configuration.
 func NewDefault() (*http.Client, error) {
-	return New(globalConfig)
+	cfg, ok := globalConfig.Load().(Config)
+	if !ok {
+		return New(Config{UserAgent: "swag2mcp/1.0"})
+	}
+	return New(cfg)
 }
 
 // New creates an HTTP client with the given configuration.

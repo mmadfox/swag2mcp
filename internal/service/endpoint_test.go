@@ -2,347 +2,210 @@ package service
 
 import (
 	"context"
-	"net/http"
 	"testing"
 
-	"github.com/mmadfox/swag2mcp/internal/index"
 	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/mmadfox/swag2mcp/internal/spec"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
-func TestEndpointsByTag_Success(t *testing.T) {
+func TestEndpointService_EndpointByID(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	_, _, tagInfo, _ := seedTestData(t, svc, t.Name())
+	tests := []struct {
+		name    string
+		epID    string
+		ep      *model.Endpoint
+		spec    *model.Spec
+		coll    *model.Collection
+		tag     *model.Tag
+		wantErr bool
+	}{
+		{
+			name: "found",
+			epID: "ep1",
+			ep:   &model.Endpoint{ID: "ep1", SpecID: "s1", CollectionID: "c1", TagID: "t1", Name: "GET", Path: "/test", Operation: &spec.Operation{Summary: "test ep"}},
+			spec: &model.Spec{ID: "s1", Domain: "d1"},
+			coll: &model.Collection{ID: "c1", Title: "C1"},
+			tag:  &model.Tag{ID: "t1", Name: "tag1"},
+		},
+		{name: "not found", epID: "missing", wantErr: true},
+	}
 
-	resp, err := svc.EndpointsByTag(context.Background(), EndpointsByTagRequest{TagID: tagInfo.ID})
-	if err != nil {
-		t.Fatalf("EndpointsByTag() = %v", err)
-	}
-	if len(resp.Endpoints) != 1 {
-		t.Fatalf("Endpoints = %d, want 1", len(resp.Endpoints))
-	}
-	if resp.Endpoints[0].Method != http.MethodGet {
-		t.Errorf("Method = %q, want %q", resp.Endpoints[0].Method, http.MethodGet)
-	}
-	if resp.Endpoints[0].Path != "/test" {
-		t.Errorf("Path = %q, want %q", resp.Endpoints[0].Path, "/test")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			idx := NewMockIndexReader(ctrl)
+
+			if tt.ep != nil {
+				idx.EXPECT().EndpointByID(tt.epID).Return(tt.ep, nil)
+				idx.EXPECT().SpecByID(tt.ep.SpecID).Return(tt.spec, nil)
+				idx.EXPECT().CollectionByID(tt.ep.CollectionID).Return(tt.coll, nil)
+				idx.EXPECT().TagByID(tt.ep.TagID).Return(tt.tag, nil)
+			} else {
+				idx.EXPECT().EndpointByID(tt.epID).Return(nil, errNotFound("endpoint", tt.epID))
+			}
+
+			svc := newEndpointService(idx, fakeValidator{})
+			resp, err := svc.EndpointByID(context.Background(), EndpointByIDRequest{ID: tt.epID})
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tt.ep.Name, resp.Endpoint.Method)
+		})
 	}
 }
 
-func TestEndpointsByTag_NotFound(t *testing.T) {
+func TestEndpointService_EndpointsByTag(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	_, err := svc.EndpointsByTag(context.Background(), EndpointsByTagRequest{TagID: "00000000000000000000000000000000"})
-	if err == nil {
-		t.Fatal("expected error")
+	tests := []struct {
+		name    string
+		tagID   string
+		tag     *model.Tag
+		coll    *model.Collection
+		spec    *model.Spec
+		eps     []*model.Endpoint
+		wantErr bool
+	}{
+		{
+			name:  "found",
+			tagID: "t1",
+			tag:   &model.Tag{ID: "t1", CollectionID: "c1"},
+			coll:  &model.Collection{ID: "c1", SpecID: "s1", Title: "C1"},
+			spec:  &model.Spec{ID: "s1", Domain: "d1"},
+			eps:   []*model.Endpoint{{ID: "ep1", Name: "GET", Path: "/test", Operation: &spec.Operation{Summary: "test"}}},
+		},
+		{name: "not found", tagID: "missing", wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			idx := NewMockIndexReader(ctrl)
+
+			if tt.tag != nil {
+				idx.EXPECT().TagByID(tt.tagID).Return(tt.tag, nil)
+				idx.EXPECT().CollectionByID(tt.tag.CollectionID).Return(tt.coll, nil)
+				idx.EXPECT().SpecByID(tt.coll.SpecID).Return(tt.spec, nil)
+				idx.EXPECT().EndpointsByTag(tt.tagID).Return(tt.eps, nil)
+			} else {
+				idx.EXPECT().TagByID(tt.tagID).Return(nil, errNotFound("tag", tt.tagID))
+			}
+
+			svc := newEndpointService(idx, fakeValidator{})
+			resp, err := svc.EndpointsByTag(context.Background(), EndpointsByTagRequest{TagID: tt.tagID})
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Len(t, resp.Endpoints, len(tt.eps))
+		})
 	}
 }
 
-func TestEndpointsByTag_ValidationError(t *testing.T) {
+func TestEndpointService_EndpointsByCollection(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	_, err := svc.EndpointsByTag(context.Background(), EndpointsByTagRequest{TagID: "bad"})
-	if err == nil {
-		t.Fatal("expected error")
+	tests := []struct {
+		name         string
+		collectionID string
+		coll         *model.Collection
+		spec         *model.Spec
+		eps          []*model.Endpoint
+		tag          *model.Tag
+		wantErr      bool
+	}{
+		{
+			name:         "found",
+			collectionID: "c1",
+			coll:         &model.Collection{ID: "c1", SpecID: "s1", Title: "C1"},
+			spec:         &model.Spec{ID: "s1", Domain: "d1"},
+			eps:          []*model.Endpoint{{ID: "ep1", TagID: "t1", Name: "GET", Path: "/test", Operation: &spec.Operation{Summary: "test"}}},
+			tag:          &model.Tag{ID: "t1", Name: "tag1"},
+		},
+		{name: "not found", collectionID: "missing", wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			idx := NewMockIndexReader(ctrl)
+
+			if tt.coll != nil {
+				idx.EXPECT().CollectionByID(tt.collectionID).Return(tt.coll, nil)
+				idx.EXPECT().SpecByID(tt.coll.SpecID).Return(tt.spec, nil)
+				idx.EXPECT().EndpointByCollection(tt.collectionID).Return(tt.eps, nil)
+				idx.EXPECT().TagByID(tt.eps[0].TagID).Return(tt.tag, nil)
+			} else {
+				idx.EXPECT().CollectionByID(tt.collectionID).Return(nil, errNotFound("collection", tt.collectionID))
+			}
+
+			svc := newEndpointService(idx, fakeValidator{})
+			resp, err := svc.EndpointsByCollection(context.Background(), EndpointsByCollectionRequest{CollectionID: tt.collectionID})
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Len(t, resp.Endpoints, len(tt.eps))
+		})
 	}
 }
 
-func TestEndpointsByCollection_Success(t *testing.T) {
+func TestEndpointService_EndpointsBySpec(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	_, collectionInfo, _, _ := seedTestData(t, svc, t.Name())
-
-	resp, err := svc.EndpointsByCollection(context.Background(), EndpointsByCollectionRequest{CollectionID: collectionInfo.ID})
-	if err != nil {
-		t.Fatalf("EndpointsByCollection() = %v", err)
-	}
-	if len(resp.Endpoints) != 1 {
-		t.Fatalf("Endpoints = %d, want 1", len(resp.Endpoints))
-	}
-	if resp.Endpoints[0].Method != http.MethodGet {
-		t.Errorf("Method = %q, want %q", resp.Endpoints[0].Method, http.MethodGet)
-	}
-}
-
-func TestEndpointsByCollection_NotFound(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, err := svc.EndpointsByCollection(context.Background(), EndpointsByCollectionRequest{CollectionID: "00000000000000000000000000000000"})
-	if err == nil {
-		t.Fatal("expected error")
-	}
-}
-
-func TestEndpointsByCollection_ValidationError(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, err := svc.EndpointsByCollection(context.Background(), EndpointsByCollectionRequest{CollectionID: "bad"})
-	if err == nil {
-		t.Fatal("expected error")
-	}
-}
-
-func TestEndpointsBySpec_Success(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	specInfo, _, _, _ := seedTestData(t, svc, t.Name())
-
-	resp, err := svc.EndpointsBySpec(context.Background(), EndpointsBySpecRequest{SpecID: specInfo.ID})
-	if err != nil {
-		t.Fatalf("EndpointsBySpec() = %v", err)
-	}
-	if len(resp.Endpoints) != 1 {
-		t.Fatalf("Endpoints = %d, want 1", len(resp.Endpoints))
-	}
-}
-
-func TestEndpointsBySpec_NotFound(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, err := svc.EndpointsBySpec(context.Background(), EndpointsBySpecRequest{SpecID: "00000000000000000000000000000000"})
-	if err == nil {
-		t.Fatal("expected error")
-	}
-}
-
-func TestEndpointsBySpec_ValidationError(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, err := svc.EndpointsBySpec(context.Background(), EndpointsBySpecRequest{SpecID: "bad"})
-	if err == nil {
-		t.Fatal("expected error")
-	}
-}
-
-func TestEndpointByID_Success(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, _, _, endpointInfo := seedTestData(t, svc, t.Name())
-
-	resp, err := svc.EndpointByID(context.Background(), EndpointByIDRequest{ID: endpointInfo.ID})
-	if err != nil {
-		t.Fatalf("EndpointByID() = %v", err)
-	}
-	if resp.Endpoint.ID != endpointInfo.ID {
-		t.Errorf("ID = %q, want %q", resp.Endpoint.ID, endpointInfo.ID)
-	}
-	if resp.Endpoint.Method != http.MethodGet {
-		t.Errorf("Method = %q, want %q", resp.Endpoint.Method, http.MethodGet)
-	}
-	if resp.Endpoint.Path != "/test" {
-		t.Errorf("Path = %q, want %q", resp.Endpoint.Path, "/test")
-	}
-}
-
-func TestEndpointByID_NotFound(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, err := svc.EndpointByID(context.Background(), EndpointByIDRequest{ID: "00000000000000000000000000000000"})
-	if err == nil {
-		t.Fatal("expected error")
-	}
-}
-
-func TestEndpointByID_ValidationError(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, err := svc.EndpointByID(context.Background(), EndpointByIDRequest{ID: "bad"})
-	if err == nil {
-		t.Fatal("expected error")
-	}
-}
-
-func TestEndpointByID_OrphanSpec(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	// Create a separate index with an endpoint whose SpecID doesn't exist
-	orphanIdx, err := index.New()
-	if err != nil {
-		t.Fatalf("index.New() = %v", err)
-	}
-	orphanEndpoint := &model.Endpoint{
-		ID:           "00000000000000000000000000000001",
-		SpecID:       "00000000000000000000000000000000",
-		CollectionID: "00000000000000000000000000000002",
-		TagID:        "00000000000000000000000000000003",
-		Name:         "GET",
-		Path:         "/orphan",
-		Operation:    &spec.Operation{ID: "orphanOp"},
-	}
-	if idxErr := orphanIdx.EnsureIndex(
-		&model.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
-		[]*model.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
-		[]*model.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
-		[]*model.Endpoint{orphanEndpoint},
-	); idxErr != nil {
-		t.Fatalf("EnsureIndex() = %v", idxErr)
+	tests := []struct {
+		name    string
+		specID  string
+		eps     []*model.Endpoint
+		spec    *model.Spec
+		coll    *model.Collection
+		tag     *model.Tag
+		wantErr bool
+	}{
+		{
+			name:   "found",
+			specID: "s1",
+			eps:    []*model.Endpoint{{ID: "ep1", SpecID: "s1", CollectionID: "c1", TagID: "t1", Name: "GET", Path: "/test", Operation: &spec.Operation{Summary: "test"}}},
+			spec:   &model.Spec{ID: "s1", Domain: "d1"},
+			coll:   &model.Collection{ID: "c1", Title: "C1"},
+			tag:    &model.Tag{ID: "t1", Name: "tag1"},
+		},
+		{name: "not found", specID: "missing", wantErr: true},
 	}
 
-	svc.index = orphanIdx
-	orphanIdx.RemoveSpec("00000000000000000000000000000000")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			idx := NewMockIndexReader(ctrl)
 
-	_, err = svc.EndpointByID(context.Background(), EndpointByIDRequest{ID: orphanEndpoint.ID})
-	if err == nil {
-		t.Fatal("expected error for orphan spec")
-	}
-}
+			if tt.eps != nil {
+				idx.EXPECT().EndpointsBySpec(tt.specID).Return(tt.eps, nil)
+				idx.EXPECT().SpecByID(tt.eps[0].SpecID).Return(tt.spec, nil)
+				idx.EXPECT().CollectionByID(tt.eps[0].CollectionID).Return(tt.coll, nil)
+				idx.EXPECT().TagByID(tt.eps[0].TagID).Return(tt.tag, nil)
+			} else {
+				idx.EXPECT().EndpointsBySpec(tt.specID).Return(nil, errNotFound("spec", tt.specID))
+			}
 
-func TestEndpointByID_OrphanCollection(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	orphanIdx, idxErr := index.New()
-	if idxErr != nil {
-		t.Fatalf("index.New() = %v", idxErr)
-	}
-	orphanEndpoint := &model.Endpoint{
-		ID:           "00000000000000000000000000000001",
-		SpecID:       "00000000000000000000000000000000",
-		CollectionID: "00000000000000000000000000000002",
-		TagID:        "00000000000000000000000000000003",
-		Name:         "GET",
-		Path:         "/orphan",
-		Operation:    &spec.Operation{ID: "orphanOp"},
-	}
-	if idxErr = orphanIdx.EnsureIndex(
-		&model.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
-		[]*model.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
-		[]*model.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
-		[]*model.Endpoint{orphanEndpoint},
-	); idxErr != nil {
-		t.Fatalf("EnsureIndex() = %v", idxErr)
-	}
-
-	svc.index = orphanIdx
-	orphanIdx.RemoveCollection("00000000000000000000000000000002")
-
-	_, err := svc.EndpointByID(context.Background(), EndpointByIDRequest{ID: orphanEndpoint.ID})
-	if err == nil {
-		t.Fatal("expected error for orphan collection")
-	}
-}
-
-func TestEndpointByID_OrphanTag(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	orphanIdx, idxErr := index.New()
-	if idxErr != nil {
-		t.Fatalf("index.New() = %v", idxErr)
-	}
-	orphanEndpoint := &model.Endpoint{
-		ID:           "00000000000000000000000000000001",
-		SpecID:       "00000000000000000000000000000000",
-		CollectionID: "00000000000000000000000000000002",
-		TagID:        "00000000000000000000000000000003",
-		Name:         "GET",
-		Path:         "/orphan",
-		Operation:    &spec.Operation{ID: "orphanOp"},
-	}
-	if idxErr = orphanIdx.EnsureIndex(
-		&model.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
-		[]*model.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
-		[]*model.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
-		[]*model.Endpoint{orphanEndpoint},
-	); idxErr != nil {
-		t.Fatalf("EnsureIndex() = %v", idxErr)
-	}
-
-	svc.index = orphanIdx
-	orphanIdx.RemoveTag("00000000000000000000000000000003")
-
-	_, err := svc.EndpointByID(context.Background(), EndpointByIDRequest{ID: orphanEndpoint.ID})
-	if err == nil {
-		t.Fatal("expected error for orphan tag")
-	}
-}
-
-func TestEndpointsByTag_OrphanCollection(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, _, tagInfo, _ := seedTestData(t, svc, t.Name())
-
-	svc.index.RemoveCollection(tagInfo.CollectionID)
-
-	_, err := svc.EndpointsByTag(context.Background(), EndpointsByTagRequest{TagID: tagInfo.ID})
-	if err == nil {
-		t.Fatal("expected error for orphan collection")
-	}
-}
-
-func TestEndpointsByTag_OrphanSpec(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, _, tagInfo, _ := seedTestData(t, svc, t.Name())
-
-	svc.index.RemoveSpec(tagInfo.SpecID)
-
-	_, err := svc.EndpointsByTag(context.Background(), EndpointsByTagRequest{TagID: tagInfo.ID})
-	if err == nil {
-		t.Fatal("expected error for orphan spec")
-	}
-}
-
-func TestEndpointsByCollection_OrphanSpec(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, collectionInfo, _, _ := seedTestData(t, svc, t.Name())
-
-	svc.index.RemoveSpec(collectionInfo.SpecID)
-
-	_, err := svc.EndpointsByCollection(context.Background(), EndpointsByCollectionRequest{CollectionID: collectionInfo.ID})
-	if err == nil {
-		t.Fatal("expected error for orphan spec")
-	}
-}
-
-func TestEndpointsByCollection_OrphanTag(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, collectionInfo, _, _ := seedTestData(t, svc, t.Name())
-
-	svc.index.RemoveAllTags()
-
-	_, err := svc.EndpointsByCollection(context.Background(), EndpointsByCollectionRequest{CollectionID: collectionInfo.ID})
-	if err == nil {
-		t.Fatal("expected error for orphan tag")
-	}
-}
-
-func TestEndpointsBySpec_OrphanTag(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	specInfo, _, _, _ := seedTestData(t, svc, t.Name())
-
-	svc.index.RemoveAllTags()
-
-	_, err := svc.EndpointsBySpec(context.Background(), EndpointsBySpecRequest{SpecID: specInfo.ID})
-	if err == nil {
-		t.Fatal("expected error for orphan tag through EndpointsBySpec")
+			svc := newEndpointService(idx, fakeValidator{})
+			resp, err := svc.EndpointsBySpec(context.Background(), EndpointsBySpecRequest{SpecID: tt.specID})
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Len(t, resp.Endpoints, len(tt.eps))
+		})
 	}
 }

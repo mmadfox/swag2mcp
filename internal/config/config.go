@@ -29,8 +29,15 @@ type ProxyConfig struct {
 // HTTPClientConfig holds per-request HTTP settings for a spec or collection.
 // These values are applied to each request at invocation time.
 type HTTPClientConfig struct {
-	Headers map[string]string `yaml:"headers,omitempty"`
-	Cookies []Cookie          `yaml:"cookies,omitempty"`
+	Randomize       bool              `yaml:"random,omitempty"`
+	Proxy           *ProxyConfig      `yaml:"proxy,omitempty"              validate:"omitempty"`
+	Headers         map[string]string `yaml:"headers,omitempty"`
+	Cookies         []Cookie          `yaml:"cookies,omitempty"            validate:"omitempty,dive"`
+	UserAgent       string            `yaml:"user_agent,omitempty"`
+	Timeout         time.Duration     `yaml:"timeout,omitempty"            validate:"omitempty,min=1000000000,max=300000000000"`
+	FollowRedirects *bool             `yaml:"follow_redirects,omitempty"`
+	MaxRedirects    *int              `yaml:"max_redirects,omitempty"      validate:"omitempty,min=0,max=50"`
+	MaxResponseSize *int              `yaml:"max_response_size,omitempty"   validate:"omitempty,min=256,max=10485760"`
 }
 
 // GlobalHTTPClientConfig holds global HTTP client settings.
@@ -118,6 +125,32 @@ func (c *MCPAuthConfig) Resolve() {
 		return
 	}
 	c.Token = env.Parse(c.Token)
+}
+
+// Resolve resolves environment variable references in headers and cookie values.
+func (c *HTTPClientConfig) Resolve() {
+	if c == nil {
+		return
+	}
+	for k, v := range c.Headers {
+		c.Headers[k] = env.Parse(v)
+	}
+	for i := range c.Cookies {
+		c.Cookies[i].Value = env.Parse(c.Cookies[i].Value)
+	}
+}
+
+// Resolve resolves environment variable references in headers and cookie values.
+func (c *GlobalHTTPClientConfig) Resolve() {
+	if c == nil {
+		return
+	}
+	for k, v := range c.Headers {
+		c.Headers[k] = env.Parse(v)
+	}
+	for i := range c.Cookies {
+		c.Cookies[i].Value = env.Parse(c.Cookies[i].Value)
+	}
 }
 
 // Spec defines a single API specification group.

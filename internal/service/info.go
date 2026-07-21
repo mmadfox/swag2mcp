@@ -10,98 +10,58 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/config"
 )
 
-// InfoSnapshot is a point-in-time snapshot of the service state,
-// computed once after Bootstrap and served on every Info call.
-type InfoSnapshot struct {
-	Version    string         `json:"version"`
-	Workspace  string         `json:"workspace"`
-	Uptime     time.Duration  `json:"-"`
-	Specs      SpecsSummary   `json:"specs"`
-	HTTPClient HTTPClientInfo `json:"http_client"`
-	MCP        MCPInfo        `json:"mcp"`
-	Auth       AuthInfo       `json:"auth"`
-	Mock       MockInfo       `json:"mock"`
+const (
+	defaultMCPTransport = "stdio"
+	devVersion          = "dev"
+	mbInBytes           = 1048576
+	kbInBytes           = 1024
+)
+
+type infoService struct {
+	settings  SettingsProvider
+	Clock     Clock
+	index     IndexReader
+	ws        WorkspaceOps
+	version   string
+	snapshot  SnapshotStore
+	startedAt int64 // UnixNano, set once during bootstrap
 }
 
-// InfoResponse holds the complete runtime and configuration summary.
-type InfoResponse struct {
-	Version    string         `json:"version,omitempty"`
-	Workspace  string         `json:"workspace"`
-	Uptime     string         `json:"uptime,omitempty"`
-	Specs      SpecsSummary   `json:"specs"`
-	HTTPClient HTTPClientInfo `json:"http_client"`
-	MCP        MCPInfo        `json:"mcp"`
-	Auth       AuthInfo       `json:"auth"`
-	Mock       MockInfo       `json:"mock"`
-}
-
-// SpecsSummary holds aggregate spec statistics.
-type SpecsSummary struct {
-	Total       int `json:"total"`
-	Active      int `json:"active"`
-	Disabled    int `json:"disabled"`
-	Collections int `json:"collections"`
-	Endpoints   int `json:"endpoints"`
-}
-
-// HTTPClientInfo holds the effective HTTP client configuration.
-type HTTPClientInfo struct {
-	Randomize       bool              `json:"randomize"`
-	UserAgent       string            `json:"user_agent,omitempty"`
-	Timeout         string            `json:"timeout,omitempty"`
-	FollowRedirects *bool             `json:"follow_redirects,omitempty"`
-	MaxRedirects    *int              `json:"max_redirects,omitempty"`
-	MaxResponseSize string            `json:"max_response_size"`
-	Proxy           *ProxyInfo        `json:"proxy,omitempty"`
-	Headers         map[string]string `json:"headers,omitempty"`
-	Cookies         []CookieInfo      `json:"cookies,omitempty"`
-}
-
-// ProxyInfo holds proxy configuration details.
-type ProxyInfo struct {
-	URL      string   `json:"url"`
-	Username string   `json:"username,omitempty"`
-	Bypass   []string `json:"bypass,omitempty"`
-}
-
-// CookieInfo holds a single cookie configuration.
-type CookieInfo struct {
-	Name     string `json:"name"`
-	Domain   string `json:"domain,omitempty"`
-	Path     string `json:"path,omitempty"`
-	Secure   bool   `json:"secure"`
-	HTTPOnly bool   `json:"http_only"`
-}
-
-// MCPInfo holds the MCP server configuration.
-type MCPInfo struct {
-	Transport   string `json:"transport"`
-	Addr        string `json:"addr,omitempty"`
-	Path        string `json:"path,omitempty"`
-	AuthEnabled bool   `json:"auth_enabled"`
-}
-
-// AuthInfo holds authentication method information.
-type AuthInfo struct {
-	Methods []string `json:"methods,omitempty"`
-}
-
-// MockInfo holds mock server configuration.
-type MockInfo struct {
-	Enabled bool `json:"enabled"`
+func newInfoService(
+	settings SettingsProvider,
+	clk Clock,
+	index IndexReader,
+	ws WorkspaceOps,
+	version string,
+	snapshot SnapshotStore,
+	startedAt int64,
+) *infoService {
+	return &infoService{
+		settings:  settings,
+		Clock:     clk,
+		index:     index,
+		ws:        ws,
+		version:   version,
+		snapshot:  snapshot,
+		startedAt: startedAt,
+	}
 }
 
 // Info returns a comprehensive summary of the current service state from the snapshot.
-func (s *Service) Info(_ context.Context) (InfoResponse, error) {
-	snap, ok := s.snapshot.Load().(*InfoSnapshot)
+func (is *infoService) Info(_ context.Context) (InfoResponse, error) {
+	snap, ok := is.snapshot.Load().(*InfoSnapshot)
 	if ok && snap != nil {
-		uptime := time.Since(s.startedAt).Round(time.Second)
+		started := is.startedAt
+		uptime := time.Duration(0)
+		if started > 0 {
+			uptime = is.Clock.Now().Sub(time.Unix(0, started)).Round(time.Second)
+		}
 		uptimeStr := ""
 		if uptime > 0 {
 			uptimeStr = uptime.String()
 		}
 		version := snap.Version
-		if version == "dev" {
+		if version == devVersion {
 			version = ""
 		}
 		return InfoResponse{
@@ -116,35 +76,36 @@ func (s *Service) Info(_ context.Context) (InfoResponse, error) {
 		}, nil
 	}
 
-	version := s.version
-	if version == "dev" {
+	version := is.version
+	if version == devVersion {
 		version = ""
 	}
 	return InfoResponse{
 		Version:   version,
-		Workspace: s.ws.Root(),
+		Workspace: is.ws.Root(),
 	}, nil
 }
 
 // buildSnapshot computes a point-in-time snapshot of the service state.
-func (s *Service) buildSnapshot() {
+func (is *infoService) buildSnapshot() {
 	snap := &InfoSnapshot{
-		Version:   s.version,
-		Workspace: s.ws.Root(),
+		Version:   is.version,
+		Workspace: is.ws.Root(),
 	}
 
-	if s.config != nil {
-		snap.Specs = s.buildSpecsSummary(s.config)
-		snap.HTTPClient = s.buildHTTPClientInfo(s.config)
-		snap.MCP = s.buildMCPInfo(s.config)
-		snap.Auth = s.buildAuthInfo(s.config)
-		snap.Mock = MockInfo{Enabled: s.config.MockEnabled}
+	cfg := is.settings.Config()
+	if cfg != nil {
+		snap.Specs = is.buildSpecsSummary(cfg)
+		snap.HTTPClient = is.buildHTTPClientInfo(cfg)
+		snap.MCP = is.buildMCPInfo(cfg)
+		snap.Auth = is.buildAuthInfo(cfg)
+		snap.Mock = MockInfo{Enabled: cfg.MockEnabled}
 	}
 
-	s.snapshot.Store(snap)
+	is.snapshot.Store(snap)
 }
 
-func (s *Service) buildSpecsSummary(c *config.Config) SpecsSummary {
+func (is *infoService) buildSpecsSummary(c *config.Config) SpecsSummary {
 	sum := SpecsSummary{}
 
 	if c != nil {
@@ -159,7 +120,7 @@ func (s *Service) buildSpecsSummary(c *config.Config) SpecsSummary {
 		}
 	}
 
-	specs := s.index.AllSpecs()
+	specs := is.index.AllSpecs()
 	for _, sp := range specs {
 		sum.Collections += sp.Stats.Collections
 		sum.Endpoints += sp.Stats.Methods
@@ -168,18 +129,19 @@ func (s *Service) buildSpecsSummary(c *config.Config) SpecsSummary {
 	return sum
 }
 
-func (s *Service) buildHTTPClientInfo(c *config.Config) HTTPClientInfo {
+func (is *infoService) buildHTTPClientInfo(c *config.Config) HTTPClientInfo {
 	inf := HTTPClientInfo{
-		MaxResponseSize: humanizeBytes(s.maxResponseSize),
+		MaxResponseSize: humanizeBytes(is.settings.MaxResponseSize()),
 	}
 
 	if c == nil || c.HTTPClient == nil {
 		return inf
 	}
 
+	httpCfg := is.settings.HTTPClientConfig()
 	gc := c.HTTPClient
-	inf.Randomize = s.httpClientConfig.Randomize
-	inf.UserAgent = s.httpClientConfig.UserAgent
+	inf.Randomize = httpCfg.Randomize
+	inf.UserAgent = httpCfg.UserAgent
 	if inf.UserAgent == "" {
 		inf.UserAgent = gc.UserAgent
 	}
@@ -221,7 +183,7 @@ func (s *Service) buildHTTPClientInfo(c *config.Config) HTTPClientInfo {
 	return inf
 }
 
-func (s *Service) buildMCPInfo(c *config.Config) MCPInfo {
+func (is *infoService) buildMCPInfo(c *config.Config) MCPInfo {
 	inf := MCPInfo{Transport: defaultMCPTransport}
 
 	if c == nil || c.MCP == nil {
@@ -239,7 +201,7 @@ func (s *Service) buildMCPInfo(c *config.Config) MCPInfo {
 	return inf
 }
 
-func (s *Service) buildAuthInfo(c *config.Config) AuthInfo {
+func (is *infoService) buildAuthInfo(c *config.Config) AuthInfo {
 	m := make(map[string]struct{})
 
 	if c != nil {
@@ -269,13 +231,7 @@ func (s *Service) buildAuthInfo(c *config.Config) AuthInfo {
 	return AuthInfo{Methods: ms}
 }
 
-const (
-	defaultMCPTransport = "stdio"
-	mbInBytes           = 1048576
-	kbInBytes           = 1024
-)
-
-// humanizeBytes converts a byte count to a human-readable string (e.g. 2048 → "2 KB").
+// humanizeBytes converts a byte count to a human-readable string (e.g. 2048 becomes "2 KB").
 func humanizeBytes(b int) string {
 	switch {
 	case b >= mbInBytes:

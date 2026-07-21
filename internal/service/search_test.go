@@ -2,186 +2,114 @@ package service
 
 import (
 	"context"
-	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"github.com/mmadfox/swag2mcp/internal/model"
+	"github.com/mmadfox/swag2mcp/internal/spec"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
-func TestSearch_ByMethod(t *testing.T) {
+func TestSearchService_Search(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	resp, err := svc.Search(context.Background(), SearchRequest{Query: "method:GET", Limit: 10})
-	require.NoError(t, err)
-	require.NotEmpty(t, resp.Endpoints)
-	assert.Equal(t, http.MethodGet, resp.Endpoints[0].Method)
-}
-
-func TestSearch_ByTag(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	resp, err := svc.Search(context.Background(), SearchRequest{Query: "test", Limit: 10})
-	require.NoError(t, err)
-	require.NotEmpty(t, resp.Endpoints)
-}
-
-func TestSearch_ByPath(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	resp, err := svc.Search(context.Background(), SearchRequest{Query: "test", Limit: 10})
-	require.NoError(t, err)
-	require.NotEmpty(t, resp.Endpoints)
-}
-
-func TestSearch_BySummary(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	resp, err := svc.Search(context.Background(), SearchRequest{Query: "summary:\"Test endpoint\"", Limit: 10})
-	require.NoError(t, err)
-	require.NotEmpty(t, resp.Endpoints)
-}
-
-func TestSearch_NoResults(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	resp, err := svc.Search(context.Background(), SearchRequest{Query: "method:POST", Limit: 10})
-	require.NoError(t, err)
-	assert.Empty(t, resp.Endpoints)
-}
-
-func TestSearch_ValidationError(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, err := svc.Search(context.Background(), SearchRequest{Query: "", Limit: 0})
-	require.Error(t, err)
-}
-
-func TestSearch_Limit(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	resp, err := svc.Search(context.Background(), SearchRequest{Query: "test", Limit: 1})
-	require.NoError(t, err)
-	assert.LessOrEqual(t, len(resp.Endpoints), 1)
-}
-
-func TestSearch_IndexError(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-
-	_, err := svc.Search(ctx, SearchRequest{Query: "test", Limit: 10})
-	require.Error(t, err)
-}
-
-func TestSearch_OrphanEndpoints(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	svc.index.RemoveAllTags()
-
-	_, err := svc.Search(context.Background(), SearchRequest{Query: "test", Limit: 10})
-	require.Error(t, err)
-}
-
-func TestMapEndpointsToSearchItems_Success(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, _, _, endpointInfo := seedTestData(t, svc, t.Name())
-
-	items, err := svc.mapEndpointsToSearchItems([]*model.Endpoint{endpointInfo})
-	require.NoError(t, err)
-	require.Len(t, items, 1)
-	assert.Equal(t, endpointInfo.ID, items[0].ID)
-	assert.NotEmpty(t, items[0].SpecDomain)
-	assert.NotEmpty(t, items[0].CollectionTitle)
-	assert.NotEmpty(t, items[0].TagName)
-}
-
-func TestMapEndpointsToSearchItems_Empty(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	items, err := svc.mapEndpointsToSearchItems(nil)
-	require.NoError(t, err)
-	assert.Empty(t, items)
-}
-
-func TestMapEndpointsToSearchItems_OrphanSpec(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	orphanEndpoint := &model.Endpoint{
-		ID:           "orphan",
-		SpecID:       "00000000000000000000000000000000",
-		CollectionID: "00000000000000000000000000000000",
-		TagID:        "00000000000000000000000000000000",
+	tests := []struct {
+		name    string
+		query   string
+		limit   int
+		results []*model.Endpoint
+		spec    *model.Spec
+		coll    *model.Collection
+		tag     *model.Tag
+		wantErr bool
+	}{
+		{
+			name:  "found",
+			query: "pet", limit: 10,
+			results: []*model.Endpoint{{ID: "ep1", SpecID: "s1", CollectionID: "c1", TagID: "t1", Name: "GET", Path: "/pet", Operation: &spec.Operation{Summary: "get pet"}}},
+			spec:    &model.Spec{ID: "s1", Domain: "pets"},
+			coll:    &model.Collection{ID: "c1", Title: "Pet Store"},
+			tag:     &model.Tag{ID: "t1", Name: "pets"},
+		},
+		{name: "no results", query: "zzz", limit: 5, wantErr: true},
 	}
 
-	_, err := svc.mapEndpointsToSearchItems([]*model.Endpoint{orphanEndpoint})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			idx := NewMockIndexReader(ctrl)
+
+			if tt.results != nil {
+				idx.EXPECT().Search(gomock.Any(), gomock.Any(), tt.limit).Return(tt.results, nil)
+				idx.EXPECT().SpecByID(tt.results[0].SpecID).Return(tt.spec, nil)
+				idx.EXPECT().CollectionByID(tt.results[0].CollectionID).Return(tt.coll, nil)
+				idx.EXPECT().TagByID(tt.results[0].TagID).Return(tt.tag, nil)
+			} else {
+				idx.EXPECT().Search(gomock.Any(), gomock.Any(), tt.limit).Return(nil, errNotFound("search", ""))
+			}
+
+			svc := newSearchService(idx, fakeValidator{})
+			resp, err := svc.Search(context.Background(), SearchRequest{Query: tt.query, Limit: tt.limit})
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Len(t, resp.Endpoints, len(tt.results))
+		})
+	}
+}
+
+func TestSearchService_Search_validationError(t *testing.T) {
+	t.Parallel()
+
+	svc := newSearchService(NewMockIndexReader(gomock.NewController(t)), strictValidator{})
+	_, err := svc.Search(context.Background(), SearchRequest{})
 	require.Error(t, err)
 }
 
-func TestMapEndpointsToSearchItems_OrphanCollection(t *testing.T) {
+func TestSearchService_Search_specNotFound(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	specInfo, _, _, _ := seedTestData(t, svc, t.Name())
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().Search(gomock.Any(), gomock.Any(), 10).Return(
+		[]*model.Endpoint{{ID: "ep1", SpecID: "s1", CollectionID: "c1", TagID: "t1", Name: "GET", Path: "/pet", Operation: &spec.Operation{}}}, nil)
+	idx.EXPECT().SpecByID("s1").Return(nil, errNotFound("spec", "s1"))
 
-	orphanEndpoint := &model.Endpoint{
-		ID:           "orphan",
-		SpecID:       specInfo.ID,
-		CollectionID: "00000000000000000000000000000000",
-		TagID:        "00000000000000000000000000000000",
-	}
-
-	_, err := svc.mapEndpointsToSearchItems([]*model.Endpoint{orphanEndpoint})
+	svc := newSearchService(idx, fakeValidator{})
+	_, err := svc.Search(context.Background(), SearchRequest{Query: "pet", Limit: 10})
 	require.Error(t, err)
 }
 
-func TestMapEndpointsToSearchItems_OrphanTag(t *testing.T) {
+func TestSearchService_Search_collectionNotFound(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	specInfo, collectionInfo, _, _ := seedTestData(t, svc, t.Name())
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().Search(gomock.Any(), gomock.Any(), 10).Return(
+		[]*model.Endpoint{{ID: "ep1", SpecID: "s1", CollectionID: "c1", TagID: "t1", Name: "GET", Path: "/pet", Operation: &spec.Operation{}}}, nil)
+	idx.EXPECT().SpecByID("s1").Return(&model.Spec{ID: "s1", Domain: "pets"}, nil)
+	idx.EXPECT().CollectionByID("c1").Return(nil, errNotFound("collection", "c1"))
 
-	orphanEndpoint := &model.Endpoint{
-		ID:           "orphan",
-		SpecID:       specInfo.ID,
-		CollectionID: collectionInfo.ID,
-		TagID:        "00000000000000000000000000000000",
-	}
+	svc := newSearchService(idx, fakeValidator{})
+	_, err := svc.Search(context.Background(), SearchRequest{Query: "pet", Limit: 10})
+	require.Error(t, err)
+}
 
-	_, err := svc.mapEndpointsToSearchItems([]*model.Endpoint{orphanEndpoint})
+func TestSearchService_Search_tagNotFound(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().Search(gomock.Any(), gomock.Any(), 10).Return(
+		[]*model.Endpoint{{ID: "ep1", SpecID: "s1", CollectionID: "c1", TagID: "t1", Name: "GET", Path: "/pet", Operation: &spec.Operation{}}}, nil)
+	idx.EXPECT().SpecByID("s1").Return(&model.Spec{ID: "s1", Domain: "pets"}, nil)
+	idx.EXPECT().CollectionByID("c1").Return(&model.Collection{ID: "c1", Title: "Pet Store"}, nil)
+	idx.EXPECT().TagByID("t1").Return(nil, errNotFound("tag", "t1"))
+
+	svc := newSearchService(idx, fakeValidator{})
+	_, err := svc.Search(context.Background(), SearchRequest{Query: "pet", Limit: 10})
 	require.Error(t, err)
 }

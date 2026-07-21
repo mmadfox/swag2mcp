@@ -13,6 +13,10 @@ const (
 	notFoundErrCode         = "not_found"
 	rateLimitErrCode        = "rate_limit"
 	invokeErrorErrCode      = "invoke_error"
+	configErrorErrCode      = "config_error"
+	workspaceErrorErrCode   = "workspace_error"
+	parseErrorErrCode       = "parse_error"
+	authErrorErrCode        = "auth_error"
 )
 
 // LLMError is an error type returned to the LLM with a machine-readable code and human-readable message.
@@ -58,6 +62,42 @@ func NewInvokeError(msg string, err error) *LLMError {
 	}
 }
 
+// NewConfigError creates an LLMError with code "config_error".
+func NewConfigError(msg string, err error) *LLMError {
+	return &LLMError{
+		Code:     configErrorErrCode,
+		Message:  msg,
+		Original: formatError(err),
+	}
+}
+
+// NewWorkspaceError creates an LLMError with code "workspace_error".
+func NewWorkspaceError(msg string, err error) *LLMError {
+	return &LLMError{
+		Code:     workspaceErrorErrCode,
+		Message:  msg,
+		Original: formatError(err),
+	}
+}
+
+// NewParseError creates an LLMError with code "parse_error".
+func NewParseError(msg string, err error) *LLMError {
+	return &LLMError{
+		Code:     parseErrorErrCode,
+		Message:  msg,
+		Original: formatError(err),
+	}
+}
+
+// NewAuthError creates an LLMError with code "auth_error".
+func NewAuthError(msg string, err error) *LLMError {
+	return &LLMError{
+		Code:     authErrorErrCode,
+		Message:  msg,
+		Original: formatError(err),
+	}
+}
+
 // Error returns the JSON-encoded string representation of the LLMError.
 func (e *LLMError) Error() string {
 	data, _ := json.Marshal(e)
@@ -76,37 +116,37 @@ func mapReaderError(err error) error {
 	switch {
 	case errors.Is(err, reader.ErrFileNotFound):
 		return NewNotFoundError(
-			"The response file was not found — invoke an endpoint first and use the fileRef.path returned.",
+			"Response file not found - invoke an endpoint first.",
 			err,
 		)
 	case errors.Is(err, reader.ErrPathNotAllowed):
 		return NewValidationError(
-			"The path is not inside the responses directory — only saved response files may be read.",
+			"Path is not inside the responses directory.",
 			err,
 		)
 	case errors.Is(err, reader.ErrInvalidJSONPath):
 		return NewValidationError(
-			"The jsonPath is invalid — use a dotted path such as data.0.name.",
+			"jsonPath is invalid - use dotted path like data.0.name.",
 			err,
 		)
 	case errors.Is(err, reader.ErrPathNotFound):
 		return NewNotFoundError(
-			"The jsonPath did not match any value in the file — check the outline and try a different path.",
+			"jsonPath did not match any value in the file.",
 			err,
 		)
 	case errors.Is(err, reader.ErrInvalidLineRange):
 		return NewValidationError(
-			"The line or range is invalid — use a 1-based line number or a start-end range.",
+			"Line or range is invalid - use 1-based line number or start-end.",
 			err,
 		)
 	case errors.Is(err, reader.ErrNotJSON):
 		return NewValidationError(
-			"The file is not valid JSON — only JSON response files can be outlined or sliced.",
+			"File is not valid JSON.",
 			err,
 		)
 	default:
 		return NewInvokeError(
-			"Failed to read the response file — verify the path and try again.",
+			"Failed to read the response file.",
 			err,
 		)
 	}

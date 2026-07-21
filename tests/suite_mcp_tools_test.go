@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -690,3 +691,46 @@ specs:
 func TestMCPToolsSuite(t *testing.T) {
 	suite.Run(t, new(MCPToolsSuite))
 }
+
+func (s *MCPToolsSuite) TestInvokeWithSpecTimeout() {
+	var capturedDuration time.Duration
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		time.Sleep(50 * time.Millisecond)
+		capturedDuration = time.Since(start)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`[]`))
+	})
+	srv := s.StartHTTPServer(mux)
+
+	configContent := `http_client:
+  timeout: 30s
+specs:
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: ` + srv.URL + `
+    http_client:
+      timeout: 5s
+    collections:
+      - title: Forecast
+        location: ./testdata/meteo.yaml
+`
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
+
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
+
+	_, err := client.callToolRaw(s.T(), "invoke", map[string]interface{}{
+		"endpointId": endpointID,
+		"parameters": map[string]interface{}{
+			"latitude":  0.0,
+			"longitude": 0.0,
+		},
+	})
+	s.Require().NoError(err)
+	s.Greater(capturedDuration, 0*time.Millisecond)
+}
+

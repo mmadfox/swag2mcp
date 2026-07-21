@@ -110,7 +110,7 @@ func runMCP(basePath, version string, opts *mcpCmdOpts, cmd *cobra.Command) erro
 		}
 	}
 
-	svcOpts := []service.NewOption{
+	svcOpts := []service.Option{
 		service.WithDisableLLMAuth(opts.DisableLLMAuth),
 		service.WithVersion(version),
 	}

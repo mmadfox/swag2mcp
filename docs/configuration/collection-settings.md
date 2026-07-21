@@ -75,7 +75,8 @@ specs:
       - llm_title: Forecast
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
         http_client:
-          timeout: 5s
           headers:
             "X-Custom": "value"
 ```
+
+Only `headers` can be overridden at the collection level. Transport settings (timeout, proxy, etc.) are configured at the global or spec level.

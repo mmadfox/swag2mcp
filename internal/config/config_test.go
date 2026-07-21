@@ -587,3 +587,84 @@ func TestGlobalHTTPClientConfig_SetDefaults_WithRandomize(t *testing.T) {
 
 	assert.Empty(t, cfg.UserAgent, "UserAgent should be empty when Randomize is true")
 }
+
+func TestHTTPClientConfig_Resolve(t *testing.T) {
+	t.Setenv("MY_HEADER", "resolved-header")
+	t.Setenv("MY_COOKIE", "resolved-cookie")
+
+	cfg := &HTTPClientConfig{
+		Headers: map[string]string{
+			"X-Custom": "$(MY_HEADER)",
+			"X-Static": "static-value",
+		},
+		Cookies: []Cookie{
+			{Name: "session", Value: "$(MY_COOKIE)"},
+			{Name: "static", Value: "static-cookie"},
+		},
+	}
+
+	cfg.Resolve()
+
+	assert.Equal(t, "resolved-header", cfg.Headers["X-Custom"])
+	assert.Equal(t, "static-value", cfg.Headers["X-Static"])
+	assert.Equal(t, "resolved-cookie", cfg.Cookies[0].Value)
+	assert.Equal(t, "static-cookie", cfg.Cookies[1].Value)
+}
+
+func TestHTTPClientConfig_Resolve_Nil(_ *testing.T) {
+	var cfg *HTTPClientConfig
+	cfg.Resolve() // should not panic
+}
+
+func TestGlobalHTTPClientConfig_Resolve(t *testing.T) {
+	t.Setenv("GLOBAL_HEADER", "global-val")
+
+	cfg := &GlobalHTTPClientConfig{
+		Headers: map[string]string{
+			"X-Global": "$(GLOBAL_HEADER)",
+		},
+		Cookies: []Cookie{
+			{Name: "gc", Value: "$(GLOBAL_HEADER)"},
+		},
+	}
+
+	cfg.Resolve()
+
+	assert.Equal(t, "global-val", cfg.Headers["X-Global"])
+	assert.Equal(t, "global-val", cfg.Cookies[0].Value)
+}
+
+func TestHTTPClientConfig_Validate_TransportFields(t *testing.T) {
+	t.Parallel()
+
+	timeout := 5 * time.Second
+	follow := false
+	maxRedir := 3
+	maxSize := 4096
+
+	cfg := &HTTPClientConfig{
+		Timeout:         timeout,
+		FollowRedirects: &follow,
+		MaxRedirects:    &maxRedir,
+		MaxResponseSize: &maxSize,
+		Randomize:       true,
+		UserAgent:       "spec-agent",
+		Proxy: &ProxyConfig{
+			URL: "http://proxy:8080",
+		},
+	}
+
+	errs := collectStructErrors("http_client", *cfg)
+	assert.Empty(t, errs, "expected no validation errors")
+}
+
+func TestHTTPClientConfig_Validate_InvalidTimeout(t *testing.T) {
+	t.Parallel()
+
+	cfg := &HTTPClientConfig{
+		Timeout: 100 * time.Millisecond, // below 1s minimum
+	}
+
+	errs := collectStructErrors("http_client", *cfg)
+	assert.NotEmpty(t, errs, "expected validation error for too-short timeout")
+}

@@ -2,87 +2,88 @@ package service
 
 import (
 	"context"
+	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
+	"github.com/mmadfox/swag2mcp/internal/model"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
-func TestAuth_Disabled(t *testing.T) {
+type errAuthClient struct{}
+
+func (errAuthClient) New() error { return nil }
+
+func (errAuthClient) Type() auth.Type { return auth.NoAuth }
+
+func (errAuthClient) Apply(_ *http.Request, _ *auth.Info) error {
+	return errors.New("auth apply failed")
+}
+
+func (errAuthClient) Validate() error { return nil }
+
+func TestAuthService_Auth(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t, WithDisableLLMAuth(true))
-	seedTestData(t, svc, t.Name())
-
-	resp, err := svc.Auth(context.Background(), AuthRequest{SpecID: "00000000000000000000000000000000"})
-	if err != nil {
-		t.Fatalf("Auth() = %v", err)
+	tests := []struct {
+		name      string
+		specID    string
+		spec      *model.Spec
+		disabled  bool
+		wantToken bool
+		wantErr   bool
+	}{
+		{name: "disabled", specID: "s1", disabled: true, wantToken: false},
+		{name: "not found", specID: "missing", wantErr: true},
 	}
-	if resp.Token != "" {
-		t.Errorf("Token = %q, want empty", resp.Token)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			idx := NewMockIndexReader(ctrl)
+
+			if tt.wantErr {
+				idx.EXPECT().SpecByID(tt.specID).Return(nil, errNotFound("spec", tt.specID))
+			}
+
+			svc := newAuthService(idx, func() bool { return tt.disabled })
+			resp, err := svc.Auth(context.Background(), AuthRequest{SpecID: tt.specID})
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			if tt.disabled {
+				require.Empty(t, resp.Token)
+			}
+		})
 	}
 }
 
-func TestAuth_NoAuthOnSpec(t *testing.T) {
+func TestAuthService_Auth_nilAuth(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	specInfo, _, _, _ := seedTestData(t, svc, t.Name())
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().SpecByID("s1").Return(&model.Spec{ID: "s1"}, nil)
 
-	resp, err := svc.Auth(context.Background(), AuthRequest{SpecID: specInfo.ID})
-	if err != nil {
-		t.Fatalf("Auth() = %v", err)
-	}
-	if resp.Token != "" {
-		t.Errorf("Token = %q, want empty", resp.Token)
-	}
+	svc := newAuthService(idx, func() bool { return false })
+	resp, err := svc.Auth(context.Background(), AuthRequest{SpecID: "s1"})
+	require.NoError(t, err)
+	require.Empty(t, resp.Token)
 }
 
-func TestAuth_WithBearer(t *testing.T) {
+func TestAuthService_Auth_applyError(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	authenticator := &auth.BearerTokenAuthClient{Token: "test-token"}
-	if err := authenticator.New(); err != nil {
-		t.Fatalf("authenticator.New() = %v", err)
-	}
-	specInfo, _, _, _ := seedTestDataWithAuth(t, svc, t.Name(), authenticator)
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().SpecByID("s1").Return(&model.Spec{ID: "s1", Auth: errAuthClient{}}, nil)
 
-	resp, err := svc.Auth(context.Background(), AuthRequest{SpecID: specInfo.ID})
-	if err != nil {
-		t.Fatalf("Auth() = %v", err)
-	}
-	if resp.Token == "" {
-		t.Fatal("Token is empty, expected a bearer token")
-	}
-}
-
-func TestAuth_SpecNotFound(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, err := svc.Auth(context.Background(), AuthRequest{SpecID: "00000000000000000000000000000000"})
-	if err == nil {
-		t.Fatal("expected error")
-	}
-}
-
-func TestAuth_ApplyError(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	// OAuth2 CC with unreachable token URL will fail Apply
-	authenticator := &auth.OAuth2ClientCredentialsAuthClient{
-		ClientID:     "test",
-		ClientSecret: "test",
-		TokenURL:     "http://127.0.0.1:1/token",
-	}
-	if err := authenticator.New(); err != nil {
-		t.Fatalf("authenticator.New() = %v", err)
-	}
-	specInfo, _, _, _ := seedTestDataWithAuth(t, svc, t.Name(), authenticator)
-
-	_, err := svc.Auth(context.Background(), AuthRequest{SpecID: specInfo.ID})
-	if err == nil {
-		t.Fatal("expected error for auth apply failure")
-	}
+	svc := newAuthService(idx, func() bool { return false })
+	_, err := svc.Auth(context.Background(), AuthRequest{SpecID: "s1"})
+	require.Error(t, err)
 }

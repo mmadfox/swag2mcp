@@ -41,6 +41,11 @@ func AddSpecFromYAML(configPath string, data []byte) error {
 	}
 
 	if err := AtomicWriteConfig(configPath, func(cfg *config.Config) error {
+		for _, sp := range cfg.Specs {
+			if sp.Domain == input.Domain {
+				return fmt.Errorf("spec with domain %q already exists", input.Domain)
+			}
+		}
 		cfg.Specs = append(cfg.Specs, input.Spec)
 		return nil
 	}); err != nil {
@@ -73,6 +78,11 @@ func AddCollectionFromYAML(configPath string, data []byte) error {
 	if err := AtomicWriteConfig(configPath, func(cfg *config.Config) error {
 		for i := range cfg.Specs {
 			if cfg.Specs[i].Domain == input.SpecDomain {
+				for _, col := range cfg.Specs[i].Collections {
+					if col.Location == input.Location {
+						return fmt.Errorf("collection with location %q already exists in spec %q", input.Location, input.SpecDomain)
+					}
+				}
 				cfg.Specs[i].Collections = append(cfg.Specs[i].Collections, input.Collection)
 				return nil
 			}
@@ -136,6 +146,11 @@ func AddSpecTUI(configPath string) error {
 	}
 
 	if err := AtomicWriteConfig(configPath, func(cfg *config.Config) error {
+		for _, sp := range cfg.Specs {
+			if sp.Domain == spec.Domain {
+				return fmt.Errorf("spec with domain %q already exists", spec.Domain)
+			}
+		}
 		newSpec := config.Spec{
 			Domain:         spec.Domain,
 			LLMTitle:       spec.LLMTitle,
@@ -216,6 +231,11 @@ func AddCollectionTUI(configPath string) error {
 
 	if err := AtomicWriteConfig(configPath, func(cfg *config.Config) error {
 		if specIdx-1 < len(cfg.Specs) {
+			for _, c := range cfg.Specs[specIdx-1].Collections {
+				if c.Location == col.Location {
+					return fmt.Errorf("collection with location %q already exists in spec %q", col.Location, spec.Domain)
+				}
+			}
 			cfg.Specs[specIdx-1].Collections = append(cfg.Specs[specIdx-1].Collections, config.Collection{
 				LLMTitle: col.Title,
 				Location: col.Location,

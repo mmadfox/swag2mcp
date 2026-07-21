@@ -12,11 +12,13 @@ import (
 	"runtime"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 )
 
 // Workspace manages the workspace directory and its standard subdirectories.
 type Workspace struct {
+	mu   sync.RWMutex
 	root string
 }
 
@@ -71,6 +73,8 @@ func (w *Workspace) Init() error {
 
 // Root returns the absolute path to the workspace root directory.
 func (w *Workspace) Root() string {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
 	return w.root
 }
 
@@ -95,6 +99,8 @@ func ConfigPathIn(workspaceDir string) string {
 
 // ConfigPath returns the config file path inside this workspace.
 func (w *Workspace) ConfigPath() string {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
 	return ConfigPathIn(w.root)
 }
 

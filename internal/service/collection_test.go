@@ -4,134 +4,88 @@ import (
 	"context"
 	"testing"
 
-	"github.com/mmadfox/swag2mcp/internal/index"
 	"github.com/mmadfox/swag2mcp/internal/model"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
-func TestCollectionsBySpec_Success(t *testing.T) {
+func TestCollectionService_CollectionsBySpec(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	specInfo, _, _, _ := seedTestData(t, svc, t.Name())
+	tests := []struct {
+		name    string
+		specID  string
+		spec    *model.Spec
+		colls   []*model.Collection
+		wantErr bool
+	}{
+		{name: "found", specID: "s1", spec: &model.Spec{ID: "s1", Domain: "d1"}, colls: []*model.Collection{{ID: "c1", Title: "C1"}}},
+		{name: "not found", specID: "missing", wantErr: true},
+	}
 
-	resp, err := svc.CollectionsBySpec(context.Background(), CollectionsRequest{SpecID: specInfo.ID})
-	if err != nil {
-		t.Fatalf("CollectionsBySpec() = %v", err)
-	}
-	if resp.Spec.ID != specInfo.ID {
-		t.Errorf("Spec.ID = %q, want %q", resp.Spec.ID, specInfo.ID)
-	}
-	if len(resp.Collections) != 1 {
-		t.Fatalf("Collections = %d, want 1", len(resp.Collections))
-	}
-	if resp.Collections[0].Title != "Test Collection" {
-		t.Errorf("Title = %q, want %q", resp.Collections[0].Title, "Test Collection")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			idx := NewMockIndexReader(ctrl)
+
+			if tt.spec != nil {
+				idx.EXPECT().SpecByID(tt.specID).Return(tt.spec, nil)
+				idx.EXPECT().CollectionsBySpec(tt.specID).Return(tt.colls, nil)
+			} else {
+				idx.EXPECT().SpecByID(tt.specID).Return(nil, errNotFound("spec", tt.specID))
+			}
+
+			svc := newCollectionService(idx, fakeValidator{})
+			resp, err := svc.CollectionsBySpec(context.Background(), CollectionsRequest{SpecID: tt.specID})
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Len(t, resp.Collections, len(tt.colls))
+		})
 	}
 }
 
-func TestCollectionsBySpec_NotFound(t *testing.T) {
+func TestCollectionService_CollectionByID(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	_, err := svc.CollectionsBySpec(context.Background(), CollectionsRequest{SpecID: "00000000000000000000000000000000"})
-	if err == nil {
-		t.Fatal("expected error")
-	}
-}
-
-func TestCollectionsBySpec_ValidationError(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, err := svc.CollectionsBySpec(context.Background(), CollectionsRequest{SpecID: "bad"})
-	if err == nil {
-		t.Fatal("expected error")
-	}
-}
-
-func TestCollectionByID_Success(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, collectionInfo, _, _ := seedTestData(t, svc, t.Name())
-
-	resp, err := svc.CollectionByID(context.Background(), CollectionByIDRequest{ID: collectionInfo.ID})
-	if err != nil {
-		t.Fatalf("CollectionByID() = %v", err)
-	}
-	if resp.Collection.ID != collectionInfo.ID {
-		t.Errorf("ID = %q, want %q", resp.Collection.ID, collectionInfo.ID)
-	}
-	if resp.Collection.Title != "Test Collection" {
-		t.Errorf("Title = %q, want %q", resp.Collection.Title, "Test Collection")
-	}
-	if len(resp.Tags) != 1 {
-		t.Errorf("Tags = %d, want 1", len(resp.Tags))
-	}
-}
-
-func TestCollectionByID_NotFound(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, err := svc.CollectionByID(context.Background(), CollectionByIDRequest{ID: "00000000000000000000000000000000"})
-	if err == nil {
-		t.Fatal("expected error")
-	}
-}
-
-func TestCollectionByID_ValidationError(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, err := svc.CollectionByID(context.Background(), CollectionByIDRequest{ID: "bad"})
-	if err == nil {
-		t.Fatal("expected error")
-	}
-}
-
-func TestCollectionByID_OrphanSpec(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	orphanIdx, idxErr := index.New()
-	if idxErr != nil {
-		t.Fatalf("index.New() = %v", idxErr)
-	}
-	if idxErr = orphanIdx.EnsureIndex(
-		&model.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
-		[]*model.Collection{{ID: "00000000000000000000000000000001", SpecID: "00000000000000000000000000000000"}},
-		[]*model.Tag{},
-		[]*model.Endpoint{},
-	); idxErr != nil {
-		t.Fatalf("EnsureIndex() = %v", idxErr)
+	tests := []struct {
+		name    string
+		collID  string
+		coll    *model.Collection
+		spec    *model.Spec
+		tags    []*model.Tag
+		wantErr bool
+	}{
+		{name: "found", collID: "c1", coll: &model.Collection{ID: "c1", SpecID: "s1", Title: "C1"}, spec: &model.Spec{ID: "s1", Domain: "d1"}, tags: []*model.Tag{{ID: "t1", Name: "tag1"}}},
+		{name: "not found", collID: "missing", wantErr: true},
 	}
 
-	svc.index = orphanIdx
-	orphanIdx.RemoveSpec("00000000000000000000000000000000")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			idx := NewMockIndexReader(ctrl)
 
-	_, err := svc.CollectionByID(context.Background(), CollectionByIDRequest{ID: "00000000000000000000000000000001"})
-	if err == nil {
-		t.Fatal("expected error for orphan spec")
-	}
-}
+			if tt.coll != nil {
+				idx.EXPECT().CollectionByID(tt.collID).Return(tt.coll, nil)
+				idx.EXPECT().SpecByID(tt.coll.SpecID).Return(tt.spec, nil)
+				idx.EXPECT().TagsByCollection(tt.collID).Return(tt.tags, nil)
+			} else {
+				idx.EXPECT().CollectionByID(tt.collID).Return(nil, errNotFound("collection", tt.collID))
+			}
 
-func TestCollectionByID_TagsError(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, collectionInfo, _, _ := seedTestData(t, svc, t.Name())
-
-	// Remove tags to trigger the else branch (TagsByCollection returns error)
-	svc.index.RemoveAllTags()
-
-	resp, err := svc.CollectionByID(context.Background(), CollectionByIDRequest{ID: collectionInfo.ID})
-	if err != nil {
-		t.Fatalf("CollectionByID() = %v", err)
-	}
-	if len(resp.Tags) != 0 {
-		t.Errorf("Tags = %d, want 0", len(resp.Tags))
+			svc := newCollectionService(idx, fakeValidator{})
+			resp, err := svc.CollectionByID(context.Background(), CollectionByIDRequest{ID: tt.collID})
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tt.coll.ID, resp.Collection.ID)
+			require.Len(t, resp.Tags, len(tt.tags))
+		})
 	}
 }

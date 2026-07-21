@@ -245,7 +245,7 @@ func (idx *Index) AllSpecs() []*model.Spec {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
-	return idx.allSpecs
+	return append([]*model.Spec(nil), idx.allSpecs...)
 }
 
 // SpecByID returns a spec by its ID.
@@ -281,7 +281,7 @@ func (idx *Index) CollectionsBySpec(specID string) ([]*model.Collection, error) 
 	if !ok {
 		return nil, fmt.Errorf("collection by spec %q not found", specID)
 	}
-	return cols, nil
+	return append([]*model.Collection(nil), cols...), nil
 }
 
 // TagByID returns a tag by its ID.
@@ -305,7 +305,7 @@ func (idx *Index) TagsByCollection(collectionID string) ([]*model.Tag, error) {
 	if !ok {
 		return nil, fmt.Errorf("tags by collection %q not found", collectionID)
 	}
-	return tags, nil
+	return append([]*model.Tag(nil), tags...), nil
 }
 
 // TagsBySpec returns all tags for a given spec ID.
@@ -317,7 +317,7 @@ func (idx *Index) TagsBySpec(specID string) ([]*model.Tag, error) {
 	if !ok {
 		return nil, fmt.Errorf("tags by spec %q not found", specID)
 	}
-	return tags, nil
+	return append([]*model.Tag(nil), tags...), nil
 }
 
 // EndpointsByTag returns all endpoints for a given tag ID.
@@ -329,7 +329,7 @@ func (idx *Index) EndpointsByTag(tagID string) ([]*model.Endpoint, error) {
 	if !ok {
 		return nil, fmt.Errorf("endpoints by tag %q not found", tagID)
 	}
-	return endpoints, nil
+	return append([]*model.Endpoint(nil), endpoints...), nil
 }
 
 // EndpointsBySpec returns all endpoints for a given spec ID.
@@ -341,7 +341,7 @@ func (idx *Index) EndpointsBySpec(specID string) ([]*model.Endpoint, error) {
 	if !ok {
 		return nil, fmt.Errorf("spec %q not found", specID)
 	}
-	return endpoints, nil
+	return append([]*model.Endpoint(nil), endpoints...), nil
 }
 
 // EndpointByCollection returns all endpoints for a given collection ID.
@@ -353,7 +353,7 @@ func (idx *Index) EndpointByCollection(collectionID string) ([]*model.Endpoint, 
 	if !ok {
 		return nil, fmt.Errorf("endpoints by collection %q not found", collectionID)
 	}
-	return endpoints, nil
+	return append([]*model.Endpoint(nil), endpoints...), nil
 }
 
 // EndpointByID returns an endpoint by its ID.

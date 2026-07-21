@@ -6,48 +6,42 @@ import (
 	"sort"
 )
 
-type (
-	// CollectionsRequest represents a request to list all collections for a given spec.
-	CollectionsRequest struct {
-		SpecID string `json:"specId" jsonschema:"required," validate:"required,md5"`
-	}
+type collectionService struct {
+	index IndexReader
+	v     RequestValidator
+}
 
-	// CollectionsResponse represents a response to list all collections for a given spec.
-	CollectionsResponse struct {
-		Spec        Spec             `json:"spec"        jsonschema:"required,Specification"`
-		Collections []CollectionItem `json:"collections" jsonschema:"List of collections associated with the spec,required"`
-	}
-
-	// CollectionByIDRequest represents a request to get a collection by its ID.
-	CollectionByIDRequest struct {
-		ID string `json:"id" validate:"required,md5" jsonschema:"Unique identifier for the collection,required"`
-	}
-
-	// CollectionByIDResponse represents a response to get a collection by its ID.
-	CollectionByIDResponse struct {
-		Spec       Spec          `json:"spec"       jsonschema:"required,Specification"`
-		Collection Collection    `json:"collection" jsonschema:"required,Collection"`
-		Tags       []TagListItem `json:"tags"       jsonschema:"List of tags associated with the collection,required"`
-	}
-)
+func newCollectionService(index IndexReader, v RequestValidator) *collectionService {
+	return &collectionService{index: index, v: v}
+}
 
 // CollectionsBySpec returns a list of all available collections for a given spec.
-func (s *Service) CollectionsBySpec(_ context.Context, rq CollectionsRequest) (CollectionsResponse, error) {
-	if err := s.validateRequest(rq); err != nil {
+func (cs *collectionService) CollectionsBySpec(
+	_ context.Context,
+	rq CollectionsRequest,
+) (CollectionsResponse, error) {
+	if err := cs.v.Struct(rq); err != nil {
 		return CollectionsResponse{}, NewValidationError(
-			"The spec ID is invalid — it must be a 32-character hex string. Use spec_list to find available specs.",
+			"The spec ID is invalid. It must be a 32-character hex string. "+
+				"Use spec_list to find the correct spec ID.",
 			err,
 		)
 	}
 
-	sp, err := s.index.SpecByID(rq.SpecID)
+	sp, err := cs.index.SpecByID(rq.SpecID)
 	if err != nil {
-		return CollectionsResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", rq.SpecID), err)
+		return CollectionsResponse{}, NewNotFoundError(
+			fmt.Sprintf("Spec %q was not found. Use spec_list to see all available specs.", rq.SpecID),
+			err,
+		)
 	}
 
-	colls, err := s.index.CollectionsBySpec(rq.SpecID)
+	colls, err := cs.index.CollectionsBySpec(rq.SpecID)
 	if err != nil {
-		return CollectionsResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", rq.SpecID), err)
+		return CollectionsResponse{}, NewNotFoundError(
+			fmt.Sprintf("Spec %q was not found. Use spec_list to see all available specs.", rq.SpecID),
+			err,
+		)
 	}
 
 	r := CollectionsResponse{
@@ -74,19 +68,25 @@ func (s *Service) CollectionsBySpec(_ context.Context, rq CollectionsRequest) (C
 	return r, nil
 }
 
-// CollectionByID returns a collection by its ID.
-func (s *Service) CollectionByID(_ context.Context, rq CollectionByIDRequest) (CollectionByIDResponse, error) {
-	if err := s.validateRequest(rq); err != nil {
+// CollectionByID returns a collection by its ID, including its spec and tags.
+func (cs *collectionService) CollectionByID(
+	_ context.Context,
+	rq CollectionByIDRequest,
+) (CollectionByIDResponse, error) {
+	if err := cs.v.Struct(rq); err != nil {
 		return CollectionByIDResponse{}, NewValidationError(
-			"The collection ID is invalid — it must be a 32-character hex string.",
+			"The collection ID is invalid. It must be a 32-character hex string.",
 			err,
 		)
 	}
 
 	var r CollectionByIDResponse
-	coll, err := s.index.CollectionByID(rq.ID)
+	coll, err := cs.index.CollectionByID(rq.ID)
 	if err != nil {
-		return CollectionByIDResponse{}, NewNotFoundError(fmt.Sprintf("Collection %q not found — use collection_by_spec to list collections.", rq.ID), err)
+		return CollectionByIDResponse{}, NewNotFoundError(
+			fmt.Sprintf("Collection %q was not found. Use collection_by_spec to list collections.", rq.ID),
+			err,
+		)
 	}
 	r.Collection = Collection{
 		ID:           coll.ID,
@@ -94,16 +94,19 @@ func (s *Service) CollectionByID(_ context.Context, rq CollectionByIDRequest) (C
 		CountMethods: coll.Stats.Methods,
 	}
 
-	sp, err := s.index.SpecByID(coll.SpecID)
+	sp, err := cs.index.SpecByID(coll.SpecID)
 	if err != nil {
-		return CollectionByIDResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — the collection references a spec that no longer exists.", coll.SpecID), err)
+		return CollectionByIDResponse{}, NewNotFoundError(
+			fmt.Sprintf("Spec %q was not found. The collection references a spec that no longer exists.", coll.SpecID),
+			err,
+		)
 	}
 	r.Spec = Spec{
 		ID:     sp.ID,
 		Domain: sp.Domain,
 	}
 
-	ts, err := s.index.TagsByCollection(rq.ID)
+	ts, err := cs.index.TagsByCollection(rq.ID)
 	if err == nil {
 		r.Tags = make([]TagListItem, 0, len(ts))
 		for _, tg := range ts {

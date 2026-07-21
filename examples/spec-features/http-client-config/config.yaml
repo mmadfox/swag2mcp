@@ -11,6 +11,7 @@ specs:
     base_url: https://api-a.example.com
     llm_title: API A
     http_client:
+      timeout: 60s  # overrides global 30s
       headers:
         X-API-Key: $(API_A_KEY)
     collections:
@@ -21,6 +22,8 @@ specs:
     base_url: https://api-b.example.com
     llm_title: API B
     http_client:
+      proxy:
+        url: http://proxy.internal:8080
       cookies:
         - name: session_id
           value: $(SESSION_ID)

@@ -151,7 +151,7 @@ collections:
 
 	collectionYAML := `spec_domain: test-api
 llm_title: Added Collection
-location: ./testdata/meteo.yaml
+location: ./testdata/other.yaml
 `
 	stdout, stderr, code := s.RunCommandInWS("add", "collection", "--yaml", collectionYAML, ".")
 	s.Equal(0, code)
@@ -159,6 +159,50 @@ location: ./testdata/meteo.yaml
 
 	stdout2, _, _ := s.RunCommandInWS("ls", ".")
 	s.Contains(stdout2, "Added Collection")
+}
+
+func (s *ConfigSuite) TestAddSpecDuplicateDomain() {
+	s.WriteConfig("specs: []")
+	specYAML := `domain: dup-api
+llm_title: First API
+base_url: https://api.example.com
+collections:
+  - title: Pets
+    location: ./testdata/meteo.yaml
+`
+	_, _, code := s.RunCommandInWS("add", "spec", "--yaml", specYAML, ".")
+	s.Equal(0, code)
+
+	dupYAML := `domain: dup-api
+llm_title: Second API
+base_url: https://api.example.com
+collections:
+  - title: Other
+    location: ./testdata/meteo.yaml
+`
+	_, stderr, code := s.RunCommandInWS("add", "spec", "--yaml", dupYAML, ".")
+	s.NotEqual(0, code)
+	s.Contains(stderr, "already exists")
+}
+
+func (s *ConfigSuite) TestAddCollectionDuplicateLocation() {
+	s.WriteConfig("specs: []")
+	specYAML := `domain: test-api
+llm_title: Test API
+base_url: https://api.example.com
+collections:
+  - title: Existing
+    location: ./testdata/meteo.yaml
+`
+	s.RunCommandInWS("add", "spec", "--yaml", specYAML, ".")
+
+	dupYAML := `spec_domain: test-api
+llm_title: Duplicate Collection
+location: ./testdata/meteo.yaml
+`
+	_, stderr, code := s.RunCommandInWS("add", "collection", "--yaml", dupYAML, ".")
+	s.NotEqual(0, code)
+	s.Contains(stderr, "already exists")
 }
 
 func (s *ConfigSuite) TestDeleteSpec() {

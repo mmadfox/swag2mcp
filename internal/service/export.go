@@ -23,14 +23,23 @@ type ExportResponse struct {
 	FileCount  int    `json:"fileCount"`
 }
 
+type exportService struct {
+	ws      WorkspaceOps
+	version string
+}
+
+func newExportService(ws WorkspaceOps, version string) *exportService {
+	return &exportService{ws: ws, version: version}
+}
+
 // Export creates a portable ZIP backup of the workspace.
-func (s *Service) Export(ctx context.Context, req ExportRequest) (ExportResponse, error) {
-	cfg, loadErr := s.loadExportConfig()
+func (es *exportService) Export(ctx context.Context, req ExportRequest) (ExportResponse, error) {
+	cfg, loadErr := es.loadExportConfig()
 	if loadErr != nil {
 		return ExportResponse{}, loadErr
 	}
 
-	exportDir, dirErr := s.ws.CreateExportDir()
+	exportDir, dirErr := es.ws.CreateExportDir()
 	if dirErr != nil {
 		return ExportResponse{}, NewInvokeError(
 			"Failed to create temporary export directory.",
@@ -46,7 +55,7 @@ func (s *Service) Export(ctx context.Context, req ExportRequest) (ExportResponse
 		)
 	}
 
-	fileCount, exportErr := s.exportCollections(ctx, cfg, req.SpecFilter, exportDir)
+	fileCount, exportErr := es.exportCollections(ctx, cfg, req.SpecFilter, exportDir)
 	if exportErr != nil {
 		return ExportResponse{}, exportErr
 	}
@@ -58,7 +67,7 @@ func (s *Service) Export(ctx context.Context, req ExportRequest) (ExportResponse
 		)
 	}
 
-	if err := s.finalizeExport(cfg, exportDir); err != nil {
+	if err := es.finalizeExport(cfg, exportDir); err != nil {
 		return ExportResponse{}, err
 	}
 
@@ -80,9 +89,9 @@ func (s *Service) Export(ctx context.Context, req ExportRequest) (ExportResponse
 	}, nil
 }
 
-func (s *Service) loadExportConfig() (*config.Config, error) {
-	cfgPath := s.ws.ConfigPath()
-	if s.ws.ConfigNotExists() {
+func (es *exportService) loadExportConfig() (*config.Config, error) {
+	cfgPath := es.ws.ConfigPath()
+	if es.ws.ConfigNotExists() {
 		return nil, NewNotFoundError(
 			"No configuration found in the workspace. Run 'swag2mcp init' first.",
 			fmt.Errorf("config not found at %s", cfgPath),
@@ -98,7 +107,7 @@ func (s *Service) loadExportConfig() (*config.Config, error) {
 	return cfg, nil
 }
 
-func (s *Service) exportCollections(ctx context.Context, cfg *config.Config, specFilter []string, exportDir string) (int, error) {
+func (es *exportService) exportCollections(ctx context.Context, cfg *config.Config, specFilter []string, exportDir string) (int, error) {
 	filter := makeFilter(specFilter)
 	locationMap := make(map[string]string)
 	fileCount := 0
@@ -121,12 +130,10 @@ func (s *Service) exportCollections(ctx context.Context, cfg *config.Config, spe
 				continue
 			}
 
-			data, dlErr := s.ws.DownloadSpec(ctx, coll.Location)
+			data, dlErr := es.ws.DownloadSpec(ctx, coll.Location)
 			if dlErr != nil {
 				return 0, NewInvokeError(
-					fmt.Sprintf("Failed to download spec from %q for collection %q in spec %q. "+
-						"Check that the location is correct and accessible.",
-						coll.Location, coll.Title, spec.Domain),
+					fmt.Sprintf("Failed to download spec for collection %q.", coll.Title),
 					dlErr,
 				)
 			}
@@ -144,12 +151,12 @@ func (s *Service) exportCollections(ctx context.Context, cfg *config.Config, spe
 		}
 	}
 
-	s.updateConfigLocations(cfg, specFilter, locationMap)
+	es.updateConfigLocations(cfg, specFilter, locationMap)
 
 	return fileCount, nil
 }
 
-func (s *Service) updateConfigLocations(cfg *config.Config, specFilter []string, locationMap map[string]string) {
+func (es *exportService) updateConfigLocations(cfg *config.Config, specFilter []string, locationMap map[string]string) {
 	filter := makeFilter(specFilter)
 	for i := range cfg.Specs {
 		spec := &cfg.Specs[i]
@@ -171,20 +178,20 @@ func (s *Service) updateConfigLocations(cfg *config.Config, specFilter []string,
 	}
 }
 
-func (s *Service) finalizeExport(cfg *config.Config, exportDir string) error {
+func (es *exportService) finalizeExport(cfg *config.Config, exportDir string) error {
 	if err := config.Save(cfg, filepath.Join(exportDir, "swag2mcp.yaml")); err != nil {
 		return NewInvokeError(
 			"Failed to save updated configuration to export.",
 			err,
 		)
 	}
-	if err := s.ws.CopyAuthScriptsToExport(exportDir); err != nil {
+	if err := es.ws.CopyAuthScriptsToExport(exportDir); err != nil {
 		return NewInvokeError(
 			"Failed to copy auth scripts to export.",
 			err,
 		)
 	}
-	if err := workspace.CreateMetaFile(exportDir, s.version); err != nil {
+	if err := workspace.CreateMetaFile(exportDir, es.version); err != nil {
 		return NewInvokeError(
 			"Failed to create backup metadata.",
 			err,

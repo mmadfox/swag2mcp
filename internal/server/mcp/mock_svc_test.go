@@ -17,6 +17,426 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
+// MockCatalogReader is a mock of CatalogReader interface.
+type MockCatalogReader struct {
+	ctrl     *gomock.Controller
+	recorder *MockCatalogReaderMockRecorder
+	isgomock struct{}
+}
+
+// MockCatalogReaderMockRecorder is the mock recorder for MockCatalogReader.
+type MockCatalogReaderMockRecorder struct {
+	mock *MockCatalogReader
+}
+
+// NewMockCatalogReader creates a new mock instance.
+func NewMockCatalogReader(ctrl *gomock.Controller) *MockCatalogReader {
+	mock := &MockCatalogReader{ctrl: ctrl}
+	mock.recorder = &MockCatalogReaderMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockCatalogReader) EXPECT() *MockCatalogReaderMockRecorder {
+	return m.recorder
+}
+
+// CollectionByID mocks base method.
+func (m *MockCatalogReader) CollectionByID(arg0 context.Context, req service.CollectionByIDRequest) (service.CollectionByIDResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CollectionByID", arg0, req)
+	ret0, _ := ret[0].(service.CollectionByIDResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CollectionByID indicates an expected call of CollectionByID.
+func (mr *MockCatalogReaderMockRecorder) CollectionByID(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CollectionByID", reflect.TypeOf((*MockCatalogReader)(nil).CollectionByID), arg0, req)
+}
+
+// CollectionsBySpec mocks base method.
+func (m *MockCatalogReader) CollectionsBySpec(arg0 context.Context, req service.CollectionsRequest) (service.CollectionsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CollectionsBySpec", arg0, req)
+	ret0, _ := ret[0].(service.CollectionsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CollectionsBySpec indicates an expected call of CollectionsBySpec.
+func (mr *MockCatalogReaderMockRecorder) CollectionsBySpec(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CollectionsBySpec", reflect.TypeOf((*MockCatalogReader)(nil).CollectionsBySpec), arg0, req)
+}
+
+// EndpointByID mocks base method.
+func (m *MockCatalogReader) EndpointByID(arg0 context.Context, req service.EndpointByIDRequest) (service.EndpointByIDResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EndpointByID", arg0, req)
+	ret0, _ := ret[0].(service.EndpointByIDResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EndpointByID indicates an expected call of EndpointByID.
+func (mr *MockCatalogReaderMockRecorder) EndpointByID(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndpointByID", reflect.TypeOf((*MockCatalogReader)(nil).EndpointByID), arg0, req)
+}
+
+// EndpointsByCollection mocks base method.
+func (m *MockCatalogReader) EndpointsByCollection(arg0 context.Context, req service.EndpointsByCollectionRequest) (service.EndpointsByCollectionResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EndpointsByCollection", arg0, req)
+	ret0, _ := ret[0].(service.EndpointsByCollectionResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EndpointsByCollection indicates an expected call of EndpointsByCollection.
+func (mr *MockCatalogReaderMockRecorder) EndpointsByCollection(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndpointsByCollection", reflect.TypeOf((*MockCatalogReader)(nil).EndpointsByCollection), arg0, req)
+}
+
+// EndpointsBySpec mocks base method.
+func (m *MockCatalogReader) EndpointsBySpec(arg0 context.Context, req service.EndpointsBySpecRequest) (service.EndpointsBySpecResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EndpointsBySpec", arg0, req)
+	ret0, _ := ret[0].(service.EndpointsBySpecResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EndpointsBySpec indicates an expected call of EndpointsBySpec.
+func (mr *MockCatalogReaderMockRecorder) EndpointsBySpec(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndpointsBySpec", reflect.TypeOf((*MockCatalogReader)(nil).EndpointsBySpec), arg0, req)
+}
+
+// EndpointsByTag mocks base method.
+func (m *MockCatalogReader) EndpointsByTag(arg0 context.Context, req service.EndpointsByTagRequest) (service.EndpointsByTagResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EndpointsByTag", arg0, req)
+	ret0, _ := ret[0].(service.EndpointsByTagResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EndpointsByTag indicates an expected call of EndpointsByTag.
+func (mr *MockCatalogReaderMockRecorder) EndpointsByTag(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndpointsByTag", reflect.TypeOf((*MockCatalogReader)(nil).EndpointsByTag), arg0, req)
+}
+
+// SpecByID mocks base method.
+func (m *MockCatalogReader) SpecByID(arg0 context.Context, req service.SpecByIDRequest) (service.SpecByIDResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SpecByID", arg0, req)
+	ret0, _ := ret[0].(service.SpecByIDResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SpecByID indicates an expected call of SpecByID.
+func (mr *MockCatalogReaderMockRecorder) SpecByID(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpecByID", reflect.TypeOf((*MockCatalogReader)(nil).SpecByID), arg0, req)
+}
+
+// Specs mocks base method.
+func (m *MockCatalogReader) Specs(arg0 context.Context) (service.SpecsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Specs", arg0)
+	ret0, _ := ret[0].(service.SpecsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Specs indicates an expected call of Specs.
+func (mr *MockCatalogReaderMockRecorder) Specs(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Specs", reflect.TypeOf((*MockCatalogReader)(nil).Specs), arg0)
+}
+
+// TagByID mocks base method.
+func (m *MockCatalogReader) TagByID(arg0 context.Context, req service.TagByIDRequest) (service.TagByIDResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TagByID", arg0, req)
+	ret0, _ := ret[0].(service.TagByIDResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TagByID indicates an expected call of TagByID.
+func (mr *MockCatalogReaderMockRecorder) TagByID(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagByID", reflect.TypeOf((*MockCatalogReader)(nil).TagByID), arg0, req)
+}
+
+// TagsByCollection mocks base method.
+func (m *MockCatalogReader) TagsByCollection(arg0 context.Context, req service.TagsByCollectionRequest) (service.TagsByCollectionResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TagsByCollection", arg0, req)
+	ret0, _ := ret[0].(service.TagsByCollectionResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TagsByCollection indicates an expected call of TagsByCollection.
+func (mr *MockCatalogReaderMockRecorder) TagsByCollection(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagsByCollection", reflect.TypeOf((*MockCatalogReader)(nil).TagsByCollection), arg0, req)
+}
+
+// TagsBySpec mocks base method.
+func (m *MockCatalogReader) TagsBySpec(arg0 context.Context, req service.TagsBySpecRequest) (service.TagsBySpecResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TagsBySpec", arg0, req)
+	ret0, _ := ret[0].(service.TagsBySpecResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TagsBySpec indicates an expected call of TagsBySpec.
+func (mr *MockCatalogReaderMockRecorder) TagsBySpec(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagsBySpec", reflect.TypeOf((*MockCatalogReader)(nil).TagsBySpec), arg0, req)
+}
+
+// MockEndpointExplorer is a mock of EndpointExplorer interface.
+type MockEndpointExplorer struct {
+	ctrl     *gomock.Controller
+	recorder *MockEndpointExplorerMockRecorder
+	isgomock struct{}
+}
+
+// MockEndpointExplorerMockRecorder is the mock recorder for MockEndpointExplorer.
+type MockEndpointExplorerMockRecorder struct {
+	mock *MockEndpointExplorer
+}
+
+// NewMockEndpointExplorer creates a new mock instance.
+func NewMockEndpointExplorer(ctrl *gomock.Controller) *MockEndpointExplorer {
+	mock := &MockEndpointExplorer{ctrl: ctrl}
+	mock.recorder = &MockEndpointExplorerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockEndpointExplorer) EXPECT() *MockEndpointExplorerMockRecorder {
+	return m.recorder
+}
+
+// Inspect mocks base method.
+func (m *MockEndpointExplorer) Inspect(arg0 context.Context, req service.InspectRequest) (service.InspectResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Inspect", arg0, req)
+	ret0, _ := ret[0].(service.InspectResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Inspect indicates an expected call of Inspect.
+func (mr *MockEndpointExplorerMockRecorder) Inspect(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inspect", reflect.TypeOf((*MockEndpointExplorer)(nil).Inspect), arg0, req)
+}
+
+// Search mocks base method.
+func (m *MockEndpointExplorer) Search(ctx context.Context, req service.SearchRequest) (service.SearchResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Search", ctx, req)
+	ret0, _ := ret[0].(service.SearchResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Search indicates an expected call of Search.
+func (mr *MockEndpointExplorerMockRecorder) Search(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Search", reflect.TypeOf((*MockEndpointExplorer)(nil).Search), ctx, req)
+}
+
+// MockEndpointExecutor is a mock of EndpointExecutor interface.
+type MockEndpointExecutor struct {
+	ctrl     *gomock.Controller
+	recorder *MockEndpointExecutorMockRecorder
+	isgomock struct{}
+}
+
+// MockEndpointExecutorMockRecorder is the mock recorder for MockEndpointExecutor.
+type MockEndpointExecutorMockRecorder struct {
+	mock *MockEndpointExecutor
+}
+
+// NewMockEndpointExecutor creates a new mock instance.
+func NewMockEndpointExecutor(ctrl *gomock.Controller) *MockEndpointExecutor {
+	mock := &MockEndpointExecutor{ctrl: ctrl}
+	mock.recorder = &MockEndpointExecutorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockEndpointExecutor) EXPECT() *MockEndpointExecutorMockRecorder {
+	return m.recorder
+}
+
+// Auth mocks base method.
+func (m *MockEndpointExecutor) Auth(arg0 context.Context, req service.AuthRequest) (service.AuthResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Auth", arg0, req)
+	ret0, _ := ret[0].(service.AuthResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Auth indicates an expected call of Auth.
+func (mr *MockEndpointExecutorMockRecorder) Auth(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Auth", reflect.TypeOf((*MockEndpointExecutor)(nil).Auth), arg0, req)
+}
+
+// Invoke mocks base method.
+func (m *MockEndpointExecutor) Invoke(arg0 context.Context, req service.InvokeRequest) (service.InvokeResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Invoke", arg0, req)
+	ret0, _ := ret[0].(service.InvokeResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Invoke indicates an expected call of Invoke.
+func (mr *MockEndpointExecutorMockRecorder) Invoke(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Invoke", reflect.TypeOf((*MockEndpointExecutor)(nil).Invoke), arg0, req)
+}
+
+// MockSystemInfo is a mock of SystemInfo interface.
+type MockSystemInfo struct {
+	ctrl     *gomock.Controller
+	recorder *MockSystemInfoMockRecorder
+	isgomock struct{}
+}
+
+// MockSystemInfoMockRecorder is the mock recorder for MockSystemInfo.
+type MockSystemInfoMockRecorder struct {
+	mock *MockSystemInfo
+}
+
+// NewMockSystemInfo creates a new mock instance.
+func NewMockSystemInfo(ctrl *gomock.Controller) *MockSystemInfo {
+	mock := &MockSystemInfo{ctrl: ctrl}
+	mock.recorder = &MockSystemInfoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockSystemInfo) EXPECT() *MockSystemInfoMockRecorder {
+	return m.recorder
+}
+
+// Info mocks base method.
+func (m *MockSystemInfo) Info(arg0 context.Context) (service.InfoResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Info", arg0)
+	ret0, _ := ret[0].(service.InfoResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Info indicates an expected call of Info.
+func (mr *MockSystemInfoMockRecorder) Info(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockSystemInfo)(nil).Info), arg0)
+}
+
+// MakeToolDefinitions mocks base method.
+func (m *MockSystemInfo) MakeToolDefinitions() (service.ToolDefinitions, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MakeToolDefinitions")
+	ret0, _ := ret[0].(service.ToolDefinitions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MakeToolDefinitions indicates an expected call of MakeToolDefinitions.
+func (mr *MockSystemInfoMockRecorder) MakeToolDefinitions() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeToolDefinitions", reflect.TypeOf((*MockSystemInfo)(nil).MakeToolDefinitions))
+}
+
+// MockResponseManager is a mock of ResponseManager interface.
+type MockResponseManager struct {
+	ctrl     *gomock.Controller
+	recorder *MockResponseManagerMockRecorder
+	isgomock struct{}
+}
+
+// MockResponseManagerMockRecorder is the mock recorder for MockResponseManager.
+type MockResponseManagerMockRecorder struct {
+	mock *MockResponseManager
+}
+
+// NewMockResponseManager creates a new mock instance.
+func NewMockResponseManager(ctrl *gomock.Controller) *MockResponseManager {
+	mock := &MockResponseManager{ctrl: ctrl}
+	mock.recorder = &MockResponseManagerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockResponseManager) EXPECT() *MockResponseManagerMockRecorder {
+	return m.recorder
+}
+
+// ResponseCompress mocks base method.
+func (m *MockResponseManager) ResponseCompress(arg0 context.Context, req service.ResponseCompressRequest) (service.ResponseCompressResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResponseCompress", arg0, req)
+	ret0, _ := ret[0].(service.ResponseCompressResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ResponseCompress indicates an expected call of ResponseCompress.
+func (mr *MockResponseManagerMockRecorder) ResponseCompress(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResponseCompress", reflect.TypeOf((*MockResponseManager)(nil).ResponseCompress), arg0, req)
+}
+
+// ResponseOutline mocks base method.
+func (m *MockResponseManager) ResponseOutline(arg0 context.Context, req service.ResponseOutlineRequest) (service.ResponseOutlineResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResponseOutline", arg0, req)
+	ret0, _ := ret[0].(service.ResponseOutlineResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ResponseOutline indicates an expected call of ResponseOutline.
+func (mr *MockResponseManagerMockRecorder) ResponseOutline(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResponseOutline", reflect.TypeOf((*MockResponseManager)(nil).ResponseOutline), arg0, req)
+}
+
+// ResponseSlice mocks base method.
+func (m *MockResponseManager) ResponseSlice(arg0 context.Context, req service.ResponseSliceRequest) (service.ResponseSliceResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResponseSlice", arg0, req)
+	ret0, _ := ret[0].(service.ResponseSliceResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ResponseSlice indicates an expected call of ResponseSlice.
+func (mr *MockResponseManagerMockRecorder) ResponseSlice(arg0, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResponseSlice", reflect.TypeOf((*MockResponseManager)(nil).ResponseSlice), arg0, req)
+}
+
 // MockSvc is a mock of Svc interface.
 type MockSvc struct {
 	ctrl     *gomock.Controller

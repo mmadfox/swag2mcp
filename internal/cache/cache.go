@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/env"
@@ -40,6 +41,7 @@ const (
 
 // Cache resolves spec locations to local file paths, caching sources on disk.
 type Cache struct {
+	mu           sync.Mutex
 	dir          string
 	specsDir     string
 	workspaceDir string
@@ -59,6 +61,8 @@ func New(workspaceDir string) *Cache {
 
 // SetWorkspaceDir sets the workspace directory and updates all subdirectories.
 func (c *Cache) SetWorkspaceDir(workspaceDir string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.dir = filepath.Join(workspaceDir, CacheDirName)
 	c.specsDir = filepath.Join(workspaceDir, SpecsDirName)
 	c.workspaceDir = workspaceDir
@@ -72,6 +76,8 @@ func (c *Cache) SetWorkspaceDir(workspaceDir string) {
 //   - Local paths inside workspaceDir/specs are returned as-is (not cached).
 //   - Local paths outside workspaceDir/specs are cached on disk.
 func (c *Cache) Resolve(ctx context.Context, location string) (string, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if location == "" {
 		return "", errors.New("empty location")
 	}
@@ -205,6 +211,8 @@ func (c *Cache) loadSource(ctx context.Context, normalized string, stype sourceT
 // For http(s):// URLs it checks the cache first, then does a HEAD request.
 // Returns nil if accessible, [LocationError] otherwise.
 func (c *Cache) Exists(ctx context.Context, location string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if location == "" {
 		return errors.New("empty location")
 	}

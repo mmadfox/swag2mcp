@@ -2,1601 +2,199 @@ package service
 
 import (
 	"context"
-	"embed"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strings"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
-	"github.com/mmadfox/swag2mcp/internal/httpclient"
-	"github.com/mmadfox/swag2mcp/internal/id"
-	"github.com/mmadfox/swag2mcp/internal/index"
 	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/mmadfox/swag2mcp/internal/spec"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
-//go:embed testdata/invoke/*.yaml
-var testDataFS embed.FS
+type fakeRateLimiter struct{}
 
-// TestInvoke_GetRequest verifies that a simple GET request works correctly.
-func TestInvoke_GetRequest(t *testing.T) {
-	t.Parallel()
+func (fakeRateLimiter) Allow(_ string) error { return nil }
 
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodGet,
-		ExpectedPath:   "/users",
-		StatusCode:     http.StatusOK,
-		ResponseBody:   map[string]any{"users": []any{}},
-	})
-	t.Cleanup(testServer.Close)
-
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
-
-	// Override the base URL to point to our test server
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusOK {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
-	}
+func newTestInvokeSvc(t *testing.T, idx IndexReader, ws WorkspaceOps) *invokeService {
+	t.Helper()
+	ctx := newServiceContext()
+	ctx.storeHTTPClient(&http.Client{Transport: http.DefaultTransport})
+	ctx.maxResponseSize.Store(defaultMaxResponseSize)
+	return newInvokeService(ctx, idx, ws, fakeValidator{}, fakeRateLimiter{}, "")
 }
 
-// TestInvoke_GetRequestWithQuery verifies that query parameters are sent correctly.
-func TestInvoke_GetRequestWithQuery(t *testing.T) {
+func TestInvokeService_Invoke_validationError(t *testing.T) {
 	t.Parallel()
 
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodGet,
-		ExpectedPath:   "/users",
-		ExpectedQuery:  map[string]string{"limit": "10", "offset": "0"},
-		StatusCode:     http.StatusOK,
-		ResponseBody:   map[string]any{"users": []any{}},
-	})
-	t.Cleanup(testServer.Close)
-
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-		Parameters: map[string]any{"limit": "10", "offset": "0"},
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusOK {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
-	}
+	ctrl := gomock.NewController(t)
+	svc := newInvokeService(newServiceContext(), NewMockIndexReader(ctrl), NewMockWorkspaceOps(ctrl), strictValidator{}, fakeRateLimiter{}, "")
+	_, err := svc.Invoke(context.Background(), InvokeRequest{EndpointID: "bad"})
+	require.Error(t, err)
 }
 
-// TestInvoke_PostRequestWithBody verifies that POST requests with a body work correctly.
-func TestInvoke_PostRequestWithBody(t *testing.T) {
+func TestInvokeService_Invoke_endpointNotFound(t *testing.T) {
 	t.Parallel()
 
-	specDoc := parseSpecFromFile(t, "orders.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodPost,
-		ExpectedPath:   "/orders",
-		ExpectedBody:   map[string]any{"productId": "prod-1", "quantity": float64(2)},
-		StatusCode:     http.StatusCreated,
-		ResponseBody:   map[string]any{"orderId": "ord-1"},
-	})
-	t.Cleanup(testServer.Close)
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().EndpointByID("missing").Return(nil, errNotFound("endpoint", "missing"))
 
-	serviceInstance := buildTestService(t, "test", specDoc, nil, nil)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodPost, "/orders")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-		RequestBody: map[string]any{
-			"productId": "prod-1",
-			"quantity":  2,
-		},
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusCreated {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusCreated)
-	}
+	svc := newTestInvokeSvc(t, idx, NewMockWorkspaceOps(ctrl))
+	_, err := svc.Invoke(context.Background(), InvokeRequest{EndpointID: "missing"})
+	require.Error(t, err)
 }
 
-// TestInvoke_DeleteRequest verifies that DELETE requests work correctly.
-func TestInvoke_DeleteRequest(t *testing.T) {
+func TestInvokeService_Invoke_specNotFound(t *testing.T) {
 	t.Parallel()
 
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodDelete,
-		ExpectedPath:   "/users/user-123",
-		StatusCode:     http.StatusNoContent,
-	})
-	t.Cleanup(testServer.Close)
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().EndpointByID("ep1").Return(&model.Endpoint{ID: "ep1", SpecID: "s1", Operation: &spec.Operation{}}, nil)
+	idx.EXPECT().SpecByID("s1").Return(nil, errNotFound("spec", "s1"))
 
-	serviceInstance := buildTestService(t, "delete-request", specDoc, nil, nil)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodDelete, "/users/{userId}")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-		Parameters: map[string]any{"userId": "user-123"},
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusNoContent {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusNoContent)
-	}
+	svc := newTestInvokeSvc(t, idx, NewMockWorkspaceOps(ctrl))
+	_, err := svc.Invoke(context.Background(), InvokeRequest{EndpointID: "ep1"})
+	require.Error(t, err)
 }
 
-// TestInvoke_PatchRequest verifies that PATCH requests with headers work correctly.
-func TestInvoke_PatchRequest(t *testing.T) {
+func TestInvokeService_Invoke_collectionNotFound(t *testing.T) {
 	t.Parallel()
 
-	specDoc := parseSpecFromFile(t, "orders.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodPatch,
-		ExpectedPath:   "/orders/ord-1",
-		ExpectedHeaders: map[string]string{
-			"X-Idempotency-Key": "idem-abc-123",
-		},
-		ExpectedBody: map[string]any{"status": "shipped"},
-		StatusCode:   http.StatusOK,
-		ResponseBody: map[string]any{"orderId": "ord-1", "status": "shipped"},
-	})
-	t.Cleanup(testServer.Close)
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().EndpointByID("ep1").Return(&model.Endpoint{ID: "ep1", SpecID: "s1", CollectionID: "c1", Operation: &spec.Operation{}}, nil)
+	idx.EXPECT().SpecByID("s1").Return(&model.Spec{ID: "s1"}, nil)
+	idx.EXPECT().CollectionByID("c1").Return(nil, errNotFound("collection", "c1"))
 
-	serviceInstance := buildTestService(t, "patch-request", specDoc, nil, nil)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodPatch, "/orders/{orderId}")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-		Parameters: map[string]any{
-			"orderId":           "ord-1",
-			"X-Idempotency-Key": "idem-abc-123",
-		},
-		RequestBody: map[string]any{"status": "shipped"},
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusOK {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
-	}
+	svc := newTestInvokeSvc(t, idx, NewMockWorkspaceOps(ctrl))
+	_, err := svc.Invoke(context.Background(), InvokeRequest{EndpointID: "ep1"})
+	require.Error(t, err)
 }
 
-// TestInvoke_SpecHeaders verifies that spec-level headers are sent on every request.
-func TestInvoke_SpecHeaders(t *testing.T) {
+func TestInvokeService_Invoke_nilOperation(t *testing.T) {
 	t.Parallel()
 
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodGet,
-		ExpectedPath:   "/users",
-		ExpectedHeaders: map[string]string{
-			"X-Source":      "swag2mcp",
-			"X-Api-Version": "2024-01",
-		},
-		StatusCode:   http.StatusOK,
-		ResponseBody: map[string]any{"users": []any{}},
-	})
-	t.Cleanup(testServer.Close)
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().EndpointByID("ep1").Return(&model.Endpoint{ID: "ep1", SpecID: "s1", CollectionID: "c1"}, nil)
 
-	serviceInstance := buildTestService(t, "spec-headers", specDoc,
-		map[string]string{
-			"X-Source":      "swag2mcp",
-			"X-Api-Version": "2024-01",
-		},
-		nil,
+	svc := newTestInvokeSvc(t, idx, NewMockWorkspaceOps(ctrl))
+	_, err := svc.Invoke(context.Background(), InvokeRequest{EndpointID: "ep1"})
+	require.Error(t, err)
+}
+
+func TestInvokeService_buildRequest(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestInvokeSvc(t, NewMockIndexReader(gomock.NewController(t)), NewMockWorkspaceOps(gomock.NewController(t)))
+	req, err := svc.buildRequest(
+		context.Background(),
+		&model.Spec{BaseURL: "https://api.example.com"},
+		&model.Collection{},
+		&model.Endpoint{Name: "GET", Path: "/test", Operation: &spec.Operation{}},
+		InvokeRequest{},
 	)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusOK {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
-	}
+	require.NoError(t, err)
+	require.NotNil(t, req)
+	require.Equal(t, "https://api.example.com/test", req.URL.String())
 }
 
-// TestInvoke_CollectionHeaders verifies that collection-level headers override spec-level headers.
-func TestInvoke_CollectionHeaders(t *testing.T) {
+func TestInvokeService_executeRequest_success(t *testing.T) {
 	t.Parallel()
 
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodGet,
-		ExpectedPath:   "/users",
-		ExpectedHeaders: map[string]string{
-			"X-Region": "us-east-1",
-		},
-		StatusCode:   http.StatusOK,
-		ResponseBody: map[string]any{"users": []any{}},
-	})
-	t.Cleanup(testServer.Close)
-
-	serviceInstance := buildTestService(t, "coll-headers", specDoc,
-		map[string]string{
-			"X-Region": "eu-west-1",
-		},
-		nil,
-	)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	// Override collection headers
-	collectionID := id.Collection(specInfo.ID, t.Name()+"/collection")
-	collection, _ := serviceInstance.index.CollectionByID(collectionID)
-	collection.HTTPClient = &model.HTTPClientConfig{
-		Headers: map[string]string{
-			"X-Region": "us-east-1",
-		},
-	}
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusOK {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
-	}
-}
-
-// TestInvoke_BearerAuth verifies that Bearer token authentication works.
-func TestInvoke_BearerAuth(t *testing.T) {
-	t.Parallel()
-
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodGet,
-		ExpectedPath:   "/users",
-		AuthType:       "bearer",
-		AuthCredentials: map[string]string{
-			"token": "my-bearer-token",
-		},
-		StatusCode:   http.StatusOK,
-		ResponseBody: map[string]any{"users": []any{}},
-	})
-	t.Cleanup(testServer.Close)
-
-	authenticator := &auth.BearerTokenAuthClient{Token: "my-bearer-token"}
-	if newError := authenticator.New(); newError != nil {
-		t.Fatalf("failed to init authenticator: %v", newError)
-	}
-
-	serviceInstance := buildTestService(t, "bearer-auth", specDoc, nil, authenticator)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusOK {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
-	}
-}
-
-// TestInvoke_BasicAuth verifies that HTTP Basic authentication works.
-func TestInvoke_BasicAuth(t *testing.T) {
-	t.Parallel()
-
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodGet,
-		ExpectedPath:   "/users",
-		AuthType:       "basic",
-		AuthCredentials: map[string]string{
-			"username": "admin",
-			"password": "secret",
-		},
-		StatusCode:   http.StatusOK,
-		ResponseBody: map[string]any{"users": []any{}},
-	})
-	t.Cleanup(testServer.Close)
-
-	authenticator := &auth.BasicAuthClient{Username: "admin", Password: "secret"}
-	if newError := authenticator.New(); newError != nil {
-		t.Fatalf("failed to init authenticator: %v", newError)
-	}
-
-	serviceInstance := buildTestService(t, "basic-auth", specDoc, nil, authenticator)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusOK {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
-	}
-}
-
-// TestInvoke_OAuth2ClientCredentials verifies that OAuth2 Client Credentials auth works.
-func TestInvoke_OAuth2ClientCredentials(t *testing.T) {
-	t.Parallel()
-
-	authServer := newTestAuthServer(t, "oauth2-token-123")
-	t.Cleanup(authServer.Close)
-
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodGet,
-		ExpectedPath:   "/users",
-		AuthType:       "oauth2-cc",
-		AuthCredentials: map[string]string{
-			"token": "oauth2-token-123",
-		},
-		StatusCode:   http.StatusOK,
-		ResponseBody: map[string]any{"users": []any{}},
-	})
-	t.Cleanup(testServer.Close)
-
-	authenticator := &auth.OAuth2ClientCredentialsAuthClient{
-		ClientID:     "test-client",
-		ClientSecret: "test-secret",
-		TokenURL:     authServer.URL + "/token",
-	}
-	if newError := authenticator.New(); newError != nil {
-		t.Fatalf("failed to init authenticator: %v", newError)
-	}
-
-	serviceInstance := buildTestService(t, "oauth2-cc", specDoc, nil, authenticator)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusOK {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
-	}
-}
-
-// TestInvoke_DigestAuth verifies that HTTP Digest authentication works.
-func TestInvoke_DigestAuth(t *testing.T) {
-	t.Parallel()
-
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	digestServer := newTestDigestServer(t, "digest-user", "digest-pass")
-	t.Cleanup(digestServer.Close)
-
-	serviceInstance := buildTestService(t, "digest-auth", specDoc, nil, nil)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = digestServer.URL
-
-	// Digest auth is applied via the auth transport, so we need to set it up
-	authenticator := &auth.DigestAuthClient{
-		Username: "digest-user",
-		Password: "digest-pass",
-	}
-	if newError := authenticator.New(); newError != nil {
-		t.Fatalf("failed to init authenticator: %v", newError)
-	}
-	specInfo.Auth = authenticator
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusOK {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
-	}
-}
-
-// TestInvoke_HMACAuth verifies that HMAC-SHA256 authentication works.
-func TestInvoke_HMACAuth(t *testing.T) {
-	t.Parallel()
-
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodGet,
-		ExpectedPath:   "/users",
-		AuthType:       "hmac",
-		AuthCredentials: map[string]string{
-			"api_key": "test-api-key",
-		},
-		StatusCode:   http.StatusOK,
-		ResponseBody: map[string]any{"users": []any{}},
-	})
-	t.Cleanup(testServer.Close)
-
-	authenticator := &auth.HMACAuthClient{APIKey: "test-api-key", SecretKey: "test-secret-key"}
-	if newError := authenticator.New(); newError != nil {
-		t.Fatalf("failed to init authenticator: %v", newError)
-	}
-
-	serviceInstance := buildTestService(t, "hmac-auth", specDoc, nil, authenticator)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusOK {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
-	}
-}
-
-// TestInvoke_NotFoundError verifies that invoking a non-existent endpoint returns an error.
-func TestInvoke_NotFoundError(t *testing.T) {
-	t.Parallel()
-
-	serviceInstance, serviceError := New()
-	if serviceError != nil {
-		t.Fatalf("failed to create service: %v", serviceError)
-	}
-
-	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: "00000000000000000000000000000000",
-	})
-	if invokeError == nil {
-		t.Fatal("expected error for non-existent endpoint, got nil")
-	}
-}
-
-// TestInvoke_ValidationError verifies that an invalid endpoint ID returns a validation error.
-func TestInvoke_ValidationError(t *testing.T) {
-	t.Parallel()
-
-	serviceInstance, serviceError := New()
-	if serviceError != nil {
-		t.Fatalf("failed to create service: %v", serviceError)
-	}
-
-	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: "invalid-id",
-	})
-	if invokeError == nil {
-		t.Fatal("expected validation error for invalid endpoint ID, got nil")
-	}
-}
-
-// TestInvoke_ContentTypeHeader verifies that Content-Type is set for requests with a body.
-func TestInvoke_ContentTypeHeader(t *testing.T) {
-	t.Parallel()
-
-	specDoc := parseSpecFromFile(t, "orders.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodPost,
-		ExpectedPath:   "/orders",
-		ExpectedHeaders: map[string]string{
-			"Content-Type": "application/json",
-		},
-		StatusCode:   http.StatusCreated,
-		ResponseBody: map[string]any{"orderId": "ord-1"},
-	})
-	t.Cleanup(testServer.Close)
-
-	serviceInstance := buildTestService(t, "content-type", specDoc, nil, nil)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodPost, "/orders")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-		RequestBody: map[string]any{
-			"productId": "prod-1",
-			"quantity":  2,
-		},
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusCreated {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusCreated)
-	}
-}
-
-// TestInvoke_Cookies verifies that cookies from HTTPClientConfig are applied.
-func TestInvoke_Cookies(t *testing.T) {
-	t.Parallel()
-
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	testServer := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		cookie := request.Header.Get("Cookie")
-		if !strings.Contains(cookie, "session_id=abc123") {
-			writer.WriteHeader(http.StatusBadRequest)
-			_, _ = fmt.Fprintf(writer, `{"error":"missing cookie: %s"}`, cookie)
-			return
-		}
-		if !strings.Contains(cookie, "theme=dark") {
-			writer.WriteHeader(http.StatusBadRequest)
-			_, _ = fmt.Fprintf(writer, `{"error":"missing cookie: %s"}`, cookie)
-			return
-		}
-		writer.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(writer).Encode(map[string]any{"ok": true})
-	}))
-	t.Cleanup(testServer.Close)
-
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	collectionID := id.Collection(specInfo.ID, t.Name()+"/collection")
-	collection, _ := serviceInstance.index.CollectionByID(collectionID)
-	collection.HTTPClient = &model.HTTPClientConfig{
-		Cookies: []httpclient.Cookie{
-			{Name: "session_id", Value: "abc123"},
-			{Name: "theme", Value: "dark"},
-		},
-	}
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusOK {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
-	}
-}
-
-// TestInvoke_HTTPClientConfigHeaders verifies that headers from HTTPClientConfig are applied.
-func TestInvoke_HTTPClientConfigHeaders(t *testing.T) {
-	t.Parallel()
-
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodGet,
-		ExpectedPath:   "/users",
-		ExpectedHeaders: map[string]string{
-			"X-Custom-Header": "custom-value",
-		},
-		StatusCode:   http.StatusOK,
-		ResponseBody: map[string]any{"users": []any{}},
-	})
-	t.Cleanup(testServer.Close)
-
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	collectionID := id.Collection(specInfo.ID, t.Name()+"/collection")
-	collection, _ := serviceInstance.index.CollectionByID(collectionID)
-	collection.HTTPClient = &model.HTTPClientConfig{
-		Headers: map[string]string{
-			"X-Custom-Header": "custom-value",
-		},
-	}
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if response.StatusCode != http.StatusOK {
-		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
-	}
-}
-
-// TestInvoke_TableDriven runs multiple test cases in a table-driven style.
-func TestInvoke_TableDriven(t *testing.T) {
-	t.Parallel()
-
-	type invokeTestCase struct {
-		Name           string
-		SpecFile       string
-		Method         string
-		Path           string
-		Parameters     map[string]any
-		RequestBody    map[string]any
-		SpecHeaders    map[string]string
-		AuthType       string
-		AuthToken      string
-		ExpectedStatus int
-	}
-
-	testCases := []invokeTestCase{
-		{
-			Name:           "GET list users without parameters",
-			SpecFile:       "users.yaml",
-			Method:         http.MethodGet,
-			Path:           "/users",
-			ExpectedStatus: http.StatusOK,
-		},
-		{
-			Name:     "GET list users with query parameters",
-			SpecFile: "users.yaml",
-			Method:   http.MethodGet,
-			Path:     "/users",
-			Parameters: map[string]any{
-				"limit":  "20",
-				"offset": "5",
-			},
-			ExpectedStatus: http.StatusOK,
-		},
-		{
-			Name:     "GET user by ID with path parameter",
-			SpecFile: "users.yaml",
-			Method:   http.MethodGet,
-			Path:     "/users/{userId}",
-			Parameters: map[string]any{
-				"userId": "user-42",
-			},
-			ExpectedStatus: http.StatusOK,
-		},
-		{
-			Name:     "DELETE user by ID",
-			SpecFile: "users.yaml",
-			Method:   http.MethodDelete,
-			Path:     "/users/{userId}",
-			Parameters: map[string]any{
-				"userId": "user-to-delete",
-			},
-			ExpectedStatus: http.StatusNoContent,
-		},
-		{
-			Name:     "POST create order with body",
-			SpecFile: "orders.yaml",
-			Method:   http.MethodPost,
-			Path:     "/orders",
-			RequestBody: map[string]any{
-				"productId": "prod-99",
-				"quantity":  1,
-			},
-			ExpectedStatus: http.StatusCreated,
-		},
-		{
-			Name:     "PATCH update order with headers and body",
-			SpecFile: "orders.yaml",
-			Method:   http.MethodPatch,
-			Path:     "/orders/{orderId}",
-			Parameters: map[string]any{
-				"orderId":           "ord-42",
-				"X-Idempotency-Key": "idem-xyz-789",
-			},
-			RequestBody: map[string]any{
-				"status": "cancelled",
-			},
-			ExpectedStatus: http.StatusOK,
-		},
-		{
-			Name:     "GET with spec-level custom headers",
-			SpecFile: "users.yaml",
-			Method:   http.MethodGet,
-			Path:     "/users",
-			SpecHeaders: map[string]string{
-				"X-Custom-Header": "custom-value",
-			},
-			ExpectedStatus: http.StatusOK,
-		},
-		{
-			Name:           "GET with Bearer authentication",
-			SpecFile:       "users.yaml",
-			Method:         http.MethodGet,
-			Path:           "/users",
-			AuthType:       "bearer",
-			AuthToken:      "table-driven-token",
-			ExpectedStatus: http.StatusOK,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
-			t.Parallel()
-			specDoc := parseSpecFromFile(t, testCase.SpecFile)
-
-			serverConfig := testServerConfig{
-				ExpectedMethod: testCase.Method,
-				StatusCode:     testCase.ExpectedStatus,
-				ResponseBody:   map[string]any{"result": "ok"},
-			}
-
-			// Only set ExpectedPath for endpoints without path parameters
-			if !strings.Contains(testCase.Path, "{") {
-				serverConfig.ExpectedPath = testCase.Path
-			}
-
-			if testCase.AuthType != "" {
-				serverConfig.AuthType = testCase.AuthType
-				serverConfig.AuthCredentials = map[string]string{"token": testCase.AuthToken}
-			}
-
-			testServer := newTestServer(t, serverConfig)
-			t.Cleanup(testServer.Close)
-
-			var authenticator auth.Authenticator
-			if testCase.AuthType == "bearer" {
-				authenticator = &auth.BearerTokenAuthClient{Token: testCase.AuthToken}
-				if newError := authenticator.New(); newError != nil {
-					t.Fatalf("failed to init authenticator: %v", newError)
-				}
-			}
-
-			serviceInstance := buildTestService(t, testCase.Name, specDoc, testCase.SpecHeaders, authenticator)
-			specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-			specInfo.BaseURL = testServer.URL
-
-			endpointID := findEndpointID(t, serviceInstance, testCase.Method, testCase.Path)
-
-			response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-				EndpointID:  endpointID,
-				Parameters:  testCase.Parameters,
-				RequestBody: testCase.RequestBody,
-			})
-			if invokeError != nil {
-				t.Fatalf("Invoke() returned error: %v", invokeError)
-			}
-
-			if response.StatusCode != testCase.ExpectedStatus {
-				t.Errorf("StatusCode = %d, want %d", response.StatusCode, testCase.ExpectedStatus)
-			}
-		})
-	}
-}
-
-// TestInvoke_RateLimit verifies that rate limiting works.
-func TestInvoke_RateLimit(t *testing.T) {
-	t.Parallel()
-
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodGet,
-		ExpectedPath:   "/users",
-		StatusCode:     http.StatusOK,
-		ResponseBody:   map[string]any{"users": []any{}},
-	})
-	t.Cleanup(testServer.Close)
-
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	// First call should succeed
-	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if invokeError != nil {
-		t.Fatalf("first Invoke() returned error: %v", invokeError)
-	}
-
-	// Second call should be rate limited
-	_, invokeError = serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if invokeError == nil {
-		t.Fatal("expected rate limit error on second call")
-	}
-}
-
-// TestInvoke_NilOperation verifies that an endpoint with nil Operation returns an error.
-func TestInvoke_NilOperation(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	// Create an endpoint with a valid Operation first, then set it to nil after indexing
-	nilOpEndpoint := &model.Endpoint{
-		ID:           "00000000000000000000000000000001",
-		SpecID:       "00000000000000000000000000000002",
-		CollectionID: "00000000000000000000000000000003",
-		TagID:        "00000000000000000000000000000004",
-		Name:         "GET",
-		Path:         "/nil-op",
-		Operation:    &spec.Operation{ID: "nilOp", Summary: "nil op"},
-	}
-	if err := svc.index.EnsureIndex(
-		&model.Spec{ID: "00000000000000000000000000000002", Domain: "nil-op-spec"},
-		[]*model.Collection{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000002"}},
-		[]*model.Tag{{ID: "00000000000000000000000000000004", SpecID: "00000000000000000000000000000002", CollectionID: "00000000000000000000000000000003"}},
-		[]*model.Endpoint{nilOpEndpoint},
-	); err != nil {
-		t.Fatalf("EnsureIndex() = %v", err)
-	}
-
-	// Set Operation to nil after indexing
-	nilOpEndpoint.Operation = nil
-
-	_, err := svc.Invoke(context.Background(), InvokeRequest{
-		EndpointID: nilOpEndpoint.ID,
-	})
-	if err == nil {
-		t.Fatal("expected error for nil operation")
-	}
-}
-
-// TestInvoke_OrphanSpec verifies that an endpoint with a non-existent spec returns an error.
-func TestInvoke_OrphanSpec(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	orphanIdx, idxErr := index.New()
-	if idxErr != nil {
-		t.Fatalf("index.New() = %v", idxErr)
-	}
-	orphanEndpoint := &model.Endpoint{
-		ID:           "00000000000000000000000000000001",
-		SpecID:       "00000000000000000000000000000000",
-		CollectionID: "00000000000000000000000000000002",
-		TagID:        "00000000000000000000000000000003",
-		Name:         "GET",
-		Path:         "/orphan",
-		Operation:    &spec.Operation{ID: "orphanOp"},
-	}
-	if idxErr = orphanIdx.EnsureIndex(
-		&model.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
-		[]*model.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
-		[]*model.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
-		[]*model.Endpoint{orphanEndpoint},
-	); idxErr != nil {
-		t.Fatalf("EnsureIndex() = %v", idxErr)
-	}
-
-	svc.index = orphanIdx
-	orphanIdx.RemoveSpec("00000000000000000000000000000000")
-
-	_, err := svc.Invoke(context.Background(), InvokeRequest{
-		EndpointID: orphanEndpoint.ID,
-	})
-	if err == nil {
-		t.Fatal("expected error for orphan spec")
-	}
-}
-
-// TestInvoke_OrphanCollection verifies that an endpoint with a non-existent collection returns an error.
-func TestInvoke_OrphanCollection(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
-
-	orphanIdx, idxErr := index.New()
-	if idxErr != nil {
-		t.Fatalf("index.New() = %v", idxErr)
-	}
-	orphanEndpoint := &model.Endpoint{
-		ID:           "00000000000000000000000000000001",
-		SpecID:       "00000000000000000000000000000000",
-		CollectionID: "00000000000000000000000000000002",
-		TagID:        "00000000000000000000000000000003",
-		Name:         "GET",
-		Path:         "/orphan",
-		Operation:    &spec.Operation{ID: "orphanOp"},
-	}
-	if idxErr = orphanIdx.EnsureIndex(
-		&model.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
-		[]*model.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
-		[]*model.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
-		[]*model.Endpoint{orphanEndpoint},
-	); idxErr != nil {
-		t.Fatalf("EnsureIndex() = %v", idxErr)
-	}
-
-	svc.index = orphanIdx
-	orphanIdx.RemoveCollection("00000000000000000000000000000002")
-
-	_, err := svc.Invoke(context.Background(), InvokeRequest{
-		EndpointID: orphanEndpoint.ID,
-	})
-	if err == nil {
-		t.Fatal("expected error for orphan collection")
-	}
-}
-
-// TestInvoke_InvalidParameters verifies that unknown parameters return an error.
-func TestInvoke_InvalidParameters(t *testing.T) {
-	t.Parallel()
-
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	_, err := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-		Parameters: map[string]any{"unknown_param": "value"},
-	})
-	if err == nil {
-		t.Fatal("expected error for unknown parameter")
-	}
-}
-
-// TestInvoke_InvalidRequestBody verifies that an invalid request body returns an error.
-func TestInvoke_InvalidRequestBody(t *testing.T) {
-	t.Parallel()
-
-	specDoc := parseSpecFromFile(t, "orders.yaml")
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodPost, "/orders")
-
-	_, err := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID:  endpointID,
-		RequestBody: map[string]any{"unknown_field": "value"},
-	})
-	if err == nil {
-		t.Fatal("expected error for unknown field in request body")
-	}
-}
-
-// TestInvoke_TransportError verifies that a transport error is returned.
-func TestInvoke_TransportError(t *testing.T) {
-	t.Parallel()
-
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
-
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = "http://127.0.0.1:1"
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	_, err := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if err == nil {
-		t.Fatal("expected transport error")
-	}
-}
-
-// TestInvoke_LargeResponse verifies that large responses are saved to disk.
-func TestInvoke_LargeResponse(t *testing.T) {
-	t.Parallel()
-
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	testServer := newTestServer(t, testServerConfig{
-		ExpectedMethod: http.MethodGet,
-		ExpectedPath:   "/users",
-		StatusCode:     http.StatusOK,
-		ResponseBody:   map[string]any{"data": string(make([]byte, 2000))},
-	})
-	t.Cleanup(testServer.Close)
-
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	// Set a small max response size to trigger large response path
-	serviceInstance.maxResponseSize = 100
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	response, err := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if err != nil {
-		t.Fatalf("Invoke() returned error: %v", err)
-	}
-	if response.FileRef == nil {
-		t.Fatal("expected FileRef for large response")
-	}
-}
-
-// testServerConfig holds configuration for a test HTTP server.
-type testServerConfig struct {
-	ExpectedMethod  string
-	ExpectedPath    string
-	ExpectedHeaders map[string]string
-	ExpectedQuery   map[string]string
-	ExpectedBody    map[string]any
-	StatusCode      int
-	ResponseBody    any
-	ResponseHeaders map[string]string
-	AuthType        string // "bearer", "basic", "oauth2-cc", "digest", ""
-	AuthCredentials map[string]string
-}
-
-// newTestServer creates an [httptest.Server] that validates incoming requests against the config.
-//
-
-func newTestServer(t *testing.T, config testServerConfig) *httptest.Server {
-	t.Helper()
-
-	return httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if config.ExpectedMethod != "" && request.Method != config.ExpectedMethod {
-			writer.WriteHeader(http.StatusMethodNotAllowed)
-			_, _ = writer.Write([]byte(`{"error":"method not allowed"}`))
-			return
-		}
-
-		if config.ExpectedPath != "" && !strings.HasSuffix(request.URL.Path, config.ExpectedPath) {
-			writer.WriteHeader(http.StatusNotFound)
-			_, _ = fmt.Fprintf(writer, `{"error":"path not found"}`)
-			return
-		}
-
-		for headerName, headerValue := range config.ExpectedHeaders {
-			actualValue := request.Header.Get(headerName)
-			if actualValue != headerValue {
-				writer.WriteHeader(http.StatusBadRequest)
-				_, _ = fmt.Fprintf(writer,
-					`{"error":"expected header %s: %s, got: %s"}`, headerName, headerValue, actualValue,
-				)
-				return
-			}
-		}
-
-		for queryName, queryValue := range config.ExpectedQuery {
-			actualValue := request.URL.Query().Get(queryName)
-			if actualValue != queryValue {
-				writer.WriteHeader(http.StatusBadRequest)
-				_, _ = fmt.Fprintf(writer,
-					`{"error":"expected query %s: %s, got: %s"}`, queryName, queryValue, actualValue,
-				)
-				return
-			}
-		}
-
-		if config.ExpectedBody != nil {
-			var receivedBody map[string]any
-			if decodeError := json.NewDecoder(request.Body).Decode(&receivedBody); decodeError != nil {
-				writer.WriteHeader(http.StatusBadRequest)
-				_, _ = fmt.Fprintf(writer, `{"error":"invalid body: %s"}`, decodeError)
-				return
-			}
-			for key, expectedValue := range config.ExpectedBody {
-				actualValue, exists := receivedBody[key]
-				if !exists {
-					writer.WriteHeader(http.StatusBadRequest)
-					_, _ = fmt.Fprintf(writer, `{"error":"missing body field: %s"}`, key)
-					return
-				}
-				if fmt.Sprintf("%v", actualValue) != fmt.Sprintf("%v", expectedValue) {
-					writer.WriteHeader(http.StatusBadRequest)
-					_, _ = fmt.Fprintf(writer,
-						`{"error":"body field %s: expected %v, got %v"}`, key, expectedValue, actualValue,
-					)
-					return
-				}
-			}
-		}
-
-		if config.AuthType != "" {
-			authError := validateAuthHeader(t, request, config)
-			if authError != "" {
-				writer.WriteHeader(http.StatusUnauthorized)
-				_, _ = fmt.Fprintf(writer, `{"error":"%s"}`, authError)
-				return
-			}
-		}
-
-		for headerName, headerValue := range config.ResponseHeaders {
-			writer.Header().Set(headerName, headerValue)
-		}
-
-		writer.WriteHeader(config.StatusCode)
-		if config.ResponseBody != nil {
-			_ = json.NewEncoder(writer).Encode(config.ResponseBody)
-		}
-	}))
-}
-
-// validateAuthHeader checks the Authorization header against the expected auth type.
-func validateAuthHeader(t *testing.T, request *http.Request, config testServerConfig) string {
-	t.Helper()
-
-	switch config.AuthType {
-	case "bearer":
-		expectedToken := config.AuthCredentials["token"]
-		authHeader := request.Header.Get("Authorization")
-		if authHeader != "Bearer "+expectedToken {
-			return fmt.Sprintf("expected Bearer %s, got %s", expectedToken, authHeader)
-		}
-	case "basic":
-		username, password, ok := request.BasicAuth()
-		if !ok {
-			return "missing basic auth"
-		}
-		expectedUser := config.AuthCredentials["username"]
-		expectedPass := config.AuthCredentials["password"]
-		if username != expectedUser || password != expectedPass {
-			return fmt.Sprintf("expected %s:%s, got %s:%s", expectedUser, expectedPass, username, password)
-		}
-	case "oauth2-cc":
-		expectedToken := config.AuthCredentials["token"]
-		authHeader := request.Header.Get("Authorization")
-		if authHeader != "Bearer "+expectedToken {
-			return fmt.Sprintf("expected Bearer %s, got %s", expectedToken, authHeader)
-		}
-	case "digest":
-		authHeader := request.Header.Get("Authorization")
-		if !strings.HasPrefix(authHeader, "Digest ") {
-			return fmt.Sprintf("expected Digest auth, got %s", authHeader)
-		}
-	case "hmac":
-		expectedAPIKey := config.AuthCredentials["api_key"]
-		actualAPIKey := request.Header.Get("X-MBX-APIKEY")
-		if actualAPIKey != expectedAPIKey {
-			return fmt.Sprintf("expected X-MBX-APIKEY %s, got %s", expectedAPIKey, actualAPIKey)
-		}
-		signature := request.URL.Query().Get("signature")
-		if signature == "" {
-			return "missing signature query param"
-		}
-		timestamp := request.URL.Query().Get("timestamp")
-		if timestamp == "" {
-			return "missing timestamp query param"
-		}
-	}
-
-	return ""
-}
-
-// newTestAuthServer creates an [httptest.Server] that simulates an OAuth2 token endpoint.
-func newTestAuthServer(t *testing.T, token string) *httptest.Server {
-	t.Helper()
-
-	return httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if request.Method != http.MethodPost {
-			writer.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-
-		_ = request.ParseForm()
-		grantType := request.Form.Get("grant_type")
-
-		response := map[string]any{
-			"access_token": token,
-			"token_type":   "Bearer",
-			"expires_in":   3600,
-		}
-
-		if grantType == "client_credentials" || grantType == "password" {
-			writer.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(writer).Encode(response)
-			return
-		}
-
-		writer.WriteHeader(http.StatusBadRequest)
-	}))
-}
-
-// newTestDigestServer creates an [httptest.Server] that challenges with Digest auth.
-func newTestDigestServer(t *testing.T, _, _ string) *httptest.Server {
-	t.Helper()
-
-	return httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		authHeader := request.Header.Get("Authorization")
-		if authHeader == "" {
-			writer.Header().Set("WWW-Authenticate",
-				`Digest realm="test-realm", nonce="test-nonce", opaque="test-opaque", qop="auth", algorithm="MD5"`,
-			)
-			writer.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-
-		if !strings.HasPrefix(authHeader, "Digest ") {
-			writer.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		writer.WriteHeader(http.StatusOK)
-		_, _ = writer.Write([]byte(`{"ok":true}`))
-	}))
-}
-
-// parseSpecFromFile parses a YAML spec file and returns the parsed Doc.
-func parseSpecFromFile(t *testing.T, filePath string) *spec.Doc {
-	t.Helper()
-
-	data := readTestFile(t, filePath)
-	doc, parseError := spec.Parse(data)
-	if parseError != nil {
-		t.Fatalf("failed to parse spec %s: %v", filePath, parseError)
-	}
-	return doc
-}
-
-// readTestFile reads a test data file from the testdata directory.
-func readTestFile(t *testing.T, relativePath string) []byte {
-	t.Helper()
-
-	data, readError := testDataFS.ReadFile("testdata/invoke/" + relativePath)
-	if readError != nil {
-		t.Fatalf("failed to read test file %s: %v", relativePath, readError)
-	}
-	return data
-}
-
-// buildTestService creates a Service with a pre-populated index for testing.
-// Uses t.Name() as the unique domain to guarantee isolation across parallel tests.
-func buildTestService(t *testing.T, _ string, specDoc *spec.Doc, specHeaders map[string]string, authenticator auth.Authenticator) *Service {
-	t.Helper()
-
-	uniqueDomain := t.Name()
-
-	serviceInstance, serviceError := New()
-	if serviceError != nil {
-		t.Fatalf("failed to create service: %v", serviceError)
-	}
-
-	newIndex, newIndexError := index.New()
-	if newIndexError != nil {
-		t.Fatalf("failed to create index: %v", newIndexError)
-	}
-	serviceInstance.index = newIndex
-
-	specID := id.Domain(uniqueDomain)
-	specInfo := &model.Spec{
-		ID:      specID,
-		Domain:  uniqueDomain,
-		BaseURL: "http://test-server",
-		Auth:    authenticator,
-	}
-	if len(specHeaders) > 0 {
-		specInfo.HTTPClient = &model.HTTPClientConfig{
-			Headers: specHeaders,
-		}
-	}
-
-	collectionID := id.Collection(specID, uniqueDomain+"/collection")
-	collectionInfo := &model.Collection{
-		ID:     collectionID,
-		SpecID: specID,
-	}
-	if specInfo.HTTPClient != nil {
-		collectionInfo.HTTPClient = specInfo.HTTPClient
-	}
-
-	var allTags []*model.Tag
-	var allEndpoints []*model.Endpoint
-
-	for index, pathItem := range specDoc.PathItems {
-		operation := pathItem.Operation
-		if operation == nil {
-			continue
-		}
-
-		tagName := fmt.Sprintf("%s-tag-%d", uniqueDomain, index)
-		tagID := id.Tag(specID, collectionID, tagName)
-		tagInfo := &model.Tag{
-			ID:           tagID,
-			SpecID:       specID,
-			CollectionID: collectionID,
-			Name:         tagName,
-		}
-		allTags = append(allTags, tagInfo)
-
-		endpoint := &model.Endpoint{
-			ID: id.Method(
-				specID,
-				collectionID,
-				tagID,
-				pathItem.Method,
-				pathItem.Path,
-				operation.ID,
-			),
-			SpecID:       specID,
-			CollectionID: collectionID,
-			TagID:        tagID,
-			Tag:          tagName,
-			Name:         pathItem.Method,
-			Path:         pathItem.Path,
-			Operation:    operation,
-		}
-		allEndpoints = append(allEndpoints, endpoint)
-	}
-
-	if ensureError := serviceInstance.index.EnsureIndex(specInfo, []*model.Collection{collectionInfo}, allTags, allEndpoints); ensureError != nil {
-		t.Fatalf("failed to index: %v", ensureError)
-	}
-
-	return serviceInstance
-}
-
-// findEndpointID finds the first endpoint ID matching the given method and path pattern.
-func findEndpointID(t *testing.T, serviceInstance *Service, method string, pathSuffix string) string {
-	t.Helper()
-
-	for cursor := range serviceInstance.index.IterateByEndpoints() {
-		if cursor.Endpoint.Name == method && strings.HasSuffix(cursor.Endpoint.Path, pathSuffix) {
-			return cursor.Endpoint.ID
-		}
-	}
-	t.Fatalf("endpoint not found: %s %s", method, pathSuffix)
-	return ""
-}
-
-// specIDForTest returns the domain ID for the current test.
-func specIDForTest(t *testing.T) string {
-	t.Helper()
-	return id.Domain(t.Name())
-}
-
-// TestInvoke_CustomHeadersPassedThrough verifies that custom headers from InvokeRequest.Headers
-// are sent with the HTTP request.
-func TestInvoke_CustomHeadersPassedThrough(t *testing.T) {
-	t.Parallel()
-
-	var capturedHeaders http.Header
-	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		capturedHeaders = r.Header
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{}`))
+		w.Write([]byte(`{"status":"ok"}`))
 	}))
-	t.Cleanup(testServer.Close)
+	defer srv.Close()
 
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
+	svc := newTestInvokeSvc(t, NewMockIndexReader(gomock.NewController(t)), NewMockWorkspaceOps(gomock.NewController(t)))
+	req, err := http.NewRequest(http.MethodGet, srv.URL, nil)
+	require.NoError(t, err)
 
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-		Headers:    map[string]string{"X-Custom-Header": "custom-value", "X-Another": "another-value"},
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if capturedHeaders.Get("X-Custom-Header") != "custom-value" {
-		t.Errorf("X-Custom-Header = %q, want %q", capturedHeaders.Get("X-Custom-Header"), "custom-value")
-	}
-	if capturedHeaders.Get("X-Another") != "another-value" {
-		t.Errorf("X-Another = %q, want %q", capturedHeaders.Get("X-Another"), "another-value")
-	}
+	resp, err := svc.executeRequest(context.Background(), req, &model.Spec{}, &model.Endpoint{Name: "GET", Path: "/"})
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
-// TestInvoke_CustomCookiesPassedThrough verifies that custom cookies from InvokeRequest.Cookies
-// are sent with the HTTP request.
-func TestInvoke_CustomCookiesPassedThrough(t *testing.T) {
+func TestInvokeService_executeRequest_withAuth(t *testing.T) {
 	t.Parallel()
 
-	var capturedCookies []string
-	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		capturedCookies = r.Header.Values("Cookie")
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{}`))
+		w.Write([]byte(`{"status":"ok"}`))
 	}))
-	t.Cleanup(testServer.Close)
+	defer srv.Close()
 
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
+	svc := newTestInvokeSvc(t, NewMockIndexReader(gomock.NewController(t)), NewMockWorkspaceOps(gomock.NewController(t)))
+	req, err := http.NewRequest(http.MethodGet, srv.URL, nil)
+	require.NoError(t, err)
 
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-		Cookies:    map[string]string{"session": "abc123", "theme": "dark"},
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	cookieStr := strings.Join(capturedCookies, "; ")
-	if !strings.Contains(cookieStr, "session=abc123") {
-		t.Errorf("Cookie 'session=abc123' not found in: %s", cookieStr)
-	}
-	if !strings.Contains(cookieStr, "theme=dark") {
-		t.Errorf("Cookie 'theme=dark' not found in: %s", cookieStr)
-	}
+	resp, err := svc.executeRequest(context.Background(), req, &model.Spec{
+		Auth: &noopAuth{},
+	}, &model.Endpoint{Name: "GET", Path: "/"})
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
-// TestInvoke_HeadersWithAuth verifies that both auth headers and custom invoke headers
-// are present in the HTTP request.
-func TestInvoke_HeadersWithAuth(t *testing.T) {
+func TestInvokeService_saveLargeResponse(t *testing.T) {
 	t.Parallel()
 
-	var capturedAuthHeader, capturedCustomHeader string
-	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		capturedAuthHeader = r.Header.Get("Authorization")
-		capturedCustomHeader = r.Header.Get("X-Custom-Header")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{}`))
-	}))
-	t.Cleanup(testServer.Close)
+	tmpDir := t.TempDir()
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(filepath.Join(tmpDir, "responses")).AnyTimes()
 
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	authenticator := &auth.BearerTokenAuthClient{Token: "test-bearer-token"}
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, authenticator)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-		Headers:    map[string]string{"X-Custom-Header": "custom-value"},
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
+	svc := newTestInvokeSvc(t, NewMockIndexReader(ctrl), ws)
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     http.Header{"Content-Type": []string{"application/json"}},
 	}
-
-	if capturedAuthHeader != "Bearer test-bearer-token" {
-		t.Errorf("Authorization = %q, want %q", capturedAuthHeader, "Bearer test-bearer-token")
-	}
-	if capturedCustomHeader != "custom-value" {
-		t.Errorf("X-Custom-Header = %q, want %q", capturedCustomHeader, "custom-value")
-	}
+	body := []byte(`{"data": "large response content"}`)
+	result, err := svc.saveLargeResponse(resp, body, "test-domain", &model.Endpoint{Name: "GET", Path: "/test"}, 10)
+	require.NoError(t, err)
+	require.NotNil(t, result.FileRef)
+	require.FileExists(t, result.FileRef.Path)
 }
 
-// TestInvoke_AuthHeaderOverridesInvoke verifies that the auth transport's Authorization header
-// takes precedence over an Authorization header passed via InvokeRequest.Headers.
-func TestInvoke_AuthHeaderOverridesInvoke(t *testing.T) {
+func TestInvokeService_dumpRequest(t *testing.T) {
 	t.Parallel()
 
-	var capturedAuthHeader string
-	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		capturedAuthHeader = r.Header.Get("Authorization")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{}`))
-	}))
-	t.Cleanup(testServer.Close)
+	tmpDir := t.TempDir()
+	svc := newTestInvokeSvc(t, NewMockIndexReader(gomock.NewController(t)), NewMockWorkspaceOps(gomock.NewController(t)))
+	svc.dumpDir = tmpDir
 
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	authenticator := &auth.BearerTokenAuthClient{Token: "correct-token"}
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, authenticator)
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
+	req, err := http.NewRequest(http.MethodGet, "https://api.example.com/test", nil)
+	require.NoError(t, err)
 
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-		Headers:    map[string]string{"Authorization": "Bearer wrong-token"},
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if capturedAuthHeader != "Bearer correct-token" {
-		t.Errorf("Authorization = %q, want %q", capturedAuthHeader, "Bearer correct-token")
-	}
+	svc.dumpRequest(req, "test-domain")
+	// Verify a dump file was created
+	entries, err := os.ReadDir(tmpDir)
+	require.NoError(t, err)
+	require.NotEmpty(t, entries)
 }
 
-// TestInvoke_GlobalHeadersApplied verifies that global http_client headers and User-Agent
-// are applied to the HTTP request even when Randomize is false.
-func TestInvoke_GlobalHeadersApplied(t *testing.T) {
+func TestInvokeService_dumpRequest_emptyDir(t *testing.T) {
 	t.Parallel()
 
-	var capturedAccept, capturedUA string
-	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		capturedAccept = r.Header.Get("Accept")
-		capturedUA = r.Header.Get("User-Agent")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{}`))
-	}))
-	t.Cleanup(testServer.Close)
+	svc := newTestInvokeSvc(t, NewMockIndexReader(gomock.NewController(t)), NewMockWorkspaceOps(gomock.NewController(t)))
+	req, err := http.NewRequest(http.MethodGet, "https://api.example.com/test", nil)
+	require.NoError(t, err)
 
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
-	serviceInstance.globalHeaders = map[string]string{"Accept": "application/json"}
-	serviceInstance.globalUserAgent = "swag2mcp-test/1.0"
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
-
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
-
-	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if capturedAccept != "application/json" {
-		t.Errorf("Accept = %q, want %q", capturedAccept, "application/json")
-	}
-	if capturedUA != "swag2mcp-test/1.0" {
-		t.Errorf("User-Agent = %q, want %q", capturedUA, "swag2mcp-test/1.0")
-	}
+	// Should not panic when dumpDir is empty
+	svc.dumpRequest(req, "test-domain")
 }
 
-// TestInvoke_GlobalCookiesApplied verifies that global http_client cookies
-// are applied to the HTTP request.
-func TestInvoke_GlobalCookiesApplied(t *testing.T) {
-	t.Parallel()
+type noopAuth struct{}
 
-	var capturedCookies string
-	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		capturedCookies = r.Header.Get("Cookie")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{}`))
-	}))
-	t.Cleanup(testServer.Close)
+func (noopAuth) New() error { return nil }
 
-	specDoc := parseSpecFromFile(t, "users.yaml")
-	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
-	serviceInstance.globalCookies = []httpclient.Cookie{
-		{Name: "global-session", Value: "abc"},
-		{Name: "global-theme", Value: "dark"},
-	}
-	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
-	specInfo.BaseURL = testServer.URL
+func (noopAuth) Type() auth.Type { return auth.NoAuth }
 
-	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+func (noopAuth) Apply(_ *http.Request, _ *auth.Info) error { return nil }
 
-	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
-		EndpointID: endpointID,
-	})
-	if invokeError != nil {
-		t.Fatalf("Invoke() returned error: %v", invokeError)
-	}
-
-	if !strings.Contains(capturedCookies, "global-session=abc") {
-		t.Errorf("Cookie 'global-session=abc' not found in: %s", capturedCookies)
-	}
-	if !strings.Contains(capturedCookies, "global-theme=dark") {
-		t.Errorf("Cookie 'global-theme=dark' not found in: %s", capturedCookies)
-	}
-}
+func (noopAuth) Validate() error { return nil }

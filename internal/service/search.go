@@ -9,33 +9,34 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/model"
 )
 
-// SearchRequest contains the search query and result limit for searching
-// endpoints across all loaded specs.
-type (
-	SearchRequest struct {
-		Query string `json:"query" jsonschema:"required,"                                    validate:"required"`
-		Limit int    `json:"limit" jsonschema:"required,Maximum number of results to return" validate:"required,min=1,max=50"`
-	}
+type searchService struct {
+	index IndexReader
+	v     RequestValidator
+}
 
-	// SearchResponse contains the list of endpoints that matched the search query.
-	SearchResponse struct {
-		Endpoints []EndpointSearchItem `json:"endpoints" jsonschema:"required,List of endpoints matching the search query"`
-	}
-)
+func newSearchService(index IndexReader, v RequestValidator) *searchService {
+	return &searchService{index: index, v: v}
+}
 
 // Search performs a full-text search across all endpoints using the given
 // query string and returns up to the specified limit of matching results.
-func (s *Service) Search(ctx context.Context, rq SearchRequest) (SearchResponse, error) {
-	if err := s.validateRequest(rq); err != nil {
-		return SearchResponse{}, NewValidationError("A search query is required and the limit must be between 1 and 50.", err)
+func (ss *searchService) Search(ctx context.Context, rq SearchRequest) (SearchResponse, error) {
+	if err := ss.v.Struct(rq); err != nil {
+		return SearchResponse{}, NewValidationError(
+			"A search query is required and the limit must be between 1 and 50.",
+			err,
+		)
 	}
 
-	eps, err := s.index.Search(ctx, strings.ToLower(rq.Query), rq.Limit)
+	eps, err := ss.index.Search(ctx, strings.ToLower(rq.Query), rq.Limit)
 	if err != nil {
-		return SearchResponse{}, NewNotFoundError("search failed", err)
+		return SearchResponse{}, NewNotFoundError(
+			"The search query did not match any endpoints. Try a different query.",
+			err,
+		)
 	}
 
-	is, err := s.mapEndpointsToSearchItems(eps)
+	is, err := mapEndpointsToSearchItems(ss.index, eps)
 	if err != nil {
 		return SearchResponse{}, err
 	}
@@ -57,20 +58,41 @@ func (s *Service) Search(ctx context.Context, rq SearchRequest) (SearchResponse,
 	return SearchResponse{Endpoints: is}, nil
 }
 
-func (s *Service) mapEndpointsToSearchItems(eps []*model.Endpoint) ([]EndpointSearchItem, error) {
+func mapEndpointsToSearchItems(
+	index IndexReader,
+	eps []*model.Endpoint,
+) ([]EndpointSearchItem, error) {
 	items := make([]EndpointSearchItem, 0, len(eps))
 	for _, e := range eps {
-		sp, err := s.index.SpecByID(e.SpecID)
+		sp, err := index.SpecByID(e.SpecID)
 		if err != nil {
-			return nil, NewNotFoundError(fmt.Sprintf("spec %q not found", e.SpecID), err)
+			return nil, NewNotFoundError(
+				fmt.Sprintf(
+					"Spec %q was not found. The endpoint references a spec that no longer exists.",
+					e.SpecID,
+				),
+				err,
+			)
 		}
-		coll, err := s.index.CollectionByID(e.CollectionID)
+		coll, err := index.CollectionByID(e.CollectionID)
 		if err != nil {
-			return nil, NewNotFoundError(fmt.Sprintf("collection %q not found", e.CollectionID), err)
+			return nil, NewNotFoundError(
+				fmt.Sprintf(
+					"Collection %q was not found. The endpoint references a collection that no longer exists.",
+					e.CollectionID,
+				),
+				err,
+			)
 		}
-		tag, err := s.index.TagByID(e.TagID)
+		tag, err := index.TagByID(e.TagID)
 		if err != nil {
-			return nil, NewNotFoundError(fmt.Sprintf("tag %q not found", e.TagID), err)
+			return nil, NewNotFoundError(
+				fmt.Sprintf(
+					"Tag %q was not found. The endpoint references a tag that no longer exists.",
+					e.TagID,
+				),
+				err,
+			)
 		}
 		items = append(items, EndpointSearchItem{
 			ID:              e.ID,

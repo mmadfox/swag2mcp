@@ -16,20 +16,20 @@ Collection (specs[].collections[].http_client)
 
 | Parameter | Global | Spec | Collection |
 |-----------|--------|------|------------|
-| `http_client.timeout` | ✅ | ❌ | ❌ |
-| `http_client.max_response_size` | ✅ | ❌ | ❌ |
-| `http_client.user_agent` | ✅ | ❌ | ❌ |
-| `http_client.follow_redirects` | ✅ | ❌ | ❌ |
-| `http_client.max_redirects` | ✅ | ❌ | ❌ |
-| `http_client.proxy` | ✅ | ❌ | ❌ |
-| `http_client.random` | ✅ | ❌ | ❌ |
+| `http_client.timeout` | ✅ | ✅ | ❌ |
+| `http_client.max_response_size` | ✅ | ✅ | ❌ |
+| `http_client.user_agent` | ✅ | ✅ | ❌ |
+| `http_client.follow_redirects` | ✅ | ✅ | ❌ |
+| `http_client.max_redirects` | ✅ | ✅ | ❌ |
+| `http_client.proxy` | ✅ | ✅ | ❌ |
+| `http_client.random` | ✅ | ✅ | ❌ |
 | `http_client.headers` | ✅ | ✅ | ✅ |
 | `http_client.cookies` | ✅ | ✅ | ❌ |
 | `base_url` | ❌ | ✅ | ✅ |
 | `auth` | ❌ | ✅ | ❌ |
 | `disable` | ❌ | ✅ | ✅ |
 
-Spec and collection levels can only override `headers` and `cookies`. All other HTTP settings (timeout, proxy, user-agent, redirects, response size, randomizer) are global only.
+Transport settings (timeout, proxy, user-agent, redirects, response size, randomizer) can be overridden at the spec level. Collection level only supports `headers` and `cookies`.
 
 ## Cascade Example
 
@@ -45,6 +45,7 @@ specs:
     llm_title: Open-Meteo Weather APIs
     base_url: https://api.open-meteo.com
     http_client:
+      timeout: 60s  # overrides global timeout
       headers:
         "X-API-Version": "2"  # added to global headers
     collections:
@@ -58,7 +59,7 @@ specs:
 ## Effective Settings for "Forecast" Collection
 
 ```
-timeout: 30s (from global)
+timeout: 60s (from spec, overrides global 30s)
 max_response_size: 1048576 (from global)
 headers:
   - User-Agent: swag2mcp/1.0 (from global)

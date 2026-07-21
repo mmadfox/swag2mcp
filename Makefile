@@ -6,7 +6,7 @@ CORE_PACKAGES = ./internal/auth/... ./internal/cache/... ./internal/config/... \
                 ./internal/service/... ./internal/spec/... \
                 ./internal/types/... ./internal/workspace/...
 
-.PHONY: lint cover cover-core integration-tests build testall docs
+.PHONY: lint cover cover-core integration-tests build testall docs race
 
 build:
 	go build -ldflags "-X github.com/mmadfox/swag2mcp/internal/commands.Version=$(VERSION)" -o swag2mcp ./cmd/swag2mcp
@@ -16,6 +16,9 @@ docs:
 
 lint:
 	golangci-lint run ./...
+
+race:
+	go test -race -count=1 -timeout 120s ./internal/service/ ./internal/cache/ ./internal/workspace/ ./internal/httpclient/
 
 # Full coverage across all packages (including commands, tui, mockserver)
 cover:

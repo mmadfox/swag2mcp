@@ -1,102 +1,257 @@
 package service
 
 import (
+	"context"
 	"testing"
 
-	"github.com/mmadfox/swag2mcp/internal/auth"
-	"github.com/mmadfox/swag2mcp/internal/id"
-	"github.com/mmadfox/swag2mcp/internal/index"
-	"github.com/mmadfox/swag2mcp/internal/model"
-	"github.com/mmadfox/swag2mcp/internal/spec"
+	"github.com/mmadfox/swag2mcp/internal/workspace"
+	"github.com/stretchr/testify/require"
 )
 
-// newTestService creates a Service with a fresh index and a single spec/collection/tag/endpoint.
-// The domain is derived from t.Name() for parallel test isolation.
-func newTestService(t *testing.T, opts ...NewOption) *Service {
-	t.Helper()
+func TestService_New(t *testing.T) {
+	t.Parallel()
 
-	svc, err := New(opts...)
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-
-	idx, err := index.New()
-	if err != nil {
-		t.Fatalf("index.New() = %v", err)
-	}
-	svc.index = idx
-
-	return svc
+	svc, err := New()
+	require.NoError(t, err)
+	require.NotNil(t, svc)
+	require.NotNil(t, svc.Workspace())
 }
 
-// seedTestData populates the service index with a spec, collection, tag, and endpoint.
-// Returns the spec, collection, tag, and endpoint for use in tests.
-func seedTestData(t *testing.T, svc *Service, domain string) (*model.Spec, *model.Collection, *model.Tag, *model.Endpoint) {
-	t.Helper()
+func TestService_NewWithOptions(t *testing.T) {
+	t.Parallel()
 
-	specID := id.Domain(domain)
-	specInfo := &model.Spec{
-		ID:      specID,
-		Domain:  domain,
-		BaseURL: "https://api.example.com",
-	}
-
-	collectionID := id.Collection(specID, domain+"/collection")
-	collectionInfo := &model.Collection{
-		ID:     collectionID,
-		SpecID: specID,
-		Title:  "Test Collection",
-		Stats: struct {
-			Tags    int `json:"tags"`
-			Methods int `json:"methods"`
-		}{Tags: 1, Methods: 1},
-	}
-
-	tagID := id.Tag(specID, collectionID, "test-tag")
-	tagInfo := &model.Tag{
-		ID:           tagID,
-		SpecID:       specID,
-		CollectionID: collectionID,
-		Name:         "test-tag",
-		Stats: struct {
-			Methods int `json:"methods"`
-		}{Methods: 1},
-	}
-
-	endpointID := id.Method(specID, collectionID, tagID, "GET", "/test", "testOp")
-	endpointInfo := &model.Endpoint{
-		ID:           endpointID,
-		SpecID:       specID,
-		CollectionID: collectionID,
-		TagID:        tagID,
-		Tag:          "test-tag",
-		Name:         "GET",
-		Path:         "/test",
-		Operation: &spec.Operation{
-			ID:          "testOp",
-			Summary:     "Test endpoint",
-			Description: "A test endpoint",
-			Parameters: []*spec.Parameter{
-				{Name: "id", In: "path", Required: true, Schema: &spec.Schema{Type: "string"}},
-			},
-		},
-	}
-
-	if err := svc.index.EnsureIndex(specInfo, []*model.Collection{collectionInfo}, []*model.Tag{tagInfo}, []*model.Endpoint{endpointInfo}); err != nil {
-		t.Fatalf("EnsureIndex() = %v", err)
-	}
-
-	// Force refresh the bluge search reader so Search works immediately.
-	svc.index.RefreshSearchReader()
-
-	return specInfo, collectionInfo, tagInfo, endpointInfo
+	svc, err := New(
+		WithVersion("test-version"),
+		WithDisableLLMAuth(true),
+		WithDumpDir("/tmp/dumps"),
+		WithIndexNoFullText(),
+	)
+	require.NoError(t, err)
+	require.NotNil(t, svc)
 }
 
-// seedTestDataWithAuth is like seedTestData but also sets an authenticator on the spec.
-func seedTestDataWithAuth(t *testing.T, svc *Service, domain string, authenticator auth.Authenticator) (*model.Spec, *model.Collection, *model.Tag, *model.Endpoint) {
-	t.Helper()
+func TestService_Specs(t *testing.T) {
+	t.Parallel()
 
-	specInfo, collectionInfo, tagInfo, endpointInfo := seedTestData(t, svc, domain)
-	specInfo.Auth = authenticator
-	return specInfo, collectionInfo, tagInfo, endpointInfo
+	svc, err := New()
+	require.NoError(t, err)
+
+	resp, err := svc.Specs(context.Background())
+	require.NoError(t, err)
+	require.Empty(t, resp.Specs)
+}
+
+func TestService_Search(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	resp, err := svc.Search(context.Background(), SearchRequest{Query: "test", Limit: 10})
+	require.NoError(t, err)
+	require.Empty(t, resp.Endpoints)
+}
+
+func TestService_Info(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	resp, err := svc.Info(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, resp.Workspace)
+}
+
+func TestService_Import_noSource(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.Import(context.Background(), ImportRequest{})
+	require.Error(t, err)
+}
+
+func TestService_ResponseOutline_invalid(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.ResponseOutline(context.Background(), ResponseOutlineRequest{})
+	require.Error(t, err)
+}
+
+func TestService_ResponseCompress_invalid(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.ResponseCompress(context.Background(), ResponseCompressRequest{})
+	require.Error(t, err)
+}
+
+func TestService_ResponseSlice_invalid(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.ResponseSlice(context.Background(), ResponseSliceRequest{})
+	require.Error(t, err)
+}
+
+func TestService_SpecByID_notFound(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.SpecByID(context.Background(), SpecByIDRequest{ID: "00000000000000000000000000000000"})
+	require.Error(t, err)
+}
+
+func TestService_CollectionsBySpec_notFound(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.CollectionsBySpec(context.Background(), CollectionsRequest{SpecID: "00000000000000000000000000000000"})
+	require.Error(t, err)
+}
+
+func TestService_CollectionByID_notFound(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.CollectionByID(context.Background(), CollectionByIDRequest{ID: "00000000000000000000000000000000"})
+	require.Error(t, err)
+}
+
+func TestService_TagsByCollection_notFound(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.TagsByCollection(context.Background(), TagsByCollectionRequest{CollectionID: "00000000000000000000000000000000"})
+	require.Error(t, err)
+}
+
+func TestService_TagByID_notFound(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.TagByID(context.Background(), TagByIDRequest{ID: "00000000000000000000000000000000"})
+	require.Error(t, err)
+}
+
+func TestService_TagsBySpec_notFound(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.TagsBySpec(context.Background(), TagsBySpecRequest{SpecID: "00000000000000000000000000000000"})
+	require.Error(t, err)
+}
+
+func TestService_EndpointsByTag_notFound(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.EndpointsByTag(context.Background(), EndpointsByTagRequest{TagID: "00000000000000000000000000000000"})
+	require.Error(t, err)
+}
+
+func TestService_EndpointsByCollection_notFound(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.EndpointsByCollection(context.Background(), EndpointsByCollectionRequest{CollectionID: "00000000000000000000000000000000"})
+	require.Error(t, err)
+}
+
+func TestService_EndpointsBySpec_notFound(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.EndpointsBySpec(context.Background(), EndpointsBySpecRequest{SpecID: "00000000000000000000000000000000"})
+	require.Error(t, err)
+}
+
+func TestService_EndpointByID_notFound(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.EndpointByID(context.Background(), EndpointByIDRequest{ID: "00000000000000000000000000000000"})
+	require.Error(t, err)
+}
+
+func TestService_Inspect_notFound(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.Inspect(context.Background(), InspectRequest{EndpointID: "00000000000000000000000000000000"})
+	require.Error(t, err)
+}
+
+func TestService_Auth_notFound(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.Auth(context.Background(), AuthRequest{SpecID: "00000000000000000000000000000000"})
+	require.Error(t, err)
+}
+
+func TestService_MakeToolDefinitions(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	defs, err := svc.MakeToolDefinitions()
+	require.NoError(t, err)
+	require.NotEmpty(t, defs.Tools)
+}
+
+func TestService_Invoke_validationError(t *testing.T) {
+	t.Parallel()
+
+	svc, err := New()
+	require.NoError(t, err)
+
+	_, err = svc.Invoke(context.Background(), InvokeRequest{})
+	require.Error(t, err)
+}
+
+func TestService_Export_noConfig(t *testing.T) {
+	t.Parallel()
+
+	ws, wsErr := workspace.New(t.TempDir())
+	require.NoError(t, wsErr)
+	svc, err := New(WithWorkspace(ws))
+	require.NoError(t, err)
+
+	_, err = svc.Export(context.Background(), ExportRequest{})
+	require.Error(t, err)
 }

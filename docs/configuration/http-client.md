@@ -1,6 +1,6 @@
 # HTTP Client
 
-swag2mcp uses a configurable HTTP client for all API calls. These settings are defined globally and apply to every request unless overridden at the spec or collection level (headers and cookies only).
+swag2mcp uses a configurable HTTP client for all API calls. These settings are defined globally and can be overridden at the spec level (transport settings, headers, cookies) and collection level (headers, cookies only).
 
 ## Configuration
 
@@ -236,12 +236,12 @@ HTTP client settings cascade from global to spec to collection:
 
 ```
 Global (http_client)
-    ↓ overrides (headers, cookies only)
+    ↓ overrides (all settings)
 Spec (specs[].http_client)
-    ↓ overrides (headers only)
+    ↓ overrides (headers, cookies only)
 Collection (specs[].collections[].http_client)
 ```
 
-**Only `headers` and `cookies` can be overridden at the spec and collection levels.** All other settings (timeout, proxy, user-agent, redirects, response size, randomizer) are global only.
+**Transport settings** (timeout, proxy, user-agent, redirects, response size, randomizer) can be overridden at the spec level. Collection level only supports `headers` and `cookies`.
 
 See [Configuration Cascade](./cascade) for details.

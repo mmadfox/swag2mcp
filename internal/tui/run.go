@@ -17,6 +17,17 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
+// ExplorerService defines the subset of service methods needed by the TUI explorer.
+type ExplorerService interface {
+	Search(ctx context.Context, req service.SearchRequest) (service.SearchResponse, error)
+	Specs(ctx context.Context) (service.SpecsResponse, error)
+	CollectionsBySpec(ctx context.Context, req service.CollectionsRequest) (service.CollectionsResponse, error)
+	TagsByCollection(ctx context.Context, req service.TagsByCollectionRequest) (service.TagsByCollectionResponse, error)
+	EndpointsByTag(ctx context.Context, req service.EndpointsByTagRequest) (service.EndpointsByTagResponse, error)
+	Inspect(ctx context.Context, req service.InspectRequest) (service.InspectResponse, error)
+	Auth(ctx context.Context, req service.AuthRequest) (service.AuthResponse, error)
+}
+
 type runState int
 
 const (
@@ -50,7 +61,7 @@ const (
 
 type runModel struct {
 	state         runState
-	svc           *service.Service
+	svc           ExplorerService
 	ws            *workspace.Workspace
 	input         textinput.Model
 	err           error
@@ -73,7 +84,7 @@ type runModel struct {
 	mode          runMode
 }
 
-func newRunModel(svc *service.Service, ws *workspace.Workspace) runModel {
+func newRunModel(svc ExplorerService, ws *workspace.Workspace) runModel {
 	ti := textinput.New()
 	ti.CharLimit = 256
 	ti.Width = 60
@@ -775,7 +786,7 @@ func (m runModel) View() string {
 }
 
 // RunExplorer starts the interactive explorer TUI.
-func RunExplorer(svc *service.Service, ws *workspace.Workspace) error {
+func RunExplorer(svc ExplorerService, ws *workspace.Workspace) error {
 	p := tea.NewProgram(newRunModel(svc, ws))
 	_, err := p.Run()
 	return err

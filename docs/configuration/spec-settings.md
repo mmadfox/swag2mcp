@@ -63,7 +63,31 @@ specs:
     http_client:
       timeout: 120s
       max_response_size: 8388608
+      headers:
+        "X-DC": "us-east-1"
     collections:
       - llm_title: Default
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
+```
+
+All `http_client` settings from the global level can be overridden at the spec level: `timeout`, `proxy`, `user_agent`, `follow_redirects`, `max_redirects`, `max_response_size`, `random`, `headers`, and `cookies`.
+
+## Proxy Override
+
+```yaml
+specs:
+  - domain: proxied-api
+    llm_title: Proxied API
+    base_url: https://api.example.com
+    http_client:
+      proxy:
+        url: http://proxy.company.com:8080
+        username: $(PROXY_USER)
+        password: $(PROXY_PASS)
+        bypass:
+          - "*.local"
+          - "10.0.0.0/8"
+    collections:
+      - llm_title: Main
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
 ```

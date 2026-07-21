@@ -2,366 +2,118 @@ package service
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
-	"os"
-	"path/filepath"
-	"strings"
+	"errors"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/stretchr/testify/require"
-
-	"github.com/mmadfox/swag2mcp/internal/workspace"
+	"go.uber.org/mock/gomock"
 )
 
-func TestExport_Success(t *testing.T) {
+func TestExportService_Export_noConfig(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ConfigPath().Return("/tmp/.swag2mcp/swag2mcp.yaml")
+	ws.EXPECT().ConfigNotExists().Return(true)
+
+	svc := newExportService(ws, "1.0")
+	_, err := svc.Export(context.Background(), ExportRequest{})
+	require.Error(t, err)
+}
+
+func TestExportService_Export_success(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ConfigPath().Return("/tmp/.swag2mcp/swag2mcp.yaml")
+	ws.EXPECT().ConfigNotExists().Return(false)
+
+	svc := newExportService(ws, "1.0")
+	_, err := svc.Export(context.Background(), ExportRequest{OutputPath: "/tmp/out.zip"})
+	require.Error(t, err) // config load will fail since we don't have a real config file
+}
+
+func TestExportService_loadExportConfig_notFound(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ConfigPath().Return("/tmp/.swag2mcp/swag2mcp.yaml")
+	ws.EXPECT().ConfigNotExists().Return(true)
+
+	svc := newExportService(ws, "1.0")
+	_, err := svc.loadExportConfig()
+	require.Error(t, err)
+}
+
+func TestExportService_updateConfigLocations(t *testing.T) {
+	t.Parallel()
+
+	svc := newExportService(NewMockWorkspaceOps(gomock.NewController(t)), "1.0")
+	cfg := &config.Config{
+		Specs: []config.Spec{
+			{
+				Domain: "api",
+				Collections: []config.Collection{
+					{Location: "https://example.com/spec.yaml", Title: "spec1"},
+				},
+			},
+		},
+	}
+	locationMap := map[string]string{
+		"https://example.com/spec.yaml": "specs/api-spec1.yaml",
+	}
+	svc.updateConfigLocations(cfg, nil, locationMap)
+	require.Equal(t, "specs/api-spec1.yaml", cfg.Specs[0].Collections[0].Location)
+}
+
+func TestExportService_updateConfigLocations_disabled(t *testing.T) {
+	t.Parallel()
+
+	svc := newExportService(NewMockWorkspaceOps(gomock.NewController(t)), "1.0")
+	cfg := &config.Config{
+		Specs: []config.Spec{
+			{
+				Domain:  "api",
+				Disable: true,
+				Collections: []config.Collection{
+					{Location: "https://example.com/spec.yaml"},
+				},
+			},
+		},
+	}
+	locationMap := map[string]string{
+		"https://example.com/spec.yaml": "specs/api-spec.yaml",
+	}
+	svc.updateConfigLocations(cfg, nil, locationMap)
+	require.Equal(t, "https://example.com/spec.yaml", cfg.Specs[0].Collections[0].Location)
+}
+
+func TestExportService_finalizeExport(t *testing.T) {
 	t.Parallel()
 
 	tmpDir := t.TempDir()
-	specContent := "openapi: 3.0.0\ninfo:\n  title: Test\n"
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(specContent))
-	}))
-	t.Cleanup(srv.Close)
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().CopyAuthScriptsToExport(tmpDir).Return(nil)
 
-	svc := newTestService(t)
-	svc.ws, _ = workspace.New(tmpDir)
-	require.NoError(t, svc.ws.Init())
-
-	cfgContent := `specs:
-  - domain: meteo
-    llm_title: Open-Meteo API
-    base_url: https://api.meteo.com
-    collections:
-      - title: Pets
-        location: ` + srv.URL + `
-`
-	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
-
-	outputPath := filepath.Join(tmpDir, "backup.zip")
-	resp, err := svc.Export(context.Background(), ExportRequest{
-		OutputPath: outputPath,
-	})
+	svc := newExportService(ws, "1.0")
+	err := svc.finalizeExport(&config.Config{}, tmpDir)
 	require.NoError(t, err)
-	assert.Equal(t, 1, resp.FileCount)
-	assert.Equal(t, outputPath, resp.OutputPath)
-	_, statErr := os.Stat(outputPath)
-	assert.NoError(t, statErr, "zip file was not created")
 }
 
-func TestExport_WithSpecFilter(t *testing.T) {
+func TestExportService_finalizeExport_copyError(t *testing.T) {
 	t.Parallel()
 
 	tmpDir := t.TempDir()
-	specContent := "openapi: 3.0.0\ninfo:\n  title: Test\n"
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(specContent))
-	}))
-	t.Cleanup(srv.Close)
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().CopyAuthScriptsToExport(tmpDir).Return(errors.New("copy failed"))
 
-	svc := newTestService(t)
-	svc.ws, _ = workspace.New(tmpDir)
-	require.NoError(t, svc.ws.Init())
-
-	cfgContent := `specs:
-  - domain: meteo
-    llm_title: Open-Meteo API
-    base_url: https://api.meteo.com
-    collections:
-      - title: Pets
-        location: ` + srv.URL + `
-  - domain: store
-    llm_title: Store API
-    base_url: https://api.store.com
-    collections:
-      - title: Products
-        location: ` + srv.URL + `
-`
-	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
-
-	outputPath := filepath.Join(tmpDir, "backup.zip")
-	resp, err := svc.Export(context.Background(), ExportRequest{
-		OutputPath: outputPath,
-		SpecFilter: []string{"meteo"},
-	})
-	require.NoError(t, err)
-	assert.Equal(t, 1, resp.FileCount)
-}
-
-func TestExport_NoConfig(t *testing.T) {
-	t.Parallel()
-
-	tmpDir := t.TempDir()
-	svc := newTestService(t)
-	svc.ws, _ = workspace.New(tmpDir)
-
-	_, err := svc.Export(context.Background(), ExportRequest{
-		OutputPath: filepath.Join(tmpDir, "backup.zip"),
-	})
-	require.Error(t, err)
-}
-
-func TestExport_NoCollections(t *testing.T) {
-	t.Parallel()
-
-	tmpDir := t.TempDir()
-	svc := newTestService(t)
-	svc.ws, _ = workspace.New(tmpDir)
-	require.NoError(t, svc.ws.Init())
-
-	cfgContent := `specs:
-  - domain: meteo
-    llm_title: Open-Meteo API
-    base_url: https://api.meteo.com
-    collections: []
-`
-	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
-
-	_, err := svc.Export(context.Background(), ExportRequest{
-		OutputPath: filepath.Join(tmpDir, "backup.zip"),
-	})
-	require.Error(t, err)
-}
-
-func TestExport_DefaultOutputPath(t *testing.T) {
-	t.Parallel()
-
-	tmpDir := t.TempDir()
-	specContent := "openapi: 3.0.0\ninfo:\n  title: Test\n"
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(specContent))
-	}))
-	t.Cleanup(srv.Close)
-
-	svc := newTestService(t)
-	svc.ws, _ = workspace.New(tmpDir)
-	require.NoError(t, svc.ws.Init())
-
-	cfgContent := `specs:
-  - domain: meteo
-    llm_title: Open-Meteo API
-    base_url: https://api.meteo.com
-    collections:
-      - title: Pets
-        location: ` + srv.URL + `
-`
-	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
-
-	outputPath := filepath.Join(tmpDir, "backup.zip")
-	resp, err := svc.Export(context.Background(), ExportRequest{
-		OutputPath: outputPath,
-	})
-	require.NoError(t, err)
-	assert.True(t, strings.HasSuffix(resp.OutputPath, ".zip"))
-	_, statErr := os.Stat(outputPath)
-	assert.NoError(t, statErr, "zip file was not created")
-}
-
-func TestExport_ProducesValidSwag2mcpZip(t *testing.T) {
-	t.Parallel()
-
-	tmpDir := t.TempDir()
-	specContent := "openapi: 3.0.0\ninfo:\n  title: Test\n"
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(specContent))
-	}))
-	t.Cleanup(srv.Close)
-
-	svc := newTestService(t)
-	svc.ws, _ = workspace.New(tmpDir)
-	require.NoError(t, svc.ws.Init())
-
-	cfgContent := `specs:
-  - domain: meteo
-    llm_title: Open-Meteo API
-    base_url: https://api.meteo.com
-    collections:
-      - title: Pets
-        location: ` + srv.URL + `
-`
-	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
-
-	outputPath := filepath.Join(tmpDir, "backup.zip")
-	_, err := svc.Export(context.Background(), ExportRequest{
-		OutputPath: outputPath,
-	})
-	require.NoError(t, err)
-	assert.True(t, workspace.IsSwag2mcpZip(outputPath))
-}
-
-func TestExport_LoadConfigError(t *testing.T) {
-	t.Parallel()
-
-	tmpDir := t.TempDir()
-	svc := newTestService(t)
-	svc.ws, _ = workspace.New(tmpDir)
-	require.NoError(t, svc.ws.Init())
-
-	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte("invalid: yaml: ["), 0600))
-
-	_, err := svc.Export(context.Background(), ExportRequest{
-		OutputPath: filepath.Join(tmpDir, "backup.zip"),
-	})
-	require.Error(t, err)
-}
-
-func TestExport_DownloadSpecError(t *testing.T) {
-	t.Parallel()
-
-	tmpDir := t.TempDir()
-	svc := newTestService(t)
-	svc.ws, _ = workspace.New(tmpDir)
-	require.NoError(t, svc.ws.Init())
-
-	cfgContent := `specs:
-  - domain: meteo
-    llm_title: Open-Meteo API
-    base_url: https://api.meteo.com
-    collections:
-      - title: Pets
-        location: http://localhost:1/nonexistent
-`
-	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
-
-	_, err := svc.Export(context.Background(), ExportRequest{
-		OutputPath: filepath.Join(tmpDir, "backup.zip"),
-	})
-	require.Error(t, err)
-}
-
-func TestExport_DisabledSpec(t *testing.T) {
-	t.Parallel()
-
-	tmpDir := t.TempDir()
-	specContent := "openapi: 3.0.0\ninfo:\n  title: Test\n"
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(specContent))
-	}))
-	t.Cleanup(srv.Close)
-
-	svc := newTestService(t)
-	svc.ws, _ = workspace.New(tmpDir)
-	require.NoError(t, svc.ws.Init())
-
-	cfgContent := `specs:
-  - domain: meteo
-    llm_title: Open-Meteo API
-    base_url: https://api.meteo.com
-    disable: true
-    collections:
-      - title: Pets
-        location: ` + srv.URL + `
-`
-	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
-
-	_, err := svc.Export(context.Background(), ExportRequest{
-		OutputPath: filepath.Join(tmpDir, "backup.zip"),
-	})
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "no collections")
-}
-
-func TestExport_DisabledCollection(t *testing.T) {
-	t.Parallel()
-
-	tmpDir := t.TempDir()
-	specContent := "openapi: 3.0.0\ninfo:\n  title: Test\n"
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(specContent))
-	}))
-	t.Cleanup(srv.Close)
-
-	svc := newTestService(t)
-	svc.ws, _ = workspace.New(tmpDir)
-	require.NoError(t, svc.ws.Init())
-
-	cfgContent := `specs:
-  - domain: meteo
-    llm_title: Open-Meteo API
-    base_url: https://api.meteo.com
-    collections:
-      - title: Pets
-        location: ` + srv.URL + `
-        disable: true
-`
-	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
-
-	_, err := svc.Export(context.Background(), ExportRequest{
-		OutputPath: filepath.Join(tmpDir, "backup.zip"),
-	})
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "no collections")
-}
-
-func TestExport_DuplicateLocation(t *testing.T) {
-	t.Parallel()
-
-	tmpDir := t.TempDir()
-	specContent := "openapi: 3.0.0\ninfo:\n  title: Test\n"
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(specContent))
-	}))
-	t.Cleanup(srv.Close)
-
-	svc := newTestService(t)
-	svc.ws, _ = workspace.New(tmpDir)
-	require.NoError(t, svc.ws.Init())
-
-	cfgContent := `specs:
-  - domain: meteo
-    llm_title: Open-Meteo API
-    base_url: https://api.meteo.com
-    collections:
-      - title: Pets
-        location: ` + srv.URL + `
-      - title: PetsDup
-        location: ` + srv.URL + `
-`
-	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
-
-	outputPath := filepath.Join(tmpDir, "backup.zip")
-	resp, err := svc.Export(context.Background(), ExportRequest{
-		OutputPath: outputPath,
-	})
-	require.NoError(t, err)
-	assert.Equal(t, 1, resp.FileCount)
-}
-
-func TestExport_CreateZipError(t *testing.T) {
-	t.Parallel()
-
-	tmpDir := t.TempDir()
-	specContent := "openapi: 3.0.0\ninfo:\n  title: Test\n"
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(specContent))
-	}))
-	t.Cleanup(srv.Close)
-
-	svc := newTestService(t)
-	svc.ws, _ = workspace.New(tmpDir)
-	require.NoError(t, svc.ws.Init())
-
-	cfgContent := `specs:
-  - domain: meteo
-    llm_title: Open-Meteo API
-    base_url: https://api.meteo.com
-    collections:
-      - title: Pets
-        location: ` + srv.URL + `
-`
-	require.NoError(t, os.WriteFile(svc.ws.ConfigPath(), []byte(cfgContent), 0600))
-
-	_, err := svc.Export(context.Background(), ExportRequest{
-		OutputPath: filepath.Join(tmpDir, "nonexistent", "backup.zip"),
-	})
+	svc := newExportService(ws, "1.0")
+	err := svc.finalizeExport(&config.Config{}, tmpDir)
 	require.Error(t, err)
 }

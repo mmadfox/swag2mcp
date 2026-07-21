@@ -6,28 +6,18 @@ import (
 	"sort"
 )
 
-// SpecByIDRequest contains the spec ID used to look up a specific
-// specification and its collections.
-type (
-	SpecByIDRequest struct {
-		ID string `json:"id" validate:"required,md5" jsonschema:"required,A unique 32-character MD5 hash identifier for the spec,pattern=^[0-9a-f]{32}$"`
-	}
+type specService struct {
+	index IndexReader
+	v     RequestValidator
+}
 
-	// SpecByIDResponse contains the requested spec and its associated collections.
-	SpecByIDResponse struct {
-		Spec        Spec             `json:"spec"        jsonschema:"required,Specification"`
-		Collections []CollectionItem `json:"collections" jsonschema:"required,List of collections associated with the spec"`
-	}
-
-	// SpecsResponse contains the list of all available specifications.
-	SpecsResponse struct {
-		Specs []SpecItem `json:"specs" jsonschema:"required,List of specifications"`
-	}
-)
+func newSpecService(index IndexReader, v RequestValidator) *specService {
+	return &specService{index: index, v: v}
+}
 
 // Specs returns a list of all available specifications.
-func (s *Service) Specs(_ context.Context) (SpecsResponse, error) {
-	allSpecs := s.index.AllSpecs()
+func (ss *specService) Specs(_ context.Context) (SpecsResponse, error) {
+	allSpecs := ss.index.AllSpecs()
 	r := SpecsResponse{
 		Specs: make([]SpecItem, len(allSpecs)),
 	}
@@ -48,25 +38,32 @@ func (s *Service) Specs(_ context.Context) (SpecsResponse, error) {
 
 // SpecByID returns the specification identified by the given spec ID,
 // along with its associated collections.
-func (s *Service) SpecByID(_ context.Context, rq SpecByIDRequest) (SpecByIDResponse, error) {
-	if err := s.validateRequest(rq); err != nil {
+func (ss *specService) SpecByID(
+	_ context.Context,
+	rq SpecByIDRequest,
+) (SpecByIDResponse, error) {
+	if err := ss.v.Struct(rq); err != nil {
 		return SpecByIDResponse{}, NewValidationError(
-			"The spec ID is invalid — it must be a 32-character hex string. Use spec_list to find available specs.",
+			"The spec ID is invalid. It must be a 32-character hex string. "+
+				"Use spec_list to find the correct spec ID.",
 			err,
 		)
 	}
 
 	var r SpecByIDResponse
-	sp, err := s.index.SpecByID(rq.ID)
+	sp, err := ss.index.SpecByID(rq.ID)
 	if err != nil {
-		return SpecByIDResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", rq.ID), err)
+		return SpecByIDResponse{}, NewNotFoundError(
+			fmt.Sprintf("Spec %q was not found. Use spec_list to see all available specs.", rq.ID),
+			err,
+		)
 	}
 	r.Spec = Spec{
 		ID:     sp.ID,
 		Domain: sp.Domain,
 	}
 
-	colls, err := s.index.CollectionsBySpec(rq.ID)
+	colls, err := ss.index.CollectionsBySpec(rq.ID)
 	if err == nil {
 		r.Collections = make([]CollectionItem, 0, len(colls))
 		for _, c := range colls {
