@@ -1,5 +1,10 @@
 package tests
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"encoding/json"
 	"net/http"
@@ -733,4 +738,3 @@ specs:
 	s.Require().NoError(err)
 	s.Greater(capturedDuration, 0*time.Millisecond)
 }
-

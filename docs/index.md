@@ -29,6 +29,18 @@ Every time you connect a new API to an LLM, you write the same boilerplate: spec
 | **Product Manager** | Rapid AI feature prototypes without backend work |
 | **and many others** | |
 
+---
+
+## License
+
+Licensed under the **GNU Affero General Public License v3.0** (AGPL v3).
+
+See [LICENSE](https://github.com/mmadfox/swag2mcp/blob/main/LICENSE) for the full license text.
+
+```
+SPDX-License-Identifier: AGPL-3.0-only
+```
+
 ## Quick Start
 
 > [!WARNING]

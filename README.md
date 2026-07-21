@@ -355,4 +355,10 @@ Browse ready-to-use configuration examples:
 
 ## License
 
-MIT
+Licensed under the **GNU Affero General Public License v3.0** (AGPL v3).
+
+See [LICENSE](LICENSE) for the full license text.
+
+```
+SPDX-License-Identifier: AGPL-3.0-only
+```

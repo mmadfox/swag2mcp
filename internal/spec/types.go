@@ -1,5 +1,10 @@
 package spec
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 // Doc is the unified representation of a parsed Swagger/OpenAPI document.
 // All versions (Swagger 2.0, OpenAPI 3.0, 3.1) are mapped to this type.
 type Doc struct {
