@@ -1,8 +1,16 @@
 # Digest Auth
 
-HTTP Digest Access Authentication.
+## Для чего
 
-## Configuration
+HTTP Digest Access Authentication — более безопасная альтернатива Basic Auth. Пароль не передаётся в открытом виде, вместо этого используется MD5-хеш.
+
+## Когда использовать
+
+- Legacy API, которые поддерживают только Digest
+- Когда нужна аутентификация без передачи пароля в открытом виде
+- Внутренние корпоративные системы
+
+## Как настроить
 
 ```yaml
 specs:
@@ -19,25 +27,15 @@ specs:
         password: "$(PASSWORD)"
 ```
 
-## How It Works
+## Параметры
 
-1. swag2mcp sends a request without auth
-2. Server responds 401 with `WWW-Authenticate: Digest ...`
-3. swag2mcp computes MD5 hashes and retries with `Authorization: Digest ...`
+| Параметр | Обязательный | Описание |
+|-----------|-------------|----------|
+| `username` | Да | Имя пользователя |
+| `password` | Да | Пароль |
 
-## Environment Variables
+## Важные моменты
 
-```yaml
-auth:
-  type: digest
-  config:
-    username: "admin"
-    password: "$(API_PASSWORD)"
-```
-
-## Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `username` | string | Username |
-| `password` | string | Password |
+- swag2mcp сначала отправляет запрос без аутентификации, получает от сервера challenge (HTTP 401), вычисляет ответ и повторяет запрос с заголовком `Authorization: Digest ...`
+- Challenge кэшируется на 5 минут — повторные запросы не требуют дополнительного round-trip
+- Пароль можно хранить в переменной окружения: `password: "$(API_PASSWORD)"`

@@ -1,12 +1,20 @@
 # API Key
 
-Authentication via API key in header or query parameter.
+## Для чего
 
-## Configuration
+Аутентификация по API-ключу. Ключ может передаваться в заголовке запроса или как параметр URL.
 
-::: code-group
+## Когда использовать
 
-```yaml [Header]
+- Сервисы с API-ключами
+- Погодные сервисы, геоданные, переводчики
+- Когда API требует ключ в заголовке (`X-API-Key`) или в параметре запроса (`?api_key=...`)
+
+## Как настроить
+
+### Ключ в заголовке
+
+```yaml
 specs:
   - domain: jokes
     llm_title: Dad Joke API
@@ -22,7 +30,9 @@ specs:
         value: "$(API_KEY)"
 ```
 
-```yaml [Query]
+### Ключ в параметре запроса
+
+```yaml
 specs:
   - domain: jokes
     llm_title: Dad Joke API
@@ -38,12 +48,16 @@ specs:
         value: "$(API_KEY)"
 ```
 
-:::
+## Параметры
 
-## Parameters
+| Параметр | Обязательный | Описание |
+|-----------|-------------|----------|
+| `key` | Да | Имя заголовка или параметра запроса |
+| `in` | Да | Куда поместить ключ: `header` или `query` |
+| `value` | Да | Значение ключа |
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `key` | string | Parameter name |
-| `in` | string | Location: `header` or `query` |
-| `value` | string | Key value |
+## Важные моменты
+
+- В режиме `header` ключ добавляется как HTTP-заголовок
+- В режиме `query` ключ добавляется как параметр URL
+- Значение можно хранить в переменной окружения: `value: "$(MY_API_KEY)"`

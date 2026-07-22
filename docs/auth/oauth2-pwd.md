@@ -1,8 +1,16 @@
-# OAuth2 Password
+# OAuth2 Password Grant
 
-OAuth2 authentication via Password Grant (Resource Owner Password Credentials).
+## Для чего
 
-## Configuration
+OAuth2 Resource Owner Password Grant — аутентификация по логину и паролю пользователя. Подходит для first-party приложений, где пользователь доверяет свои учётные данные приложению.
+
+## Когда использовать
+
+- First-party приложения (мобильные, веб)
+- Интеграция с Keycloak и аналогичными Identity Provider
+- Когда API поддерживает OAuth2 Password Grant
+
+## Как настроить
 
 ```yaml
 specs:
@@ -20,25 +28,25 @@ specs:
         username: "$(USERNAME)"
         password: "$(PASSWORD)"
         token_url: "https://auth.example.com/oauth/token"
-        scopes: ["openid", "profile"]
+        scopes:
+          - openid
+          - profile
 ```
 
-## How It Works
+## Параметры
 
-1. swag2mcp sends username + password to `token_url`
-2. The Bearer token is used for all requests
-3. Token is automatically refreshed on expiry
+| Параметр | Обязательный | Описание |
+|-----------|-------------|----------|
+| `client_id` | Да | Идентификатор клиента |
+| `username` | Да | Имя пользователя |
+| `password` | Да | Пароль |
+| `token_url` | Да | URL токен-эндпоинта |
+| `client_secret` | Нет | Секрет клиента (опционально, для public client) |
+| `scopes` | Нет | Список разрешений (опционально) |
 
-## Parameters
+## Важные моменты
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `client_id` | string | Client ID |
-| `client_secret` | string | Client secret (optional, for public client) |
-| `username` | string | Username |
-| `password` | string | Password |
-| `token_url` | string | Token endpoint URL |
-| `scopes` | array | Scope list (optional) |
-
-!!! tip "Public Client"
-    `client_secret` is optional — public clients are supported (e.g., Keycloak).
+- `client_secret` опционален — поддерживаются **public клиенты** (например, Keycloak)
+- swag2mcp автоматически обновляет токен по истечении срока действия
+- Токен кэшируется до expiry
+- Все параметры можно хранить в переменных окружения

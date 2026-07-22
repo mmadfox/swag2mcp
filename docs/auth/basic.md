@@ -1,8 +1,16 @@
 # Basic Auth
 
-HTTP Basic Authentication.
+## Для чего
 
-## Configuration
+HTTP Basic Authentication — самый простой способ аутентификации по логину и паролю.
+
+## Когда использовать
+
+- Legacy API, которые поддерживают только Basic Auth
+- Простая аутентификация без сложных токенов
+- Внутренние сервисы
+
+## Как настроить
 
 ```yaml
 specs:
@@ -19,23 +27,14 @@ specs:
         password: "$(PASSWORD)"
 ```
 
-## How It Works
+## Параметры
 
-Header `Authorization: Basic base64(username:password)` is added to every request.
+| Параметр | Обязательный | Описание |
+|-----------|-------------|----------|
+| `username` | Да | Имя пользователя |
+| `password` | Да | Пароль |
 
-## Environment Variables
+## Важные моменты
 
-```yaml
-auth:
-  type: basic
-  config:
-    username: "admin"
-    password: "$(API_PASSWORD)"
-```
-
-## Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `username` | string | Username |
-| `password` | string | Password |
+- Пароль передаётся в заголовке `Authorization: Basic ...` в кодировке Base64 — это **не шифрование**. Всегда используйте HTTPS.
+- Пароль можно хранить в переменной окружения: `password: "$(MY_PASSWORD)"`
