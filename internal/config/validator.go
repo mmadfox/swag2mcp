@@ -78,6 +78,7 @@ type ValidateOptions struct {
 func ValidateConfig(cfg *Config, opts ValidateOptions) error {
 	var errs validationErrors
 
+	cfg.SetDefaults()
 	cfg.HTTPClient.SetDefaults()
 
 	filter := NewFilter(opts.Tags)

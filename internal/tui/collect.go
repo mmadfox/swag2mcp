@@ -13,9 +13,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// collectState represents a step in a collection sub-wizard.
-type collectState int
-
 const (
 	colDomain collectState = iota
 	colTitle
@@ -29,6 +26,9 @@ const (
 	colCollLocation
 	colDone
 )
+
+// collectState represents a step in a collection sub-wizard.
+type collectState int
 
 // collectModel is a Bubbletea model for collecting a single spec or collection.
 type collectModel struct {

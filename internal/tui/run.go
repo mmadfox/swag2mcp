@@ -17,9 +17,15 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/service"
 	"github.com/mmadfox/swag2mcp/internal/spec"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
+)
+
+const (
+	pageSize   = 10
+	actionHint = "  Enter number and press Enter.  [B]ack  [M]enu.\n"
 )
 
 // ExplorerService defines the subset of service methods needed by the TUI explorer.
@@ -56,12 +62,6 @@ const (
 	modeSearch runMode = iota
 	modeBrowse
 	modeAuth
-)
-
-const (
-	randSuffixLen = 6
-	pageSize      = 10
-	actionHint    = "  Enter number and press Enter.  [B]ack  [M]enu.\n"
 )
 
 type runModel struct {
@@ -566,7 +566,7 @@ func (m runModel) showEndpoint() (tea.Model, tea.Cmd) {
 	path = strings.ReplaceAll(path, "/", "_")
 	path = strings.ReplaceAll(path, "{", "")
 	path = strings.ReplaceAll(path, "}", "")
-	filename := fmt.Sprintf("%s-%s-%s-%s.json", m.epDetail.SpecDomain, method, path, randomSuffix(randSuffixLen))
+	filename := fmt.Sprintf("%s-%s-%s-%s.json", m.epDetail.SpecDomain, method, path, randomSuffix(config.RandSuffixLen))
 
 	if err := os.WriteFile(filename, data, 0600); err != nil {
 		m.err = fmt.Errorf("save endpoint: %w", err)

@@ -22,9 +22,6 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
-// state represents the current step in the initialization wizard.
-type state int
-
 const (
 	stateWorkspaceDir state = iota
 	stateDirNotEmpty
@@ -43,6 +40,9 @@ const (
 	stateConfirm
 	stateDone
 )
+
+// state represents the current step in the initialization wizard.
+type state int
 
 // authFieldDef describes a single field for an auth method.
 type authFieldDef struct {

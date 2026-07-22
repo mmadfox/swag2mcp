@@ -28,6 +28,8 @@ const (
 
 const specIDKey = "specId"
 
+var portCounter int32
+
 type BaseSuite struct {
 	suite.Suite
 
@@ -253,5 +255,3 @@ func (s *BaseSuite) GetEndpointID(client *mcpClient, specID, method, path string
 	s.Require().FailNowf("endpoint %s %s not found", method, path)
 	return ""
 }
-
-var portCounter int32

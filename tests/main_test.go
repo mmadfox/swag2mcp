@@ -18,11 +18,41 @@ import (
 	"time"
 )
 
+const mcpStartTimeout = 10 * time.Second
+
 var (
 	binPath     string
 	MockBinPath string
 	projectRoot string
 )
+
+type mcpClient struct {
+	cmd    *exec.Cmd
+	stdin  *os.File
+	stdout *os.File
+	stderr *bytes.Buffer
+	mu     sync.Mutex
+}
+
+type jsonRPCRequest struct {
+	JSONRPC string      `json:"jsonrpc"`
+	ID      int         `json:"id"`
+	Method  string      `json:"method"`
+	Params  interface{} `json:"params,omitempty"`
+}
+
+type jsonRPCResponse struct {
+	JSONRPC string          `json:"jsonrpc"`
+	ID      int             `json:"id"`
+	Result  json.RawMessage `json:"result,omitempty"`
+	Error   *jsonRPCError   `json:"error,omitempty"`
+}
+
+type jsonRPCError struct {
+	Code    int             `json:"code"`
+	Message string          `json:"message"`
+	Data    json.RawMessage `json:"data,omitempty"`
+}
 
 func TestMain(m *testing.M) {
 	_, filename, _, _ := runtime.Caller(0)
@@ -52,36 +82,6 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(m.Run())
-}
-
-type mcpClient struct {
-	cmd    *exec.Cmd
-	stdin  *os.File
-	stdout *os.File
-	stderr *bytes.Buffer
-	mu     sync.Mutex
-}
-
-const mcpStartTimeout = 10 * time.Second
-
-type jsonRPCRequest struct {
-	JSONRPC string      `json:"jsonrpc"`
-	ID      int         `json:"id"`
-	Method  string      `json:"method"`
-	Params  interface{} `json:"params,omitempty"`
-}
-
-type jsonRPCResponse struct {
-	JSONRPC string          `json:"jsonrpc"`
-	ID      int             `json:"id"`
-	Result  json.RawMessage `json:"result,omitempty"`
-	Error   *jsonRPCError   `json:"error,omitempty"`
-}
-
-type jsonRPCError struct {
-	Code    int             `json:"code"`
-	Message string          `json:"message"`
-	Data    json.RawMessage `json:"data,omitempty"`
 }
 
 func (c *mcpClient) initialize(t *testing.T) {

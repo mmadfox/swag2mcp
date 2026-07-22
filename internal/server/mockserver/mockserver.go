@@ -35,6 +35,12 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
+const (
+	defaultOAuth2Port = 9090
+	defaultDigestPort = 9091
+	defaultHMACPort   = 9092
+)
+
 // Options holds configuration for the MockServer.
 type Options struct {
 	// Config is the parsed swag2mcp configuration containing specs and collections.
@@ -141,12 +147,6 @@ func (m *MockServer) Start(ctx context.Context) error {
 
 	return nil
 }
-
-const (
-	defaultOAuth2Port = 9090
-	defaultDigestPort = 9091
-	defaultHMACPort   = 9092
-)
 
 // startAuthServers creates and registers auth mock servers (OAuth2, Digest, HMAC).
 func (m *MockServer) startAuthServers() {

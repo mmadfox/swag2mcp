@@ -15,6 +15,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/model"
 )
 
@@ -47,13 +48,13 @@ func newInvokeResponse(response *http.Response, body []byte) InvokeResponse {
 // Default is 1 MB, maximum is 10 MB.
 func resolveMaxResponseSize(size *int) int {
 	if size == nil {
-		return defaultMaxResponseSize
+		return config.DefaultMaxResponseSize
 	}
-	if *size > maxAllowedResponseSize {
-		return maxAllowedResponseSize
+	if *size > config.MaxAllowedResponseSize {
+		return config.MaxAllowedResponseSize
 	}
 	if *size <= 0 {
-		return defaultMaxResponseSize
+		return config.DefaultMaxResponseSize
 	}
 	return *size
 }

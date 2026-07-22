@@ -151,9 +151,18 @@ import (
 
 ### 2.4 Grouping and Ordering
 
-- `type` declarations before `const` before `var`.
-- Related types, constants, and functions grouped together.
-- Methods grouped by receiver type.
+Within a file, declarations follow this order:
+
+1. `package` declaration
+2. `import` block
+3. `const` block — exported constants first, then unexported
+4. `var` block — exported vars first, then unexported
+5. `type` declarations — interfaces, then structs
+6. Constructor functions (`New*`)
+7. Method implementations grouped by receiver type
+8. Standalone functions
+
+Related types, constants, and functions are grouped together. Methods are grouped by receiver type.
 
 ### 2.5 Reduce Nesting
 
@@ -772,17 +781,17 @@ type SearchResponse struct {
 ### 11.3 Functional Options Pattern
 
 ```go
-type NewOption func(*Service)
+type Option func(*Service)
 
-func New(opts ...NewOption) (*Service, error)
+func New(opts ...Option) (*Service, error)
 
-func WithDisableLLMAuth(disable bool) NewOption {
+func WithDisableLLMAuth(disable bool) Option {
     return func(s *Service) {
         s.disableLLMAuth.Store(disable)
     }
 }
 
-func WithVersion(version string) NewOption {
+func WithVersion(version string) Option {
     return func(s *Service) {
         s.version = version
     }

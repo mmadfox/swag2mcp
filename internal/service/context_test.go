@@ -18,7 +18,7 @@ func TestServiceContext_HTTPClient(t *testing.T) {
 	t.Parallel()
 
 	c := newServiceContext()
-	require.Nil(t, c.loadHTTPClient())
+	require.Same(t, http.DefaultClient, c.loadHTTPClient())
 
 	client := &http.Client{}
 	c.storeHTTPClient(client)
@@ -83,7 +83,7 @@ func TestServiceContext_MaxResponseSize(t *testing.T) {
 	t.Parallel()
 
 	c := newServiceContext()
-	require.Equal(t, 0, c.MaxResponseSize())
+	require.Equal(t, config.DefaultMaxResponseSize, c.MaxResponseSize())
 
 	c.maxResponseSize.Store(2048)
 	require.Equal(t, 2048, c.MaxResponseSize())

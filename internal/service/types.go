@@ -11,18 +11,6 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/spec"
 )
 
-// Tool represents a single MCP tool definition.
-type Tool struct {
-	Name        string `json:"name"        jsonschema:"required,Unique identifier for the tool"`
-	Description string `json:"description" jsonschema:"required,Detailed description of what the tool does, when to use it, and what arguments it expects"`
-}
-
-// ToolDefinitions represents the complete set of MCP tools with their descriptions.
-type ToolDefinitions struct {
-	Instruction string `json:"instruction" jsonschema:"required,Instruction for the LLM about when to use each tool"`
-	Tools       []Tool `json:"tools"       jsonschema:"required,List of available MCP tools with their detailed descriptions"`
-}
-
 const (
 	// Name is the name of the service.
 	Name = "swag2mcp"
@@ -65,6 +53,18 @@ const (
 	// ResponseSlice is the name of the response_slice tool.
 	ResponseSlice = "response_slice"
 )
+
+// Tool represents a single MCP tool definition.
+type Tool struct {
+	Name        string `json:"name"        jsonschema:"required,Unique identifier for the tool"`
+	Description string `json:"description" jsonschema:"required,Detailed description of what the tool does, when to use it, and what arguments it expects"`
+}
+
+// ToolDefinitions represents the complete set of MCP tools with their descriptions.
+type ToolDefinitions struct {
+	Instruction string `json:"instruction" jsonschema:"required,Instruction for the LLM about when to use each tool"`
+	Tools       []Tool `json:"tools"       jsonschema:"required,List of available MCP tools with their detailed descriptions"`
+}
 
 // TagListItem represents a tag with its method count for display in lists.
 type TagListItem struct {

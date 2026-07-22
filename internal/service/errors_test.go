@@ -12,6 +12,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type testError struct{ msg string }
+
+func (e *testError) Error() string { return e.msg }
+
+func newTestError(msg string) error {
+	return &testError{msg: msg}
+}
+
 func TestLLMError_Error(t *testing.T) {
 	t.Parallel()
 
@@ -105,11 +113,3 @@ func TestMapReaderError_default(t *testing.T) {
 	err := mapReaderError(newTestError("unknown"))
 	require.Contains(t, err.Error(), "invoke_error")
 }
-
-func newTestError(msg string) error {
-	return &testError{msg: msg}
-}
-
-type testError struct{ msg string }
-
-func (e *testError) Error() string { return e.msg }

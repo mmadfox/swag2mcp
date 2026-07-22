@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/reader"
 )
 
@@ -112,7 +113,7 @@ func (rs *responseService) ResponseCompress(_ context.Context, req ResponseCompr
 		ArrayTail:  req.ArrayTail,
 		StringLen:  req.StringLen,
 		SelectKeys: req.SelectKeys,
-		Limit:      int(rs.ctx.maxResponseSize.Load()),
+		Limit:      rs.ctx.MaxResponseSize(),
 	})
 	if err != nil {
 		return ResponseCompressResponse{}, mapReaderError(err)
@@ -147,13 +148,13 @@ func (rs *responseService) ResponseSlice(_ context.Context, req ResponseSliceReq
 		Line:     req.Line,
 		Range:    req.Range,
 		Around:   req.Around,
-		Limit:    int(rs.ctx.maxResponseSize.Load()),
+		Limit:    rs.ctx.MaxResponseSize(),
 	})
 	if err != nil {
 		return ResponseSliceResponse{}, mapReaderError(err)
 	}
 
-	maxSize := int(rs.ctx.maxResponseSize.Load())
+	maxSize := rs.ctx.MaxResponseSize()
 	fragmentBytes, _ := json.Marshal(slice.Value)
 	if maxSize > 0 && len(fragmentBytes) > maxSize {
 		ref, saveErr := rs.saveReaderResult(req.Path, fragmentBytes)
@@ -189,7 +190,7 @@ func (rs *responseService) saveReaderResult(_ string, data any) (FileReference, 
 		return FileReference{}, fmt.Errorf("create responses dir: %w", err)
 	}
 
-	suf := randomSuffix(randSuffixLen)
+	suf := randomSuffix(config.RandSuffixLen)
 	fname := fmt.Sprintf("response-fragment-%s.json", suf)
 	fp := filepath.Join(rs.ws.ResponsesDir(), fname)
 
@@ -198,7 +199,7 @@ func (rs *responseService) saveReaderResult(_ string, data any) (FileReference, 
 	}
 
 	size := formatSize(len(body))
-	maxSizeStr := formatSize(int(rs.ctx.maxResponseSize.Load()))
+	maxSizeStr := formatSize(rs.ctx.MaxResponseSize())
 	msg := fmt.Sprintf(
 		"Response fragment (%s) saved to disk. Use the path with response_slice or response_outline.",
 		size,

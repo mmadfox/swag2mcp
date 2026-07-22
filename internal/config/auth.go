@@ -15,6 +15,23 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/auth"
 )
 
+// authDecoder decodes a YAML config node into an auth.Authenticator.
+type authDecoder func(*yaml.Node) (auth.Authenticator, error)
+
+// authDecoders maps auth type strings to their config decoders.
+var authDecoders = map[string]authDecoder{ //nolint:gochecknoglobals // Static registry.
+	"":                                    decodeNoAuth,
+	auth.NoAuth.String():                  decodeNoAuth,
+	auth.BasicAuth.String():               decodeBasicAuth,
+	auth.BearerTokenAuth.String():         decodeBearerAuth,
+	auth.DigestAuth.String():              decodeDigestAuth,
+	auth.OAuth2ClientCredentials.String(): decodeOAuth2CC,
+	auth.OAuth2Password.String():          decodeOAuth2Pwd,
+	auth.APIKeyAuth.String():              decodeAPIKeyAuth,
+	auth.ScriptAuth.String():              decodeScriptAuth,
+	auth.HMACAuth.String():                decodeHMACAuth,
+}
+
 // Auth holds the parsed authentication configuration for a spec.
 // It is populated during YAML unmarshalling by reading the "type" and "config" keys.
 type Auth struct {
@@ -62,23 +79,6 @@ func (a *Auth) UnmarshalYAML(value *yaml.Node) error {
 	}
 	a.Client = client
 	return nil
-}
-
-// authDecoder decodes a YAML config node into an auth.Authenticator.
-type authDecoder func(*yaml.Node) (auth.Authenticator, error)
-
-// authDecoders maps auth type strings to their config decoders.
-var authDecoders = map[string]authDecoder{ //nolint:gochecknoglobals // Static registry.
-	"":                                    decodeNoAuth,
-	auth.NoAuth.String():                  decodeNoAuth,
-	auth.BasicAuth.String():               decodeBasicAuth,
-	auth.BearerTokenAuth.String():         decodeBearerAuth,
-	auth.DigestAuth.String():              decodeDigestAuth,
-	auth.OAuth2ClientCredentials.String(): decodeOAuth2CC,
-	auth.OAuth2Password.String():          decodeOAuth2Pwd,
-	auth.APIKeyAuth.String():              decodeAPIKeyAuth,
-	auth.ScriptAuth.String():              decodeScriptAuth,
-	auth.HMACAuth.String():                decodeHMACAuth,
 }
 
 func decodeNoAuth(_ *yaml.Node) (auth.Authenticator, error) {

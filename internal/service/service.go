@@ -8,21 +8,12 @@ package service
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"sync/atomic"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/mmadfox/swag2mcp/internal/cache"
 	"github.com/mmadfox/swag2mcp/internal/index"
-	"github.com/mmadfox/swag2mcp/internal/ratelimit"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
-)
-
-const (
-	defaultMaxResponseSize = 1048576  // 1 MB
-	maxAllowedResponseSize = 10485760 // 10 MB
-	randSuffixLen          = 6
 )
 
 // Service is the core business logic layer for swag2mcp.
@@ -35,7 +26,6 @@ type Service struct {
 	dumpDir         string
 	version         string
 	indexNoFullText bool
-	rateLimiter     *ratelimit.RateLimiter
 	snapshot        atomic.Value // stores *InfoSnapshot
 
 	specSvc       *specService
@@ -95,19 +85,15 @@ func WithWorkspace(ws *workspace.Workspace) Option {
 // New creates a new Service with the given options.
 func New(opts ...Option) (*Service, error) {
 	s := &Service{
-		ctx:         newServiceContext(),
-		v:           validator.New(validator.WithRequiredStructEnabled()),
-		rateLimiter: ratelimit.New(),
+		ctx: newServiceContext(),
+		v:   validator.New(validator.WithRequiredStructEnabled()),
 	}
-	s.ctx.storeHTTPClient(&http.Client{Transport: http.DefaultTransport})
-	s.ctx.maxResponseSize.Store(defaultMaxResponseSize)
-	s.ctx.startedAt.Store(time.Now().UnixNano())
 
 	for _, opt := range opts {
 		opt(s)
 	}
 
-	idxOpts := []index.NewOption{}
+	idxOpts := []index.Option{}
 	if s.indexNoFullText {
 		idxOpts = append(idxOpts, index.WithNoFullText())
 	}
@@ -138,7 +124,7 @@ func New(opts ...Option) (*Service, error) {
 	s.inspectSvc = newInspectService(s.index, s.v)
 	s.authSvc = newAuthService(s.index, llmAuthDisabled)
 	s.toolsSvc = newToolsService(s.index, llmAuthDisabled)
-	s.invokeSvc = newInvokeService(s.ctx, s.index, s.ws, s.v, s.rateLimiter, s.dumpDir)
+	s.invokeSvc = newInvokeService(s.ctx, s.index, s.ws, s.v, s.dumpDir)
 	s.infoSvc = newInfoService(s.ctx, realClock{}, s.index, s.ws, s.version, &s.snapshot, s.ctx.startedAt.Load())
 	s.exportSvc = newExportService(s.ws, s.version)
 	s.importSvc = newImportService(s.ws)

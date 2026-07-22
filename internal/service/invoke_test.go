@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
+	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/mmadfox/swag2mcp/internal/spec"
 	"github.com/stretchr/testify/require"
@@ -28,15 +29,18 @@ func newTestInvokeSvc(t *testing.T, idx IndexReader, ws WorkspaceOps) *invokeSer
 	t.Helper()
 	ctx := newServiceContext()
 	ctx.storeHTTPClient(&http.Client{Transport: http.DefaultTransport})
-	ctx.maxResponseSize.Store(defaultMaxResponseSize)
-	return newInvokeService(ctx, idx, ws, fakeValidator{}, fakeRateLimiter{}, "")
+	ctx.maxResponseSize.Store(config.DefaultMaxResponseSize)
+	ctx.storeRateLimiter(fakeRateLimiter{})
+	return newInvokeService(ctx, idx, ws, fakeValidator{}, "")
 }
 
 func TestInvokeService_Invoke_validationError(t *testing.T) {
 	t.Parallel()
 
 	ctrl := gomock.NewController(t)
-	svc := newInvokeService(newServiceContext(), NewMockIndexReader(ctrl), NewMockWorkspaceOps(ctrl), strictValidator{}, fakeRateLimiter{}, "")
+	ctx := newServiceContext()
+	ctx.storeRateLimiter(fakeRateLimiter{})
+	svc := newInvokeService(ctx, NewMockIndexReader(ctrl), NewMockWorkspaceOps(ctrl), strictValidator{}, "")
 	_, err := svc.Invoke(context.Background(), InvokeRequest{EndpointID: "bad"})
 	require.Error(t, err)
 }

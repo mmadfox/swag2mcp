@@ -12,8 +12,6 @@ import (
 	"time"
 )
 
-const invokeRateInterval = 10 * time.Second
-
 // Limiter checks whether an endpoint ID is allowed to proceed.
 type Limiter interface {
 	Allow(endpointID string) error
@@ -21,14 +19,27 @@ type Limiter interface {
 
 // RateLimiter enforces a per-endpoint cooldown period.
 type RateLimiter struct {
-	mu   sync.Mutex
-	last map[string]time.Time
+	mu       sync.Mutex
+	last     map[string]time.Time
+	interval time.Duration
 }
 
-// New creates a new RateLimiter.
+// New creates a new RateLimiter with the default interval (10s).
 func New() *RateLimiter {
 	return &RateLimiter{
-		last: make(map[string]time.Time),
+		last:     make(map[string]time.Time),
+		interval: 10 * time.Second, //nolint:mnd // default rate limit interval
+	}
+}
+
+// NewWithInterval creates a new RateLimiter with the given interval.
+func NewWithInterval(interval time.Duration) *RateLimiter {
+	if interval <= 0 {
+		return New()
+	}
+	return &RateLimiter{
+		last:     make(map[string]time.Time),
+		interval: interval,
 	}
 }
 
@@ -38,8 +49,8 @@ func (rl *RateLimiter) Allow(endpointID string) error {
 	defer rl.mu.Unlock()
 
 	now := time.Now()
-	if last, ok := rl.last[endpointID]; ok && now.Sub(last) < invokeRateInterval {
-		remaining := invokeRateInterval - now.Sub(last)
+	if last, ok := rl.last[endpointID]; ok && now.Sub(last) < rl.interval {
+		remaining := rl.interval - now.Sub(last)
 		return fmt.Errorf(
 			"rate limit exceeded for endpoint %q: try again in %.0f seconds",
 			endpointID, remaining.Seconds(),

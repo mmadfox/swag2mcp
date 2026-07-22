@@ -14,6 +14,14 @@ import (
 	"strings"
 )
 
+// pathForChild builds a dotted path to a child node.
+func pathForChild(parent, child string) string {
+	if parent == "" {
+		return child
+	}
+	return parent + "." + child
+}
+
 // Outline returns a structural summary of the JSON file at path.
 func (r *reader) Outline(path string, opts OutlineOptions) (Outline, error) {
 	if err := r.validatePath(path); err != nil {
@@ -406,12 +414,4 @@ func buildNavigationHints(path string, node outlineNode) navigation {
 		}
 	}
 	return nav
-}
-
-// pathForChild builds a dotted path to a child node.
-func pathForChild(parent, child string) string {
-	if parent == "" {
-		return child
-	}
-	return parent + "." + child
 }

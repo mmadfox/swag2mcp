@@ -21,6 +21,12 @@ import (
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
+const (
+	shutdownTimeout   = 5 * time.Second
+	readHeaderTimeout = 10 * time.Second
+	tokenExpiry       = 300 * time.Hour
+)
+
 // TransportType defines the MCP server transport.
 type TransportType int
 
@@ -31,12 +37,6 @@ const (
 	TransportSSE
 	// TransportStreamableHTTP uses the Streamable HTTP transport for MCP communication.
 	TransportStreamableHTTP
-)
-
-const (
-	shutdownTimeout   = 5 * time.Second
-	readHeaderTimeout = 10 * time.Second
-	tokenExpiry       = 300 * time.Hour
 )
 
 // TokenVerifier verifies bearer tokens for HTTP transport auth.

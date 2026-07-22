@@ -17,6 +17,8 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
+const defaultSpecName = "spec"
+
 type specFilter struct {
 	domains map[string]struct{}
 }
@@ -70,8 +72,6 @@ func removeDiacritics(s string) string {
 	result, _, _ := transform.String(t, s)
 	return result
 }
-
-const defaultSpecName = "spec"
 
 func specFileNameBase(location string) string {
 	if strings.HasPrefix(location, "http://") || strings.HasPrefix(location, "https://") {

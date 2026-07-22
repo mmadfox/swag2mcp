@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/stretchr/testify/require"
 )
@@ -16,21 +17,21 @@ import (
 func TestResolveMaxResponseSize_nil(t *testing.T) {
 	t.Parallel()
 
-	require.Equal(t, defaultMaxResponseSize, resolveMaxResponseSize(nil))
+	require.Equal(t, config.DefaultMaxResponseSize, resolveMaxResponseSize(nil))
 }
 
 func TestResolveMaxResponseSize_zero(t *testing.T) {
 	t.Parallel()
 
 	zero := 0
-	require.Equal(t, defaultMaxResponseSize, resolveMaxResponseSize(&zero))
+	require.Equal(t, config.DefaultMaxResponseSize, resolveMaxResponseSize(&zero))
 }
 
 func TestResolveMaxResponseSize_overflow(t *testing.T) {
 	t.Parallel()
 
 	big := 20_000_000
-	require.Equal(t, maxAllowedResponseSize, resolveMaxResponseSize(&big))
+	require.Equal(t, config.MaxAllowedResponseSize, resolveMaxResponseSize(&big))
 }
 
 func TestResolveMaxResponseSize_valid(t *testing.T) {

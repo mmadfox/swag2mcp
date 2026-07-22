@@ -22,6 +22,11 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
+const (
+	transportSSE            = "sse"
+	transportStreamableHTTP = "streamable-http"
+)
+
 type mcpCmdOpts struct {
 	Logfile        string
 	Tags           string
@@ -32,11 +37,6 @@ type mcpCmdOpts struct {
 	HTTPPath       string
 	AuthToken      string
 }
-
-const (
-	transportSSE            = "sse"
-	transportStreamableHTTP = "streamable-http"
-)
 
 func newMCPCmd(version string) *cobra.Command {
 	opts := mcpCmdOpts{}

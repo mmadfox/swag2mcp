@@ -18,8 +18,8 @@ import (
 	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
+	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/model"
-	"github.com/mmadfox/swag2mcp/internal/ratelimit"
 )
 
 // InvokeRequest represents a request to invoke an API endpoint.
@@ -50,12 +50,11 @@ type InvokeResponse struct {
 }
 
 type invokeService struct {
-	ctx         *serviceContext
-	index       IndexReader
-	ws          WorkspaceOps
-	v           RequestValidator
-	rateLimiter ratelimit.Limiter
-	dumpDir     string
+	ctx     *serviceContext
+	index   IndexReader
+	ws      WorkspaceOps
+	v       RequestValidator
+	dumpDir string
 }
 
 func newInvokeService(
@@ -63,16 +62,14 @@ func newInvokeService(
 	index IndexReader,
 	ws WorkspaceOps,
 	v RequestValidator,
-	rateLimiter ratelimit.Limiter,
 	dumpDir string,
 ) *invokeService {
 	return &invokeService{
-		ctx:         ctx,
-		index:       index,
-		ws:          ws,
-		v:           v,
-		rateLimiter: rateLimiter,
-		dumpDir:     dumpDir,
+		ctx:     ctx,
+		index:   index,
+		ws:      ws,
+		v:       v,
+		dumpDir: dumpDir,
 	}
 }
 
@@ -87,7 +84,7 @@ func (is *invokeService) Invoke(ctx context.Context, rq InvokeRequest) (InvokeRe
 	}
 
 	if !is.ctx.disableRateLimiter.Load() {
-		if err := is.rateLimiter.Allow(rq.EndpointID); err != nil {
+		if err := is.ctx.loadRateLimiter().Allow(rq.EndpointID); err != nil {
 			return InvokeResponse{}, NewRateLimitError(err)
 		}
 	}
@@ -223,7 +220,7 @@ func (is *invokeService) executeRequest(
 		)
 	}
 
-	maxSize := int(is.ctx.maxResponseSize.Load())
+	maxSize := is.ctx.MaxResponseSize()
 	if len(body) > maxSize {
 		return is.saveLargeResponse(response, body, sp.Domain, ep, maxSize)
 	}
@@ -250,7 +247,7 @@ func (is *invokeService) saveLargeResponse(
 	p = strings.ReplaceAll(p, "/", "_")
 	p = strings.ReplaceAll(p, "{", "")
 	p = strings.ReplaceAll(p, "}", "")
-	suf := randomSuffix(randSuffixLen)
+	suf := randomSuffix(config.RandSuffixLen)
 	fname := fmt.Sprintf("%s-%s-%s-%s.json", domain, m, p, suf)
 	fp := filepath.Join(is.ws.ResponsesDir(), fname)
 

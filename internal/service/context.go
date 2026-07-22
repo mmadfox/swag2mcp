@@ -11,6 +11,7 @@ import (
 
 	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/httpclient"
+	"github.com/mmadfox/swag2mcp/internal/ratelimit"
 )
 
 // serviceContext holds all mutable, concurrency-safe fields shared across sub-services.
@@ -25,6 +26,7 @@ type serviceContext struct {
 	globalCookies      atomic.Value // []httpclient.Cookie
 	disableLLMAuth     atomic.Bool
 	disableRateLimiter atomic.Bool
+	rateLimiter        atomic.Value // ratelimit.Limiter
 }
 
 func newServiceContext() *serviceContext {
@@ -34,7 +36,7 @@ func newServiceContext() *serviceContext {
 func (c *serviceContext) loadHTTPClient() *http.Client {
 	v := c.httpClient.Load()
 	if v == nil {
-		return nil
+		return http.DefaultClient
 	}
 	return v.(*http.Client)
 }
@@ -105,7 +107,11 @@ func (c *serviceContext) storeGlobalCookies(cookies []httpclient.Cookie) {
 
 // MaxResponseSize implements settingsProvider.
 func (c *serviceContext) MaxResponseSize() int {
-	return int(c.maxResponseSize.Load())
+	v := c.maxResponseSize.Load()
+	if v <= 0 {
+		return config.DefaultMaxResponseSize
+	}
+	return int(v)
 }
 
 // HTTPClientConfig implements settingsProvider.
@@ -116,4 +122,16 @@ func (c *serviceContext) HTTPClientConfig() httpclient.Config {
 // Config implements settingsProvider.
 func (c *serviceContext) Config() *config.Config {
 	return c.loadConfig()
+}
+
+func (c *serviceContext) loadRateLimiter() ratelimit.Limiter {
+	v := c.rateLimiter.Load()
+	if v == nil {
+		return nil
+	}
+	return v.(ratelimit.Limiter)
+}
+
+func (c *serviceContext) storeRateLimiter(l ratelimit.Limiter) {
+	c.rateLimiter.Store(l)
 }

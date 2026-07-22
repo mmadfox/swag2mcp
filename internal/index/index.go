@@ -26,16 +26,6 @@ import (
 
 const initialSpecsCapacity = 8
 
-// newAnalyzer creates a default text analyzer with unicode tokenizer and lower-case filter.
-func newAnalyzer() *analysis.Analyzer {
-	return &analysis.Analyzer{
-		Tokenizer: tokenizer.NewUnicodeTokenizer(),
-		TokenFilters: []analysis.TokenFilter{
-			token.NewLowerCaseFilter(),
-		},
-	}
-}
-
 // EndpointCursor represents a position in the index.
 type EndpointCursor struct {
 	Spec       *model.Spec
@@ -77,19 +67,19 @@ type Index struct {
 	noFullText            bool
 }
 
-// NewOption is a functional option for configuring an Index.
-type NewOption func(*Index)
+// Option is a functional option for configuring an Index.
+type Option func(*Index)
 
 // WithNoFullText disables full-text search indexing.
 // Use this for CLI commands that only need in-memory lookups.
-func WithNoFullText() NewOption {
+func WithNoFullText() Option {
 	return func(idx *Index) {
 		idx.noFullText = true
 	}
 }
 
 // New creates an empty in-memory index with type-based structures.
-func New(opts ...NewOption) (*Index, error) {
+func New(opts ...Option) (*Index, error) {
 	writer, err := bluge.OpenWriter(bluge.InMemoryOnlyConfig())
 	if err != nil {
 		return nil, fmt.Errorf("bluge open: %w", err)
@@ -624,4 +614,14 @@ func (idx *Index) AddCollection(coll *model.Collection) {
 	defer idx.mu.Unlock()
 	idx.collectionByID[coll.ID] = coll
 	idx.collectionsBySpec[coll.SpecID] = append(idx.collectionsBySpec[coll.SpecID], coll)
+}
+
+// newAnalyzer creates a default text analyzer with unicode tokenizer and lower-case filter.
+func newAnalyzer() *analysis.Analyzer {
+	return &analysis.Analyzer{
+		Tokenizer: tokenizer.NewUnicodeTokenizer(),
+		TokenFilters: []analysis.TokenFilter{
+			token.NewLowerCaseFilter(),
+		},
+	}
 }

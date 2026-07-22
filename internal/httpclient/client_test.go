@@ -17,6 +17,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type mockRoundTripper struct{}
+
+func (m *mockRoundTripper) RoundTrip(_ *http.Request) (*http.Response, error) {
+	return &http.Response{StatusCode: http.StatusOK, Header: make(http.Header)}, nil
+}
+
 func TestNew_DefaultTimeout(t *testing.T) {
 	client, err := New(Config{})
 	require.NoError(t, err)
@@ -331,10 +337,4 @@ func TestRandomizingTransport_DoesNotOverwrite(t *testing.T) {
 
 	assert.Equal(t, "existing-agent", req.Header.Get("User-Agent"))
 	assert.Equal(t, "application/json", req.Header.Get("Accept"))
-}
-
-type mockRoundTripper struct{}
-
-func (m *mockRoundTripper) RoundTrip(_ *http.Request) (*http.Response, error) {
-	return &http.Response{StatusCode: http.StatusOK, Header: make(http.Header)}, nil
 }

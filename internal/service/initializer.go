@@ -12,6 +12,7 @@ import (
 
 	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/httpclient"
+	"github.com/mmadfox/swag2mcp/internal/ratelimit"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
@@ -32,6 +33,7 @@ func (init *initializer) setStartedAt() {
 func (init *initializer) storeConfig(cfg *config.Config) {
 	init.s.ctx.storeConfig(cfg)
 	init.s.ctx.disableRateLimiter.Store(cfg.DisableRateLimiter)
+	init.s.ctx.storeRateLimiter(ratelimit.NewWithInterval(cfg.RateLimitInterval))
 }
 
 func (init *initializer) initWorkspace(wsDir string) error {
