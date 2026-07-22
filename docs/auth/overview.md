@@ -52,12 +52,12 @@ In **production**, this tool should be disabled with `--disable-llm-auth` (enabl
 
 | Method | Description | Best for |
 |--------|-------------|----------|
-| `none` | No authentication | Public APIs |
-| `basic` | HTTP Basic (username + password) | Legacy APIs, simple auth |
-| `bearer` | Bearer Token (JWT, token) | Modern REST APIs |
-| `api-key` | API key in header or query parameter | Services with API keys |
-| `digest` | HTTP Digest (username + password) | Legacy APIs, more secure than Basic |
-| `hmac` | HMAC-SHA256 signature (Binance-style) | Cryptocurrency exchanges |
-| `oauth2-cc` | OAuth2 Client Credentials | Server-to-server, microservices |
-| `oauth2-pwd` | OAuth2 Password Grant | Apps with user login |
-| `script` | External script to obtain a token | Any custom auth scheme |
+| [`none`](/auth/none) | No authentication | Public APIs |
+| [`basic`](/auth/basic) | HTTP Basic (username + password) | Legacy APIs, simple auth |
+| [`bearer`](/auth/bearer) | Bearer Token (JWT, token) | Modern REST APIs |
+| [`api-key`](/auth/api-key) | API key in header or query parameter | Services with API keys |
+| [`digest`](/auth/digest) | HTTP Digest (username + password) | Legacy APIs, more secure than Basic |
+| [`hmac`](/auth/hmac) | HMAC-SHA256 signature (Binance-style) | Cryptocurrency exchanges |
+| [`oauth2-cc`](/auth/oauth2-cc) | OAuth2 Client Credentials | Server-to-server, microservices |
+| [`oauth2-pwd`](/auth/oauth2-pwd) | OAuth2 Password Grant | Apps with user login |
+| [`script`](/auth/script) | External script to obtain a token | Any custom auth scheme |
