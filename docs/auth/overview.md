@@ -2,11 +2,11 @@
 
 ## Overview
 
-swag2mcp поддерживает **9 методов аутентификации** для работы с API, которые требуют авторизации. Настройка выполняется один раз в конфигурационном файле — после этого все вызовы API через `invoke` будут автоматически содержать нужные токены и заголовки.
+swag2mcp supports **9 authentication methods** for working with APIs that require authorization. You configure it once in the config file — after that, every API call through `invoke` automatically includes the right tokens and headers.
 
-### Где настраивается
+### Where to configure
 
-Аутентификация указывается на уровне **spec** в `swag2mcp.yaml`:
+Authentication is set at the **spec** level in `swag2mcp.yaml`:
 
 ```yaml
 specs:
@@ -22,16 +22,16 @@ specs:
         token: "my-token"
 ```
 
-### Как это работает
+### How it works
 
-- Вы указываете тип аутентификации и параметры в конфиге
-- swag2mcp автоматически применяет их к каждому запросу при вызове `invoke`
-- Вам **не нужно** дополнительно запрашивать токен перед вызовом API — всё происходит автоматически
-- Если токен истекает (OAuth2, Script), swag2mcp обновляет его самостоятельно
+- You specify the auth type and parameters in the config
+- swag2mcp automatically applies them to every request when you call `invoke`
+- You **don't need** to request a token before calling an API — it happens automatically
+- If a token expires (OAuth2, Script), swag2mcp refreshes it on its own
 
-### Переменные окружения
+### Environment variables
 
-Чувствительные данные (токены, пароли, ключи) можно хранить в переменных окружения, используя синтаксис `$(VAR_NAME)`:
+Sensitive data (tokens, passwords, keys) can be stored in environment variables using `$(VAR_NAME)` syntax:
 
 ```yaml
 auth:
@@ -40,24 +40,24 @@ auth:
     token: "$(MY_API_TOKEN)"
 ```
 
-swag2mcp подставит значение переменной `MY_API_TOKEN` при запуске.
+swag2mcp substitutes the value of `MY_API_TOKEN` at startup.
 
-### MCP инструмент auth
+### MCP auth tool
 
-LLM-агент может получить токен или заголовки через MCP инструмент `auth` — например, чтобы сформировать curl-запрос или показать пользователю.
+The LLM agent can retrieve a token or headers through the `auth` MCP tool — for example, to build a curl command or show the user.
 
-В **production** этот инструмент рекомендуется отключать флагом `--disable-llm-auth` (включён по умолчанию), чтобы LLM не имела доступа к токенам.
+In **production**, this tool should be disabled with `--disable-llm-auth` (enabled by default) so the LLM never has access to tokens.
 
-### Методы
+### Methods
 
-| Метод | Описание | Для каких API |
-|-------|----------|---------------|
-| `none` | Без аутентификации | Публичные API |
-| `basic` | HTTP Basic (логин + пароль) | Legacy API, простая аутентификация |
-| `bearer` | Bearer Token (JWT, токен) | Современные REST API |
-| `api-key` | API-ключ в заголовке или параметре запроса | Сервисы с API-ключами |
-| `digest` | HTTP Digest (логин + пароль) | Legacy API, безопаснее Basic |
-| `hmac` | HMAC-SHA256 подпись (Binance-style) | Криптовалютные биржи |
-| `oauth2-cc` | OAuth2 Client Credentials | Server-to-server, микросервисы |
-| `oauth2-pwd` | OAuth2 Password Grant | Приложения с логином пользователя |
-| `script` | Внешний скрипт для получения токена | Любая кастомная схема |
+| Method | Description | Best for |
+|--------|-------------|----------|
+| `none` | No authentication | Public APIs |
+| `basic` | HTTP Basic (username + password) | Legacy APIs, simple auth |
+| `bearer` | Bearer Token (JWT, token) | Modern REST APIs |
+| `api-key` | API key in header or query parameter | Services with API keys |
+| `digest` | HTTP Digest (username + password) | Legacy APIs, more secure than Basic |
+| `hmac` | HMAC-SHA256 signature (Binance-style) | Cryptocurrency exchanges |
+| `oauth2-cc` | OAuth2 Client Credentials | Server-to-server, microservices |
+| `oauth2-pwd` | OAuth2 Password Grant | Apps with user login |
+| `script` | External script to obtain a token | Any custom auth scheme |

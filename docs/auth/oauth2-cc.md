@@ -1,16 +1,16 @@
 # OAuth2 Client Credentials
 
-## Для чего
+## Purpose
 
-OAuth2 Client Credentials Grant — аутентификация для server-to-server коммуникации. Приложение получает токен, используя свой client_id и client_secret, без участия пользователя.
+OAuth2 Client Credentials Grant — authentication for server-to-server communication. The application obtains a token using its client_id and client_secret, without user involvement.
 
-## Когда использовать
+## When to use
 
-- Микросервисы и server-to-server интеграции
-- Machine-to-machine коммуникация
-- Когда API использует OAuth2 и у вас есть client_id + client_secret
+- Microservices and server-to-server integrations
+- Machine-to-machine communication
+- When the API uses OAuth2 and you have a client_id + client_secret
 
-## Как настроить
+## Configuration
 
 ```yaml
 specs:
@@ -31,18 +31,18 @@ specs:
           - write
 ```
 
-## Параметры
+## Parameters
 
-| Параметр | Обязательный | Описание |
-|-----------|-------------|----------|
-| `client_id` | Да | Идентификатор клиента |
-| `client_secret` | Да | Секрет клиента |
-| `token_url` | Да | URL токен-эндпоинта |
-| `scopes` | Нет | Список разрешений (опционально) |
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `client_id` | Yes | Client identifier |
+| `client_secret` | Yes | Client secret |
+| `token_url` | Yes | Token endpoint URL |
+| `scopes` | No | List of permissions (optional) |
 
-## Важные моменты
+## Notes
 
-- swag2mcp автоматически запрашивает новый токен, когда текущий истекает
-- Токен кэшируется до окончания срока действия (`expires_in`)
-- Если сервер не указал `expires_in`, токен считается действительным 1 час
-- Все параметры можно хранить в переменных окружения
+- swag2mcp automatically requests a new token when the current one expires
+- The token is cached until its expiry time (`expires_in`)
+- If the server doesn't provide `expires_in`, the token is considered valid for 1 hour
+- All parameters can be stored in environment variables

@@ -1,18 +1,18 @@
 # API Key
 
-## Для чего
+## Purpose
 
-Аутентификация по API-ключу. Ключ может передаваться в заголовке запроса или как параметр URL.
+Authentication via an API key. The key can be sent as an HTTP header or as a URL query parameter.
 
-## Когда использовать
+## When to use
 
-- Сервисы с API-ключами
-- Погодные сервисы, геоданные, переводчики
-- Когда API требует ключ в заголовке (`X-API-Key`) или в параметре запроса (`?api_key=...`)
+- Services that use API keys
+- Weather services, geodata, translation APIs
+- When the API expects a key in a header (`X-API-Key`) or query parameter (`?api_key=...`)
 
-## Как настроить
+## Configuration
 
-### Ключ в заголовке
+### Key in header
 
 ```yaml
 specs:
@@ -30,7 +30,7 @@ specs:
         value: "$(API_KEY)"
 ```
 
-### Ключ в параметре запроса
+### Key in query parameter
 
 ```yaml
 specs:
@@ -48,16 +48,16 @@ specs:
         value: "$(API_KEY)"
 ```
 
-## Параметры
+## Parameters
 
-| Параметр | Обязательный | Описание |
-|-----------|-------------|----------|
-| `key` | Да | Имя заголовка или параметра запроса |
-| `in` | Да | Куда поместить ключ: `header` или `query` |
-| `value` | Да | Значение ключа |
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `key` | Yes | Name of the header or query parameter |
+| `in` | Yes | Where to place the key: `header` or `query` |
+| `value` | Yes | The key value |
 
-## Важные моменты
+## Notes
 
-- В режиме `header` ключ добавляется как HTTP-заголовок
-- В режиме `query` ключ добавляется как параметр URL
-- Значение можно хранить в переменной окружения: `value: "$(MY_API_KEY)"`
+- In `header` mode, the key is added as an HTTP header
+- In `query` mode, the key is added as a URL parameter
+- Store the value in an environment variable: `value: "$(MY_API_KEY)"`
