@@ -74,6 +74,8 @@ func runExport(basePath, outputPath string, specs []string, cmd *cobra.Command) 
 		return fmt.Errorf("service: %w", svcErr)
 	}
 
+	setupGlobalHTTPClient(ws.ConfigPath())
+
 	if outputPath == "" {
 		cwd, err := os.Getwd()
 		if err != nil {

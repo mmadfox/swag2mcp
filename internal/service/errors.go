@@ -26,80 +26,79 @@ const (
 
 // LLMError is an error type returned to the LLM with a machine-readable code and human-readable message.
 type LLMError struct {
-	Code     string `json:"code"`
-	Message  string `json:"message"`
-	Original string `json:"hint,omitempty"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	Hint    string `json:"hint,omitempty"`
 }
 
 // NewValidationError creates an LLMError with code "validation_failed".
 func NewValidationError(msg string, err error) *LLMError {
 	return &LLMError{
-		Code:     validationFailedErrCode,
-		Message:  msg,
-		Original: formatError(err),
+		Code:    validationFailedErrCode,
+		Message: msg,
+		Hint:    formatError(err),
 	}
 }
 
 // NewNotFoundError creates an LLMError with code "not_found".
 func NewNotFoundError(msg string, err error) *LLMError {
 	return &LLMError{
-		Code:     notFoundErrCode,
-		Message:  msg,
-		Original: formatError(err),
+		Code:    notFoundErrCode,
+		Message: msg,
+		Hint:    formatError(err),
 	}
 }
 
 // NewRateLimitError creates an LLMError with code "rate_limit".
 func NewRateLimitError(err error) *LLMError {
 	return &LLMError{
-		Code:     rateLimitErrCode,
-		Message:  err.Error(),
-		Original: "",
+		Code:    rateLimitErrCode,
+		Message: err.Error(),
 	}
 }
 
 // NewInvokeError creates an LLMError with code "invoke_error".
 func NewInvokeError(msg string, err error) *LLMError {
 	return &LLMError{
-		Code:     invokeErrorErrCode,
-		Message:  msg,
-		Original: formatError(err),
+		Code:    invokeErrorErrCode,
+		Message: msg,
+		Hint:    formatError(err),
 	}
 }
 
 // NewConfigError creates an LLMError with code "config_error".
 func NewConfigError(msg string, err error) *LLMError {
 	return &LLMError{
-		Code:     configErrorErrCode,
-		Message:  msg,
-		Original: formatError(err),
+		Code:    configErrorErrCode,
+		Message: msg,
+		Hint:    formatError(err),
 	}
 }
 
 // NewWorkspaceError creates an LLMError with code "workspace_error".
 func NewWorkspaceError(msg string, err error) *LLMError {
 	return &LLMError{
-		Code:     workspaceErrorErrCode,
-		Message:  msg,
-		Original: formatError(err),
+		Code:    workspaceErrorErrCode,
+		Message: msg,
+		Hint:    formatError(err),
 	}
 }
 
 // NewParseError creates an LLMError with code "parse_error".
 func NewParseError(msg string, err error) *LLMError {
 	return &LLMError{
-		Code:     parseErrorErrCode,
-		Message:  msg,
-		Original: formatError(err),
+		Code:    parseErrorErrCode,
+		Message: msg,
+		Hint:    formatError(err),
 	}
 }
 
 // NewAuthError creates an LLMError with code "auth_error".
 func NewAuthError(msg string, err error) *LLMError {
 	return &LLMError{
-		Code:     authErrorErrCode,
-		Message:  msg,
-		Original: formatError(err),
+		Code:    authErrorErrCode,
+		Message: msg,
+		Hint:    formatError(err),
 	}
 }
 

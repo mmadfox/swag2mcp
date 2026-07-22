@@ -166,7 +166,6 @@ func (is *invokeService) buildRequest(
 	rq InvokeRequest,
 ) (*http.Request, error) {
 	return newRequestBuilder(
-		withContext(ctx),
 		withSpec(sp),
 		withCollection(coll),
 		withEndpoint(ep),
@@ -178,7 +177,7 @@ func (is *invokeService) buildRequest(
 		withGlobalHeaders(is.ctx.loadGlobalHeaders()),
 		withGlobalUserAgent(is.ctx.loadGlobalUserAgent()),
 		withGlobalCookies(is.ctx.loadGlobalCookies()),
-	).build()
+	).build(ctx)
 }
 
 func (is *invokeService) executeRequest(

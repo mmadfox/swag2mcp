@@ -552,6 +552,17 @@ func TestSearch_MatchAll(t *testing.T) {
 	require.NotEmpty(t, results, "expected at least 1 result for match all")
 }
 
+func TestSearch_InvalidQuerySyntax(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedTestData(t, idx, t.Name())
+
+	_, err := idx.Search(context.Background(), "invalid:field:value", 10)
+	require.Error(t, err)
+	require.ErrorIs(t, err, ErrInvalidQuery)
+}
+
 func TestSize(t *testing.T) {
 	t.Parallel()
 
@@ -664,6 +675,32 @@ func TestRemoveSpec(t *testing.T) {
 	require.Error(t, err, "expected error after RemoveSpec")
 }
 
+func TestRemoveSpec_CleansRelatedData(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	specInfo, collectionInfo, tagInfo, endpointInfo := seedTestData(t, idx, t.Name())
+
+	idx.RemoveSpec(specInfo.ID)
+
+	_, err := idx.SpecByID(specInfo.ID)
+	require.Error(t, err, "spec should be removed")
+
+	_, err = idx.CollectionByID(collectionInfo.ID)
+	require.Error(t, err, "collection should be removed")
+
+	_, err = idx.TagByID(tagInfo.ID)
+	require.Error(t, err, "tag should be removed")
+
+	_, err = idx.EndpointByID(endpointInfo.ID)
+	require.Error(t, err, "endpoint should be removed")
+
+	_, err = idx.CollectionsBySpec(specInfo.ID)
+	require.Error(t, err, "collections by spec should be removed")
+
+	assert.Equal(t, 0, idx.Size(), "index size should be 0")
+}
+
 func TestRemoveSpec_NonExistent(t *testing.T) {
 	t.Parallel()
 
@@ -681,6 +718,27 @@ func TestRemoveCollection(t *testing.T) {
 
 	_, err := idx.CollectionByID(collectionInfo.ID)
 	require.Error(t, err, "expected error after RemoveCollection")
+}
+
+func TestRemoveCollection_CleansRelatedData(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	specInfo, collectionInfo, tagInfo, endpointInfo := seedTestData(t, idx, t.Name())
+
+	idx.RemoveCollection(collectionInfo.ID)
+
+	_, err := idx.CollectionByID(collectionInfo.ID)
+	require.Error(t, err, "collection should be removed")
+
+	_, err = idx.TagByID(tagInfo.ID)
+	require.Error(t, err, "tag should be removed")
+
+	_, err = idx.EndpointByID(endpointInfo.ID)
+	require.Error(t, err, "endpoint should be removed")
+
+	_, err = idx.SpecByID(specInfo.ID)
+	require.NoError(t, err, "spec should still exist")
 }
 
 func TestRemoveCollection_NonExistent(t *testing.T) {
@@ -702,11 +760,89 @@ func TestRemoveTag(t *testing.T) {
 	require.Error(t, err, "expected error after RemoveTag")
 }
 
+func TestRemoveTag_CleansRelatedData(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	specInfo, collectionInfo, tagInfo, endpointInfo := seedTestData(t, idx, t.Name())
+
+	idx.RemoveTag(tagInfo.ID)
+
+	_, err := idx.TagByID(tagInfo.ID)
+	require.Error(t, err, "tag should be removed")
+
+	_, err = idx.EndpointByID(endpointInfo.ID)
+	require.Error(t, err, "endpoint should be removed")
+
+	_, err = idx.SpecByID(specInfo.ID)
+	require.NoError(t, err, "spec should still exist")
+
+	_, err = idx.CollectionByID(collectionInfo.ID)
+	require.NoError(t, err, "collection should still exist")
+}
+
 func TestRemoveTag_NonExistent(t *testing.T) {
 	t.Parallel()
 
 	idx := newTestIndex(t)
 	idx.RemoveTag("nonexistent")
+}
+
+func TestEnsureIndex_RollbackOnCollectionsError(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	specInfo := &model.Spec{ID: "spec-1", Domain: t.Name(), BaseURL: "https://example.com"}
+	orphanColl := &model.Collection{ID: "coll-1", SpecID: "spec-2", Title: "Orphan"}
+
+	err := idx.EnsureIndex(specInfo, []*model.Collection{orphanColl}, nil, nil)
+	require.Error(t, err, "expected error for missing spec in collection")
+
+	_, err = idx.SpecByID("spec-1")
+	require.Error(t, err, "spec should be rolled back")
+}
+
+func TestEnsureIndex_RollbackOnTagsError(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	specInfo := &model.Spec{ID: "spec-1", Domain: t.Name(), BaseURL: "https://example.com"}
+	collInfo := &model.Collection{ID: "coll-1", SpecID: "spec-1", Title: "Coll"}
+	orphanTag := &model.Tag{ID: "tag-1", SpecID: "spec-1", CollectionID: "coll-2", Name: "orphan"}
+
+	err := idx.EnsureIndex(specInfo, []*model.Collection{collInfo}, []*model.Tag{orphanTag}, nil)
+	require.Error(t, err, "expected error for missing collection in tag")
+
+	_, err = idx.SpecByID("spec-1")
+	require.Error(t, err, "spec should be rolled back")
+
+	_, err = idx.CollectionByID("coll-1")
+	require.Error(t, err, "collection should be rolled back")
+}
+
+func TestEnsureIndex_RollbackOnEndpointsError(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	specInfo := &model.Spec{ID: "spec-1", Domain: t.Name(), BaseURL: "https://example.com"}
+	collInfo := &model.Collection{ID: "coll-1", SpecID: "spec-1", Title: "Coll"}
+	tagInfo := &model.Tag{ID: "tag-1", SpecID: "spec-1", CollectionID: "coll-1", Name: "tag"}
+	orphanEp := &model.Endpoint{
+		ID: "ep-1", SpecID: "spec-1", CollectionID: "coll-2",
+		TagID: "tag-1", Name: "GET", Path: "/test",
+	}
+
+	err := idx.EnsureIndex(specInfo, []*model.Collection{collInfo}, []*model.Tag{tagInfo}, []*model.Endpoint{orphanEp})
+	require.Error(t, err, "expected error for missing collection in endpoint")
+
+	_, err = idx.SpecByID("spec-1")
+	require.Error(t, err, "spec should be rolled back")
+
+	_, err = idx.CollectionByID("coll-1")
+	require.Error(t, err, "collection should be rolled back")
+
+	_, err = idx.TagByID("tag-1")
+	require.Error(t, err, "tag should be rolled back")
 }
 
 func TestRemoveAllTags(t *testing.T) {

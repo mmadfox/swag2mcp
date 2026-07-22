@@ -106,3 +106,18 @@ func TestServiceContext_ConfigMethod(t *testing.T) {
 	c.storeConfig(cfg)
 	require.Same(t, cfg, c.Config())
 }
+
+func TestServiceContext_RateLimiter_nil(t *testing.T) {
+	t.Parallel()
+
+	c := newServiceContext()
+	require.Nil(t, c.loadRateLimiter())
+}
+
+func TestServiceContext_RateLimiter_stored(t *testing.T) {
+	t.Parallel()
+
+	c := newServiceContext()
+	c.storeRateLimiter(fakeRateLimiter{})
+	require.NotNil(t, c.loadRateLimiter())
+}

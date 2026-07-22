@@ -41,6 +41,34 @@ func TestExportService_Export_success(t *testing.T) {
 	require.Error(t, err) // config load will fail since we don't have a real config file
 }
 
+func TestExportService_exportCollections_disabledSpec(t *testing.T) {
+	t.Parallel()
+
+	svc := newExportService(NewMockWorkspaceOps(gomock.NewController(t)), "1.0")
+	cfg := &config.Config{
+		Specs: []config.Spec{
+			{Domain: "api", Disable: true},
+		},
+	}
+	count, err := svc.exportCollections(context.Background(), cfg, nil, t.TempDir())
+	require.NoError(t, err)
+	require.Equal(t, 0, count)
+}
+
+func TestExportService_exportCollections_filtered(t *testing.T) {
+	t.Parallel()
+
+	svc := newExportService(NewMockWorkspaceOps(gomock.NewController(t)), "1.0")
+	cfg := &config.Config{
+		Specs: []config.Spec{
+			{Domain: "api", Collections: []config.Collection{{Location: "http://example.com/spec.yaml", Title: "spec1"}}},
+		},
+	}
+	count, err := svc.exportCollections(context.Background(), cfg, []string{"other"}, t.TempDir())
+	require.NoError(t, err)
+	require.Equal(t, 0, count)
+}
+
 func TestExportService_loadExportConfig_notFound(t *testing.T) {
 	t.Parallel()
 

@@ -11,13 +11,14 @@ import (
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/config"
+	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/stretchr/testify/require"
 )
 
 func TestBuildGlobalHTTPConfig_nil(t *testing.T) {
 	t.Parallel()
 
-	cfg := buildGlobalHTTPConfig(nil)
+	cfg := BuildGlobalHTTPConfig(nil)
 	require.Equal(t, "swag2mcp-global/1.0", cfg.UserAgent)
 }
 
@@ -36,7 +37,7 @@ func TestBuildGlobalHTTPConfig_withValues(t *testing.T) {
 		},
 	}
 
-	cfg := buildGlobalHTTPConfig(global)
+	cfg := BuildGlobalHTTPConfig(global)
 	require.Equal(t, "custom-agent", cfg.UserAgent)
 	require.Equal(t, 60*time.Second, cfg.Timeout)
 	require.Equal(t, "val", cfg.Headers["X-Custom"])
@@ -133,6 +134,29 @@ func TestCopyMap_withValues(t *testing.T) {
 	require.Equal(t, m, result)
 	result["a"] = "changed"
 	require.Equal(t, "1", m["a"]) // original unchanged
+}
+
+func TestMergeCookies_withValues(t *testing.T) {
+	t.Parallel()
+
+	result := &model.HTTPClientConfig{}
+	level := &config.HTTPClientConfig{
+		Cookies: []config.Cookie{
+			{Name: "session", Value: "abc123"},
+		},
+	}
+	mergeCookies(result, level)
+	require.Len(t, result.Cookies, 1)
+	require.Equal(t, "session", result.Cookies[0].Name)
+	require.Equal(t, "abc123", result.Cookies[0].Value)
+}
+
+func TestMergeCookies_nil(t *testing.T) {
+	t.Parallel()
+
+	result := &model.HTTPClientConfig{}
+	mergeCookies(result, &config.HTTPClientConfig{})
+	require.Nil(t, result.Cookies)
 }
 
 func TestApplyMockAuthURLs_nilConfig(t *testing.T) {

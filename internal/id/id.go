@@ -27,7 +27,7 @@ func Tag(domainName, collectionName, tag string) string {
 }
 
 // Method generates an MD5 hash ID for a method endpoint.
-// It combines domainName, collectionName, method, path, and opID into a single hash.
+// It combines domainName, collectionName, tagID, method, path, and opID into a single hash.
 func Method(domainName, collectionName, _ string, method, path, opID string) string {
 	return hash(domainName, collectionName, method, path, opID)
 }

@@ -87,3 +87,42 @@ func TestAPIKeyAuthClient_Apply(t *testing.T) {
 		assert.Nil(t, info.Headers)
 	})
 }
+
+func TestAPIKeyAuthClient_New(t *testing.T) {
+	t.Parallel()
+
+	client := &APIKeyAuthClient{Key: "X-Key", Value: "val", In: "header"}
+	require.NoError(t, client.New())
+}
+
+func TestAPIKeyAuthClient_Validate(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		client  *APIKeyAuthClient
+		wantErr bool
+	}{
+		{name: "valid", client: &APIKeyAuthClient{Key: "X-Key", Value: "val", In: "header"}, wantErr: false},
+		{name: "empty", client: &APIKeyAuthClient{}, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := tt.client.Validate()
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestAPIKeyAuthClient_Type(t *testing.T) {
+	t.Parallel()
+
+	client := &APIKeyAuthClient{}
+	assert.Equal(t, APIKeyAuth, client.Type())
+}

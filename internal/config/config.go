@@ -17,10 +17,10 @@ const (
 	defaultUserAgent         = "swag2mcp-global/1.0"
 	defaultTimeout           = 30 * time.Second
 	defaultMaxRedirects      = 10
-	defaultMaxResponseSize   = 1048576
 	defaultRateLimitInterval = 10 * time.Second
 	MaxAllowedResponseSize   = 10485760 // 10 MB
 	DefaultMaxResponseSize   = 1048576  // 1 MB
+	defaultMaxResponseSize   = DefaultMaxResponseSize
 	RandSuffixLen            = 6
 )
 

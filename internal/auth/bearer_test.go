@@ -53,3 +53,35 @@ func TestBearerTokenAuthClient_Apply_EnvVars(t *testing.T) {
 
 	assert.Equal(t, "Bearer env-bearer-token", req.Header.Get(headerAuthorization))
 }
+
+func TestBearerTokenAuthClient_Validate(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		client  *BearerTokenAuthClient
+		wantErr bool
+	}{
+		{name: "valid", client: &BearerTokenAuthClient{Token: "valid-token"}, wantErr: false},
+		{name: "empty token", client: &BearerTokenAuthClient{Token: ""}, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := tt.client.Validate()
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestBearerTokenAuthClient_Type(t *testing.T) {
+	t.Parallel()
+
+	client := &BearerTokenAuthClient{}
+	assert.Equal(t, BearerTokenAuth, client.Type())
+}

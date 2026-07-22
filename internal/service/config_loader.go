@@ -21,12 +21,14 @@ const (
 	defaultMockDigestPort = 9091
 )
 
-func buildGlobalHTTPConfig(global *config.GlobalHTTPClientConfig) httpclient.Config {
+func BuildGlobalHTTPConfig(global *config.GlobalHTTPClientConfig) httpclient.Config {
 	if global == nil {
 		return httpclient.Config{
 			UserAgent: defaultUserAgent,
 		}
 	}
+
+	global.Resolve()
 
 	cfg := httpclient.Config{
 		Randomize:       global.Randomize,

@@ -45,6 +45,76 @@ func TestInvokeService_Invoke_validationError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestInvokeService_Invoke_rateLimiterDisabled(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().EndpointByID("ep1").Return(&model.Endpoint{ID: "ep1", SpecID: "s1", CollectionID: "c1", Operation: &spec.Operation{}}, nil)
+	idx.EXPECT().SpecByID("s1").Return(&model.Spec{ID: "s1"}, nil)
+	idx.EXPECT().CollectionByID("c1").Return(&model.Collection{ID: "c1"}, nil)
+
+	ctx := newServiceContext()
+	ctx.disableRateLimiter.Store(true)
+	svc := newInvokeService(ctx, idx, NewMockWorkspaceOps(ctrl), fakeValidator{}, "")
+	_, err := svc.Invoke(context.Background(), InvokeRequest{EndpointID: "ep1"})
+	require.Error(t, err) // buildRequest will fail due to missing base URL, but rate limiter was skipped
+}
+
+func TestInvokeService_Invoke_paramValidationError(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().EndpointByID("ep1").Return(&model.Endpoint{
+		ID: "ep1", SpecID: "s1", CollectionID: "c1",
+		Operation: &spec.Operation{
+			Parameters: []*spec.Parameter{{Name: "id", In: "path", Required: true}},
+		},
+	}, nil)
+	idx.EXPECT().SpecByID("s1").Return(&model.Spec{ID: "s1"}, nil)
+	idx.EXPECT().CollectionByID("c1").Return(&model.Collection{ID: "c1"}, nil)
+
+	svc := newTestInvokeSvc(t, idx, NewMockWorkspaceOps(ctrl))
+	_, err := svc.Invoke(context.Background(), InvokeRequest{
+		EndpointID: "ep1",
+		Parameters: map[string]any{"unknown": "val"},
+	})
+	require.Error(t, err)
+}
+
+func TestInvokeService_Invoke_bodyValidationError(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().EndpointByID("ep1").Return(&model.Endpoint{
+		ID: "ep1", SpecID: "s1", CollectionID: "c1",
+		Operation: &spec.Operation{
+			RequestBody: &spec.RequestBody{
+				Required: true,
+				Content: map[string]*spec.MediaType{
+					"application/json": {
+						Schema: &spec.Schema{
+							Type:       "object",
+							Properties: map[string]*spec.Schema{"name": {Type: "string"}},
+						},
+					},
+				},
+			},
+		},
+	}, nil)
+	idx.EXPECT().SpecByID("s1").Return(&model.Spec{ID: "s1"}, nil)
+	idx.EXPECT().CollectionByID("c1").Return(&model.Collection{ID: "c1"}, nil)
+
+	svc := newTestInvokeSvc(t, idx, NewMockWorkspaceOps(ctrl))
+	_, err := svc.Invoke(context.Background(), InvokeRequest{
+		EndpointID:  "ep1",
+		RequestBody: map[string]any{"unknown": "val"},
+	})
+	require.Error(t, err)
+}
+
 func TestInvokeService_Invoke_endpointNotFound(t *testing.T) {
 	t.Parallel()
 

@@ -244,11 +244,6 @@ func (w *slogWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// newTransport creates a transport for the MCP server (defaults to stdio).
-func newTransport(opts Options) sdkmcp.Transport {
-	return newStdioTransport(opts)
-}
-
 // newServer creates a new MCP server with the given tool definitions and options.
 func newServer(defs service.ToolDefinitions, opts Options) *sdkmcp.Server {
 	return sdkmcp.NewServer(&sdkmcp.Implementation{

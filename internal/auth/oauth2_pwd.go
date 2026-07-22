@@ -6,6 +6,7 @@ package auth
 // included in the /LICENSE file.
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -50,7 +51,7 @@ func (c *OAuth2PasswordAuthClient) Apply(req *http.Request, out *Info) error {
 		return nil
 	}
 
-	token, expiresIn, err := c.fetchToken()
+	token, expiresIn, err := c.fetchToken(req.Context())
 	if err != nil {
 		return fmt.Errorf("oauth2-pwd: %w", err)
 	}
@@ -76,9 +77,9 @@ func (c *OAuth2PasswordAuthClient) writeToken(token string, expiresIn int) {
 	c.expiresAt = time.Now().Add(time.Duration(expiresIn) * time.Second)
 }
 
-func (c *OAuth2PasswordAuthClient) fetchToken() (string, int, error) {
+func (c *OAuth2PasswordAuthClient) fetchToken(ctx context.Context) (string, int, error) {
 	form := c.buildTokenForm()
-	resp, err := doTokenRequest(c.TokenURL, form)
+	resp, err := doTokenRequest(ctx, c.TokenURL, form)
 	if err != nil {
 		return "", 0, err
 	}

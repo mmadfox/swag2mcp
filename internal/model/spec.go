@@ -91,6 +91,9 @@ type Endpoint struct {
 
 // SummaryOrFallback returns the endpoint summary, falling back to description, then "Method /path".
 func (e *Endpoint) SummaryOrFallback() string {
+	if e.Operation == nil {
+		return e.Name + " " + e.Path
+	}
 	if e.Operation.Summary != "" {
 		return e.Operation.Summary
 	}

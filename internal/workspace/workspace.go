@@ -19,6 +19,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 )
 
 // Workspace manages the workspace directory and its standard subdirectories.
@@ -319,7 +321,12 @@ func (w *Workspace) downloadFromHTTP(ctx context.Context, source string) ([]byte
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
 	}
-	resp, err := http.DefaultClient.Do(req)
+
+	client, err := httpclient.NewDefault()
+	if err != nil {
+		return nil, fmt.Errorf("create http client: %w", err)
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("download %q: %w", source, err)
 	}

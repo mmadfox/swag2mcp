@@ -21,7 +21,6 @@ import (
 
 // requestBuilder builds an [http.Request] from spec, collection, endpoint, and parameters.
 type requestBuilder struct {
-	context         context.Context
 	spec            *model.Spec
 	collection      *model.Collection
 	endpoint        *model.Endpoint
@@ -44,16 +43,7 @@ func newRequestBuilder(options ...requestOption) *requestBuilder {
 	for _, option := range options {
 		option(builder)
 	}
-	if builder.context == nil {
-		builder.context = context.Background()
-	}
 	return builder
-}
-
-func withContext(ctx context.Context) requestOption {
-	return func(builder *requestBuilder) {
-		builder.context = ctx
-	}
 }
 
 func withSpec(specification *model.Spec) requestOption {
@@ -123,7 +113,7 @@ func withGlobalCookies(cookies []httpclient.Cookie) requestOption {
 }
 
 // build constructs the [http.Request] from the configured options.
-func (builder *requestBuilder) build() (*http.Request, error) {
+func (builder *requestBuilder) build(ctx context.Context) (*http.Request, error) {
 	baseURL := builder.resolveBaseURL()
 	baseURL = strings.TrimRight(baseURL, "/")
 	reqURL := baseURL + "/" + strings.TrimLeft(builder.endpoint.Path, "/")
@@ -159,7 +149,7 @@ func (builder *requestBuilder) build() (*http.Request, error) {
 	}
 
 	req, err := http.NewRequestWithContext(
-		builder.context,
+		ctx,
 		builder.endpoint.Name,
 		u.String(),
 		body,
@@ -229,7 +219,10 @@ func (builder *requestBuilder) applyGlobalConfig(req *http.Request) {
 	}
 
 	for _, c := range builder.globalCookies {
-		req.AddCookie(&http.Cookie{Name: c.Name, Value: c.Value, Domain: c.Domain, Path: c.Path, Secure: c.Secure, HttpOnly: c.HTTPOnly})
+		req.AddCookie(&http.Cookie{
+			Name: c.Name, Value: c.Value, Domain: c.Domain,
+			Path: c.Path, Secure: c.Secure, HttpOnly: c.HTTPOnly,
+		})
 	}
 }
 

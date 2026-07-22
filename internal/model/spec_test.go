@@ -127,6 +127,17 @@ func TestSummaryOrFallback_EmptySummary(t *testing.T) {
 	assert.Equal(t, "Delete a user by ID", result)
 }
 
+func TestSummaryOrFallback_NilOperation(t *testing.T) {
+	t.Parallel()
+
+	e := &Endpoint{
+		Name: "PATCH",
+		Path: "/items/{id}",
+	}
+	result := e.SummaryOrFallback()
+	assert.Equal(t, "PATCH /items/{id}", result)
+}
+
 func TestCookie_Fields(t *testing.T) {
 	t.Parallel()
 

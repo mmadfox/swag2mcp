@@ -20,11 +20,10 @@ func TestRequestBuilder_build(t *testing.T) {
 	t.Parallel()
 
 	req, err := newRequestBuilder(
-		withContext(context.Background()),
 		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
 		withCollection(&model.Collection{}),
 		withEndpoint(&model.Endpoint{Name: "GET", Path: "/pets", Operation: &spec.Operation{}}),
-	).build()
+	).build(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "https://api.example.com/pets", req.URL.String())
 	require.Equal(t, http.MethodGet, req.Method)
@@ -34,7 +33,6 @@ func TestRequestBuilder_withPathParams(t *testing.T) {
 	t.Parallel()
 
 	req, err := newRequestBuilder(
-		withContext(context.Background()),
 		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
 		withCollection(&model.Collection{}),
 		withEndpoint(&model.Endpoint{
@@ -46,7 +44,7 @@ func TestRequestBuilder_withPathParams(t *testing.T) {
 			},
 		}),
 		withParameters(map[string]any{"id": "42"}),
-	).build()
+	).build(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "https://api.example.com/pets/42", req.URL.String())
 }
@@ -55,7 +53,6 @@ func TestRequestBuilder_withQueryParams(t *testing.T) {
 	t.Parallel()
 
 	req, err := newRequestBuilder(
-		withContext(context.Background()),
 		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
 		withCollection(&model.Collection{}),
 		withEndpoint(&model.Endpoint{
@@ -67,7 +64,7 @@ func TestRequestBuilder_withQueryParams(t *testing.T) {
 			},
 		}),
 		withParameters(map[string]any{"limit": "10"}),
-	).build()
+	).build(context.Background())
 	require.NoError(t, err)
 	require.Contains(t, req.URL.RawQuery, "limit=10")
 }
@@ -76,12 +73,11 @@ func TestRequestBuilder_withBody(t *testing.T) {
 	t.Parallel()
 
 	req, err := newRequestBuilder(
-		withContext(context.Background()),
 		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
 		withCollection(&model.Collection{}),
 		withEndpoint(&model.Endpoint{Name: "POST", Path: "/pets", Operation: &spec.Operation{}}),
 		withBody(map[string]any{"name": "Rex"}),
-	).build()
+	).build(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, http.MethodPost, req.Method)
 	require.NotNil(t, req.Body)
@@ -91,12 +87,11 @@ func TestRequestBuilder_withGlobalHeaders(t *testing.T) {
 	t.Parallel()
 
 	req, err := newRequestBuilder(
-		withContext(context.Background()),
 		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
 		withCollection(&model.Collection{}),
 		withEndpoint(&model.Endpoint{Name: "GET", Path: "/test", Operation: &spec.Operation{}}),
 		withGlobalHeaders(map[string]string{"X-Custom": "val"}),
-	).build()
+	).build(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "val", req.Header.Get("X-Custom"))
 }
@@ -105,12 +100,11 @@ func TestRequestBuilder_withGlobalCookies(t *testing.T) {
 	t.Parallel()
 
 	req, err := newRequestBuilder(
-		withContext(context.Background()),
 		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
 		withCollection(&model.Collection{}),
 		withEndpoint(&model.Endpoint{Name: "GET", Path: "/test", Operation: &spec.Operation{}}),
 		withGlobalCookies([]httpclient.Cookie{{Name: "session", Value: "abc"}}),
-	).build()
+	).build(context.Background())
 	require.NoError(t, err)
 	cookie, _ := req.Cookie("session")
 	require.NotNil(t, cookie)
@@ -141,14 +135,13 @@ func TestRequestBuilder_withHTTPConfig(t *testing.T) {
 	t.Parallel()
 
 	req, err := newRequestBuilder(
-		withContext(context.Background()),
 		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
 		withCollection(&model.Collection{}),
 		withEndpoint(&model.Endpoint{Name: "GET", Path: "/test", Operation: &spec.Operation{}}),
 		withHTTPConfig(&model.HTTPClientConfig{
 			Headers: map[string]string{"X-Spec": "spec-val"},
 		}),
-	).build()
+	).build(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "spec-val", req.Header.Get("X-Spec"))
 }
@@ -157,12 +150,11 @@ func TestRequestBuilder_withInvokeHeaders(t *testing.T) {
 	t.Parallel()
 
 	req, err := newRequestBuilder(
-		withContext(context.Background()),
 		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
 		withCollection(&model.Collection{}),
 		withEndpoint(&model.Endpoint{Name: "GET", Path: "/test", Operation: &spec.Operation{}}),
 		withInvokeHeaders(map[string]string{"X-Override": "override-val"}),
-	).build()
+	).build(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "override-val", req.Header.Get("X-Override"))
 }
@@ -171,12 +163,11 @@ func TestRequestBuilder_withInvokeCookies(t *testing.T) {
 	t.Parallel()
 
 	req, err := newRequestBuilder(
-		withContext(context.Background()),
 		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
 		withCollection(&model.Collection{}),
 		withEndpoint(&model.Endpoint{Name: "GET", Path: "/test", Operation: &spec.Operation{}}),
 		withInvokeCookies(map[string]string{"session": "abc"}),
-	).build()
+	).build(context.Background())
 	require.NoError(t, err)
 	cookie, _ := req.Cookie("session")
 	require.NotNil(t, cookie)
@@ -187,12 +178,11 @@ func TestRequestBuilder_withGlobalUserAgent(t *testing.T) {
 	t.Parallel()
 
 	req, err := newRequestBuilder(
-		withContext(context.Background()),
 		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
 		withCollection(&model.Collection{}),
 		withEndpoint(&model.Endpoint{Name: "GET", Path: "/test", Operation: &spec.Operation{}}),
 		withGlobalUserAgent("test-agent"),
-	).build()
+	).build(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "test-agent", req.Header.Get("User-Agent"))
 }
@@ -201,12 +191,11 @@ func TestRequestBuilder_applyDefaultAccept_json(t *testing.T) {
 	t.Parallel()
 
 	req, err := newRequestBuilder(
-		withContext(context.Background()),
 		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
 		withCollection(&model.Collection{}),
 		withEndpoint(&model.Endpoint{Name: "POST", Path: "/test", Operation: &spec.Operation{}}),
 		withBody(map[string]any{"key": "val"}),
-	).build()
+	).build(context.Background())
 	require.NoError(t, err)
 	// Content-Type is set, so Accept should be application/json
 	require.Equal(t, "application/json", req.Header.Get("Content-Type"))
@@ -216,11 +205,10 @@ func TestRequestBuilder_applyDefaultAccept_other(t *testing.T) {
 	t.Parallel()
 
 	req, err := newRequestBuilder(
-		withContext(context.Background()),
 		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
 		withCollection(&model.Collection{}),
 		withEndpoint(&model.Endpoint{Name: "GET", Path: "/test", Operation: &spec.Operation{}}),
-	).build()
+	).build(context.Background())
 	require.NoError(t, err)
 	// Go's http.Client sets a default Accept header; our code should not override it
 	require.NotEmpty(t, req.Header.Get("Accept"))
@@ -230,12 +218,11 @@ func TestRequestBuilder_applyDefaultAccept_preservesExisting(t *testing.T) {
 	t.Parallel()
 
 	req, err := newRequestBuilder(
-		withContext(context.Background()),
 		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
 		withCollection(&model.Collection{}),
 		withEndpoint(&model.Endpoint{Name: "GET", Path: "/test", Operation: &spec.Operation{}}),
 		withInvokeHeaders(map[string]string{"Accept": "text/plain"}),
-	).build()
+	).build(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "text/plain", req.Header.Get("Accept"))
 }
@@ -251,9 +238,8 @@ func TestRequestBuilder_applySpecConfig(t *testing.T) {
 			Headers: map[string]string{"X-Spec": "spec-val"},
 			Cookies: []httpclient.Cookie{{Name: "spec-cookie", Value: "spec-val"}},
 		},
-		context: context.Background(),
 	}
-	req, err := b.build()
+	req, err := b.build(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "spec-val", req.Header.Get("X-Spec"))
 	cookie, _ := req.Cookie("spec-cookie")
@@ -268,9 +254,8 @@ func TestRequestBuilder_applySpecConfig_nil(t *testing.T) {
 		spec:       &model.Spec{BaseURL: "https://api.example.com"},
 		collection: &model.Collection{},
 		endpoint:   &model.Endpoint{Name: "GET", Path: "/test", Operation: &spec.Operation{}},
-		context:    context.Background(),
 	}
-	req, err := b.build()
+	req, err := b.build(context.Background())
 	require.NoError(t, err)
 	// Should not panic when httpConfig is nil
 	require.NotNil(t, req)
@@ -285,9 +270,8 @@ func TestRequestBuilder_applyInvokeOverrides(t *testing.T) {
 		endpoint:      &model.Endpoint{Name: "GET", Path: "/test", Operation: &spec.Operation{}},
 		invokeHeaders: map[string]string{"X-Override": "override-val"},
 		invokeCookies: map[string]string{"override-cookie": "override-val"},
-		context:       context.Background(),
 	}
-	req, err := b.build()
+	req, err := b.build(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "override-val", req.Header.Get("X-Override"))
 	cookie, _ := req.Cookie("override-cookie")

@@ -45,7 +45,13 @@ func TestRunImport_NoSpec_Success(t *testing.T) {
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)
 
-	err := runImport(tmpDir, srv.URL, "myspec.yaml", "", nil, cmd)
+	parsed := importArgs{
+		mode:     importModeSingle,
+		basePath: tmpDir,
+		source:   srv.URL,
+		name:     "myspec.yaml",
+	}
+	err := runImport(parsed, nil, cmd)
 	if err != nil {
 		t.Fatalf("runImport() = %v", err)
 	}
@@ -65,7 +71,8 @@ func TestRunImport_NoSpec_MissingArgs(t *testing.T) {
 	cmd := testCmd()
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)
-	err := runImport(tmpDir, "", "", "", nil, cmd)
+	parsed := importArgs{mode: importModeSingle, basePath: tmpDir}
+	err := runImport(parsed, nil, cmd)
 
 	if err == nil {
 		t.Fatal("runImport() expected error, got nil")
@@ -102,7 +109,8 @@ func TestRunImport_WithSpec_Success(t *testing.T) {
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)
 
-	err := runImport(tmpDir, "", "", "", []string{"meteo"}, cmd)
+	parsed := importArgs{mode: importModeBulk, basePath: tmpDir}
+	err := runImport(parsed, []string{"meteo"}, cmd)
 	if err != nil {
 		t.Fatalf("runImport() = %v", err)
 	}
@@ -118,7 +126,8 @@ func TestRunImport_WithSpec_NoConfig(t *testing.T) {
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)
 
-	err := runImport(tmpDir, "", "", "", []string{"meteo"}, cmd)
+	parsed := importArgs{mode: importModeBulk, basePath: tmpDir}
+	err := runImport(parsed, []string{"meteo"}, cmd)
 	if err == nil {
 		t.Fatal("runImport() expected error, got nil")
 	}
@@ -147,7 +156,8 @@ func TestRunImport_WithSpec_NoMatch(t *testing.T) {
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)
 
-	err := runImport(tmpDir, "", "", "", []string{"nonexistent"}, cmd)
+	parsed := importArgs{mode: importModeBulk, basePath: tmpDir}
+	err := runImport(parsed, []string{"nonexistent"}, cmd)
 	if err == nil {
 		t.Fatal("runImport() expected error for no matching specs, got nil")
 	}
@@ -197,7 +207,8 @@ func TestRunImport_FromZip(t *testing.T) {
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)
 
-	err := runImport(restoreDir, "", "", zipPath, nil, cmd)
+	parsed := importArgs{mode: importModeZip, basePath: restoreDir, zipFile: zipPath}
+	err := runImport(parsed, nil, cmd)
 	if err != nil {
 		t.Fatalf("runImport() = %v", err)
 	}
@@ -253,8 +264,8 @@ func TestRunImport_FromZip_DetectByExtension(t *testing.T) {
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)
 
-	basePath, _, _, zipSource := parseImportArgs([]string{restoreDir, zipPath}, nil, "")
-	err := runImport(basePath, "", "", zipSource, nil, cmd)
+	parsed := parseImportArgs([]string{restoreDir, zipPath}, nil, "")
+	err := runImport(parsed, nil, cmd)
 	if err != nil {
 		t.Fatalf("runImport() = %v", err)
 	}

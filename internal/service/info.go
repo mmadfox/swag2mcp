@@ -24,7 +24,7 @@ const (
 
 type infoService struct {
 	settings  SettingsProvider
-	Clock     Clock
+	clock     Clock
 	index     IndexReader
 	ws        WorkspaceOps
 	version   string
@@ -43,7 +43,7 @@ func newInfoService(
 ) *infoService {
 	return &infoService{
 		settings:  settings,
-		Clock:     clk,
+		clock:     clk,
 		index:     index,
 		ws:        ws,
 		version:   version,
@@ -59,7 +59,7 @@ func (is *infoService) Info(_ context.Context) (InfoResponse, error) {
 		started := is.startedAt
 		uptime := time.Duration(0)
 		if started > 0 {
-			uptime = is.Clock.Now().Sub(time.Unix(0, started)).Round(time.Second)
+			uptime = is.clock.Now().Sub(time.Unix(0, started)).Round(time.Second)
 		}
 		uptimeStr := ""
 		if uptime > 0 {

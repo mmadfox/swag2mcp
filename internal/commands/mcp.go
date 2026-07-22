@@ -10,12 +10,10 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/mmadfox/swag2mcp/internal/cache"
 	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/server/mcp"
 	"github.com/mmadfox/swag2mcp/internal/service"
@@ -93,19 +91,10 @@ func runMCP(basePath, version string, opts *mcpCmdOpts, cmd *cobra.Command) erro
 	}
 
 	cfg, loadErr := config.Load(configFile)
-	if loadErr == nil {
-		if cfg.MCP != nil {
-			cfg.MCP.Auth.Resolve()
-		}
-		validateOpts := config.ValidateOptions{
-			Cache: cache.New(filepath.Dir(configFile)),
-		}
-		if err := config.ValidateConfig(cfg, validateOpts); err != nil {
-			fmt.Fprintf(os.Stderr, "⚠️  Configuration warnings:\n%s\n", err)
-		}
+	if loadErr == nil && cfg.MCP != nil {
+		cfg.MCP.Auth.Resolve()
+		applyMCPConfig(cmd, cfg, opts)
 	}
-
-	applyMCPConfig(cmd, cfg, opts)
 
 	var tags []string
 	if opts.Tags != "" {

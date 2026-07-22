@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 	"gopkg.in/yaml.v3"
@@ -57,7 +58,7 @@ func AddSpecFromYAML(configPath string, data []byte) error {
 		return fmt.Errorf("write config: %w", err)
 	}
 
-	fmt.Printf("  ✅ Specification \"%s\" added.\n", input.Domain)
+	fmt.Printf("  Specification \"%s\" added.\n", input.Domain)
 	return nil
 }
 
@@ -97,7 +98,7 @@ func AddCollectionFromYAML(configPath string, data []byte) error {
 		return fmt.Errorf("write config: %w", err)
 	}
 
-	fmt.Printf("  ✅ Collection \"%s\" added to spec \"%s\".\n", input.LLMTitle, input.SpecDomain)
+	fmt.Printf("  Collection \"%s\" added to spec \"%s\".\n", input.LLMTitle, input.SpecDomain)
 	return nil
 }
 
@@ -165,6 +166,7 @@ func AddSpecTUI(configPath string) error {
 		}
 		if spec.AuthType != "" && spec.AuthType != "none" {
 			newSpec.Auth = config.Auth{}
+			newSpec.Auth.Client = authClientFromSpec(spec)
 		}
 		for _, col := range spec.Collections {
 			newSpec.Collections = append(newSpec.Collections, config.Collection{
@@ -178,7 +180,7 @@ func AddSpecTUI(configPath string) error {
 		return fmt.Errorf("write config: %w", err)
 	}
 
-	fmt.Println("  ✅ Specification added.")
+	fmt.Println("  Specification added.")
 	return nil
 }
 
@@ -251,6 +253,53 @@ func AddCollectionTUI(configPath string) error {
 		return fmt.Errorf("write config: %w", err)
 	}
 
-	fmt.Println("  ✅ Collection added.")
+	fmt.Println("  Collection added.")
 	return nil
+}
+
+// authClientFromSpec converts SpecInput auth data into an auth.Authenticator.
+func authClientFromSpec(spec SpecInput) auth.Authenticator {
+	switch spec.AuthType {
+	case "basic":
+		return &auth.BasicAuthClient{
+			Username: spec.AuthConfig["username"],
+			Password: spec.AuthConfig["password"],
+		}
+	case "bearer":
+		return &auth.BearerTokenAuthClient{
+			Token: spec.AuthConfig["token"],
+		}
+	case "digest":
+		return &auth.DigestAuthClient{
+			Username: spec.AuthConfig["username"],
+			Password: spec.AuthConfig["password"],
+		}
+	case "api-key":
+		return &auth.APIKeyAuthClient{
+			Key:   spec.AuthConfig["key"],
+			Value: spec.AuthConfig["value"],
+			In:    spec.AuthConfig["in"],
+		}
+	case "oauth2-cc":
+		return &auth.OAuth2ClientCredentialsAuthClient{
+			ClientID:     spec.AuthConfig["client_id"],
+			ClientSecret: spec.AuthConfig["client_secret"],
+			TokenURL:     spec.AuthConfig["token_url"],
+		}
+	case "oauth2-pwd":
+		return &auth.OAuth2PasswordAuthClient{
+			Username:     spec.AuthConfig["username"],
+			Password:     spec.AuthConfig["password"],
+			ClientID:     spec.AuthConfig["client_id"],
+			ClientSecret: spec.AuthConfig["client_secret"],
+			TokenURL:     spec.AuthConfig["token_url"],
+		}
+	case "hmac":
+		return &auth.HMACAuthClient{
+			APIKey:    spec.AuthConfig["api_key"],
+			SecretKey: spec.AuthConfig["secret_key"],
+		}
+	default:
+		return nil
+	}
 }

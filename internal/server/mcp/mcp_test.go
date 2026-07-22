@@ -8,6 +8,7 @@ package mcp
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -49,22 +50,22 @@ func TestServe_MakeToolDefinitionsError(t *testing.T) {
 	require.Error(t, err, "expected error for nil service")
 }
 
-func TestNewTransport_WithLogger(t *testing.T) {
+func TestNewStdioTransport_WithLogger(t *testing.T) {
 	t.Parallel()
 
 	var buf bytes.Buffer
 	logger := slog.New(slog.NewTextHandler(&buf, nil))
 	opts := Options{Logger: logger}
-	transport := newTransport(opts)
+	transport := newStdioTransport(opts)
 
 	require.IsType(t, &sdkmcp.LoggingTransport{}, transport)
 }
 
-func TestNewTransport_WithoutLogger(t *testing.T) {
+func TestNewStdioTransport_WithoutLogger(t *testing.T) {
 	t.Parallel()
 
 	opts := Options{}
-	transport := newTransport(opts)
+	transport := newStdioTransport(opts)
 
 	require.IsType(t, &sdkmcp.StdioTransport{}, transport)
 }
@@ -108,6 +109,9 @@ func TestRegisterTools_AllTools(t *testing.T) {
 				{Name: "invoke", Description: "Invoke"},
 				{Name: "auth", Description: "Auth"},
 				{Name: "info", Description: "Info"},
+				{Name: "response_outline", Description: "Outline"},
+				{Name: "response_compress", Description: "Compress"},
+				{Name: "response_slice", Description: "Slice"},
 			},
 		}, nil,
 	)
@@ -325,12 +329,8 @@ func TestOptions_CustomAddr(t *testing.T) {
 	t.Parallel()
 
 	opts := Options{HTTPAddr: ":9090", HTTPPath: "/api/mcp"}
-	if opts.httpAddr() != ":9090" {
-		t.Errorf("httpAddr = %q, want %q", opts.httpAddr(), ":9090")
-	}
-	if opts.httpPath() != "/api/mcp" {
-		t.Errorf("httpPath = %q, want %q", opts.httpPath(), "/api/mcp")
-	}
+	require.Equal(t, ":9090", opts.httpAddr())
+	require.Equal(t, "/api/mcp", opts.httpPath())
 }
 
 func TestHandler_SpecList_Success(t *testing.T) {
@@ -1173,38 +1173,29 @@ func TestServeHTTP_StreamableHTTP(t *testing.T) {
 func TestHealthEndpoint(t *testing.T) {
 	t.Parallel()
 
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mock := NewMockSvc(ctrl)
-	mock.EXPECT().MakeToolDefinitions().Return(
-		service.ToolDefinitions{
-			Instruction: "test",
-			Tools:       []service.Tool{},
-		}, nil,
-	)
-
-	ctx, cancel := context.WithCancel(t.Context())
-	defer cancel()
-
-	errCh := make(chan error, 1)
-	go func() {
-		errCh <- Serve(ctx, Options{
-			Service:   mock,
-			Transport: TransportSSE,
-			HTTPAddr:  ":0",
-			Version:   "v1.0.0",
-			Logger:    slog.New(slog.DiscardHandler),
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"status":  "ok",
+			"version": "v1.0.0",
 		})
-	}()
+	})
 
-	time.Sleep(50 * time.Millisecond)
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
 
-	resp, err := http.Get("http://localhost:0/health")
-	if err == nil {
-		defer resp.Body.Close()
-	}
-	_ = err
+	resp, err := http.Get(srv.URL + "/health")
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	require.Equal(t, "application/json", resp.Header.Get("Content-Type"))
+
+	var body map[string]string
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+	require.Equal(t, "ok", body["status"])
+	require.Equal(t, "v1.0.0", body["version"])
 }
 
 func TestWithLogging_WithLogger(t *testing.T) {

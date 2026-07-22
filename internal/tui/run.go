@@ -24,8 +24,9 @@ import (
 )
 
 const (
-	pageSize   = 10
-	actionHint = "  Enter number and press Enter.  [B]ack  [M]enu.\n"
+	pageSize       = 10
+	maxSearchLimit = 50
+	actionHint     = "  Enter number and press Enter.  [B]ack  [M]enu.\n"
 )
 
 // ExplorerService defines the subset of service methods needed by the TUI explorer.
@@ -305,7 +306,7 @@ func (m runModel) handleMenu() (tea.Model, tea.Cmd) {
 func (m runModel) doSearch(query string) (tea.Model, tea.Cmd) {
 	results, err := m.svc.Search(context.Background(), service.SearchRequest{
 		Query: query,
-		Limit: 50, //nolint:mnd // max search results
+		Limit: maxSearchLimit,
 	})
 	if err != nil {
 		m.err = err
@@ -574,7 +575,7 @@ func (m runModel) showEndpoint() (tea.Model, tea.Cmd) {
 	}
 
 	absPath, _ := filepath.Abs(filename)
-	m.msg = fmt.Sprintf("✅ Saved to: %s", absPath)
+	m.msg = fmt.Sprintf("Saved to: %s", absPath)
 	return m, nil
 }
 
@@ -586,17 +587,17 @@ func (m runModel) View() string {
 	s += "  ╰──────────────────────────────────────────────╯\n\n"
 
 	if m.err != nil {
-		s += fmt.Sprintf("  ❌ Error: %s\n\n", m.err)
+		s += fmt.Sprintf("  Error: %s\n\n", m.err)
 	}
 
 	switch m.state {
 	case runMenu:
 		s += "  What would you like to do?\n"
 		s += "  ──────────────────────────\n\n"
-		s += "  1. 🔍  Search endpoints\n"
-		s += "  2. 📂  Browse by specification\n"
-		s += "  3. 🔑  Get auth token\n"
-		s += "  4. ❌  Exit\n\n"
+		s += "  1.  Search endpoints\n"
+		s += "  2.  Browse by specification\n"
+		s += "  3.  Get auth token\n"
+		s += "  4.  Exit\n\n"
 		s += "  Press 1, 2, 3, or 4.  (Esc/Ctrl+C to exit)\n"
 
 	case runSearchQuery:

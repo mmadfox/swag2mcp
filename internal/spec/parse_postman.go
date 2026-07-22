@@ -15,7 +15,6 @@ import (
 )
 
 const (
-	mediaTypeJSON = "application/json"
 	paramTypeStr  = "string"
 	paramTypeFile = "file"
 	paramTypeObj  = "object"
@@ -134,7 +133,7 @@ func flattenPostmanItems(folderNames []string, items []postmanItem, doc *Doc) er
 			doc.PathItems = append(doc.PathItems, pi)
 		}
 		if len(item.Item) > 0 {
-			names := append(folderNames, item.Name) //nolint:gocritic // intentional: avoid aliasing parent slice
+			names := append(append([]string{}, folderNames...), item.Name)
 			if err := flattenPostmanItems(names, item.Item, doc); err != nil {
 				return err
 			}

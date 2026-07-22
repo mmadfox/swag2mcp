@@ -12,6 +12,9 @@ import (
 	"time"
 )
 
+// defaultInterval is the default per-endpoint cooldown period (10s).
+const defaultInterval = 10 * time.Second
+
 // Limiter checks whether an endpoint ID is allowed to proceed.
 type Limiter interface {
 	Allow(endpointID string) error
@@ -22,13 +25,15 @@ type RateLimiter struct {
 	mu       sync.Mutex
 	last     map[string]time.Time
 	interval time.Duration
+	now      func() time.Time
 }
 
 // New creates a new RateLimiter with the default interval (10s).
 func New() *RateLimiter {
 	return &RateLimiter{
 		last:     make(map[string]time.Time),
-		interval: 10 * time.Second, //nolint:mnd // default rate limit interval
+		interval: defaultInterval,
+		now:      time.Now,
 	}
 }
 
@@ -40,6 +45,7 @@ func NewWithInterval(interval time.Duration) *RateLimiter {
 	return &RateLimiter{
 		last:     make(map[string]time.Time),
 		interval: interval,
+		now:      time.Now,
 	}
 }
 
@@ -48,7 +54,7 @@ func (rl *RateLimiter) Allow(endpointID string) error {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
 
-	now := time.Now()
+	now := rl.now()
 	if last, ok := rl.last[endpointID]; ok && now.Sub(last) < rl.interval {
 		remaining := rl.interval - now.Sub(last)
 		return fmt.Errorf(

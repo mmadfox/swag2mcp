@@ -13,8 +13,6 @@ import (
 	"github.com/go-openapi/spec"
 )
 
-const specVersion20 = "2.0"
-
 // parseV2 parses a Swagger 2.0 document into a unified Doc.
 func parseV2(data []byte) (*Doc, error) {
 	var swag spec.Swagger

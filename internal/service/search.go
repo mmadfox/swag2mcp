@@ -7,10 +7,12 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
 
+	"github.com/mmadfox/swag2mcp/internal/index"
 	"github.com/mmadfox/swag2mcp/internal/model"
 )
 
@@ -35,6 +37,13 @@ func (ss *searchService) Search(ctx context.Context, rq SearchRequest) (SearchRe
 
 	eps, err := ss.index.Search(ctx, strings.ToLower(rq.Query), rq.Limit)
 	if err != nil {
+		if errors.Is(err, index.ErrInvalidQuery) {
+			return SearchResponse{}, NewValidationError(
+				"The search query format is invalid. "+
+					"Use simple text search (e.g. 'get pet') or field search (e.g. method:GET, tag:pets).",
+				err,
+			)
+		}
 		return SearchResponse{}, NewNotFoundError(
 			"The search query did not match any endpoints. Try a different query.",
 			err,

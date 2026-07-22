@@ -146,3 +146,15 @@ func TestOpenCommand(t *testing.T) {
 	cmd := openCommand("/tmp/test.json")
 	require.Contains(t, cmd, "/tmp/test.json")
 }
+
+func TestOpenCommand_containsOS(t *testing.T) {
+	t.Parallel()
+
+	cmd := openCommand("/tmp/test.json")
+	// Should contain one of the known open commands
+	require.True(t,
+		cmd == "open /tmp/test.json" ||
+			cmd == "start /tmp/test.json" ||
+			cmd == "xdg-open /tmp/test.json",
+	)
+}

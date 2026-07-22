@@ -113,3 +113,24 @@ func TestMapReaderError_default(t *testing.T) {
 	err := mapReaderError(newTestError("unknown"))
 	require.Contains(t, err.Error(), "invoke_error")
 }
+
+func TestMapReaderError_pathNotFound(t *testing.T) {
+	t.Parallel()
+
+	err := mapReaderError(reader.ErrPathNotFound)
+	require.Contains(t, err.Error(), "not_found")
+}
+
+func TestMapReaderError_invalidLineRange(t *testing.T) {
+	t.Parallel()
+
+	err := mapReaderError(reader.ErrInvalidLineRange)
+	require.Contains(t, err.Error(), "validation_failed")
+}
+
+func TestMapReaderError_notJSON(t *testing.T) {
+	t.Parallel()
+
+	err := mapReaderError(reader.ErrNotJSON)
+	require.Contains(t, err.Error(), "validation_failed")
+}

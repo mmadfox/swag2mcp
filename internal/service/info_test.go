@@ -303,3 +303,46 @@ func TestBuildAuthInfo(t *testing.T) {
 		require.Contains(t, inf.Methods, "basic")
 	})
 }
+
+func TestBuildSnapshot(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	settings := NewMockSettingsProvider(ctrl)
+	settings.EXPECT().Config().Return(&config.Config{
+		DisableRateLimiter: true,
+		Specs:              []config.Spec{{Domain: "api"}},
+		HTTPClient: &config.GlobalHTTPClientConfig{
+			UserAgent: "global-agent",
+		},
+	})
+	settings.EXPECT().MaxResponseSize().Return(2048)
+	settings.EXPECT().HTTPClientConfig().Return(httpclient.Config{UserAgent: "agent"})
+
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().AllSpecs().Return([]*model.Spec{
+		{Stats: struct {
+			Collections int `json:"collections"`
+			Tags        int `json:"tags"`
+			Methods     int `json:"methods"`
+		}{Collections: 1, Methods: 5}},
+	})
+
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().Root().Return("/ws")
+
+	snap := NewMockSnapshotStore(ctrl)
+	snap.EXPECT().Store(gomock.Any())
+
+	svc := newInfoService(
+		settings,
+		NewMockClock(ctrl),
+		idx,
+		ws,
+		"1.0",
+		snap,
+		0,
+	)
+
+	svc.buildSnapshot()
+}

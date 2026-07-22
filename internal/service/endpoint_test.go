@@ -214,3 +214,48 @@ func TestEndpointService_EndpointsBySpec(t *testing.T) {
 		})
 	}
 }
+
+func TestEndpointService_EndpointsBySpec_specNotFound(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().EndpointsBySpec("s1").Return(
+		[]*model.Endpoint{{ID: "ep1", SpecID: "s1", CollectionID: "c1", TagID: "t1", Name: "GET", Path: "/test", Operation: &spec.Operation{}}}, nil)
+	idx.EXPECT().SpecByID("s1").Return(nil, errNotFound("spec", "s1"))
+
+	svc := newEndpointService(idx, fakeValidator{})
+	_, err := svc.EndpointsBySpec(context.Background(), EndpointsBySpecRequest{SpecID: "s1"})
+	require.Error(t, err)
+}
+
+func TestEndpointService_EndpointsBySpec_collectionNotFound(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().EndpointsBySpec("s1").Return(
+		[]*model.Endpoint{{ID: "ep1", SpecID: "s1", CollectionID: "c1", TagID: "t1", Name: "GET", Path: "/test", Operation: &spec.Operation{}}}, nil)
+	idx.EXPECT().SpecByID("s1").Return(&model.Spec{ID: "s1", Domain: "d1"}, nil)
+	idx.EXPECT().CollectionByID("c1").Return(nil, errNotFound("collection", "c1"))
+
+	svc := newEndpointService(idx, fakeValidator{})
+	_, err := svc.EndpointsBySpec(context.Background(), EndpointsBySpecRequest{SpecID: "s1"})
+	require.Error(t, err)
+}
+
+func TestEndpointService_EndpointsBySpec_tagNotFound(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().EndpointsBySpec("s1").Return(
+		[]*model.Endpoint{{ID: "ep1", SpecID: "s1", CollectionID: "c1", TagID: "t1", Name: "GET", Path: "/test", Operation: &spec.Operation{}}}, nil)
+	idx.EXPECT().SpecByID("s1").Return(&model.Spec{ID: "s1", Domain: "d1"}, nil)
+	idx.EXPECT().CollectionByID("c1").Return(&model.Collection{ID: "c1", Title: "C1"}, nil)
+	idx.EXPECT().TagByID("t1").Return(nil, errNotFound("tag", "t1"))
+
+	svc := newEndpointService(idx, fakeValidator{})
+	_, err := svc.EndpointsBySpec(context.Background(), EndpointsBySpecRequest{SpecID: "s1"})
+	require.Error(t, err)
+}

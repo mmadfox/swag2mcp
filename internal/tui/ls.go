@@ -13,6 +13,8 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/config"
 )
 
+const tabPadding = 3
+
 // ListConfig loads the config and returns a formatted listing of specs and collections.
 func ListConfig(configPath string, tags []string) (string, error) {
 	cfg, err := config.Load(configPath)
@@ -22,7 +24,7 @@ func ListConfig(configPath string, tags []string) (string, error) {
 
 	filter := config.NewFilter(tags)
 	var b strings.Builder
-	w := tabwriter.NewWriter(&b, 0, 0, 3, ' ', 0) //nolint:mnd // tab padding width
+	w := tabwriter.NewWriter(&b, 0, 0, tabPadding, ' ', 0)
 
 	fmt.Fprintln(w, "Specifications:")
 

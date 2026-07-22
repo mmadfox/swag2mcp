@@ -92,7 +92,7 @@ func (r *reader) compressValue(data []byte, opts CompressOptions) ([]byte, error
 	case CompressSelectKeys:
 		return compressSelectKeys(data, opts.SelectKeys)
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrInvalidJSONPath, opts.Mode)
+		return nil, fmt.Errorf("%w: %s", ErrInvalidCompressMode, opts.Mode)
 	}
 }
 
@@ -343,7 +343,7 @@ func decodeKeysOnlyArray(decoder *json.Decoder) (string, error) {
 // compressSelectKeys keeps only selected keys for every object in an array or object.
 func compressSelectKeys(data []byte, selectKeys []string) ([]byte, error) {
 	if len(selectKeys) == 0 {
-		return nil, errors.New("select_keys requires at least one selectKey")
+		return nil, fmt.Errorf("%w: %s", ErrSelectKeysRequired, selectKeys)
 	}
 
 	set := make(map[string]struct{}, len(selectKeys))

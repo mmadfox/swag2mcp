@@ -21,14 +21,6 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/httpclient"
 )
 
-// Type is the type of authentication used.
-type Type string
-
-// String returns the string representation of the auth type.
-func (t Type) String() string {
-	return string(t)
-}
-
 const (
 	// NoAuth represents no authentication.
 	NoAuth Type = "none"
@@ -61,8 +53,22 @@ const (
 	defaultExpiresIn = 3600
 )
 
+// Sentinel errors for common auth failure modes.
+var (
+	// ErrEmptyAccessToken is returned when a token endpoint returns an empty access_token.
+	ErrEmptyAccessToken = errors.New("empty access_token in response")
+)
+
 //nolint:gochecknoglobals // Validator is stateless and safe to reuse.
 var authValidator = validator.New(validator.WithRequiredStructEnabled())
+
+// Type is the type of authentication used.
+type Type string
+
+// String returns the string representation of the auth type.
+func (t Type) String() string {
+	return string(t)
+}
 
 // Info holds the authentication details extracted during Apply.
 type Info struct {
@@ -135,8 +141,8 @@ type oauth2TokenResponse struct {
 }
 
 // doTokenRequest sends a form-encoded POST to the token URL and returns the response.
-func doTokenRequest(tokenURL string, form url.Values) (*http.Response, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), tokenRequestTimeout)
+func doTokenRequest(ctx context.Context, tokenURL string, form url.Values) (*http.Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, tokenRequestTimeout)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, strings.NewReader(form.Encode()))
@@ -175,7 +181,7 @@ func decodeTokenResponse(r io.Reader) (string, int, error) {
 		token = tr.Token
 	}
 	if token == "" {
-		return "", 0, errors.New("empty access_token in response")
+		return "", 0, ErrEmptyAccessToken
 	}
 
 	expiresIn := tr.ExpiresIn

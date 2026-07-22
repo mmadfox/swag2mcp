@@ -9,7 +9,6 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -120,7 +119,6 @@ func TestNew_ProxyInvalidURL(t *testing.T) {
 }
 
 func TestNewDefault_NoGlobalConfig(t *testing.T) {
-	globalConfig = atomic.Value{}
 	globalConfig.Store(Config{})
 
 	client, err := NewDefault()
@@ -129,8 +127,6 @@ func TestNewDefault_NoGlobalConfig(t *testing.T) {
 }
 
 func TestSetGlobalConfig(t *testing.T) {
-	globalConfig = atomic.Value{}
-
 	SetGlobalConfig(Config{
 		Timeout: 10 * time.Second,
 	})

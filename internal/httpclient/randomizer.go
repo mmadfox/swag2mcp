@@ -112,8 +112,6 @@ var (
 		"script",
 		"image",
 	}
-
-	cachedSystemLang string
 )
 
 // randomUserAgent returns a random browser User-Agent string.
@@ -165,12 +163,8 @@ func randomSecFetchDest() string {
 }
 
 // detectSystemLanguage detects the system language from environment variables.
-// Falls back to en_US.UTF-8 if none are set. Caches the result.
+// Falls back to en_US.UTF-8 if none are set.
 func detectSystemLanguage() string {
-	if cachedSystemLang != "" {
-		return cachedSystemLang
-	}
-
 	lang := os.Getenv("LANG")
 	if lang == "" {
 		lang = os.Getenv("MUI_LANG")
@@ -182,7 +176,6 @@ func detectSystemLanguage() string {
 		lang = "en_US.UTF-8"
 	}
 
-	cachedSystemLang = lang
 	return lang
 }
 

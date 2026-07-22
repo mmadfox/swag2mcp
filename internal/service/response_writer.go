@@ -85,9 +85,11 @@ func formatSize(bytes int) string {
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }
 
+const hexCharsPerByte = 2
+
 // randomSuffix generates a random hex string of length n.
 func randomSuffix(n int) string {
-	byteLen := (n + 1) / 2 //nolint:mnd // hex encoding: 2 chars per byte
+	byteLen := (n + hexCharsPerByte - 1) / hexCharsPerByte
 	b := make([]byte, byteLen)
 	if _, err := rand.Read(b); err != nil {
 		return fmt.Sprintf("%0*x", n, 0)

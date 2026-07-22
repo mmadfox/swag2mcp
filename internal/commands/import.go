@@ -12,13 +12,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/mmadfox/swag2mcp/internal/config"
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 	"github.com/mmadfox/swag2mcp/internal/service"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
-)
-
-const (
-	importMaxArgs = 3
-	importTwoArgs = 2
 )
 
 func newImportCmd() *cobra.Command {
@@ -50,8 +47,8 @@ saves them to specs/, and updates the config with the new locations.
 The --from-zip flag or a .zip source restores a full workspace from a swag2mcp backup archive.`,
 		Args: cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			basePath, source, name, zipSource := parseImportArgs(args, opts.Specs, opts.FromZip)
-			return runImport(basePath, source, name, zipSource, opts.Specs, cmd)
+			parsed := parseImportArgs(args, opts.Specs, opts.FromZip)
+			return runImport(parsed, opts.Specs, cmd)
 		},
 	}
 
@@ -65,49 +62,77 @@ The --from-zip flag or a .zip source restores a full workspace from a swag2mcp b
 	return cmd
 }
 
-func parseImportArgs(args []string, specs []string, fromZip string) (string, string, string, string) {
+type importMode int
+
+const (
+	importModeSingle importMode = iota
+	importModeBulk
+	importModeZip
+)
+
+const (
+	importArgsMinForFull = 3
+	importArgsSourceName = 2
+)
+
+type importArgs struct {
+	mode     importMode
+	basePath string
+	source   string
+	name     string
+	zipFile  string
+}
+
+func parseImportArgs(args []string, specs []string, fromZip string) importArgs {
 	if fromZip != "" {
+		basePath := ""
 		if len(args) > 0 {
-			return args[0], "", "", fromZip
+			basePath = args[0]
 		}
-		return "", "", "", fromZip
+		return importArgs{mode: importModeZip, basePath: basePath, zipFile: fromZip}
 	}
 
 	if len(specs) > 0 {
+		basePath := ""
 		if len(args) > 0 {
-			return args[0], "", "", ""
+			basePath = args[0]
 		}
-		return "", "", "", ""
+		return importArgs{mode: importModeBulk, basePath: basePath}
 	}
 
+	return parseSingleOrZipArgs(args)
+}
+
+func parseSingleOrZipArgs(args []string) importArgs {
 	l := len(args)
-	if l >= importMaxArgs {
-		if isZipFile(args[l-1]) {
-			return args[0], "", "", args[l-1]
-		}
-		return args[0], args[1], args[2], ""
+	if l == 0 {
+		return importArgs{mode: importModeSingle}
 	}
-	if l == importTwoArgs {
-		if isZipFile(args[1]) {
-			return args[0], "", "", args[1]
+
+	last := args[l-1]
+	if isZipFile(last) {
+		basePath := ""
+		if l > 1 {
+			basePath = args[0]
 		}
-		return "", args[0], args[1], ""
+		return importArgs{mode: importModeZip, basePath: basePath, zipFile: last}
 	}
-	if l == 1 {
-		if isZipFile(args[0]) {
-			return "", "", "", args[0]
-		}
-		return "", args[0], "", ""
+
+	if l >= importArgsMinForFull {
+		return importArgs{mode: importModeSingle, basePath: args[0], source: args[1], name: args[2]}
 	}
-	return "", "", "", ""
+	if l == importArgsSourceName {
+		return importArgs{mode: importModeSingle, source: args[0], name: args[1]}
+	}
+	return importArgs{mode: importModeSingle, source: args[0]}
 }
 
 func isZipFile(path string) bool {
 	return filepath.Ext(path) == ".zip"
 }
 
-func runImport(basePath, source, name, zipSource string, specs []string, cmd *cobra.Command) error {
-	ws, wsErr := workspace.NewFromBase(basePath)
+func runImport(parsed importArgs, specs []string, cmd *cobra.Command) error {
+	ws, wsErr := workspace.NewFromBase(parsed.basePath)
 	if wsErr != nil {
 		return fmt.Errorf("workspace: %w", wsErr)
 	}
@@ -117,13 +142,16 @@ func runImport(basePath, source, name, zipSource string, specs []string, cmd *co
 		return fmt.Errorf("service: %w", svcErr)
 	}
 
-	if zipSource != "" {
+	setupGlobalHTTPClient(ws.ConfigPath())
+
+	switch parsed.mode {
+	case importModeZip:
 		if initErr := ws.Init(); initErr != nil {
 			return fmt.Errorf("workspace init: %w", initErr)
 		}
 
 		_, importErr := svc.Import(cmd.Context(), service.ImportRequest{
-			ZipSource: zipSource,
+			ZipSource: parsed.zipFile,
 		})
 		if importErr != nil {
 			return importErr
@@ -131,9 +159,8 @@ func runImport(basePath, source, name, zipSource string, specs []string, cmd *co
 
 		cmd.Println("✅ Restored successfully!")
 		return nil
-	}
 
-	if len(specs) > 0 {
+	case importModeBulk:
 		cfgPath := ws.ConfigPath()
 		if ws.ConfigNotExists() {
 			return fmt.Errorf("configuration not found at %s\n  Run 'swag2mcp init' first or provide a workspace path with a valid config", cfgPath)
@@ -152,33 +179,49 @@ func runImport(basePath, source, name, zipSource string, specs []string, cmd *co
 			cmd.Printf("   • %s → %s\n", f.Source, f.SavedPath)
 		}
 		return nil
+
+	case importModeSingle:
+		if parsed.source == "" || parsed.name == "" {
+			return errors.New("import requires a source and name (single import), --spec flag (bulk import), or --from-zip (restore from backup)\n\n" +
+				"Single import:\n" +
+				"  swag2mcp import <source> <name>\n" +
+				"  swag2mcp import /path/to/workspace <source> <name>\n\n" +
+				"Bulk import:\n" +
+				"  swag2mcp import --spec meteo\n" +
+				"  swag2mcp import /path/to/workspace --spec meteo,store\n\n" +
+				"Restore from backup:\n" +
+				"  swag2mcp import --from-zip /path/to/backup.zip\n" +
+				"  swag2mcp import /path/to/workspace /path/to/backup.zip")
+		}
+
+		if initErr := ws.Init(); initErr != nil {
+			return fmt.Errorf("workspace init: %w", initErr)
+		}
+
+		resp, importErr := svc.Import(cmd.Context(), service.ImportRequest{
+			Source: parsed.source,
+			Name:   parsed.name,
+		})
+		if importErr != nil {
+			return importErr
+		}
+
+		cmd.Printf("✅ Imported %s → %s\n", resp.Files[0].Source, resp.Files[0].SavedPath)
+		return nil
 	}
 
-	if source == "" || name == "" {
-		return errors.New("import requires a source and name (single import), --spec flag (bulk import), or --from-zip (restore from backup)\n\n" +
-			"Single import:\n" +
-			"  swag2mcp import <source> <name>\n" +
-			"  swag2mcp import /path/to/workspace <source> <name>\n\n" +
-			"Bulk import:\n" +
-			"  swag2mcp import --spec meteo\n" +
-			"  swag2mcp import /path/to/workspace --spec meteo,store\n\n" +
-			"Restore from backup:\n" +
-			"  swag2mcp import --from-zip /path/to/backup.zip\n" +
-			"  swag2mcp import /path/to/workspace /path/to/backup.zip")
-	}
-
-	if initErr := ws.Init(); initErr != nil {
-		return fmt.Errorf("workspace init: %w", initErr)
-	}
-
-	resp, importErr := svc.Import(cmd.Context(), service.ImportRequest{
-		Source: source,
-		Name:   name,
-	})
-	if importErr != nil {
-		return importErr
-	}
-
-	cmd.Printf("✅ Imported %s → %s\n", resp.Files[0].Source, resp.Files[0].SavedPath)
 	return nil
+}
+
+// setupGlobalHTTPClient loads the config and sets the global HTTP client config
+// so that httpclient.NewDefault() returns a properly configured client.
+// If the config file does not exist, the default client with a 30s timeout is used.
+func setupGlobalHTTPClient(configPath string) {
+	cfg, err := config.Load(configPath)
+	if err != nil {
+		return
+	}
+
+	httpCfg := service.BuildGlobalHTTPConfig(cfg.HTTPClient)
+	httpclient.SetGlobalConfig(httpCfg)
 }

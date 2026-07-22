@@ -52,3 +52,35 @@ func TestBasicAuthClient_Apply_EnvVars(t *testing.T) {
 	assert.Equal(t, "bob", user)
 	assert.Equal(t, "bobpass", pass)
 }
+
+func TestBasicAuthClient_Type(t *testing.T) {
+	t.Parallel()
+
+	client := &BasicAuthClient{}
+	assert.Equal(t, BasicAuth, client.Type())
+}
+
+func TestBasicAuthClient_Validate(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		client  *BasicAuthClient
+		wantErr bool
+	}{
+		{name: "valid", client: &BasicAuthClient{Username: "u", Password: "p"}, wantErr: false},
+		{name: "empty", client: &BasicAuthClient{}, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := tt.client.Validate()
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}

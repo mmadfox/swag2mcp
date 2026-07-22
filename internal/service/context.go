@@ -105,7 +105,7 @@ func (c *serviceContext) storeGlobalCookies(cookies []httpclient.Cookie) {
 	c.globalCookies.Store(cookies)
 }
 
-// MaxResponseSize implements settingsProvider.
+// MaxResponseSize implements SettingsProvider.
 func (c *serviceContext) MaxResponseSize() int {
 	v := c.maxResponseSize.Load()
 	if v <= 0 {

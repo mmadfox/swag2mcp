@@ -20,4 +20,8 @@ var (
 	ErrInvalidLineRange = errors.New("invalid line range")
 	// ErrNotJSON indicates the file is not valid JSON.
 	ErrNotJSON = errors.New("file is not valid JSON")
+	// ErrInvalidCompressMode indicates the compression mode is not supported.
+	ErrInvalidCompressMode = errors.New("invalid compress mode")
+	// ErrSelectKeysRequired indicates select_keys mode requires at least one key.
+	ErrSelectKeysRequired = errors.New("select_keys requires at least one selectKey")
 )

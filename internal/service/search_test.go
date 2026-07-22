@@ -7,8 +7,10 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
+	"github.com/mmadfox/swag2mcp/internal/index"
 	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/mmadfox/swag2mcp/internal/spec"
 	"github.com/stretchr/testify/require"
@@ -117,4 +119,20 @@ func TestSearchService_Search_tagNotFound(t *testing.T) {
 	svc := newSearchService(idx, fakeValidator{})
 	_, err := svc.Search(context.Background(), SearchRequest{Query: "pet", Limit: 10})
 	require.Error(t, err)
+}
+
+func TestSearchService_Search_invalidQuery(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().Search(gomock.Any(), gomock.Any(), 10).Return(nil, fmt.Errorf("%w: bad syntax", index.ErrInvalidQuery))
+
+	svc := newSearchService(idx, fakeValidator{})
+	_, err := svc.Search(context.Background(), SearchRequest{Query: "invalid:field:value", Limit: 10})
+	require.Error(t, err)
+
+	var llmErr *LLMError
+	require.ErrorAs(t, err, &llmErr)
+	require.Equal(t, validationFailedErrCode, llmErr.Code)
 }

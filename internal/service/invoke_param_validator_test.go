@@ -135,3 +135,112 @@ func TestSchemaForContentType_found(t *testing.T) {
 	}
 	require.NotNil(t, schemaForContentType(ct))
 }
+
+func TestValidateArraySchema_valid(t *testing.T) {
+	t.Parallel()
+
+	sc := &spec.Schema{
+		Type: "array",
+		Items: &spec.Schema{
+			Type:       "object",
+			Properties: map[string]*spec.Schema{"name": {Type: "string"}},
+		},
+	}
+	err := validateSchemaValue(sc, []any{map[string]any{"name": "test"}}, "$")
+	require.NoError(t, err)
+}
+
+func TestValidateArraySchema_missingField(t *testing.T) {
+	t.Parallel()
+
+	sc := &spec.Schema{
+		Type: "array",
+		Items: &spec.Schema{
+			Type:       "object",
+			Required:   []string{"name"},
+			Properties: map[string]*spec.Schema{"name": {Type: "string"}},
+		},
+	}
+	err := validateSchemaValue(sc, []any{map[string]any{}}, "$")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "missing required field")
+}
+
+func TestValidateArraySchema_notArray(t *testing.T) {
+	t.Parallel()
+
+	sc := &spec.Schema{
+		Type: "array",
+		Items: &spec.Schema{
+			Type: "string",
+		},
+	}
+	err := validateSchemaValue(sc, "not-an-array", "$")
+	require.NoError(t, err)
+}
+
+func TestValidateSchemaValue_nilSchema(t *testing.T) {
+	t.Parallel()
+
+	err := validateSchemaValue(nil, "anything", "$")
+	require.NoError(t, err)
+}
+
+func TestValidateSchemaValue_unknownType(t *testing.T) {
+	t.Parallel()
+
+	sc := &spec.Schema{Type: "string"}
+	err := validateSchemaValue(sc, "hello", "$")
+	require.NoError(t, err)
+}
+
+func TestValidateObjectSchema_notObject(t *testing.T) {
+	t.Parallel()
+
+	sc := &spec.Schema{
+		Type:       "object",
+		Properties: map[string]*spec.Schema{"name": {Type: "string"}},
+	}
+	err := validateSchemaValue(sc, "not-an-object", "$")
+	require.NoError(t, err)
+}
+
+func TestValidateObjectSchema_unknownField(t *testing.T) {
+	t.Parallel()
+
+	sc := &spec.Schema{
+		Type:       "object",
+		Properties: map[string]*spec.Schema{"name": {Type: "string"}},
+	}
+	err := validateSchemaValue(sc, map[string]any{"unknown": "val"}, "$")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "unknown field")
+}
+
+func TestValidateRequestBody_nilContent(t *testing.T) {
+	t.Parallel()
+
+	op := &spec.Operation{
+		RequestBody: &spec.RequestBody{
+			Required: true,
+			Content:  nil,
+		},
+	}
+	err := validateRequestBody(op, map[string]any{"name": "test"})
+	require.NoError(t, err)
+}
+
+func TestValidateRequestBody_noJSONContent(t *testing.T) {
+	t.Parallel()
+
+	op := &spec.Operation{
+		RequestBody: &spec.RequestBody{
+			Required: true,
+			Content: map[string]*spec.MediaType{
+				"text/plain": {Schema: &spec.Schema{Type: "string"}},
+			},
+		},
+	}
+	err := validateRequestBody(op, map[string]any{"name": "test"})
+	require.NoError(t, err)
+}

@@ -5,7 +5,19 @@ package cache
 // Use of this software is governed by the AGPL v3 license
 // included in the /LICENSE file.
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
+
+// Sentinel errors for common cache failure modes.
+var (
+	// ErrEmptyLocation is returned when a location string is empty.
+	ErrEmptyLocation = errors.New("empty location")
+
+	// ErrEmptyBody is returned when an HTTP response body is empty.
+	ErrEmptyBody = errors.New("empty response body")
+)
 
 // LocationError describes an error accessing a location.
 type LocationError struct {

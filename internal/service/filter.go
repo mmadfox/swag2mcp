@@ -69,7 +69,10 @@ func specFileName(domain, title, location string) string {
 
 func removeDiacritics(s string) string {
 	t := transform.Chain(norm.NFD, runes.Remove(runes.Predicate(unicode.IsMark)), norm.NFC)
-	result, _, _ := transform.String(t, s)
+	result, _, err := transform.String(t, s)
+	if err != nil {
+		return s
+	}
 	return result
 }
 

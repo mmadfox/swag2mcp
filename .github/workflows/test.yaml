@@ -37,13 +37,21 @@ jobs:
           cache: true
 
       - name: Unit Tests
-        run: |
-          COVER_PKGS=$(go list ./... | grep -v -E '(/cmd|/tests$|/tests/|/mocks/|internal/tui|internal/commands/init|internal/commands/add|internal/commands/delete|internal/commands/run)' | tr '\n' ',')
-          go test -count=1 \
-          -coverpkg=$COVER_PKGS \
-          -coverprofile=coverage.out \
-          -covermode=atomic \
-          ./...
+        run: make unit-tests
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+
+      - name: Coverage
+        run: make cover
 
       # Coveralls in informational mode — never blocks PRs on coverage drop
       - name: Coveralls

@@ -33,10 +33,11 @@ func (s *Service) Bootstrap(ctx context.Context, request BootstrapRequest) error
 		return err
 	}
 
-	httpCfg := buildGlobalHTTPConfig(cfg.HTTPClient)
+	httpCfg := BuildGlobalHTTPConfig(cfg.HTTPClient)
 	if err := init.setupHTTPClient(httpCfg); err != nil {
 		return err
 	}
+	s.cache.SetHTTPClient(s.ctx.loadHTTPClient())
 
 	if err := init.processSpecs(ctx, cfg, request.Tags); err != nil {
 		return err

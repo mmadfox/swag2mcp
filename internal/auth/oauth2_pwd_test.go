@@ -6,6 +6,7 @@ package auth
 // included in the /LICENSE file.
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -268,4 +269,155 @@ func TestOAuth2PasswordAuthClient_Apply(t *testing.T) {
 		require.NoError(t, client.Apply(req, nil), "Apply()")
 		assert.Equal(t, "Bearer scoped-token", req.Header.Get(headerAuthorization))
 	})
+}
+
+func TestOAuth2PasswordAuthClient_Validate(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		client  *OAuth2PasswordAuthClient
+		wantErr bool
+	}{
+		{
+			name: "valid",
+			client: &OAuth2PasswordAuthClient{
+				Username: "u", Password: "p", ClientID: "cid",
+				TokenURL: "https://example.com/token",
+			},
+			wantErr: false,
+		},
+		{name: "empty", client: &OAuth2PasswordAuthClient{}, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := tt.client.Validate()
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestOAuth2PasswordAuthClient_Type(t *testing.T) {
+	t.Parallel()
+
+	client := &OAuth2PasswordAuthClient{}
+	assert.Equal(t, OAuth2Password, client.Type())
+}
+
+func TestOAuth2PasswordAuthClient_New_EnvVars(t *testing.T) {
+	t.Setenv("TEST_PWD_USER", "env-user")
+	t.Setenv("TEST_PWD_PASS", "env-pass")
+	t.Setenv("TEST_PWD_CID", "env-cid")
+	t.Setenv("TEST_PWD_CS", "env-cs")
+
+	client := &OAuth2PasswordAuthClient{
+		Username: "$(TEST_PWD_USER)", Password: "$(TEST_PWD_PASS)",
+		ClientID: "$(TEST_PWD_CID)", ClientSecret: "$(TEST_PWD_CS)",
+		TokenURL: "https://example.com/token",
+	}
+	require.NoError(t, client.New(), "New()")
+	assert.Equal(t, "env-user", client.Username)
+	assert.Equal(t, "env-pass", client.Password)
+}
+
+func TestOAuth2PasswordAuthClient_Apply_DefaultExpiry(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		resp := oauth2TokenResponse{AccessToken: "token", TokenType: "Bearer", ExpiresIn: 0}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	t.Cleanup(srv.Close)
+
+	client := &OAuth2PasswordAuthClient{
+		Username: "u", Password: "p", ClientID: "c",
+		TokenURL: srv.URL + "/token",
+	}
+	require.NoError(t, client.New(), "New()")
+
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
+	require.NoError(t, client.Apply(req, nil), "Apply()")
+	assert.Equal(t, "Bearer token", req.Header.Get(headerAuthorization))
+}
+
+func TestOAuth2PasswordAuthClient_Apply_Scopes(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = r.ParseForm()
+		if r.Form.Get("scope") != "openid profile" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		resp := oauth2TokenResponse{AccessToken: "scoped-token", TokenType: "Bearer", ExpiresIn: 3600}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	t.Cleanup(srv.Close)
+
+	client := &OAuth2PasswordAuthClient{
+		Username: "u", Password: "p", ClientID: "c",
+		TokenURL: srv.URL + "/token",
+		Scopes:   []string{"openid", "profile"},
+	}
+	require.NoError(t, client.New(), "New()")
+
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
+	require.NoError(t, client.Apply(req, nil), "Apply()")
+	assert.Equal(t, "Bearer scoped-token", req.Header.Get(headerAuthorization))
+}
+
+func TestOAuth2PasswordAuthClient_Apply_EmptyAccessToken(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		resp := oauth2TokenResponse{AccessToken: "", TokenType: "Bearer", ExpiresIn: 3600}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	t.Cleanup(srv.Close)
+
+	client := &OAuth2PasswordAuthClient{
+		Username: "u", Password: "p", ClientID: "c",
+		TokenURL: srv.URL + "/token",
+	}
+	require.NoError(t, client.New(), "New()")
+
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
+	err := client.Apply(req, nil)
+	require.Error(t, err, "expected error for empty access_token")
+}
+
+func TestOAuth2PasswordAuthClient_Apply_Non200(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+	t.Cleanup(srv.Close)
+
+	client := &OAuth2PasswordAuthClient{
+		Username: "u", Password: "p", ClientID: "c",
+		TokenURL: srv.URL + "/token",
+	}
+	require.NoError(t, client.New(), "New()")
+
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
+	err := client.Apply(req, nil)
+	require.Error(t, err, "expected error for non-200")
+}
+
+func TestOAuth2PasswordAuthClient_SetTokenURL(t *testing.T) {
+	t.Parallel()
+
+	client := &OAuth2PasswordAuthClient{}
+	client.SetTokenURL("http://localhost:9090/token")
+	assert.Equal(t, "http://localhost:9090/token", client.TokenURL)
 }

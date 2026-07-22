@@ -71,7 +71,7 @@ func (c *DigestAuthClient) Apply(req *http.Request, out *Info) error {
 	challenge, nc, cnonce, ok := c.readChallenge()
 	if !ok {
 		var err error
-		challenge, err = c.fetchChallenge(req)
+		challenge, err = c.fetchChallenge(req.Context(), req)
 		if err != nil {
 			return fmt.Errorf("digest: %w", err)
 		}
@@ -122,13 +122,13 @@ func (c *DigestAuthClient) SetMockBaseURL(url string) {
 	c.MockBaseURL = url
 }
 
-func (c *DigestAuthClient) fetchChallenge(req *http.Request) (digestChallenge, error) {
+func (c *DigestAuthClient) fetchChallenge(ctx context.Context, req *http.Request) (digestChallenge, error) {
 	challengeURL := req.URL.String()
 	if c.MockBaseURL != "" {
 		challengeURL = c.MockBaseURL
 	}
 
-	fakeReq, err := http.NewRequestWithContext(context.Background(), req.Method, challengeURL, nil)
+	fakeReq, err := http.NewRequestWithContext(ctx, req.Method, challengeURL, nil)
 	if err != nil {
 		return digestChallenge{}, fmt.Errorf("create challenge request: %w", err)
 	}
