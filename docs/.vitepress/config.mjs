@@ -80,6 +80,7 @@ export default defineConfig({
           { text: 'Endpoints', link: '/mcp-tools/endpoints' },
           { text: 'Execution', link: '/mcp-tools/execution' },
           { text: 'Utilities', link: '/mcp-tools/utilities' },
+          { text: 'Skills', link: '/mcp-tools/skills' },
         ],
       },
       {
@@ -229,6 +230,7 @@ export default defineConfig({
                 { text: 'Эндпоинты', link: '/ru/mcp-tools/endpoints' },
                 { text: 'Выполнение', link: '/ru/mcp-tools/execution' },
                 { text: 'Утилиты', link: '/ru/mcp-tools/utilities' },
+                { text: 'Скиллы', link: '/ru/mcp-tools/skills' },
               ],
             },
             {

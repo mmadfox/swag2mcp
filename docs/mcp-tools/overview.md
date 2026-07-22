@@ -44,6 +44,7 @@ All tools return errors as structured `LLMError` objects with a machine-readable
 | **Endpoints** | `endpoint_by_spec`, `endpoint_by_collection`, `endpoint_by_tag`, `endpoint_by_id` | View endpoints at different levels of the hierarchy |
 | **Execution** | `search`, `inspect`, `invoke` | Search, inspect the full contract, and call APIs |
 | **Utilities** | `auth`, `info`, `response_outline`, `response_compress`, `response_slice` | Auth tokens, runtime info, and large response handling |
+| **Skills** | [Formatting guide](/mcp-tools/skills) | Customize how tool responses are displayed |
 
 ## Full List
 
