@@ -14,6 +14,10 @@ swag2mcp-mock mockserver
 
 ```yaml
 mock_enabled: true
+mock_auth:
+  oauth2_port: 9090
+  digest_port: 9091
+  hmac_port: 9092
 
 specs:
   - domain: jokes
@@ -30,6 +34,9 @@ specs:
 | Parameter | Description |
 |-----------|-------------|
 | `mock_enabled` | Enable mock mode globally |
+| `mock_auth.oauth2_port` | OAuth2 mock server port (default: 9090) |
+| `mock_auth.digest_port` | Digest mock server port (default: 9091) |
+| `mock_auth.hmac_port` | HMAC mock server port (default: 9092) |
 | `base_mock_url` | Mock server address per collection (host:port) |
 
 ## Flags

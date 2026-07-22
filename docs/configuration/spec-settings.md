@@ -34,7 +34,7 @@ specs:
 | `base_url` | string | — | Base URL for API requests |
 | `disable` | bool | `false` | Disable this spec |
 | `tags` | array | `[]` | Tags for filtering |
-| `http_client` | object | — | HTTP client override |
+| `http_client` | object | — | HTTP client override (all settings: timeout, proxy, headers, cookies, redirects, user-agent, response size, randomizer) |
 | `collections` | array | — | Collection list (1-30 items) |
 | `auth` | object | — | Auth settings |
 

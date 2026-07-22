@@ -35,6 +35,9 @@ mcp:
   auth:
     token: "my-secret-token"
 
+disable_ratelimiter: false
+rate_limit_interval: 10s
+
 specs:
   - domain: meteo
     llm_title: Open-Meteo Weather APIs

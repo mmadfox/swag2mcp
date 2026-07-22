@@ -5,31 +5,34 @@ swag2mcp uses a three-level configuration cascade. Each level overrides the prev
 ## Levels
 
 ```
-Global (http_client, mcp)
+Global (http_client, mcp, mock_enabled, disable_ratelimiter, rate_limit_interval)
     ↓ overrides
-Spec (specs[].http_client)
+Spec (specs[].http_client, specs[].auth, specs[].base_url)
     ↓ overrides
-Collection (specs[].collections[].http_client)
+Collection (specs[].collections[].http_client, specs[].collections[].base_url)
 ```
 
 ## What Overrides What
 
 | Parameter | Global | Spec | Collection |
 |-----------|--------|------|------------|
-| `http_client.timeout` | ✅ | ✅ | ❌ |
-| `http_client.max_response_size` | ✅ | ✅ | ❌ |
-| `http_client.user_agent` | ✅ | ✅ | ❌ |
-| `http_client.follow_redirects` | ✅ | ✅ | ❌ |
-| `http_client.max_redirects` | ✅ | ✅ | ❌ |
-| `http_client.proxy` | ✅ | ✅ | ❌ |
-| `http_client.random` | ✅ | ✅ | ❌ |
+| `http_client.timeout` | ✅ | ✅ | ✅ |
+| `http_client.max_response_size` | ✅ | ✅ | ✅ |
+| `http_client.user_agent` | ✅ | ✅ | ✅ |
+| `http_client.follow_redirects` | ✅ | ✅ | ✅ |
+| `http_client.max_redirects` | ✅ | ✅ | ✅ |
+| `http_client.proxy` | ✅ | ✅ | ✅ |
+| `http_client.random` | ✅ | ✅ | ✅ |
 | `http_client.headers` | ✅ | ✅ | ✅ |
-| `http_client.cookies` | ✅ | ✅ | ❌ |
+| `http_client.cookies` | ✅ | ✅ | ✅ |
 | `base_url` | ❌ | ✅ | ✅ |
 | `auth` | ❌ | ✅ | ❌ |
 | `disable` | ❌ | ✅ | ✅ |
+| `mock_enabled` | ✅ | ❌ | ❌ |
+| `disable_ratelimiter` | ✅ | ❌ | ❌ |
+| `rate_limit_interval` | ✅ | ❌ | ❌ |
 
-Transport settings (timeout, proxy, user-agent, redirects, response size, randomizer) can be overridden at the spec level. Collection level only supports `headers` and `cookies`.
+All `http_client` settings can be overridden at every level. Collection-level settings take full precedence over spec and global.
 
 ## Cascade Example
 
@@ -52,6 +55,7 @@ specs:
       - llm_title: Forecast
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
         http_client:
+          timeout: 120s  # overrides spec timeout
           headers:
             "X-Custom": "value"  # added to spec + global headers
 ```
@@ -59,7 +63,7 @@ specs:
 ## Effective Settings for "Forecast" Collection
 
 ```
-timeout: 60s (from spec, overrides global 30s)
+timeout: 120s (from collection, overrides spec 60s and global 30s)
 max_response_size: 1048576 (from global)
 headers:
   - User-Agent: swag2mcp/1.0 (from global)

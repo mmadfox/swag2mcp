@@ -4,14 +4,21 @@ Global settings are the top-level configuration blocks in `swag2mcp.yaml`. They 
 
 ## Structure
 
-There are two global blocks:
-
 ```yaml
 http_client:
   # HTTP client settings for all API calls
 
 mcp:
   # MCP server settings
+
+mock_enabled: false
+mock_auth:
+  oauth2_port: 9090
+  digest_port: 9091
+  hmac_port: 9092
+
+disable_ratelimiter: false
+rate_limit_interval: 10s
 ```
 
 ### HTTP Client
@@ -26,15 +33,38 @@ Controls how the MCP server communicates with LLM agents: transport type (stdio,
 
 See [MCP Server](./mcp-server) for all parameters, transports, and startup flags.
 
+### Mock Server
+
+```yaml
+mock_enabled: true
+mock_auth:
+  oauth2_port: 9090
+  digest_port: 9091
+  hmac_port: 9092
+```
+
+- `mock_enabled` — enables mock server mode. When `true`, each collection must have `base_mock_url` set.
+- `mock_auth` — port configuration for mock auth servers (OAuth2, Digest, HMAC).
+
+### Rate Limiter
+
+```yaml
+disable_ratelimiter: false
+rate_limit_interval: 10s
+```
+
+- `disable_ratelimiter` — disables the per-endpoint 10-second rate limiter for the `invoke` tool. Set to `true` when testing or when you need to call the same endpoint repeatedly.
+- `rate_limit_interval` — custom rate limit interval (Go duration format: `10s`, `30s`, `1m`). Default: `10s`.
+
 ## Cascade
 
-Global settings can be overridden at the spec and collection levels, but **only `headers` and `cookies`** can be overridden. All other HTTP settings (timeout, proxy, user-agent, redirects, response size, randomizer) are global only.
+Global settings can be overridden at the spec and collection levels. All `http_client` settings (timeout, proxy, user-agent, redirects, response size, randomizer, headers, cookies) can be overridden at both spec and collection levels.
 
 ```
 Global (http_client)
-    ↓ overrides (headers, cookies only)
+    ↓ overrides (all settings)
 Spec (specs[].http_client)
-    ↓ overrides (headers only)
+    ↓ overrides (all settings)
 Collection (specs[].collections[].http_client)
 ```
 

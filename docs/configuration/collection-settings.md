@@ -66,6 +66,8 @@ specs:
 
 ## HTTP Client Override
 
+All `http_client` settings can be overridden at the collection level:
+
 ```yaml
 specs:
   - domain: meteo
@@ -75,8 +77,12 @@ specs:
       - llm_title: Forecast
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
         http_client:
+          timeout: 120s
           headers:
             "X-Custom": "value"
+          cookies:
+            - name: "session"
+              value: "abc123"
 ```
 
-Only `headers` can be overridden at the collection level. Transport settings (timeout, proxy, etc.) are configured at the global or spec level.
+All `http_client` settings (timeout, proxy, user-agent, redirects, response size, randomizer, headers, cookies) can be overridden at the collection level.

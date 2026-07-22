@@ -1,5 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1200" width="1400" height="1200" role="img" aria-label="swag2mcp architecture">
   <defs>
+    <style><![CDATA[
+      @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+      .t { font-family: 'Patrick Hand', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    ]]></style>
+
     <linearGradient id="gradBlock" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#F3E8FF"/>
       <stop offset="100%" stop-color="#E9D5FF"/>
@@ -31,70 +36,70 @@
   <!-- ===== SPECS ===== -->
   <g filter="url(#shadow)">
     <rect x="500" y="30" width="440" height="160" rx="24" fill="url(#gradBlock)" stroke="#A855F7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="720" y="100" text-anchor="middle" fill="#6B21A8" font-size="36" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif" font-weight="bold">OpenAPI / Swagger</text>
-    <text x="720" y="150" text-anchor="middle" fill="#6B21A8" font-size="32" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif" font-weight="bold">Postman Spec</text>
+    <text x="720" y="100" text-anchor="middle" fill="#6B21A8" font-size="36" class="t" font-weight="bold">OpenAPI / Swagger</text>
+    <text x="720" y="150" text-anchor="middle" fill="#6B21A8" font-size="32" class="t" font-weight="bold">Postman Spec</text>
   </g>
 
   <!-- Arrow: Specs → swag2mcp -->
   <line x1="720" y1="190" x2="720" y2="320" stroke="#A855F7" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
-  <text x="740" y="260" fill="#A855F7" font-size="30" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif" font-weight="bold">parses</text>
+  <text x="740" y="260" fill="#A855F7" font-size="30" class="t" font-weight="bold">parses</text>
 
   <!-- ===== swag2mcp ===== -->
   <g filter="url(#shadow)">
     <rect x="500" y="330" width="440" height="160" rx="24" fill="url(#gradBlock)" stroke="#A855F7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="720" y="410" text-anchor="middle" fill="#6B21A8" font-size="40" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif" font-weight="bold">swag2mcp</text>
-    <text x="720" y="460" text-anchor="middle" fill="#6B21A8" font-size="30" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif">16 tools · 9 auth · Search</text>
+    <text x="720" y="410" text-anchor="middle" fill="#6B21A8" font-size="40" class="t" font-weight="bold">swag2mcp</text>
+    <text x="720" y="460" text-anchor="middle" fill="#6B21A8" font-size="30" class="t">16 tools · 9 auth · Search</text>
   </g>
 
   <!-- Arrow: swag2mcp → MCP Server -->
   <line x1="720" y1="490" x2="720" y2="620" stroke="#A855F7" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
-  <text x="740" y="560" fill="#A855F7" font-size="30" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif" font-weight="bold">exposes</text>
+  <text x="740" y="560" fill="#A855F7" font-size="30" class="t" font-weight="bold">exposes</text>
 
   <!-- ===== Row: MCP Client <-> MCP Server <-> LLM Agent ===== -->
 
   <!-- MCP Client -->
   <g filter="url(#shadowLLM)">
     <rect x="60" y="630" width="280" height="180" rx="28" fill="url(#gradLLM)" stroke="#EC4899" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="200" y="700" text-anchor="middle" fill="#FFFFFF" font-size="38" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif" font-weight="bold">MCP Client</text>
-    <text x="200" y="750" text-anchor="middle" fill="#FCE7F3" font-size="24" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif">SDKs for</text>
-    <text x="200" y="780" text-anchor="middle" fill="#FCE7F3" font-size="24" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif">custom agents</text>
+    <text x="200" y="700" text-anchor="middle" fill="#FFFFFF" font-size="38" class="t" font-weight="bold">MCP Client</text>
+    <text x="200" y="750" text-anchor="middle" fill="#FCE7F3" font-size="24" class="t">SDKs for</text>
+    <text x="200" y="780" text-anchor="middle" fill="#FCE7F3" font-size="24" class="t">custom agents</text>
   </g>
 
   <!-- MCP Client <-> MCP Server (protocol) -->
   <line x1="340" y1="690" x2="490" y2="690" stroke="#A855F7" stroke-width="5" stroke-linecap="round" marker-end="url(#arrow)"/>
   <line x1="490" y1="720" x2="340" y2="720" stroke="#A855F7" stroke-width="5" stroke-linecap="round" marker-end="url(#arrow)"/>
-  <text x="415" y="670" text-anchor="middle" fill="#7C3AED" font-size="24" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif" font-weight="bold">protocol</text>
+  <text x="415" y="670" text-anchor="middle" fill="#7C3AED" font-size="24" class="t" font-weight="bold">protocol</text>
 
   <!-- MCP Server -->
   <g filter="url(#shadow)">
     <rect x="500" y="630" width="440" height="160" rx="24" fill="url(#gradBlock)" stroke="#A855F7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="720" y="710" text-anchor="middle" fill="#6B21A8" font-size="38" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif" font-weight="bold">MCP Server</text>
-    <text x="720" y="760" text-anchor="middle" fill="#6B21A8" font-size="30" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif">stdio · SSE · HTTP</text>
+    <text x="720" y="710" text-anchor="middle" fill="#6B21A8" font-size="38" class="t" font-weight="bold">MCP Server</text>
+    <text x="720" y="760" text-anchor="middle" fill="#6B21A8" font-size="30" class="t">stdio · SSE · HTTP</text>
   </g>
 
   <!-- MCP Server <-> LLM Agent (protocol) -->
   <line x1="940" y1="690" x2="1070" y2="690" stroke="#A855F7" stroke-width="5" stroke-linecap="round" marker-end="url(#arrow)"/>
   <line x1="1070" y1="720" x2="940" y2="720" stroke="#A855F7" stroke-width="5" stroke-linecap="round" marker-end="url(#arrow)"/>
-  <text x="1005" y="670" text-anchor="middle" fill="#7C3AED" font-size="24" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif" font-weight="bold">protocol</text>
+  <text x="1005" y="670" text-anchor="middle" fill="#7C3AED" font-size="24" class="t" font-weight="bold">protocol</text>
 
   <!-- LLM Agent -->
   <g filter="url(#shadowLLM)">
     <rect x="1080" y="630" width="280" height="180" rx="28" fill="url(#gradLLM)" stroke="#EC4899" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="1220" y="700" text-anchor="middle" fill="#FFFFFF" font-size="42" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif" font-weight="bold">LLM Agent</text>
-    <text x="1220" y="760" text-anchor="middle" fill="#FCE7F3" font-size="28" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif">OpenCode · Crush</text>
+    <text x="1220" y="700" text-anchor="middle" fill="#FFFFFF" font-size="42" class="t" font-weight="bold">LLM Agent</text>
+    <text x="1220" y="760" text-anchor="middle" fill="#FCE7F3" font-size="28" class="t">OpenCode · Crush</text>
   </g>
 
   <!-- Arrow: MCP Server → Your API (invoke) -->
   <line x1="700" y1="790" x2="700" y2="920" stroke="#0EA5E9" stroke-width="3" stroke-linecap="round" marker-end="url(#arrowBlue)"/>
-  <text x="690" y="860" text-anchor="end" fill="#0EA5E9" font-size="30" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif" font-weight="bold">invoke</text>
+  <text x="690" y="860" text-anchor="end" fill="#0EA5E9" font-size="30" class="t" font-weight="bold">invoke</text>
   <!-- Arrow: Your API → MCP Server (response) -->
   <line x1="740" y1="930" x2="740" y2="800" stroke="#0EA5E9" stroke-width="3" stroke-linecap="round" marker-end="url(#arrowBlue)"/>
-  <text x="755" y="870" fill="#0EA5E9" font-size="30" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif" font-weight="bold">response</text>
+  <text x="755" y="870" fill="#0EA5E9" font-size="30" class="t" font-weight="bold">response</text>
 
   <!-- ===== Your API ===== -->
   <g filter="url(#shadow)">
     <rect x="500" y="930" width="440" height="160" rx="24" fill="url(#gradAPI)" stroke="#0EA5E9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="720" y="1010" text-anchor="middle" fill="#0369A1" font-size="38" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif" font-weight="bold">Your API</text>
-    <text x="720" y="1060" text-anchor="middle" fill="#0369A1" font-size="32" font-family="'Patrick Hand', 'Comic Sans MS', cursive, sans-serif">JSON Response</text>
+    <text x="720" y="1010" text-anchor="middle" fill="#0369A1" font-size="38" class="t" font-weight="bold">Your API</text>
+    <text x="720" y="1060" text-anchor="middle" fill="#0369A1" font-size="32" class="t">JSON Response</text>
   </g>
 </svg>
