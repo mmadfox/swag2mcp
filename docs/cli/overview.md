@@ -14,12 +14,12 @@ The `swag2mcp` CLI is the single entry point for all operations — from initial
 
 ### Key nuances
 
-- **Path resolution** — commands that accept `[path]` search in this order: explicit path → `./swag2mcp.yaml` → `~/.swag2mcp/swag2mcp.yaml`. Always pass an explicit path when running as a service or in IDE config to avoid loading the wrong workspace.
+- **Path resolution** — commands that accept `[path]` expect a **workspace directory** (not a file path). Resolution order: explicit `[path]` → current directory (`./`) → `~/.swag2mcp/`. The CLI appends `swag2mcp.yaml` automatically. Always pass an explicit path when running as a service or in IDE config to avoid loading the wrong workspace.
 - **Spec vs Collection** — a **spec** represents a logical API service (e.g. "Open-Meteo API"), while a **collection** is one OpenAPI/Swagger/Postman file. A spec can have multiple collections.
 - **`--version`** is supported both as a flag (`swag2mcp --version`) and as a subcommand (`swag2mcp version`).
 - **`add spec` / `add collection`** accept YAML input via `--yaml` (inline string or `-` for stdin). Piping from a file or heredoc avoids shell quoting issues with special characters.
 - **`delete`** requires a TTY (interactive terminal). There is no `--force` or `--yes` flag — it always prompts for selection and confirmation.
-- **`mcp`** is the primary command for LLM integration. It supports three transports: `stdio` (default), `sse`, and `streamable-http`. The `--disable-llm-auth` flag (default: `true`) removes the `auth` tool from the MCP tool list entirely.
+- **`mcp`** is the primary command for LLM integration. It supports three transports: `stdio` (default), `sse`, and `streamable-http`. The `--disable-llm-auth` flag (default: `true`) removes the `auth` tool from the MCP tool list, preventing the LLM from seeing or requesting tokens. Auth still works — tokens are obtained through the standard config mechanism, not via the LLM. This mode is recommended for **production** (LLM never has access to credentials). For **debugging** or when using short-lived tokens, set `--disable-llm-auth=false` to let the LLM request fresh tokens via the `auth` tool.
 - **`validate`** checks YAML syntax, config structure, spec file existence, URL reachability, spec format (OpenAPI/Swagger/Postman), auth settings, and HTTP client correctness. It does **not** test authentication endpoints or API endpoint availability.
 - **`export` / `import`** provide a full workspace round-trip — config file, spec files, cache, and auth scripts are all included in the ZIP archive.
 - **`clean`** removes `cache/` and `responses/` directories but preserves `specs/` and `auth_scripts/`. Old responses (>48h) are also cleaned automatically on `mcp` startup.
