@@ -54,6 +54,7 @@ func NewRateLimitError(err error) *LLMError {
 	return &LLMError{
 		Code:    rateLimitErrCode,
 		Message: err.Error(),
+		Hint:    "Wait for the cooldown period to expire, then try invoking the endpoint again. Use the search tool to find other endpoints you can call in the meantime.",
 	}
 }
 

@@ -7,6 +7,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -59,6 +60,29 @@ func TestInvokeService_Invoke_rateLimiterDisabled(t *testing.T) {
 	svc := newInvokeService(ctx, idx, NewMockWorkspaceOps(ctrl), fakeValidator{}, "")
 	_, err := svc.Invoke(context.Background(), InvokeRequest{EndpointID: "ep1"})
 	require.Error(t, err) // buildRequest will fail due to missing base URL, but rate limiter was skipped
+}
+
+type rateLimitReached struct{}
+
+func (rateLimitReached) Allow(_ string) error {
+	return fmt.Errorf(`rate limit exceeded for endpoint "ep1": try again in 8 seconds`)
+}
+
+func TestInvokeService_Invoke_rateLimitError(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	ctx := newServiceContext()
+	ctx.storeRateLimiter(rateLimitReached{})
+	svc := newInvokeService(ctx, NewMockIndexReader(ctrl), NewMockWorkspaceOps(ctrl), fakeValidator{}, "")
+	_, err := svc.Invoke(context.Background(), InvokeRequest{EndpointID: "ep1"})
+	require.Error(t, err)
+
+	var llmErr *LLMError
+	require.ErrorAs(t, err, &llmErr)
+	require.Equal(t, "rate_limit", llmErr.Code)
+	require.Contains(t, llmErr.Message, "try again in 8 seconds")
+	require.Contains(t, llmErr.Hint, "Wait for the cooldown period")
 }
 
 func TestInvokeService_Invoke_paramValidationError(t *testing.T) {

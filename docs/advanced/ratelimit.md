@@ -6,11 +6,11 @@ swag2mcp has a built-in rate limiter that prevents the LLM from calling the same
 
 ## How it works
 
-Each endpoint has a cooldown period. If the LLM tries to call the same endpoint again within the cooldown, the call is silently blocked.
+Each endpoint has a cooldown period. If the LLM tries to call the same endpoint again within the cooldown, the call is rejected with a structured error.
 
 ```
 t=0s  → invoke(endpoint) → executes
-t=2s  → invoke(endpoint) → blocked (silent, no error)
+t=2s  → invoke(endpoint) → rejected with rate_limit error
 t=12s → invoke(endpoint) → executes (cooldown has passed)
 ```
 
@@ -18,8 +18,22 @@ t=12s → invoke(endpoint) → executes (cooldown has passed)
 
 - **Cooldown:** 10 seconds per endpoint
 - **Scope:** Per-endpoint — calling endpoint A does not affect endpoint B
-- **Blocking:** Silent — the LLM does not receive an error, the call is simply ignored
+- **Error response:** The LLM receives an `LLMError` with code `rate_limit` and a message indicating how long to wait
 - **Reset:** After 10 seconds of inactivity on that endpoint
+
+### Error format
+
+When rate limited, the LLM receives:
+
+```json
+{
+  "code": "rate_limit",
+  "message": "rate limit exceeded for endpoint \"abc123\": try again in 8 seconds",
+  "hint": "Wait for the cooldown period to expire, then try invoking the endpoint again. Use the search tool to find other endpoints you can call in the meantime."
+}
+```
+
+The LLM can use this information to wait and retry, or switch to a different endpoint.
 
 ### Why it exists
 
@@ -59,5 +73,5 @@ rate_limit_interval: 30s
 ## Important notes
 
 - **Per-endpoint tracking** — each endpoint is tracked independently. Calling one endpoint does not affect others.
-- **Silent blocking** — the second call within the cooldown is silently blocked. The LLM does not receive an error message.
+- **Error returned to LLM** — the second call within the cooldown is rejected with a `rate_limit` error. The LLM receives the cooldown duration and can retry after waiting.
 - **No cleanup needed** — the rate limiter tracks endpoints automatically and does not require maintenance.

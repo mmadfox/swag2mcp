@@ -51,6 +51,16 @@ func TestNewRateLimitError(t *testing.T) {
 	require.Equal(t, "rate limited", err.Message)
 }
 
+func TestNewRateLimitError_Hint(t *testing.T) {
+	t.Parallel()
+
+	err := NewRateLimitError(newTestError("rate limit exceeded for endpoint \"ep1\": try again in 8 seconds"))
+	require.Equal(t, "rate_limit", err.Code)
+	require.Contains(t, err.Message, "try again in 8 seconds")
+	require.Contains(t, err.Hint, "Wait for the cooldown period")
+	require.Contains(t, err.Hint, "search tool")
+}
+
 func TestNewInvokeError(t *testing.T) {
 	t.Parallel()
 
