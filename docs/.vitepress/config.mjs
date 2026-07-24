@@ -16,135 +16,6 @@ export default defineConfig({
     logo: '/icon.svg',
     siteTitle: 'swag2mcp',
 
-    nav: [
-      { text: 'Home', link: '/' },
-      { text: 'Quick Start', link: '/getting-started/quickstart' },
-      { text: 'Installation', link: '/getting-started/installation' },
-      { text: 'GitHub', link: 'https://github.com/mmadfox/swag2mcp' },
-    ],
-
-    sidebar: [
-      {
-        text: 'Getting Started',
-        items: [
-          { text: 'Installation', link: '/getting-started/installation' },
-                { text: 'Quick Start', link: '/getting-started/quickstart' },
-        ],
-      },
-      {
-        text: 'Concepts',
-        items: [
-          { text: 'Overview', link: '/concepts/overview' },
-          { text: 'Specs', link: '/concepts/specs' },
-          { text: 'Collections', link: '/concepts/collections' },
-          { text: 'Tags', link: '/concepts/tags' },
-          { text: 'Endpoints', link: '/concepts/endpoints' },
-          { text: 'Workspace', link: '/concepts/workspace' },
-        ],
-      },
-      {
-        text: 'Configuration',
-        items: [
-          { text: 'Config File', link: '/configuration/config-file' },
-          { text: 'Global Settings', link: '/configuration/global-settings' },
-          { text: 'Spec Settings', link: '/configuration/spec-settings' },
-          { text: 'Collection Settings', link: '/configuration/collection-settings' },
-          { text: 'HTTP Client', link: '/configuration/http-client' },
-          { text: 'MCP Server', link: '/configuration/mcp-server' },
-          { text: 'Cascade', link: '/configuration/cascade' },
-        ],
-      },
-      {
-        text: 'CLI',
-        items: [
-          { text: 'Overview', link: '/cli/overview' },
-          { text: 'init', link: '/cli/init' },
-          { text: 'add', link: '/cli/add' },
-          { text: 'delete', link: '/cli/delete' },
-          { text: 'ls', link: '/cli/ls' },
-          { text: 'run', link: '/cli/run' },
-          { text: 'validate', link: '/cli/validate' },
-          { text: 'clean', link: '/cli/clean' },
-          { text: 'update', link: '/cli/update' },
-          { text: 'mcp', link: '/cli/mcp' },
-          { text: 'version', link: '/cli/version' },
-          { text: 'info', link: '/cli/info' },
-          { text: 'import', link: '/cli/import' },
-          { text: 'export', link: '/cli/export' },
-        ],
-      },
-      {
-        text: 'MCP Tools',
-        items: [
-          { text: 'Overview', link: '/mcp-tools/overview' },
-          { text: 'Discovery', link: '/mcp-tools/discovery' },
-          { text: 'Endpoints', link: '/mcp-tools/endpoints' },
-          { text: 'Execution', link: '/mcp-tools/execution' },
-          { text: 'Utilities', link: '/mcp-tools/utilities' },
-          { text: 'Skills', link: '/mcp-tools/skills' },
-        ],
-      },
-      {
-        text: 'Authentication',
-        items: [
-          { text: 'Overview', link: '/auth/overview' },
-          { text: 'None', link: '/auth/none' },
-          { text: 'Basic', link: '/auth/basic' },
-          { text: 'Bearer', link: '/auth/bearer' },
-          { text: 'API Key', link: '/auth/api-key' },
-          { text: 'Digest', link: '/auth/digest' },
-          { text: 'HMAC', link: '/auth/hmac' },
-          { text: 'OAuth2 CC', link: '/auth/oauth2-cc' },
-          { text: 'OAuth2 Password', link: '/auth/oauth2-pwd' },
-          { text: 'Script', link: '/auth/script' },
-        ],
-      },
-      {
-        text: 'Advanced',
-        items: [
-          { text: 'Search', link: '/advanced/search' },
-          { text: 'Rate Limiting', link: '/advanced/ratelimit' },
-          { text: 'Response Size', link: '/advanced/response-size' },
-          { text: 'Caching', link: '/advanced/caching' },
-          { text: 'Mock Server', link: '/advanced/mock-server' },
-          { text: 'TUI', link: '/advanced/tui' },
-          { text: 'Export/Import', link: '/advanced/export-import' },
-          { text: 'Environment Variables', link: '/advanced/env-vars' },
-        ],
-      },
-      {
-        text: 'Integration',
-        items: [
-          { text: 'OpenCode', link: '/integration/opencode' },
-          { text: 'Cursor', link: '/integration/cursor' },
-          { text: 'Claude Desktop', link: '/integration/claude' },
-          { text: 'VS Code', link: '/integration/vscode' },
-          { text: 'Crush', link: '/integration/crush' },
-        ],
-      },
-      {
-        text: 'Configuration Examples',
-        items: [
-          { text: 'CLI Workflow', link: '/examples/cli-workflow' },
-          { text: 'LLM Session', link: '/examples/llm-session' },
-        ],
-      },
-      {
-        text: 'Development',
-        items: [
-          { text: 'Overview', link: '/development/overview' },
-          { text: 'Project Structure', link: '/development/project-structure' },
-          { text: 'Building', link: '/development/building' },
-          { text: 'Testing', link: '/development/testing' },
-          { text: 'Conventions', link: '/development/conventions' },
-          { text: 'New Auth Method', link: '/development/new-auth' },
-          { text: 'New MCP Tool', link: '/development/new-tool' },
-        ],
-      },
-      { text: 'FAQ', link: '/faq' },
-      { text: 'Troubleshooting', link: '/troubleshooting' },
-    ],
-
     socialLinks: [
       { icon: 'github', link: 'https://github.com/mmadfox/swag2mcp' },
     ],
@@ -159,6 +30,140 @@ export default defineConfig({
   },
 
   locales: {
+    '/': {
+      label: 'English',
+      lang: 'en-US',
+      title: 'swag2mcp',
+      description: 'Bridging OpenAPI/Swagger/Postman specifications with LLM agents via MCP',
+      themeConfig: {
+        nav: [
+          { text: 'Home', link: '/' },
+          { text: 'Quick Start', link: '/getting-started/quickstart' },
+          { text: 'Installation', link: '/getting-started/installation' },
+        ],
+        sidebar: [
+          {
+            text: 'Getting Started',
+            items: [
+              { text: 'Installation', link: '/getting-started/installation' },
+              { text: 'Quick Start', link: '/getting-started/quickstart' },
+            ],
+          },
+          {
+            text: 'Concepts',
+            items: [
+              { text: 'Overview', link: '/concepts/overview' },
+              { text: 'Specs', link: '/concepts/specs' },
+              { text: 'Collections', link: '/concepts/collections' },
+              { text: 'Tags', link: '/concepts/tags' },
+              { text: 'Endpoints', link: '/concepts/endpoints' },
+              { text: 'Workspace', link: '/concepts/workspace' },
+            ],
+          },
+          {
+            text: 'Configuration',
+            items: [
+              { text: 'Config File', link: '/configuration/config-file' },
+              { text: 'Global Settings', link: '/configuration/global-settings' },
+              { text: 'Spec Settings', link: '/configuration/spec-settings' },
+              { text: 'Collection Settings', link: '/configuration/collection-settings' },
+              { text: 'HTTP Client', link: '/configuration/http-client' },
+              { text: 'MCP Server', link: '/configuration/mcp-server' },
+              { text: 'Cascade', link: '/configuration/cascade' },
+            ],
+          },
+          {
+            text: 'CLI',
+            items: [
+              { text: 'Overview', link: '/cli/overview' },
+              { text: 'init', link: '/cli/init' },
+              { text: 'add', link: '/cli/add' },
+              { text: 'delete', link: '/cli/delete' },
+              { text: 'ls', link: '/cli/ls' },
+              { text: 'run', link: '/cli/run' },
+              { text: 'validate', link: '/cli/validate' },
+              { text: 'clean', link: '/cli/clean' },
+              { text: 'update', link: '/cli/update' },
+              { text: 'mcp', link: '/cli/mcp' },
+              { text: 'version', link: '/cli/version' },
+              { text: 'info', link: '/cli/info' },
+              { text: 'import', link: '/cli/import' },
+              { text: 'export', link: '/cli/export' },
+            ],
+          },
+          {
+            text: 'MCP Tools',
+            items: [
+              { text: 'Overview', link: '/mcp-tools/overview' },
+              { text: 'Discovery', link: '/mcp-tools/discovery' },
+              { text: 'Endpoints', link: '/mcp-tools/endpoints' },
+              { text: 'Execution', link: '/mcp-tools/execution' },
+              { text: 'Utilities', link: '/mcp-tools/utilities' },
+              { text: 'Skills', link: '/mcp-tools/skills' },
+            ],
+          },
+          {
+            text: 'Authentication',
+            items: [
+              { text: 'Overview', link: '/auth/overview' },
+              { text: 'None', link: '/auth/none' },
+              { text: 'Basic', link: '/auth/basic' },
+              { text: 'Bearer', link: '/auth/bearer' },
+              { text: 'API Key', link: '/auth/api-key' },
+              { text: 'Digest', link: '/auth/digest' },
+              { text: 'HMAC', link: '/auth/hmac' },
+              { text: 'OAuth2 CC', link: '/auth/oauth2-cc' },
+              { text: 'OAuth2 Password', link: '/auth/oauth2-pwd' },
+              { text: 'Script', link: '/auth/script' },
+            ],
+          },
+          {
+            text: 'Advanced',
+            items: [
+              { text: 'Search', link: '/advanced/search' },
+              { text: 'Rate Limiting', link: '/advanced/ratelimit' },
+              { text: 'Response Size', link: '/advanced/response-size' },
+              { text: 'Caching', link: '/advanced/caching' },
+              { text: 'Mock Server', link: '/advanced/mock-server' },
+              { text: 'TUI', link: '/advanced/tui' },
+              { text: 'Export/Import', link: '/advanced/export-import' },
+              { text: 'Environment Variables', link: '/advanced/env-vars' },
+            ],
+          },
+          {
+            text: 'Integration',
+            items: [
+              { text: 'OpenCode', link: '/integration/opencode' },
+              { text: 'Cursor', link: '/integration/cursor' },
+              { text: 'Claude Desktop', link: '/integration/claude' },
+              { text: 'VS Code', link: '/integration/vscode' },
+              { text: 'Crush', link: '/integration/crush' },
+            ],
+          },
+          {
+            text: 'Configuration Examples',
+            items: [
+              { text: 'CLI Workflow', link: '/examples/cli-workflow' },
+              { text: 'LLM Session', link: '/examples/llm-session' },
+            ],
+          },
+          {
+            text: 'Development',
+            items: [
+              { text: 'Overview', link: '/development/overview' },
+              { text: 'Project Structure', link: '/development/project-structure' },
+              { text: 'Building', link: '/development/building' },
+              { text: 'Testing', link: '/development/testing' },
+              { text: 'Conventions', link: '/development/conventions' },
+              { text: 'New Auth Method', link: '/development/new-auth' },
+              { text: 'New MCP Tool', link: '/development/new-tool' },
+            ],
+          },
+          { text: 'FAQ', link: '/faq' },
+          { text: 'Troubleshooting', link: '/troubleshooting' },
+        ],
+      },
+    },
     '/ru/': {
       label: 'Русский',
       lang: 'ru-RU',
@@ -170,7 +175,6 @@ export default defineConfig({
           { text: 'Быстрый старт', link: '/ru/getting-started/quickstart' },
           { text: 'Установка', link: '/ru/getting-started/installation' },
           { text: 'Интеграция', link: '/ru/integration/opencode' },
-          { text: 'GitHub', link: 'https://github.com/mmadfox/swag2mcp' },
         ],
         sidebar: [
           {
@@ -306,7 +310,6 @@ export default defineConfig({
           { text: 'Schnellstart', link: '/de/getting-started/quickstart' },
           { text: 'Installation', link: '/de/getting-started/installation' },
           { text: 'Integration', link: '/de/integration/opencode' },
-          { text: 'GitHub', link: 'https://github.com/mmadfox/swag2mcp' },
         ],
         sidebar: [
           {
@@ -442,7 +445,6 @@ export default defineConfig({
           { text: 'Démarrage rapide', link: '/fr/getting-started/quickstart' },
           { text: 'Installation', link: '/fr/getting-started/installation' },
           { text: 'Intégration', link: '/fr/integration/opencode' },
-          { text: 'GitHub', link: 'https://github.com/mmadfox/swag2mcp' },
         ],
         sidebar: [
           {
@@ -578,7 +580,6 @@ export default defineConfig({
           { text: 'Inicio rápido', link: '/es/getting-started/quickstart' },
           { text: 'Instalación', link: '/es/getting-started/installation' },
           { text: 'Integración', link: '/es/integration/opencode' },
-          { text: 'GitHub', link: 'https://github.com/mmadfox/swag2mcp' },
         ],
         sidebar: [
           {
@@ -714,7 +715,6 @@ export default defineConfig({
           { text: '快速开始', link: '/zh-CN/getting-started/quickstart' },
           { text: '安装', link: '/zh-CN/getting-started/installation' },
           { text: '集成', link: '/zh-CN/integration/opencode' },
-          { text: 'GitHub', link: 'https://github.com/mmadfox/swag2mcp' },
         ],
         sidebar: [
           {
@@ -850,7 +850,6 @@ export default defineConfig({
           { text: 'クイックスタート', link: '/ja/getting-started/quickstart' },
           { text: 'インストール', link: '/ja/getting-started/installation' },
           { text: '統合', link: '/ja/integration/opencode' },
-          { text: 'GitHub', link: 'https://github.com/mmadfox/swag2mcp' },
         ],
         sidebar: [
           {
@@ -986,7 +985,6 @@ export default defineConfig({
           { text: '빠른 시작', link: '/ko/getting-started/quickstart' },
           { text: '설치', link: '/ko/getting-started/installation' },
           { text: '통합', link: '/ko/integration/opencode' },
-          { text: 'GitHub', link: 'https://github.com/mmadfox/swag2mcp' },
         ],
         sidebar: [
           {
