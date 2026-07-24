@@ -5,6 +5,20 @@
 - **macOS, Linux, or Windows** (amd64 / arm64)
 - **Go 1.26+** (only for `go install` or building from source)
 
+## Compatibility
+
+| Method | macOS | Linux | Windows |
+|--------|-------|-------|---------|
+| One-liner (curl) | ✅ | ✅ | ❌ |
+| Homebrew | ✅ | ✅ | ❌ |
+| Scoop | ❌ | ❌ | ✅ |
+| APT (deb) | ❌ | ✅ | ❌ |
+| RPM | ❌ | ✅ | ❌ |
+| Docker | ❌ | ✅ | ❌ |
+| GitHub Release | ✅ | ✅ | ✅ |
+| go install | ✅ | ✅ | ✅ |
+| Build from source | ✅ | ✅ | ✅ |
+
 ---
 
 ## macOS
@@ -216,8 +230,8 @@ If you use an AI-powered IDE (OpenCode, Cursor, Claude Desktop, VS Code, etc.), 
 1. Ask your agent to add the swag2mcp skills:
 
    ```
-   "Add the swag2mcp-cli skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
-   "Add the swag2mcp-format skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md"
+   "Create the .agents/skills/swag2mcp-cli directory and add the skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md to .agents/skills/swag2mcp-cli/SKILL.md"
+   "Create the .agents/skills/swag2mcp-format directory and add the skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md to .agents/skills/swag2mcp-format/SKILL.md"
    ```
 
 2. Then tell your agent:
@@ -238,10 +252,10 @@ If you use an AI-powered IDE (OpenCode, Cursor, Claude Desktop, VS Code, etc.), 
 swag2mcp --version
 ```
 
-Expected output:
+Expected output (version may vary):
 
 ```
-swag2mcp dev
+swag2mcp v*.*.*
 ```
 
 ---
