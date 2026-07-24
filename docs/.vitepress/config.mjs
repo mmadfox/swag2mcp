@@ -18,7 +18,9 @@ export default defineConfig({
 
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Getting Started', link: '/getting-started/installation' },
+      { text: 'Quick Start', link: '/getting-started/quickstart' },
+      { text: 'Installation', link: '/getting-started/installation' },
+      { text: 'Integration', link: '/integration/opencode' },
       { text: 'GitHub', link: 'https://github.com/mmadfox/swag2mcp' },
     ],
 

@@ -45,16 +45,3 @@ See [LICENSE](https://github.com/mmadfox/swag2mcp/blob/main/LICENSE) for the ful
 ```
 SPDX-License-Identifier: AGPL-3.0-only
 ```
-
-## Quick Start
-
-```bash
-go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
-swag2mcp init
-swag2mcp import https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml dadjoke
-swag2mcp mcp
-```
-
-## Integrations
-
-OpenCode · Cursor · Claude Desktop · VS Code · Crush
