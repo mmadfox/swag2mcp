@@ -122,8 +122,16 @@ export default defineConfig({
         ],
       },
       {
+        text: 'Configuration Examples',
+        items: [
+          { text: 'CLI Workflow', link: '/examples/cli-workflow' },
+          { text: 'LLM Session', link: '/examples/llm-session' },
+        ],
+      },
+      {
         text: 'Development',
         items: [
+          { text: 'Overview', link: '/development/overview' },
           { text: 'Project Structure', link: '/development/project-structure' },
           { text: 'Building', link: '/development/building' },
           { text: 'Testing', link: '/development/testing' },
@@ -131,16 +139,6 @@ export default defineConfig({
           { text: 'New Auth Method', link: '/development/new-auth' },
           { text: 'New MCP Tool', link: '/development/new-tool' },
           { text: 'Release', link: '/development/release' },
-        ],
-      },
-      {
-        text: 'Examples',
-        items: [
-          { text: 'Minimal', link: '/examples/minimal' },
-          { text: 'Full', link: '/examples/full' },
-          { text: 'Auth', link: '/examples/auth' },
-          { text: 'Transport', link: '/examples/transport' },
-          { text: 'Mock', link: '/examples/mock' },
         ],
       },
       { text: 'FAQ', link: '/faq' },
@@ -272,8 +270,16 @@ export default defineConfig({
               ],
             },
             {
+              text: 'Примеры конфигурации',
+              items: [
+                { text: 'CLI Workflow', link: '/ru/examples/cli-workflow' },
+                { text: 'LLM Session', link: '/ru/examples/llm-session' },
+              ],
+            },
+            {
               text: 'Разработка',
               items: [
+                { text: 'Обзор', link: '/ru/development/overview' },
                 { text: 'Структура проекта', link: '/ru/development/project-structure' },
                 { text: 'Сборка', link: '/ru/development/building' },
                 { text: 'Тестирование', link: '/ru/development/testing' },
@@ -281,16 +287,6 @@ export default defineConfig({
                 { text: 'Новый auth метод', link: '/ru/development/new-auth' },
                 { text: 'Новый MCP инструмент', link: '/ru/development/new-tool' },
                 { text: 'Релиз', link: '/ru/development/release' },
-              ],
-            },
-            {
-              text: 'Примеры',
-              items: [
-                { text: 'Минимальная', link: '/ru/examples/minimal' },
-                { text: 'Полная', link: '/ru/examples/full' },
-                { text: 'Auth', link: '/ru/examples/auth' },
-                { text: 'Transport', link: '/ru/examples/transport' },
-                { text: 'Mock', link: '/ru/examples/mock' },
               ],
             },
             { text: 'FAQ', link: '/ru/faq' },

@@ -1,15 +1,15 @@
 # Configuration Cascade
 
-swag2mcp uses a three-level configuration cascade. Each level overrides the previous.
+swag2mcp uses a three-level configuration cascade. Each level overrides the previous. This lets you set sensible defaults globally and fine-tune settings for specific specs or collections.
 
 ## Levels
 
 ```
 Global (http_client, mcp, mock_enabled, disable_ratelimiter, rate_limit_interval)
     ↓ overrides
-Spec (specs[].http_client, specs[].auth, specs[].base_url)
+Spec (specs[].http_client, specs[].auth, specs[].base_url, specs[].disable, specs[].tags)
     ↓ overrides
-Collection (specs[].collections[].http_client, specs[].collections[].base_url)
+Collection (specs[].collections[].http_client, specs[].collections[].base_url, specs[].collections[].disable)
 ```
 
 ## What Overrides What
@@ -28,6 +28,7 @@ Collection (specs[].collections[].http_client, specs[].collections[].base_url)
 | `base_url` | ❌ | ✅ | ✅ |
 | `auth` | ❌ | ✅ | ❌ |
 | `disable` | ❌ | ✅ | ✅ |
+| `tags` | ❌ | ✅ | ❌ |
 | `mock_enabled` | ✅ | ❌ | ❌ |
 | `disable_ratelimiter` | ✅ | ❌ | ❌ |
 | `rate_limit_interval` | ✅ | ❌ | ❌ |
@@ -70,3 +71,21 @@ headers:
   - X-API-Version: 2 (from spec)
   - X-Custom: value (from collection)
 ```
+
+## How Merging Works
+
+### HTTP Client Settings
+
+Simple values (`timeout`, `max_response_size`, `user_agent`, `follow_redirects`, `max_redirects`, `random`) are **replaced** at each level. If a spec sets `timeout: 60s`, it completely replaces the global `30s`.
+
+### Headers
+
+Headers are **merged** across levels. All three levels' headers are combined. If the same header key appears at multiple levels, the lowest level wins.
+
+### Cookies
+
+Cookies are **merged** across levels. If the same cookie name appears at multiple levels, the lowest level wins.
+
+### Proxy
+
+Proxy is **replaced** at each level. If a spec sets a proxy, it completely replaces the global proxy for that spec.
