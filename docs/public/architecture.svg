@@ -55,6 +55,36 @@
   <line x1="720" y1="490" x2="720" y2="620" stroke="#A855F7" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
   <text x="740" y="560" fill="#A855F7" font-size="30" class="t" font-weight="bold">exposes</text>
 
+  <!-- ===== AI Agents Group (dashed) ===== -->
+  <g>
+    <rect x="40" y="350" width="320" height="170" rx="16" fill="none" stroke="#A855F7" stroke-width="2" stroke-dasharray="8,6"/>
+    <text x="200" y="378" text-anchor="middle" fill="#7C3AED" font-size="20" class="t" font-weight="bold">AI Agents</text>
+
+    <!-- Row 1 -->
+    <rect x="55" y="395" width="85" height="48" rx="10" fill="url(#gradLLM)" stroke="#EC4899" stroke-width="2"/>
+    <text x="97" y="424" text-anchor="middle" fill="#FFF" font-size="14" class="t" font-weight="bold">Finance</text>
+
+    <rect x="150" y="395" width="85" height="48" rx="10" fill="url(#gradLLM)" stroke="#EC4899" stroke-width="2"/>
+    <text x="192" y="424" text-anchor="middle" fill="#FFF" font-size="14" class="t" font-weight="bold">Security</text>
+
+    <rect x="245" y="395" width="85" height="48" rx="10" fill="url(#gradLLM)" stroke="#EC4899" stroke-width="2"/>
+    <text x="287" y="424" text-anchor="middle" fill="#FFF" font-size="14" class="t" font-weight="bold">Chat Bot</text>
+
+    <!-- Row 2 -->
+    <rect x="55" y="453" width="85" height="48" rx="10" fill="url(#gradLLM)" stroke="#EC4899" stroke-width="2"/>
+    <text x="97" y="482" text-anchor="middle" fill="#FFF" font-size="14" class="t" font-weight="bold">Healthcare</text>
+
+    <rect x="150" y="453" width="85" height="48" rx="10" fill="url(#gradLLM)" stroke="#EC4899" stroke-width="2"/>
+    <text x="192" y="482" text-anchor="middle" fill="#FFF" font-size="14" class="t" font-weight="bold">E-Commerce</text>
+
+    <rect x="245" y="453" width="85" height="48" rx="10" fill="url(#gradLLM)" stroke="#EC4899" stroke-width="2"/>
+    <text x="287" y="482" text-anchor="middle" fill="#FFF" font-size="14" class="t" font-weight="bold">Logistics</text>
+  </g>
+
+  <!-- Dashed bidirectional arrow: AI Agents Group ↔ MCP Client -->
+  <line x1="200" y1="520" x2="200" y2="625" stroke="#A855F7" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+  <line x1="200" y1="628" x2="200" y2="523" stroke="#A855F7" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
   <!-- ===== Row: MCP Client <-> MCP Server <-> LLM Agent ===== -->
 
   <!-- MCP Client -->

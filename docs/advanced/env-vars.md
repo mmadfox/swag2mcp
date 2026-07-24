@@ -34,7 +34,6 @@ If the environment variable `API_TOKEN` is set, it will be substituted. If it is
 
 ## Where `$(VAR)` is NOT resolved
 
-- Proxy settings (`url`, `username`, `password`)
 - Base URLs (`base_url`)
 - Collection locations (`location`)
 - Spec domain names (`domain`)

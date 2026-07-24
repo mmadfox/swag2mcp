@@ -8,17 +8,7 @@ This page shows real examples of using swag2mcp from the terminal — from initi
 # 1. Initialize a workspace
 mkdir -p .swag2mcp && swag2mcp init ./.swag2mcp
 
-# 2. Add a spec (public API, no auth)
-swag2mcp add spec --yaml - <<EOF
-domain: dadjoke
-llm_title: icanhazdadjoke API
-base_url: https://icanhazdadjoke.com
-collections:
-  - llm_title: Jokes
-    location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
-EOF
-
-# 3. List your specs
+# 2. List your specs
 swag2mcp ls
 ```
 
