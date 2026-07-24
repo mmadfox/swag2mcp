@@ -47,9 +47,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 > **Work in Progress** — Installation and Quick Start sections are being updated. The commands below are functional but documentation is under active development.
 
 ```bash
-go install github.com/mmadfox/swag2mcp@latest
+go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 swag2mcp init
-swag2mcp add https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
+swag2mcp import https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml dadjoke
 swag2mcp mcp
 ```
 
