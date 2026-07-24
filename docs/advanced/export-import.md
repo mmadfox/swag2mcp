@@ -51,7 +51,7 @@ swag2mcp import --from-zip /path/to/backup.zip -f
 
 The ZIP must be created by `swag2mcp export` — arbitrary ZIP files will not work.
 
-### Import a single spec
+### Import a single spec file
 
 Download a spec file and add it to the workspace:
 
@@ -62,7 +62,7 @@ swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
 
 ### Bulk import from existing config
 
-Download all spec files referenced in the config for specific specs:
+Download all collection spec files for the specified specs (domains):
 
 ```bash
 swag2mcp import --spec meteo

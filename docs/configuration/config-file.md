@@ -114,7 +114,7 @@ mcp:
 - MCP server auth token: `mcp.auth.token`
 - HTTP client headers and cookie values
 
-`$(VAR)` is **not** resolved in proxy settings, base URLs, or collection locations.
+`$(VAR)` is **not** resolved in base URLs or collection locations.
 
 ## Validation
 

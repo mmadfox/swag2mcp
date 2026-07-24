@@ -167,11 +167,22 @@ func (c *MCPAuthConfig) Resolve() {
 	c.Token = env.Parse(c.Token)
 }
 
+// Resolve resolves environment variable references in proxy fields.
+func (c *ProxyConfig) Resolve() {
+	if c == nil {
+		return
+	}
+	c.URL = env.Parse(c.URL)
+	c.Username = env.Parse(c.Username)
+	c.Password = env.Parse(c.Password)
+}
+
 // Resolve resolves environment variable references in headers and cookie values.
 func (c *HTTPClientConfig) Resolve() {
 	if c == nil {
 		return
 	}
+	c.Proxy.Resolve()
 	for k, v := range c.Headers {
 		c.Headers[k] = env.Parse(v)
 	}
@@ -185,6 +196,7 @@ func (c *GlobalHTTPClientConfig) Resolve() {
 	if c == nil {
 		return
 	}
+	c.Proxy.Resolve()
 	for k, v := range c.Headers {
 		c.Headers[k] = env.Parse(v)
 	}

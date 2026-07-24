@@ -673,3 +673,53 @@ func TestHTTPClientConfig_Validate_InvalidTimeout(t *testing.T) {
 	errs := collectStructErrors("http_client", *cfg)
 	assert.NotEmpty(t, errs, "expected validation error for too-short timeout")
 }
+
+func TestProxyConfig_Resolve(t *testing.T) {
+	t.Setenv("PROXY_URL", "http://proxy.example.com:8080")
+	t.Setenv("PROXY_USER", "user1")
+	t.Setenv("PROXY_PASS", "pass1")
+
+	cfg := &ProxyConfig{
+		URL:      "$(PROXY_URL)",
+		Username: "$(PROXY_USER)",
+		Password: "$(PROXY_PASS)",
+	}
+	cfg.Resolve()
+
+	assert.Equal(t, "http://proxy.example.com:8080", cfg.URL)
+	assert.Equal(t, "user1", cfg.Username)
+	assert.Equal(t, "pass1", cfg.Password)
+}
+
+func TestProxyConfig_Resolve_nil(t *testing.T) {
+	t.Parallel()
+
+	var cfg *ProxyConfig
+	cfg.Resolve() // should not panic
+}
+
+func TestHTTPClientConfig_Resolve_Proxy(t *testing.T) {
+	t.Setenv("PROXY_URL", "http://proxy:3128")
+
+	cfg := &HTTPClientConfig{
+		Proxy: &ProxyConfig{
+			URL: "$(PROXY_URL)",
+		},
+	}
+	cfg.Resolve()
+
+	assert.Equal(t, "http://proxy:3128", cfg.Proxy.URL)
+}
+
+func TestGlobalHTTPClientConfig_Resolve_Proxy(t *testing.T) {
+	t.Setenv("PROXY_URL", "socks5://127.0.0.1:1080")
+
+	cfg := &GlobalHTTPClientConfig{
+		Proxy: &ProxyConfig{
+			URL: "$(PROXY_URL)",
+		},
+	}
+	cfg.Resolve()
+
+	assert.Equal(t, "socks5://127.0.0.1:1080", cfg.Proxy.URL)
+}

@@ -7,7 +7,7 @@ package service
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -65,7 +65,7 @@ func TestInvokeService_Invoke_rateLimiterDisabled(t *testing.T) {
 type rateLimitReached struct{}
 
 func (rateLimitReached) Allow(_ string) error {
-	return fmt.Errorf(`rate limit exceeded for endpoint "ep1": try again in 8 seconds`)
+	return errors.New(`rate limit exceeded for endpoint "ep1": try again in 8 seconds`)
 }
 
 func TestInvokeService_Invoke_rateLimitError(t *testing.T) {

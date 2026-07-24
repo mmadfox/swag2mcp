@@ -476,7 +476,7 @@ swag2mcp add spec
 lsof -i :9090
 
 # Check the mock server logs
-swag2mcp-mock mockserver --logfile /tmp/mock.log
+swag2mcp-mock mockserver
 ```
 
 ### Mock server returns empty responses

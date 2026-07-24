@@ -130,6 +130,7 @@ A proxy server acts as an intermediary between swag2mcp and the target API. All 
 - **Type:** `string`
 - **Default:** `""` (no proxy)
 - **Supported schemes:** `http`, `https`, `socks5`, `socks5h`
+- **Supports `$(VAR)`:** ✅ resolved at runtime
 
 | Scheme | Description | Use Case |
 |--------|-------------|----------|
@@ -141,6 +142,8 @@ A proxy server acts as an intermediary between swag2mcp and the target API. All 
 ### Proxy Authentication
 
 If the proxy requires authentication, provide `username` and `password`:
+
+- **Supports `$(VAR)`:** ✅ resolved at runtime for all three fields (`url`, `username`, `password`)
 
 ```yaml
 http_client:
