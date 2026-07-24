@@ -7,7 +7,11 @@
     <a href="https://coveralls.io/github/mmadfox/swag2mcp?branch=main"><img src="https://coveralls.io/repos/github/mmadfox/swag2mcp/badge.svg?branch=main&v=3" alt="Coverage Status"></a>
 </p>
 
-> ⚠️ **Work in progress** — API may change, contributions welcome.
+<p align="center">
+  <strong style="background: #dc2626; color: white; padding: 12px 20px; border-radius: 8px; display: inline-block; font-size: 1.1em;">
+    🚧 WORK IN PROGRESS — release coming soon!
+  </strong>
+</p>
 
 **swag2mcp** bridges OpenAPI/Swagger/Postman API specifications with LLM agents via the Model Context Protocol (MCP).
 
