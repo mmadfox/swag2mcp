@@ -17,9 +17,9 @@
 
 ---
 
-- [Installation](https://mmadfox.github.io/swag2mcp/getting-started/installation)
-- [Quickstart](https://mmadfox.github.io/swag2mcp/getting-started/quickstart)
-- [Documentation](https://mmadfox.github.io/swag2mcp)
+- <a href="https://mmadfox.github.io/swag2mcp/getting-started/installation" target="_blank" rel="noopener noreferrer">Installation</a>
+- <a href="https://mmadfox.github.io/swag2mcp/getting-started/quickstart" target="_blank" rel="noopener noreferrer">Quickstart</a>
+- <a href="https://mmadfox.github.io/swag2mcp" target="_blank" rel="noopener noreferrer">Documentation</a>
 
 ---
 

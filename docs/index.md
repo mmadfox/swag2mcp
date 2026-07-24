@@ -43,9 +43,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 ## Quick Start
 
-> [!WARNING]
-> **Work in Progress** — Installation and Quick Start sections are being updated. The commands below are functional but documentation is under active development.
-
 ```bash
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 swag2mcp init

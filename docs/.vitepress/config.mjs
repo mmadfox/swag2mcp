@@ -9,11 +9,11 @@ export default defineConfig({
   base: '/',
 
   head: [
-    ['link', { rel: 'icon', href: '/logo.svg' }],
+    ['link', { rel: 'icon', href: '/icon.svg' }],
   ],
 
   themeConfig: {
-    logo: '/logo.svg',
+    logo: '/icon.svg',
     siteTitle: 'swag2mcp',
 
     nav: [
