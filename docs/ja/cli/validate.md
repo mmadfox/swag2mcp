@@ -74,6 +74,6 @@ swag2mcp validate --tags=public
 
 ## ニュアンス
 
-- **自動初期化なし:** `add`、`ls`、`run` とは異なり、`validate` は設定がない場合に自動初期化**しません**。エラーを返します：`"configuration not found at <path>"`。
+- **自動初期化なし:** `add`、`ls`、`run` とは異なり、`validate` は設定がない場合に自動初期化**しません**。エラーを返します：`"configuration not found at &lt;path&gt;"`。
 - **ネットワークアクセス:** リモート spec URL は検証中に取得されます。spec が遅いサーバーでホストされている場合、コマンドに時間がかかることがあります。
 - **タグフィルタリング:** `--tags` が設定されている場合、指定されたタグに一致する spec のみが検証されます。他の spec はスキップされます。

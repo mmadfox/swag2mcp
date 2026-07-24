@@ -74,6 +74,6 @@ If validation passes, the configuration is ready for `mcp`, `update`, or `run`.
 
 ## Nuances
 
-- **No auto-init:** Unlike `add`, `ls`, or `run`, `validate` does **not** auto-initialize if the config is missing. It returns an error: `"configuration not found at <path>"`.
+- **No auto-init:** Unlike `add`, `ls`, or `run`, `validate` does **not** auto-initialize if the config is missing. It returns an error: `"configuration not found at &lt;path&gt;"`.
 - **Network access:** Remote spec URLs are fetched during validation. The command may take longer if specs are hosted on slow servers.
 - **Tag filtering:** When `--tags` is set, only specs matching the specified tags are validated. Other specs are skipped.

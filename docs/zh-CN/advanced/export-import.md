@@ -9,7 +9,7 @@ swag2mcp 支持通过 ZIP 归档进行完整的工作区往返。你可以将整
 创建工作区的可移植 ZIP 备份。
 
 ```bash
-# 导出到默认文件（swag2mcp-backup-<timestamp>.zip）
+# 导出到默认文件（swag2mcp-backup-&lt;timestamp&gt;.zip）
 swag2mcp export
 
 # 使用自定义路径导出

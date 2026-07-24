@@ -74,6 +74,6 @@ Si la validación pasa, la configuración está lista para `mcp`, `update` o `ru
 
 ## Matices
 
-- **Sin auto-inicio:** A diferencia de `add`, `ls` o `run`, `validate` **no** se auto-inicializa si falta la configuración. Devuelve un error: `"configuration not found at <path>"`.
+- **Sin auto-inicio:** A diferencia de `add`, `ls` o `run`, `validate` **no** se auto-inicializa si falta la configuración. Devuelve un error: `"configuration not found at &lt;path&gt;"`.
 - **Acceso a red:** Las URL de especificaciones remotas se obtienen durante la validación. El comando puede tardar más si las especificaciones están alojadas en servidores lentos.
 - **Filtrado por etiquetas:** Cuando se establece `--tags`, solo se validan las especificaciones que coinciden con las etiquetas especificadas. Otras especificaciones se omiten.

@@ -86,14 +86,14 @@ swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 
 - **타입:** `string`
 - **기본값:** `"/mcp"`
-- **설명:** MCP 엔드포인트의 URL 경로입니다. LLM 클라이언트가 `http://<addr><path>`로 요청을 보냅니다.
+- **설명:** MCP 엔드포인트의 URL 경로입니다. LLM 클라이언트가 `http://&lt;addr&gt;&lt;path&gt;`로 요청을 보냅니다.
 - **예시:** `"/mcp"`, `"/api/mcp"`, `"/v1/mcp"`
 
 ### auth.token
 
 - **타입:** `string`
 - **기본값:** `""` (인증 없음)
-- **설명:** HTTP 전송 인증용 Bearer 토큰입니다. 설정되면 LLM 클라이언트가 모든 요청에 `Authorization: Bearer <token>`을 포함해야 합니다.
+- **설명:** HTTP 전송 인증용 Bearer 토큰입니다. 설정되면 LLM 클라이언트가 모든 요청에 `Authorization: Bearer &lt;token&gt;`을 포함해야 합니다.
 - **참고:** `$(ENV_VAR)` 해결을 지원합니다.
 
 ## HTTP 인증

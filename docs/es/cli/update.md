@@ -57,7 +57,7 @@ swag2mcp ls [path]
 
 ## Matices
 
-- **Sin auto-inicio:** Si el archivo de configuración no existe, `update` devuelve un error: `"configuration not found at <path>"`. Ejecute `init` primero.
+- **Sin auto-inicio:** Si el archivo de configuración no existe, `update` devuelve un error: `"configuration not found at &lt;path&gt;"`. Ejecute `init` primero.
 - **Dependencia de red:** Todas las URL de especificaciones remotas deben ser accesibles. Si alguna descarga falla, toda la actualización falla con un mensaje de error claro.
 - **Creación de scripts de autenticación:** Si una especificación usa `ScriptAuth` y el script de plantilla no existe, `update` lo crea. Si la creación falla, la actualización falla.
 - **`update` vs `clean`:** `clean` solo elimina la caché. `update` elimina la caché **y** vuelve a descargar todo. Use `clean` cuando solo quiera liberar espacio; use `update` cuando quiera actualizar.

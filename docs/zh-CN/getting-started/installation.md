@@ -219,7 +219,7 @@ go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 
 :::
 
-或从 [GitHub Releases](https://github.com/mmadfox/swag2mcp/releases) 下载 — 查找 `swag2mcp-mock_<version>_<os>_<arch>.tar.gz`。
+或从 [GitHub Releases](https://github.com/mmadfox/swag2mcp/releases) 下载 — 查找 `swag2mcp-mock_&lt;version&gt;_&lt;os&gt;_&lt;arch&gt;.tar.gz`。
 
 ---
 

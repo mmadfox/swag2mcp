@@ -2,7 +2,7 @@
 
 ## 목적
 
-Bearer Token 인증 — 현대 REST API에서 가장 일반적인 방법입니다. 토큰은 `Authorization: Bearer <token>` 헤더로 전송됩니다.
+Bearer Token 인증 — 현대 REST API에서 가장 일반적인 방법입니다. 토큰은 `Authorization: Bearer &lt;token&gt;` 헤더로 전송됩니다.
 
 ## 사용 시기
 

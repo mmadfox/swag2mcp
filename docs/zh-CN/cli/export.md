@@ -22,7 +22,7 @@ swag2mcp export [path] [output] [flags]
 | 参数 | 位置 | 必需 | 描述 |
 |------|------|------|------|
 | `path` | 1 | 否 | 工作区目录。如果省略，通过路径解析规则解析。 |
-| `output` | 2 | 否 | 输出 ZIP 文件的完整路径。如果省略，默认为 `./swag2mcp-backup-<timestamp>.zip`。 |
+| `output` | 2 | 否 | 输出 ZIP 文件的完整路径。如果省略，默认为 `./swag2mcp-backup-&lt;timestamp&gt;.zip`。 |
 
 ## 标志
 

@@ -10,7 +10,7 @@ Der Mock-Server ist eine **separate Binärdatei** — `swag2mcp-mock`. Sie ist n
 
 ```bash
 # Option 1: Von GitHub Releases herunterladen
-# Suchen Sie nach swag2mcp-mock_<version>_<os>_<arch>.tar.gz
+# Suchen Sie nach swag2mcp-mock_&lt;version&gt;_&lt;os&gt;_&lt;arch&gt;.tar.gz
 
 # Option 2: Mit Go installieren
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest

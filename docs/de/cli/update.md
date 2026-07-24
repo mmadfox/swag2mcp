@@ -57,7 +57,7 @@ swag2mcp ls [path]
 
 ## Nuancen
 
-- **Kein Auto-Init:** Wenn die Konfigurationsdatei nicht existiert, gibt `update` einen Fehler zurück: `"Konfiguration nicht gefunden unter <path>"`. Führen Sie zuerst `init` aus.
+- **Kein Auto-Init:** Wenn die Konfigurationsdatei nicht existiert, gibt `update` einen Fehler zurück: `"Konfiguration nicht gefunden unter &lt;path&gt;"`. Führen Sie zuerst `init` aus.
 - **Netzwerkabhängigkeit:** Alle entfernten Spec-URLs müssen erreichbar sein. Wenn ein Download fehlschlägt, schlägt das gesamte Update mit einer klaren Fehlermeldung fehl.
 - **Auth-Skript-Erstellung:** Wenn eine Spec `ScriptAuth` verwendet und das Stub-Skript nicht existiert, erstellt `update` es. Wenn die Erstellung fehlschlägt, schlägt das Update fehl.
 - **`update` vs `clean`:** `clean` entfernt nur den Cache. `update` entfernt den Cache **und** lädt alles neu herunter. Verwenden Sie `clean`, wenn Sie nur Speicherplatz freigeben möchten; verwenden Sie `update`, wenn Sie eine Aktualisierung wünschen.

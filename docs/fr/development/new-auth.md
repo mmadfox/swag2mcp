@@ -2,7 +2,7 @@
 
 ## Étapes
 
-1. **Créer le client d'authentification** dans `internal/auth/<nom>.go`
+1. **Créer le client d'authentification** dans `internal/auth/&lt;nom&gt;.go`
 2. **Implémenter l'interface `Authenticator`**
 3. **Ajouter une constante de type** dans `internal/auth/auth.go`
 4. **Ajouter un décodeur YAML** dans `internal/config/auth.go`

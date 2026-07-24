@@ -10,7 +10,7 @@
 
 ```bash
 # 옵션 1: GitHub Releases에서 다운로드
-# swag2mcp-mock_<version>_<os>_<arch>.tar.gz 찾기
+# swag2mcp-mock_&lt;version&gt;_&lt;os&gt;_&lt;arch&gt;.tar.gz 찾기
 
 # 옵션 2: Go로 설치
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest

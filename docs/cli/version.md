@@ -38,7 +38,7 @@ swag2mcp --version
 ## Output format
 
 ```
-swag2mcp <version>
+swag2mcp &lt;version&gt;
 ```
 
 The version is set at build time via `ldflags`. If not set, it defaults to `"dev"`.

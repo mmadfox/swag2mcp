@@ -2,7 +2,7 @@
 
 ## 手順
 
-1. **認証クライアントを作成** `internal/auth/<name>.go` に
+1. **認証クライアントを作成** `internal/auth/&lt;name&gt;.go` に
 2. **`Authenticator` インターフェースを実装**
 3. **型定数を追加** `internal/auth/auth.go` に
 4. **YAML デコーダーを追加** `internal/config/auth.go` に

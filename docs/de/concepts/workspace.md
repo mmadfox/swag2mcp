@@ -52,7 +52,7 @@ Jede zwischengespeicherte Datei hat eine zufällige TTL zwischen 1 Stunde und 48
 Speichert lokale Spezifikationsdateien, auf die Collections über `location: specs/{name}` verweisen. Dateien hier werden direkt ohne Zwischenspeicherung verwendet.
 
 Dieses Verzeichnis wird befüllt durch:
-- `swag2mcp import <source> <name>` — lädt eine entfernte Spezifikation herunter und speichert sie hier
+- `swag2mcp import &lt;source&gt; &lt;name&gt;` — lädt eine entfernte Spezifikation herunter und speichert sie hier
 - `swag2mcp export` — kopiert Spezifikationen von hier in das Export-ZIP
 - Manuelle Platzierung — Sie können Spezifikationsdateien selbst hierher kopieren
 

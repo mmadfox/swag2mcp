@@ -174,7 +174,7 @@ MCP server listening on http://127.0.0.1:8080/mcp
 
 ## 细节
 
-- **无自动初始化：** 如果配置文件不存在，`mcp` 返回错误：`"configuration not found at <path>"`。先运行 `init`。
+- **无自动初始化：** 如果配置文件不存在，`mcp` 返回错误：`"configuration not found at &lt;path&gt;"`。先运行 `init`。
 - **`--disable-llm-auth`（默认：`true`）：** 启用时，`auth` 工具从 MCP 工具列表中完全移除。LLM 无法看到或请求令牌。认证仍然有效 — 令牌通过标准配置机制获取，而不是通过 LLM。此模式推荐用于**生产环境**。对于**调试**或使用短期令牌时，设置 `--disable-llm-auth=false` 让 LLM 通过 `auth` 工具请求新令牌。
 - **YAML 配置回退：** 如果未显式设置 CLI 标志，则从 `swag2mcp.yaml` 中的 `mcp` 部分取值（如果存在）。这允许你在配置文件中配置服务器，而不是每次都传递标志。
 - **响应清理：** 启动时，超过 48 小时的响应会自动从 `responses/` 目录中删除。

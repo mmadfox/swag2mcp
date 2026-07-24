@@ -2,7 +2,7 @@
 
 ## Шаги
 
-1. **Создайте клиент аутентификации** в `internal/auth/<name>.go`
+1. **Создайте клиент аутентификации** в `internal/auth/&lt;name&gt;.go`
 2. **Реализуйте интерфейс `Authenticator`**
 3. **Добавьте константу типа** в `internal/auth/auth.go`
 4. **Добавьте YAML-декодер** в `internal/config/auth.go`

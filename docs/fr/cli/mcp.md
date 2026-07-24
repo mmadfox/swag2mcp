@@ -174,7 +174,7 @@ Serveur MCP à l'écoute sur http://127.0.0.1:8080/mcp
 
 ## Nuances
 
-- **Pas d'auto-initialisation :** Si le fichier de configuration n'existe pas, `mcp` retourne une erreur : « configuration introuvable à <chemin> ». Exécutez `init` d'abord.
+- **Pas d'auto-initialisation :** Si le fichier de configuration n'existe pas, `mcp` retourne une erreur : « configuration introuvable à &lt;chemin&gt; ». Exécutez `init` d'abord.
 - **`--disable-llm-auth` (défaut : `true`) :** Lorsqu'il est activé, l'outil `auth` est complètement supprimé de la liste des outils MCP. Le LLM ne peut pas voir ni demander de jetons. L'authentification fonctionne toujours — les jetons sont obtenus via le mécanisme de configuration standard, pas via le LLM. Ce mode est recommandé pour la **production**. Pour le **débogage** ou lors de l'utilisation de jetons de courte durée, définissez `--disable-llm-auth=false` pour permettre au LLM de demander des jetons frais via l'outil `auth`.
 - **Recours à la configuration YAML :** Si un drapeau CLI n'est pas explicitement défini, la valeur est prise de la section `mcp` dans `swag2mcp.yaml` (si présente). Cela vous permet de configurer le serveur dans le fichier de configuration au lieu de passer des drapeaux à chaque fois.
 - **Nettoyage des réponses :** Au démarrage, les réponses de plus de 48 heures sont automatiquement supprimées du répertoire `responses/`.

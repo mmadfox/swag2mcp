@@ -86,14 +86,14 @@ swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 
 - **Tipo:** `string`
 - **Valor predeterminado:** `"/mcp"`
-- **Descripción:** Ruta URL para el endpoint MCP. El cliente LLM envía solicitudes a `http://<addr><path>`.
+- **Descripción:** Ruta URL para el endpoint MCP. El cliente LLM envía solicitudes a `http://&lt;addr&gt;&lt;path&gt;`.
 - **Ejemplos:** `"/mcp"`, `"/api/mcp"`, `"/v1/mcp"`
 
 ### auth.token
 
 - **Tipo:** `string`
 - **Valor predeterminado:** `""` (sin autenticación)
-- **Descripción:** Token Bearer para autenticación de transporte HTTP. Cuando se establece, el cliente LLM debe incluir `Authorization: Bearer <token>` en cada solicitud.
+- **Descripción:** Token Bearer para autenticación de transporte HTTP. Cuando se establece, el cliente LLM debe incluir `Authorization: Bearer &lt;token&gt;` en cada solicitud.
 - **Nota:** Admite resolución de `$(ENV_VAR)`.
 
 ## Autenticación HTTP

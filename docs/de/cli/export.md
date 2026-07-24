@@ -22,7 +22,7 @@ swag2mcp export [path] [output] [flags]
 | Argument | Position | Erforderlich | Beschreibung |
 |----------|----------|-------------|--------------|
 | `path` | 1 | Nein | Arbeitsbereichsverzeichnis. Wenn nicht angegeben, wird über die Pfadauflösungsregeln ermittelt. |
-| `output` | 2 | Nein | Vollständiger Pfad für die Ausgabe-ZIP-Datei. Wenn nicht angegeben, Standard: `./swag2mcp-backup-<timestamp>.zip`. |
+| `output` | 2 | Nein | Vollständiger Pfad für die Ausgabe-ZIP-Datei. Wenn nicht angegeben, Standard: `./swag2mcp-backup-&lt;timestamp&gt;.zip`. |
 
 ## Flags
 

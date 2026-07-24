@@ -2,7 +2,7 @@
 
 ## Zweck
 
-Bearer-Token-Authentifizierung — die gebräuchlichste Methode für moderne REST-APIs. Das Token wird im `Authorization: Bearer <token>`-Header gesendet.
+Bearer-Token-Authentifizierung — die gebräuchlichste Methode für moderne REST-APIs. Das Token wird im `Authorization: Bearer &lt;token&gt;`-Header gesendet.
 
 ## Wann verwenden
 

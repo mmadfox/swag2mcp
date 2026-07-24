@@ -52,7 +52,7 @@ Cada archivo en caché tiene un TTL aleatorio entre 1 hora y 48 horas. La caché
 Almacena archivos de especificación locales a los que las colecciones apuntan mediante `location: specs/{name}`. Los archivos aquí se usan directamente sin almacenamiento en caché.
 
 Este directorio se llena mediante:
-- `swag2mcp import <source> <name>` — descarga una especificación remota y la guarda aquí
+- `swag2mcp import &lt;source&gt; &lt;name&gt;` — descarga una especificación remota y la guarda aquí
 - `swag2mcp export` — copia las especificaciones aquí en el ZIP de exportación
 - Colocación manual — puede copiar archivos de especificación aquí usted mismo
 

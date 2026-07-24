@@ -52,7 +52,7 @@ swag2mcp mcp ./my-workspace
 存储 collection 通过 `location: specs/{name}` 引用的本地规范文件。此处的文件直接使用，无需缓存。
 
 此目录由以下方式填充：
-- `swag2mcp import <source> <name>` — 下载远程规范并保存到此
+- `swag2mcp import &lt;source&gt; &lt;name&gt;` — 下载远程规范并保存到此
 - `swag2mcp export` — 将规范复制到导出 ZIP
 - 手动放置 — 你可以自己将规范文件复制到此
 

@@ -38,7 +38,7 @@ swag2mcp --version
 ## 出力形式
 
 ```
-swag2mcp <version>
+swag2mcp &lt;version&gt;
 ```
 
 バージョンはビルド時に `ldflags` で設定されます。設定されていない場合、デフォルトで `"dev"` になります。

@@ -2,7 +2,7 @@
 
 ## Schritte
 
-1. **Auth-Client erstellen** in `internal/auth/<name>.go`
+1. **Auth-Client erstellen** in `internal/auth/&lt;name&gt;.go`
 2. **`Authenticator`-Interface implementieren**
 3. **Typ-Konstante hinzufügen** in `internal/auth/auth.go`
 4. **YAML-Decoder hinzufügen** in `internal/config/auth.go`

@@ -56,7 +56,7 @@ go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 ```
 
-또는 GitHub Releases에서 `swag2mcp-mock_<version>_<os>_<arch>.tar.gz`를 다운로드하세요.
+또는 GitHub Releases에서 `swag2mcp-mock_&lt;version&gt;_&lt;os&gt;_&lt;arch&gt;.tar.gz`를 다운로드하세요.
 
 ## 시작하기
 

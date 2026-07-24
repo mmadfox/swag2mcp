@@ -10,7 +10,7 @@ The mock server is a **separate binary** — `swag2mcp-mock`. It is not included
 
 ```bash
 # Option 1: Download from GitHub Releases
-# Look for swag2mcp-mock_<version>_<os>_<arch>.tar.gz
+# Look for swag2mcp-mock_&lt;version&gt;_&lt;os&gt;_&lt;arch&gt;.tar.gz
 
 # Option 2: Install with Go
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest

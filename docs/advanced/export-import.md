@@ -9,7 +9,7 @@ swag2mcp supports full workspace round-trip via ZIP archives. You can export you
 Creates a portable ZIP backup of your workspace.
 
 ```bash
-# Export to default file (swag2mcp-backup-<timestamp>.zip)
+# Export to default file (swag2mcp-backup-&lt;timestamp&gt;.zip)
 swag2mcp export
 
 # Export with custom path

@@ -56,7 +56,7 @@ Le serveur mock est un binaire séparé :
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 ```
 
-Ou téléchargez `swag2mcp-mock_<version>_<os>_<arch>.tar.gz` depuis GitHub Releases.
+Ou téléchargez `swag2mcp-mock_&lt;version&gt;_&lt;os&gt;_&lt;arch&gt;.tar.gz` depuis GitHub Releases.
 
 ## Premiers pas
 

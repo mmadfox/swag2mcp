@@ -57,7 +57,7 @@ swag2mcp ls [chemin]
 
 ## Nuances
 
-- **Pas d'auto-initialisation :** Si le fichier de configuration n'existe pas, `update` retourne une erreur : « configuration introuvable à <chemin> ». Exécutez `init` d'abord.
+- **Pas d'auto-initialisation :** Si le fichier de configuration n'existe pas, `update` retourne une erreur : « configuration introuvable à &lt;chemin&gt; ». Exécutez `init` d'abord.
 - **Dépendance réseau :** Toutes les URL de spécification distantes doivent être accessibles. Si un téléchargement échoue, la mise à jour entière échoue avec un message d'erreur clair.
 - **Création de script d'authentification :** Si une spec utilise `ScriptAuth` et que le script stub n'existe pas, `update` le crée. Si la création échoue, la mise à jour échoue.
 - **`update` vs `clean` :** `clean` supprime uniquement le cache. `update` supprime le cache **et** retélécharge tout. Utilisez `clean` lorsque vous voulez juste libérer de l'espace ; utilisez `update` lorsque vous voulez rafraîchir.

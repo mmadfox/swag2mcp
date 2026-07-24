@@ -56,7 +56,7 @@ Mock-сервер — это отдельный бинарный файл:
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 ```
 
-Или скачайте `swag2mcp-mock_<version>_<os>_<arch>.tar.gz` с GitHub Releases.
+Или скачайте `swag2mcp-mock_&lt;version&gt;_&lt;os&gt;_&lt;arch&gt;.tar.gz` с GitHub Releases.
 
 ## Начало работы
 

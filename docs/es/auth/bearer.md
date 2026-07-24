@@ -2,7 +2,7 @@
 
 ## Propósito
 
-Autenticación mediante Token Bearer — el método más común para APIs REST modernas. El token se envía en el encabezado `Authorization: Bearer <token>`.
+Autenticación mediante Token Bearer — el método más común para APIs REST modernas. El token se envía en el encabezado `Authorization: Bearer &lt;token&gt;`.
 
 ## Cuándo usarlo
 

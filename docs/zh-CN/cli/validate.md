@@ -74,6 +74,6 @@ swag2mcp validate --tags=public
 
 ## 细节
 
-- **无自动初始化：** 与 `add`、`ls` 或 `run` 不同，如果配置缺失，`validate` **不会**自动初始化。它返回错误：`"configuration not found at <path>"`。
+- **无自动初始化：** 与 `add`、`ls` 或 `run` 不同，如果配置缺失，`validate` **不会**自动初始化。它返回错误：`"configuration not found at &lt;path&gt;"`。
 - **网络访问：** 验证期间会获取远程规范 URL。如果规范托管在慢速服务器上，命令可能需要更长时间。
 - **标签过滤：** 设置 `--tags` 时，只验证匹配指定标签的 spec。其他 spec 被跳过。

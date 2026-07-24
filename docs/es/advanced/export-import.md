@@ -9,7 +9,7 @@ swag2mcp admite el ciclo completo del espacio de trabajo mediante archivos ZIP. 
 Crea una copia de seguridad ZIP portátil de su espacio de trabajo.
 
 ```bash
-# Exportar al archivo predeterminado (swag2mcp-backup-<timestamp>.zip)
+# Exportar al archivo predeterminado (swag2mcp-backup-&lt;timestamp&gt;.zip)
 swag2mcp export
 
 # Exportar con ruta personalizada

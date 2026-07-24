@@ -22,7 +22,7 @@ swag2mcp export [chemin] [sortie] [drapeaux]
 | Argument | Position | Requis | Description |
 |----------|----------|--------|-------------|
 | `chemin` | 1 | Non | Répertoire de l'espace de travail. S'il est omis, résolution via les règles de résolution de chemin. |
-| `sortie` | 2 | Non | Chemin complet pour le fichier ZIP de sortie. S'il est omis, par défaut `./swag2mcp-backup-<horodatage>.zip`. |
+| `sortie` | 2 | Non | Chemin complet pour le fichier ZIP de sortie. S'il est omis, par défaut `./swag2mcp-backup-&lt;horodatage&gt;.zip`. |
 
 ## Drapeaux
 

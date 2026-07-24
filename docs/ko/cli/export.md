@@ -22,7 +22,7 @@ swag2mcp export [path] [output] [flags]
 | 인수 | 위치 | 필수 | 설명 |
 |------|------|------|------|
 | `path` | 1 | 아니요 | 워크스페이스 디렉토리. 생략 시 경로 해결 규칙에 따라 결정됩니다. |
-| `output` | 2 | 아니요 | 출력 ZIP 파일의 전체 경로. 생략 시 `./swag2mcp-backup-<timestamp>.zip`으로 기본 설정됩니다. |
+| `output` | 2 | 아니요 | 출력 ZIP 파일의 전체 경로. 생략 시 `./swag2mcp-backup-&lt;timestamp&gt;.zip`으로 기본 설정됩니다. |
 
 ## 플래그
 

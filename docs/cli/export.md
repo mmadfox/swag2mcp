@@ -22,7 +22,7 @@ swag2mcp export [path] [output] [flags]
 | Argument | Position | Required | Description |
 |----------|----------|----------|-------------|
 | `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
-| `output` | 2 | No | Full path for the output ZIP file. If omitted, defaults to `./swag2mcp-backup-<timestamp>.zip`. |
+| `output` | 2 | No | Full path for the output ZIP file. If omitted, defaults to `./swag2mcp-backup-&lt;timestamp&gt;.zip`. |
 
 ## Flags
 

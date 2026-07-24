@@ -9,7 +9,7 @@ swag2mcp unterstützt die vollständige Arbeitsbereichs-Roundtrip-Funktionalitä
 Erstellt ein portables ZIP-Backup Ihres Arbeitsbereichs.
 
 ```bash
-# In Standarddatei exportieren (swag2mcp-backup-<timestamp>.zip)
+# In Standarddatei exportieren (swag2mcp-backup-&lt;timestamp&gt;.zip)
 swag2mcp export
 
 # Mit benutzerdefiniertem Pfad exportieren

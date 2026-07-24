@@ -74,6 +74,6 @@ Wenn die Validierung bestanden wird, ist die Konfiguration bereit für `mcp`, `u
 
 ## Nuancen
 
-- **Kein Auto-Init:** Anders als `add`, `ls` oder `run` führt `validate` **keine** automatische Initialisierung durch, wenn die Konfiguration fehlt. Es gibt einen Fehler zurück: `"Konfiguration nicht gefunden unter <path>"`.
+- **Kein Auto-Init:** Anders als `add`, `ls` oder `run` führt `validate` **keine** automatische Initialisierung durch, wenn die Konfiguration fehlt. Es gibt einen Fehler zurück: `"Konfiguration nicht gefunden unter &lt;path&gt;"`.
 - **Netzwerkzugriff:** Entfernte Spec-URLs werden während der Validierung abgerufen. Der Befehl kann länger dauern, wenn Spezifikationen auf langsamen Servern gehostet werden.
 - **Tag-Filterung:** Wenn `--tags` gesetzt ist, werden nur Specs mit den angegebenen Tags validiert. Andere Specs werden übersprungen.

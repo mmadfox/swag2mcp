@@ -2,7 +2,7 @@
 
 ## Objectif
 
-Authentification par jeton Bearer — la méthode la plus courante pour les API REST modernes. Le jeton est envoyé dans l'en-tête `Authorization: Bearer <jeton>`.
+Authentification par jeton Bearer — la méthode la plus courante pour les API REST modernes. Le jeton est envoyé dans l'en-tête `Authorization: Bearer &lt;jeton&gt;`.
 
 ## Quand l'utiliser
 

@@ -86,14 +86,14 @@ swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 
 - **型:** `string`
 - **デフォルト:** `"/mcp"`
-- **説明:** MCP エンドポイントの URL パス。LLM クライアントは `http://<addr><path>` にリクエストを送信します。
+- **説明:** MCP エンドポイントの URL パス。LLM クライアントは `http://&lt;addr&gt;&lt;path&gt;` にリクエストを送信します。
 - **例:** `"/mcp"`、`"/api/mcp"`、`"/v1/mcp"`
 
 ### auth.token
 
 - **型:** `string`
 - **デフォルト:** `""`（認証なし）
-- **説明:** HTTP トランスポート認証用の Bearer トークン。設定すると、LLM クライアントはすべてのリクエストに `Authorization: Bearer <token>` を含める必要があります。
+- **説明:** HTTP トランスポート認証用の Bearer トークン。設定すると、LLM クライアントはすべてのリクエストに `Authorization: Bearer &lt;token&gt;` を含める必要があります。
 - **注:** `$(ENV_VAR)` 解決をサポートします。
 
 ## HTTP 認証

@@ -52,7 +52,7 @@ Chaque fichier en cache a un TTL aléatoire entre 1 heure et 48 heures. Le cache
 Stocke les fichiers de spécification locaux vers lesquels les collections pointent via `location: specs/{nom}`. Les fichiers ici sont utilisés directement sans mise en cache.
 
 Ce répertoire est rempli par :
-- `swag2mcp import <source> <nom>` — télécharge une spec distante et la sauvegarde ici
+- `swag2mcp import &lt;source&gt; &lt;nom&gt;` — télécharge une spec distante et la sauvegarde ici
 - `swag2mcp export` — copie les specs ici dans le ZIP d'exportation
 - Placement manuel — vous pouvez copier vous-même des fichiers de spécification ici
 

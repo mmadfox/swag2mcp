@@ -52,7 +52,7 @@ swag2mcp mcp ./my-workspace
 collection が `location: specs/{name}` を介して指すローカル spec ファイルを保存します。ここにあるファイルはキャッシュなしで直接使用されます。
 
 このディレクトリは以下によって作成されます：
-- `swag2mcp import <source> <name>` — リモート spec をダウンロードしてここに保存
+- `swag2mcp import &lt;source&gt; &lt;name&gt;` — リモート spec をダウンロードしてここに保存
 - `swag2mcp export` — ここからエクスポート ZIP に spec をコピー
 - 手動配置 — 自分で spec ファイルをコピーできます
 

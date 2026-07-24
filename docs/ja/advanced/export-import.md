@@ -9,7 +9,7 @@ swag2mcp は ZIP アーカイブによる完全なワークスペースのラウ
 ワークスペースのポータブルな ZIP バックアップを作成します。
 
 ```bash
-# デフォルトファイルにエクスポート（swag2mcp-backup-<timestamp>.zip）
+# デフォルトファイルにエクスポート（swag2mcp-backup-&lt;timestamp&gt;.zip）
 swag2mcp export
 
 # カスタムパスでエクスポート

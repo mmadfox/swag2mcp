@@ -57,7 +57,7 @@ swag2mcp ls [path]
 
 ## 세부 사항
 
-- **자동 초기화 없음:** 설정 파일이 없으면 `update`가 오류를 반환합니다: `"configuration not found at <path>"`. 먼저 `init`을 실행하세요.
+- **자동 초기화 없음:** 설정 파일이 없으면 `update`가 오류를 반환합니다: `"configuration not found at &lt;path&gt;"`. 먼저 `init`을 실행하세요.
 - **네트워크 의존성:** 모든 원격 명세 URL에 접근할 수 있어야 합니다. 다운로드가 실패하면 전체 업데이트가 명확한 오류 메시지와 함께 실패합니다.
 - **인증 스크립트 생성:** spec이 `ScriptAuth`를 사용하고 스텁 스크립트가 없으면 `update`가 생성합니다. 생성에 실패하면 업데이트가 실패합니다.
 - **`update` vs `clean`:** `clean`은 캐시만 제거합니다. `update`는 캐시를 제거하고 **모든 것을 다시 다운로드합니다**. 공간 확보만 필요하면 `clean`을 사용하고, 새로고침이 필요하면 `update`를 사용하세요.

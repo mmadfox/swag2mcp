@@ -10,7 +10,7 @@ El servidor simulado es un **binario separado** — `swag2mcp-mock`. No está in
 
 ```bash
 # Opción 1: Descargar desde GitHub Releases
-# Busque swag2mcp-mock_<version>_<os>_<arch>.tar.gz
+# Busque swag2mcp-mock_&lt;version&gt;_&lt;os&gt;_&lt;arch&gt;.tar.gz
 
 # Opción 2: Instalar con Go
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest

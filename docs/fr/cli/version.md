@@ -38,7 +38,7 @@ swag2mcp --version
 ## Format de sortie
 
 ```
-swag2mcp <version>
+swag2mcp &lt;version&gt;
 ```
 
 La version est définie au moment de la construction via `ldflags`. Si elle n'est pas définie, elle prend par défaut `"dev"`.

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Bearer Token authentication — the most common method for modern REST APIs. The token is sent in the `Authorization: Bearer <token>` header.
+Bearer Token authentication — the most common method for modern REST APIs. The token is sent in the `Authorization: Bearer &lt;token&gt;` header.
 
 ## When to use
 

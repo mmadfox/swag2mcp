@@ -219,7 +219,7 @@ go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 
 :::
 
-Oder laden Sie sie von [GitHub Releases](https://github.com/mmadfox/swag2mcp/releases) herunter — suchen Sie nach `swag2mcp-mock_<version>_<os>_<arch>.tar.gz`.
+Oder laden Sie sie von [GitHub Releases](https://github.com/mmadfox/swag2mcp/releases) herunter — suchen Sie nach `swag2mcp-mock_&lt;version&gt;_&lt;os&gt;_&lt;arch&gt;.tar.gz`.
 
 ---
 

@@ -38,7 +38,7 @@ swag2mcp --version
 ## 输出格式
 
 ```
-swag2mcp <version>
+swag2mcp &lt;version&gt;
 ```
 
 版本在构建时通过 `ldflags` 设置。如果未设置，默认为 `"dev"`。

@@ -22,7 +22,7 @@ swag2mcp export [path] [output] [flags]
 | Argumento | Posición | Requerido | Descripción |
 |-----------|----------|-----------|-------------|
 | `path` | 1 | No | Directorio del espacio de trabajo. Si se omite, se resuelve mediante reglas de resolución de ruta. |
-| `output` | 2 | No | Ruta completa para el archivo ZIP de salida. Si se omite, el valor predeterminado es `./swag2mcp-backup-<timestamp>.zip`. |
+| `output` | 2 | No | Ruta completa para el archivo ZIP de salida. Si se omite, el valor predeterminado es `./swag2mcp-backup-&lt;timestamp&gt;.zip`. |
 
 ## Banderas
 

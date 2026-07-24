@@ -57,7 +57,7 @@ swag2mcp ls [path]
 
 ## 细节
 
-- **无自动初始化：** 如果配置文件不存在，`update` 返回错误：`"configuration not found at <path>"`。先运行 `init`。
+- **无自动初始化：** 如果配置文件不存在，`update` 返回错误：`"configuration not found at &lt;path&gt;"`。先运行 `init`。
 - **网络依赖：** 所有远程规范 URL 必须可达。如果任何下载失败，整个更新失败并显示清晰的错误消息。
 - **认证脚本创建：** 如果 spec 使用 `ScriptAuth` 且存根脚本不存在，`update` 会创建它。如果创建失败，更新失败。
 - **`update` vs `clean`：** `clean` 只删除缓存。`update` 删除缓存**并**重新下载所有内容。当你只想释放空间时使用 `clean`；当你想刷新时使用 `update`。

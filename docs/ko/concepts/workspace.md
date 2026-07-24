@@ -52,7 +52,7 @@ swag2mcp mcp ./my-workspace
 collection이 `location: specs/{name}`을 통해 가리키는 로컬 명세 파일을 저장합니다. 여기의 파일은 캐싱 없이 직접 사용됩니다.
 
 이 디렉토리는 다음으로 채워집니다:
-- `swag2mcp import <source> <name>` — 원격 명세를 다운로드하여 여기에 저장
+- `swag2mcp import &lt;source&gt; &lt;name&gt;` — 원격 명세를 다운로드하여 여기에 저장
 - `swag2mcp export` — 명세를 내보내기 ZIP에 복사
 - 수동 배치 — 직접 명세 파일을 여기에 복사 가능
 

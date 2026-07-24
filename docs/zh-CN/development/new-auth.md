@@ -2,7 +2,7 @@
 
 ## 步骤
 
-1. **创建认证客户端** 在 `internal/auth/<name>.go`
+1. **创建认证客户端** 在 `internal/auth/&lt;name&gt;.go`
 2. **实现 `Authenticator` 接口**
 3. **添加类型常量** 到 `internal/auth/auth.go`
 4. **添加 YAML 解码器** 到 `internal/config/auth.go`

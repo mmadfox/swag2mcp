@@ -52,7 +52,7 @@ Each cached file has a random TTL between 1 hour and 48 hours. The cache is auto
 Stores local spec files that collections point to via `location: specs/{name}`. Files here are used directly without caching.
 
 This directory is populated by:
-- `swag2mcp import <source> <name>` — downloads a remote spec and saves it here
+- `swag2mcp import &lt;source&gt; &lt;name&gt;` — downloads a remote spec and saves it here
 - `swag2mcp export` — copies specs here into the export ZIP
 - Manual placement — you can copy spec files here yourself
 

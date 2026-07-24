@@ -9,7 +9,7 @@ swag2mcp prend en charge le transfert complet d'espace de travail via des archiv
 Crée une sauvegarde ZIP portable de votre espace de travail.
 
 ```bash
-# Exportation vers le fichier par défaut (swag2mcp-backup-<horodatage>.zip)
+# Exportation vers le fichier par défaut (swag2mcp-backup-&lt;horodatage&gt;.zip)
 swag2mcp export
 
 # Exportation avec un chemin personnalisé

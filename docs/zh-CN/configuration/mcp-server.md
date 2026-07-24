@@ -86,14 +86,14 @@ swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 
 - **类型：** `string`
 - **默认值：** `"/mcp"`
-- **描述：** MCP 端点的 URL 路径。LLM 客户端发送请求到 `http://<addr><path>`。
+- **描述：** MCP 端点的 URL 路径。LLM 客户端发送请求到 `http://&lt;addr&gt;&lt;path&gt;`。
 - **示例：** `"/mcp"`、`"/api/mcp"`、`"/v1/mcp"`
 
 ### auth.token
 
 - **类型：** `string`
 - **默认值：** `""`（无认证）
-- **描述：** HTTP 传输认证的 Bearer 令牌。设置后，LLM 客户端必须在每个请求中包含 `Authorization: Bearer <token>`。
+- **描述：** HTTP 传输认证的 Bearer 令牌。设置后，LLM 客户端必须在每个请求中包含 `Authorization: Bearer &lt;token&gt;`。
 - **注意：** 支持 `$(ENV_VAR)` 解析。
 
 ## HTTP 认证

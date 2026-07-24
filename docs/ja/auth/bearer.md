@@ -2,7 +2,7 @@
 
 ## 目的
 
-Bearer トークン認証 — 最新の REST API で最も一般的な方法。トークンは `Authorization: Bearer <token>` ヘッダーで送信されます。
+Bearer トークン認証 — 最新の REST API で最も一般的な方法。トークンは `Authorization: Bearer &lt;token&gt;` ヘッダーで送信されます。
 
 ## 使用するタイミング
 

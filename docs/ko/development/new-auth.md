@@ -2,7 +2,7 @@
 
 ## 단계
 
-1. **인증 클라이언트 생성** `internal/auth/<name>.go`
+1. **인증 클라이언트 생성** `internal/auth/&lt;name&gt;.go`
 2. **`Authenticator` 인터페이스 구현**
 3. **타입 상수 추가** `internal/auth/auth.go`
 4. **YAML 디코더 추가** `internal/config/auth.go`

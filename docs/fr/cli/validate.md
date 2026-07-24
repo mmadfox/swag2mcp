@@ -74,6 +74,6 @@ Si la validation réussit, la configuration est prête pour `mcp`, `update` ou `
 
 ## Nuances
 
-- **Pas d'auto-initialisation :** Contrairement à `add`, `ls` ou `run`, `validate` ne s'auto-initialise **pas** si la configuration est manquante. Il retourne une erreur : « configuration introuvable à <chemin> ».
+- **Pas d'auto-initialisation :** Contrairement à `add`, `ls` ou `run`, `validate` ne s'auto-initialise **pas** si la configuration est manquante. Il retourne une erreur : « configuration introuvable à &lt;chemin&gt; ».
 - **Accès réseau :** Les URL de spécification distantes sont récupérées pendant la validation. La commande peut prendre plus de temps si les specs sont hébergées sur des serveurs lents.
 - **Filtrage par étiquettes :** Lorsque `--tags` est défini, seules les specs correspondant aux étiquettes spécifiées sont validées. Les autres specs sont ignorées.

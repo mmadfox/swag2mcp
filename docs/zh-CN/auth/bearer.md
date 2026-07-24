@@ -2,7 +2,7 @@
 
 ## 用途
 
-Bearer 令牌认证 — 现代 REST API 最常用的方法。令牌通过 `Authorization: Bearer <token>` 头发送。
+Bearer 令牌认证 — 现代 REST API 最常用的方法。令牌通过 `Authorization: Bearer &lt;token&gt;` 头发送。
 
 ## 何时使用
 

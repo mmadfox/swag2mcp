@@ -22,7 +22,7 @@ swag2mcp export [path] [output] [flags]
 | 引数 | 位置 | 必須 | 説明 |
 |------|------|------|------|
 | `path` | 1 | いいえ | ワークスペースディレクトリ。省略時はパス解決ルールに従います。 |
-| `output` | 2 | いいえ | 出力 ZIP ファイルのフルパス。省略時は `./swag2mcp-backup-<timestamp>.zip` になります。 |
+| `output` | 2 | いいえ | 出力 ZIP ファイルのフルパス。省略時は `./swag2mcp-backup-&lt;timestamp&gt;.zip` になります。 |
 
 ## フラグ
 

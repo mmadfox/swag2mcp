@@ -174,7 +174,7 @@ MCP server listening on http://127.0.0.1:8080/mcp
 
 ## Matices
 
-- **Sin auto-inicio:** Si el archivo de configuración no existe, `mcp` devuelve un error: `"configuration not found at <path>"`. Ejecute `init` primero.
+- **Sin auto-inicio:** Si el archivo de configuración no existe, `mcp` devuelve un error: `"configuration not found at &lt;path&gt;"`. Ejecute `init` primero.
 - **`--disable-llm-auth` (predeterminado: `true`):** Cuando está habilitado, la herramienta `auth` se elimina por completo de la lista de herramientas MCP. El LLM no puede ver ni solicitar tokens. La autenticación sigue funcionando — los tokens se obtienen a través del mecanismo de configuración estándar, no a través del LLM. Este modo se recomienda para **producción**. Para **depuración** o cuando se usan tokens de corta duración, establezca `--disable-llm-auth=false` para permitir que el LLM solicite tokens frescos a través de la herramienta `auth`.
 - **Respaldo de configuración YAML:** Si una bandera CLI no se establece explícitamente, el valor se toma de la sección `mcp` en `swag2mcp.yaml` (si está presente). Esto le permite configurar el servidor en el archivo de configuración en lugar de pasar banderas cada vez.
 - **Limpieza de respuestas:** Al iniciar, las respuestas con más de 48 horas se eliminan automáticamente del directorio `responses/`.

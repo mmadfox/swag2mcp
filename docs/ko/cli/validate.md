@@ -74,6 +74,6 @@ swag2mcp validate --tags=public
 
 ## 세부 사항
 
-- **자동 초기화 없음:** `add`, `ls` 또는 `run`과 달리 `validate`는 설정이 없으면 **자동 초기화하지 않습니다**. 오류를 반환합니다: `"configuration not found at <path>"`.
+- **자동 초기화 없음:** `add`, `ls` 또는 `run`과 달리 `validate`는 설정이 없으면 **자동 초기화하지 않습니다**. 오류를 반환합니다: `"configuration not found at &lt;path&gt;"`.
 - **네트워크 접근:** 원격 명세 URL은 검증 중에 가져옵니다. 명세가 느린 서버에 호스팅된 경우 명령어 실행 시간이 더 오래 걸릴 수 있습니다.
 - **태그 필터링:** `--tags`가 설정되면 지정된 태그와 일치하는 spec만 검증됩니다. 다른 spec은 건너뜁니다.

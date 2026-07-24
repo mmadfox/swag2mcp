@@ -57,7 +57,7 @@ swag2mcp ls [path]
 
 ## Nuances
 
-- **No auto-init:** If the config file does not exist, `update` returns an error: `"configuration not found at <path>"`. Run `init` first.
+- **No auto-init:** If the config file does not exist, `update` returns an error: `"configuration not found at &lt;path&gt;"`. Run `init` first.
 - **Network dependency:** All remote spec URLs must be reachable. If any download fails, the entire update fails with a clear error message.
 - **Auth script creation:** If a spec uses `ScriptAuth` and the stub script doesn't exist, `update` creates it. If creation fails, the update fails.
 - **`update` vs `clean`:** `clean` only removes cache. `update` removes cache **and** re-downloads everything. Use `clean` when you just want to free space; use `update` when you want to refresh.
