@@ -66,7 +66,15 @@ Or download `swag2mcp-mock_<version>_<os>_<arch>.tar.gz` from GitHub Releases.
 # 1. Initialize a workspace
 mkdir -p .swag2mcp && swag2mcp init ./.swag2mcp
 
-# 2. Add a public API
+# 2. Start the MCP server (public example specs are included after init)
+swag2mcp mcp
+```
+
+After `init`, the workspace already includes several public example specs (icanhazdadjoke, Open-Meteo, Binance, PokéAPI). You can start the MCP server immediately — no need to add specs manually.
+
+If you want to add your own API instead:
+
+```bash
 swag2mcp add spec --yaml - <<EOF
 domain: dadjoke
 llm_title: icanhazdadjoke API
@@ -75,9 +83,6 @@ collections:
   - llm_title: Jokes
     location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 EOF
-
-# 3. Start the MCP server
-swag2mcp mcp
 ```
 
 ### How do I connect swag2mcp to my IDE?
