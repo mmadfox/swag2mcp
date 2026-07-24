@@ -1,72 +1,72 @@
 # delete
 
-## Purpose
+## 목적
 
-Remove a **spec** (API service) or **collection** (spec file) from the configuration. This is the inverse of `add`.
+설정에서 **spec**(API 서비스) 또는 **collection**(명세 파일)을 제거합니다. `add`의 반대 작업입니다.
 
-## When to use
+## 사용 시기
 
-- An API is no longer needed
-- You want to remove a specific spec file from a spec
-- You are cleaning up your workspace
+- API가 더 이상 필요하지 않을 때
+- spec에서 특정 명세 파일을 제거하려고 할 때
+- 워크스페이스를 정리할 때
 
-## Syntax
+## 구문
 
 ```bash
 swag2mcp delete spec [path]
 swag2mcp delete collection [path]
 ```
 
-## Arguments
+## 인수
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 인수 | 위치 | 필수 | 설명 |
+|------|------|------|------|
+| `path` | 1 | 아니요 | 워크스페이스 디렉토리. 생략 시 경로 해결 규칙에 따라 결정됩니다. |
 
-## Flags
+## 플래그
 
-None. Both subcommands are purely interactive.
+없음. 두 하위 명령어 모두 순수하게 대화형입니다.
 
-## How it works
+## 작동 방식
 
-### Delete a spec
+### Spec 삭제
 
-Prompts you to select a spec from a list, then asks for confirmation before deleting.
+목록에서 spec을 선택하라는 프롬프트를 표시한 후 삭제 전 확인을 요청합니다.
 
 ```bash
 swag2mcp delete spec
 ```
 
-### Delete a collection
+### Collection 삭제
 
-Prompts you to select a spec, then a collection within that spec, then asks for confirmation.
+spec을 선택한 후 해당 spec 내의 collection을 선택하라는 프롬프트를 표시한 후 확인을 요청합니다.
 
 ```bash
 swag2mcp delete collection
 ```
 
-## Finding IDs
+## ID 찾기
 
-The interactive prompts show human-readable names, not IDs. If you need IDs for reference:
+대화형 프롬프트는 ID 대신 사람이 읽을 수 있는 이름을 표시합니다. 참조용 ID가 필요하면:
 
 ```bash
-# List all specs with their IDs
+# 모든 spec을 ID와 함께 나열
 swag2mcp ls
 
-# List collections for a specific spec
+# 특정 spec의 collection 나열
 swag2mcp ls --tags
 ```
 
-## Post-command verification
+## 명령 후 검증
 
 ```bash
 swag2mcp ls [path]
-# The deleted spec or collection should no longer appear
+# 삭제된 spec 또는 collection이 더 이상 표시되지 않아야 함
 ```
 
-## Nuances
+## 세부 사항
 
-- **TTY required:** Both commands require an interactive terminal. They will **not** work in CI/CD pipelines, cron jobs, or non-interactive scripts.
-- **No `--force` or `--yes`:** There is no way to skip the confirmation prompt. This is intentional to prevent accidental deletions.
-- **Auto-init:** If no config file exists, `delete` automatically runs the init wizard first.
-- **No YAML mode:** Unlike `add`, there is no `--yaml` flag. Deletion is always interactive.
+- **TTY 필요:** 두 명령어 모두 대화형 터미널이 필요합니다. CI/CD 파이프라인, cron 작업 또는 비대화형 스크립트에서는 **작동하지 않습니다**.
+- **`--force` 또는 `--yes` 없음:** 확인 프롬프트를 건너뛸 방법이 없습니다. 이는 실수로 인한 삭제를 방지하기 위한 의도적인 설계입니다.
+- **자동 초기화:** 설정 파일이 없으면 `delete`가 자동으로 init 마법사를 먼저 실행합니다.
+- **YAML 모드 없음:** `add`와 달리 `--yaml` 플래그가 없습니다. 삭제는 항상 대화형입니다.

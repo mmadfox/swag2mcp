@@ -1,16 +1,16 @@
-# Response Size Management
+# Gestion de la taille des réponses
 
-## Overview
+## Aperçu
 
-API responses can be very large — sometimes too large to fit in the LLM's context window. swag2mcp automatically manages response sizes by saving oversized responses to disk and providing tools to explore them.
+Les réponses API peuvent être très volumineuses — parfois trop grandes pour tenir dans la fenêtre de contexte du LLM. swag2mcp gère automatiquement les tailles de réponse en sauvegardant les réponses trop grandes sur le disque et en fournissant des outils pour les explorer.
 
-## How it works
+## Comment cela fonctionne
 
-1. **You call `invoke`** — swag2mcp makes the API request
-2. **If the response is small** (within the limit) — it is returned inline to the LLM
-3. **If the response is too large** (exceeds the limit) — it is saved to `{workspace}/responses/` as a JSON file. The LLM receives a file reference instead of the full response
+1. **Vous appelez `invoke`** — swag2mcp effectue la requête API
+2. **Si la réponse est petite** (dans la limite) — elle est retournée en ligne au LLM
+3. **Si la réponse est trop volumineuse** (dépasse la limite) — elle est sauvegardée dans `{espace-travail}/responses/` sous forme de fichier JSON. Le LLM reçoit une référence de fichier au lieu de la réponse complète
 
-### Example: small response (inline)
+### Exemple : petite réponse (en ligne)
 
 ```json
 {
@@ -23,18 +23,18 @@ API responses can be very large — sometimes too large to fit in the LLM's cont
 }
 ```
 
-### Example: large response (file reference)
+### Exemple : grande réponse (référence de fichier)
 
 ```json
 {
   "statusCode": 200,
   "fileRef": {
-    "path": "/Users/user/.swag2mcp/responses/response_a1b2c3d4.json",
+    "path": "/Users/utilisateur/.swag2mcp/responses/response_a1b2c3d4.json",
     "size": 1572864,
-    "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "Response exceeds the 2 KB limit and has been saved to disk.",
-    "openCmd": "open /Users/user/.swag2mcp/responses/response_a1b2c3d4.json"
+    "sizeHint": "1.5 Mo",
+    "maxSizeHint": "2 Ko",
+    "message": "La réponse dépasse la limite de 2 Ko et a été sauvegardée sur le disque.",
+    "openCmd": "open /Users/utilisateur/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }
 ```
@@ -43,28 +43,28 @@ API responses can be very large — sometimes too large to fit in the LLM's cont
 
 ```yaml
 http_client:
-  max_response_size: 1048576  # 1 MB in bytes
+  max_response_size: 1048576  # 1 Mo en octets
 ```
 
 ### max_response_size
 
-- **Type:** `int` (bytes)
-- **Default:** `1048576` (1 MB)
-- **Range:** 256 to 10,485,760 bytes (10 MB)
-- **Effect:** Responses larger than this are saved to disk instead of returned inline
-- **When to increase:** APIs that return large datasets (reports, logs, analytics)
-- **When to decrease:** Limited LLM context window, or when you prefer file-based access
+- **Type :** `int` (octets)
+- **Défaut :** `1048576` (1 Mo)
+- **Plage :** 256 à 10 485 760 octets (10 Mo)
+- **Effet :** Les réponses plus grandes que cela sont sauvegardées sur le disque au lieu d'être retournées en ligne
+- **Quand augmenter :** API qui retournent de grands ensembles de données (rapports, journaux, analyses)
+- **Quand diminuer :** Fenêtre de contexte LLM limitée, ou lorsque vous préférez un accès basé sur les fichiers
 
-## Working with large responses
+## Travailler avec de grandes réponses
 
-When `invoke` returns a `fileRef`, use these three tools to explore the data:
+Lorsque `invoke` retourne un `fileRef`, utilisez ces trois outils pour explorer les données :
 
-### 1. response_outline — understand the structure
+### 1. response_outline — comprendre la structure
 
-Get a structural summary of the response: keys, types, array lengths, and navigation hints.
+Obtenez un résumé structurel de la réponse : clés, types, longueurs de tableaux et indices de navigation.
 
 ```json
-→ response_outline(path: "/path/to/file.json")
+→ response_outline(path: "/chemin/vers/fichier.json")
 ← {
     "type": "object",
     "size": 1572864,
@@ -77,32 +77,32 @@ Get a structural summary of the response: keys, types, array lengths, and naviga
   }
 ```
 
-### 2. response_compress — get a smaller version
+### 2. response_compress — obtenir une version plus petite
 
-Compress the data to fit inline. Multiple compression modes let you choose the right trade-off.
+Compressez les données pour qu'elles tiennent en ligne. Plusieurs modes de compression vous permettent de choisir le bon compromis.
 
-| Mode | Description | Best for |
-|------|-------------|----------|
-| `first_of_array` | Keep only the first element of an array | When all elements have the same structure |
-| `sample_array` | Keep head (3) and tail (2) of an array | When you need to see the range of values |
-| `truncate_strings` | Shorten every string to N characters | When strings are very long |
-| `keys_only` | Replace values with their type names | When you only need the structure |
-| `select_keys` | Keep only specified keys | When you need specific fields |
+| Mode | Description | Meilleur pour |
+|------|-------------|---------------|
+| `first_of_array` | Conserver uniquement le premier élément d'un tableau | Quand tous les éléments ont la même structure |
+| `sample_array` | Conserver le début (3) et la fin (2) d'un tableau | Quand vous devez voir la plage de valeurs |
+| `truncate_strings` | Raccourcir chaque chaîne à N caractères | Quand les chaînes sont très longues |
+| `keys_only` | Remplacer les valeurs par leurs noms de type | Quand vous avez seulement besoin de la structure |
+| `select_keys` | Conserver uniquement les clés spécifiées | Quand vous avez besoin de champs spécifiques |
 
 ```json
-→ response_compress(path: "/path/to/file.json", mode: "first_of_array", jsonPath: "data")
+→ response_compress(path: "/chemin/vers/fichier.json", mode: "first_of_array", jsonPath: "data")
 ← {
     "body": [{ "id": 1, "name": "Rex" }],
-    "hint": "Compressed array from 500 to 1 item using first_of_array mode"
+    "hint": "Tableau compressé de 500 à 1 élément en utilisant le mode first_of_array"
   }
 ```
 
-### 3. response_slice — extract a specific fragment
+### 3. response_slice — extraire un fragment spécifique
 
-Get a specific element or value by JSON path or line range.
+Obtenez un élément ou une valeur spécifique par chemin JSON ou plage de lignes.
 
 ```json
-→ response_slice(path: "/path/to/file.json", jsonPath: "data.0")
+→ response_slice(path: "/chemin/vers/fichier.json", jsonPath: "data.0")
 ← {
     "slice": {
       "value": { "id": 1, "name": "Rex" },
@@ -113,27 +113,27 @@ Get a specific element or value by JSON path or line range.
   }
 ```
 
-## Complete workflow
+## Flux de travail complet
 
 ```
-1. invoke(endpoint) → fileRef (response is 1.5 MB)
-2. response_outline(path) → structure: { data: Array(500) }
-3. response_compress(path, mode: "first_of_array", jsonPath: "data") → first item
-4. response_slice(path, jsonPath: "data.0") → full first item details
-5. response_slice(path, jsonPath: "data.1") → second item
+1. invoke(point d'accès) → fileRef (la réponse fait 1,5 Mo)
+2. response_outline(chemin) → structure : { data: Array(500) }
+3. response_compress(chemin, mode: "first_of_array", jsonPath: "data") → premier élément
+4. response_slice(chemin, jsonPath: "data.0") → détails complets du premier élément
+5. response_slice(chemin, jsonPath: "data.1") → deuxième élément
 ```
 
-## Automatic cleanup
+## Nettoyage automatique
 
-When the MCP server starts (`swag2mcp mcp`), response files older than 48 hours are automatically removed. You can also clean them manually:
+Lorsque le serveur MCP démarre (`swag2mcp mcp`), les fichiers de réponse de plus de 48 heures sont automatiquement supprimés. Vous pouvez également les nettoyer manuellement :
 
 ```bash
 swag2mcp clean
 ```
 
-## Important notes
+## Notes importantes
 
-- **The limit is in bytes** — `1048576` = 1 MB, `2097152` = 2 MB, etc.
-- **File references include an open command** — on macOS it's `open`, on Linux it's `xdg-open`
-- **Response files are named with random suffixes** — no conflicts between concurrent calls
-- **The responses directory is created automatically** — no manual setup needed
+- **La limite est en octets** — `1048576` = 1 Mo, `2097152` = 2 Mo, etc.
+- **Les références de fichier incluent une commande d'ouverture** — sur macOS c'est `open`, sur Linux c'est `xdg-open`
+- **Les fichiers de réponse sont nommés avec des suffixes aléatoires** — pas de conflits entre les appels simultanés
+- **Le répertoire des réponses est créé automatiquement** — aucune configuration manuelle nécessaire

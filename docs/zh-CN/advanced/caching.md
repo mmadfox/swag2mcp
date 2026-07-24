@@ -1,68 +1,68 @@
-# Caching
+# 缓存
 
-## Overview
+## 概述
 
-swag2mcp caches downloaded spec files so the MCP server starts faster on subsequent runs. Instead of downloading the same spec file every time, it reuses the cached copy.
+swag2mcp 会缓存下载的规范文件，以便 MCP 服务器在后续启动时更快。它不会每次都下载相同的规范文件，而是重用缓存的副本。
 
-## How caching works
+## 缓存工作原理
 
-When you add a spec with a remote URL, swag2mcp downloads it and saves it to the `cache/` directory. On the next startup, it checks if the cached copy is still fresh. If it is, the download is skipped.
+当你添加带有远程 URL 的 spec 时，swag2mcp 会下载它并保存到 `cache/` 目录。下次启动时，它会检查缓存的副本是否仍然有效。如果是，则跳过下载。
 
-### What gets cached
+### 哪些内容会被缓存
 
-| Source | Behavior |
-|--------|----------|
-| **Remote URL** (http/https) | Always cached. Downloaded once, reused until the cache expires. |
-| **Local file in `specs/`** | Used directly from the `specs/` directory. Never cached — changes are immediately visible. |
-| **Local file outside `specs/`** | Copied to the cache. If the source file changes (modification time), the cache is invalidated. |
+| 来源 | 行为 |
+|------|------|
+| **远程 URL**（http/https） | 始终缓存。下载一次，重用直到缓存过期。 |
+| **`specs/` 中的本地文件** | 直接从 `specs/` 目录使用。从不缓存 — 更改立即可见。 |
+| **`specs/` 外部的本地文件** | 复制到缓存。如果源文件更改（修改时间），缓存失效。 |
 
-### Cache expiration (TTL)
+### 缓存过期（TTL）
 
-Each cached file gets a random expiration time between **1 hour and 48 hours**. The randomness prevents all cached files from expiring at the same time (which would cause a thundering herd of downloads).
+每个缓存文件获得 **1 小时到 48 小时** 之间的随机过期时间。随机性防止所有缓存文件同时过期（这会导致下载风暴）。
 
-- The TTL is reset every time the MCP server starts
-- If a cached file is still within its TTL, it is reused
-- If the TTL has expired, the file is downloaded again
+- TTL 在每次 MCP 服务器启动时重置
+- 如果缓存文件仍在 TTL 内，则重用
+- 如果 TTL 已过期，则重新下载文件
 
-### Cache structure
+### 缓存结构
 
 ```
 ~/.swag2mcp/cache/
-├── a1b2c3d4e5f6a7b8.spec    # Cached spec file
-├── a1b2c3d4e5f6a7b8.meta    # Metadata (source, TTL, cached at)
+├── a1b2c3d4e5f6a7b8.spec    # 缓存的规范文件
+├── a1b2c3d4e5f6a7b8.meta    # 元数据（来源、TTL、缓存时间）
 ├── b2c3d4e5f6a7b8c9.spec
 ├── b2c3d4e5f6a7b8c9.meta
 └── ...
 ```
 
-The cache key is derived from the spec file URL or path. Each cached file has a companion `.meta` file that stores when it was cached and when it expires.
+缓存键源自规范文件 URL 或路径。每个缓存文件都有一个配套的 `.meta` 文件，存储缓存时间和过期时间。
 
-## Managing the cache
+## 管理缓存
 
-### Force a refresh
+### 强制刷新
 
-Run `swag2mcp update` to clear the entire cache and re-download all spec files:
+运行 `swag2mcp update` 清除整个缓存并重新下载所有规范文件：
 
 ```bash
 swag2mcp update
 ```
 
-This validates the config, clears the cache, and downloads everything fresh.
+这会验证配置、清除缓存并重新下载所有内容。
 
-### Clear the cache manually
+### 手动清除缓存
 
 ```bash
 swag2mcp clean
 ```
 
-This removes all cached spec files and saved API responses. The next time you start the MCP server, all specs will be downloaded again.
+这会删除所有缓存的规范文件和保存的 API 响应。下次启动 MCP 服务器时，所有规范将重新下载。
 
-### Automatic cleanup
+### 自动清理
 
-When the MCP server starts (`swag2mcp mcp`), saved API responses older than 48 hours are automatically removed. This prevents the `responses/` directory from growing indefinitely.
+当 MCP 服务器启动（`swag2mcp mcp`）时，超过 48 小时的保存的 API 响应会自动删除。这防止 `responses/` 目录无限增长。
 
-## Important notes
+## 重要说明
 
-- **Local files in `specs/` are never cached** — if you edit a spec file directly in the `specs/` directory, the changes are immediately visible without clearing the cache
-- **Remote URLs are always cached** — there is no way to bypass the cache for remote URLs except by running `swag2mcp update` or `swag2mcp clean`
-- **The cache is local** — it is stored on disk and does not sync between machines. Use `swag2mcp export` and `swag2mcp import` to transfer specs between machines
+- **`specs/` 中的本地文件从不缓存** — 如果你直接在 `specs/` 目录中编辑规范文件，更改立即可见，无需清除缓存
+- **远程 URL 始终缓存** — 除了运行 `swag2mcp update` 或 `swag2mcp clean` 之外，无法绕过远程 URL 的缓存
+- **缓存是本地的** — 存储在磁盘上，不会在机器之间同步。使用 `swag2mcp export` 和 `swag2mcp import` 在机器之间传输规范

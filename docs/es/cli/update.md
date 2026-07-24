@@ -1,63 +1,63 @@
 # update
 
-## Purpose
+## Propósito
 
-Re-validate the configuration, clear the cache, and re-download all spec files. This is a **full refresh** of the workspace — it ensures all cached specs are up to date and the index is rebuilt.
+Revalidar la configuración, limpiar la caché y volver a descargar todos los archivos de especificación. Esto es una **actualización completa** del espacio de trabajo — asegura que todas las especificaciones en caché estén actualizadas y el índice se reconstruya.
 
-## When to use
+## Cuándo usarlo
 
-- Remote spec files have changed and you want the latest version
-- After editing `swag2mcp.yaml` to add or change spec locations
-- When troubleshooting stale or corrupted cache
-- Before running `mcp` to ensure everything is fresh
+- Los archivos de especificación remotos han cambiado y desea la versión más reciente
+- Después de editar `swag2mcp.yaml` para agregar o cambiar ubicaciones de especificaciones
+- Al solucionar problemas de caché obsoleta o corrupta
+- Antes de ejecutar `mcp` para asegurarse de que todo esté actualizado
 
-## Syntax
+## Sintaxis
 
 ```bash
 swag2mcp update [path]
 ```
 
-## Arguments
+## Argumentos
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Argumento | Posición | Requerido | Descripción |
+|-----------|----------|-----------|-------------|
+| `path` | 1 | No | Directorio del espacio de trabajo. Si se omite, se resuelve mediante reglas de resolución de ruta. |
 
-## Flags
+## Banderas
 
-None.
+Ninguna.
 
-## How it works
+## Cómo funciona
 
-The `update` command runs a pipeline of operations:
+El comando `update` ejecuta un pipeline de operaciones:
 
-1. **Load config** — reads `swag2mcp.yaml` from the workspace
-2. **Validate** — runs the same checks as `validate` (YAML syntax, structure, spec file reachability, format, auth, HTTP client)
-3. **Clean** — removes all contents of `cache/` and `responses/`
-4. **Re-cache** — downloads all remote spec files and copies local spec files into the cache
-5. **Re-index** — rebuilds the full-text search index for all endpoints
-6. **Auth scripts** — creates stub auth scripts for specs using `ScriptAuth`
-7. **Orphan cleanup** — removes auth scripts for specs that no longer exist
+1. **Cargar configuración** — lee `swag2mcp.yaml` del espacio de trabajo
+2. **Validar** — ejecuta las mismas comprobaciones que `validate` (sintaxis YAML, estructura, alcance del archivo de especificación, formato, autenticación, cliente HTTP)
+3. **Limpiar** — elimina todo el contenido de `cache/` y `responses/`
+4. **Recargar en caché** — descarga todos los archivos de especificación remotos y copia los archivos de especificación locales a la caché
+5. **Reindexar** — reconstruye el índice de búsqueda de texto completo para todos los endpoints
+6. **Scripts de autenticación** — crea scripts de autenticación de plantilla para especificaciones que usan `ScriptAuth`
+7. **Limpieza de huérfanos** — elimina scripts de autenticación para especificaciones que ya no existen
 
 ```bash
 swag2mcp update
 swag2mcp update ./my-workspace
 ```
 
-## What happens to disabled collections
+## Qué sucede con las colecciones deshabilitadas
 
-Collections with `disable: true` are skipped entirely — they are not cached or indexed.
+Las colecciones con `disable: true` se omiten por completo — no se almacenan en caché ni se indexan.
 
-## Post-command verification
+## Verificación posterior al comando
 
 ```bash
 swag2mcp ls [path]
-# All specs should still be listed and reachable
+# Todas las especificaciones deberían seguir listadas y accesibles
 ```
 
-## Nuances
+## Matices
 
-- **No auto-init:** If the config file does not exist, `update` returns an error: `"configuration not found at <path>"`. Run `init` first.
-- **Network dependency:** All remote spec URLs must be reachable. If any download fails, the entire update fails with a clear error message.
-- **Auth script creation:** If a spec uses `ScriptAuth` and the stub script doesn't exist, `update` creates it. If creation fails, the update fails.
-- **`update` vs `clean`:** `clean` only removes cache. `update` removes cache **and** re-downloads everything. Use `clean` when you just want to free space; use `update` when you want to refresh.
+- **Sin auto-inicio:** Si el archivo de configuración no existe, `update` devuelve un error: `"configuration not found at <path>"`. Ejecute `init` primero.
+- **Dependencia de red:** Todas las URL de especificaciones remotas deben ser accesibles. Si alguna descarga falla, toda la actualización falla con un mensaje de error claro.
+- **Creación de scripts de autenticación:** Si una especificación usa `ScriptAuth` y el script de plantilla no existe, `update` lo crea. Si la creación falla, la actualización falla.
+- **`update` vs `clean`:** `clean` solo elimina la caché. `update` elimina la caché **y** vuelve a descargar todo. Use `clean` cuando solo quiera liberar espacio; use `update` cuando quiera actualizar.

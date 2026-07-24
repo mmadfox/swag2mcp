@@ -1,72 +1,72 @@
 # run
 
-## Purpose
+## 用途
 
-Launch the interactive **TUI (Terminal User Interface)** API explorer. This is a full-screen application for searching, browsing, inspecting, and invoking API endpoints without leaving the terminal.
+启动交互式 **TUI（终端用户界面）** API 浏览器。这是一个全屏应用程序，用于搜索、浏览、检查和调用 API 端点，无需离开终端。
 
-## When to use
+## 何时使用
 
-- You want to explore your APIs interactively
-- You need to search for a specific endpoint across all specs
-- You want to browse the spec → collection → tag → endpoint hierarchy
-- You want to test an API call before configuring the MCP server
+- 你想交互式地探索你的 API
+- 你需要跨所有 spec 搜索特定端点
+- 你想浏览 spec → collection → tag → endpoint 层次结构
+- 你想在配置 MCP 服务器之前测试 API 调用
 
-## Syntax
+## 语法
 
 ```bash
 swag2mcp run [path]
 ```
 
-## Arguments
+## 参数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 参数 | 位置 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | 1 | 否 | 工作区目录。如果省略，通过路径解析规则解析。 |
 
-## Flags
+## 标志
 
-None.
+无。
 
-## Modes
+## 模式
 
-### Search mode
+### 搜索模式
 
-Full-text search across all endpoints in all specs. Supports filtering by HTTP method, tag, and path.
+跨所有 spec 中所有端点的全文搜索。支持按 HTTP 方法、标签和路径过滤。
 
-- Type a query to search endpoint names, paths, and descriptions
-- Filter results by method (GET, POST, PUT, DELETE, etc.)
-- View endpoint details with a single keystroke
+- 输入查询以搜索端点名称、路径和描述
+- 按方法过滤结果（GET、POST、PUT、DELETE 等）
+- 一键查看端点详情
 
-### Browse mode
+### 浏览模式
 
-Tree navigation through the spec hierarchy:
+通过 spec 层次结构进行树形导航：
 
 ```
 Spec → Collection → Tag → Endpoint
 ```
 
-- Navigate down the tree to find specific endpoints
-- View endpoint details (parameters, request body, responses)
-- Invoke the API directly from the TUI
+- 向下导航树以查找特定端点
+- 查看端点详情（参数、请求体、响应）
+- 直接从 TUI 调用 API
 
-## Navigation
+## 导航
 
-| Key | Action |
-|-----|--------|
-| `↑` / `↓` | Navigate up/down |
-| `Enter` | Select or open |
-| `Esc` | Go back |
-| `Tab` | Switch between Search and Browse modes |
-| `/` | Focus search input |
-| `q` | Quit |
+| 按键 | 操作 |
+|------|------|
+| `↑` / `↓` | 向上/向下导航 |
+| `Enter` | 选择或打开 |
+| `Esc` | 返回 |
+| `Tab` | 在搜索和浏览模式之间切换 |
+| `/` | 聚焦搜索输入 |
+| `q` | 退出 |
 
-## Post-command verification
+## 命令后验证
 
-The TUI loads all specs from the workspace. If a spec fails to load, an error message is shown in the interface.
+TUI 从工作区加载所有 spec。如果 spec 加载失败，界面中会显示错误消息。
 
-## Nuances
+## 细节
 
-- **Auto-init:** If no config file exists, `run` automatically runs the init wizard first.
-- **No flags:** The `run` command has no flags — all configuration comes from the workspace.
-- **Terminal size:** The TUI requires a terminal with at least 80×24 characters. It may not render correctly in very small terminals.
-- **Dependencies:** The TUI uses Bubbletea. It works over SSH and in most terminal emulators.
+- **自动初始化：** 如果不存在配置文件，`run` 会自动先运行初始化向导。
+- **无标志：** `run` 命令没有标志 — 所有配置来自工作区。
+- **终端大小：** TUI 需要至少 80×24 字符的终端。在非常小的终端中可能无法正确渲染。
+- **依赖：** TUI 使用 Bubbletea。它可以通过 SSH 和在大多数终端模拟器中工作。

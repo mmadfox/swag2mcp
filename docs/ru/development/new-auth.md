@@ -1,17 +1,17 @@
-# Adding a New Auth Method
+# Добавление нового метода аутентификации
 
-## Steps
+## Шаги
 
-1. **Create the auth client** in `internal/auth/<name>.go`
-2. **Implement the `Authenticator` interface**
-3. **Add type constant** to `internal/auth/auth.go`
-4. **Add YAML decoder** to `internal/config/auth.go`
-5. **Register decoder** in the `authDecoders` map
-6. **Write tests**
+1. **Создайте клиент аутентификации** в `internal/auth/<name>.go`
+2. **Реализуйте интерфейс `Authenticator`**
+3. **Добавьте константу типа** в `internal/auth/auth.go`
+4. **Добавьте YAML-декодер** в `internal/config/auth.go`
+5. **Зарегистрируйте декодер** в карте `authDecoders`
+6. **Напишите тесты**
 
-## 1. Auth client
+## 1. Клиент аутентификации
 
-Create `internal/auth/my_auth.go`:
+Создайте `internal/auth/my_auth.go`:
 
 ```go
 package auth
@@ -44,30 +44,30 @@ func (c *MyAuthClient) Validate() error {
 }
 ```
 
-## 2. Authenticator interface
+## 2. Интерфейс Authenticator
 
-Every auth client must implement:
+Каждый клиент аутентификации должен реализовать:
 
 ```go
 type Authenticator interface {
-    New() error                    // Initialize, resolve env vars
-    Type() Type                    // Return the auth type identifier
-    Apply(req *http.Request, out *Info) error  // Apply auth to request
-    Validate() error               // Validate required fields
+    New() error                    // Инициализация, разрешение env-переменных
+    Type() Type                    // Возврат идентификатора типа аутентификации
+    Apply(req *http.Request, out *Info) error  // Применение аутентификации к запросу
+    Validate() error               // Валидация обязательных полей
 }
 ```
 
-## 3. Type constant
+## 3. Константа типа
 
-Add to `internal/auth/auth.go`:
+Добавьте в `internal/auth/auth.go`:
 
 ```go
 const MyAuth Type = "my-auth"
 ```
 
-## 4. YAML decoder
+## 4. YAML-декодер
 
-Add a decoder function in `internal/config/auth.go`. The decoder receives a `*yaml.Node` and must decode it into your auth client struct:
+Добавьте функцию декодера в `internal/config/auth.go`. Декодер получает `*yaml.Node` и должен декодировать его в структуру вашего клиента аутентификации:
 
 ```go
 func decodeMyAuth(node *yaml.Node) (auth.Authenticator, error) {
@@ -79,28 +79,28 @@ func decodeMyAuth(node *yaml.Node) (auth.Authenticator, error) {
 }
 ```
 
-The `decodeConfig` helper handles the common pattern: it checks that the node is not empty, decodes YAML into the struct, and returns a descriptive error on failure.
+Хелпер `decodeConfig` обрабатывает общий шаблон: проверяет, что узел не пуст, декодирует YAML в структуру и возвращает описательную ошибку при неудаче.
 
-## 5. Register decoder
+## 5. Регистрация декодера
 
-Add your decoder to the `authDecoders` map in `internal/config/auth.go`:
+Добавьте ваш декодер в карту `authDecoders` в `internal/config/auth.go`:
 
 ```go
 var authDecoders = map[string]authDecoder{
-    // ... existing decoders
+    // ... существующие декодеры
     auth.MyAuth.String(): decodeMyAuth,
 }
 ```
 
-The `UnmarshalYAML` method on `Auth` reads the `type` field from the YAML, normalises underscores to hyphens, looks up the decoder in `authDecoders`, and calls it with the `config` node. This is how swag2mcp knows which auth client to instantiate for each spec.
+Метод `UnmarshalYAML` на `Auth` читает поле `type` из YAML, нормализует подчёркивания в дефисы, ищет декодер в `authDecoders` и вызывает его с узлом `config`. Так swag2mcp узнаёт, какой клиент аутентификации создать для каждой спецификации.
 
-## 6. Tests
+## 6. Тесты
 
-Create `internal/auth/my_auth_test.go` with table-driven tests covering:
+Создайте `internal/auth/my_auth_test.go` с table-driven тестами, покрывающими:
 
-- `New()` resolves env vars correctly
-- `Type()` returns the correct type
-- `Apply()` sets the right headers/query params
-- `Apply()` handles empty values gracefully
-- `Validate()` passes for valid config
-- `Validate()` fails for missing required fields
+- `New()` правильно разрешает env-переменные
+- `Type()` возвращает правильный тип
+- `Apply()` устанавливает правильные заголовки/query-параметры
+- `Apply()` корректно обрабатывает пустые значения
+- `Validate()` проходит для валидной конфигурации
+- `Validate()` возвращает ошибку для отсутствующих обязательных полей

@@ -1,49 +1,49 @@
-# Testing
+# テスト
 
-## Commands
+## コマンド
 
 ```bash
-# Unit tests
+# ユニットテスト
 go test ./...
 
-# Specific package
+# 特定のパッケージ
 go test ./internal/service/...
 
-# Integration tests
+# 統合テスト
 make integration-tests
 
-# Coverage
+# カバレッジ
 make cover
 
-# All tests
+# 全テスト
 make testall
 ```
 
-## Test Structure
+## テスト構造
 
 ```
 tests/
-├── main_test.go              # Entry point
-├── suite_test.go             # Suite setup
-├── suite_auth_test.go        # Auth tests
-├── suite_config_test.go      # Config tests
-├── suite_mcp_tools_test.go   # MCP tools tests
-├── suite_search_test.go      # Search tests
-├── suite_ratelimit_test.go   # Rate limit tests
-├── suite_response_test.go    # Response tests
-├── suite_export_test.go      # Export tests
-├── suite_import_test.go      # Import tests
-├── suite_parsing_test.go     # Parsing tests
-├── suite_transport_test.go   # Transport tests
-├── suite_mock_test.go        # Mock server tests
-├── suite_workspace_test.go   # Workspace tests
-├── suite_errors_test.go      # Error tests
-└── suite_version_test.go     # Version tests
+├── main_test.go              # エントリポイント
+├── suite_test.go             # スイートセットアップ
+├── suite_auth_test.go        # 認証テスト
+├── suite_config_test.go      # 設定テスト
+├── suite_mcp_tools_test.go   # MCP ツールテスト
+├── suite_search_test.go      # 検索テスト
+├── suite_ratelimit_test.go   # レート制限テスト
+├── suite_response_test.go    # レスポンステスト
+├── suite_export_test.go      # エクスポートテスト
+├── suite_import_test.go      # インポートテスト
+├── suite_parsing_test.go     # 解析テスト
+├── suite_transport_test.go   # トランスポートテスト
+├── suite_mock_test.go        # モックサーバーテスト
+├── suite_workspace_test.go   # ワークスペーステスト
+├── suite_errors_test.go      # エラーテスト
+└── suite_version_test.go     # バージョンテスト
 ```
 
-## Coverage
+## カバレッジ
 
-Target: 80%+ for core packages:
+目標：コアパッケージで 80% 以上：
 
 - `auth`
 - `cache`
@@ -57,17 +57,17 @@ Target: 80%+ for core packages:
 - `spec`
 - `workspace`
 
-## Mocks
+## モック
 
-Uses `go.uber.org/mock` for MCP server tests:
+MCP サーバーテストには `go.uber.org/mock` を使用：
 
 ```bash
 go generate ./...
 ```
 
-Generates `internal/server/mcp/mock_svc_test.go` from `handler.go`.
+`handler.go` から `internal/server/mcp/mock_svc_test.go` を生成します。
 
-## Table-Driven Tests
+## テーブル駆動テスト
 
 ```go
 func TestSomething(t *testing.T) {

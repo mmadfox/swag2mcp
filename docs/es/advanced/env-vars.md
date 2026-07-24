@@ -1,12 +1,12 @@
-# Environment Variables
+# Variables de Entorno
 
-## Overview
+## Descripción General
 
-swag2mcp supports environment variable substitution in the configuration file using `$(VAR_NAME)` syntax. This lets you keep sensitive data (tokens, passwords, keys) out of the YAML file.
+swag2mcp admite la sustitución de variables de entorno en el archivo de configuración usando la sintaxis `$(VAR_NAME)`. Esto le permite mantener datos sensibles (tokens, contraseñas, claves) fuera del archivo YAML.
 
-## How it works
+## Cómo funciona
 
-When swag2mcp starts, it scans the configuration for `$(VAR_NAME)` patterns and replaces them with the value of the corresponding environment variable.
+Cuando swag2mcp se inicia, escanea la configuración en busca de patrones `$(VAR_NAME)` y los reemplaza con el valor de la variable de entorno correspondiente.
 
 ```yaml
 specs:
@@ -17,28 +17,28 @@ specs:
         token: "$(API_TOKEN)"
 ```
 
-If the environment variable `API_TOKEN` is set, it will be substituted. If it is not set, the value becomes empty.
+Si la variable de entorno `API_TOKEN` está establecida, se sustituirá. Si no está establecida, el valor se vuelve vacío.
 
-## Where `$(VAR)` is resolved
+## Dónde se resuelve `$(VAR)`
 
-| Field | Example |
+| Campo | Ejemplo |
 |-------|---------|
-| Auth `token` (bearer) | `token: "$(API_TOKEN)"` |
-| Auth `username` / `password` (basic, digest) | `password: "$(API_PASSWORD)"` |
-| Auth `client_id` / `client_secret` (oauth2-cc, oauth2-pwd) | `client_secret: "$(OAUTH_SECRET)"` |
-| Auth `api_key` / `secret_key` (hmac) | `api_key: "$(BINANCE_API_KEY)"` |
-| Auth `domain` (script) | `domain: "$(AUTH_DOMAIN)"` |
-| MCP server token | `token: "$(MCP_TOKEN)"` |
-| HTTP client headers | `"X-API-Key": "$(API_KEY)"` |
-| HTTP client cookie values | `value: "$(SESSION_TOKEN)"` |
+| `token` de autenticación (bearer) | `token: "$(API_TOKEN)"` |
+| `username` / `password` de autenticación (basic, digest) | `password: "$(API_PASSWORD)"` |
+| `client_id` / `client_secret` de autenticación (oauth2-cc, oauth2-pwd) | `client_secret: "$(OAUTH_SECRET)"` |
+| `api_key` / `secret_key` de autenticación (hmac) | `api_key: "$(BINANCE_API_KEY)"` |
+| `domain` de autenticación (script) | `domain: "$(AUTH_DOMAIN)"` |
+| Token del servidor MCP | `token: "$(MCP_TOKEN)"` |
+| Encabezados del cliente HTTP | `"X-API-Key": "$(API_KEY)"` |
+| Valores de cookies del cliente HTTP | `value: "$(SESSION_TOKEN)"` |
 
-## Where `$(VAR)` is NOT resolved
+## Dónde NO se resuelve `$(VAR)`
 
-- Base URLs (`base_url`)
-- Collection locations (`location`)
-- Spec domain names (`domain`)
+- URLs base (`base_url`)
+- Ubicaciones de colecciones (`location`)
+- Nombres de dominio de especificaciones (`domain`)
 
-## Example
+## Ejemplo
 
 ```bash
 export API_TOKEN="eyJhbGciOiJIUzI1NiIs..."
@@ -47,16 +47,16 @@ export MCP_TOKEN="my-secret-token"
 swag2mcp mcp
 ```
 
-## Security best practices
+## Mejores prácticas de seguridad
 
-- **Never** store secrets directly in the YAML file
-- Use environment variables or an external secret manager
-- Add the YAML file to `.gitignore` if it contains any hardcoded secrets
-- Set environment variables in your shell profile, IDE configuration, or deployment pipeline
+- **Nunca** almacene secretos directamente en el archivo YAML
+- Use variables de entorno o un gestor de secretos externo
+- Agregue el archivo YAML a `.gitignore` si contiene algún secreto codificado
+- Establezca las variables de entorno en su perfil de shell, configuración del IDE o pipeline de despliegue
 
-## Syntax details
+## Detalles de sintaxis
 
-- `$(VAR_NAME)` — standard syntax
-- `$( VAR_NAME )` — whitespace inside parentheses is allowed and trimmed
-- `$()` — empty variable name returns the original string unchanged
-- Nested `$(...)` patterns are not resolved
+- `$(VAR_NAME)` — sintaxis estándar
+- `$( VAR_NAME )` — se permiten y recortan espacios en blanco dentro de los paréntesis
+- `$()` — un nombre de variable vacío devuelve la cadena original sin cambios
+- Los patrones `$(...)` anidados no se resuelven

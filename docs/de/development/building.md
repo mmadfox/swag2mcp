@@ -1,17 +1,17 @@
-# Building
+# Bauen
 
-## Requirements
+## Anforderungen
 
 - Go 1.26+
 - Make
 
-## Commands
+## Befehle
 
 ```bash
-# Build
+# Bauen
 make build
 
-# Build with version
+# Mit Version bauen
 make build VERSION=1.0.0
 
 # Lint
@@ -20,22 +20,22 @@ make lint
 # Tests
 go test ./...
 
-# All tests
+# Alle Tests
 make testall
 ```
 
 ## GoReleaser
 
-For releases:
+Für Veröffentlichungen:
 
 ```bash
 goreleaser release --snapshot --clean
 ```
 
-## Platforms
+## Plattformen
 
-| Platform | Architecture |
-|----------|-------------|
+| Plattform | Architektur |
+|-----------|-------------|
 | Linux | amd64, arm64 |
 | macOS | amd64, arm64 |
 | Windows | amd64 |
@@ -46,4 +46,4 @@ goreleaser release --snapshot --clean
 make lint
 ```
 
-Uses `golangci-lint` with 80+ linters. Config in `.golangci.yml`.
+Verwendet `golangci-lint` mit 80+ Linters. Konfiguration in `.golangci.yml`.

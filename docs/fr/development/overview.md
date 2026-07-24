@@ -1,40 +1,40 @@
-# Development Overview
+# Aperçu du développement
 
-## About this project
+## À propos de ce projet
 
-swag2mcp is a Go project that bridges OpenAPI/Swagger/Postman specifications with LLM agents via the Model Context Protocol (MCP). It is built with Go 1.23+ and follows strict coding conventions enforced by 80+ linters.
+swag2mcp est un projet Go qui fait le pont entre les spécifications OpenAPI/Swagger/Postman et les agents LLM via le Model Context Protocol (MCP). Il est construit avec Go 1.23+ et suit des conventions de codage strictes appliquées par plus de 80 analyseurs de code.
 
-This section is written for **engineers** who want to understand the codebase, contribute, or extend swag2mcp with new auth methods, MCP tools, or integrations.
+Cette section est écrite pour les **ingénieurs** qui souhaitent comprendre la base de code, contribuer ou étendre swag2mcp avec de nouvelles méthodes d'authentification, de nouveaux outils MCP ou de nouvelles intégrations.
 
-## Development skills
+## Compétences de développement
 
-The project ships with two development skills that encode the project's conventions and patterns. You can use them or ignore them — they are tools, not rules.
+Le projet est livré avec deux compétences de développement qui encodent les conventions et les modèles du projet. Vous pouvez les utiliser ou les ignorer — ce sont des outils, pas des règles.
 
 ### godeveloper
 
-The [godeveloper skill](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/godeveloper/SKILL.md) defines every code convention in the project:
+La [compétence godeveloper](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/godeveloper/SKILL.md) définit toutes les conventions de code du projet :
 
-- **Naming** — packages, files, types, interfaces, receivers, constants
-- **Formatting** — gofmt/gofumpt/goimports/gci, 120-line limit, import ordering
-- **Error handling** — `LLMError` with 8 error codes, sentinel errors, error wrapping
-- **Interfaces** — small interfaces, composition, consumer-side definitions
-- **Concurrency** — mutex granularity, goroutine lifetimes, context passing
-- **Testing** — table-driven tests, `newTestService()`/`seedTestData()` helpers, mock generation
-- **Project patterns** — service layer, request/response structs, functional options, MCP handler pattern
+- **Nommage** — packages, fichiers, types, interfaces, récepteurs, constantes
+- **Formatage** — gofmt/gofumpt/goimports/gci, limite de 120 lignes, ordre des importations
+- **Gestion des erreurs** — `LLMError` avec 8 codes d'erreur, erreurs sentinelles, encapsulation des erreurs
+- **Interfaces** — petites interfaces, composition, définitions côté consommateur
+- **Concurrence** — granularité des mutex, durée de vie des goroutines, passage de contexte
+- **Tests** — tests pilotés par tableaux, helpers `newTestService()`/`seedTestData()`, génération de mocks
+- **Modèles du projet** — couche de service, structures requête/réponse, options fonctionnelles, modèle de gestionnaire MCP
 
 ### swag2mcp-cli
 
-The [swag2mcp-cli skill](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md) documents every CLI command with syntax, flags, arguments, and examples. Useful when working on CLI commands or writing documentation.
+La [compétence swag2mcp-cli](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md) documente chaque commande CLI avec sa syntaxe, ses indicateurs, ses arguments et ses exemples. Utile lorsque vous travaillez sur des commandes CLI ou que vous rédigez de la documentation.
 
-## Key architectural decisions
+## Décisions architecturales clés
 
-### Service layer pattern
+### Modèle de couche de service
 
-Every feature follows the same three-step pattern:
+Chaque fonctionnalité suit le même modèle en trois étapes :
 
-1. **Validate** the request with `s.validateRequest(req)` (uses `go-playground/validator`)
-2. **Look up** entities from the in-memory index (returns `LLMError` with `not_found` code)
-3. **Execute** business logic and return a typed response or `LLMError`
+1. **Valider** la requête avec `s.validateRequest(req)` (utilise `go-playground/validator`)
+2. **Rechercher** les entités dans l'index en mémoire (renvoie `LLMError` avec le code `not_found`)
+3. **Exécuter** la logique métier et renvoyer une réponse typée ou une `LLMError`
 
 ```go
 func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse, error) {
@@ -49,14 +49,14 @@ func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse
 }
 ```
 
-### Request/Response structs
+### Structures Requête/Réponse
 
-Each method has a dedicated `{Method}Request` and `{Method}Response` struct. Request structs use `validate` tags for validation and `jsonschema` tags for documentation:
+Chaque méthode a des structures `{Méthode}Request` et `{Méthode}Response` dédiées. Les structures de requête utilisent les balises `validate` pour la validation et les balises `jsonschema` pour la documentation :
 
 ```go
 type SearchRequest struct {
-    Query string `json:"query" validate:"required,min=1" jsonschema:"description=Search query supporting field filters"`
-    Limit int    `json:"limit" validate:"required,min=1,max=50" jsonschema:"description=Maximum results"`
+    Query string `json:"query" validate:"required,min=1" jsonschema:"description=Requête de recherche prenant en charge les filtres de champ"`
+    Limit int    `json:"limit" validate:"required,min=1,max=50" jsonschema:"description=Résultats maximum"`
 }
 
 type SearchResponse struct {
@@ -64,9 +64,9 @@ type SearchResponse struct {
 }
 ```
 
-### Functional options
+### Options fonctionnelles
 
-Configuration uses the functional options pattern:
+La configuration utilise le modèle des options fonctionnelles :
 
 ```go
 type Option func(*Service)
@@ -80,9 +80,9 @@ func WithDisableLLMAuth(disable bool) Option {
 }
 ```
 
-### MCP handler pattern
+### Modèle de gestionnaire MCP
 
-The MCP server uses a composed interface pattern. The `Svc` interface in `internal/server/mcp/handler.go` is composed from smaller interfaces (`CatalogReader`, `EndpointExplorer`, `EndpointExecutor`, `SystemInfo`, `ResponseManager`). Each handler method delegates to the service layer:
+Le serveur MCP utilise un modèle d'interface composée. L'interface `Svc` dans `internal/server/mcp/handler.go` est composée d'interfaces plus petites (`CatalogReader`, `EndpointExplorer`, `EndpointExecutor`, `SystemInfo`, `ResponseManager`). Chaque méthode de gestionnaire délègue à la couche de service :
 
 ```go
 type handler struct {
@@ -100,54 +100,54 @@ func (h *handler) handleSearch(ctx context.Context, _ *sdkmcp.CallToolRequest, r
 
 ### LLMError
 
-All errors returned to the LLM use the `LLMError` type with one of 8 codes:
+Toutes les erreurs renvoyées au LLM utilisent le type `LLMError` avec l'un des 8 codes :
 
-| Code | When |
+| Code | Quand |
 |------|------|
-| `validation_failed` | Invalid input (wrong ID format, missing required fields) |
-| `not_found` | Entity not found in index |
-| `rate_limit` | Per-endpoint 10s cooldown exceeded |
-| `invoke_error` | HTTP request/response failures |
-| `config_error` | Configuration loading or validation failure |
-| `workspace_error` | Workspace directory or file operation failure |
-| `parse_error` | Spec file parsing failure |
-| `auth_error` | Authentication token retrieval failure |
+| `validation_failed` | Entrée invalide (mauvais format d'ID, champs obligatoires manquants) |
+| `not_found` | Entité non trouvée dans l'index |
+| `rate_limit` | Délai de refroidissement de 10s par point de terminaison dépassé |
+| `invoke_error` | Échecs de requête/réponse HTTP |
+| `config_error` | Échec de chargement ou de validation de la configuration |
+| `workspace_error` | Échec d'opération sur le répertoire ou le fichier de l'espace de travail |
+| `parse_error` | Échec d'analyse du fichier de spécification |
+| `auth_error` | Échec de récupération du jeton d'authentification |
 
-Messages must explain what went wrong AND what to do next, in plain language suitable for an LLM consumer.
+Les messages doivent expliquer ce qui n'a pas fonctionné ET quoi faire ensuite, dans un langage simple adapté à un consommateur LLM.
 
-### ID generation
+### Génération d'ID
 
-All IDs are deterministic MD5 hashes:
+Tous les ID sont des hachages MD5 déterministes :
 
 ```go
-id.Domain("meteo")                          // 32-char hex
-id.Collection("meteo", "Forecast")          // 32-char hex
-id.Tag("meteo", "Forecast", "pets")         // 32-char hex
+id.Domain("meteo")                          // hexa 32 caractères
+id.Collection("meteo", "Forecast")          // hexa 32 caractères
+id.Tag("meteo", "Forecast", "pets")         // hexa 32 caractères
 id.Method("meteo", "Forecast", "pets", "GET", "/v2/pet/{petId}")
 ```
 
-### Config cascade
+### Cascade de configuration
 
-Configuration cascades through three levels: **global → spec → collection**. Each level overrides the previous. All `http_client` settings can be overridden at every level. Headers and cookies are merged; simple values are replaced.
+La configuration se propage en cascade à travers trois niveaux : **global → spécification → collection**. Chaque niveau remplace le précédent. Tous les paramètres `http_client` peuvent être remplacés à chaque niveau. Les en-têtes et les cookies sont fusionnés ; les valeurs simples sont remplacées.
 
-## Quick reference
+## Référence rapide
 
-| Area | Convention |
+| Domaine | Convention |
 |------|------------|
-| **Go version** | 1.23+ |
-| **Formatters** | gofmt, gofumpt, goimports, gci |
-| **Line length** | 120 characters |
-| **Linters** | 80+ in `.golangci.yml` |
-| **Error type** | `LLMError` with 8 codes |
-| **Mock framework** | `go.uber.org/mock` |
-| **Test helpers** | `newTestService()`, `seedTestData()` |
-| **Config format** | YAML with cascade |
-| **Auth dispatch** | `UnmarshalYAML` reads `type` field |
-| **ID generation** | MD5-based (`id.Domain()`, `id.Collection()`, etc.) |
-| **Rate limit** | 10s per endpoint for `invoke` |
-| **Response size** | 1 MB default, saved to file when exceeded |
-| **Coverage target** | 80%+ for core packages |
-| **Build** | `make build` |
-| **Lint** | `make lint` |
+| **Version Go** | 1.23+ |
+| **Formateurs** | gofmt, gofumpt, goimports, gci |
+| **Longueur de ligne** | 120 caractères |
+| **Analyseurs** | 80+ dans `.golangci.yml` |
+| **Type d'erreur** | `LLMError` avec 8 codes |
+| **Framework de mock** | `go.uber.org/mock` |
+| **Helpers de test** | `newTestService()`, `seedTestData()` |
+| **Format de configuration** | YAML avec cascade |
+| **Répartition de l'authentification** | `UnmarshalYAML` lit le champ `type` |
+| **Génération d'ID** | Basé sur MD5 (`id.Domain()`, `id.Collection()`, etc.) |
+| **Limite de débit** | 10s par point de terminaison pour `invoke` |
+| **Taille de réponse** | 1 Mo par défaut, enregistré dans un fichier si dépassé |
+| **Objectif de couverture** | 80%+ pour les packages principaux |
+| **Construction** | `make build` |
+| **Analyse** | `make lint` |
 | **Test** | `go test ./...` |
-| **Generate** | `go generate ./...` |
+| **Génération** | `go generate ./...` |

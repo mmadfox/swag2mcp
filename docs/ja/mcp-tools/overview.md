@@ -1,76 +1,76 @@
-# MCP Tools
+# MCP ツール
 
-## Overview
+## 概要
 
-swag2mcp provides **19 MCP tools** that give an LLM agent full access to your APIs through the Model Context Protocol. These tools cover the complete workflow: discovering what APIs are available, navigating the spec hierarchy, searching and inspecting endpoints, executing API calls, and working with large responses.
+swag2mcp は **19 の MCP ツール** を提供し、LLM エージェントが Model Context Protocol を通じて API に完全にアクセスできるようにします。これらのツールは、利用可能な API の発見、スペック階層のナビゲーション、エンドポイントの検索と検査、API 呼び出しの実行、大規模レスポンスの処理まで、完全なワークフローをカバーします。
 
-### What the tools solve
+### ツールが解決する課題
 
-- **Discovery** — the LLM can find specs, collections, and tags without knowing IDs in advance
-- **Navigation** — drill down from spec → collection → tag → endpoint in a structured hierarchy
-- **Search** — full-text search across all endpoints when you don't have an ID
-- **Inspection** — get the full OpenAPI operation object before making a call
-- **Execution** — invoke real API calls with automatic authentication
-- **Large response handling** — outline, compress, and slice oversized responses that don't fit inline
+- **発見** — LLM は ID を事前に知らなくてもスペック、コレクション、タグを見つけられます
+- **ナビゲーション** — スペック → コレクション → タグ → エンドポイントの構造化された階層を掘り下げます
+- **検索** — ID がない場合に全エンドポイントを全文検索
+- **検査** — 呼び出し前に完全な OpenAPI 操作オブジェクトを取得
+- **実行** — 自動認証付きで実際の API 呼び出しを実行
+- **大規模レスポンス処理** — インラインに収まらない大きなレスポンスの概要表示、圧縮、スライス
 
-### Read-only vs Mutable
+### 読み取り専用 vs 可変
 
-| Type | Count | Tools |
+| タイプ | 数 | ツール |
 |------|-------|-------|
-| **Read-only** | 17 | All discovery, endpoint, search, inspect, info, and response tools |
-| **Mutable** | 2 | `invoke` (makes real HTTP calls), `auth` (retrieves tokens) |
+| **読み取り専用** | 17 | すべての発見、エンドポイント、検索、検査、情報、レスポンスツール |
+| **可変** | 2 | `invoke`（実際の HTTP 呼び出し）、`auth`（トークン取得） |
 
-Read-only tools are marked with `ReadOnlyHint=true` and `IdempotentHint=true` in the MCP protocol, signaling to the LLM that they are safe to call without side effects.
+読み取り専用ツールは MCP プロトコルで `ReadOnlyHint=true` および `IdempotentHint=true` とマークされ、LLM に副作用なく安全に呼び出せることを示します。
 
-### Error handling
+### エラーハンドリング
 
-All tools return errors as structured `LLMError` objects with a machine-readable code and a human-readable message that explains what went wrong and what to do next:
+すべてのツールは、機械可読なコードと人間可読なメッセージを含む構造化された `LLMError` オブジェクトとしてエラーを返します：
 
-| Error code | Meaning |
+| エラーコード | 意味 |
 |------------|---------|
-| `validation_failed` | Invalid input (bad ID format, missing required fields) |
-| `not_found` | Entity not found in the index or workspace |
-| `rate_limit` | Second `invoke` call within 10 seconds on the same endpoint |
-| `invoke_error` | HTTP call failure, download failure |
-| `auth_error` | Auth token retrieval failure |
-| `config_error` | Config file load or save failure |
-| `parse_error` | Spec file parse failure |
+| `validation_failed` | 無効な入力（不正な ID 形式、必須フィールドの欠落） |
+| `not_found` | インデックスまたはワークスペースにエンティティが見つからない |
+| `rate_limit` | 同じエンドポイントへの 10 秒以内の 2 回目の `invoke` 呼び出し |
+| `invoke_error` | HTTP 呼び出しの失敗、ダウンロードの失敗 |
+| `auth_error` | 認証トークン取得の失敗 |
+| `config_error` | 設定ファイルの読み込みまたは保存の失敗 |
+| `parse_error` | スペックファイルの解析の失敗 |
 
-## Categories
+## カテゴリ
 
-| Category | Tools | Description |
+| カテゴリ | ツール | 説明 |
 |----------|-------|-------------|
-| **Discovery** | `spec_list`, `spec_by_id`, `collection_by_spec`, `collection_by_id`, `tag_by_spec`, `tag_by_collection`, `tag_by_id` | Navigate the spec hierarchy: find specs, collections, and tags |
-| **Endpoints** | `endpoint_by_spec`, `endpoint_by_collection`, `endpoint_by_tag`, `endpoint_by_id` | View endpoints at different levels of the hierarchy |
-| **Execution** | `search`, `inspect`, `invoke` | Search, inspect the full contract, and call APIs |
-| **Utilities** | `auth`, `info`, `response_outline`, `response_compress`, `response_slice` | Auth tokens, runtime info, and large response handling |
-| **Skills** | [Formatting guide](/mcp-tools/skills) | Customize how tool responses are displayed |
+| **発見** | `spec_list`, `spec_by_id`, `collection_by_spec`, `collection_by_id`, `tag_by_spec`, `tag_by_collection`, `tag_by_id` | スペック階層をナビゲート：スペック、コレクション、タグを検索 |
+| **エンドポイント** | `endpoint_by_spec`, `endpoint_by_collection`, `endpoint_by_tag`, `endpoint_by_id` | 階層の異なるレベルでエンドポイントを表示 |
+| **実行** | `search`, `inspect`, `invoke` | 検索、完全な契約の検査、API の呼び出し |
+| **ユーティリティ** | `auth`, `info`, `response_outline`, `response_compress`, `response_slice` | 認証トークン、ランタイム情報、大規模レスポンス処理 |
+| **スキル** | [フォーマットガイド](/mcp-tools/skills) | ツールレスポンスの表示方法をカスタマイズ |
 
-## Full List
+## 全リスト
 
-| Tool | Description |
+| ツール | 説明 |
 |------|-------------|
-| `spec_list` | List all API specifications in the workspace |
-| `spec_by_id` | Get detailed spec information with collections |
-| `collection_by_spec` | List collections within a spec |
-| `collection_by_id` | Get collection details with tags |
-| `tag_by_spec` | List all tags across a spec |
-| `tag_by_collection` | List tags within a collection |
-| `tag_by_id` | Get tag details (ID, title, method count) |
-| `endpoint_by_spec` | List all endpoints in a spec |
-| `endpoint_by_collection` | List endpoints in a collection |
-| `endpoint_by_tag` | List endpoints in a tag |
-| `endpoint_by_id` | Quick endpoint summary (method, path, summary) |
-| `search` | Full-text search across all endpoints |
-| `inspect` | Full OpenAPI operation details (parameters, schemas) |
-| `invoke` | Execute a real API call |
-| `auth` | Get auth token or headers for a spec |
-| `info` | Runtime information (version, specs, config) |
-| `response_outline` | Structural summary of a large response file |
-| `response_compress` | Compress a large response to fit inline |
-| `response_slice` | Extract a fragment of a large response |
+| `spec_list` | ワークスペース内のすべての API スペックを一覧表示 |
+| `spec_by_id` | コレクションを含む詳細なスペック情報を取得 |
+| `collection_by_spec` | スペック内のコレクションを一覧表示 |
+| `collection_by_id` | タグを含むコレクションの詳細を取得 |
+| `tag_by_spec` | スペック全体のすべてのタグを一覧表示 |
+| `tag_by_collection` | コレクション内のタグを一覧表示 |
+| `tag_by_id` | タグの詳細（ID、タイトル、メソッド数）を取得 |
+| `endpoint_by_spec` | スペック内のすべてのエンドポイントを一覧表示 |
+| `endpoint_by_collection` | コレクション内のエンドポイントを一覧表示 |
+| `endpoint_by_tag` | タグ内のエンドポイントを一覧表示 |
+| `endpoint_by_id` | クイックエンドポイント概要（メソッド、パス、概要） |
+| `search` | 全エンドポイントの全文検索 |
+| `inspect` | 完全な OpenAPI 操作の詳細（パラメータ、スキーマ） |
+| `invoke` | 実際の API 呼び出しを実行 |
+| `auth` | スペックの認証トークンまたはヘッダーを取得 |
+| `info` | ランタイム情報（バージョン、スペック、設定） |
+| `response_outline` | 大規模レスポンスファイルの構造概要 |
+| `response_compress` | 大規模レスポンスをインラインに収まるよう圧縮 |
+| `response_slice` | 大規模レスポンスの断片を抽出 |
 
-## Navigation Hierarchy
+## ナビゲーション階層
 
 ```
 spec_list
@@ -85,4 +85,4 @@ spec_list
                                                   └── invoke(endpointId)
 ```
 
-When you don't have an ID, use `search` to find endpoints by query. When `invoke` returns a `fileRef` (response too large), use `response_outline` → `response_compress` or `response_slice` to explore the data.
+ID がない場合は `search` を使用してクエリでエンドポイントを検索します。`invoke` が `fileRef` を返した場合（レスポンスが大きすぎる場合）、`response_outline` → `response_compress` または `response_slice` を使用してデータを探索します。

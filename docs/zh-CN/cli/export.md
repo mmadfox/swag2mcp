@@ -1,92 +1,92 @@
 # export
 
-## Purpose
+## 用途
 
-Create a portable ZIP backup of the workspace. The archive contains the configuration file, all spec files, and auth scripts — everything needed to restore the workspace on another machine.
+创建工作区的可移植 ZIP 备份。归档包含配置文件、所有规范文件和认证脚本 — 在另一台机器上恢复工作区所需的一切。
 
-## When to use
+## 何时使用
 
-- You want to back up your workspace before making changes
-- You are migrating swag2mcp to another machine
-- You want to share your API configuration with a colleague
-- You are preparing a reproducible environment
+- 你想在更改之前备份工作区
+- 你正在将 swag2mcp 迁移到另一台机器
+- 你想与同事共享 API 配置
+- 你正在准备可重现的环境
 
-## Syntax
+## 语法
 
 ```bash
 swag2mcp export [path] [output] [flags]
 ```
 
-## Arguments
+## 参数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
-| `output` | 2 | No | Full path for the output ZIP file. If omitted, defaults to `./swag2mcp-backup-<timestamp>.zip`. |
+| 参数 | 位置 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | 1 | 否 | 工作区目录。如果省略，通过路径解析规则解析。 |
+| `output` | 2 | 否 | 输出 ZIP 文件的完整路径。如果省略，默认为 `./swag2mcp-backup-<timestamp>.zip`。 |
 
-## Flags
+## 标志
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--spec` | `-s` | `stringSlice` | `nil` | Export only specified specs (comma-separated) |
+| 标志 | 简写 | 类型 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| `--spec` | `-s` | `stringSlice` | `nil` | 仅导出指定的 spec（逗号分隔） |
 
-## How it works
+## 工作原理
 
-### Default export
+### 默认导出
 
-Creates a ZIP in the current directory with a timestamped name:
+在当前目录中创建带时间戳名称的 ZIP：
 
 ```bash
 swag2mcp export
-# Creates ./swag2mcp-backup-2026-07-22-143022.zip
+# 创建 ./swag2mcp-backup-2026-07-22-143022.zip
 ```
 
-### Custom output path
+### 自定义输出路径
 
 ```bash
 swag2mcp export /path/to/workspace /path/to/backup.zip
 ```
 
-### Export specific specs
+### 导出特定 spec
 
 ```bash
 swag2mcp export --spec meteo
 swag2mcp export --spec meteo,store
 ```
 
-## What's in the ZIP
+## ZIP 中的内容
 
-| Entry | Description |
-|-------|-------------|
-| `swag2mcp.meta` | Metadata about the export |
-| `swag2mcp.yaml` | Configuration file |
-| `specs/` | All spec files (OpenAPI/Swagger/Postman) |
-| `auth_scripts/` | Authentication scripts |
-| `cache/` | Empty (cache is not exported) |
-| `responses/` | Empty (responses are not exported) |
+| 条目 | 描述 |
+|------|------|
+| `swag2mcp.meta` | 关于导出的元数据 |
+| `swag2mcp.yaml` | 配置文件 |
+| `specs/` | 所有规范文件（OpenAPI/Swagger/Postman） |
+| `auth_scripts/` | 认证脚本 |
+| `cache/` | 空（缓存不被导出） |
+| `responses/` | 空（响应不被导出） |
 
-## Restore
+## 恢复
 
-Use `import` to restore from a backup:
+使用 `import` 从备份恢复：
 
 ```bash
 swag2mcp import --from-zip /path/to/backup.zip
 ```
 
-## Post-command verification
+## 命令后验证
 
-Always verify the ZIP file was created:
+始终验证 ZIP 文件是否已创建：
 
 ```bash
 ls -la swag2mcp-backup-*.zip
-# or for a custom output path:
+# 或对于自定义输出路径：
 ls -la /path/to/backup.zip
 ```
 
-## Nuances
+## 细节
 
-- **Output must be a file path:** The `[output]` argument must be a full file path ending in `.zip`. Do **not** pass a directory — the command will not create a ZIP if given a directory path.
-- **Default filename:** `swag2mcp-backup-<YYYY-MM-DD-HHMMSS>.zip` using UTC timestamp.
-- **`--spec` filter:** When set, only the specified specs are included. Other specs are excluded from the archive.
-- **No config required:** `export` works even without a valid config file. It exports whatever exists in the workspace.
-- **Cache and responses are excluded:** These are transient data that would be stale on restore. Only the config, specs, and auth scripts are preserved.
+- **输出必须是文件路径：** `[output]` 参数必须是 `.zip` 结尾的完整文件路径。**不要**传递目录 — 如果给定目录路径，命令不会创建 ZIP。
+- **默认文件名：** `swag2mcp-backup-<YYYY-MM-DD-HHMMSS>.zip`，使用 UTC 时间戳。
+- **`--spec` 过滤器：** 设置后，只包含指定的 spec。其他 spec 被排除在归档之外。
+- **无需配置：** `export` 即使没有有效的配置文件也能工作。它导出工作区中存在的任何内容。
+- **缓存和响应被排除：** 这些是临时数据，恢复时已过时。只保留配置、规范和认证脚本。

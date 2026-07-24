@@ -1,82 +1,82 @@
 # Collections
 
-A collection is a single OpenAPI/Swagger/Postman file that describes a specific API. It points to a `location` (URL or local file path) and belongs to a spec (domain).
+Collection は、特定の API を記述する単一の OpenAPI/Swagger/Postman ファイルです。`location`（URL またはローカルファイルパス）を指し、spec（ドメイン）に属します。
 
-One spec can have multiple collections — for example, the "meteo" spec might have "Forecast", "Air Quality", and "Marine" collections, each pointing to a different spec file.
+1 つの spec は複数の collection を持つことができます — 例えば、"meteo" spec には "Forecast"、"Air Quality"、"Marine" の collection があり、それぞれ異なる spec ファイルを指します。
 
-## Collection Fields
+## Collection フィールド
 
-| Field | YAML key | Required | Description |
-|-------|----------|----------|-------------|
-| [LLM Title](#llm-instruction) | `llm_title` | ❌ | Collection display name for the LLM (max 120 chars). Auto-populated from spec document if not set |
-| [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | Short hint for the LLM (max 360 chars). Auto-populated from spec document if not set |
-| Title | `title` | ❌ | Original spec title override (auto-populated from parsed document) |
-| [Location](#location--how-spec-files-are-resolved) | `location` | ✅ | URL or path to the spec file (5–250 chars) |
-| [Disable](#disable) | `disable` | ❌ | Skip this collection during loading |
-| [HTTP Client](#http-client-override) | `http_client` | ❌ | Per-collection HTTP settings (headers, cookies) |
-| [Base URL](#base-url-override) | `base_url` | ❌ | Override the spec's base URL for this collection |
-| [Mock Server](#mock-server) | `base_mock_url` | ❌ | Mock server address in `host:port` format. Required when `mock_enabled: true` |
+| フィールド | YAML キー | 必須 | 説明 |
+|-----------|----------|------|------|
+| [LLM Title](#llm-instruction) | `llm_title` | ❌ | LLM 用の collection 表示名（最大 120 文字）。未設定時は spec ドキュメントから自動入力 |
+| [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | LLM 向けの短いヒント（最大 360 文字）。未設定時は spec ドキュメントから自動入力 |
+| Title | `title` | ❌ | 元の spec タイトルの上書き（解析されたドキュメントから自動入力） |
+| [Location](#location--how-spec-files-are-resolved) | `location` | ✅ | spec ファイルの URL またはパス（5〜250 文字） |
+| [Disable](#disable) | `disable` | ❌ | 読み込み時にこの collection をスキップ |
+| [HTTP Client](#http-client-override) | `http_client` | ❌ | collection ごとの HTTP 設定（ヘッダー、Cookie） |
+| [Base URL](#base-url-override) | `base_url` | ❌ | この collection の spec のベース URL を上書き |
+| [Mock Server](#mock-server) | `base_mock_url` | ❌ | `host:port` 形式のモックサーバーアドレス。`mock_enabled: true` 時に必須 |
 
-## Location — How Spec Files Are Resolved
+## Location — Spec ファイルの解決方法
 
-The `location` field tells swag2mcp where to find the OpenAPI/Swagger/Postman file. It supports several source types:
+`location` フィールドは swag2mcp に OpenAPI/Swagger/Postman ファイルの場所を指示します。複数のソースタイプをサポートします：
 
-| Source | Example | Description |
-|--------|---------|-------------|
-| **Remote URL** | `https://raw.githubusercontent.com/.../spec.yaml` | Downloaded and cached |
-| **Local file (absolute)** | `/home/user/my-api.yaml` | Read from filesystem, cached |
-| **Local file (relative)** | `./my-api.yaml` | Resolved to absolute path, cached |
-| **Workspace local file** | `specs/my-api.yaml` | Stored in `~/.swag2mcp/specs/`, used directly (not cached) |
-| **file:// URI** | `file:///home/user/spec.yaml` | Converted to local path, cached |
+| ソース | 例 | 説明 |
+|-------|-----|------|
+| **リモート URL** | `https://raw.githubusercontent.com/.../spec.yaml` | ダウンロードしてキャッシュ |
+| **ローカルファイル（絶対パス）** | `/home/user/my-api.yaml` | ファイルシステムから読み取り、キャッシュ |
+| **ローカルファイル（相対パス）** | `./my-api.yaml` | 絶対パスに解決、キャッシュ |
+| **ワークスペースローカルファイル** | `specs/my-api.yaml` | `~/.swag2mcp/specs/` に保存、直接使用（キャッシュなし） |
+| **file:// URI** | `file:///home/user/spec.yaml` | ローカルパスに変換、キャッシュ |
 
-swag2mcp automatically detects the source type:
+swag2mcp は自動的にソースタイプを検出します：
 
-- `https://` or `http://` → remote URL (cached)
-- `file://` → local file (converted to filesystem path)
-- Everything else → local file (with `~` expansion for home directory)
+- `https://` または `http://` → リモート URL（キャッシュ）
+- `file://` → ローカルファイル（ファイルシステムパスに変換）
+- その他 → ローカルファイル（ホームディレクトリの `~` 展開あり）
 
-### Remote URLs
+### リモート URL
 
-When you use a remote URL, swag2mcp downloads the file and caches it locally. The cache is reused on subsequent starts to avoid repeated downloads.
+リモート URL を使用すると、swag2mcp はファイルをダウンロードしてローカルにキャッシュします。キャッシュは後続の起動時に再利用され、繰り返しのダウンロードを避けます。
 
-### Local Files
+### ローカルファイル
 
-Local files are read directly from the filesystem. If the file is outside the workspace `specs/` directory, it is copied to the cache for consistency.
+ローカルファイルはファイルシステムから直接読み取られます。ファイルがワークスペースの `specs/` ディレクトリ外にある場合、一貫性のためにキャッシュにコピーされます。
 
-### Workspace Local Files
+### ワークスペースローカルファイル
 
-The `specs/` directory inside the workspace (`~/.swag2mcp/specs/`) is the recommended place for local spec files. Files stored here are used directly without caching. Use a relative path starting with `specs/` to reference them.
+ワークスペース内の `specs/` ディレクトリ（`~/.swag2mcp/specs/`）は、ローカル spec ファイルの推奨場所です。ここに保存されたファイルはキャッシュなしで直接使用されます。参照するには `specs/` で始まる相対パスを使用します。
 
-> **Note:** `specs/` is just a directory name (like `cache/` or `responses/`), not the concept of "spec". It stores the actual OpenAPI/Swagger/Postman files that collections point to.
+> **注:** `specs/` は単なるディレクトリ名（`cache/` や `responses/` と同様）であり、「spec」という概念ではありません。collection が指す実際の OpenAPI/Swagger/Postman ファイルを保存します。
 
 ```bash
-# Import a spec file into the workspace
+# spec ファイルをワークスペースにインポート
 swag2mcp import https://example.com/api.yaml myspec
 
-# After import, the location becomes:
+# インポート後、location は次のようになります：
 # specs/myspec.yaml
 ```
 
-## Cache System
+## キャッシュシステム
 
-swag2mcp caches remote spec files to avoid downloading them on every startup.
+swag2mcp はリモート spec ファイルをキャッシュして、起動のたびにダウンロードするのを避けます。
 
-### How It Works
+### 仕組み
 
-1. When a collection with a remote URL is loaded, swag2mcp checks the cache
-2. If a valid (non-expired) cache entry exists, it is used directly
-3. If not, the file is downloaded, parsed, and stored in the cache
+1. リモート URL の collection が読み込まれると、swag2mcp はキャッシュをチェックします
+2. 有効な（期限切れでない）キャッシュエントリが存在する場合、それが直接使用されます
+3. 存在しない場合、ファイルがダウンロードされ、解析され、キャッシュに保存されます
 
-### Cache Structure
+### キャッシュ構造
 
 ```
 ~/.swag2mcp/
   cache/
-    {sha256_hash}.spec    # Cached spec file content
-    {sha256_hash}.meta    # Cache metadata (JSON)
+    {sha256_hash}.spec    # キャッシュされた spec ファイルの内容
+    {sha256_hash}.meta    # キャッシュメタデータ（JSON）
 ```
 
-Each cached file has a metadata file containing:
+各キャッシュファイルには、以下を含むメタデータファイルがあります：
 
 ```json
 {
@@ -88,59 +88,59 @@ Each cached file has a metadata file containing:
 }
 ```
 
-### Cache TTL
+### キャッシュ TTL
 
-Each cached file gets a **random TTL** between 1 hour and 48 hours. This prevents all cached files from expiring at the same time (thundering herd problem).
+各キャッシュファイルには **1 時間から 48 時間** の間でランダムな TTL が設定されます。これにより、すべてのキャッシュファイルが同時に期限切れになるのを防ぎます（群集問題）。
 
-### Cache Key
+### キャッシュキー
 
-The cache key is a SHA-256 hash of the raw location string (first 16 bytes = 32 hex chars).
+キャッシュキーは、生の location 文字列の SHA-256 ハッシュです（最初の 16 バイト = 32 桁の 16 進数）。
 
-### Managing the Cache
+### キャッシュの管理
 
 ```bash
-# Clear cache and responses, re-download all spec files
+# キャッシュとレスポンスをクリアし、すべての spec ファイルを再ダウンロード
 swag2mcp update
 
-# Clear cache and responses only
+# キャッシュとレスポンスのみをクリア
 swag2mcp clean
 ```
 
-- `swag2mcp update` — validates config, clears `cache/` and `responses/`, then re-caches all collection locations
-- `swag2mcp clean` — removes all contents of `cache/` and `responses/`, plus orphan auth scripts
-- Old responses are cleaned automatically after 48 hours on MCP server start
+- `swag2mcp update` — 設定を検証し、`cache/` と `responses/` をクリアし、すべての collection location を再キャッシュ
+- `swag2mcp clean` — `cache/` と `responses/` のすべての内容と、孤立した認証スクリプトを削除
+- 古いレスポンスは MCP サーバー起動後 48 時間で自動的にクリーンアップ
 
-## Validation
+## 検証
 
-Every collection is validated when the config is loaded. Validation runs on every `swag2mcp mcp` startup. If it fails, the MCP server will not start — in some IDEs this means the server simply won't connect, and the LLM receives a clear error message explaining what to fix.
+すべての collection は設定が読み込まれるときに検証されます。検証は `swag2mcp mcp` の起動のたびに実行されます。失敗した場合、MCP サーバーは起動しません — 一部の IDE では、サーバーが単に接続せず、LLM は何を修正すべきかを説明する明確なエラーメッセージを受け取ります。
 
-| Check | Rule |
-|-------|------|
-| **Location** | Required, 5–250 characters |
-| **Location accessibility** | Must be a reachable URL or existing file |
-| **Location validity** | Must be a valid OpenAPI 3.x, Swagger 2.0, or Postman file |
-| **LLM Title** | Max 120 characters, letters/digits/basic punctuation |
-| **LLM Instruction** | Max 360 characters, same character set as title |
-| **Base URL** | Must be a valid URL if set |
-| **Base Mock URL** | Must be `host:port` or `host:port/path` where host is `localhost`, `127.0.0.1`, or `0.0.0.0` |
-| **Mock required** | If `mock_enabled: true`, every collection must have `base_mock_url` |
-| **Duplicate mock ports** | No two collections may share the same mock port |
+| チェック | ルール |
+|---------|-------|
+| **Location** | 必須、5〜250 文字 |
+| **Location のアクセス可能性** | 到達可能な URL または既存のファイルである必要があります |
+| **Location の有効性** | 有効な OpenAPI 3.x、Swagger 2.0、または Postman ファイルである必要があります |
+| **LLM Title** | 最大 120 文字、英字/数字/基本句読点 |
+| **LLM Instruction** | 最大 360 文字、タイトルと同じ文字セット |
+| **Base URL** | 設定されている場合、有効な URL である必要があります |
+| **Base Mock URL** | `host:port` または `host:port/path` 形式で、host は `localhost`、`127.0.0.1`、または `0.0.0.0` |
+| **Mock 必須** | `mock_enabled: true` の場合、すべての collection に `base_mock_url` が必要 |
+| **重複モックポート** | 2 つの collection が同じモックポートを共有してはいけません |
 
-To diagnose issues before starting the server, use the [`validate`](../cli/validate.md) command:
+サーバーを起動する前に問題を診断するには、[`validate`](../cli/validate.md) コマンドを使用します：
 
 ```bash
-# Validate default workspace (~/.swag2mcp)
+# デフォルトワークスペースを検証（~/.swag2mcp）
 swag2mcp validate
 
-# Validate a custom project workspace
+# カスタムプロジェクトワークスペースを検証
 swag2mcp validate ./my-project
 ```
 
-## Adding Collections
+## Collection の追加
 
-### Via YAML Config
+### YAML 設定経由
 
-Edit `~/.swag2mcp/swag2mcp.yaml` directly:
+`~/.swag2mcp/swag2mcp.yaml` を直接編集します：
 
 ```yaml
 specs:
@@ -152,36 +152,36 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
 ```
 
-After editing, restart the MCP server (`swag2mcp mcp`) for changes to take effect.
+編集後、変更を反映するために MCP サーバー（`swag2mcp mcp`）を再起動します。
 
-### Via CLI
+### CLI 経由
 
 ```bash
-# Interactive mode
+# 対話モード
 swag2mcp add collection
 
-# Non-interactive with YAML
+# YAML を使用した非対話モード
 swag2mcp add collection --yaml 'spec_domain: meteo
 llm_title: Forecast
 location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml'
 
-# Pipe from stdin
+# 標準入力からパイプ
 cat collection.yaml | swag2mcp add collection --yaml -
 
-# Show YAML example
+# YAML 例を表示
 swag2mcp add collection --example
 ```
 
-### Via Import
+### Import 経由
 
 ```bash
-# Import a spec file into the workspace
+# spec ファイルをワークスペースにインポート
 swag2mcp import https://example.com/api.yaml
 ```
 
 ## LLM Instruction
 
-Collections can have their own `llm_instruction` (up to 360 chars) for more specific guidance. This is injected into the swag2mcp system prompt alongside the spec-level instruction.
+Collection は、より具体的なガイダンスのために独自の `llm_instruction`（最大 360 文字）を持つことができます。これは spec レベルの指示とともに swag2mcp システムプロンプトに注入されます。
 
 ```yaml
 specs:
@@ -197,11 +197,11 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/air-quality.yml
 ```
 
-If `llm_title` is not set, it is automatically populated from the spec document's `title` field. If `llm_instruction` is not set, it is populated from the spec document's `description` field.
+`llm_title` が設定されていない場合、spec ドキュメントの `title` フィールドから自動的に入力されます。`llm_instruction` が設定されていない場合、spec ドキュメントの `description` フィールドから入力されます。
 
 ## Disable
 
-Set `disable: true` to skip a collection. It won't be loaded, indexed, or available to the LLM.
+`disable: true` を設定して collection をスキップします。読み込まれず、インデックス化されず、LLM が利用できなくなります。
 
 ```yaml
 specs:
@@ -216,9 +216,9 @@ specs:
         disable: true
 ```
 
-## Base URL Override
+## Base URL の上書き
 
-Each collection can override the spec's `base_url`. This is useful when different collections within the same spec use different API endpoints.
+各 collection は spec の `base_url` を上書きできます。これは同じ spec 内の異なる collection が異なる API エンドポイントを使用する場合に便利です。
 
 ```yaml
 specs:
@@ -236,9 +236,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
-## HTTP Client Override
+## HTTP Client の上書き
 
-Collections can override HTTP settings (headers, cookies) from the spec and global levels.
+Collection は spec およびグローバルレベルから HTTP 設定（ヘッダー、Cookie）を上書きできます。
 
 ```yaml
 specs:
@@ -256,11 +256,11 @@ specs:
               value: abc123
 ```
 
-Settings cascade: global → spec → collection. See [Configuration Cascade](../configuration/cascade.md) for details.
+設定のカスケード：グローバル → spec → collection。詳細は [Configuration Cascade](../configuration/cascade.md) を参照してください。
 
-## Mock Server
+## モックサーバー
 
-When `mock_enabled: true` is set at the config level, every collection must have `base_mock_url` set. This tells swag2mcp where the mock server is running for this collection.
+設定レベルで `mock_enabled: true` が設定されている場合、すべての collection に `base_mock_url` が設定されている必要があります。これは、この collection のモックサーバーがどこで実行されているかを swag2mcp に伝えます。
 
 ```yaml
 mock_enabled: true
@@ -274,11 +274,11 @@ specs:
         base_mock_url: localhost:8080
 ```
 
-See [Mock Server](../advanced/mock-server.md) for full details.
+詳細は [Mock Server](../advanced/mock-server.md) を参照してください。
 
-## Examples
+## 例
 
-### Minimal Collection
+### 最小限の Collection
 
 ```yaml
 specs:
@@ -290,7 +290,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-### Full Collection with All Fields
+### 全フィールドの Collection
 
 ```yaml
 specs:
@@ -310,7 +310,7 @@ specs:
             X-Custom: value
 ```
 
-### Multiple Collections per Spec
+### 1 つの Spec に複数の Collection
 
 ```yaml
 specs:
@@ -328,7 +328,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
-### Local File in Workspace (specs/ Directory)
+### ワークスペース内のローカルファイル（specs/ ディレクトリ）
 
 ```yaml
 specs:
@@ -342,7 +342,7 @@ specs:
         location: specs/orders.openapi.json
 ```
 
-### Disabled Collection
+### 無効化された Collection
 
 ```yaml
 specs:
@@ -357,13 +357,13 @@ specs:
         disable: true
 ```
 
-## Related
+## 関連項目
 
-- [Collection Settings (config)](../configuration/collection-settings.md) — full YAML reference
-- [Configuration Cascade](../configuration/cascade.md) — how settings override each other
-- [Specs](./specs) — logical containers for collections
-- [HTTP Client](../configuration/http-client.md) — HTTP client configuration
-- [Mock Server](../advanced/mock-server.md) — mock server setup
-- [CLI: validate](../cli/validate.md) — validate command reference
-- [CLI: update](../cli/update.md) — update command reference
-- [CLI: clean](../cli/clean.md) — clean command reference
+- [Collection Settings (config)](../configuration/collection-settings.md) — 完全な YAML リファレンス
+- [Configuration Cascade](../configuration/cascade.md) — 設定の上書き方法
+- [Specs](./specs) — collection の論理コンテナ
+- [HTTP Client](../configuration/http-client.md) — HTTP クライアント設定
+- [Mock Server](../advanced/mock-server.md) — モックサーバー設定
+- [CLI: validate](../cli/validate.md) — validate コマンドリファレンス
+- [CLI: update](../cli/update.md) — update コマンドリファレンス
+- [CLI: clean](../cli/clean.md) — clean コマンドリファレンス

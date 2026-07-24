@@ -1,58 +1,58 @@
-# Skills
+# Habilidades
 
-## Customizing Output Format
+## Personalizar el Formato de Salida
 
-Every swag2mcp MCP tool returns structured JSON data. How this data is **presented** to the user depends on the LLM's formatting skill — and you can control it completely.
+Cada herramienta MCP de swag2mcp devuelve datos JSON estructurados. Cómo se **presentan** estos datos al usuario depende de la habilidad de formato del LLM — y usted puede controlarlo completamente.
 
-### The default format skill
+### La habilidad de formato predeterminada
 
-swag2mcp ships with a built-in formatting skill that defines compact, human-readable markdown for every tool response:
+swag2mcp incluye una habilidad de formato incorporada que define markdown compacto y legible por humanos para cada respuesta de herramienta:
 
 [swag2mcp-format SKILL.md](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md)
 
-This skill covers all 19 MCP tools with:
-- Tight tables for lists (specs, collections, tags, endpoints)
-- Inline headers for detail views
-- Compact schema representation for `inspect`
-- Consistent styling across all responses
+Esta habilidad cubre las 19 herramientas MCP con:
+- Tablas compactas para listas (especificaciones, colecciones, etiquetas, endpoints)
+- Encabezados en línea para vistas de detalle
+- Representación compacta de esquemas para `inspect`
+- Estilo consistente en todas las respuestas
 
-### Why skills matter
+### Por qué las habilidades son importantes
 
-The same data can be presented in radically different ways depending on the skill:
+Los mismos datos pueden presentarse de formas radicalmente diferentes dependiendo de la habilidad:
 
-| Style | Example output |
-|-------|---------------|
-| **Compact tables** (default) | `GET /pet/{petId}` — Find pet by ID |
-| **Verbose** | `Method: GET, Path: /pet/{petId}, Summary: Find pet by ID, Deprecated: false` |
-| **Minimal** | `GET /pet/{petId}` |
-| **Technical** | `GET /pet/{petId} → 200: Pet object, 404: Not found` |
-| **Custom** | Any format you can describe |
+| Estilo | Ejemplo de salida |
+|-------|-------------------|
+| **Tablas compactas** (predeterminado) | `GET /pet/{petId}` — Find pet by ID |
+| **Verboso** | `Method: GET, Path: /pet/{petId}, Summary: Find pet by ID, Deprecated: false` |
+| **Mínimo** | `GET /pet/{petId}` |
+| **Técnico** | `GET /pet/{petId} → 200: Pet object, 404: Not found` |
+| **Personalizado** | Cualquier formato que pueda describir |
 
-### Creating your own skill
+### Crear su propia habilidad
 
-You can write your own formatting skill by describing the exact output format you want. The skill is a markdown file with formatting rules for each tool. Here are some ideas:
+Puede escribir su propia habilidad de formato describiendo el formato de salida exacto que desea. La habilidad es un archivo markdown con reglas de formato para cada herramienta. Aquí hay algunas ideas:
 
-- **JSON output** — return raw JSON for machine consumption
-- **CSV-style** — tabular data for spreadsheet import
-- **Diagram-friendly** — Mermaid or ASCII diagrams of API structure
-- **Minimal** — just method and path, nothing else
-- **Documentation-style** — full descriptions, examples, and notes
+- **Salida JSON** — devolver JSON sin procesar para consumo por máquina
+- **Estilo CSV** — datos tabulares para importación a hojas de cálculo
+- **Amigable para diagramas** — diagramas Mermaid o ASCII de la estructura de la API
+- **Mínimo** — solo método y ruta, nada más
+- **Estilo documentación** — descripciones completas, ejemplos y notas
 
-### The only limit is the model
+### El único límite es el modelo
 
-The quality of the formatted output depends entirely on the LLM's ability to follow your formatting rules. A well-written skill with clear examples produces consistent, reliable output. A vague skill produces inconsistent results.
+La calidad de la salida formateada depende completamente de la capacidad del LLM para seguir sus reglas de formato. Una habilidad bien escrita con ejemplos claros produce una salida consistente y confiable. Una habilidad vaga produce resultados inconsistentes.
 
-You can:
-- Use the default skill as-is
-- Fork it and tweak the formatting to your taste
-- Write your own from scratch
-- Switch between skills depending on the task
+Puede:
+- Usar la habilidad predeterminada tal cual
+- Bifurcarla y ajustar el formato a su gusto
+- Escribir la suya propia desde cero
+- Cambiar entre habilidades dependiendo de la tarea
 
-### How to use a skill
+### Cómo usar una habilidad
 
-Skills are loaded by the LLM client (OpenCode, Cursor, Claude Desktop, etc.) as part of its system prompt or agent configuration. Refer to your client's documentation for how to attach a skill file.
+Las habilidades son cargadas por el cliente LLM (OpenCode, Cursor, Claude Desktop, etc.) como parte de su prompt del sistema o configuración del agente. Consulte la documentación de su cliente para saber cómo adjuntar un archivo de habilidad.
 
-For OpenCode, skills are configured in `opencode.json`:
+Para OpenCode, las habilidades se configuran en `opencode.json`:
 
 ```json
 {

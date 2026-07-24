@@ -1,77 +1,77 @@
-# Rate Limiting
+# 속도 제한
 
-## Overview
+## 개요
 
-swag2mcp has a built-in rate limiter that prevents the LLM from calling the same API endpoint too frequently. This protects against accidental duplicate calls and respects API rate limits.
+swag2mcp에는 LLM이 동일한 API 엔드포인트를 너무 자주 호출하는 것을 방지하는 내장 속도 제한기가 있습니다. 실수로 인한 중복 호출을 방지하고 API 속도 제한을 준수합니다.
 
-## How it works
+## 작동 방식
 
-Each endpoint has a cooldown period. If the LLM tries to call the same endpoint again within the cooldown, the call is rejected with a structured error.
+각 엔드포인트에는 쿨다운 기간이 있습니다. LLM이 쿨다운 내에 동일한 엔드포인트를 다시 호출하려고 하면 구조화된 오류와 함께 거부됩니다.
 
 ```
-t=0s  → invoke(endpoint) → executes
-t=2s  → invoke(endpoint) → rejected with rate_limit error
-t=12s → invoke(endpoint) → executes (cooldown has passed)
+t=0s  → invoke(endpoint) → 실행
+t=2s  → invoke(endpoint) → rate_limit 오류로 거부
+t=12s → invoke(endpoint) → 실행 (쿨다운 경과)
 ```
 
-### Default behavior
+### 기본 동작
 
-- **Cooldown:** 10 seconds per endpoint
-- **Scope:** Per-endpoint — calling endpoint A does not affect endpoint B
-- **Error response:** The LLM receives an `LLMError` with code `rate_limit` and a message indicating how long to wait
-- **Reset:** After 10 seconds of inactivity on that endpoint
+- **쿨다운:** 엔드포인트당 10초
+- **범위:** 엔드포인트별 — 엔드포인트 A 호출이 엔드포인트 B에 영향을 주지 않음
+- **오류 응답:** LLM은 코드 `rate_limit`와 대기 시간을 알리는 메시지가 포함된 `LLMError`를 받습니다
+- **초기화:** 해당 엔드포인트에서 10초 동안 활동이 없으면 초기화
 
-### Error format
+### 오류 형식
 
-When rate limited, the LLM receives:
+속도 제한 시 LLM이 받는 응답:
 
 ```json
 {
   "code": "rate_limit",
-  "message": "rate limit exceeded for endpoint \"abc123\": try again in 8 seconds",
-  "hint": "Wait for the cooldown period to expire, then try invoking the endpoint again. Use the search tool to find other endpoints you can call in the meantime."
+  "message": "endpoint \"abc123\"에 대한 속도 제한 초과: 8초 후에 다시 시도하세요",
+  "hint": "쿨다운 기간이 만료될 때까지 기다린 후 엔드포인트를 다시 호출하세요. 그동안 호출할 수 있는 다른 엔드포인트를 찾으려면 검색 도구를 사용하세요."
 }
 ```
 
-The LLM can use this information to wait and retry, or switch to a different endpoint.
+LLM은 이 정보를 사용하여 대기 후 재시도하거나 다른 엔드포인트로 전환할 수 있습니다.
 
-### Why it exists
+### 존재 이유
 
-- **Prevents accidental duplicate calls** — the LLM might call the same endpoint multiple times in quick succession
-- **Protects against API rate limits** — many APIs have their own rate limits, and hitting them would cause errors
-- **Saves resources** — reduces unnecessary network traffic
+- **실수로 인한 중복 호출 방지** — LLM이 동일한 엔드포인트를 빠르게 연속해서 여러 번 호출할 수 있음
+- **API 속도 제한 보호** — 많은 API에 자체 속도 제한이 있으며, 이를 초과하면 오류가 발생함
+- **리소스 절약** — 불필요한 네트워크 트래픽 감소
 
-## Configuration
+## 설정
 
-You can disable the rate limiter or change the cooldown interval:
+속도 제한기를 비활성화하거나 쿨다운 간격을 변경할 수 있습니다:
 
 ```yaml
-# Disable the rate limiter entirely
+# 속도 제한기 완전 비활성화
 disable_ratelimiter: true
 
-# Custom cooldown interval
+# 커스텀 쿨다운 간격
 rate_limit_interval: 30s
 ```
 
 ### disable_ratelimiter
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Effect:** When `true`, the per-endpoint rate limiter is disabled. The LLM can call the same endpoint repeatedly without waiting.
-- **When to enable:** Testing, debugging, or when you need to call the same endpoint multiple times in quick succession.
-- **When to keep disabled (recommended):** Production. The rate limiter prevents accidental abuse.
+- **타입:** `bool`
+- **기본값:** `false`
+- **효과:** `true`일 때 엔드포인트별 속도 제한기가 비활성화됩니다. LLM이 대기 없이 동일한 엔드포인트를 반복해서 호출할 수 있습니다.
+- **활성화 시기:** 테스트, 디버깅 또는 동일한 엔드포인트를 빠르게 연속해서 여러 번 호출해야 할 때.
+- **비활성화 유지(권장):** 프로덕션. 속도 제한기는 실수로 인한 남용을 방지합니다.
 
 ### rate_limit_interval
 
-- **Type:** duration (Go format: `10s`, `30s`, `1m`)
-- **Default:** `10s`
-- **Effect:** Sets the cooldown period between calls to the same endpoint.
-- **When to increase:** APIs with strict rate limits (e.g., 10 requests per minute).
-- **When to decrease:** Internal APIs where you control the load.
-- **Examples:** `5s`, `30s`, `1m`, `2m`
+- **타입:** duration (Go 형식: `10s`, `30s`, `1m`)
+- **기본값:** `10s`
+- **효과:** 동일한 엔드포인트 호출 간 LLM이 대기해야 하는 시간을 설정합니다.
+- **증가 시기:** 엄격한 속도 제한이 있는 API(예: 분당 10회 요청).
+- **감소 시기:** 부하를 제어할 수 있는 내부 API.
+- **예시:** `5s`, `30s`, `1m`, `2m`
 
-## Important notes
+## 중요 참고 사항
 
-- **Per-endpoint tracking** — each endpoint is tracked independently. Calling one endpoint does not affect others.
-- **Error returned to LLM** — the second call within the cooldown is rejected with a `rate_limit` error. The LLM receives the cooldown duration and can retry after waiting.
-- **No cleanup needed** — the rate limiter tracks endpoints automatically and does not require maintenance.
+- **엔드포인트별 추적** — 각 엔드포인트는 독립적으로 추적됩니다. 하나의 엔드포인트를 호출해도 다른 엔드포인트에 영향을 주지 않습니다.
+- **LLM에 오류 반환** — 쿨다운 내의 두 번째 호출은 `rate_limit` 오류와 함께 거부됩니다. LLM은 쿨다운 시간을 받고 대기 후 재시도할 수 있습니다.
+- **정리 불필요** — 속도 제한기는 엔드포인트를 자동으로 추적하며 유지보수가 필요하지 않습니다.

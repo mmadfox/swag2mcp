@@ -1,8 +1,8 @@
-# Claude Desktop Integration
+# Интеграция с Claude Desktop
 
 ## stdio
 
-In `claude_desktop_config.json`:
+В `claude_desktop_config.json`:
 
 ```json
 {
@@ -15,7 +15,7 @@ In `claude_desktop_config.json`:
 }
 ```
 
-## Custom Workspace
+## Пользовательская рабочая область
 
 ```json
 {
@@ -28,19 +28,19 @@ In `claude_desktop_config.json`:
 }
 ```
 
-## Usage
+## Использование
 
-After restarting Claude Desktop, you can:
+После перезапуска Claude Desktop вы можете:
 
-- "Show me the list of all APIs"
-- "Find the endpoint for creating an order"
-- "Call the weather API for Moscow"
+- "Покажи список всех API"
+- "Найди эндпоинт для создания заказа"
+- "Вызови API погоды для Москвы"
 
-## Others
+## Другие клиенты
 
-Don't see your client? All MCP integrations follow the same pattern:
-- Set the command to `swag2mcp` with argument `mcp`
-- Optionally add a workspace path: `mcp /path/to/workspace`
-- Check your client's documentation for the exact config file location and format
+Не нашли свой клиент? Все MCP-интеграции следуют одному шаблону:
+- Укажите команду `swag2mcp` с аргументом `mcp`
+- При необходимости добавьте путь к рабочей области: `mcp /path/to/workspace`
+- Проверьте документацию вашего клиента для точного расположения и формата файла конфигурации
 
-Most MCP clients support stdio transport, and some support HTTP (SSE / Streamable HTTP).
+Большинство MCP-клиентов поддерживают stdio-транспорт, а некоторые — HTTP (SSE / Streamable HTTP).

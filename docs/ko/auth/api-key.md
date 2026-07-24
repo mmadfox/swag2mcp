@@ -1,18 +1,18 @@
 # API Key
 
-## Purpose
+## 목적
 
-Authentication via an API key. The key can be sent as an HTTP header or as a URL query parameter.
+API 키를 통한 인증입니다. 키는 HTTP 헤더 또는 URL 쿼리 매개변수로 전송할 수 있습니다.
 
-## When to use
+## 사용 시기
 
-- Services that use API keys
-- Weather services, geodata, translation APIs
-- When the API expects a key in a header (`X-API-Key`) or query parameter (`?api_key=...`)
+- API 키를 사용하는 서비스
+- 날씨 서비스, 지리 데이터, 번역 API
+- API가 헤더(`X-API-Key`) 또는 쿼리 매개변수(`?api_key=...`)에서 키를 기대할 때
 
-## Configuration
+## 설정
 
-### Key in header
+### 헤더의 키
 
 ```yaml
 specs:
@@ -30,7 +30,7 @@ specs:
         value: "$(API_KEY)"
 ```
 
-### Key in query parameter
+### 쿼리 매개변수의 키
 
 ```yaml
 specs:
@@ -48,16 +48,16 @@ specs:
         value: "$(API_KEY)"
 ```
 
-## Parameters
+## 매개변수
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `key` | Yes | Name of the header or query parameter |
-| `in` | Yes | Where to place the key: `header` or `query` |
-| `value` | Yes | The key value |
+| 매개변수 | 필수 | 설명 |
+|---------|------|------|
+| `key` | 예 | 헤더 또는 쿼리 매개변수의 이름 |
+| `in` | 예 | 키 위치: `header` 또는 `query` |
+| `value` | 예 | 키 값 |
 
-## Notes
+## 참고 사항
 
-- In `header` mode, the key is added as an HTTP header
-- In `query` mode, the key is added as a URL parameter
-- Store the value in an environment variable: `value: "$(MY_API_KEY)"`
+- `header` 모드에서 키는 HTTP 헤더로 추가됩니다
+- `query` 모드에서 키는 URL 매개변수로 추가됩니다
+- 값을 환경 변수에 저장하세요: `value: "$(MY_API_KEY)"`

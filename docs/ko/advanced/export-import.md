@@ -1,113 +1,113 @@
-# Export and Import
+# 내보내기 및 가져오기
 
-## Overview
+## 개요
 
-swag2mcp supports full workspace round-trip via ZIP archives. You can export your entire workspace (config, spec files, auth scripts) to a ZIP file and restore it on another machine.
+swag2mcp는 ZIP 아카이브를 통한 전체 워크스페이스 왕복을 지원합니다. 전체 워크스페이스(설정, 명세 파일, 인증 스크립트)를 ZIP 파일로 내보내고 다른 머신에서 복원할 수 있습니다.
 
-## Export
+## 내보내기
 
-Creates a portable ZIP backup of your workspace.
+워크스페이스의 이식 가능한 ZIP 백업을 생성합니다.
 
 ```bash
-# Export to default file (swag2mcp-backup-<timestamp>.zip)
+# 기본 파일로 내보내기 (swag2mcp-backup-<timestamp>.zip)
 swag2mcp export
 
-# Export with custom path
+# 커스텀 경로로 내보내기
 swag2mcp export --output ~/backups/swag2mcp-backup.zip
 
-# Export only specific specs
+# 특정 spec만 내보내기
 swag2mcp export --spec meteo
 swag2mcp export --spec meteo,store
 ```
 
-### What's included in the export
+### 내보내기에 포함되는 항목
 
-| Item | Description |
-|------|-------------|
-| `swag2mcp.yaml` | Configuration file |
-| `specs/` | All spec files (OpenAPI/Swagger/Postman) |
-| `auth_scripts/` | Authentication scripts |
-| `swag2mcp.meta` | Metadata (version info for compatibility) |
+| 항목 | 설명 |
+|------|------|
+| `swag2mcp.yaml` | 설정 파일 |
+| `specs/` | 모든 명세 파일 (OpenAPI/Swagger/Postman) |
+| `auth_scripts/` | 인증 스크립트 |
+| `swag2mcp.meta` | 메타데이터 (호환성 버전 정보) |
 
-Cache and responses are **not** exported — they are transient and would be stale on restore.
+캐시와 응답은 **내보내지지 않습니다** — 일시적인 데이터이며 복원 시 오래된 상태가 됩니다.
 
-### Default filename
+### 기본 파일 이름
 
-If you don't specify an output path, the file is saved as `swag2mcp-backup-<YYYY-MM-DD-HHMMSS>.zip` in the current directory (UTC timestamp).
+출력 경로를 지정하지 않으면 현재 디렉토리에 `swag2mcp-backup-<YYYY-MM-DD-HHMMSS>.zip`으로 저장됩니다(UTC 타임스탬프).
 
-## Import
+## 가져오기
 
-Restore a workspace from a ZIP backup or import spec files.
+ZIP 백업에서 워크스페이스를 복원하거나 명세 파일을 가져옵니다.
 
-### Restore from ZIP
+### ZIP에서 복원
 
 ```bash
-# Restore full workspace
+# 전체 워크스페이스 복원
 swag2mcp import --from-zip /path/to/backup.zip
 
-# Restore with overwrite
+# 덮어쓰기로 복원
 swag2mcp import --from-zip /path/to/backup.zip -f
 ```
 
-The ZIP must be created by `swag2mcp export` — arbitrary ZIP files will not work.
+ZIP은 `swag2mcp export`로 생성된 것이어야 합니다 — 임의의 ZIP 파일은 작동하지 않습니다.
 
-### Import a single spec file
+### 단일 명세 파일 가져오기
 
-Download a spec file and add it to the workspace:
+명세 파일을 다운로드하여 워크스페이스에 추가:
 
 ```bash
 swag2mcp import https://example.com/spec.yaml myspec
 swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
 ```
 
-### Bulk import from existing config
+### 기존 설정에서 대량 가져오기
 
-Download all collection spec files for the specified specs (domains):
+지정된 spec(도메인)의 모든 collection 명세 파일을 다운로드:
 
 ```bash
 swag2mcp import --spec meteo
 swag2mcp import /path/to/workspace --spec meteo,store
 ```
 
-This downloads each collection's spec file, saves it to `specs/`, and updates the config to point to the local copy.
+각 collection의 명세 파일을 다운로드하여 `specs/`에 저장하고 설정을 로컬 복사본을 가리키도록 업데이트합니다.
 
-## Use cases
+## 사용 사례
 
-### Backup
+### 백업
 
 ```bash
 swag2mcp export --output swag2mcp-$(date +%Y-%m-%d).zip
 ```
 
-### Transfer to another machine
+### 다른 머신으로 전송
 
 ```bash
-# On old machine
+# 이전 머신에서
 swag2mcp export --output swag2mcp.zip
 
-# Copy the ZIP to the new machine, then:
+# ZIP을 새 머신으로 복사한 후:
 swag2mcp import --from-zip swag2mcp.zip
 ```
 
-### Share configuration
+### 설정 공유
 
 ```bash
 swag2mcp init
 swag2mcp export --output template.zip
-# Share template.zip with a colleague
+# template.zip을 동료와 공유
 ```
 
-## Post-export verification
+## 내보내기 후 검증
 
-Always verify the ZIP file was created:
+항상 ZIP 파일이 생성되었는지 확인하세요:
 
 ```bash
 ls -la swag2mcp-backup-*.zip
 ```
 
-## Important notes
+## 중요 참고 사항
 
-- **The output must be a file path ending in `.zip`** — do not pass a directory
-- **Cache and responses are excluded** — only the config, specs, and auth scripts are preserved
-- **The ZIP is self-contained** — it can be restored on any machine with swag2mcp installed
-- **Spec filter** — use `--spec` to export or import only specific specs
+- **출력은 `.zip`으로 끝나는 파일 경로여야 함** — 디렉토리를 전달하지 마세요
+- **캐시와 응답은 제외됨** — 설정, 명세, 인증 스크립트만 보존됩니다
+- **ZIP은 자체 포함됨** — swag2mcp가 설치된 모든 머신에서 복원할 수 있습니다
+- **Spec 필터** — `--spec`을 사용하여 특정 spec만 내보내거나 가져올 수 있습니다

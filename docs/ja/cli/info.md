@@ -1,42 +1,42 @@
 # info
 
-## Purpose
+## 目的
 
-Show a comprehensive summary of the swag2mcp runtime as **JSON**. This includes version, workspace path, specs summary, HTTP client settings, MCP transport configuration, auth methods, and mock mode status.
+swag2mcp ランタイムの包括的なサマリーを **JSON** で表示します。バージョン、ワークスペースパス、spec サマリー、HTTP クライアント設定、MCP トランスポート設定、認証方式、モックモードステータスが含まれます。
 
-## When to use
+## 使用するタイミング
 
-- You want a machine-readable overview of the workspace
-- You need to check the runtime configuration for debugging
-- You want to see how many specs and endpoints are active
-- You need to verify HTTP client or MCP transport settings
+- ワークスペースの機械可読な概要が必要な場合
+- デバッグのためにランタイム設定を確認する必要がある場合
+- アクティブな spec とエンドポイントの数を確認したい場合
+- HTTP クライアントまたは MCP トランスポート設定を確認する必要がある場合
 
-## Syntax
+## 構文
 
 ```bash
 swag2mcp info [path]
 ```
 
-## Arguments
+## 引数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 引数 | 位置 | 必須 | 説明 |
+|------|------|------|------|
+| `path` | 1 | いいえ | ワークスペースディレクトリ。省略時はパス解決ルールに従います。 |
 
-## Flags
+## フラグ
 
-None.
+なし。
 
-## How it works
+## 仕組み
 
 ```bash
 swag2mcp info
 swag2mcp info ./my-workspace
 ```
 
-## Output
+## 出力
 
-The output is a JSON object with the following structure:
+出力は以下の構造を持つ JSON オブジェクトです：
 
 ```json
 {
@@ -68,13 +68,13 @@ The output is a JSON object with the following structure:
 }
 ```
 
-## Post-command verification
+## コマンド実行後の確認
 
-Use `info` to confirm that the workspace loaded correctly and all specs are active before starting the MCP server.
+MCP サーバーを起動する前に、`info` を使用してワークスペースが正しく読み込まれ、すべての spec がアクティブであることを確認します。
 
-## Nuances
+## ニュアンス
 
-- **Auto-init:** If no config file exists, `info` automatically runs the init wizard first.
-- **JSON only:** The output is always JSON. For human-readable output, use `ls`.
-- **`max_response_size`:** Shown in human-readable format (e.g., `"1 KB"`, `"2 MB"`).
-- **No full-text index:** `info` disables full-text indexing since it only needs config and spec metadata.
+- **自動初期化:** 設定ファイルが存在しない場合、`info` は自動的に init ウィザードを実行します。
+- **JSON のみ:** 出力は常に JSON です。人間が読める出力には `ls` を使用してください。
+- **`max_response_size`:** 人間が読める形式で表示されます（例：`"1 KB"`、`"2 MB"`）。
+- **全文インデックスなし:** `info` は設定と spec のメタデータのみが必要なため、全文インデックス作成を無効にします。

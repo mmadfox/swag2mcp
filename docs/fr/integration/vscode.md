@@ -1,8 +1,8 @@
-# VS Code Integration
+# Intégration avec VS Code
 
-## Via VS Code Settings
+## Via les paramètres VS Code
 
-In `.vscode/settings.json`:
+Dans `.vscode/settings.json` :
 
 ```json
 {
@@ -15,9 +15,9 @@ In `.vscode/settings.json`:
 }
 ```
 
-## Via Extension
+## Via une extension
 
-Install the MCP extension for VS Code and add:
+Installez l'extension MCP pour VS Code et ajoutez :
 
 ```json
 {
@@ -30,15 +30,15 @@ Install the MCP extension for VS Code and add:
 }
 ```
 
-## Usage
+## Utilisation
 
-After setup, VS Code AI Assistant can work with your APIs through swag2mcp.
+Après la configuration, l'assistant IA de VS Code peut travailler avec vos API via swag2mcp.
 
-## Others
+## Autres
 
-Don't see your client? All MCP integrations follow the same pattern:
-- Set the command to `swag2mcp` with argument `mcp`
-- Optionally add a workspace path: `mcp /path/to/workspace`
-- Check your client's documentation for the exact config file location and format
+Vous ne voyez pas votre client ? Toutes les intégrations MCP suivent le même modèle :
+- Définissez la commande sur `swag2mcp` avec l'argument `mcp`
+- Ajoutez éventuellement un chemin d'espace de travail : `mcp /chemin/vers/espace-de-travail`
+- Consultez la documentation de votre client pour l'emplacement et le format exacts du fichier de configuration
 
-Most MCP clients support stdio transport, and some support HTTP (SSE / Streamable HTTP).
+La plupart des clients MCP prennent en charge le transport stdio, et certains prennent en charge HTTP (SSE / Streamable HTTP).

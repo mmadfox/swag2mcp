@@ -1,16 +1,16 @@
 # Basic Auth
 
-## Purpose
+## 목적
 
-HTTP Basic Authentication — the simplest way to authenticate with a username and password.
+HTTP Basic Authentication — 사용자 이름과 비밀번호로 인증하는 가장 간단한 방법입니다.
 
-## When to use
+## 사용 시기
 
-- Legacy APIs that only support Basic Auth
-- Simple authentication without complex tokens
-- Internal services
+- Basic Auth만 지원하는 레거시 API
+- 복잡한 토큰이 필요 없는 간단한 인증
+- 내부 서비스
 
-## Configuration
+## 설정
 
 ```yaml
 specs:
@@ -27,14 +27,14 @@ specs:
         password: "$(PASSWORD)"
 ```
 
-## Parameters
+## 매개변수
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `username` | Yes | Username |
-| `password` | Yes | Password |
+| 매개변수 | 필수 | 설명 |
+|---------|------|------|
+| `username` | 예 | 사용자 이름 |
+| `password` | 예 | 비밀번호 |
 
-## Notes
+## 참고 사항
 
-- The password is sent in the `Authorization: Basic ...` header encoded in Base64 — this is **not encryption**. Always use HTTPS.
-- Store the password in an environment variable: `password: "$(MY_PASSWORD)"`
+- 비밀번호는 `Authorization: Basic ...` 헤더에 Base64로 인코딩되어 전송됩니다 — 이는 **암호화가 아닙니다**. 항상 HTTPS를 사용하세요.
+- 비밀번호를 환경 변수에 저장하세요: `password: "$(MY_PASSWORD)"`

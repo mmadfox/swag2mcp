@@ -1,30 +1,30 @@
-# Discovery Tools
+# Инструменты обнаружения
 
-Discovery tools let the LLM navigate the spec hierarchy: find all specs, drill into a spec to see its collections, and explore tags within a collection. Start with `spec_list` to see what APIs are available, then use IDs to drill deeper.
+Инструменты обнаружения позволяют LLM навигировать по иерархии спецификаций: найти все спецификации, углубиться в спецификацию для просмотра коллекций и исследовать теги внутри коллекции. Начните с `spec_list`, чтобы увидеть доступные API, затем используйте ID для дальнейшего углубления.
 
 ---
 
 ## spec_list
 
-### Purpose
+### Назначение
 
-List all API specifications registered in the workspace. This is the starting point for any session — the LLM calls it first to discover what APIs are available.
+Список всех спецификаций API, зарегистрированных в рабочей области. Это отправная точка для любой сессии — LLM вызывает его первым, чтобы узнать, какие API доступны.
 
-### When to use
+### Когда использовать
 
-- At the start of a session to see what APIs are configured
-- After adding or removing specs to refresh the list
-- When you need a spec ID for other tools
+- В начале сессии, чтобы увидеть, какие API настроены
+- После добавления или удаления спецификаций для обновления списка
+- Когда нужен ID спецификации для других инструментов
 
-### How it works
+### Как работает
 
-Returns a list of all specs with their unique ID and domain name. No parameters needed.
+Возвращает список всех спецификаций с их уникальным ID и доменным именем. Параметры не требуются.
 
-### Parameters
+### Параметры
 
-None.
+Нет.
 
-### Response
+### Ответ
 
 ```json
 {
@@ -41,41 +41,41 @@ None.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | 32-character MD5 hash, unique identifier for the spec |
-| `domain` | string | Domain name of the spec (e.g. "meteo", "dadjoke") |
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `id` | string | 32-символьный MD5-хеш, уникальный идентификатор спецификации |
+| `domain` | string | Доменное имя спецификации (например, "meteo", "dadjoke") |
 
-### Nuances
+### Нюансы
 
-- Returns only `id` and `domain` — for full details (collections, tags), use `spec_by_id`
-- All IDs are 32-character MD5 hex strings (`^[0-9a-f]{32}$`)
-- If no specs are configured, returns an empty array
+- Возвращает только `id` и `domain` — для полных деталей (коллекции, теги) используйте `spec_by_id`
+- Все ID — 32-символьные MD5-строки в шестнадцатеричном формате (`^[0-9a-f]{32}$`)
+- Если спецификации не настроены, возвращает пустой массив
 
 ---
 
 ## spec_by_id
 
-### Purpose
+### Назначение
 
-Get detailed information about a specific spec: its domain, all collections, and their statistics (tag count, method count).
+Получение детальной информации о конкретной спецификации: её домен, все коллекции и их статистика (количество тегов, количество методов).
 
-### When to use
+### Когда использовать
 
-- After `spec_list` to see the collections inside a spec
-- When you need collection IDs for further navigation
+- После `spec_list` для просмотра коллекций внутри спецификации
+- Когда нужны ID коллекций для дальнейшей навигации
 
-### How it works
+### Как работает
 
-Takes a spec ID and returns the spec metadata plus all its collections with counts.
+Принимает ID спецификации и возвращает метаданные спецификации плюс все её коллекции с количественными показателями.
 
-### Parameters
+### Параметры
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the spec |
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `id` | string | Да | 32-символьный MD5-хеш спецификации |
 
-### Response
+### Ответ
 
 ```json
 {
@@ -95,41 +95,41 @@ Takes a spec ID and returns the spec metadata plus all its collections with coun
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `spec.id` | string | Spec identifier |
-| `spec.domain` | string | Spec domain name |
-| `collections[].id` | string | Collection identifier |
-| `collections[].title` | string | Human-readable title |
-| `collections[].llmTitle` | string | LLM-friendly title (optional) |
-| `collections[].countTags` | int | Number of tags in the collection |
-| `collections[].countMethods` | int | Number of HTTP methods in the collection |
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `spec.id` | string | Идентификатор спецификации |
+| `spec.domain` | string | Доменное имя спецификации |
+| `collections[].id` | string | Идентификатор коллекции |
+| `collections[].title` | string | Человекочитаемое название |
+| `collections[].llmTitle` | string | Название для LLM (опционально) |
+| `collections[].countTags` | int | Количество тегов в коллекции |
+| `collections[].countMethods` | int | Количество HTTP-методов в коллекции |
 
-### Nuances
+### Нюансы
 
-- Returns `not_found` error if the spec ID does not exist
-- The `id` must be a valid 32-character MD5 hex string
+- Возвращает ошибку `not_found`, если ID спецификации не существует
+- `id` должен быть валидной 32-символьной MD5-строкой в шестнадцатеричном формате
 
 ---
 
 ## collection_by_spec
 
-### Purpose
+### Назначение
 
-List all collections within a specific spec. Similar to `spec_by_id` but returns only the collection list without extra spec metadata.
+Список всех коллекций в конкретной спецификации. Аналогично `spec_by_id`, но возвращает только список коллекций без дополнительных метаданных спецификации.
 
-### When to use
+### Когда использовать
 
-- When you already have the spec ID and just need the collection list
-- As a lighter alternative to `spec_by_id`
+- Когда уже есть ID спецификации и нужен только список коллекций
+- Как более лёгкая альтернатива `spec_by_id`
 
-### Parameters
+### Параметры
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `specId` | string | Yes | 32-character MD5 hash of the spec |
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `specId` | string | Да | 32-символьный MD5-хеш спецификации |
 
-### Response
+### Ответ
 
 ```json
 {
@@ -149,31 +149,31 @@ List all collections within a specific spec. Similar to `spec_by_id` but returns
 }
 ```
 
-### Nuances
+### Нюансы
 
-- Returns `not_found` if the spec does not exist
-- Same data as `spec_by_id` but without the extra spec wrapper
+- Возвращает `not_found`, если спецификация не существует
+- Те же данные, что и `spec_by_id`, но без дополнительной обёртки спецификации
 
 ---
 
 ## collection_by_id
 
-### Purpose
+### Назначение
 
-Get detailed information about a specific collection: its metadata, the parent spec, and all tags within the collection.
+Получение детальной информации о конкретной коллекции: её метаданные, родительская спецификация и все теги внутри коллекции.
 
-### When to use
+### Когда использовать
 
-- After `collection_by_spec` to see the tags inside a collection
-- When you need tag IDs for `tag_by_id` or `endpoint_by_tag`
+- После `collection_by_spec` для просмотра тегов внутри коллекции
+- Когда нужны ID тегов для `tag_by_id` или `endpoint_by_tag`
 
-### Parameters
+### Параметры
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the collection |
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `id` | string | Да | 32-символьный MD5-хеш коллекции |
 
-### Response
+### Ответ
 
 ```json
 {
@@ -201,37 +201,37 @@ Get detailed information about a specific collection: its metadata, the parent s
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `spec` | object | Parent spec (id, domain) |
-| `collection` | object | Collection metadata (id, title, countMethods) |
-| `tags[]` | array | List of tags with id, title, countMethods |
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `spec` | object | Родительская спецификация (id, domain) |
+| `collection` | object | Метаданные коллекции (id, title, countMethods) |
+| `tags[]` | array | Список тегов с id, title, countMethods |
 
-### Nuances
+### Нюансы
 
-- Returns `not_found` if the collection ID does not exist
-- Tags are returned with their IDs — use `endpoint_by_tag(tagId)` to see the actual endpoints
+- Возвращает `not_found`, если ID коллекции не существует
+- Теги возвращаются с их ID — используйте `endpoint_by_tag(tagId)` для просмотра фактических эндпоинтов
 
 ---
 
 ## tag_by_spec
 
-### Purpose
+### Назначение
 
-List all tags across an entire spec, spanning all collections. Useful for getting a bird's-eye view of all available tags.
+Список всех тегов во всей спецификации, охватывающий все коллекции. Полезно для получения общего обзора всех доступных тегов.
 
-### When to use
+### Когда использовать
 
-- When you want to see all tags in a spec without drilling into each collection
-- When you don't know which collection contains the tag you need
+- Когда нужно увидеть все теги в спецификации без углубления в каждую коллекцию
+- Когда неизвестно, в какой коллекции находится нужный тег
 
-### Parameters
+### Параметры
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `specId` | string | Yes | 32-character MD5 hash of the spec |
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `specId` | string | Да | 32-символьный MD5-хеш спецификации |
 
-### Response
+### Ответ
 
 ```json
 {
@@ -250,31 +250,31 @@ List all tags across an entire spec, spanning all collections. Useful for gettin
 }
 ```
 
-### Nuances
+### Нюансы
 
-- Returns `not_found` if the spec does not exist
-- Tags are aggregated from all collections in the spec
+- Возвращает `not_found`, если спецификация не существует
+- Теги агрегируются из всех коллекций спецификации
 
 ---
 
 ## tag_by_collection
 
-### Purpose
+### Назначение
 
-List all tags within a specific collection. Unlike `tag_by_spec`, this also returns the parent spec and collection metadata.
+Список всех тегов в конкретной коллекции. В отличие от `tag_by_spec`, также возвращает метаданные родительской спецификации и коллекции.
 
-### When to use
+### Когда использовать
 
-- After `collection_by_id` to confirm the tag list
-- When you need the full context (spec + collection + tags)
+- После `collection_by_id` для подтверждения списка тегов
+- Когда нужен полный контекст (спецификация + коллекция + теги)
 
-### Parameters
+### Параметры
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `collectionId` | string | Yes | 32-character MD5 hash of the collection |
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `collectionId` | string | Да | 32-символьный MD5-хеш коллекции |
 
-### Response
+### Ответ
 
 ```json
 {
@@ -297,31 +297,31 @@ List all tags within a specific collection. Unlike `tag_by_spec`, this also retu
 }
 ```
 
-### Nuances
+### Нюансы
 
-- Returns `not_found` if the collection does not exist
-- Same tag data as `tag_by_spec` but scoped to one collection
+- Возвращает `not_found`, если коллекция не существует
+- Те же данные тегов, что и `tag_by_spec`, но ограниченные одной коллекцией
 
 ---
 
 ## tag_by_id
 
-### Purpose
+### Назначение
 
-Get information about a single tag: its ID, title, and how many methods it contains. This tells you about the tag itself — to see the actual endpoints, use `endpoint_by_tag`.
+Получение информации об одном теге: его ID, название и количество методов. Это рассказывает о самом теге — для просмотра фактических эндпоинтов используйте `endpoint_by_tag`.
 
-### When to use
+### Когда использовать
 
-- When you have a tag ID and want to confirm its name and size
-- Before calling `endpoint_by_tag` to understand how many endpoints to expect
+- Когда есть ID тега и нужно подтвердить его имя и размер
+- Перед вызовом `endpoint_by_tag` для понимания, сколько эндпоинтов ожидать
 
-### Parameters
+### Параметры
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the tag |
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `id` | string | Да | 32-символьный MD5-хеш тега |
 
-### Response
+### Ответ
 
 ```json
 {
@@ -333,13 +333,13 @@ Get information about a single tag: its ID, title, and how many methods it conta
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `tag.id` | string | Tag identifier |
-| `tag.title` | string | Human-readable tag name |
-| `tag.countMethods` | int | Number of HTTP methods in this tag |
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `tag.id` | string | Идентификатор тега |
+| `tag.title` | string | Человекочитаемое имя тега |
+| `tag.countMethods` | int | Количество HTTP-методов в этом теге |
 
-### Nuances
+### Нюансы
 
-- Returns `not_found` if the tag does not exist
-- This tool returns tag metadata only — use `endpoint_by_tag` to get the actual list of endpoints
+- Возвращает `not_found`, если тег не существует
+- Этот инструмент возвращает только метаданные тега — используйте `endpoint_by_tag` для получения фактического списка эндпоинтов

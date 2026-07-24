@@ -1,121 +1,121 @@
 # mcp
 
-## Purpose
+## 用途
 
-Start the **MCP (Model Context Protocol) server** — the primary mode for LLM integration. This is what you run to give an AI agent (Claude, Cursor, OpenCode, etc.) access to your APIs through 16 MCP tools.
+启动 **MCP（模型上下文协议）服务器** — LLM 集成的主要模式。这是你运行以让 AI 智能体（Claude、Cursor、OpenCode 等）通过 16 个 MCP 工具访问你的 API 的方式。
 
-## When to use
+## 何时使用
 
-- You want to connect an LLM agent to your APIs
-- You are configuring an IDE (VS Code, Cursor, JetBrains) or desktop app (Claude Desktop)
-- You need to expose your APIs via the MCP protocol
-- You are testing the MCP server before integration
+- 你想将 LLM 智能体连接到你的 API
+- 你正在配置 IDE（VS Code、Cursor、JetBrains）或桌面应用（Claude Desktop）
+- 你需要通过 MCP 协议暴露你的 API
+- 你正在集成前测试 MCP 服务器
 
-## Syntax
+## 语法
 
 ```bash
 swag2mcp mcp [path] [flags]
 ```
 
-## Arguments
+## 参数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 参数 | 位置 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | 1 | 否 | 工作区目录。如果省略，通过路径解析规则解析。 |
 
-## Flags
+## 标志
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--transport` | | `string` | `"stdio"` | MCP transport: `stdio`, `sse`, `streamable-http` |
-| `--http-addr` | | `string` | `":8080"` | HTTP server address (for `sse` and `streamable-http`) |
-| `--http-path` | | `string` | `"/mcp"` | HTTP path for the MCP handler |
-| `--auth-token` | | `string` | `""` | Bearer token for HTTP transport authentication |
-| `--logfile` | `-f` | `string` | `""` | Log file path. If unset, logs to stderr. |
-| `--disable-llm-auth` | | `bool` | `true` | Remove the `auth` tool from the MCP tool list |
-| `--dump-dir` | | `string` | `""` | Directory to dump HTTP requests for debugging |
-| `--tags` | `-t` | `string` | `""` | Filter specs by tags (comma-separated) |
+| 标志 | 简写 | 类型 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| `--transport` | | `string` | `"stdio"` | MCP 传输：`stdio`、`sse`、`streamable-http` |
+| `--http-addr` | | `string` | `":8080"` | HTTP 服务器地址（用于 `sse` 和 `streamable-http`） |
+| `--http-path` | | `string` | `"/mcp"` | MCP 处理程序的 HTTP 路径 |
+| `--auth-token` | | `string` | `""` | HTTP 传输认证的 Bearer 令牌 |
+| `--logfile` | `-f` | `string` | `""` | 日志文件路径。如果未设置，日志输出到 stderr。 |
+| `--disable-llm-auth` | | `bool` | `true` | 从 MCP 工具列表中移除 `auth` 工具 |
+| `--dump-dir` | | `string` | `""` | 用于调试的 HTTP 请求转储目录 |
+| `--tags` | `-t` | `string` | `""` | 按标签过滤 spec（逗号分隔） |
 
-## How it works
+## 工作原理
 
-### stdio transport (default)
+### stdio 传输（默认）
 
-Used when the MCP server is launched as a subprocess by the LLM client (IDE, Claude Desktop, etc.). The server communicates over standard input/output.
+当 MCP 服务器作为子进程由 LLM 客户端（IDE、Claude Desktop 等）启动时使用。服务器通过标准输入/输出进行通信。
 
 ```bash
 swag2mcp mcp
 ```
 
-### SSE transport
+### SSE 传输
 
-Server-Sent Events transport for HTTP-based communication. Requires the MCP handshake sequence.
+用于基于 HTTP 通信的服务器发送事件传输。需要 MCP 握手序列。
 
 ```bash
 swag2mcp mcp --transport sse --http-addr :8080
 ```
 
-### Streamable HTTP transport
+### Streamable HTTP 传输
 
-Modern HTTP transport that supports streaming responses.
+支持流式响应的现代 HTTP 传输。
 
 ```bash
 swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 ```
 
-### With authentication
+### 带认证
 
-Protect the HTTP endpoint with a bearer token:
+使用 bearer 令牌保护 HTTP 端点：
 
 ```bash
 swag2mcp mcp --transport sse --http-addr :8080 --auth-token "my-secret"
 ```
 
-### With tag filtering
+### 带标签过滤
 
-Only load specs with specific tags:
+仅加载具有特定标签的 spec：
 
 ```bash
 swag2mcp mcp --tags=public
 ```
 
-### With auth tool enabled (debug mode)
+### 启用 auth 工具（调试模式）
 
-Allow the LLM to request fresh tokens via the `auth` tool:
+允许 LLM 通过 `auth` 工具请求新令牌：
 
 ```bash
 swag2mcp mcp --disable-llm-auth=false
 ```
 
-### With request dump directory
+### 带请求转储目录
 
-Save all HTTP requests for debugging:
+保存所有 HTTP 请求以进行调试：
 
 ```bash
 swag2mcp mcp --dump-dir ./dumps
 ```
 
-## MCP HTTP Transport — Handshake Protocol
+## MCP HTTP 传输 — 握手协议
 
-When using `sse` or `streamable-http`, the MCP protocol requires a specific handshake. Tool calls will fail before initialization:
+使用 `sse` 或 `streamable-http` 时，MCP 协议需要特定的握手。在初始化之前，工具调用将失败：
 
 ```
-Step 1: POST /mcp → {"method":"initialize", ...}
-Step 2: POST /mcp → {"method":"notifications/initialized"}
-Step 3: POST /mcp → {"method":"tools/list", ...}   ← now works
+步骤 1：POST /mcp → {"method":"initialize", ...}
+步骤 2：POST /mcp → {"method":"notifications/initialized"}
+步骤 3：POST /mcp → {"method":"tools/list", ...}   ← 现在可以工作
 ```
 
-### Health check
+### 健康检查
 
-Works without initialization:
+无需初始化即可工作：
 
 ```bash
 curl http://localhost:8080/health
 # → {"status":"ok","version":"v1.2.0"}
 ```
 
-## IDE Configuration Examples
+## IDE 配置示例
 
-### VS Code (`.vscode/settings.json` or global settings)
+### VS Code（`.vscode/settings.json` 或全局设置）
 
 ```json
 {
@@ -130,7 +130,7 @@ curl http://localhost:8080/health
 }
 ```
 
-### Cursor / Windsurf (`~/.cursor/mcp.json` or project `.cursor/mcp.json`)
+### Cursor / Windsurf（`~/.cursor/mcp.json` 或项目 `.cursor/mcp.json`）
 
 ```json
 {
@@ -143,7 +143,7 @@ curl http://localhost:8080/health
 }
 ```
 
-### Claude Desktop (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS)
+### Claude Desktop（macOS 上为 `~/Library/Application Support/Claude/claude_desktop_config.json`）
 
 ```json
 {
@@ -156,26 +156,26 @@ curl http://localhost:8080/health
 }
 ```
 
-### JetBrains IDEs (Settings → Tools → MCP)
+### JetBrains IDE（设置 → 工具 → MCP）
 
-- Name: `swag2mcp`
-- Command: `swag2mcp`
-- Arguments: `mcp /absolute/path/to/.swag2mcp`
+- 名称：`swag2mcp`
+- 命令：`swag2mcp`
+- 参数：`mcp /absolute/path/to/.swag2mcp`
 
-> **Always use an absolute path** to the workspace directory in IDE config. Relative paths may fail depending on the IDE's working directory.
+> **始终使用工作区目录的绝对路径**。相对路径可能因 IDE 的工作目录而失败。
 
-## Output
+## 输出
 
-On success, the server prints:
+成功时，服务器打印：
 
 ```
 MCP server listening on http://127.0.0.1:8080/mcp
 ```
 
-## Nuances
+## 细节
 
-- **No auto-init:** If the config file does not exist, `mcp` returns an error: `"configuration not found at <path>"`. Run `init` first.
-- **`--disable-llm-auth` (default: `true`):** When enabled, the `auth` tool is removed from the MCP tool list entirely. The LLM cannot see or request tokens. Auth still works — tokens are obtained through the standard config mechanism, not via the LLM. This mode is recommended for **production**. For **debugging** or when using short-lived tokens, set `--disable-llm-auth=false` to let the LLM request fresh tokens via the `auth` tool.
-- **YAML config fallback:** If a CLI flag is not explicitly set, the value is taken from the `mcp` section in `swag2mcp.yaml` (if present). This allows you to configure the server in the config file instead of passing flags every time.
-- **Response cleanup:** On startup, responses older than 48 hours are automatically removed from the `responses/` directory.
-- **Path resolution warning:** When `[path]` is omitted, `mcp` searches for `swag2mcp.yaml` in the current directory first, then falls back to `~/.swag2mcp/`. If you run the command from the wrong directory, it may load a different workspace than intended. **Always specify `[path]` explicitly when running as a service or in IDE config.**
+- **无自动初始化：** 如果配置文件不存在，`mcp` 返回错误：`"configuration not found at <path>"`。先运行 `init`。
+- **`--disable-llm-auth`（默认：`true`）：** 启用时，`auth` 工具从 MCP 工具列表中完全移除。LLM 无法看到或请求令牌。认证仍然有效 — 令牌通过标准配置机制获取，而不是通过 LLM。此模式推荐用于**生产环境**。对于**调试**或使用短期令牌时，设置 `--disable-llm-auth=false` 让 LLM 通过 `auth` 工具请求新令牌。
+- **YAML 配置回退：** 如果未显式设置 CLI 标志，则从 `swag2mcp.yaml` 中的 `mcp` 部分取值（如果存在）。这允许你在配置文件中配置服务器，而不是每次都传递标志。
+- **响应清理：** 启动时，超过 48 小时的响应会自动从 `responses/` 目录中删除。
+- **路径解析警告：** 当省略 `[path]` 时，`mcp` 首先在当前目录中搜索 `swag2mcp.yaml`，然后回退到 `~/.swag2mcp/`。如果你从错误的目录运行命令，可能会加载与预期不同的工作区。**作为服务运行或在 IDE 配置中时，始终显式指定 `[path]`。**

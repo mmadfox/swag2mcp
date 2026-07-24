@@ -1,12 +1,12 @@
-# Authentication
+# 認証
 
-## Overview
+## 概要
 
-swag2mcp supports **9 authentication methods** for working with APIs that require authorization. You configure it once in the config file — after that, every API call through `invoke` automatically includes the right tokens and headers.
+swag2mcp は認証が必要な API を扱うための **9 つの認証方式** をサポートしています。設定ファイルに一度設定するだけで、以降 `invoke` によるすべての API 呼び出しに自動的に適切なトークンとヘッダーが含まれます。
 
-### Where to configure
+### 設定場所
 
-Authentication is set at the **spec** level in `swag2mcp.yaml`:
+認証は `swag2mcp.yaml` の **spec** レベルで設定します：
 
 ```yaml
 specs:
@@ -22,16 +22,16 @@ specs:
         token: "my-token"
 ```
 
-### How it works
+### 仕組み
 
-- You specify the auth type and parameters in the config
-- swag2mcp automatically applies them to every request when you call `invoke`
-- You **don't need** to request a token before calling an API — it happens automatically
-- If a token expires (OAuth2, Script), swag2mcp refreshes it on its own
+- 設定で認証タイプとパラメーターを指定します
+- swag2mcp は `invoke` を呼び出すときに自動的にすべてのリクエストに適用します
+- API を呼び出す前にトークンを要求する**必要はありません** — 自動的に行われます
+- トークンが期限切れになった場合（OAuth2、Script）、swag2mcp が自動的に更新します
 
-### Environment variables
+### 環境変数
 
-Sensitive data (tokens, passwords, keys) can be stored in environment variables using `$(VAR_NAME)` syntax:
+機密データ（トークン、パスワード、キー）は `$(VAR_NAME)` 構文を使用して環境変数に保存できます：
 
 ```yaml
 auth:
@@ -40,24 +40,24 @@ auth:
     token: "$(MY_API_TOKEN)"
 ```
 
-swag2mcp substitutes the value of `MY_API_TOKEN` at startup.
+swag2mcp は起動時に `MY_API_TOKEN` の値を代入します。
 
-### MCP auth tool
+### MCP auth ツール
 
-The LLM agent can retrieve a token or headers through the `auth` MCP tool — for example, to build a curl command or show the user.
+LLM エージェントは `auth` MCP ツールを介してトークンやヘッダーを取得できます — 例えば、curl コマンドを構築したりユーザーに表示したりするためです。
 
-In **production**, this tool should be disabled with `--disable-llm-auth` (enabled by default) so the LLM never has access to tokens.
+**本番環境**では、このツールは `--disable-llm-auth`（デフォルトで有効）で無効にし、LLM がトークンにアクセスできないようにする必要があります。
 
-### Methods
+### 方式一覧
 
-| Method | Description | Best for |
-|--------|-------------|----------|
-| [`none`](/auth/none) | No authentication | Public APIs |
-| [`basic`](/auth/basic) | HTTP Basic (username + password) | Legacy APIs, simple auth |
-| [`bearer`](/auth/bearer) | Bearer Token (JWT, token) | Modern REST APIs |
-| [`api-key`](/auth/api-key) | API key in header or query parameter | Services with API keys |
-| [`digest`](/auth/digest) | HTTP Digest (username + password) | Legacy APIs, more secure than Basic |
-| [`hmac`](/auth/hmac) | HMAC-SHA256 signature (Binance-style) | Cryptocurrency exchanges |
-| [`oauth2-cc`](/auth/oauth2-cc) | OAuth2 Client Credentials | Server-to-server, microservices |
-| [`oauth2-pwd`](/auth/oauth2-pwd) | OAuth2 Password Grant | Apps with user login |
-| [`script`](/auth/script) | External script to obtain a token | Any custom auth scheme |
+| 方式 | 説明 | 最適な用途 |
+|------|------|-----------|
+| [`none`](/auth/none) | 認証なし | 公開 API |
+| [`basic`](/auth/basic) | HTTP Basic（ユーザー名 + パスワード） | レガシー API、シンプルな認証 |
+| [`bearer`](/auth/bearer) | Bearer トークン（JWT、トークン） | 最新の REST API |
+| [`api-key`](/auth/api-key) | ヘッダーまたはクエリパラメーターの API キー | API キーを使用するサービス |
+| [`digest`](/auth/digest) | HTTP Digest（ユーザー名 + パスワード） | レガシー API、Basic より安全 |
+| [`hmac`](/auth/hmac) | HMAC-SHA256 署名（Binance スタイル） | 暗号通貨取引所 |
+| [`oauth2-cc`](/auth/oauth2-cc) | OAuth2 Client Credentials | サーバー間、マイクロサービス |
+| [`oauth2-pwd`](/auth/oauth2-pwd) | OAuth2 Password Grant | ユーザーログイン付きアプリ |
+| [`script`](/auth/script) | トークン取得用の外部スクリプト | 任意のカスタム認証スキーム |

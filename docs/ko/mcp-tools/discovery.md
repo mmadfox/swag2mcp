@@ -1,30 +1,30 @@
-# Discovery Tools
+# 발견 도구
 
-Discovery tools let the LLM navigate the spec hierarchy: find all specs, drill into a spec to see its collections, and explore tags within a collection. Start with `spec_list` to see what APIs are available, then use IDs to drill deeper.
+발견 도구는 LLM이 spec 계층 구조를 탐색할 수 있게 합니다: 모든 spec 찾기, spec으로 드릴다운하여 collection 보기, collection 내의 태그 탐색. `spec_list`로 시작하여 사용 가능한 API를 확인한 후 ID를 사용하여 더 깊이 들어가세요.
 
 ---
 
 ## spec_list
 
-### Purpose
+### 목적
 
-List all API specifications registered in the workspace. This is the starting point for any session — the LLM calls it first to discover what APIs are available.
+워크스페이스에 등록된 모든 API 명세를 나열합니다. 모든 세션의 시작점입니다 — LLM이 먼저 호출하여 사용 가능한 API를 발견합니다.
 
-### When to use
+### 사용 시기
 
-- At the start of a session to see what APIs are configured
-- After adding or removing specs to refresh the list
-- When you need a spec ID for other tools
+- 세션 시작 시 어떤 API가 설정되어 있는지 확인
+- spec을 추가하거나 제거한 후 목록 새로고침
+- 다른 도구에 필요한 spec ID가 필요할 때
 
-### How it works
+### 작동 방식
 
-Returns a list of all specs with their unique ID and domain name. No parameters needed.
+고유 ID와 도메인 이름이 있는 모든 spec 목록을 반환합니다. 매개변수가 필요하지 않습니다.
 
-### Parameters
+### 매개변수
 
-None.
+없음.
 
-### Response
+### 응답
 
 ```json
 {
@@ -41,41 +41,41 @@ None.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | 32-character MD5 hash, unique identifier for the spec |
-| `domain` | string | Domain name of the spec (e.g. "meteo", "dadjoke") |
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | string | 32자 MD5 해시, spec의 고유 식별자 |
+| `domain` | string | spec의 도메인 이름 (예: "meteo", "dadjoke") |
 
-### Nuances
+### 세부 사항
 
-- Returns only `id` and `domain` — for full details (collections, tags), use `spec_by_id`
-- All IDs are 32-character MD5 hex strings (`^[0-9a-f]{32}$`)
-- If no specs are configured, returns an empty array
+- `id`와 `domain`만 반환 — 전체 세부 정보(collection, 태그)는 `spec_by_id` 사용
+- 모든 ID는 32자 MD5 16진수 문자열 (`^[0-9a-f]{32}$`)
+- 설정된 spec이 없으면 빈 배열 반환
 
 ---
 
 ## spec_by_id
 
-### Purpose
+### 목적
 
-Get detailed information about a specific spec: its domain, all collections, and their statistics (tag count, method count).
+특정 spec의 상세 정보를 가져옵니다: 도메인, 모든 collection, 통계(태그 수, 메서드 수).
 
-### When to use
+### 사용 시기
 
-- After `spec_list` to see the collections inside a spec
-- When you need collection IDs for further navigation
+- `spec_list` 후 spec 내부의 collection을 보려고 할 때
+- 추가 탐색을 위해 collection ID가 필요할 때
 
-### How it works
+### 작동 방식
 
-Takes a spec ID and returns the spec metadata plus all its collections with counts.
+spec ID를 받아 spec 메타데이터와 모든 collection을 개수와 함께 반환합니다.
 
-### Parameters
+### 매개변수
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the spec |
+| 매개변수 | 타입 | 필수 | 설명 |
+|---------|------|------|------|
+| `id` | string | 예 | spec의 32자 MD5 해시 |
 
-### Response
+### 응답
 
 ```json
 {
@@ -95,41 +95,41 @@ Takes a spec ID and returns the spec metadata plus all its collections with coun
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `spec.id` | string | Spec identifier |
-| `spec.domain` | string | Spec domain name |
-| `collections[].id` | string | Collection identifier |
-| `collections[].title` | string | Human-readable title |
-| `collections[].llmTitle` | string | LLM-friendly title (optional) |
-| `collections[].countTags` | int | Number of tags in the collection |
-| `collections[].countMethods` | int | Number of HTTP methods in the collection |
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `spec.id` | string | Spec 식별자 |
+| `spec.domain` | string | Spec 도메인 이름 |
+| `collections[].id` | string | Collection 식별자 |
+| `collections[].title` | string | 사람이 읽을 수 있는 제목 |
+| `collections[].llmTitle` | string | LLM 친화적 제목 (선택 사항) |
+| `collections[].countTags` | int | collection의 태그 수 |
+| `collections[].countMethods` | int | collection의 HTTP 메서드 수 |
 
-### Nuances
+### 세부 사항
 
-- Returns `not_found` error if the spec ID does not exist
-- The `id` must be a valid 32-character MD5 hex string
+- spec ID가 존재하지 않으면 `not_found` 오류 반환
+- `id`는 유효한 32자 MD5 16진수 문자열이어야 함
 
 ---
 
 ## collection_by_spec
 
-### Purpose
+### 목적
 
-List all collections within a specific spec. Similar to `spec_by_id` but returns only the collection list without extra spec metadata.
+특정 spec 내의 모든 collection을 나열합니다. `spec_by_id`와 유사하지만 추가 spec 메타데이터 없이 collection 목록만 반환합니다.
 
-### When to use
+### 사용 시기
 
-- When you already have the spec ID and just need the collection list
-- As a lighter alternative to `spec_by_id`
+- 이미 spec ID가 있고 collection 목록만 필요할 때
+- `spec_by_id`의 더 가벼운 대안으로
 
-### Parameters
+### 매개변수
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `specId` | string | Yes | 32-character MD5 hash of the spec |
+| 매개변수 | 타입 | 필수 | 설명 |
+|---------|------|------|------|
+| `specId` | string | 예 | spec의 32자 MD5 해시 |
 
-### Response
+### 응답
 
 ```json
 {
@@ -149,31 +149,31 @@ List all collections within a specific spec. Similar to `spec_by_id` but returns
 }
 ```
 
-### Nuances
+### 세부 사항
 
-- Returns `not_found` if the spec does not exist
-- Same data as `spec_by_id` but without the extra spec wrapper
+- spec이 존재하지 않으면 `not_found` 반환
+- `spec_by_id`와 동일한 데이터지만 추가 spec 래퍼 없음
 
 ---
 
 ## collection_by_id
 
-### Purpose
+### 목적
 
-Get detailed information about a specific collection: its metadata, the parent spec, and all tags within the collection.
+특정 collection의 상세 정보를 가져옵니다: 메타데이터, 상위 spec, collection 내의 모든 태그.
 
-### When to use
+### 사용 시기
 
-- After `collection_by_spec` to see the tags inside a collection
-- When you need tag IDs for `tag_by_id` or `endpoint_by_tag`
+- `collection_by_spec` 후 collection 내부의 태그를 보려고 할 때
+- `tag_by_id` 또는 `endpoint_by_tag`에 필요한 태그 ID가 필요할 때
 
-### Parameters
+### 매개변수
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the collection |
+| 매개변수 | 타입 | 필수 | 설명 |
+|---------|------|------|------|
+| `id` | string | 예 | collection의 32자 MD5 해시 |
 
-### Response
+### 응답
 
 ```json
 {
@@ -201,37 +201,37 @@ Get detailed information about a specific collection: its metadata, the parent s
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `spec` | object | Parent spec (id, domain) |
-| `collection` | object | Collection metadata (id, title, countMethods) |
-| `tags[]` | array | List of tags with id, title, countMethods |
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `spec` | object | 상위 spec (id, domain) |
+| `collection` | object | Collection 메타데이터 (id, title, countMethods) |
+| `tags[]` | array | id, title, countMethods가 있는 태그 목록 |
 
-### Nuances
+### 세부 사항
 
-- Returns `not_found` if the collection ID does not exist
-- Tags are returned with their IDs — use `endpoint_by_tag(tagId)` to see the actual endpoints
+- collection ID가 존재하지 않으면 `not_found` 반환
+- 태그는 ID와 함께 반환 — 실제 엔드포인트를 보려면 `endpoint_by_tag(tagId)` 사용
 
 ---
 
 ## tag_by_spec
 
-### Purpose
+### 목적
 
-List all tags across an entire spec, spanning all collections. Useful for getting a bird's-eye view of all available tags.
+모든 collection에 걸쳐 전체 spec의 모든 태그를 나열합니다. 사용 가능한 모든 태그의 조감도를 보는 데 유용합니다.
 
-### When to use
+### 사용 시기
 
-- When you want to see all tags in a spec without drilling into each collection
-- When you don't know which collection contains the tag you need
+- 각 collection으로 드릴다운하지 않고 spec의 모든 태그를 보려고 할 때
+- 필요한 태그가 어떤 collection에 있는지 모를 때
 
-### Parameters
+### 매개변수
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `specId` | string | Yes | 32-character MD5 hash of the spec |
+| 매개변수 | 타입 | 필수 | 설명 |
+|---------|------|------|------|
+| `specId` | string | 예 | spec의 32자 MD5 해시 |
 
-### Response
+### 응답
 
 ```json
 {
@@ -250,31 +250,31 @@ List all tags across an entire spec, spanning all collections. Useful for gettin
 }
 ```
 
-### Nuances
+### 세부 사항
 
-- Returns `not_found` if the spec does not exist
-- Tags are aggregated from all collections in the spec
+- spec이 존재하지 않으면 `not_found` 반환
+- 태그는 spec의 모든 collection에서 집계됨
 
 ---
 
 ## tag_by_collection
 
-### Purpose
+### 목적
 
-List all tags within a specific collection. Unlike `tag_by_spec`, this also returns the parent spec and collection metadata.
+특정 collection 내의 모든 태그를 나열합니다. `tag_by_spec`과 달리 상위 spec 및 collection 메타데이터도 반환합니다.
 
-### When to use
+### 사용 시기
 
-- After `collection_by_id` to confirm the tag list
-- When you need the full context (spec + collection + tags)
+- `collection_by_id` 후 태그 목록을 확인하려고 할 때
+- 전체 컨텍스트(spec + collection + 태그)가 필요할 때
 
-### Parameters
+### 매개변수
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `collectionId` | string | Yes | 32-character MD5 hash of the collection |
+| 매개변수 | 타입 | 필수 | 설명 |
+|---------|------|------|------|
+| `collectionId` | string | 예 | collection의 32자 MD5 해시 |
 
-### Response
+### 응답
 
 ```json
 {
@@ -297,31 +297,31 @@ List all tags within a specific collection. Unlike `tag_by_spec`, this also retu
 }
 ```
 
-### Nuances
+### 세부 사항
 
-- Returns `not_found` if the collection does not exist
-- Same tag data as `tag_by_spec` but scoped to one collection
+- collection이 존재하지 않으면 `not_found` 반환
+- `tag_by_spec`과 동일한 태그 데이터지만 하나의 collection으로 범위가 제한됨
 
 ---
 
 ## tag_by_id
 
-### Purpose
+### 목적
 
-Get information about a single tag: its ID, title, and how many methods it contains. This tells you about the tag itself — to see the actual endpoints, use `endpoint_by_tag`.
+단일 태그에 대한 정보를 가져옵니다: ID, 제목, 포함된 메서드 수. 태그 자체에 대한 정보를 알려줍니다 — 실제 엔드포인트를 보려면 `endpoint_by_tag`를 사용하세요.
 
-### When to use
+### 사용 시기
 
-- When you have a tag ID and want to confirm its name and size
-- Before calling `endpoint_by_tag` to understand how many endpoints to expect
+- 태그 ID가 있고 이름과 크기를 확인하려고 할 때
+- `endpoint_by_tag`를 호출하기 전에 예상되는 엔드포인트 수를 이해하려고 할 때
 
-### Parameters
+### 매개변수
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the tag |
+| 매개변수 | 타입 | 필수 | 설명 |
+|---------|------|------|------|
+| `id` | string | 예 | 태그의 32자 MD5 해시 |
 
-### Response
+### 응답
 
 ```json
 {
@@ -333,13 +333,13 @@ Get information about a single tag: its ID, title, and how many methods it conta
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `tag.id` | string | Tag identifier |
-| `tag.title` | string | Human-readable tag name |
-| `tag.countMethods` | int | Number of HTTP methods in this tag |
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `tag.id` | string | 태그 식별자 |
+| `tag.title` | string | 사람이 읽을 수 있는 태그 이름 |
+| `tag.countMethods` | int | 이 태그의 HTTP 메서드 수 |
 
-### Nuances
+### 세부 사항
 
-- Returns `not_found` if the tag does not exist
-- This tool returns tag metadata only — use `endpoint_by_tag` to get the actual list of endpoints
+- 태그가 존재하지 않으면 `not_found` 반환
+- 이 도구는 태그 메타데이터만 반환 — 실제 엔드포인트 목록은 `endpoint_by_tag` 사용

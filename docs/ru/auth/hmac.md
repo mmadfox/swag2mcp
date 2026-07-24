@@ -1,16 +1,16 @@
 # HMAC Auth
 
-## Purpose
+## Назначение
 
-HMAC-SHA256 request signing — the authentication method used by cryptocurrency exchanges (Binance, Bybit, and others). Each request is signed with a secret key.
+Подпись запросов HMAC-SHA256 — метод аутентификации, используемый криптовалютными биржами (Binance, Bybit и другие). Каждый запрос подписывается секретным ключом.
 
-## When to use
+## Когда использовать
 
-- Binance API and Binance-compatible exchanges
-- Cryptocurrency trading platforms
-- APIs that require request signing
+- API Binance и совместимые с Binance биржи
+- Криптовалютные торговые платформы
+- API, требующие подписи запросов
 
-## Configuration
+## Конфигурация
 
 ```yaml
 specs:
@@ -27,16 +27,16 @@ specs:
         secret_key: "$(BINANCE_SECRET_KEY)"
 ```
 
-## Parameters
+## Параметры
 
-| Parameter | Required | Description |
+| Параметр | Обязательно | Описание |
 |-----------|----------|-------------|
-| `api_key` | Yes | Public API key |
-| `secret_key` | Yes | Secret key for signing |
+| `api_key` | Да | Публичный API-ключ |
+| `secret_key` | Да | Секретный ключ для подписи |
 
-## Notes
+## Примечания
 
-- swag2mcp automatically adds a timestamp (Unix in milliseconds) to every request
-- The signature is computed from all request parameters
-- Store keys in environment variables: `api_key: "$(BINANCE_API_KEY)"`
-- This method is compatible with Binance API and similar exchanges
+- swag2mcp автоматически добавляет временную метку (Unix в миллисекундах) к каждому запросу
+- Подпись вычисляется из всех параметров запроса
+- Храните ключи в переменных окружения: `api_key: "$(BINANCE_API_KEY)"`
+- Этот метод совместим с API Binance и аналогичными биржами

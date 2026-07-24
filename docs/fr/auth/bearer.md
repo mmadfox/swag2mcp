@@ -1,25 +1,25 @@
-# Bearer Auth
+# Authentification Bearer
 
-## Purpose
+## Objectif
 
-Bearer Token authentication — the most common method for modern REST APIs. The token is sent in the `Authorization: Bearer <token>` header.
+Authentification par jeton Bearer — la méthode la plus courante pour les API REST modernes. Le jeton est envoyé dans l'en-tête `Authorization: Bearer <jeton>`.
 
-## When to use
+## Quand l'utiliser
 
-- Modern REST APIs
+- API REST modernes
 - JWT (JSON Web Tokens)
-- OAuth2 access tokens (when the token is already obtained)
-- Any API that accepts a Bearer Token
+- Jetons d'accès OAuth2 (lorsque le jeton est déjà obtenu)
+- Toute API qui accepte un jeton Bearer
 
 ## Configuration
 
 ```yaml
 specs:
   - domain: jokes
-    llm_title: Dad Joke API
+    llm_title: API Dad Joke
     base_url: https://icanhazdadjoke.com
     collections:
-      - llm_title: Jokes
+      - llm_title: Blagues
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: bearer
@@ -27,14 +27,14 @@ specs:
         token: "eyJhbGciOiJIUzI1NiIs..."
 ```
 
-## Parameters
+## Paramètres
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `token` | Yes | Bearer token (JWT, OAuth2 token, etc.) |
+| Paramètre | Requis | Description |
+|-----------|--------|-------------|
+| `token` | Oui | Jeton Bearer (JWT, jeton OAuth2, etc.) |
 
 ## Notes
 
-- The token is static — if it expires, you need to update it in the config manually
-- For automatic token refresh, use `oauth2-cc` or `oauth2-pwd`
-- Store the token in an environment variable: `token: "$(API_TOKEN)"`
+- Le jeton est statique — s'il expire, vous devez le mettre à jour manuellement dans la configuration
+- Pour un renouvellement automatique du jeton, utilisez `oauth2-cc` ou `oauth2-pwd`
+- Stockez le jeton dans une variable d'environnement : `token: "$(JETON_API)"`

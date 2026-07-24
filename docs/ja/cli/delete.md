@@ -1,72 +1,72 @@
 # delete
 
-## Purpose
+## 目的
 
-Remove a **spec** (API service) or **collection** (spec file) from the configuration. This is the inverse of `add`.
+設定から **spec**（API サービス）または **collection**（spec ファイル）を削除します。`add` の逆の操作です。
 
-## When to use
+## 使用するタイミング
 
-- An API is no longer needed
-- You want to remove a specific spec file from a spec
-- You are cleaning up your workspace
+- API が不要になった場合
+- spec から特定の spec ファイルを削除したい場合
+- ワークスペースをクリーンアップしている場合
 
-## Syntax
+## 構文
 
 ```bash
 swag2mcp delete spec [path]
 swag2mcp delete collection [path]
 ```
 
-## Arguments
+## 引数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 引数 | 位置 | 必須 | 説明 |
+|------|------|------|------|
+| `path` | 1 | いいえ | ワークスペースディレクトリ。省略時はパス解決ルールに従います。 |
 
-## Flags
+## フラグ
 
-None. Both subcommands are purely interactive.
+なし。両方のサブコマンドは純粋に対話型です。
 
-## How it works
+## 仕組み
 
-### Delete a spec
+### Spec の削除
 
-Prompts you to select a spec from a list, then asks for confirmation before deleting.
+リストから spec を選択するよう促し、削除前に確認を求めます。
 
 ```bash
 swag2mcp delete spec
 ```
 
-### Delete a collection
+### Collection の削除
 
-Prompts you to select a spec, then a collection within that spec, then asks for confirmation.
+spec を選択し、次にその spec 内の collection を選択するよう促し、確認を求めます。
 
 ```bash
 swag2mcp delete collection
 ```
 
-## Finding IDs
+## ID の確認
 
-The interactive prompts show human-readable names, not IDs. If you need IDs for reference:
+対話型プロンプトは ID ではなく人間が読める名前を表示します。ID が必要な場合：
 
 ```bash
-# List all specs with their IDs
+# すべての spec を ID 付きで一覧表示
 swag2mcp ls
 
-# List collections for a specific spec
+# 特定の spec の collection を一覧表示
 swag2mcp ls --tags
 ```
 
-## Post-command verification
+## コマンド実行後の確認
 
 ```bash
 swag2mcp ls [path]
-# The deleted spec or collection should no longer appear
+# 削除された spec または collection が表示されなくなるはずです
 ```
 
-## Nuances
+## ニュアンス
 
-- **TTY required:** Both commands require an interactive terminal. They will **not** work in CI/CD pipelines, cron jobs, or non-interactive scripts.
-- **No `--force` or `--yes`:** There is no way to skip the confirmation prompt. This is intentional to prevent accidental deletions.
-- **Auto-init:** If no config file exists, `delete` automatically runs the init wizard first.
-- **No YAML mode:** Unlike `add`, there is no `--yaml` flag. Deletion is always interactive.
+- **TTY 必須:** 両方のコマンドは対話型ターミナルが必要です。CI/CD パイプライン、cron ジョブ、または非対話型スクリプトでは**動作しません**。
+- **`--force` や `--yes` なし:** 確認プロンプトをスキップする方法はありません。これは誤削除を防ぐための意図的な設計です。
+- **自動初期化:** 設定ファイルが存在しない場合、`delete` は自動的に init ウィザードを実行します。
+- **YAML モードなし:** `add` とは異なり、`--yaml` フラグはありません。削除は常に対話型です。

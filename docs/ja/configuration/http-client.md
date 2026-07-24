@@ -1,8 +1,8 @@
-# HTTP Client
+# HTTP クライアント
 
-swag2mcp uses a configurable HTTP client for all API calls. These settings are defined globally and can be overridden at the spec and collection levels.
+swag2mcp はすべての API 呼び出しに設定可能な HTTP クライアントを使用します。これらの設定はグローバルに定義され、spec および collection レベルで上書きできます。
 
-## Configuration
+## 設定
 
 ```yaml
 http_client:
@@ -28,14 +28,14 @@ http_client:
 
 ## Timeout
 
-Controls how long swag2mcp waits for an API response before giving up.
+swag2mcp が API レスポンスを待機する時間を制御します。
 
-- **Type:** duration (Go format: `30s`, `60s`, `2m`)
-- **Default:** `30s`
-- **Range:** 1 second to 5 minutes
-- **Effect:** If the API does not respond within this time, the request fails with a timeout error.
-- **When to increase:** Slow APIs, large payloads, unreliable networks.
-- **When to decrease:** Internal APIs, health checks, fast-fail scenarios.
+- **型:** 期間（Go 形式：`30s`、`60s`、`2m`）
+- **デフォルト:** `30s`
+- **範囲:** 1 秒〜5 分
+- **効果:** API がこの時間内に応答しない場合、リクエストはタイムアウトエラーで失敗します。
+- **増やすタイミング:** 遅い API、大きなペイロード、信頼性の低いネットワーク。
+- **減らすタイミング:** 内部 API、ヘルスチェック、高速失敗シナリオ。
 
 ```yaml
 http_client:
@@ -44,14 +44,14 @@ http_client:
 
 ## Max Response Size
 
-Limits how large a response can be before swag2mcp saves it to disk instead of returning it inline to the LLM.
+レスポンスが swag2mcp によってディスクに保存され、インラインで LLM に返されなくなるサイズの制限。
 
-- **Type:** `int` (bytes)
-- **Default:** `1048576` (1 MB)
-- **Range:** 256 to 10,485,760 bytes (10 MB)
-- **Effect:** When a response exceeds this limit, it is saved to `{workspace}/responses/` as a JSON file. The LLM receives a file reference and can explore it with `response_outline`, `response_compress`, and `response_slice` tools.
-- **When to increase:** APIs that return large datasets (reports, logs, analytics).
-- **When to decrease:** Limited LLM context window, or when you prefer file-based access for all responses.
+- **型:** `int`（バイト）
+- **デフォルト:** `1048576`（1 MB）
+- **範囲:** 256 〜 10,485,760 バイト（10 MB）
+- **効果:** レスポンスがこの制限を超えると、`{workspace}/responses/` に JSON ファイルとして保存されます。LLM はファイル参照を受け取り、`response_outline`、`response_compress`、`response_slice` ツールで探索できます。
+- **増やすタイミング:** 大規模なデータセットを返す API（レポート、ログ、分析）。
+- **減らすタイミング:** LLM のコンテキストウィンドウが限られている場合、またはすべてのレスポンスにファイルベースのアクセスを希望する場合。
 
 ```yaml
 http_client:
@@ -60,12 +60,12 @@ http_client:
 
 ## User-Agent
 
-The `User-Agent` header sent with every request. Some APIs require a specific user-agent or block known bot user-agents.
+すべてのリクエストとともに送信される `User-Agent` ヘッダー。一部の API は特定のユーザーエージェントを要求したり、既知のボットユーザーエージェントをブロックしたりします。
 
-- **Type:** `string`
-- **Default:** `"swag2mcp-global/1.0"`
-- **Effect:** Identifies your application to the API server.
-- **When to change:** The API requires a specific user-agent, or you want to identify your application for analytics.
+- **型:** `string`
+- **デフォルト:** `"swag2mcp-global/1.0"`
+- **効果:** API サーバーにアプリケーションを識別します。
+- **変更するタイミング:** API が特定のユーザーエージェントを要求する場合、または分析のためにアプリケーションを識別したい場合。
 
 ```yaml
 http_client:
@@ -74,12 +74,12 @@ http_client:
 
 ## Follow Redirects
 
-Controls whether swag2mcp automatically follows HTTP redirects (3xx status codes).
+swag2mcp が HTTP リダイレクト（3xx ステータスコード）を自動的に追跡するかどうかを制御します。
 
-- **Type:** `bool`
-- **Default:** `true`
-- **Effect:** When `true`, swag2mcp follows redirects up to `max_redirects` times. When `false`, the redirect response is returned as-is.
-- **When to disable:** APIs that redirect in a loop, security-sensitive endpoints where you want to inspect redirect targets manually.
+- **型:** `bool`
+- **デフォルト:** `true`
+- **効果:** `true` の場合、swag2mcp は `max_redirects` 回までリダイレクトを追跡します。`false` の場合、リダイレクトレスポンスがそのまま返されます。
+- **無効にするタイミング:** ループでリダイレクトする API、リダイレクトターゲットを手動で検査したいセキュリティ重視のエンドポイント。
 
 ```yaml
 http_client:
@@ -88,13 +88,13 @@ http_client:
 
 ## Max Redirects
 
-Limits how many redirects swag2mcp follows before stopping.
+swag2mcp が停止するまでに追跡するリダイレクト数を制限します。
 
-- **Type:** `int`
-- **Default:** `10`
-- **Range:** 0 to 50
-- **Effect:** If the API redirects more times than this limit, the request fails.
-- **When to change:** APIs with long redirect chains, or reduce for faster failure on redirect loops.
+- **型:** `int`
+- **デフォルト:** `10`
+- **範囲:** 0 〜 50
+- **効果:** API がこの制限よりも多くリダイレクトした場合、リクエストは失敗します。
+- **変更するタイミング:** 長いリダイレクトチェーンがある API、またはリダイレクトループでの高速失敗のために減らす。
 
 ```yaml
 http_client:
@@ -103,12 +103,12 @@ http_client:
 
 ## Randomizer
 
-Adds random browser-like headers to each request to avoid fingerprinting and blocking.
+各リクエストにブラウザ風のランダムヘッダーを追加して、フィンガープリンティングとブロックを回避します。
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Effect:** When `true`, swag2mcp generates random headers for each request: `User-Agent` (from a pool of real browser strings), `Accept`, `Accept-Language`, `Accept-Encoding`, `Cache-Control`. This overrides the `user_agent` setting.
-- **When to enable:** APIs that block requests based on User-Agent or header patterns, scraping scenarios.
+- **型:** `bool`
+- **デフォルト:** `false`
+- **効果:** `true` の場合、swag2mcp は各リクエストにランダムなヘッダーを生成します：`User-Agent`（実際のブラウザ文字列のプールから）、`Accept`、`Accept-Language`、`Accept-Encoding`、`Cache-Control`。これにより `user_agent` 設定が上書きされます。
+- **有効にするタイミング:** User-Agent またはヘッダーパターンに基づいてリクエストをブロックする API、スクレイピングシナリオ。
 
 ```yaml
 http_client:
@@ -117,33 +117,33 @@ http_client:
 
 ## Proxy
 
-A proxy server acts as an intermediary between swag2mcp and the target API. All HTTP traffic is routed through it.
+プロキシサーバーは swag2mcp とターゲット API の間の仲介役として機能します。すべての HTTP トラフィックはそれを経由してルーティングされます。
 
-**When you might need a proxy:**
-- **Corporate network** — all outbound traffic must go through a company proxy
-- **Geographic restrictions** — some APIs are region-locked, a proxy in the right region bypasses this
-- **Static IP** — APIs that require IP allowlisting
-- **Anonymity** — hide the origin IP from the target API
+**プロキシが必要な場合：**
+- **企業ネットワーク** — すべてのアウトバウンドトラフィックが会社のプロキシを通過する必要がある
+- **地理的制限** — 一部の API は地域ロックされており、適切な地域のプロキシがこれを回避する
+- **静的 IP** — IP 許可リストが必要な API
+- **匿名性** — ターゲット API から発信元 IP を隠す
 
 ### Proxy URL
 
-- **Type:** `string`
-- **Default:** `""` (no proxy)
-- **Supported schemes:** `http`, `https`, `socks5`, `socks5h`
-- **Supports `$(VAR)`:** ✅ resolved at runtime
+- **型:** `string`
+- **デフォルト:** `""`（プロキシなし）
+- **サポートされるスキーム:** `http`、`https`、`socks5`、`socks5h`
+- **`$(VAR)` をサポート:** ✅ 実行時に解決
 
-| Scheme | Description | Use Case |
-|--------|-------------|----------|
-| `http` | HTTP proxy for HTTP traffic | Corporate proxies, basic proxying |
-| `https` | HTTPS proxy (CONNECT tunnel) | Secure corporate proxies |
-| `socks5` | SOCKS5 proxy (DNS resolved locally) | General purpose, any protocol |
-| `socks5h` | SOCKS5 proxy (DNS resolved on proxy) | When proxy has better DNS resolution |
+| スキーム | 説明 | ユースケース |
+|---------|------|-----------|
+| `http` | HTTP トラフィック用 HTTP プロキシ | 企業プロキシ、基本的なプロキシ |
+| `https` | HTTPS プロキシ（CONNECT トンネル） | セキュアな企業プロキシ |
+| `socks5` | SOCKS5 プロキシ（DNS はローカルで解決） | 汎用、任意のプロトコル |
+| `socks5h` | SOCKS5 プロキシ（DNS はプロキシ上で解決） | プロキシの DNS 解決が優れている場合 |
 
-### Proxy Authentication
+### Proxy 認証
 
-If the proxy requires authentication, provide `username` and `password`:
+プロキシが認証を必要とする場合、`username` と `password` を指定します：
 
-- **Supports `$(VAR)`:** ✅ resolved at runtime for all three fields (`url`, `username`, `password`)
+- **`$(VAR)` をサポート:** ✅ 3 つのフィールドすべて（`url`、`username`、`password`）で実行時に解決
 
 ```yaml
 http_client:
@@ -153,9 +153,9 @@ http_client:
     password: "$(PROXY_PASSWORD)"
 ```
 
-### Proxy Bypass
+### Proxy バイパス
 
-A list of domains that should **not** go through the proxy. Useful for internal services, localhost, or APIs that are only accessible directly.
+プロキシを**経由すべきでない**ドメインのリスト。内部サービス、localhost、または直接のみアクセス可能な API に便利です。
 
 ```yaml
 http_client:
@@ -168,17 +168,17 @@ http_client:
       - "api.local"
 ```
 
-Bypass supports wildcard patterns (`*.example.com` matches any subdomain).
+バイパスはワイルドカードパターンをサポートします（`*.example.com` は任意のサブドメインに一致）。
 
 ## Headers
 
-Custom HTTP headers added to every request. Headers are merged across cascade levels:
+すべてのリクエストに追加されるカスタム HTTP ヘッダー。ヘッダーはカスケードレベル間でマージされます：
 
 ```
-Global headers → Spec headers (merged) → Collection headers (merged)
+Global headers → Spec headers（マージ） → Collection headers（マージ）
 ```
 
-Collection headers override spec headers, which override global headers for the same key.
+Collection ヘッダーは spec ヘッダーを上書きし、spec ヘッダーは同じキーのグローバルヘッダーを上書きします。
 
 ```yaml
 http_client:
@@ -187,11 +187,11 @@ http_client:
     "Accept-Language": "en-US"
 ```
 
-Header values support `$(ENV_VAR)` resolution.
+ヘッダー値は `$(ENV_VAR)` 解決をサポートします。
 
 ## Cookies
 
-Cookies sent with every request. Cookies are merged across cascade levels (lower level overrides global for the same cookie name).
+すべてのリクエストとともに送信される Cookie。Cookie はカスケードレベル間でマージされます（低いレベルが同じ Cookie 名のグローバルを上書き）。
 
 ```yaml
 http_client:
@@ -204,18 +204,18 @@ http_client:
       http_only: false
 ```
 
-### Cookie Fields
+### Cookie フィールド
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `name` | Yes | Cookie name |
-| `value` | Yes | Cookie value (supports `$(ENV_VAR)` resolution) |
-| `domain` | No | Domain scope (e.g., `.example.com`) |
-| `path` | No | Path scope (e.g., `/`) |
-| `secure` | No | Only send over HTTPS |
-| `http_only` | No | Not accessible via JavaScript |
+| フィールド | 必須 | 説明 |
+|-----------|------|------|
+| `name` | はい | Cookie 名 |
+| `value` | はい | Cookie 値（`$(ENV_VAR)` 解決をサポート） |
+| `domain` | いいえ | ドメインスコープ（例：`.example.com`） |
+| `path` | いいえ | パススコープ（例：`/`） |
+| `secure` | いいえ | HTTPS 経由でのみ送信 |
+| `http_only` | いいえ | JavaScript からアクセス不可 |
 
-## Custom Headers at Spec Level
+## Spec レベルでのカスタムヘッダー
 
 ```yaml
 specs:
@@ -230,7 +230,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## Cookies at Spec Level
+## Spec レベルでの Cookie
 
 ```yaml
 specs:
@@ -248,18 +248,18 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## Cascade
+## カスケード
 
-HTTP client settings cascade from global to spec to collection. All settings can be overridden at every level:
+HTTP クライアント設定はグローバルから spec、collection へとカスケードされます。すべての設定はすべてのレベルで上書き可能：
 
 ```
 Global (http_client)
-    ↓ overrides (all settings)
+    ↓ 上書き（すべての設定）
 Spec (specs[].http_client)
-    ↓ overrides (all settings)
+    ↓ 上書き（すべての設定）
 Collection (specs[].collections[].http_client)
 ```
 
-**All HTTP client settings** (timeout, proxy, user-agent, redirects, response size, randomizer, headers, cookies) can be overridden at both spec and collection levels.
+**すべての HTTP クライアント設定**（タイムアウト、プロキシ、ユーザーエージェント、リダイレクト、レスポンスサイズ、ランダマイザー、ヘッダー、Cookie）は spec と collection の両方のレベルで上書きできます。
 
-See [Configuration Cascade](./cascade) for details.
+詳細は [Configuration Cascade](./cascade) を参照してください。

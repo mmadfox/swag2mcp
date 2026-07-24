@@ -1,18 +1,18 @@
-# API Key
+# API-Schlüssel
 
-## Purpose
+## Zweck
 
-Authentication via an API key. The key can be sent as an HTTP header or as a URL query parameter.
+Authentifizierung über einen API-Schlüssel. Der Schlüssel kann als HTTP-Header oder als URL-Abfrageparameter gesendet werden.
 
-## When to use
+## Wann verwenden
 
-- Services that use API keys
-- Weather services, geodata, translation APIs
-- When the API expects a key in a header (`X-API-Key`) or query parameter (`?api_key=...`)
+- Dienste, die API-Schlüssel verwenden
+- Wetterdienste, Geodaten, Übersetzungs-APIs
+- Wenn die API einen Schlüssel in einem Header (`X-API-Key`) oder Abfrageparameter (`?api_key=...`) erwartet
 
-## Configuration
+## Konfiguration
 
-### Key in header
+### Schlüssel im Header
 
 ```yaml
 specs:
@@ -30,7 +30,7 @@ specs:
         value: "$(API_KEY)"
 ```
 
-### Key in query parameter
+### Schlüssel im Abfrageparameter
 
 ```yaml
 specs:
@@ -48,16 +48,16 @@ specs:
         value: "$(API_KEY)"
 ```
 
-## Parameters
+## Parameter
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `key` | Yes | Name of the header or query parameter |
-| `in` | Yes | Where to place the key: `header` or `query` |
-| `value` | Yes | The key value |
+| Parameter | Erforderlich | Beschreibung |
+|-----------|-------------|--------------|
+| `key` | Ja | Name des Headers oder Abfrageparameters |
+| `in` | Ja | Wo der Schlüssel platziert wird: `header` oder `query` |
+| `value` | Ja | Der Schlüsselwert |
 
-## Notes
+## Hinweise
 
-- In `header` mode, the key is added as an HTTP header
-- In `query` mode, the key is added as a URL parameter
-- Store the value in an environment variable: `value: "$(MY_API_KEY)"`
+- Im `header`-Modus wird der Schlüssel als HTTP-Header hinzugefügt
+- Im `query`-Modus wird der Schlüssel als URL-Parameter hinzugefügt
+- Speichern Sie den Wert in einer Umgebungsvariable: `value: "$(MY_API_KEY)"`

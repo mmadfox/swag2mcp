@@ -1,8 +1,8 @@
-# Collection Settings
+# Collection 设置
 
-Collection settings define a single OpenAPI/Swagger/Postman spec file and override spec settings for that specific file. Each collection belongs to a spec and represents one API specification document.
+Collection 设置定义单个 OpenAPI/Swagger/Postman 规范文件，并为该特定文件覆盖 spec 设置。每个 collection 属于一个 spec，代表一个 API 规范文档。
 
-## Collection Section
+## Collection 部分
 
 ```yaml
 specs:
@@ -20,54 +20,54 @@ specs:
           timeout: 5s
 ```
 
-## Parameters
+## 参数
 
 ### llm_title
 
-- **Type:** `string`
-- **Required:** No
-- **Description:** Human-readable name for this collection. Shown in MCP tool responses.
-- **Rules:** Max 120 characters. Letters, digits, spaces, and basic punctuation only.
-- **Example:** `Forecast`, `Air Quality`, `Market Data`
+- **类型：** `string`
+- **必需：** 否
+- **描述：** 此 collection 的人类可读名称。显示在 MCP 工具响应中。
+- **规则：** 最多 120 字符。仅限字母、数字、空格和基本标点。
+- **示例：** `Forecast`、`Air Quality`、`Market Data`
 
 ### llm_instruction
 
-- **Type:** `string`
-- **Default:** `""`
-- **Description:** Instructions for the LLM about this specific collection. Describes what endpoints this collection provides.
-- **Rules:** Max 360 characters. Letters, digits, spaces, and basic punctuation only.
-- **Example:** `"Use for current and forecast weather data."`
+- **类型：** `string`
+- **默认值：** `""`
+- **描述：** 关于此特定 collection 的 LLM 指令。描述此 collection 提供哪些端点。
+- **规则：** 最多 360 字符。仅限字母、数字、空格和基本标点。
+- **示例：** `"Use for current and forecast weather data."`
 
 ### title
 
-- **Type:** `string`
-- **Default:** `""`
-- **Description:** Raw title from the spec file. Populated automatically at runtime. You typically don't need to set this in YAML.
+- **类型：** `string`
+- **默认值：** `""`
+- **描述：** 来自规范文件的原始标题。在运行时自动填充。你通常不需要在 YAML 中设置此字段。
 
 ### location
 
-- **Type:** `string`
-- **Required:** Yes
-- **Description:** URL or local file path to the OpenAPI 3.x, Swagger 2.0, or Postman collection spec file.
-- **Rules:** 5-250 characters.
-- **Examples:**
-  - URL: `https://raw.githubusercontent.com/org/repo/main/spec.yaml`
-  - Local: `./specs/my-api.json`
-  - Local (absolute): `/home/user/.swag2mcp/specs/my-api.yaml`
+- **类型：** `string`
+- **必需：** 是
+- **描述：** OpenAPI 3.x、Swagger 2.0 或 Postman collection 规范文件的 URL 或本地文件路径。
+- **规则：** 5-250 字符。
+- **示例：**
+  - URL：`https://raw.githubusercontent.com/org/repo/main/spec.yaml`
+  - 本地：`./specs/my-api.json`
+  - 本地（绝对路径）：`/home/user/.swag2mcp/specs/my-api.yaml`
 
 ### disable
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Description:** When `true`, this collection is excluded from MCP tools. It is not loaded or indexed.
-- **When to use:** Temporarily disable a collection without removing it from the config. Useful when a spec file is being updated or an API version is deprecated.
+- **类型：** `bool`
+- **默认值：** `false`
+- **描述：** 当为 `true` 时，此 collection 被排除在 MCP 工具之外。它不会被加载或索引。
+- **何时使用：** 临时禁用一个 collection 而不从配置中删除它。当规范文件正在更新或 API 版本已弃用时很有用。
 
 ### http_client
 
-- **Type:** `object`
-- **Default:** inherits from spec (or global)
-- **Description:** Override HTTP client settings for this collection. All settings from the global `http_client` can be overridden: `timeout`, `max_response_size`, `user_agent`, `follow_redirects`, `max_redirects`, `random`, `proxy`, `headers`, `cookies`.
-- **Example:**
+- **类型：** `object`
+- **默认值：** 继承自 spec（或全局）
+- **描述：** 为此 collection 覆盖 HTTP 客户端设置。全局 `http_client` 中的所有设置都可以被覆盖：`timeout`、`max_response_size`、`user_agent`、`follow_redirects`、`max_redirects`、`random`、`proxy`、`headers`、`cookies`。
+- **示例：**
   ```yaml
   http_client:
     timeout: 120s
@@ -80,23 +80,23 @@ specs:
 
 ### base_url
 
-- **Type:** `string`
-- **Default:** `""` (inherits from spec)
-- **Description:** Override the spec-level `base_url` for this collection. Use when different collections within the same spec use different base URLs.
-- **Example:** If the spec has `base_url: https://api.open-meteo.com` but one collection uses `https://air-quality-api.open-meteo.com`, set `base_url` at the collection level.
+- **类型：** `string`
+- **默认值：** `""`（继承自 spec）
+- **描述：** 为此 collection 覆盖 spec 级别的 `base_url`。当同一 spec 中的不同 collection 使用不同的基础 URL 时使用。
+- **示例：** 如果 spec 有 `base_url: https://api.open-meteo.com` 但一个 collection 使用 `https://air-quality-api.open-meteo.com`，在 collection 级别设置 `base_url`。
 
 ### base_mock_url
 
-- **Type:** `string`
-- **Default:** `""`
-- **Description:** Mock server address in `host:port` format. Required when `mock_enabled: true` in the global config.
-- **Rules:** Host must be `localhost`, `127.0.0.1`, or `0.0.0.0`. Port must be a valid port number.
-- **Example:** `localhost:8081`, `127.0.0.1:9000`
-- **When to use:** You have `mock_enabled: true` and want to test this collection with fake responses.
+- **类型：** `string`
+- **默认值：** `""`
+- **描述：** 模拟服务器地址，格式为 `host:port`。当全局配置中 `mock_enabled: true` 时必需。
+- **规则：** Host 必须是 `localhost`、`127.0.0.1` 或 `0.0.0.0`。端口必须是有效的端口号。
+- **示例：** `localhost:8081`、`127.0.0.1:9000`
+- **何时使用：** 你设置了 `mock_enabled: true` 并想用模拟响应测试此 collection。
 
-## Multiple Collections from One Spec
+## 一个 Spec 中的多个 Collection
 
-A spec can have multiple collections — for example, when an API has separate spec files for different services:
+一个 spec 可以有多个 collection — 例如，当一个 API 的不同服务有单独的规范文件时：
 
 ```yaml
 specs:
@@ -114,7 +114,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
-## Disabling a Collection
+## 禁用一个 Collection
 
 ```yaml
 specs:
@@ -130,9 +130,9 @@ specs:
         disable: true
 ```
 
-## HTTP Client Override
+## HTTP 客户端覆盖
 
-All `http_client` settings can be overridden at the collection level. Collection values take precedence over spec and global values for this collection only.
+所有 `http_client` 设置可以在 collection 级别覆盖。Collection 值仅对此 collection 优先于 spec 和全局值。
 
 ```yaml
 specs:

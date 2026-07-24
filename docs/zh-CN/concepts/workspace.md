@@ -1,89 +1,89 @@
-# Workspace
+# 工作区
 
-The workspace is the directory where swag2mcp stores all its data — config, cached specs, local spec files, saved responses, and auth scripts.
+工作区是 swag2mcp 存储所有数据的目录 — 配置、缓存的规范、本地规范文件、保存的响应和认证脚本。
 
-## Structure
+## 结构
 
 ```
-~/.swag2mcp/                          # Workspace root (default)
-├── swag2mcp.yaml                     # Configuration file
-├── cache/                            # Cached remote spec files
-│   ├── a1b2c3d4e5f6...spec          # Cached spec content
-│   └── a1b2c3d4e5f6...meta          # Cache metadata (JSON)
-├── specs/                            # Local spec files
+~/.swag2mcp/                          # 工作区根目录（默认）
+├── swag2mcp.yaml                     # 配置文件
+├── cache/                            # 缓存的远程规范文件
+│   ├── a1b2c3d4e5f6...spec          # 缓存的规范内容
+│   └── a1b2c3d4e5f6...meta          # 缓存元数据（JSON）
+├── specs/                            # 本地规范文件
 │   └── my-api.yaml
-├── responses/                        # Saved API responses (large responses)
+├── responses/                        # 保存的 API 响应（大响应）
 │   ├── meteo-get-forecast-abc123.json
 │   └── response-fragment-def456.json
-└── auth_scripts/                     # Authentication scripts
-    ├── meteo.sh                      # Unix shell script
-    └── meteo.bat                     # Windows batch script
+└── auth_scripts/                     # 认证脚本
+    ├── meteo.sh                      # Unix shell 脚本
+    └── meteo.bat                     # Windows 批处理脚本
 ```
 
-## Default Path
+## 默认路径
 
-- **Linux/macOS**: `~/.swag2mcp/`
-- **Windows**: `%USERPROFILE%\.swag2mcp\`
+- **Linux/macOS**：`~/.swag2mcp/`
+- **Windows**：`%USERPROFILE%\.swag2mcp\`
 
-## Custom Path
+## 自定义路径
 
 ```bash
 swag2mcp mcp /path/to/workspace
 swag2mcp mcp ./my-workspace
 ```
 
-## Directories
+## 目录
 
 ### cache/
 
-Stores downloaded remote spec files. Each file is cached with a SHA-256 hash of its URL as the filename:
+存储下载的远程规范文件。每个文件以其 URL 的 SHA-256 哈希作为文件名进行缓存：
 
-- `{hash}.spec` — the cached spec file content
-- `{hash}.meta` — JSON metadata (source URL, cache time, TTL)
+- `{hash}.spec` — 缓存的规范文件内容
+- `{hash}.meta` — JSON 元数据（来源 URL、缓存时间、TTL）
 
-Each cached file has a random TTL between 1 hour and 48 hours. The cache is automatically checked on every startup — if a valid (non-expired) entry exists, it is reused without downloading.
+每个缓存文件有 1 小时到 48 小时之间的随机 TTL。每次启动时自动检查缓存 — 如果存在有效（未过期）的条目，则重用而不下载。
 
-**Commands:**
-- `swag2mcp update` — clears cache and re-downloads all specs
-- `swag2mcp clean` — clears cache and responses
+**命令：**
+- `swag2mcp update` — 清除缓存并重新下载所有规范
+- `swag2mcp clean` — 清除缓存和响应
 
 ### specs/
 
-Stores local spec files that collections point to via `location: specs/{name}`. Files here are used directly without caching.
+存储 collection 通过 `location: specs/{name}` 引用的本地规范文件。此处的文件直接使用，无需缓存。
 
-This directory is populated by:
-- `swag2mcp import <source> <name>` — downloads a remote spec and saves it here
-- `swag2mcp export` — copies specs here into the export ZIP
-- Manual placement — you can copy spec files here yourself
+此目录由以下方式填充：
+- `swag2mcp import <source> <name>` — 下载远程规范并保存到此
+- `swag2mcp export` — 将规范复制到导出 ZIP
+- 手动放置 — 你可以自己将规范文件复制到此
 
 ### responses/
 
-Stores API responses that exceed the `max_response_size` limit (default 1 MB). When the LLM invokes an endpoint and the response is too large, swag2mcp saves it here and returns a file reference instead.
+存储超过 `max_response_size` 限制（默认 1 MB）的 API 响应。当 LLM 调用端点且响应太大时，swag2mcp 将其保存到此并返回文件引用。
 
-Naming convention: `{domain}-{method}-{path_with_underscores}-{6char_hex}.json`
+命名约定：`{domain}-{method}-{path_with_underscores}-{6char_hex}.json`
 
-Old responses are cleaned automatically after 48 hours on MCP server start.
+旧响应在 MCP 服务器启动后 48 小时自动清理。
 
 ### auth_scripts/
 
-Stores authentication scripts for the `script` auth type. Each script is named after the spec's domain.
+存储 `script` 认证类型的认证脚本。每个脚本以 spec 的域命名。
 
-#### Naming Convention
+#### 命名约定
 
-| Platform | Filename | Example |
-|----------|----------|---------|
-| Unix (Linux, macOS) | `{domain}.sh` | `meteo.sh` |
+| 平台 | 文件名 | 示例 |
+|------|--------|------|
+| Unix（Linux、macOS） | `{domain}.sh` | `meteo.sh` |
 | Windows | `{domain}.bat` | `meteo.bat` |
 
-The domain must not contain `/` or `\` characters.
+域不能包含 `/` 或 `\` 字符。
 
-#### How Scripts Work
+#### 脚本工作原理
 
-1. swag2mcp runs the script with a 30-second timeout
-2. The script must output valid JSON to stdout
-3. swag2mcp parses the JSON and uses the token for API requests
+1. swag2mcp 以 30 秒超时运行脚本
+2. 脚本必须将有效的 JSON 输出到 stdout
+3. swag2mcp 解析 JSON 并使用令牌进行 API 请求
 
-#### Expected Output Format
+#### 预期输出格式
 
 ```json
 {
@@ -92,49 +92,49 @@ The domain must not contain `/` or `\` characters.
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `token` | string | ✅ | The authentication token |
-| `access_token` | string | ❌ | Alternative to `token` (checked first) |
-| `token_type` | string | ❌ | Token type (e.g., "Bearer") |
-| `expires_in` | number | ❌ | Token lifetime in seconds (default: 3600) |
+| 字段 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `token` | string | ✅ | 认证令牌 |
+| `access_token` | string | ❌ | `token` 的替代（优先检查） |
+| `token_type` | string | ❌ | 令牌类型（例如"Bearer"） |
+| `expires_in` | number | ❌ | 令牌生命周期（秒，默认：3600） |
 
-#### Execution
+#### 执行
 
-| Platform | Command |
-|----------|---------|
+| 平台 | 命令 |
+|------|------|
 | Unix | `sh {domain}.sh` |
 | Windows | `cmd /c {domain}.bat` |
 
-#### Token Caching
+#### 令牌缓存
 
-The token is cached in memory until it expires. On each API call, swag2mcp checks the cache first — the script is only executed when the cached token has expired.
+令牌在内存中缓存直到过期。每次 API 调用时，swag2mcp 首先检查缓存 — 只有在缓存的令牌过期时才执行脚本。
 
-#### Stub Creation
+#### 存根创建
 
-When you configure `auth: { type: script, config: { domain: "myapi" } }`, swag2mcp creates a stub script automatically:
+当你配置 `auth: { type: script, config: { domain: "myapi" } }` 时，swag2mcp 会自动创建存根脚本：
 
-**Unix (`auth_scripts/myapi.sh`):**
+**Unix（`auth_scripts/myapi.sh`）：**
 ```bash
 #!/bin/sh
 echo '{"token": "your-token-here", "expires_in": 3600}'
 ```
 
-**Windows (`auth_scripts/myapi.bat`):**
+**Windows（`auth_scripts/myapi.bat`）：**
 ```bat
 @echo off
 echo {"token": "your-token-here", "expires_in": 3600}
 ```
 
-Replace the placeholder token with your actual authentication logic.
+将占位符令牌替换为你的实际认证逻辑。
 
-#### Orphan Cleanup
+#### 孤立清理
 
-When you delete a spec, its auth script becomes orphaned. swag2mcp automatically removes orphan scripts on:
+当你删除 spec 时，其认证脚本会成为孤立文件。swag2mcp 在以下情况下自动删除孤立脚本：
 - `swag2mcp update`
 - `swag2mcp clean`
 
-## Commands
+## 命令
 
 ### update
 
@@ -142,12 +142,12 @@ When you delete a spec, its auth script becomes orphaned. swag2mcp automatically
 swag2mcp update [path]
 ```
 
-Validates the config, clears the cache and responses, then re-downloads all spec files. Also ensures auth scripts exist and removes orphan scripts.
+验证配置，清除缓存和响应，然后重新下载所有规范文件。还确保认证脚本存在并删除孤立脚本。
 
-Use this command after:
-- Adding or removing collections
-- Changing collection locations
-- Editing spec files that need re-caching
+在以下情况后使用此命令：
+- 添加或删除 collection
+- 更改 collection 位置
+- 编辑需要重新缓存的规范文件
 
 ### clean
 
@@ -155,7 +155,7 @@ Use this command after:
 swag2mcp clean [path]
 ```
 
-Removes all contents of `cache/` and `responses/`, plus orphan auth scripts. Does NOT re-cache specs — use `update` for that.
+删除 `cache/` 和 `responses/` 的所有内容，以及孤立的认证脚本。不会重新缓存规范 — 使用 `update` 进行重新缓存。
 
 ### validate
 
@@ -163,35 +163,35 @@ Removes all contents of `cache/` and `responses/`, plus orphan auth scripts. Doe
 swag2mcp validate [path]
 ```
 
-Validates the config including all collection locations. See [CLI: validate](../cli/validate.md).
+验证配置，包括所有 collection 位置。请参见[CLI: validate](../cli/validate.md)。
 
-## Export and Import
+## 导出和导入
 
 ```bash
-# Export workspace to ZIP (default name: swag2mcp-backup-{date}.zip)
+# 将工作区导出到 ZIP（默认名称：swag2mcp-backup-{date}.zip）
 swag2mcp export
 
-# Export to a specific path
+# 导出到特定路径
 swag2mcp export /path/to/workspace /path/to/backup.zip
 
-# Export only specific specs
+# 仅导出特定 spec
 swag2mcp export --spec meteo
 
-# Restore from backup
+# 从备份恢复
 swag2mcp import --from-zip /path/to/backup.zip
 swag2mcp import /path/to/workspace /path/to/backup.zip
 ```
 
-Export includes: `swag2mcp.yaml`, `specs/`, `auth_scripts/`. Cache and responses are excluded (they are local data).
+导出包括：`swag2mcp.yaml`、`specs/`、`auth_scripts/`。缓存和响应被排除（它们是本地数据）。
 
 ## .gitignore
 
-If your workspace is inside a Git repository, add these entries to `.gitignore`:
+如果你的工作区在 Git 仓库中，将以下条目添加到 `.gitignore`：
 
 ```gitignore
-# swag2mcp — local data only
+# swag2mcp — 仅本地数据
 .swag2mcp/cache/
 .swag2mcp/responses/
 ```
 
-The `cache/` and `responses/` directories contain local, machine-specific data that should not be committed. Everything else (`swag2mcp.yaml`, `specs/`, `auth_scripts/`) should be in the repository so the configuration is shared across the team.
+`cache/` 和 `responses/` 目录包含不应提交的本地机器特定数据。其他所有内容（`swag2mcp.yaml`、`specs/`、`auth_scripts/`）应放在仓库中，以便配置在团队中共享。

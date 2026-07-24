@@ -1,98 +1,98 @@
-# TUI Explorer
+# TUI 탐색기
 
-## Overview
+## 개요
 
-swag2mcp includes a built-in TUI (Terminal User Interface) for interactive API exploration. It is a full-screen terminal application that lets you search, browse, inspect, and invoke API endpoints without leaving the terminal.
+swag2mcp에는 대화형 API 탐색을 위한 내장 TUI(터미널 사용자 인터페이스)가 포함되어 있습니다. 터미널을 떠나지 않고 API 엔드포인트를 검색, 탐색, 검사, 호출할 수 있는 전체 화면 터미널 애플리케이션입니다.
 
-## Launch
+## 실행
 
 ```bash
 swag2mcp run
 ```
 
-If no config file exists, the TUI will automatically start the initialization wizard first.
+설정 파일이 없으면 TUI가 자동으로 초기화 마법사를 먼저 시작합니다.
 
-## Modes
+## 모드
 
-The TUI has three modes, switchable with the `Tab` key:
+TUI는 세 가지 모드가 있으며 `Tab` 키로 전환할 수 있습니다:
 
-### Search mode
+### 검색 모드
 
-Full-text search across all endpoints in all specs. Supports the same query syntax as the `search` MCP tool.
+모든 spec의 모든 엔드포인트에 대한 전문 검색입니다. `search` MCP 도구와 동일한 쿼리 구문을 지원합니다.
 
-- Type a query to search endpoint names, paths, and descriptions
-- Filter results by method, tag, or path
-- View endpoint details with a single keystroke
-- Navigate through results with pagination (10 items per page)
+- 쿼리를 입력하여 엔드포인트 이름, 경로, 설명 검색
+- 메서드, 태그 또는 경로로 결과 필터링
+- 한 번의 키 입력으로 엔드포인트 세부 정보 보기
+- 페이지네이션으로 결과 탐색 (페이지당 10개 항목)
 
-### Browse mode
+### 탐색 모드
 
-Tree navigation through the spec hierarchy:
+Spec 계층 구조를 통한 트리 탐색:
 
 ```
 Spec → Collection → Tag → Endpoint
 ```
 
-- Navigate down the tree to find specific endpoints
-- View endpoint details (parameters, request body, responses)
-- Invoke the API directly from the TUI
-- Save endpoint details as a JSON file
+- 트리를 따라 내려가 특정 엔드포인트 찾기
+- 엔드포인트 세부 정보 보기 (매개변수, 요청 본문, 응답)
+- TUI에서 직접 API 호출
+- 엔드포인트 세부 정보를 JSON 파일로 저장
 
-### Auth mode
+### 인증 모드
 
-View authentication tokens and headers for any spec. Useful for debugging or generating curl commands.
+모든 spec의 인증 토큰과 헤더를 봅니다. 디버깅 또는 curl 명령어 생성에 유용합니다.
 
-## Controls
+## 컨트롤
 
-| Key | Action |
-|-----|--------|
-| `↑` / `↓` | Navigate up/down |
-| `Enter` | Select or open |
-| `Esc` | Go back one level |
-| `Tab` | Switch between Search, Browse, and Auth modes |
-| `/` | Focus search input |
-| `N` / `P` | Next / previous page |
-| `B` | Back to previous screen |
-| `M` | Return to main menu |
-| `S` | Save endpoint detail as JSON file |
-| `q` / `Ctrl+C` | Quit |
+| 키 | 동작 |
+|-----|------|
+| `↑` / `↓` | 위/아래 이동 |
+| `Enter` | 선택 또는 열기 |
+| `Esc` | 한 단계 뒤로 |
+| `Tab` | 검색, 탐색, 인증 모드 간 전환 |
+| `/` | 검색 입력 포커스 |
+| `N` / `P` | 다음 / 이전 페이지 |
+| `B` | 이전 화면으로 |
+| `M` | 메인 메뉴로 |
+| `S` | 엔드포인트 세부 정보를 JSON 파일로 저장 |
+| `q` / `Ctrl+C` | 종료 |
 
-## States
+## 상태
 
-The TUI goes through these states as you navigate:
+TUI는 탐색하면서 다음 상태를 거칩니다:
 
-1. **Loading** — loading data from the workspace
-2. **Search** — search mode with query input
-3. **Browse** — browse mode with spec list
-4. **Spec List** — list of all specs
-5. **Collection List** — collections within a spec
-6. **Tag List** — tags within a collection
-7. **Endpoint List** — endpoints within a tag
-8. **Endpoint Detail** — full endpoint information
-9. **Invoke Result** — API call result
-10. **Error** — error state with message
+1. **로딩** — 워크스페이스에서 데이터 로드 중
+2. **검색** — 쿼리 입력이 있는 검색 모드
+3. **탐색** — spec 목록이 있는 탐색 모드
+4. **Spec 목록** — 모든 spec 목록
+5. **Collection 목록** — spec 내의 collection
+6. **Tag 목록** — collection 내의 태그
+7. **Endpoint 목록** — 태그 내의 엔드포인트
+8. **Endpoint 상세** — 전체 엔드포인트 정보
+9. **호출 결과** — API 호출 결과
+10. **오류** — 메시지가 있는 오류 상태
 
-## Endpoint detail view
+## 엔드포인트 상세 보기
 
-When you select an endpoint, the TUI shows:
+엔드포인트를 선택하면 TUI가 다음을 표시합니다:
 
-- HTTP method and path
-- Base URL and full URL
-- Summary and description
-- All parameters (name, location, type, required)
-- Request body schema (if applicable)
-- Response codes and schemas
-- Deprecation status
+- HTTP 메서드 및 경로
+- Base URL 및 전체 URL
+- 요약 및 설명
+- 모든 매개변수 (이름, 위치, 타입, 필수)
+- 요청 본문 스키마 (해당하는 경우)
+- 응답 코드 및 스키마
+- 폐기 상태
 
-## Requirements
+## 요구 사항
 
-- **Terminal size:** At least 80×24 characters
-- **Terminal emulator:** Works in most modern terminals (iTerm2, Terminal.app, GNOME Terminal, Windows Terminal, etc.)
-- **SSH:** Works over SSH connections
+- **터미널 크기:** 최소 80×24 문자
+- **터미널 에뮬레이터:** 대부분의 최신 터미널에서 작동 (iTerm2, Terminal.app, GNOME Terminal, Windows Terminal 등)
+- **SSH:** SSH 연결을 통해 작동
 
-## Important notes
+## 중요 참고 사항
 
-- **Auto-init** — if no config file exists, the TUI automatically starts the initialization wizard
-- **Pagination** — lists are paginated at 10 items per page. Use `N` and `P` to navigate
-- **Save endpoint details** — press `S` in the endpoint detail view to save the full detail as a JSON file in the current directory
-- **Auth mode** — shows tokens and headers for debugging. In production, the auth tool can be disabled with `--disable-llm-auth`
+- **자동 초기화** — 설정 파일이 없으면 TUI가 자동으로 초기화 마법사를 시작합니다
+- **페이지네이션** — 목록은 페이지당 10개 항목으로 페이지네이션됩니다. `N`과 `P`로 탐색하세요
+- **엔드포인트 세부 정보 저장** — 엔드포인트 상세 보기에서 `S`를 눌러 전체 세부 정보를 현재 디렉토리에 JSON 파일로 저장하세요
+- **인증 모드** — 디버깅을 위한 토큰 및 헤더 표시. 프로덕션에서는 `--disable-llm-auth`로 인증 도구를 비활성화할 수 있습니다

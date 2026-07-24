@@ -1,15 +1,15 @@
 # run
 
-## Purpose
+## Zweck
 
-Launch the interactive **TUI (Terminal User Interface)** API explorer. This is a full-screen application for searching, browsing, inspecting, and invoking API endpoints without leaving the terminal.
+Startet den interaktiven **TUI (Terminal User Interface)**-API-Explorer. Dies ist eine Vollbildanwendung zum Suchen, Durchsuchen, Inspizieren und Aufrufen von API-Endpunkten, ohne das Terminal zu verlassen.
 
-## When to use
+## Wann verwenden
 
-- You want to explore your APIs interactively
-- You need to search for a specific endpoint across all specs
-- You want to browse the spec → collection → tag → endpoint hierarchy
-- You want to test an API call before configuring the MCP server
+- Sie möchten Ihre APIs interaktiv erkunden
+- Sie müssen nach einem bestimmten Endpunkt über alle Specs hinweg suchen
+- Sie möchten die Spec → Collection → Tag → Endpunkt-Hierarchie durchsuchen
+- Sie möchten einen API-Aufruf testen, bevor Sie den MCP-Server konfigurieren
 
 ## Syntax
 
@@ -17,56 +17,56 @@ Launch the interactive **TUI (Terminal User Interface)** API explorer. This is a
 swag2mcp run [path]
 ```
 
-## Arguments
+## Argumente
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Argument | Position | Erforderlich | Beschreibung |
+|----------|----------|-------------|--------------|
+| `path` | 1 | Nein | Arbeitsbereichsverzeichnis. Wenn nicht angegeben, wird über die Pfadauflösungsregeln ermittelt. |
 
 ## Flags
 
-None.
+Keine.
 
-## Modes
+## Modi
 
-### Search mode
+### Suchmodus
 
-Full-text search across all endpoints in all specs. Supports filtering by HTTP method, tag, and path.
+Volltextsuche über alle Endpunkte aller Specs. Unterstützt Filterung nach HTTP-Methode, Tag und Pfad.
 
-- Type a query to search endpoint names, paths, and descriptions
-- Filter results by method (GET, POST, PUT, DELETE, etc.)
-- View endpoint details with a single keystroke
+- Geben Sie eine Abfrage ein, um nach Endpunktnamen, Pfaden und Beschreibungen zu suchen
+- Filtern Sie Ergebnisse nach Methode (GET, POST, PUT, DELETE usw.)
+- Zeigen Sie Endpunktdetails mit einem Tastendruck an
 
-### Browse mode
+### Durchsuchen-Modus
 
-Tree navigation through the spec hierarchy:
+Baumnavigation durch die Spec-Hierarchie:
 
 ```
-Spec → Collection → Tag → Endpoint
+Spec → Collection → Tag → Endpunkt
 ```
 
-- Navigate down the tree to find specific endpoints
-- View endpoint details (parameters, request body, responses)
-- Invoke the API directly from the TUI
+- Navigieren Sie im Baum nach unten, um bestimmte Endpunkte zu finden
+- Zeigen Sie Endpunktdetails an (Parameter, Anforderungstext, Antworten)
+- Rufen Sie die API direkt aus der TUI auf
 
 ## Navigation
 
-| Key | Action |
-|-----|--------|
-| `↑` / `↓` | Navigate up/down |
-| `Enter` | Select or open |
-| `Esc` | Go back |
-| `Tab` | Switch between Search and Browse modes |
-| `/` | Focus search input |
-| `q` | Quit |
+| Taste | Aktion |
+|-------|--------|
+| `↑` / `↓` | Nach oben/unten navigieren |
+| `Enter` | Auswählen oder öffnen |
+| `Esc` | Zurückgehen |
+| `Tab` | Zwischen Such- und Durchsuchen-Modus wechseln |
+| `/` | Sucheingabe fokussieren |
+| `q` | Beenden |
 
-## Post-command verification
+## Überprüfung nach dem Befehl
 
-The TUI loads all specs from the workspace. If a spec fails to load, an error message is shown in the interface.
+Die TUI lädt alle Specs aus dem Arbeitsbereich. Wenn eine Spec nicht geladen werden kann, wird eine Fehlermeldung in der Oberfläche angezeigt.
 
-## Nuances
+## Nuancen
 
-- **Auto-init:** If no config file exists, `run` automatically runs the init wizard first.
-- **No flags:** The `run` command has no flags — all configuration comes from the workspace.
-- **Terminal size:** The TUI requires a terminal with at least 80×24 characters. It may not render correctly in very small terminals.
-- **Dependencies:** The TUI uses Bubbletea. It works over SSH and in most terminal emulators.
+- **Auto-Init:** Wenn keine Konfigurationsdatei existiert, führt `run` automatisch zuerst den Init-Assistenten aus.
+- **Keine Flags:** Der Befehl `run` hat keine Flags — die gesamte Konfiguration stammt aus dem Arbeitsbereich.
+- **Terminalgröße:** Die TUI erfordert ein Terminal mit mindestens 80×24 Zeichen. In sehr kleinen Terminals wird sie möglicherweise nicht korrekt dargestellt.
+- **Abhängigkeiten:** Die TUI verwendet Bubbletea. Sie funktioniert über SSH und in den meisten Terminalemulatoren.

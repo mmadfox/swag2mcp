@@ -1,16 +1,16 @@
-# OAuth2 Client Credentials
+# OAuth2 Credenciales de Cliente
 
-## Purpose
+## Propósito
 
-OAuth2 Client Credentials Grant — authentication for server-to-server communication. The application obtains a token using its client_id and client_secret, without user involvement.
+Concesión de Credenciales de Cliente OAuth2 — autenticación para comunicación servidor a servidor. La aplicación obtiene un token usando su client_id y client_secret, sin intervención del usuario.
 
-## When to use
+## Cuándo usarlo
 
-- Microservices and server-to-server integrations
-- Machine-to-machine communication
-- When the API uses OAuth2 and you have a client_id + client_secret
+- Microservicios e integraciones servidor a servidor
+- Comunicación máquina a máquina
+- Cuando la API usa OAuth2 y tiene un client_id + client_secret
 
-## Configuration
+## Configuración
 
 ```yaml
 specs:
@@ -31,18 +31,18 @@ specs:
           - write
 ```
 
-## Parameters
+## Parámetros
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `client_id` | Yes | Client identifier |
-| `client_secret` | Yes | Client secret |
-| `token_url` | Yes | Token endpoint URL |
-| `scopes` | No | List of permissions (optional) |
+| Parámetro | Requerido | Descripción |
+|-----------|-----------|-------------|
+| `client_id` | Sí | Identificador del cliente |
+| `client_secret` | Sí | Secreto del cliente |
+| `token_url` | Sí | URL del endpoint de token |
+| `scopes` | No | Lista de permisos (opcional) |
 
-## Notes
+## Notas
 
-- swag2mcp automatically requests a new token when the current one expires
-- The token is cached until its expiry time (`expires_in`)
-- If the server doesn't provide `expires_in`, the token is considered valid for 1 hour
-- All parameters can be stored in environment variables
+- swag2mcp solicita automáticamente un nuevo token cuando el actual expira
+- El token se almacena en caché hasta su tiempo de expiración (`expires_in`)
+- Si el servidor no proporciona `expires_in`, el token se considera válido por 1 hora
+- Todos los parámetros pueden almacenarse en variables de entorno

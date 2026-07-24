@@ -1,12 +1,12 @@
-# Authentication
+# Аутентификация
 
-## Overview
+## Обзор
 
-swag2mcp supports **9 authentication methods** for working with APIs that require authorization. You configure it once in the config file — after that, every API call through `invoke` automatically includes the right tokens and headers.
+swag2mcp поддерживает **9 методов аутентификации** для работы с API, требующими авторизации. Вы настраиваете это один раз в файле конфигурации — после этого каждый вызов API через `invoke` автоматически включает правильные токены и заголовки.
 
-### Where to configure
+### Где настраивать
 
-Authentication is set at the **spec** level in `swag2mcp.yaml`:
+Аутентификация задаётся на уровне **спецификации** в `swag2mcp.yaml`:
 
 ```yaml
 specs:
@@ -22,16 +22,16 @@ specs:
         token: "my-token"
 ```
 
-### How it works
+### Как это работает
 
-- You specify the auth type and parameters in the config
-- swag2mcp automatically applies them to every request when you call `invoke`
-- You **don't need** to request a token before calling an API — it happens automatically
-- If a token expires (OAuth2, Script), swag2mcp refreshes it on its own
+- Вы указываете тип аутентификации и параметры в конфиге
+- swag2mcp автоматически применяет их к каждому запросу при вызове `invoke`
+- Вам **не нужно** запрашивать токен перед вызовом API — это происходит автоматически
+- Если срок действия токена истекает (OAuth2, Script), swag2mcp обновляет его самостоятельно
 
-### Environment variables
+### Переменные окружения
 
-Sensitive data (tokens, passwords, keys) can be stored in environment variables using `$(VAR_NAME)` syntax:
+Конфиденциальные данные (токены, пароли, ключи) можно хранить в переменных окружения, используя синтаксис `$(VAR_NAME)`:
 
 ```yaml
 auth:
@@ -40,24 +40,24 @@ auth:
     token: "$(MY_API_TOKEN)"
 ```
 
-swag2mcp substitutes the value of `MY_API_TOKEN` at startup.
+swag2mcp подставляет значение `MY_API_TOKEN` при запуске.
 
-### MCP auth tool
+### MCP-инструмент auth
 
-The LLM agent can retrieve a token or headers through the `auth` MCP tool — for example, to build a curl command or show the user.
+LLM-агент может получить токен или заголовки через MCP-инструмент `auth` — например, чтобы сформировать команду curl или показать пользователю.
 
-In **production**, this tool should be disabled with `--disable-llm-auth` (enabled by default) so the LLM never has access to tokens.
+В **продакшене** этот инструмент следует отключать с помощью `--disable-llm-auth` (включён по умолчанию), чтобы LLM никогда не имела доступа к токенам.
 
-### Methods
+### Методы
 
-| Method | Description | Best for |
+| Метод | Описание | Для чего подходит |
 |--------|-------------|----------|
-| [`none`](/auth/none) | No authentication | Public APIs |
-| [`basic`](/auth/basic) | HTTP Basic (username + password) | Legacy APIs, simple auth |
-| [`bearer`](/auth/bearer) | Bearer Token (JWT, token) | Modern REST APIs |
-| [`api-key`](/auth/api-key) | API key in header or query parameter | Services with API keys |
-| [`digest`](/auth/digest) | HTTP Digest (username + password) | Legacy APIs, more secure than Basic |
-| [`hmac`](/auth/hmac) | HMAC-SHA256 signature (Binance-style) | Cryptocurrency exchanges |
-| [`oauth2-cc`](/auth/oauth2-cc) | OAuth2 Client Credentials | Server-to-server, microservices |
-| [`oauth2-pwd`](/auth/oauth2-pwd) | OAuth2 Password Grant | Apps with user login |
-| [`script`](/auth/script) | External script to obtain a token | Any custom auth scheme |
+| [`none`](/auth/none) | Без аутентификации | Публичные API |
+| [`basic`](/auth/basic) | HTTP Basic (username + password) | Устаревшие API, простая аутентификация |
+| [`bearer`](/auth/bearer) | Bearer Token (JWT, токен) | Современные REST API |
+| [`api-key`](/auth/api-key) | API-ключ в заголовке или параметре запроса | Сервисы с API-ключами |
+| [`digest`](/auth/digest) | HTTP Digest (username + password) | Устаревшие API, безопаснее Basic |
+| [`hmac`](/auth/hmac) | Подпись HMAC-SHA256 (стиль Binance) | Криптовалютные биржи |
+| [`oauth2-cc`](/auth/oauth2-cc) | OAuth2 Client Credentials | Сервер-сервер, микросервисы |
+| [`oauth2-pwd`](/auth/oauth2-pwd) | OAuth2 Password Grant | Приложения с входом пользователя |
+| [`script`](/auth/script) | Внешний скрипт для получения токена | Любая пользовательская схема auth |

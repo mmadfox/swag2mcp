@@ -1,40 +1,40 @@
-# Development Overview
+# 開発概要
 
-## About this project
+## このプロジェクトについて
 
-swag2mcp is a Go project that bridges OpenAPI/Swagger/Postman specifications with LLM agents via the Model Context Protocol (MCP). It is built with Go 1.23+ and follows strict coding conventions enforced by 80+ linters.
+swag2mcp は、OpenAPI/Swagger/Postman 仕様と LLM エージェントを Model Context Protocol（MCP）を介して橋渡しする Go プロジェクトです。Go 1.23+ で構築され、80 以上のリンターによって強制される厳格なコーディング規約に従っています。
 
-This section is written for **engineers** who want to understand the codebase, contribute, or extend swag2mcp with new auth methods, MCP tools, or integrations.
+このセクションは、コードベースを理解し、貢献し、新しい認証方法、MCP ツール、または統合機能で swag2mcp を拡張したい**エンジニア**向けに書かれています。
 
-## Development skills
+## 開発スキル
 
-The project ships with two development skills that encode the project's conventions and patterns. You can use them or ignore them — they are tools, not rules.
+プロジェクトには、プロジェクトの規約とパターンをエンコードした 2 つの開発スキルが付属しています。これらを使用することも無視することもできます。これらはツールであり、ルールではありません。
 
 ### godeveloper
 
-The [godeveloper skill](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/godeveloper/SKILL.md) defines every code convention in the project:
+[godeveloper スキル](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/godeveloper/SKILL.md) は、プロジェクトのすべてのコード規約を定義しています：
 
-- **Naming** — packages, files, types, interfaces, receivers, constants
-- **Formatting** — gofmt/gofumpt/goimports/gci, 120-line limit, import ordering
-- **Error handling** — `LLMError` with 8 error codes, sentinel errors, error wrapping
-- **Interfaces** — small interfaces, composition, consumer-side definitions
-- **Concurrency** — mutex granularity, goroutine lifetimes, context passing
-- **Testing** — table-driven tests, `newTestService()`/`seedTestData()` helpers, mock generation
-- **Project patterns** — service layer, request/response structs, functional options, MCP handler pattern
+- **命名** — パッケージ、ファイル、型、インターフェース、レシーバー、定数
+- **フォーマット** — gofmt/gofumpt/goimports/gci、120 行制限、インポート順序
+- **エラーハンドリング** — 8 つのエラーコードを持つ `LLMError`、センチネルエラー、エラーラッピング
+- **インターフェース** — 小さなインターフェース、合成、コンシューマー側の定義
+- **並行性** — ミューテックスの粒度、ゴルーチンのライフタイム、コンテキストの受け渡し
+- **テスト** — テーブル駆動テスト、`newTestService()`/`seedTestData()` ヘルパー、モック生成
+- **プロジェクトパターン** — サービス層、リクエスト/レスポンス構造体、関数型オプション、MCP ハンドラーパターン
 
 ### swag2mcp-cli
 
-The [swag2mcp-cli skill](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md) documents every CLI command with syntax, flags, arguments, and examples. Useful when working on CLI commands or writing documentation.
+[swag2mcp-cli スキル](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md) は、すべての CLI コマンドを構文、フラグ、引数、例とともに文書化しています。CLI コマンドの作業やドキュメントの作成時に役立ちます。
 
-## Key architectural decisions
+## 主要なアーキテクチャ上の決定
 
-### Service layer pattern
+### サービス層パターン
 
-Every feature follows the same three-step pattern:
+すべての機能は同じ 3 ステップのパターンに従います：
 
-1. **Validate** the request with `s.validateRequest(req)` (uses `go-playground/validator`)
-2. **Look up** entities from the in-memory index (returns `LLMError` with `not_found` code)
-3. **Execute** business logic and return a typed response or `LLMError`
+1. **検証**：`s.validateRequest(req)` でリクエストを検証（`go-playground/validator` を使用）
+2. **検索**：インメモリインデックスからエンティティを検索（`not_found` コードの `LLMError` を返す）
+3. **実行**：ビジネスロジックを実行し、型付きレスポンスまたは `LLMError` を返す
 
 ```go
 func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse, error) {
@@ -49,9 +49,9 @@ func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse
 }
 ```
 
-### Request/Response structs
+### リクエスト/レスポンス構造体
 
-Each method has a dedicated `{Method}Request` and `{Method}Response` struct. Request structs use `validate` tags for validation and `jsonschema` tags for documentation:
+各メソッドには専用の `{Method}Request` および `{Method}Response` 構造体があります。リクエスト構造体は検証用の `validate` タグとドキュメント用の `jsonschema` タグを使用します：
 
 ```go
 type SearchRequest struct {
@@ -64,9 +64,9 @@ type SearchResponse struct {
 }
 ```
 
-### Functional options
+### 関数型オプション
 
-Configuration uses the functional options pattern:
+設定は関数型オプションパターンを使用します：
 
 ```go
 type Option func(*Service)
@@ -80,9 +80,9 @@ func WithDisableLLMAuth(disable bool) Option {
 }
 ```
 
-### MCP handler pattern
+### MCP ハンドラーパターン
 
-The MCP server uses a composed interface pattern. The `Svc` interface in `internal/server/mcp/handler.go` is composed from smaller interfaces (`CatalogReader`, `EndpointExplorer`, `EndpointExecutor`, `SystemInfo`, `ResponseManager`). Each handler method delegates to the service layer:
+MCP サーバーは合成インターフェースパターンを使用します。`internal/server/mcp/handler.go` の `Svc` インターフェースは、より小さなインターフェース（`CatalogReader`、`EndpointExplorer`、`EndpointExecutor`、`SystemInfo`、`ResponseManager`）から構成されています。各ハンドラーメソッドはサービス層に委譲します：
 
 ```go
 type handler struct {
@@ -100,54 +100,54 @@ func (h *handler) handleSearch(ctx context.Context, _ *sdkmcp.CallToolRequest, r
 
 ### LLMError
 
-All errors returned to the LLM use the `LLMError` type with one of 8 codes:
+LLM に返されるすべてのエラーは、8 つのコードのいずれかを持つ `LLMError` 型を使用します：
 
-| Code | When |
+| コード | 発生時 |
 |------|------|
-| `validation_failed` | Invalid input (wrong ID format, missing required fields) |
-| `not_found` | Entity not found in index |
-| `rate_limit` | Per-endpoint 10s cooldown exceeded |
-| `invoke_error` | HTTP request/response failures |
-| `config_error` | Configuration loading or validation failure |
-| `workspace_error` | Workspace directory or file operation failure |
-| `parse_error` | Spec file parsing failure |
-| `auth_error` | Authentication token retrieval failure |
+| `validation_failed` | 無効な入力（間違った ID 形式、必須フィールドの欠落） |
+| `not_found` | インデックスにエンティティが見つからない |
+| `rate_limit` | エンドポイントごとの 10 秒クールダウンを超過 |
+| `invoke_error` | HTTP リクエスト/レスポンスの失敗 |
+| `config_error` | 設定の読み込みまたは検証の失敗 |
+| `workspace_error` | ワークスペースディレクトリまたはファイル操作の失敗 |
+| `parse_error` | スペックファイルの解析の失敗 |
+| `auth_error` | 認証トークン取得の失敗 |
 
-Messages must explain what went wrong AND what to do next, in plain language suitable for an LLM consumer.
+メッセージは、何が問題だったか**および**次に何をすべきかを、LLM コンシューマーに適した平易な言葉で説明する必要があります。
 
-### ID generation
+### ID 生成
 
-All IDs are deterministic MD5 hashes:
+すべての ID は決定論的な MD5 ハッシュです：
 
 ```go
-id.Domain("meteo")                          // 32-char hex
-id.Collection("meteo", "Forecast")          // 32-char hex
-id.Tag("meteo", "Forecast", "pets")         // 32-char hex
+id.Domain("meteo")                          // 32 文字の 16 進数
+id.Collection("meteo", "Forecast")          // 32 文字の 16 進数
+id.Tag("meteo", "Forecast", "pets")         // 32 文字の 16 進数
 id.Method("meteo", "Forecast", "pets", "GET", "/v2/pet/{petId}")
 ```
 
-### Config cascade
+### 設定カスケード
 
-Configuration cascades through three levels: **global → spec → collection**. Each level overrides the previous. All `http_client` settings can be overridden at every level. Headers and cookies are merged; simple values are replaced.
+設定は **グローバル → スペック → コレクション** の 3 つのレベルでカスケードされます。各レベルが前のレベルを上書きします。すべての `http_client` 設定はすべてのレベルで上書き可能です。ヘッダーとクッキーはマージされ、単純な値は置き換えられます。
 
-## Quick reference
+## クイックリファレンス
 
-| Area | Convention |
+| 領域 | 規約 |
 |------|------------|
-| **Go version** | 1.23+ |
-| **Formatters** | gofmt, gofumpt, goimports, gci |
-| **Line length** | 120 characters |
-| **Linters** | 80+ in `.golangci.yml` |
-| **Error type** | `LLMError` with 8 codes |
-| **Mock framework** | `go.uber.org/mock` |
-| **Test helpers** | `newTestService()`, `seedTestData()` |
-| **Config format** | YAML with cascade |
-| **Auth dispatch** | `UnmarshalYAML` reads `type` field |
-| **ID generation** | MD5-based (`id.Domain()`, `id.Collection()`, etc.) |
-| **Rate limit** | 10s per endpoint for `invoke` |
-| **Response size** | 1 MB default, saved to file when exceeded |
-| **Coverage target** | 80%+ for core packages |
-| **Build** | `make build` |
-| **Lint** | `make lint` |
-| **Test** | `go test ./...` |
-| **Generate** | `go generate ./...` |
+| **Go バージョン** | 1.23+ |
+| **フォーマッター** | gofmt、gofumpt、goimports、gci |
+| **行長** | 120 文字 |
+| **リンター** | `.golangci.yml` で 80 以上 |
+| **エラー型** | 8 つのコードを持つ `LLMError` |
+| **モックフレームワーク** | `go.uber.org/mock` |
+| **テストヘルパー** | `newTestService()`、`seedTestData()` |
+| **設定形式** | カスケード付き YAML |
+| **認証ディスパッチ** | `UnmarshalYAML` が `type` フィールドを読み取る |
+| **ID 生成** | MD5 ベース（`id.Domain()`、`id.Collection()` など） |
+| **レート制限** | `invoke` でエンドポイントごとに 10 秒 |
+| **レスポンスサイズ** | デフォルト 1 MB、超過時はファイルに保存 |
+| **カバレッジ目標** | コアパッケージで 80% 以上 |
+| **ビルド** | `make build` |
+| **リンター** | `make lint` |
+| **テスト** | `go test ./...` |
+| **生成** | `go generate ./...` |

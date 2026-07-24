@@ -1,67 +1,67 @@
 # Specs
 
-A spec is a logical container representing an API domain or service (e.g., YouTube, Binance, Open-Meteo). Each spec has a unique `domain`, a `base_url`, optional `auth`, and contains one or more collections.
+Spec は API ドメインまたはサービスを表す論理コンテナです（例：YouTube、Binance、Open-Meteo）。各 spec は一意の `domain`、`base_url`、オプションの `auth` を持ち、1 つ以上の collection を含みます。
 
-[Collections](./collections) point to OpenAPI/Swagger/Postman files — the spec itself is not a file, it's the grouping around them.
+[Collections](./collections) は OpenAPI/Swagger/Postman ファイルを指します — spec 自体はファイルではなく、それらをグループ化するものです。
 
-## Domain — Naming Rules
+## Domain — 命名規則
 
-The `domain` is the unique identifier of a spec. It is used as the primary key throughout the system.
+`domain` は spec の一意識別子です。システム全体で主キーとして使用されます。
 
-| Rule | Constraint |
-|------|------------|
-| Characters | `a-z`, `0-9`, `_`, `-` only |
-| Length | 1–60 characters |
-| Uniqueness | **No duplicates allowed** — two active specs cannot share the same domain |
-
-**Valid examples:** `meteo`, `binance`, `github-api`, `my_service`, `openai-v1`
-
-**Invalid examples:** `Meteo` (uppercase), `my api` (space), `my.api` (dot), `a-very-long-domain-name-that-exceeds-sixty-characters` (too long)
-
-## Spec Fields
-
-| Field | YAML key | Required | Description |
-|-------|----------|----------|-------------|
-| [Domain](#domain--naming-rules) | `domain` | ✅ | Unique API identifier (1–60 chars, `a-z0-9_-`) |
-| LLM Title | `llm_title` | ✅ | Human-readable name the LLM uses to reference this API (5–120 chars) |
-| [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | Short hint injected into the swag2mcp system prompt (max 500 chars) |
-| Base URL | `base_url` | ✅ | Base URL for all API requests (valid URL) |
-| [Disable](#disable) | `disable` | ❌ | Skip this spec during loading and indexing |
-| [Tags](#tags) | `tags` | ❌ | Tags for filtering (e.g., `["public", "demo"]`) |
-| [Auth](#auth) | `auth` | ❌ | Authentication configuration |
-| [HTTP Client](#http-client) | `http_client` | ❌ | Per-spec HTTP settings (headers, cookies) |
-| [Collections](./collections) | `collections` | ✅ | List of 1–30 collections |
-
-## Validation
-
-When swag2mcp validates the config, these rules are checked for every spec:
-
-| Check | Rule |
+| ルール | 制約 |
 |-------|------|
-| **Duplicate domains** | No two active specs may share the same `domain` |
-| **Domain format** | Must match `^[a-z0-9_-]{1,60}$` |
-| **LLM Title** | Required, 5–120 characters, letters/digits/spaces/basic punctuation |
-| **LLM Instruction** | Max 500 characters, same character set as title |
-| **Base URL** | Required, must be a valid URL |
-| **Collections** | Required, 1–30 items |
-| **Auth** | Validated per auth type (e.g., bearer requires `token`, basic requires `username` + `password`) |
-| **Location** | Each collection's `location` must be a valid URL or file path (5–250 chars) |
+| 文字 | `a-z`、`0-9`、`_`、`-` のみ |
+| 長さ | 1〜60 文字 |
+| 一意性 | **重複不可** — 2 つのアクティブな spec が同じ domain を共有できません |
 
-Validation runs on every `swag2mcp mcp` startup. If it fails, the MCP server will not start — in some IDEs this means the server simply won't connect, and the LLM receives a clear error message explaining what to fix.
+**有効な例:** `meteo`、`binance`、`github-api`、`my_service`、`openai-v1`
 
-To diagnose issues before starting the server, use the [`validate`](../cli/validate.md) command:
+**無効な例:** `Meteo`（大文字）、`my api`（スペース）、`my.api`（ドット）、`a-very-long-domain-name-that-exceeds-sixty-characters`（長すぎる）
+
+## Spec フィールド
+
+| フィールド | YAML キー | 必須 | 説明 |
+|-----------|----------|------|------|
+| [Domain](#domain--naming-rules) | `domain` | ✅ | 一意の API 識別子（1〜60 文字、`a-z0-9_-`） |
+| LLM Title | `llm_title` | ✅ | LLM がこの API を参照するための人間可読名（5〜120 文字） |
+| [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | swag2mcp システムプロンプトに注入される短いヒント（最大 500 文字） |
+| Base URL | `base_url` | ✅ | すべての API リクエストのベース URL（有効な URL） |
+| [Disable](#disable) | `disable` | ❌ | 読み込みとインデックス化時にこの spec をスキップ |
+| [Tags](#tags) | `tags` | ❌ | フィルタリング用のタグ（例：`["public", "demo"]`） |
+| [Auth](#auth) | `auth` | ❌ | 認証設定 |
+| [HTTP Client](#http-client) | `http_client` | ❌ | spec ごとの HTTP 設定（ヘッダー、Cookie） |
+| [Collections](./collections) | `collections` | ✅ | 1〜30 の collection のリスト |
+
+## 検証
+
+swag2mcp が設定を検証するとき、各 spec に対して以下のルールがチェックされます：
+
+| チェック | ルール |
+|---------|-------|
+| **重複ドメイン** | 2 つのアクティブな spec が同じ `domain` を共有してはいけません |
+| **ドメイン形式** | `^[a-z0-9_-]{1,60}$` に一致する必要があります |
+| **LLM Title** | 必須、5〜120 文字、英字/数字/スペース/基本句読点 |
+| **LLM Instruction** | 最大 500 文字、タイトルと同じ文字セット |
+| **Base URL** | 必須、有効な URL である必要があります |
+| **Collections** | 必須、1〜30 項目 |
+| **Auth** | 認証タイプごとに検証（例：bearer は `token`、basic は `username` + `password` が必要） |
+| **Location** | 各 collection の `location` は有効な URL またはファイルパスである必要があります（5〜250 文字） |
+
+検証は `swag2mcp mcp` の起動のたびに実行されます。失敗した場合、MCP サーバーは起動しません — 一部の IDE では、サーバーが単に接続せず、LLM は何を修正すべきかを説明する明確なエラーメッセージを受け取ります。
+
+サーバーを起動する前に問題を診断するには、[`validate`](../cli/validate.md) コマンドを使用します：
 
 ```bash
-# Validate default workspace (~/.swag2mcp)
+# デフォルトワークスペースを検証（~/.swag2mcp）
 swag2mcp validate
 
-# Validate a custom project workspace
+# カスタムプロジェクトワークスペースを検証
 swag2mcp validate ./my-project
 ```
 
 ## LLM Instruction
 
-It is recommended to set `llm_instruction` on each spec — a short hint (up to 500 chars) that tells the LLM what this API is for and when to use it. This instruction is injected into the swag2mcp system prompt, helping the LLM understand the spec's purpose without extra context.
+各 spec に `llm_instruction` を設定することを推奨します — この API の目的と使用タイミングを LLM に伝える短いヒント（最大 500 文字）です。この指示は swag2mcp システムプロンプトに注入され、追加のコンテキストなしで LLM が spec の目的を理解するのに役立ちます。
 
 ```yaml
 specs:
@@ -74,29 +74,29 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-Collections can also have their own `llm_instruction` (up to 360 chars) for more specific guidance.
+Collection も独自の `llm_instruction`（最大 360 文字）を持ち、より具体的なガイダンスを提供できます。
 
 ## Auth
 
-Authentication is configured at the spec level and applies to all its collections. swag2mcp supports 9 auth methods:
+認証は spec レベルで設定され、そのすべての collection に適用されます。swag2mcp は 9 つの認証方式をサポートしています：
 
-| Method | YAML type | Key fields |
-|--------|-----------|------------|
+| 方式 | YAML タイプ | 主要フィールド |
+|------|-----------|------------|
 | [None](../auth/none.md) | `none` | — |
-| [Basic](../auth/basic.md) | `basic` | `username`, `password` |
+| [Basic](../auth/basic.md) | `basic` | `username`、`password` |
 | [Bearer](../auth/bearer.md) | `bearer` | `token` |
-| [Digest](../auth/digest.md) | `digest` | `username`, `password` |
-| [OAuth2 Client Credentials](../auth/oauth2-cc.md) | `oauth2-cc` | `client_id`, `client_secret`, `token_url` |
-| [OAuth2 Password](../auth/oauth2-pwd.md) | `oauth2-pwd` | `username`, `password`, `client_id`, `token_url` |
-| [API Key](../auth/api-key.md) | `api-key` | `key`, `value`, `in` (`header` or `query`) |
-| [HMAC](../auth/hmac.md) | `hmac` | `api_key`, `secret_key` |
+| [Digest](../auth/digest.md) | `digest` | `username`、`password` |
+| [OAuth2 Client Credentials](../auth/oauth2-cc.md) | `oauth2-cc` | `client_id`、`client_secret`、`token_url` |
+| [OAuth2 Password](../auth/oauth2-pwd.md) | `oauth2-pwd` | `username`、`password`、`client_id`、`token_url` |
+| [API Key](../auth/api-key.md) | `api-key` | `key`、`value`、`in`（`header` または `query`） |
+| [HMAC](../auth/hmac.md) | `hmac` | `api_key`、`secret_key` |
 | [Script](../auth/script.md) | `script` | `domain` |
 
-See [Auth Overview](../auth/overview.md) for full details on each method.
+各方式の詳細は [Auth Overview](../auth/overview.md) を参照してください。
 
 ## HTTP Client
 
-You can override HTTP settings at the spec level. These apply to all requests made by this spec's collections.
+spec レベルで HTTP 設定を上書きできます。これらはこの spec の collection が行うすべてのリクエストに適用されます。
 
 ```yaml
 specs:
@@ -114,11 +114,11 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-Settings cascade: global → spec → collection. See [Configuration Cascade](../configuration/cascade.md) for details.
+設定のカスケード：グローバル → spec → collection。詳細は [Configuration Cascade](../configuration/cascade.md) を参照してください。
 
 ## Tags
 
-Tags let you filter specs by category. Use them with the `--tags` flag on `swag2mcp ls` or during bootstrap.
+タグを使用すると、カテゴリで spec をフィルタリングできます。`swag2mcp ls` またはブートストラップ時に `--tags` フラグとともに使用します。
 
 ```yaml
 specs:
@@ -132,13 +132,13 @@ specs:
 ```
 
 ```bash
-# List only specs tagged "weather"
+# "weather" タグが付いた spec のみを一覧表示
 swag2mcp ls --tags weather
 ```
 
 ## Disable
 
-Set `disable: true` to skip a spec entirely. It won't be loaded, indexed, or available to the LLM.
+`disable: true` を設定して spec を完全にスキップします。読み込まれず、インデックス化されず、LLM が利用できなくなります。
 
 ```yaml
 specs:
@@ -151,9 +151,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## Examples
+## 例
 
-### Minimal Spec
+### 最小限の Spec
 
 ```yaml
 specs:
@@ -165,7 +165,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-### Spec with Auth
+### 認証付き Spec
 
 ```yaml
 specs:
@@ -182,7 +182,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
 ```
 
-### Spec with Multiple Collections
+### 複数 Collection の Spec
 
 ```yaml
 specs:
@@ -198,7 +198,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
-### Spec with LLM Instruction and Tags
+### LLM Instruction と Tags 付き Spec
 
 ```yaml
 specs:
@@ -212,10 +212,10 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/rick-and-morty.json
 ```
 
-## Related
+## 関連項目
 
-- [Spec Settings (config)](../configuration/spec-settings.md) — full YAML reference
-- [Configuration Cascade](../configuration/cascade.md) — how settings override each other
-- [Auth Overview](../auth/overview.md) — all 9 auth methods
-- [HTTP Client](../configuration/http-client.md) — HTTP client configuration
-- [Collections](./collections) — spec files within a spec
+- [Spec Settings (config)](../configuration/spec-settings.md) — 完全な YAML リファレンス
+- [Configuration Cascade](../configuration/cascade.md) — 設定の上書き方法
+- [Auth Overview](../auth/overview.md) — 全 9 認証方式
+- [HTTP Client](../configuration/http-client.md) — HTTP クライアント設定
+- [Collections](./collections) — spec 内の spec ファイル

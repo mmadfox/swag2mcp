@@ -1,16 +1,16 @@
-# Basic Auth
+# Autenticación Básica
 
-## Purpose
+## Propósito
 
-HTTP Basic Authentication — the simplest way to authenticate with a username and password.
+Autenticación HTTP Básica — la forma más simple de autenticarse con un nombre de usuario y contraseña.
 
-## When to use
+## Cuándo usarlo
 
-- Legacy APIs that only support Basic Auth
-- Simple authentication without complex tokens
-- Internal services
+- APIs heredadas que solo admiten Autenticación Básica
+- Autenticación simple sin tokens complejos
+- Servicios internos
 
-## Configuration
+## Configuración
 
 ```yaml
 specs:
@@ -27,14 +27,14 @@ specs:
         password: "$(PASSWORD)"
 ```
 
-## Parameters
+## Parámetros
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `username` | Yes | Username |
-| `password` | Yes | Password |
+| Parámetro | Requerido | Descripción |
+|-----------|-----------|-------------|
+| `username` | Sí | Nombre de usuario |
+| `password` | Sí | Contraseña |
 
-## Notes
+## Notas
 
-- The password is sent in the `Authorization: Basic ...` header encoded in Base64 — this is **not encryption**. Always use HTTPS.
-- Store the password in an environment variable: `password: "$(MY_PASSWORD)"`
+- La contraseña se envía en el encabezado `Authorization: Basic ...` codificada en Base64 — esto **no es cifrado**. Use siempre HTTPS.
+- Almacene la contraseña en una variable de entorno: `password: "$(MY_PASSWORD)"`

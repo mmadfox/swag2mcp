@@ -1,77 +1,77 @@
-# Rate Limiting
+# Ratenbegrenzung
 
-## Overview
+## Übersicht
 
-swag2mcp has a built-in rate limiter that prevents the LLM from calling the same API endpoint too frequently. This protects against accidental duplicate calls and respects API rate limits.
+swag2mcp verfügt über einen integrierten Ratenbegrenzer, der verhindert, dass der LLM denselben API-Endpunkt zu häufig aufruft. Dies schützt vor versehentlichen doppelten Aufrufen und respektiert API-Ratenlimits.
 
-## How it works
+## Wie es funktioniert
 
-Each endpoint has a cooldown period. If the LLM tries to call the same endpoint again within the cooldown, the call is rejected with a structured error.
+Jeder Endpunkt hat eine Abklingzeit. Wenn der LLM versucht, denselben Endpunkt innerhalb der Abklingzeit erneut aufzurufen, wird der Aufruf mit einem strukturierten Fehler abgelehnt.
 
 ```
-t=0s  → invoke(endpoint) → executes
-t=2s  → invoke(endpoint) → rejected with rate_limit error
-t=12s → invoke(endpoint) → executes (cooldown has passed)
+t=0s  → invoke(endpoint) → wird ausgeführt
+t=2s  → invoke(endpoint) → mit rate_limit-Fehler abgelehnt
+t=12s → invoke(endpoint) → wird ausgeführt (Abklingzeit abgelaufen)
 ```
 
-### Default behavior
+### Standardverhalten
 
-- **Cooldown:** 10 seconds per endpoint
-- **Scope:** Per-endpoint — calling endpoint A does not affect endpoint B
-- **Error response:** The LLM receives an `LLMError` with code `rate_limit` and a message indicating how long to wait
-- **Reset:** After 10 seconds of inactivity on that endpoint
+- **Abklingzeit:** 10 Sekunden pro Endpunkt
+- **Gültigkeitsbereich:** Pro Endpunkt — der Aufruf von Endpunkt A hat keine Auswirkung auf Endpunkt B
+- **Fehlerantwort:** Der LLM erhält einen `LLMError` mit dem Code `rate_limit` und einer Nachricht, die angibt, wie lange gewartet werden muss
+- **Zurücksetzen:** Nach 10 Sekunden Inaktivität auf diesem Endpunkt
 
-### Error format
+### Fehlerformat
 
-When rate limited, the LLM receives:
+Bei Ratenbegrenzung erhält der LLM:
 
 ```json
 {
   "code": "rate_limit",
-  "message": "rate limit exceeded for endpoint \"abc123\": try again in 8 seconds",
-  "hint": "Wait for the cooldown period to expire, then try invoking the endpoint again. Use the search tool to find other endpoints you can call in the meantime."
+  "message": "Ratenlimit für Endpunkt \"abc123\" überschritten: versuchen Sie es in 8 Sekunden erneut",
+  "hint": "Warten Sie, bis die Abklingzeit abgelaufen ist, und versuchen Sie dann, den Endpunkt erneut aufzurufen. Verwenden Sie das Suchtool, um andere Endpunkte zu finden, die Sie in der Zwischenzeit aufrufen können."
 }
 ```
 
-The LLM can use this information to wait and retry, or switch to a different endpoint.
+Der LLM kann diese Informationen nutzen, um zu warten und es erneut zu versuchen oder zu einem anderen Endpunkt zu wechseln.
 
-### Why it exists
+### Warum es existiert
 
-- **Prevents accidental duplicate calls** — the LLM might call the same endpoint multiple times in quick succession
-- **Protects against API rate limits** — many APIs have their own rate limits, and hitting them would cause errors
-- **Saves resources** — reduces unnecessary network traffic
+- **Verhindert versehentliche doppelte Aufrufe** — der LLM könnte denselben Endpunkt mehrmals schnell hintereinander aufrufen
+- **Schützt vor API-Ratenlimits** — viele APIs haben eigene Ratenlimits, deren Überschreitung zu Fehlern führen würde
+- **Spart Ressourcen** — reduziert unnötigen Netzwerkverkehr
 
-## Configuration
+## Konfiguration
 
-You can disable the rate limiter or change the cooldown interval:
+Sie können den Ratenbegrenzer deaktivieren oder das Abklingintervall ändern:
 
 ```yaml
-# Disable the rate limiter entirely
+# Ratenbegrenzer vollständig deaktivieren
 disable_ratelimiter: true
 
-# Custom cooldown interval
+# Benutzerdefiniertes Abklingintervall
 rate_limit_interval: 30s
 ```
 
 ### disable_ratelimiter
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Effect:** When `true`, the per-endpoint rate limiter is disabled. The LLM can call the same endpoint repeatedly without waiting.
-- **When to enable:** Testing, debugging, or when you need to call the same endpoint multiple times in quick succession.
-- **When to keep disabled (recommended):** Production. The rate limiter prevents accidental abuse.
+- **Typ:** `bool`
+- **Standard:** `false`
+- **Wirkung:** Wenn `true`, wird der Pro-Endpunkt-Ratenbegrenzer deaktiviert. Der LLM kann denselben Endpunkt wiederholt ohne Wartezeit aufrufen.
+- **Wann aktivieren:** Testen, Debuggen oder wenn Sie denselben Endpunkt mehrmals schnell hintereinander aufrufen müssen.
+- **Wann deaktiviert lassen (empfohlen):** Produktion. Der Ratenbegrenzer verhindert versehentlichen Missbrauch.
 
 ### rate_limit_interval
 
-- **Type:** duration (Go format: `10s`, `30s`, `1m`)
-- **Default:** `10s`
-- **Effect:** Sets the cooldown period between calls to the same endpoint.
-- **When to increase:** APIs with strict rate limits (e.g., 10 requests per minute).
-- **When to decrease:** Internal APIs where you control the load.
-- **Examples:** `5s`, `30s`, `1m`, `2m`
+- **Typ:** Dauer (Go-Format: `10s`, `30s`, `1m`)
+- **Standard:** `10s`
+- **Wirkung:** Legt die Abklingzeit zwischen Aufrufen desselben Endpunkts fest.
+- **Wann erhöhen:** APIs mit strengen Ratenlimits (z. B. 10 Anfragen pro Minute).
+- **Wann verringern:** Interne APIs, bei denen Sie die Last kontrollieren.
+- **Beispiele:** `5s`, `30s`, `1m`, `2m`
 
-## Important notes
+## Wichtige Hinweise
 
-- **Per-endpoint tracking** — each endpoint is tracked independently. Calling one endpoint does not affect others.
-- **Error returned to LLM** — the second call within the cooldown is rejected with a `rate_limit` error. The LLM receives the cooldown duration and can retry after waiting.
-- **No cleanup needed** — the rate limiter tracks endpoints automatically and does not require maintenance.
+- **Pro-Endpunkt-Verfolgung** — jeder Endpunkt wird unabhängig verfolgt. Der Aufruf eines Endpunkts hat keine Auswirkung auf andere.
+- **Fehler wird an LLM zurückgegeben** — der zweite Aufruf innerhalb der Abklingzeit wird mit einem `rate_limit`-Fehler abgelehnt. Der LLM erhält die Abklingdauer und kann nach dem Warten erneut versuchen.
+- **Keine Bereinigung erforderlich** — der Ratenbegrenzer verfolgt Endpunkte automatisch und erfordert keine Wartung.

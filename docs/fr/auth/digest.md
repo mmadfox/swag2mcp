@@ -1,41 +1,41 @@
-# Digest Auth
+# Authentification Digest
 
-## Purpose
+## Objectif
 
-HTTP Digest Access Authentication — a more secure alternative to Basic Auth. The password is not sent in plain text; instead, MD5 hashes are used.
+Authentification HTTP Digest Access — une alternative plus sécurisée à Basic Auth. Le mot de passe n'est pas envoyé en texte clair ; des hachages MD5 sont utilisés à la place.
 
-## When to use
+## Quand l'utiliser
 
-- Legacy APIs that only support Digest
-- When you need authentication without sending the password in plain text
-- Internal enterprise systems
+- API legacy qui ne prennent en charge que Digest
+- Quand vous avez besoin d'authentification sans envoyer le mot de passe en texte clair
+- Systèmes d'entreprise internes
 
 ## Configuration
 
 ```yaml
 specs:
   - domain: jokes
-    llm_title: Dad Joke API
+    llm_title: API Dad Joke
     base_url: https://icanhazdadjoke.com
     collections:
-      - llm_title: Jokes
+      - llm_title: Blagues
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: digest
       config:
         username: "admin"
-        password: "$(PASSWORD)"
+        password: "$(MOT_DE_PASSE)"
 ```
 
-## Parameters
+## Paramètres
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `username` | Yes | Username |
-| `password` | Yes | Password |
+| Paramètre | Requis | Description |
+|-----------|--------|-------------|
+| `username` | Oui | Nom d'utilisateur |
+| `password` | Oui | Mot de passe |
 
 ## Notes
 
-- swag2mcp first sends a request without authentication, receives a challenge from the server (HTTP 401), computes the response, and retries with the `Authorization: Digest ...` header
-- The challenge is cached for 5 minutes — subsequent requests don't need an extra round-trip
-- Store the password in an environment variable: `password: "$(API_PASSWORD)"`
+- swag2mcp envoie d'abord une requête sans authentification, reçoit un défi du serveur (HTTP 401), calcule la réponse et réessaie avec l'en-tête `Authorization: Digest ...`
+- Le défi est mis en cache pendant 5 minutes — les requêtes suivantes n'ont pas besoin d'un aller-retour supplémentaire
+- Stockez le mot de passe dans une variable d'environnement : `password: "$(MOT_DE_PASSE_API)"`

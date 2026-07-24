@@ -1,72 +1,72 @@
 # delete
 
-## Purpose
+## Propósito
 
-Remove a **spec** (API service) or **collection** (spec file) from the configuration. This is the inverse of `add`.
+Eliminar una **especificación** (servicio de API) o **colección** (archivo de especificación) de la configuración. Es la operación inversa de `add`.
 
-## When to use
+## Cuándo usarlo
 
-- An API is no longer needed
-- You want to remove a specific spec file from a spec
-- You are cleaning up your workspace
+- Una API ya no es necesaria
+- Desea eliminar un archivo de especificación específico de una especificación
+- Está limpiando su espacio de trabajo
 
-## Syntax
+## Sintaxis
 
 ```bash
 swag2mcp delete spec [path]
 swag2mcp delete collection [path]
 ```
 
-## Arguments
+## Argumentos
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Argumento | Posición | Requerido | Descripción |
+|-----------|----------|-----------|-------------|
+| `path` | 1 | No | Directorio del espacio de trabajo. Si se omite, se resuelve mediante reglas de resolución de ruta. |
 
-## Flags
+## Banderas
 
-None. Both subcommands are purely interactive.
+Ninguna. Ambos subcomandos son puramente interactivos.
 
-## How it works
+## Cómo funciona
 
-### Delete a spec
+### Eliminar una especificación
 
-Prompts you to select a spec from a list, then asks for confirmation before deleting.
+Le solicita que seleccione una especificación de una lista, luego pide confirmación antes de eliminar.
 
 ```bash
 swag2mcp delete spec
 ```
 
-### Delete a collection
+### Eliminar una colección
 
-Prompts you to select a spec, then a collection within that spec, then asks for confirmation.
+Le solicita que seleccione una especificación, luego una colección dentro de esa especificación, luego pide confirmación.
 
 ```bash
 swag2mcp delete collection
 ```
 
-## Finding IDs
+## Encontrar IDs
 
-The interactive prompts show human-readable names, not IDs. If you need IDs for reference:
+Los mensajes interactivos muestran nombres legibles por humanos, no IDs. Si necesita IDs como referencia:
 
 ```bash
-# List all specs with their IDs
+# Listar todas las especificaciones con sus IDs
 swag2mcp ls
 
-# List collections for a specific spec
+# Listar colecciones para una especificación específica
 swag2mcp ls --tags
 ```
 
-## Post-command verification
+## Verificación posterior al comando
 
 ```bash
 swag2mcp ls [path]
-# The deleted spec or collection should no longer appear
+# La especificación o colección eliminada ya no debería aparecer
 ```
 
-## Nuances
+## Matices
 
-- **TTY required:** Both commands require an interactive terminal. They will **not** work in CI/CD pipelines, cron jobs, or non-interactive scripts.
-- **No `--force` or `--yes`:** There is no way to skip the confirmation prompt. This is intentional to prevent accidental deletions.
-- **Auto-init:** If no config file exists, `delete` automatically runs the init wizard first.
-- **No YAML mode:** Unlike `add`, there is no `--yaml` flag. Deletion is always interactive.
+- **Se requiere TTY:** Ambos comandos requieren una terminal interactiva. **No** funcionarán en pipelines CI/CD, tareas cron o scripts no interactivos.
+- **No hay `--force` o `--yes`:** No hay forma de omitir el mensaje de confirmación. Esto es intencional para evitar eliminaciones accidentales.
+- **Auto-inicio:** Si no existe un archivo de configuración, `delete` ejecuta automáticamente el asistente de inicio primero.
+- **Sin modo YAML:** A diferencia de `add`, no hay una bandera `--yaml`. La eliminación siempre es interactiva.

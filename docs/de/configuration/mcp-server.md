@@ -1,8 +1,8 @@
-# MCP Server
+# MCP-Server
 
-The MCP server is the main interaction point for LLM agents. It exposes all configured APIs as MCP tools that the LLM can call.
+Der MCP-Server ist der Hauptinteraktionspunkt für LLM-Agenten. Er stellt alle konfigurierten APIs als MCP-Tools bereit, die der LLM aufrufen kann.
 
-## Configuration
+## Konfiguration
 
 ```yaml
 mcp:
@@ -15,17 +15,17 @@ mcp:
 
 ## Transports
 
-Three transport types are available:
+Drei Transporttypen sind verfügbar:
 
-| Transport | Description | When to Use |
-|-----------|-------------|-------------|
-| `stdio` | Standard input/output | Local LLM clients (VS Code, Cursor, Claude Desktop) |
-| `sse` | Server-Sent Events | Remote clients, HTTP-based communication |
-| `streamable-http` | HTTP with streaming | Web clients, modern MCP clients |
+| Transport | Beschreibung | Wann verwenden |
+|-----------|-------------|----------------|
+| `stdio` | Standard-Ein-/ausgabe | Lokale LLM-Clients (VS Code, Cursor, Claude Desktop) |
+| `sse` | Server-Sent Events | Entfernte Clients, HTTP-basierte Kommunikation |
+| `streamable-http` | HTTP mit Streaming | Web-Clients, moderne MCP-Clients |
 
-### stdio (default)
+### stdio (Standard)
 
-The LLM client runs swag2mcp as a child process. Communication happens over standard input and output. No network port is needed.
+Der LLM-Client führt swag2mcp als Kindprozess aus. Die Kommunikation erfolgt über Standard-Ein- und -ausgabe. Es wird kein Netzwerkport benötigt.
 
 ```yaml
 mcp:
@@ -38,7 +38,7 @@ swag2mcp mcp
 
 ### SSE
 
-Server-Sent Events transport for HTTP-based communication. The MCP server listens on an HTTP port and the LLM client connects remotely.
+Server-Sent-Events-Transport für HTTP-basierte Kommunikation. Der MCP-Server lauscht auf einem HTTP-Port und der LLM-Client verbindet sich remote.
 
 ```yaml
 mcp:
@@ -53,7 +53,7 @@ swag2mcp mcp --transport sse --http-addr 127.0.0.1:8080
 
 ### Streamable HTTP
 
-Modern HTTP transport that supports streaming responses. Similar to SSE but uses a different protocol.
+Moderner HTTP-Transport, der Streaming-Antworten unterstützt. Ähnlich wie SSE, verwendet aber ein anderes Protokoll.
 
 ```yaml
 mcp:
@@ -66,39 +66,39 @@ mcp:
 swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 ```
 
-## Parameters
+## Parameter
 
 ### transport
 
-- **Type:** `string`
-- **Default:** `"stdio"`
-- **Options:** `stdio`, `sse`, `streamable-http`
-- **Effect:** Determines how the MCP server communicates with the LLM client.
+- **Typ:** `string`
+- **Standard:** `"stdio"`
+- **Optionen:** `stdio`, `sse`, `streamable-http`
+- **Wirkung:** Bestimmt, wie der MCP-Server mit dem LLM-Client kommuniziert.
 
 ### addr
 
-- **Type:** `string`
-- **Default:** `":8080"`
-- **Description:** Listen address for SSE and Streamable HTTP transports. Format: `host:port`.
-- **Examples:** `":8080"`, `"127.0.0.1:8080"`, `"0.0.0.0:9000"`
+- **Typ:** `string`
+- **Standard:** `":8080"`
+- **Beschreibung:** Lauschadresse für SSE- und Streamable-HTTP-Transports. Format: `host:port`.
+- **Beispiele:** `":8080"`, `"127.0.0.1:8080"`, `"0.0.0.0:9000"`
 
 ### path
 
-- **Type:** `string`
-- **Default:** `"/mcp"`
-- **Description:** URL path for the MCP endpoint. The LLM client sends requests to `http://<addr><path>`.
-- **Examples:** `"/mcp"`, `"/api/mcp"`, `"/v1/mcp"`
+- **Typ:** `string`
+- **Standard:** `"/mcp"`
+- **Beschreibung:** URL-Pfad für den MCP-Endpunkt. Der LLM-Client sendet Anfragen an `http://<addr><path>`.
+- **Beispiele:** `"/mcp"`, `"/api/mcp"`, `"/v1/mcp"`
 
 ### auth.token
 
-- **Type:** `string`
-- **Default:** `""` (no auth)
-- **Description:** Bearer token for HTTP transport authentication. When set, the LLM client must include `Authorization: Bearer <token>` in every request.
-- **Note:** Supports `$(ENV_VAR)` resolution.
+- **Typ:** `string`
+- **Standard:** `""` (kein Auth)
+- **Beschreibung:** Bearer-Token für die HTTP-Transport-Authentifizierung. Wenn gesetzt, muss der LLM-Client bei jeder Anfrage `Authorization: Bearer <token>` mitsenden.
+- **Hinweis:** Unterstützt die Auflösung von `$(ENV_VAR)`.
 
-## HTTP Authentication
+## HTTP-Authentifizierung
 
-Protect the MCP HTTP endpoint with a bearer token:
+Schützen Sie den MCP-HTTP-Endpunkt mit einem Bearer-Token:
 
 ```yaml
 mcp:
@@ -106,32 +106,32 @@ mcp:
     token: "my-secret-token"
 ```
 
-Or via CLI flag:
+Oder über CLI-Flag:
 
 ```bash
 swag2mcp mcp --auth-token "my-secret-token"
 ```
 
-## Health Check
+## Health-Check
 
-The MCP server provides a health check endpoint that works without MCP initialization:
+Der MCP-Server bietet einen Health-Check-Endpunkt, der ohne MCP-Initialisierung funktioniert:
 
 ```bash
 curl http://127.0.0.1:8080/health
 # {"status":"ok","version":"v1.2.0"}
 ```
 
-## Startup Flags
+## Start-Flags
 
-CLI flags override the YAML configuration. If a flag is not set, the value from `mcp` section in YAML is used as fallback.
+CLI-Flags überschreiben die YAML-Konfiguration. Wenn ein Flag nicht gesetzt ist, wird der Wert aus dem `mcp`-Abschnitt in YAML als Fallback verwendet.
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--transport` | string | `"stdio"` | Transport type: `stdio`, `sse`, `streamable-http` |
-| `--http-addr` | string | `":8080"` | HTTP server address (for SSE and Streamable HTTP) |
-| `--http-path` | string | `"/mcp"` | URL path for the MCP handler |
-| `--auth-token` | string | `""` | Bearer token for HTTP transport authentication |
-| `--logfile` | string | `""` | Log file path (logs to stderr if unset) |
-| `--disable-llm-auth` | bool | `true` | Remove the `auth` tool from the MCP tool list |
-| `--dump-dir` | string | `""` | Directory to dump HTTP requests for debugging |
-| `--tags` | string | `""` | Filter specs by tags (comma-separated) |
+| Flag | Typ | Standard | Beschreibung |
+|------|-----|----------|--------------|
+| `--transport` | string | `"stdio"` | Transporttyp: `stdio`, `sse`, `streamable-http` |
+| `--http-addr` | string | `":8080"` | HTTP-Serveradresse (für SSE und Streamable HTTP) |
+| `--http-path` | string | `"/mcp"` | URL-Pfad für den MCP-Handler |
+| `--auth-token` | string | `""` | Bearer-Token für HTTP-Transport-Authentifizierung |
+| `--logfile` | string | `""` | Log-Dateipfad (loggt nach stderr, wenn nicht gesetzt) |
+| `--disable-llm-auth` | bool | `true` | Entfernt das `auth`-Tool aus der MCP-Tool-Liste |
+| `--dump-dir` | string | `""` | Verzeichnis zum Speichern von HTTP-Anfragen zum Debuggen |
+| `--tags` | string | `""` | Specs nach Tags filtern (kommagetrennt) |

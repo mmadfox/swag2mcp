@@ -1,17 +1,17 @@
-# Bearer Auth
+# Autenticación Bearer
 
-## Purpose
+## Propósito
 
-Bearer Token authentication — the most common method for modern REST APIs. The token is sent in the `Authorization: Bearer <token>` header.
+Autenticación mediante Token Bearer — el método más común para APIs REST modernas. El token se envía en el encabezado `Authorization: Bearer <token>`.
 
-## When to use
+## Cuándo usarlo
 
-- Modern REST APIs
+- APIs REST modernas
 - JWT (JSON Web Tokens)
-- OAuth2 access tokens (when the token is already obtained)
-- Any API that accepts a Bearer Token
+- Tokens de acceso OAuth2 (cuando el token ya se ha obtenido)
+- Cualquier API que acepte un Token Bearer
 
-## Configuration
+## Configuración
 
 ```yaml
 specs:
@@ -27,14 +27,14 @@ specs:
         token: "eyJhbGciOiJIUzI1NiIs..."
 ```
 
-## Parameters
+## Parámetros
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `token` | Yes | Bearer token (JWT, OAuth2 token, etc.) |
+| Parámetro | Requerido | Descripción |
+|-----------|-----------|-------------|
+| `token` | Sí | Token Bearer (JWT, token OAuth2, etc.) |
 
-## Notes
+## Notas
 
-- The token is static — if it expires, you need to update it in the config manually
-- For automatic token refresh, use `oauth2-cc` or `oauth2-pwd`
-- Store the token in an environment variable: `token: "$(API_TOKEN)"`
+- El token es estático — si expira, debe actualizarlo en la configuración manualmente
+- Para renovación automática de tokens, use `oauth2-cc` o `oauth2-pwd`
+- Almacene el token en una variable de entorno: `token: "$(API_TOKEN)"`

@@ -1,168 +1,168 @@
-# LLM Session Examples
+# Exemples de sessions LLM
 
-This page shows real dialogues between a user and an LLM agent powered by swag2mcp. Each example includes the user's request, the MCP tool call, and the response.
+Cette page présente des dialogues réels entre un utilisateur et un agent LLM propulsé par swag2mcp. Chaque exemple inclut la demande de l'utilisateur, l'appel d'outil MCP et la réponse.
 
-## Setup
+## Configuration
 
-The workspace has two APIs configured:
+L'espace de travail a deux API configurées :
 
-- **icanhazdadjoke** — public dad jokes API
-- **Open-Meteo** — weather forecast API
+- **icanhazdadjoke** — API publique de blagues de papa
+- **Open-Meteo** — API de prévisions météorologiques
 
 ---
 
-## Discovering available APIs
+## Découverte des API disponibles
 
-**User:** What APIs do you have access to?
+**Utilisateur :** À quelles API avez-vous accès ?
 
-**LLM → MCP:** `spec_list()`
+**LLM → MCP :** `spec_list()`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```
-Specifications:
+Spécifications :
   dadjoke (icanhazdadjoke)
-  meteo (Open-Meteo Weather API)
+  meteo (API météo Open-Meteo)
 ```
 
-**LLM:** I have access to two APIs: icanhazdadjoke for dad jokes and Open-Meteo for weather data.
+**LLM :** J'ai accès à deux API : icanhazdadjoke pour les blagues de papa et Open-Meteo pour les données météorologiques.
 
 ---
 
-## Getting spec details
+## Obtention des détails d'une spécification
 
-**User:** Tell me more about the dadjoke API.
+**Utilisateur :** Parlez-moi plus de l'API dadjoke.
 
-**LLM → MCP:** `spec_by_id(id: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")`
+**LLM → MCP :** `spec_by_id(id: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```
-Spec: dadjoke (icanhazdadjoke)
-Collections:
-  - Jokes (3 endpoints, 1 tag)
+Spécification : dadjoke (icanhazdadjoke)
+Collections :
+  - Jokes (3 points de terminaison, 1 balise)
 ```
 
-**LLM:** The dadjoke API has one collection called "Jokes" with 3 endpoints under a single tag.
+**LLM :** L'API dadjoke a une collection appelée « Jokes » avec 3 points de terminaison sous une seule balise.
 
 ---
 
-## Searching for endpoints
+## Recherche de points de terminaison
 
-**User:** Find me an endpoint to get a random dad joke.
+**Utilisateur :** Trouvez-moi un point de terminaison pour obtenir une blague de papa aléatoire.
 
-**LLM → MCP:** `search(query: "random joke", limit: 5)`
+**LLM → MCP :** `search(query: "blague aléatoire", limit: 5)`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```
-Endpoints:
-  GET /  — Return a random dad joke
-  GET /j/{id} — Return a specific dad joke by ID
-  GET /search — Search for dad jokes
+Points de terminaison :
+  GET /  — Renvoyer une blague de papa aléatoire
+  GET /j/{id} — Renvoyer une blague de papa spécifique par ID
+  GET /search — Rechercher des blagues de papa
 ```
 
-**LLM:** I found three endpoints. The main one is `GET /` which returns a random dad joke.
+**LLM :** J'ai trouvé trois points de terminaison. Le principal est `GET /` qui renvoie une blague de papa aléatoire.
 
 ---
 
-## Inspecting an endpoint
+## Inspection d'un point de terminaison
 
-**User:** What parameters does the random joke endpoint need?
+**Utilisateur :** De quels paramètres le point de terminaison de blague aléatoire a-t-il besoin ?
 
-**LLM → MCP:** `inspect(endpointId: "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6")`
+**LLM → MCP :** `inspect(endpointId: "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6")`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```
 GET /
-Base URL: https://icanhazdadjoke.com
-Full URL: https://icanhazdadjoke.com/
+URL de base : https://icanhazdadjoke.com
+URL complète : https://icanhazdadjoke.com/
 
-Parameters: none
+Paramètres : aucun
 
-Responses:
-  200: A random dad joke
-    Headers: Accept: text/plain
+Réponses :
+  200 : Une blague de papa aléatoire
+    En-têtes : Accept: text/plain
 ```
 
-**LLM:** The endpoint takes no parameters. Just call it and you'll get a random joke.
+**LLM :** Le point de terminaison ne prend aucun paramètre. Il suffit de l'appeler et vous obtiendrez une blague aléatoire.
 
 ---
 
-## Invoking an API
+## Invocation d'une API
 
-**User:** Give me a random dad joke!
+**Utilisateur :** Donnez-moi une blague de papa aléatoire !
 
-**LLM → MCP:** `invoke(endpointId: "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6")`
+**LLM → MCP :** `invoke(endpointId: "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6")`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```json
 {
   "statusCode": 200,
-  "body": "Why don't scientists trust atoms? Because they make up everything!"
+  "body": "Pourquoi les scientifiques ne font-ils pas confiance aux atomes ? Parce qu'ils inventent tout !"
 }
 ```
 
-**LLM:** Here's your dad joke: "Why don't scientists trust atoms? Because they make up everything!"
+**LLM :** Voici votre blague de papa : « Pourquoi les scientifiques ne font-ils pas confiance aux atomes ? Parce qu'ils inventent tout ! »
 
 ---
 
-## Working with large responses
+## Travail avec de grandes réponses
 
-**User:** Get me the weather forecast for Berlin.
+**Utilisateur :** Obtenez-moi les prévisions météorologiques pour Paris.
 
-**LLM → MCP:** `search(query: "weather forecast", limit: 5)`
+**LLM → MCP :** `search(query: "prévisions météorologiques", limit: 5)`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```
-Endpoints:
-  GET /v1/forecast — Weather forecast
+Points de terminaison :
+  GET /v1/forecast — Prévisions météorologiques
 ```
 
-**LLM → MCP:** `inspect(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7")`
+**LLM → MCP :** `inspect(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7")`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```
 GET /v1/forecast
-Parameters:
-  latitude (query, number, required)
-  longitude (query, number, required)
-  hourly (query, string, optional)
+Paramètres :
+  latitude (query, nombre, obligatoire)
+  longitude (query, nombre, obligatoire)
+  hourly (query, chaîne, optionnel)
 
-Responses:
-  200: Forecast data
+Réponses :
+  200 : Données de prévisions
 ```
 
-**LLM → MCP:** `invoke(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7", parameters: {"latitude": 52.52, "longitude": 13.41, "hourly": "temperature_2m"})`
+**LLM → MCP :** `invoke(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7", parameters: {"latitude": 48.85, "longitude": 2.35, "hourly": "temperature_2m"})`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```json
 {
   "statusCode": 200,
   "fileRef": {
-    "path": "/home/user/.swag2mcp/responses/response_x7k9m2.json",
+    "path": "/home/utilisateur/.swag2mcp/responses/response_x7k9m2.json",
     "size": 1572864,
-    "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "Response exceeds the 2 KB limit and has been saved to disk."
+    "sizeHint": "1.5 Mo",
+    "maxSizeHint": "2 Ko",
+    "message": "La réponse dépasse la limite de 2 Ko et a été enregistrée sur le disque."
   }
 }
 ```
 
-**LLM:** The response is large (1.5 MB). Let me explore its structure.
+**LLM :** La réponse est volumineuse (1.5 Mo). Laissez-moi explorer sa structure.
 
-**LLM → MCP:** `response_outline(path: "/home/user/.swag2mcp/responses/response_x7k9m2.json")`
+**LLM → MCP :** `response_outline(path: "/home/utilisateur/.swag2mcp/responses/response_x7k9m2.json")`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```
-Type: object
-Size: 1.5 MB
-Keys: latitude, longitude, hourly, daily
-Arrays:
-  hourly.time (168 items)
-  hourly.temperature_2m (168 items)
+Type : object
+Taille : 1.5 Mo
+Clés : latitude, longitude, hourly, daily
+Tableaux :
+  hourly.time (168 éléments)
+  hourly.temperature_2m (168 éléments)
 ```
 
-**LLM → MCP:** `response_compress(path: "/home/user/.swag2mcp/responses/response_x7k9m2.json", mode: "sample_array", jsonPath: "hourly", arrayHead: 3, arrayTail: 2)`
+**LLM → MCP :** `response_compress(path: "/home/utilisateur/.swag2mcp/responses/response_x7k9m2.json", mode: "sample_array", jsonPath: "hourly", arrayHead: 3, arrayTail: 2)`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```json
 {
   "compressed": {
@@ -181,22 +181,22 @@ Arrays:
 }
 ```
 
-**LLM:** Here's the Berlin weather forecast. Temperatures range from 16.9°C at night to around 20°C in the evening.
+**LLM :** Voici les prévisions météorologiques pour Paris. Les températures varient de 16,9°C la nuit à environ 20°C le soir.
 
 ---
 
-## Auth token retrieval
+## Récupération d'un jeton d'authentification
 
-**User:** Show me the auth token for my API so I can test it with curl.
+**Utilisateur :** Affichez-moi le jeton d'authentification pour mon API afin que je puisse la tester avec curl.
 
-**LLM → MCP:** `auth(specId: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")`
+**LLM → MCP :** `auth(specId: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 ```
 
-**LLM:** Here's the token. You can use it in curl:
+**LLM :** Voici le jeton. Vous pouvez l'utiliser dans curl :
 
 ```bash
 curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/v1/users
@@ -204,17 +204,17 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/
 
 ---
 
-## Runtime info
+## Informations d'exécution
 
-**User:** What's the current system status?
+**Utilisateur :** Quel est l'état actuel du système ?
 
-**LLM → MCP:** `info()`
+**LLM → MCP :** `info()`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```json
 {
   "version": "v1.2.0",
-  "workspace": "/home/user/.swag2mcp",
+  "workspace": "/home/utilisateur/.swag2mcp",
   "uptime": "2h 15m",
   "specs": {
     "total": 2,
@@ -223,7 +223,7 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 KB"
+    "max_response_size": "2 Ko"
   },
   "mcp": {
     "transport": "stdio"
@@ -231,36 +231,36 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/
 }
 ```
 
-**LLM:** The system has been running for 2 hours and 15 minutes. Two specs are active with 20 endpoints total. The HTTP client has a 30-second timeout and a 2 KB response size limit.
+**LLM :** Le système fonctionne depuis 2 heures et 15 minutes. Deux spécifications sont actives avec 20 points de terminaison au total. Le client HTTP a un délai d'attente de 30 secondes et une limite de taille de réponse de 2 Ko.
 
 ---
 
-## Full conversation: planning a trip
+## Conversation complète : planification d'un voyage
 
-**User:** I'm planning a trip to Tokyo next week. Can you help me prepare?
+**Utilisateur :** Je planifie un voyage à Tokyo la semaine prochaine. Pouvez-vous m'aider à me préparer ?
 
-**LLM → MCP:** `search(query: "weather forecast", limit: 5)`
+**LLM → MCP :** `search(query: "prévisions météorologiques", limit: 5)`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```
-Endpoints:
-  GET /v1/forecast — Weather forecast
+Points de terminaison :
+  GET /v1/forecast — Prévisions météorologiques
 ```
 
-**LLM → MCP:** `inspect(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7")`
+**LLM → MCP :** `inspect(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7")`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```
 GET /v1/forecast
-Parameters:
-  latitude (query, number, required)
-  longitude (query, number, required)
-  daily (query, string, optional)
+Paramètres :
+  latitude (query, nombre, obligatoire)
+  longitude (query, nombre, obligatoire)
+  daily (query, chaîne, optionnel)
 ```
 
-**LLM → MCP:** `invoke(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7", parameters: {"latitude": 35.68, "longitude": 139.69, "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum"})`
+**LLM → MCP :** `invoke(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7", parameters: {"latitude": 35.68, "longitude": 139.69, "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum"})`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```json
 {
   "statusCode": 200,
@@ -277,49 +277,49 @@ Parameters:
 }
 ```
 
-**LLM:** Here's the Tokyo weather forecast for next week:
+**LLM :** Voici les prévisions météorologiques pour Tokyo pour la semaine prochaine :
 
-| Date | Max | Min | Rain |
+| Date | Max | Min | Pluie |
 |------|-----|-----|------|
-| Jul 28 | 32°C | 25°C | 0 mm |
-| Jul 29 | 33°C | 26°C | 0.5 mm |
-| Jul 30 | 31°C | 24°C | 2.1 mm |
-| Jul 31 | 30°C | 23°C | 0 mm |
-| Aug 1 | 29°C | 22°C | 0 mm |
+| 28 juil. | 32°C | 25°C | 0 mm |
+| 29 juil. | 33°C | 26°C | 0,5 mm |
+| 30 juil. | 31°C | 24°C | 2,1 mm |
+| 31 juil. | 30°C | 23°C | 0 mm |
+| 1 août | 29°C | 22°C | 0 mm |
 
-Looks like hot and mostly dry weather. Pack light clothes and an umbrella just in case for July 30!
+Il fera chaud et le temps sera généralement sec. Prévoyez des vêtements légers et un parapluie au cas où pour le 30 juillet !
 
 ---
 
-## Full conversation: finding a joke
+## Conversation complète : trouver une blague
 
-**User:** Tell me something funny!
+**Utilisateur :** Dites-moi quelque chose de drôle !
 
-**LLM → MCP:** `spec_list()`
+**LLM → MCP :** `spec_list()`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```
-Specifications:
+Spécifications :
   dadjoke (icanhazdadjoke)
-  meteo (Open-Meteo Weather API)
+  meteo (API météo Open-Meteo)
 ```
 
-**LLM → MCP:** `search(query: "random joke", limit: 5)`
+**LLM → MCP :** `search(query: "blague aléatoire", limit: 5)`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```
-Endpoints:
-  GET /  — Return a random dad joke
+Points de terminaison :
+  GET /  — Renvoyer une blague de papa aléatoire
 ```
 
-**LLM → MCP:** `invoke(endpointId: "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6")`
+**LLM → MCP :** `invoke(endpointId: "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6")`
 
-**MCP → LLM:**
+**MCP → LLM :**
 ```json
 {
   "statusCode": 200,
-  "body": "I told my wife she was drawing her eyebrows too high. She looked surprised."
+  "body": "J'ai dit à ma femme qu'elle dessinait ses sourcils trop haut. Elle avait l'air surprise."
 }
 ```
 
-**LLM:** Here you go: "I told my wife she was drawing her eyebrows too high. She looked surprised."
+**LLM :** La voici : « J'ai dit à ma femme qu'elle dessinait ses sourcils trop haut. Elle avait l'air surprise. »

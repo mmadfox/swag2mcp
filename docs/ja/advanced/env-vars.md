@@ -1,12 +1,12 @@
-# Environment Variables
+# 環境変数
 
-## Overview
+## 概要
 
-swag2mcp supports environment variable substitution in the configuration file using `$(VAR_NAME)` syntax. This lets you keep sensitive data (tokens, passwords, keys) out of the YAML file.
+swag2mcp は設定ファイル内で `$(VAR_NAME)` 構文を使用した環境変数の置換をサポートしています。これにより、機密データ（トークン、パスワード、キー）を YAML ファイルから分離できます。
 
-## How it works
+## 仕組み
 
-When swag2mcp starts, it scans the configuration for `$(VAR_NAME)` patterns and replaces them with the value of the corresponding environment variable.
+swag2mcp が起動すると、設定内の `$(VAR_NAME)` パターンをスキャンし、対応する環境変数の値に置換します。
 
 ```yaml
 specs:
@@ -17,28 +17,28 @@ specs:
         token: "$(API_TOKEN)"
 ```
 
-If the environment variable `API_TOKEN` is set, it will be substituted. If it is not set, the value becomes empty.
+環境変数 `API_TOKEN` が設定されている場合、それが代入されます。設定されていない場合、値は空になります。
 
-## Where `$(VAR)` is resolved
+## `$(VAR)` が解決される場所
 
-| Field | Example |
-|-------|---------|
+| フィールド | 例 |
+|-----------|------|
 | Auth `token` (bearer) | `token: "$(API_TOKEN)"` |
 | Auth `username` / `password` (basic, digest) | `password: "$(API_PASSWORD)"` |
 | Auth `client_id` / `client_secret` (oauth2-cc, oauth2-pwd) | `client_secret: "$(OAUTH_SECRET)"` |
 | Auth `api_key` / `secret_key` (hmac) | `api_key: "$(BINANCE_API_KEY)"` |
 | Auth `domain` (script) | `domain: "$(AUTH_DOMAIN)"` |
-| MCP server token | `token: "$(MCP_TOKEN)"` |
-| HTTP client headers | `"X-API-Key": "$(API_KEY)"` |
-| HTTP client cookie values | `value: "$(SESSION_TOKEN)"` |
+| MCP サーバートークン | `token: "$(MCP_TOKEN)"` |
+| HTTP クライアントヘッダー | `"X-API-Key": "$(API_KEY)"` |
+| HTTP クライアント Cookie 値 | `value: "$(SESSION_TOKEN)"` |
 
-## Where `$(VAR)` is NOT resolved
+## `$(VAR)` が解決されない場所
 
-- Base URLs (`base_url`)
-- Collection locations (`location`)
-- Spec domain names (`domain`)
+- ベース URL（`base_url`）
+- Collection の場所（`location`）
+- Spec のドメイン名（`domain`）
 
-## Example
+## 例
 
 ```bash
 export API_TOKEN="eyJhbGciOiJIUzI1NiIs..."
@@ -47,16 +47,16 @@ export MCP_TOKEN="my-secret-token"
 swag2mcp mcp
 ```
 
-## Security best practices
+## セキュリティのベストプラクティス
 
-- **Never** store secrets directly in the YAML file
-- Use environment variables or an external secret manager
-- Add the YAML file to `.gitignore` if it contains any hardcoded secrets
-- Set environment variables in your shell profile, IDE configuration, or deployment pipeline
+- **決して** YAML ファイルに直接シークレットを保存しないでください
+- 環境変数または外部シークレットマネージャーを使用してください
+- ハードコードされたシークレットが含まれている場合は YAML ファイルを `.gitignore` に追加してください
+- シェルプロファイル、IDE 設定、またはデプロイメントパイプラインで環境変数を設定してください
 
-## Syntax details
+## 構文の詳細
 
-- `$(VAR_NAME)` — standard syntax
-- `$( VAR_NAME )` — whitespace inside parentheses is allowed and trimmed
-- `$()` — empty variable name returns the original string unchanged
-- Nested `$(...)` patterns are not resolved
+- `$(VAR_NAME)` — 標準構文
+- `$( VAR_NAME )` — 括弧内の空白は許可され、トリミングされます
+- `$()` — 空の変数名は元の文字列をそのまま返します
+- ネストされた `$(...)` パターンは解決されません

@@ -1,98 +1,98 @@
-# TUI Explorer
+# Explorador TUI
 
-## Overview
+## Descripción General
 
-swag2mcp includes a built-in TUI (Terminal User Interface) for interactive API exploration. It is a full-screen terminal application that lets you search, browse, inspect, and invoke API endpoints without leaving the terminal.
+swag2mcp incluye una TUI (Interfaz de Usuario de Terminal) incorporada para la exploración interactiva de APIs. Es una aplicación de terminal de pantalla completa que le permite buscar, navegar, inspeccionar e invocar endpoints de API sin salir de la terminal.
 
-## Launch
+## Inicio
 
 ```bash
 swag2mcp run
 ```
 
-If no config file exists, the TUI will automatically start the initialization wizard first.
+Si no existe un archivo de configuración, la TUI iniciará automáticamente el asistente de inicialización primero.
 
-## Modes
+## Modos
 
-The TUI has three modes, switchable with the `Tab` key:
+La TUI tiene tres modos, intercambiables con la tecla `Tab`:
 
-### Search mode
+### Modo de búsqueda
 
-Full-text search across all endpoints in all specs. Supports the same query syntax as the `search` MCP tool.
+Búsqueda de texto completo en todos los endpoints de todas las especificaciones. Admite la misma sintaxis de consulta que la herramienta MCP `search`.
 
-- Type a query to search endpoint names, paths, and descriptions
-- Filter results by method, tag, or path
-- View endpoint details with a single keystroke
-- Navigate through results with pagination (10 items per page)
+- Escriba una consulta para buscar nombres, rutas y descripciones de endpoints
+- Filtre resultados por método, etiqueta o ruta
+- Vea los detalles del endpoint con una sola pulsación de tecla
+- Navegue por los resultados con paginación (10 elementos por página)
 
-### Browse mode
+### Modo de navegación
 
-Tree navigation through the spec hierarchy:
+Navegación en árbol a través de la jerarquía de especificaciones:
 
 ```
-Spec → Collection → Tag → Endpoint
+Especificación → Colección → Etiqueta → Endpoint
 ```
 
-- Navigate down the tree to find specific endpoints
-- View endpoint details (parameters, request body, responses)
-- Invoke the API directly from the TUI
-- Save endpoint details as a JSON file
+- Navegue hacia abajo en el árbol para encontrar endpoints específicos
+- Vea los detalles del endpoint (parámetros, cuerpo de solicitud, respuestas)
+- Invocar la API directamente desde la TUI
+- Guarde los detalles del endpoint como un archivo JSON
 
-### Auth mode
+### Modo de autenticación
 
-View authentication tokens and headers for any spec. Useful for debugging or generating curl commands.
+Vea los tokens de autenticación y encabezados para cualquier especificación. Útil para depuración o generación de comandos curl.
 
-## Controls
+## Controles
 
-| Key | Action |
-|-----|--------|
-| `↑` / `↓` | Navigate up/down |
-| `Enter` | Select or open |
-| `Esc` | Go back one level |
-| `Tab` | Switch between Search, Browse, and Auth modes |
-| `/` | Focus search input |
-| `N` / `P` | Next / previous page |
-| `B` | Back to previous screen |
-| `M` | Return to main menu |
-| `S` | Save endpoint detail as JSON file |
-| `q` / `Ctrl+C` | Quit |
+| Tecla | Acción |
+|-------|--------|
+| `↑` / `↓` | Navegar arriba/abajo |
+| `Enter` | Seleccionar o abrir |
+| `Esc` | Retroceder un nivel |
+| `Tab` | Cambiar entre los modos Búsqueda, Navegación y Autenticación |
+| `/` | Enfocar entrada de búsqueda |
+| `N` / `P` | Siguiente / página anterior |
+| `B` | Volver a la pantalla anterior |
+| `M` | Volver al menú principal |
+| `S` | Guardar detalle del endpoint como archivo JSON |
+| `q` / `Ctrl+C` | Salir |
 
-## States
+## Estados
 
-The TUI goes through these states as you navigate:
+La TUI pasa por estos estados a medida que navega:
 
-1. **Loading** — loading data from the workspace
-2. **Search** — search mode with query input
-3. **Browse** — browse mode with spec list
-4. **Spec List** — list of all specs
-5. **Collection List** — collections within a spec
-6. **Tag List** — tags within a collection
-7. **Endpoint List** — endpoints within a tag
-8. **Endpoint Detail** — full endpoint information
-9. **Invoke Result** — API call result
-10. **Error** — error state with message
+1. **Cargando** — cargando datos del espacio de trabajo
+2. **Búsqueda** — modo de búsqueda con entrada de consulta
+3. **Navegación** — modo de navegación con lista de especificaciones
+4. **Lista de Especificaciones** — lista de todas las especificaciones
+5. **Lista de Colecciones** — colecciones dentro de una especificación
+6. **Lista de Etiquetas** — etiquetas dentro de una colección
+7. **Lista de Endpoints** — endpoints dentro de una etiqueta
+8. **Detalle del Endpoint** — información completa del endpoint
+9. **Resultado de Invocación** — resultado de la llamada a la API
+10. **Error** — estado de error con mensaje
 
-## Endpoint detail view
+## Vista de detalle del endpoint
 
-When you select an endpoint, the TUI shows:
+Cuando selecciona un endpoint, la TUI muestra:
 
-- HTTP method and path
-- Base URL and full URL
-- Summary and description
-- All parameters (name, location, type, required)
-- Request body schema (if applicable)
-- Response codes and schemas
-- Deprecation status
+- Método HTTP y ruta
+- URL base y URL completa
+- Resumen y descripción
+- Todos los parámetros (nombre, ubicación, tipo, requerido)
+- Esquema del cuerpo de solicitud (si aplica)
+- Códigos de respuesta y esquemas
+- Estado de obsolescencia
 
-## Requirements
+## Requisitos
 
-- **Terminal size:** At least 80×24 characters
-- **Terminal emulator:** Works in most modern terminals (iTerm2, Terminal.app, GNOME Terminal, Windows Terminal, etc.)
-- **SSH:** Works over SSH connections
+- **Tamaño de terminal:** Al menos 80×24 caracteres
+- **Emulador de terminal:** Funciona en la mayoría de terminales modernas (iTerm2, Terminal.app, GNOME Terminal, Windows Terminal, etc.)
+- **SSH:** Funciona a través de conexiones SSH
 
-## Important notes
+## Notas importantes
 
-- **Auto-init** — if no config file exists, the TUI automatically starts the initialization wizard
-- **Pagination** — lists are paginated at 10 items per page. Use `N` and `P` to navigate
-- **Save endpoint details** — press `S` in the endpoint detail view to save the full detail as a JSON file in the current directory
-- **Auth mode** — shows tokens and headers for debugging. In production, the auth tool can be disabled with `--disable-llm-auth`
+- **Auto-inicio** — si no existe un archivo de configuración, la TUI inicia automáticamente el asistente de inicialización
+- **Paginación** — las listas se paginan a 10 elementos por página. Use `N` y `P` para navegar
+- **Guardar detalles del endpoint** — presione `S` en la vista de detalle del endpoint para guardar el detalle completo como un archivo JSON en el directorio actual
+- **Modo de autenticación** — muestra tokens y encabezados para depuración. En producción, la herramienta de autenticación puede deshabilitarse con `--disable-llm-auth`

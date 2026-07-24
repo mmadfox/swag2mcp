@@ -1,72 +1,72 @@
 # run
 
-## Purpose
+## 目的
 
-Launch the interactive **TUI (Terminal User Interface)** API explorer. This is a full-screen application for searching, browsing, inspecting, and invoking API endpoints without leaving the terminal.
+対話型 **TUI（Terminal User Interface）** API エクスプローラーを起動します。ターミナルから離れることなく API エンドポイントを検索、ブラウズ、調査、呼び出しできるフルスクリーンアプリケーションです。
 
-## When to use
+## 使用するタイミング
 
-- You want to explore your APIs interactively
-- You need to search for a specific endpoint across all specs
-- You want to browse the spec → collection → tag → endpoint hierarchy
-- You want to test an API call before configuring the MCP server
+- 対話的に API を探索したい場合
+- すべての spec にわたって特定のエンドポイントを検索する必要がある場合
+- spec → collection → tag → endpoint の階層をブラウズしたい場合
+- MCP サーバーを設定する前に API 呼び出しをテストしたい場合
 
-## Syntax
+## 構文
 
 ```bash
 swag2mcp run [path]
 ```
 
-## Arguments
+## 引数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 引数 | 位置 | 必須 | 説明 |
+|------|------|------|------|
+| `path` | 1 | いいえ | ワークスペースディレクトリ。省略時はパス解決ルールに従います。 |
 
-## Flags
+## フラグ
 
-None.
+なし。
 
-## Modes
+## モード
 
-### Search mode
+### 検索モード
 
-Full-text search across all endpoints in all specs. Supports filtering by HTTP method, tag, and path.
+すべての spec の全エンドポイントに対する全文検索。HTTP メソッド、タグ、パスによるフィルタリングをサポートします。
 
-- Type a query to search endpoint names, paths, and descriptions
-- Filter results by method (GET, POST, PUT, DELETE, etc.)
-- View endpoint details with a single keystroke
+- クエリを入力してエンドポイント名、パス、説明を検索
+- メソッド（GET、POST、PUT、DELETE など）で結果をフィルタリング
+- 1 回のキー操作でエンドポイントの詳細を表示
 
-### Browse mode
+### ブラウズモード
 
-Tree navigation through the spec hierarchy:
+spec 階層のツリー移動：
 
 ```
 Spec → Collection → Tag → Endpoint
 ```
 
-- Navigate down the tree to find specific endpoints
-- View endpoint details (parameters, request body, responses)
-- Invoke the API directly from the TUI
+- ツリーを下って特定のエンドポイントを見つける
+- エンドポイントの詳細を表示（パラメーター、リクエストボディ、レスポンス）
+- TUI から直接 API を呼び出す
 
-## Navigation
+## ナビゲーション
 
-| Key | Action |
-|-----|--------|
-| `↑` / `↓` | Navigate up/down |
-| `Enter` | Select or open |
-| `Esc` | Go back |
-| `Tab` | Switch between Search and Browse modes |
-| `/` | Focus search input |
-| `q` | Quit |
+| キー | アクション |
+|------|-----------|
+| `↑` / `↓` | 上下に移動 |
+| `Enter` | 選択または開く |
+| `Esc` | 戻る |
+| `Tab` | 検索モードとブラウズモードを切り替え |
+| `/` | 検索入力をフォーカス |
+| `q` | 終了 |
 
-## Post-command verification
+## コマンド実行後の確認
 
-The TUI loads all specs from the workspace. If a spec fails to load, an error message is shown in the interface.
+TUI はワークスペースからすべての spec を読み込みます。spec の読み込みに失敗した場合、インターフェースにエラーメッセージが表示されます。
 
-## Nuances
+## ニュアンス
 
-- **Auto-init:** If no config file exists, `run` automatically runs the init wizard first.
-- **No flags:** The `run` command has no flags — all configuration comes from the workspace.
-- **Terminal size:** The TUI requires a terminal with at least 80×24 characters. It may not render correctly in very small terminals.
-- **Dependencies:** The TUI uses Bubbletea. It works over SSH and in most terminal emulators.
+- **自動初期化:** 設定ファイルが存在しない場合、`run` は自動的に init ウィザードを実行します。
+- **フラグなし:** `run` コマンドにはフラグがありません — すべての設定はワークスペースから取得されます。
+- **ターミナルサイズ:** TUI は最低 80×24 文字のターミナルが必要です。非常に小さいターミナルでは正しく表示されない場合があります。
+- **依存関係:** TUI は Bubbletea を使用します。SSH 経由およびほとんどのターミナルエミュレーターで動作します。

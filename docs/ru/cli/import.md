@@ -1,42 +1,42 @@
 # import
 
-## Purpose
+## Назначение
 
-Import spec files into the workspace or restore a full workspace from a ZIP backup. Three modes cover different scenarios: adding a single spec, bulk-importing from existing config, or restoring a complete workspace.
+Импортировать файлы спецификаций в рабочую область или восстановить полную рабочую область из ZIP-архива. Три режима покрывают различные сценарии: добавление одной спецификации, массовый импорт из существующего конфига или восстановление полной рабочей области.
 
-## When to use
+## Когда использовать
 
-- You have a spec URL or file and want to add it to the workspace
-- You want to download all spec files referenced in the config
-- You need to restore a workspace from a ZIP backup created by `export`
-- You are migrating swag2mcp to another machine
+- У вас есть URL или файл спецификации, и вы хотите добавить его в рабочую область
+- Вы хотите загрузить все файлы спецификаций, указанные в конфиге
+- Вам нужно восстановить рабочую область из ZIP-архива, созданного командой `export`
+- Вы переносите swag2mcp на другую машину
 
-## Syntax
+## Синтаксис
 
 ```bash
 swag2mcp import [path] [source] [name] [flags]
 ```
 
-## Arguments
+## Аргументы
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
-| `source` | 2 | Varies | URL or local path to a spec file, or path to a ZIP archive |
-| `name` | 3 | Varies | Domain name for the new spec |
+| Аргумент | Позиция | Обязательно | Описание |
+|----------|----------|-------------|----------|
+| `path` | 1 | Нет | Директория рабочей области. Если не указан, разрешается по правилам разрешения пути. |
+| `source` | 2 | По ситуации | URL или локальный путь к файлу спецификации, или путь к ZIP-архиву |
+| `name` | 3 | По ситуации | Имя домена для новой спецификации |
 
-## Flags
+## Флаги
 
-| Flag | Shorthand | Type | Default | Description |
+| Флаг | Сокращение | Тип | По умолчанию | Описание |
 |------|-----------|------|---------|-------------|
-| `--spec` | `-s` | `stringSlice` | `nil` | Import collections from specified specs (comma-separated) |
-| `--from-zip` | | `string` | `""` | Restore workspace from a swag2mcp backup ZIP |
+| `--spec` | `-s` | `stringSlice` | `nil` | Импортировать коллекции из указанных спецификаций (через запятую) |
+| `--from-zip` | | `string` | `""` | Восстановить рабочую область из ZIP-архива swag2mcp |
 
-## How it works
+## Как это работает
 
-### Mode 1 — Single import from URL or file
+### Режим 1 — Одиночный импорт из URL или файла
 
-Download a spec file and add it to the workspace with a domain name:
+Загрузить файл спецификации и добавить его в рабочую область с именем домена:
 
 ```bash
 swag2mcp import https://example.com/spec.yaml myspec
@@ -44,46 +44,46 @@ swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
 swag2mcp import ./local-spec.yaml myspec
 ```
 
-The spec file is saved to `specs/` and the config is updated with the new spec entry.
+Файл спецификации сохраняется в `specs/`, а конфиг обновляется новой записью спецификации.
 
-### Mode 2 — Bulk import from existing config
+### Режим 2 — Массовый импорт из существующего конфига
 
-Download all collections for the specified domains from their configured URLs:
+Загрузить все коллекции для указанных доменов из их настроенных URL:
 
 ```bash
 swag2mcp import --spec meteo
 swag2mcp import /path/to/workspace --spec meteo,store
 ```
 
-Each collection's spec file is downloaded and saved to `specs/`. The config is updated to point to the local copies.
+Каждый файл спецификации коллекции загружается и сохраняется в `specs/`. Конфиг обновляется, чтобы указывать на локальные копии.
 
-### Mode 3 — Restore from ZIP backup
+### Режим 3 — Восстановление из ZIP-архива
 
-Restore a full workspace from a ZIP archive created by `swag2mcp export`:
+Восстановить полную рабочую область из ZIP-архива, созданного командой `swag2mcp export`:
 
 ```bash
 swag2mcp import --from-zip /path/to/backup.zip
 swag2mcp import /path/to/workspace /path/to/backup.zip
 ```
 
-> **The ZIP must be created by `swag2mcp export`.** Arbitrary ZIP files will not work — the archive has a specific internal structure (`swag2mcp.yaml`, `specs/`, `auth_scripts/`).
+> **ZIP должен быть создан командой `swag2mcp export`.** Произвольные ZIP-файлы не подойдут — архив имеет определённую внутреннюю структуру (`swag2mcp.yaml`, `specs/`, `auth_scripts/`).
 
-## Post-command verification
+## Проверка после команды
 
 ```bash
-# Single or bulk import
+# Одиночный или массовый импорт
 swag2mcp ls [path]
-# The new spec should appear in the list
+# Новая спецификация должна появиться в списке
 
-# ZIP restore
+# Восстановление из ZIP
 swag2mcp ls [path]
-# All specs from the backup should appear
+# Все спецификации из резервной копии должны появиться
 ```
 
-## Nuances
+## Нюансы
 
-- **Bulk mode requires config:** When using `--spec`, the config file must exist. Run `init` first if needed.
-- **Single import creates workspace:** If the workspace doesn't exist, it is created automatically.
-- **ZIP detection:** A positional argument ending in `.zip` is treated as a ZIP source. The `--from-zip` flag takes priority over positional detection.
-- **`--force`:** Available for ZIP restore to overwrite an existing workspace.
-- **HTTP client:** The global HTTP client settings from the config are applied during import (timeout, proxy, headers, etc.).
+- **Массовый режим требует конфиг:** При использовании `--spec` файл конфигурации должен существовать. При необходимости сначала выполните `init`.
+- **Одиночный импорт создаёт рабочую область:** Если рабочая область не существует, она создаётся автоматически.
+- **Определение ZIP:** Позиционный аргумент, заканчивающийся на `.zip`, обрабатывается как ZIP-источник. Флаг `--from-zip` имеет приоритет над позиционным определением.
+- **`--force`:** Доступен для восстановления из ZIP для перезаписи существующей рабочей области.
+- **HTTP-клиент:** Глобальные настройки HTTP-клиента из конфига применяются во время импорта (таймаут, прокси, заголовки и т.д.).

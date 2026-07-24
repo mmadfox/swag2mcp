@@ -1,12 +1,12 @@
-# Environment Variables
+# 환경 변수
 
-## Overview
+## 개요
 
-swag2mcp supports environment variable substitution in the configuration file using `$(VAR_NAME)` syntax. This lets you keep sensitive data (tokens, passwords, keys) out of the YAML file.
+swag2mcp는 `$(VAR_NAME)` 구문을 사용하여 설정 파일에서 환경 변수 치환을 지원합니다. 이를 통해 민감한 데이터(토큰, 비밀번호, 키)를 YAML 파일 밖에 보관할 수 있습니다.
 
-## How it works
+## 작동 방식
 
-When swag2mcp starts, it scans the configuration for `$(VAR_NAME)` patterns and replaces them with the value of the corresponding environment variable.
+swag2mcp가 시작되면 설정에서 `$(VAR_NAME)` 패턴을 스캔하고 해당 환경 변수의 값으로 대체합니다.
 
 ```yaml
 specs:
@@ -17,28 +17,28 @@ specs:
         token: "$(API_TOKEN)"
 ```
 
-If the environment variable `API_TOKEN` is set, it will be substituted. If it is not set, the value becomes empty.
+환경 변수 `API_TOKEN`이 설정되어 있으면 치환됩니다. 설정되어 있지 않으면 값이 비어 있게 됩니다.
 
-## Where `$(VAR)` is resolved
+## `$(VAR)`이 해결되는 위치
 
-| Field | Example |
-|-------|---------|
-| Auth `token` (bearer) | `token: "$(API_TOKEN)"` |
-| Auth `username` / `password` (basic, digest) | `password: "$(API_PASSWORD)"` |
-| Auth `client_id` / `client_secret` (oauth2-cc, oauth2-pwd) | `client_secret: "$(OAUTH_SECRET)"` |
-| Auth `api_key` / `secret_key` (hmac) | `api_key: "$(BINANCE_API_KEY)"` |
-| Auth `domain` (script) | `domain: "$(AUTH_DOMAIN)"` |
-| MCP server token | `token: "$(MCP_TOKEN)"` |
-| HTTP client headers | `"X-API-Key": "$(API_KEY)"` |
-| HTTP client cookie values | `value: "$(SESSION_TOKEN)"` |
+| 필드 | 예시 |
+|------|------|
+| 인증 `token` (bearer) | `token: "$(API_TOKEN)"` |
+| 인증 `username` / `password` (basic, digest) | `password: "$(API_PASSWORD)"` |
+| 인증 `client_id` / `client_secret` (oauth2-cc, oauth2-pwd) | `client_secret: "$(OAUTH_SECRET)"` |
+| 인증 `api_key` / `secret_key` (hmac) | `api_key: "$(BINANCE_API_KEY)"` |
+| 인증 `domain` (script) | `domain: "$(AUTH_DOMAIN)"` |
+| MCP 서버 토큰 | `token: "$(MCP_TOKEN)"` |
+| HTTP 클라이언트 헤더 | `"X-API-Key": "$(API_KEY)"` |
+| HTTP 클라이언트 쿠키 값 | `value: "$(SESSION_TOKEN)"` |
 
-## Where `$(VAR)` is NOT resolved
+## `$(VAR)`이 해결되지 않는 위치
 
-- Base URLs (`base_url`)
-- Collection locations (`location`)
-- Spec domain names (`domain`)
+- Base URL (`base_url`)
+- Collection 위치 (`location`)
+- Spec 도메인 이름 (`domain`)
 
-## Example
+## 예시
 
 ```bash
 export API_TOKEN="eyJhbGciOiJIUzI1NiIs..."
@@ -47,16 +47,16 @@ export MCP_TOKEN="my-secret-token"
 swag2mcp mcp
 ```
 
-## Security best practices
+## 보안 모범 사례
 
-- **Never** store secrets directly in the YAML file
-- Use environment variables or an external secret manager
-- Add the YAML file to `.gitignore` if it contains any hardcoded secrets
-- Set environment variables in your shell profile, IDE configuration, or deployment pipeline
+- **절대** 시크릿을 YAML 파일에 직접 저장하지 마세요
+- 환경 변수 또는 외부 시크릿 관리자를 사용하세요
+- 하드코딩된 시크릿이 포함된 경우 YAML 파일을 `.gitignore`에 추가하세요
+- 셸 프로필, IDE 설정 또는 배포 파이프라인에서 환경 변수를 설정하세요
 
-## Syntax details
+## 구문 세부 사항
 
-- `$(VAR_NAME)` — standard syntax
-- `$( VAR_NAME )` — whitespace inside parentheses is allowed and trimmed
-- `$()` — empty variable name returns the original string unchanged
-- Nested `$(...)` patterns are not resolved
+- `$(VAR_NAME)` — 표준 구문
+- `$( VAR_NAME )` — 괄호 안의 공백은 허용되며 제거됩니다
+- `$()` — 빈 변수 이름은 원래 문자열을 변경하지 않고 반환합니다
+- 중첩된 `$(...)` 패턴은 해결되지 않습니다

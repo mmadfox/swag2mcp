@@ -1,16 +1,16 @@
 # OAuth2 Client Credentials
 
-## Purpose
+## 用途
 
-OAuth2 Client Credentials Grant — authentication for server-to-server communication. The application obtains a token using its client_id and client_secret, without user involvement.
+OAuth2 客户端凭证授权 — 服务器到服务器通信的认证。应用程序使用其 client_id 和 client_secret 获取令牌，无需用户参与。
 
-## When to use
+## 何时使用
 
-- Microservices and server-to-server integrations
-- Machine-to-machine communication
-- When the API uses OAuth2 and you have a client_id + client_secret
+- 微服务和服务器到服务器集成
+- 机器对机器通信
+- 当 API 使用 OAuth2 并且你有 client_id + client_secret 时
 
-## Configuration
+## 配置
 
 ```yaml
 specs:
@@ -31,18 +31,18 @@ specs:
           - write
 ```
 
-## Parameters
+## 参数
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `client_id` | Yes | Client identifier |
-| `client_secret` | Yes | Client secret |
-| `token_url` | Yes | Token endpoint URL |
-| `scopes` | No | List of permissions (optional) |
+| 参数 | 必需 | 描述 |
+|------|------|------|
+| `client_id` | 是 | 客户端标识符 |
+| `client_secret` | 是 | 客户端密钥 |
+| `token_url` | 是 | 令牌端点 URL |
+| `scopes` | 否 | 权限列表（可选） |
 
-## Notes
+## 说明
 
-- swag2mcp automatically requests a new token when the current one expires
-- The token is cached until its expiry time (`expires_in`)
-- If the server doesn't provide `expires_in`, the token is considered valid for 1 hour
-- All parameters can be stored in environment variables
+- swag2mcp 在当前令牌过期时自动请求新令牌
+- 令牌被缓存直到其过期时间（`expires_in`）
+- 如果服务器未提供 `expires_in`，令牌被视为有效 1 小时
+- 所有参数可以存储在环境变量中

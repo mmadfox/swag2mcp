@@ -1,49 +1,49 @@
-# Testing
+# Тестирование
 
-## Commands
+## Команды
 
 ```bash
-# Unit tests
+# Модульные тесты
 go test ./...
 
-# Specific package
+# Конкретный пакет
 go test ./internal/service/...
 
-# Integration tests
+# Интеграционные тесты
 make integration-tests
 
-# Coverage
+# Покрытие
 make cover
 
-# All tests
+# Все тесты
 make testall
 ```
 
-## Test Structure
+## Структура тестов
 
 ```
 tests/
-├── main_test.go              # Entry point
-├── suite_test.go             # Suite setup
-├── suite_auth_test.go        # Auth tests
-├── suite_config_test.go      # Config tests
-├── suite_mcp_tools_test.go   # MCP tools tests
-├── suite_search_test.go      # Search tests
-├── suite_ratelimit_test.go   # Rate limit tests
-├── suite_response_test.go    # Response tests
-├── suite_export_test.go      # Export tests
-├── suite_import_test.go      # Import tests
-├── suite_parsing_test.go     # Parsing tests
-├── suite_transport_test.go   # Transport tests
-├── suite_mock_test.go        # Mock server tests
-├── suite_workspace_test.go   # Workspace tests
-├── suite_errors_test.go      # Error tests
-└── suite_version_test.go     # Version tests
+├── main_test.go              # Точка входа
+├── suite_test.go             # Настройка набора тестов
+├── suite_auth_test.go        # Тесты аутентификации
+├── suite_config_test.go      # Тесты конфигурации
+├── suite_mcp_tools_test.go   # Тесты MCP-инструментов
+├── suite_search_test.go      # Тесты поиска
+├── suite_ratelimit_test.go   # Тесты ограничения частоты
+├── suite_response_test.go    # Тесты ответов
+├── suite_export_test.go      # Тесты экспорта
+├── suite_import_test.go      # Тесты импорта
+├── suite_parsing_test.go     # Тесты парсинга
+├── suite_transport_test.go   # Тесты транспорта
+├── suite_mock_test.go        # Тесты мок-сервера
+├── suite_workspace_test.go   # Тесты рабочей области
+├── suite_errors_test.go      # Тесты ошибок
+└── suite_version_test.go     # Тесты версии
 ```
 
-## Coverage
+## Покрытие
 
-Target: 80%+ for core packages:
+Цель: 80%+ для основных пакетов:
 
 - `auth`
 - `cache`
@@ -57,17 +57,17 @@ Target: 80%+ for core packages:
 - `spec`
 - `workspace`
 
-## Mocks
+## Моки
 
-Uses `go.uber.org/mock` for MCP server tests:
+Использует `go.uber.org/mock` для тестов MCP-сервера:
 
 ```bash
 go generate ./...
 ```
 
-Generates `internal/server/mcp/mock_svc_test.go` from `handler.go`.
+Генерирует `internal/server/mcp/mock_svc_test.go` из `handler.go`.
 
-## Table-Driven Tests
+## Table-Driven тесты
 
 ```go
 func TestSomething(t *testing.T) {

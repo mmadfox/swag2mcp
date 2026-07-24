@@ -1,76 +1,76 @@
-# MCP Tools
+# Herramientas MCP
 
-## Overview
+## Descripción General
 
-swag2mcp provides **19 MCP tools** that give an LLM agent full access to your APIs through the Model Context Protocol. These tools cover the complete workflow: discovering what APIs are available, navigating the spec hierarchy, searching and inspecting endpoints, executing API calls, and working with large responses.
+swag2mcp proporciona **19 herramientas MCP** que dan a un agente LLM acceso completo a sus APIs a través del Protocolo de Contexto de Modelo. Estas herramientas cubren el flujo de trabajo completo: descubrir qué APIs están disponibles, navegar por la jerarquía de especificaciones, buscar e inspeccionar endpoints, ejecutar llamadas a la API y trabajar con respuestas grandes.
 
-### What the tools solve
+### Qué resuelven las herramientas
 
-- **Discovery** — the LLM can find specs, collections, and tags without knowing IDs in advance
-- **Navigation** — drill down from spec → collection → tag → endpoint in a structured hierarchy
-- **Search** — full-text search across all endpoints when you don't have an ID
-- **Inspection** — get the full OpenAPI operation object before making a call
-- **Execution** — invoke real API calls with automatic authentication
-- **Large response handling** — outline, compress, and slice oversized responses that don't fit inline
+- **Descubrimiento** — el LLM puede encontrar especificaciones, colecciones y etiquetas sin conocer los IDs de antemano
+- **Navegación** — profundizar desde especificación → colección → etiqueta → endpoint en una jerarquía estructurada
+- **Búsqueda** — búsqueda de texto completo en todos los endpoints cuando no tiene un ID
+- **Inspección** — obtener el objeto de operación OpenAPI completo antes de hacer una llamada
+- **Ejecución** — invocar llamadas reales a la API con autenticación automática
+- **Manejo de respuestas grandes** — esquematizar, comprimir y segmentar respuestas demasiado grandes que no caben en línea
 
-### Read-only vs Mutable
+### Solo lectura vs Mutables
 
-| Type | Count | Tools |
-|------|-------|-------|
-| **Read-only** | 17 | All discovery, endpoint, search, inspect, info, and response tools |
-| **Mutable** | 2 | `invoke` (makes real HTTP calls), `auth` (retrieves tokens) |
+| Tipo | Cantidad | Herramientas |
+|------|----------|--------------|
+| **Solo lectura** | 17 | Todas las herramientas de descubrimiento, endpoints, búsqueda, inspección, información y respuesta |
+| **Mutables** | 2 | `invoke` (realiza llamadas HTTP reales), `auth` (recupera tokens) |
 
-Read-only tools are marked with `ReadOnlyHint=true` and `IdempotentHint=true` in the MCP protocol, signaling to the LLM that they are safe to call without side effects.
+Las herramientas de solo lectura están marcadas con `ReadOnlyHint=true` y `IdempotentHint=true` en el protocolo MCP, indicando al LLM que son seguras de llamar sin efectos secundarios.
 
-### Error handling
+### Manejo de errores
 
-All tools return errors as structured `LLMError` objects with a machine-readable code and a human-readable message that explains what went wrong and what to do next:
+Todas las herramientas devuelven errores como objetos `LLMError` estructurados con un código legible por máquina y un mensaje legible por humanos que explica qué salió mal y qué hacer a continuación:
 
-| Error code | Meaning |
-|------------|---------|
-| `validation_failed` | Invalid input (bad ID format, missing required fields) |
-| `not_found` | Entity not found in the index or workspace |
-| `rate_limit` | Second `invoke` call within 10 seconds on the same endpoint |
-| `invoke_error` | HTTP call failure, download failure |
-| `auth_error` | Auth token retrieval failure |
-| `config_error` | Config file load or save failure |
-| `parse_error` | Spec file parse failure |
+| Código de error | Significado |
+|-----------------|-------------|
+| `validation_failed` | Entrada inválida (formato de ID incorrecto, campos requeridos faltantes) |
+| `not_found` | Entidad no encontrada en el índice o espacio de trabajo |
+| `rate_limit` | Segunda llamada `invoke` dentro de 10 segundos en el mismo endpoint |
+| `invoke_error` | Fallo de llamada HTTP, fallo de descarga |
+| `auth_error` | Fallo de recuperación de token de autenticación |
+| `config_error` | Fallo de carga o guardado del archivo de configuración |
+| `parse_error` | Fallo de análisis del archivo de especificación |
 
-## Categories
+## Categorías
 
-| Category | Tools | Description |
-|----------|-------|-------------|
-| **Discovery** | `spec_list`, `spec_by_id`, `collection_by_spec`, `collection_by_id`, `tag_by_spec`, `tag_by_collection`, `tag_by_id` | Navigate the spec hierarchy: find specs, collections, and tags |
-| **Endpoints** | `endpoint_by_spec`, `endpoint_by_collection`, `endpoint_by_tag`, `endpoint_by_id` | View endpoints at different levels of the hierarchy |
-| **Execution** | `search`, `inspect`, `invoke` | Search, inspect the full contract, and call APIs |
-| **Utilities** | `auth`, `info`, `response_outline`, `response_compress`, `response_slice` | Auth tokens, runtime info, and large response handling |
-| **Skills** | [Formatting guide](/mcp-tools/skills) | Customize how tool responses are displayed |
+| Categoría | Herramientas | Descripción |
+|-----------|--------------|-------------|
+| **Descubrimiento** | `spec_list`, `spec_by_id`, `collection_by_spec`, `collection_by_id`, `tag_by_spec`, `tag_by_collection`, `tag_by_id` | Navegar por la jerarquía de especificaciones: encontrar especificaciones, colecciones y etiquetas |
+| **Endpoints** | `endpoint_by_spec`, `endpoint_by_collection`, `endpoint_by_tag`, `endpoint_by_id` | Ver endpoints en diferentes niveles de la jerarquía |
+| **Ejecución** | `search`, `inspect`, `invoke` | Buscar, inspeccionar el contrato completo y llamar APIs |
+| **Utilidades** | `auth`, `info`, `response_outline`, `response_compress`, `response_slice` | Tokens de autenticación, información de ejecución y manejo de respuestas grandes |
+| **Habilidades** | [Guía de formato](/mcp-tools/skills) | Personalizar cómo se muestran las respuestas de las herramientas |
 
-## Full List
+## Lista Completa
 
-| Tool | Description |
-|------|-------------|
-| `spec_list` | List all API specifications in the workspace |
-| `spec_by_id` | Get detailed spec information with collections |
-| `collection_by_spec` | List collections within a spec |
-| `collection_by_id` | Get collection details with tags |
-| `tag_by_spec` | List all tags across a spec |
-| `tag_by_collection` | List tags within a collection |
-| `tag_by_id` | Get tag details (ID, title, method count) |
-| `endpoint_by_spec` | List all endpoints in a spec |
-| `endpoint_by_collection` | List endpoints in a collection |
-| `endpoint_by_tag` | List endpoints in a tag |
-| `endpoint_by_id` | Quick endpoint summary (method, path, summary) |
-| `search` | Full-text search across all endpoints |
-| `inspect` | Full OpenAPI operation details (parameters, schemas) |
-| `invoke` | Execute a real API call |
-| `auth` | Get auth token or headers for a spec |
-| `info` | Runtime information (version, specs, config) |
-| `response_outline` | Structural summary of a large response file |
-| `response_compress` | Compress a large response to fit inline |
-| `response_slice` | Extract a fragment of a large response |
+| Herramienta | Descripción |
+|-------------|-------------|
+| `spec_list` | Listar todas las especificaciones de API en el espacio de trabajo |
+| `spec_by_id` | Obtener información detallada de la especificación con colecciones |
+| `collection_by_spec` | Listar colecciones dentro de una especificación |
+| `collection_by_id` | Obtener detalles de la colección con etiquetas |
+| `tag_by_spec` | Listar todas las etiquetas en una especificación |
+| `tag_by_collection` | Listar etiquetas dentro de una colección |
+| `tag_by_id` | Obtener detalles de la etiqueta (ID, título, recuento de métodos) |
+| `endpoint_by_spec` | Listar todos los endpoints en una especificación |
+| `endpoint_by_collection` | Listar endpoints en una colección |
+| `endpoint_by_tag` | Listar endpoints en una etiqueta |
+| `endpoint_by_id` | Resumen rápido del endpoint (método, ruta, resumen) |
+| `search` | Búsqueda de texto completo en todos los endpoints |
+| `inspect` | Detalles completos de la operación OpenAPI (parámetros, esquemas) |
+| `invoke` | Ejecutar una llamada real a la API |
+| `auth` | Obtener token o encabezados de autenticación para una especificación |
+| `info` | Información de ejecución (versión, especificaciones, configuración) |
+| `response_outline` | Resumen estructural de un archivo de respuesta grande |
+| `response_compress` | Comprimir una respuesta grande para que quepa en línea |
+| `response_slice` | Extraer un fragmento de una respuesta grande |
 
-## Navigation Hierarchy
+## Jerarquía de Navegación
 
 ```
 spec_list
@@ -85,4 +85,4 @@ spec_list
                                                   └── invoke(endpointId)
 ```
 
-When you don't have an ID, use `search` to find endpoints by query. When `invoke` returns a `fileRef` (response too large), use `response_outline` → `response_compress` or `response_slice` to explore the data.
+Cuando no tiene un ID, use `search` para encontrar endpoints por consulta. Cuando `invoke` devuelve un `fileRef` (respuesta demasiado grande), use `response_outline` → `response_compress` o `response_slice` para explorar los datos.

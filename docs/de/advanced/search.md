@@ -1,43 +1,43 @@
-# Full-Text Search
+# Volltextsuche
 
-## Overview
+## Übersicht
 
-swag2mcp includes a built-in full-text search engine (bluge) that indexes all endpoints across all specs. The LLM can search for endpoints by method, path, summary, or tag — even without knowing the endpoint ID.
+swag2mcp enthält eine integrierte Volltext-Suchmaschine (bluge), die alle Endpunkte aller Specs indiziert. Der LLM kann nach Endpunkten nach Methode, Pfad, Zusammenfassung oder Tag suchen — sogar ohne die Endpunkt-ID zu kennen.
 
-## How indexing works
+## Wie die Indizierung funktioniert
 
-When a spec is added or updated, every endpoint is indexed. The following fields are searchable:
+Wenn eine Spec hinzugefügt oder aktualisiert wird, wird jeder Endpunkt indiziert. Die folgenden Felder sind durchsuchbar:
 
-| Field | Description | Example |
-|-------|-------------|---------|
-| `method` | HTTP method | `GET`, `POST`, `PUT` |
-| `path` | API endpoint path | `/api/v1/users/{id}` |
-| `summary` | OpenAPI summary | "Find pet by ID" |
-| `tag` | Endpoint category | "pets", "users" |
-| `_all` | All fields combined | method + path + tag + summary |
+| Feld | Beschreibung | Beispiel |
+|------|--------------|----------|
+| `method` | HTTP-Methode | `GET`, `POST`, `PUT` |
+| `path` | API-Endpunkt-Pfad | `/api/v1/users/{id}` |
+| `summary` | OpenAPI-Zusammenfassung | "Find pet by ID" |
+| `tag` | Endpunkt-Kategorie | "pets", "users" |
+| `_all` | Alle Felder kombiniert | method + path + tag + summary |
 
-The index is rebuilt on every MCP server start. It is stored in memory for fast searches.
+Der Index wird bei jedem MCP-Server-Neustart neu aufgebaut. Er wird für schnelle Suchvorgänge im Speicher gehalten.
 
-## Query syntax
+## Abfragesyntax
 
-The search supports a rich query syntax for precise filtering:
+Die Suche unterstützt eine umfangreiche Abfragesyntax für präzises Filtern:
 
-| Example | Description |
-|---------|-------------|
-| `pet` | Simple text search across all fields |
-| `method:GET` | Find all GET endpoints |
-| `tag:pets` | Find endpoints in the "pets" tag |
-| `path:"/api/v1/users"` | Exact path match |
-| `+method:POST +tag:pet` | Must match both conditions |
-| `-method:DELETE` | Exclude DELETE methods |
-| `create~` | Fuzzy search (typo-tolerant) |
-| `cr*` | Wildcard search |
-| `"find pet"` | Phrase search |
-| `+summary:pet -method:DELETE` | Include "pet" in summary, exclude DELETE |
+| Beispiel | Beschreibung |
+|----------|--------------|
+| `pet` | Einfache Textsuche über alle Felder |
+| `method:GET` | Alle GET-Endpunkte finden |
+| `tag:pets` | Endpunkte im Tag "pets" finden |
+| `path:"/api/v1/users"` | Exakte Pfadübereinstimmung |
+| `+method:POST +tag:pet` | Beide Bedingungen müssen zutreffen |
+| `-method:DELETE` | DELETE-Methoden ausschließen |
+| `create~` | Unscharfe Suche (toleriert Tippfehler) |
+| `cr*` | Platzhaltersuche |
+| `"find pet"` | Phrasensuche |
+| `+summary:pet -method:DELETE` | "pet" in Zusammenfassung einschließen, DELETE ausschließen |
 
-### Field-specific search
+### Feldspezifische Suche
 
-You can search within specific fields using the `field:value` syntax:
+Sie können innerhalb bestimmter Felder mit der Syntax `field:value` suchen:
 
 ```
 method:GET
@@ -46,61 +46,61 @@ path:"/pet/findByStatus"
 summary:"find pet by status"
 ```
 
-### Boolean operators
+### Boolesche Operatoren
 
-- `+` — the term must match (AND)
-- `-` — the term must not match (NOT)
-- Space between terms — OR (any term can match)
+- `+` — der Begriff muss übereinstimmen (AND)
+- `-` — der Begriff darf nicht übereinstimmen (NOT)
+- Leerzeichen zwischen Begriffen — OR (jeder Begriff kann übereinstimmen)
 
-### Fuzzy and wildcard
+### Unscharfe Suche und Platzhalter
 
-- `term~` — fuzzy search (matches similar words, handles typos)
-- `te*` — wildcard (matches any characters)
-- `te?t` — single character wildcard
+- `term~` — unscharfe Suche (findet ähnliche Wörter, behandelt Tippfehler)
+- `te*` — Platzhalter (passt auf beliebige Zeichen)
+- `te?t` — Einzelzeichen-Platzhalter
 
-## Examples
+## Beispiele
 
 ```
-# Find all GET requests
+# Alle GET-Anfragen finden
 method:GET
 
-# Find POST requests in the pet tag
+# POST-Anfragen im Tag "pet" finden
 +method:POST +tag:pet
 
-# Find endpoints by exact path
+# Endpunkte nach exaktem Pfad finden
 path:"/pet/findByStatus"
 
-# Find by description
+# Nach Beschreibung finden
 "find pet by status"
 
-# Find everything except DELETE
+# Alles außer DELETE finden
 +summary:pet -method:DELETE
 
-# Fuzzy search for "create" (handles typos)
+# Unscharfe Suche nach "create" (behandelt Tippfehler)
 create~
 ```
 
-## MCP tool
+## MCP-Tool
 
-The `search` MCP tool exposes the search engine to the LLM:
+Das `search`-MCP-Tool stellt die Suchmaschine dem LLM zur Verfügung:
 
 ```
 → search(query: "find pet by status", limit: 5)
-← GET /pet/findByStatus — Finds Pets by status
-   GET /pet/{petId} — Find pet by ID
+← GET /pet/findByStatus — Findet Haustiere nach Status
+   GET /pet/{petId} — Haustier nach ID finden
 ```
 
-### Parameters
+### Parameter
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `query` | Yes | Search query (supports structured syntax) |
-| `limit` | Yes | Maximum results (1-50) |
+| Parameter | Erforderlich | Beschreibung |
+|-----------|-------------|--------------|
+| `query` | Ja | Suchabfrage (unterstützt strukturierte Syntax) |
+| `limit` | Ja | Maximale Ergebnisse (1-50) |
 
-## Important notes
+## Wichtige Hinweise
 
-- **The index is in-memory** — it is rebuilt every time the MCP server starts. There is no persistent index file.
-- **All fields are lowercased** — searches are case-insensitive
-- **Limit is capped at 50** — you cannot request more than 50 results
-- **Invalid query syntax** returns a helpful error message with examples
-- **The `_all` field** combines method, path, tag, and summary for simple text searches
+- **Der Index ist im Speicher** — er wird bei jedem Start des MCP-Servers neu aufgebaut. Es gibt keine persistente Indexdatei.
+- **Alle Felder werden kleingeschrieben** — die Suche ist nicht case-sensitive
+- **Limit ist auf 50 begrenzt** — Sie können nicht mehr als 50 Ergebnisse anfordern
+- **Ungültige Abfragesyntax** gibt eine hilfreiche Fehlermeldung mit Beispielen zurück
+- **Das Feld `_all`** kombiniert Methode, Pfad, Tag und Zusammenfassung für einfache Textsuche

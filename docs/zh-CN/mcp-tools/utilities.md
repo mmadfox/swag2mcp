@@ -1,37 +1,37 @@
-# Utility Tools
+# 实用工具
 
-Utility tools provide supporting functionality: retrieving auth tokens, getting runtime information, and working with large API responses that don't fit inline.
+实用工具提供辅助功能：检索认证令牌、获取运行时信息以及处理不适合内联的大 API 响应。
 
 ---
 
 ## auth
 
-### Purpose
+### 用途
 
-Retrieve an authentication token, headers, or query parameters for a specific spec. This gives the LLM access to credentials that can be used outside of swag2mcp (e.g., generating a curl command).
+检索特定 spec 的认证令牌、头或查询参数。这使 LLM 可以访问可在 swag2mcp 之外使用的凭据（例如，生成 curl 命令）。
 
-### When to use
+### 何时使用
 
-- Only when the user explicitly asks for the raw token or credentials
-- When generating a curl command or code snippet that needs auth
-- When the user wants to see what auth method is configured
+- 仅当用户明确要求原始令牌或凭据时
+- 当生成需要认证的 curl 命令或代码片段时
+- 当用户想查看配置了哪种认证方法时
 
-### When NOT to use
+### 何时不使用
 
-- **Do not** call `auth` before `inspect` or `invoke` — `invoke` automatically obtains and applies authentication
-- **Do not** call `auth` just to check if auth is configured — use `info` instead
+- **不要**在 `inspect` 或 `invoke` 之前调用 `auth` — `invoke` 会自动获取并应用认证
+- **不要**仅仅为了检查是否配置了认证而调用 `auth` — 使用 `info` 代替
 
-### How it works
+### 工作原理
 
-Looks up the spec's auth configuration and executes the auth flow (token exchange, script execution, etc.) to obtain the current credentials.
+查找 spec 的认证配置并执行认证流程（令牌交换、脚本执行等）以获取当前凭据。
 
-### Parameters
+### 参数
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `specId` | string | Yes | 32-character MD5 hash of the spec |
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `specId` | string | 是 | spec 的 32 字符 MD5 哈希 |
 
-### Response
+### 响应
 
 ```json
 {
@@ -46,43 +46,43 @@ Looks up the spec's auth configuration and executes the auth flow (token exchang
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `token` | string | Raw token value (bearer token, API key, etc.) |
-| `headers` | object | HTTP headers to include in requests |
-| `queryParams` | object | Query parameters to include in requests |
+| 字段 | 类型 | 描述 |
+|------|------|------|
+| `token` | string | 原始令牌值（bearer 令牌、API 密钥等） |
+| `headers` | object | 请求中包含的 HTTP 头 |
+| `queryParams` | object | 请求中包含的查询参数 |
 
-### Nuances
+### 细节
 
-- **Disabled by default in production:** The `--disable-llm-auth` flag (default: `true`) removes the `auth` tool from the MCP tool list entirely. The LLM cannot see or request tokens. Set `--disable-llm-auth=false` to enable it for debugging or short-lived tokens.
-- **`invoke` handles auth automatically:** You do not need to call `auth` before `invoke`. The invoke service automatically obtains and applies the correct authentication.
-- **Supports 9 auth methods:** `none`, `basic`, `bearer`, `digest`, `hmac`, `oauth2-cc` (client credentials), `oauth2-pwd` (password), `api-key`, `script`.
-- Returns `auth_error` if the auth method fails (e.g., OAuth2 token endpoint unreachable, script execution failure).
+- **生产环境默认禁用：** `--disable-llm-auth` 标志（默认：`true`）从 MCP 工具列表中完全移除 `auth` 工具。LLM 无法看到或请求令牌。设置 `--disable-llm-auth=false` 以在调试或使用短期令牌时启用。
+- **`invoke` 自动处理认证：** 你不需要在 `invoke` 之前调用 `auth`。invoke 服务自动获取并应用正确的认证。
+- **支持 9 种认证方法：** `none`、`basic`、`bearer`、`digest`、`hmac`、`oauth2-cc`（客户端凭证）、`oauth2-pwd`（密码）、`api-key`、`script`。
+- 如果认证方法失败（例如 OAuth2 令牌端点不可达、脚本执行失败），返回 `auth_error`。
 
 ---
 
 ## info
 
-### Purpose
+### 用途
 
-Return a comprehensive summary of the swag2mcp runtime: version, workspace path, active specs, HTTP client settings, MCP transport configuration, auth methods, and mock mode status.
+返回 swag2mcp 运行时的全面摘要：版本、工作区路径、活动 spec、HTTP 客户端设置、MCP 传输配置、认证方法和模拟模式状态。
 
-### When to use
+### 何时使用
 
-- When the user asks about the system configuration
-- When you need to check runtime settings (timeout, response size limit, transport)
-- When you need to know which auth methods are available
-- When troubleshooting configuration issues
+- 当用户询问系统配置时
+- 当你需要检查运行时设置（超时、响应大小限制、传输方式）时
+- 当你想知道哪些认证方法可用时
+- 排查配置问题时
 
-### How it works
+### 工作原理
 
-Returns a pre-computed snapshot of the runtime state. No parameters needed.
+返回运行时状态的预计算快照。无需参数。
 
-### Parameters
+### 参数
 
-None.
+无。
 
-### Response
+### 响应
 
 ```json
 {
@@ -121,50 +121,50 @@ None.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `version` | string | swag2mcp version |
-| `workspace` | string | Workspace directory path |
-| `uptime` | string | Server uptime (human-readable) |
-| `specs` | object | Spec summary: total, active, disabled, collections, endpoints |
-| `http_client` | object | HTTP client configuration |
-| `http_client.max_response_size` | string | Max response size in human-readable format (e.g. "2 KB") |
-| `mcp` | object | MCP server configuration |
-| `auth` | object | Available auth methods |
-| `mock` | object | Mock server status |
+| 字段 | 类型 | 描述 |
+|------|------|------|
+| `version` | string | swag2mcp 版本 |
+| `workspace` | string | 工作区目录路径 |
+| `uptime` | string | 服务器运行时间（人类可读） |
+| `specs` | object | Spec 摘要：总数、活动、禁用、collection、端点 |
+| `http_client` | object | HTTP 客户端配置 |
+| `http_client.max_response_size` | string | 最大响应大小，人类可读格式（例如"2 KB"） |
+| `mcp` | object | MCP 服务器配置 |
+| `auth` | object | 可用的认证方法 |
+| `mock` | object | 模拟服务器状态 |
 
-### Nuances
+### 细节
 
-- `max_response_size` is shown in human-readable format (e.g., `"1 KB"`, `"2 MB"`)
-- `uptime` is computed from the server start time
-- The data is a snapshot taken at bootstrap time — it reflects the state when the MCP server started
+- `max_response_size` 以人类可读格式显示（例如 `"1 KB"`、`"2 MB"`）
+- `uptime` 从服务器启动时间计算
+- 数据是在引导时拍摄的快照 — 它反映了 MCP 服务器启动时的状态
 
 ---
 
 ## response_outline
 
-### Purpose
+### 用途
 
-Get a high-level structural summary of a large JSON response file that was saved to disk by `invoke`. It returns the shape of the data — keys, types, array lengths, and navigation hints — without returning the actual values.
+获取由 `invoke` 保存到磁盘的大 JSON 响应文件的高级结构摘要。它返回数据的形状 — 键、类型、数组长度和导航提示 — 而不返回实际值。
 
-### When to use
+### 何时使用
 
-- Immediately after `invoke` returns a `fileRef` (response too large for inline)
-- This is the **mandatory first step** in the large-response workflow
+- 在 `invoke` 返回 `fileRef`（响应太大无法内联）后立即使用
+- 这是大响应工作流程中的**强制第一步**
 
-### How it works
+### 工作原理
 
-Reads the saved response file and analyzes its structure: top-level type, keys, array lengths, nesting depth, and compression hints.
+读取保存的响应文件并分析其结构：顶级类型、键、数组长度、嵌套深度和压缩提示。
 
-### Parameters
+### 参数
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `path` | string | Yes | Absolute path from `fileRef.path` |
-| `maxDepth` | int | No | Maximum recursion depth (default: 3) |
-| `maxArrayItems` | int | No | How many array items to inspect (default: 5) |
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | string | 是 | 来自 `fileRef.path` 的绝对路径 |
+| `maxDepth` | int | 否 | 最大递归深度（默认：3） |
+| `maxArrayItems` | int | 否 | 要检查的数组项数（默认：5） |
 
-### Response
+### 响应
 
 ```json
 {
@@ -205,67 +205,67 @@ Reads the saved response file and analyzes its structure: top-level type, keys, 
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `type` | string | Top-level type: "object" or "array" |
-| `size` | int | File size in bytes |
-| `lineCount` | int | Number of lines in the file |
-| `depth` | int | Maximum nesting depth inspected |
-| `structure` | object | Recursive structure with keys, types, array lengths |
-| `schemaHint` | string | One-line summary of the top-level shape |
-| `keys` | array | Top-level keys (for objects) |
-| `itemCount` | int | Array length (for arrays) |
-| `compressionHints` | array | Suggested `response_compress` calls with parameters |
-| `navigationHints` | object | Top-level paths and arrays with lengths |
+| 字段 | 类型 | 描述 |
+|------|------|------|
+| `type` | string | 顶级类型："object"或"array" |
+| `size` | int | 文件大小（字节） |
+| `lineCount` | int | 文件行数 |
+| `depth` | int | 检查的最大嵌套深度 |
+| `structure` | object | 递归结构，包含键、类型、数组长度 |
+| `schemaHint` | string | 顶级形状的一行摘要 |
+| `keys` | array | 顶级键（对于对象） |
+| `itemCount` | int | 数组长度（对于数组） |
+| `compressionHints` | array | 建议的 `response_compress` 调用及参数 |
+| `navigationHints` | object | 顶级路径和数组及其长度 |
 
-### Nuances
+### 细节
 
-- Returns `validation_failed` if the path is invalid or not inside the responses directory
-- Returns `not_found` if the file does not exist
-- Returns `validation_failed` if the file is not valid JSON
-- The `compressionHints` field provides ready-to-use suggestions for `response_compress` calls
+- 如果路径无效或不在响应目录内，返回 `validation_failed`
+- 如果文件不存在，返回 `not_found`
+- 如果文件不是有效的 JSON，返回 `validation_failed`
+- `compressionHints` 字段提供即用型的 `response_compress` 调用建议
 
 ---
 
 ## response_compress
 
-### Purpose
+### 用途
 
-Reduce a JSON value inside a saved response file so it fits within the response size limit and can be returned to the LLM inline. Multiple compression modes let you choose the right trade-off between size and information.
+缩小保存的响应文件中的 JSON 值，使其适合响应大小限制并可以内联返回给 LLM。多种压缩模式让你在大小和信息之间选择合适的权衡。
 
-### When to use
+### 何时使用
 
-- After `response_outline` to understand the structure
-- When you need to get data from a large response inline
-- When `response_slice` is too narrow and you need a broader view
+- 在 `response_outline` 之后了解结构
+- 当你需要从大响应中内联获取数据时
+- 当 `response_slice` 太窄，你需要更广泛的视图时
 
-### How it works
+### 工作原理
 
-Reads the saved response file, navigates to the specified JSON path, applies the compression mode, and returns the compressed result. If the result still exceeds the size limit, it is saved to a new file.
+读取保存的响应文件，导航到指定的 JSON 路径，应用压缩模式，并返回压缩结果。如果结果仍然超过大小限制，则保存到新文件。
 
-### Parameters
+### 参数
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `path` | string | Yes | Absolute path from `fileRef.path` |
-| `jsonPath` | string | No | Path to the value to compress (e.g. `data` or `data.0`) |
-| `mode` | string | Yes | Compression mode (see table below) |
-| `arrayHead` | int | No | Leading items to keep in `sample_array` mode (default: 3) |
-| `arrayTail` | int | No | Trailing items to keep in `sample_array` mode (default: 2) |
-| `stringLen` | int | No | Max string length in `truncate_strings` mode (default: 80) |
-| `selectKeys` | array | No | Keys to keep in `select_keys` mode |
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | string | 是 | 来自 `fileRef.path` 的绝对路径 |
+| `jsonPath` | string | 否 | 要压缩的值的路径（例如 `data` 或 `data.0`） |
+| `mode` | string | 是 | 压缩模式（见下表） |
+| `arrayHead` | int | 否 | `sample_array` 模式下保留的前导项数（默认：3） |
+| `arrayTail` | int | 否 | `sample_array` 模式下保留的尾部项数（默认：2） |
+| `stringLen` | int | 否 | `truncate_strings` 模式下的最大字符串长度（默认：80） |
+| `selectKeys` | array | 否 | `select_keys` 模式下要保留的键 |
 
-### Compression modes
+### 压缩模式
 
-| Mode | Description | Best for |
-|------|-------------|----------|
-| `first_of_array` | Keep only the first element of an array | When all elements have the same structure |
-| `sample_array` | Keep head and tail of an array | When you need to see the range of values |
-| `truncate_strings` | Shorten every string to `stringLen` characters | When strings are very long but structure matters |
-| `keys_only` | Replace object values with their type names | When you only need the structure |
-| `select_keys` | Keep only specified keys in every object | When you need specific fields from many objects |
+| 模式 | 描述 | 最适合 |
+|------|------|--------|
+| `first_of_array` | 只保留数组的第一个元素 | 所有元素结构相同时 |
+| `sample_array` | 保留数组的头部和尾部 | 需要查看值的范围时 |
+| `truncate_strings` | 将每个字符串缩短到 `stringLen` 字符 | 字符串非常长但结构重要时 |
+| `keys_only` | 将对象值替换为类型名称 | 只需要结构时 |
+| `select_keys` | 在每个对象中只保留指定的键 | 需要来自多个对象的特定字段时 |
 
-### Response
+### 响应
 
 ```json
 {
@@ -277,48 +277,48 @@ Reads the saved response file, navigates to the specified JSON path, applies the
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `body` | any | Compressed JSON value (present when within size limit) |
-| `fileRef` | object | File reference (present when still too large) |
-| `hint` | string | Explanation of what was compressed |
+| 字段 | 类型 | 描述 |
+|------|------|------|
+| `body` | any | 压缩的 JSON 值（在大小限制内时存在） |
+| `fileRef` | object | 文件引用（仍然太大时存在） |
+| `hint` | string | 压缩内容的说明 |
 
-### Nuances
+### 细节
 
-- If the compressed result still exceeds `max_response_size`, it is saved to a new file and a `FileReference` is returned
-- Default values: `arrayHead=3`, `arrayTail=2`, `stringLen=80`
-- Returns `validation_failed` for invalid path, invalid JSONPath, or non-JSON file
-- Returns `not_found` if the file does not exist or JSONPath does not match
+- 如果压缩结果仍然超过 `max_response_size`，则保存到新文件并返回 `FileReference`
+- 默认值：`arrayHead=3`、`arrayTail=2`、`stringLen=80`
+- 对于无效路径、无效 JSONPath 或非 JSON 文件，返回 `validation_failed`
+- 如果文件不存在或 JSONPath 不匹配，返回 `not_found`
 
 ---
 
 ## response_slice
 
-### Purpose
+### 用途
 
-Extract a specific fragment of a saved JSON response file by logical JSON path or by line range. Unlike `response_compress`, this gives you the raw, unmodified data.
+通过逻辑 JSON 路径或行范围提取保存的 JSON 响应文件的特定片段。与 `response_compress` 不同，这给你原始、未修改的数据。
 
-### When to use
+### 何时使用
 
-- When you need a specific element or value from a large response
-- When `response_compress` doesn't give you enough detail
-- When you want to navigate through a response step by step
+- 当你需要大响应中的特定元素或值时
+- 当 `response_compress` 没有提供足够的细节时
+- 当你想逐步浏览响应时
 
-### How it works
+### 工作原理
 
-Reads the saved response file and extracts a fragment by JSON path (e.g., `data.3.name`) or by line range (e.g., `120-240`). Returns navigation hints for stepping through arrays and objects.
+读取保存的响应文件并通过 JSON 路径（例如 `data.3.name`）或行范围（例如 `120-240`）提取片段。返回逐步浏览数组和对象的导航提示。
 
-### Parameters
+### 参数
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `path` | string | Yes | Absolute path from `fileRef.path` |
-| `jsonPath` | string | No | Logical path to the value (e.g. `data.3.name`) |
-| `line` | int | No | 1-based line number to center the fragment on |
-| `range` | string | No | Line range as `start-end` (e.g. `120-240`) |
-| `around` | int | No | Lines to include around `line` (default: 20) |
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | string | 是 | 来自 `fileRef.path` 的绝对路径 |
+| `jsonPath` | string | 否 | 值的逻辑路径（例如 `data.3.name`） |
+| `line` | int | 否 | 以片段为中心的基于 1 的行号 |
+| `range` | string | 否 | 行范围，格式为 `start-end`（例如 `120-240`） |
+| `around` | int | 否 | `line` 周围包含的行数（默认：20） |
 
-### Response
+### 响应
 
 ```json
 {
@@ -340,24 +340,24 @@ Reads the saved response file and extracts a fragment by JSON path (e.g., `data.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `lines` | array | 1-based line range [start, end] |
-| `fragment` | string | Raw JSON text (when small enough) |
-| `value` | any | Extracted JSON value |
-| `jsonPath` | string | The JSON path used |
-| `context` | string | "object", "array", or "value" |
-| `isComplete` | bool | True when the value is a valid JSON fragment |
-| `nextLine` | int | Suggested next line for line-based navigation |
-| `prevLine` | int | Suggested previous line |
-| `nextPath` | string | Suggested next JSON path for array navigation |
-| `prevPath` | string | Suggested previous JSON path |
+| 字段 | 类型 | 描述 |
+|------|------|------|
+| `lines` | array | 基于 1 的行范围 [start, end] |
+| `fragment` | string | 原始 JSON 文本（足够小时） |
+| `value` | any | 提取的 JSON 值 |
+| `jsonPath` | string | 使用的 JSON 路径 |
+| `context` | string | "object"、"array"或"value" |
+| `isComplete` | bool | 值为有效的 JSON 片段时为 true |
+| `nextLine` | int | 基于行的导航的建议下一行 |
+| `prevLine` | int | 建议的上一行 |
+| `nextPath` | string | 数组导航的建议下一个 JSON 路径 |
+| `prevPath` | string | 建议的上一个 JSON 路径 |
 
-### Nuances
+### 细节
 
-- **Prefer `jsonPath` over line numbers** — JSON paths are stable and descriptive, line numbers change if the file is regenerated
-- If the extracted fragment exceeds `max_response_size`, it is saved to a new file and a `FileReference` is returned
-- Default `around` is 20 lines
-- The response includes `nextPath`/`prevPath` for stepping through arrays and `nextLine`/`prevLine` for line-based navigation
-- Returns `validation_failed` for invalid path, invalid JSONPath, invalid line/range, or non-JSON file
-- Returns `not_found` if the file does not exist or JSONPath does not match
+- **优先使用 `jsonPath` 而不是行号** — JSON 路径稳定且具有描述性，行号在文件重新生成时会变化
+- 如果提取的片段超过 `max_response_size`，则保存到新文件并返回 `FileReference`
+- 默认 `around` 为 20 行
+- 响应包含用于逐步浏览数组的 `nextPath`/`prevPath` 和用于基于行的导航的 `nextLine`/`prevLine`
+- 对于无效路径、无效 JSONPath、无效行/范围或非 JSON 文件，返回 `validation_failed`
+- 如果文件不存在或 JSONPath 不匹配，返回 `not_found`

@@ -1,30 +1,30 @@
-# Quick Start
+# Inicio Rápido
 
-Get swag2mcp running in 2 minutes.
+Ponga swag2mcp en marcha en 2 minutos.
 
-## 1. Initialize
+## 1. Inicializar
 
-### Home directory (recommended)
+### Directorio personal (recomendado)
 
-One-time setup for your entire system. Config is stored in your home folder.
+Configuración única para todo su sistema. La configuración se almacena en su carpeta personal.
 
 ::: code-group
 
 ```bash [macOS / Linux]
 swag2mcp init
-# Creates ~/.swag2mcp/swag2mcp.yaml
+# Crea ~/.swag2mcp/swag2mcp.yaml
 ```
 
 ```powershell [Windows]
 swag2mcp.exe init
-# Creates %USERPROFILE%\.swag2mcp\swag2mcp.yaml
+# Crea %USERPROFILE%\.swag2mcp\swag2mcp.yaml
 ```
 
 :::
 
-### Project directory
+### Directorio del proyecto
 
-For an isolated workspace inside your project.
+Para un espacio de trabajo aislado dentro de su proyecto.
 
 ::: code-group
 
@@ -38,30 +38,30 @@ mkdir ./swag2mcp; swag2mcp.exe init ./swag2mcp
 
 :::
 
-### From ZIP
+### Desde ZIP
 
-If you have a ready-made workspace (e.g., from a colleague):
+Si tiene un espacio de trabajo ya preparado (por ejemplo, de un colega):
 
 ```bash
 swag2mcp import --from-zip workspace.zip
 ```
 
-## 2. Install Agent Skills (recommended)
+## 2. Instalar Habilidades del Agente (recomendado)
 
-Install the swag2mcp skills to teach your AI agent all commands, flags, config format, and real-world examples.
+Instale las habilidades de swag2mcp para enseñar a su agente de IA todos los comandos, banderas, formato de configuración y ejemplos del mundo real.
 
-Ask your agent:
+Pídale a su agente:
 
 ```bash
-"Add the swag2mcp-cli skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
-"Add the swag2mcp-format skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md"
+"Agregue la habilidad swag2mcp-cli desde https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
+"Agregue la habilidad swag2mcp-format desde https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md"
 ```
 
-> Some IDEs require a restart after adding skills.
+> Algunos IDEs requieren un reinicio después de agregar habilidades.
 
-## 3. LLM Client / IDE Configuration
+## 3. Configuración del Cliente LLM / IDE
 
-Configure your IDE to connect to swag2mcp. The IDE will start the MCP server automatically when needed.
+Configure su IDE para conectarse a swag2mcp. El IDE iniciará el servidor MCP automáticamente cuando sea necesario.
 
 ::: code-group
 
@@ -102,30 +102,30 @@ Configure your IDE to connect to swag2mcp. The IDE will start the MCP server aut
 
 :::
 
-For other IDEs (Cursor, VS Code, JetBrains) see the [Integration guide](../integration/opencode.md).
+Para otros IDEs (Cursor, VS Code, JetBrains) consulte la [guía de Integración](../integration/opencode.md).
 
-> If you initialized the workspace at a custom path (e.g. `./swag2mcp`), use the full path in the command:
+> Si inicializó el espacio de trabajo en una ruta personalizada (por ejemplo, `./swag2mcp`), use la ruta completa en el comando:
 > `"command": ["swag2mcp", "mcp", "/absolute/path/to/swag2mcp"]`
 
-> **After any config change, restart the MCP server** for the changes to take effect.
+> **Después de cualquier cambio de configuración, reinicie el servidor MCP** para que los cambios surtan efecto.
 
-## 4. Start MCP Server
+## 4. Iniciar Servidor MCP
 
-### stdio (default) — for local IDE
+### stdio (predeterminado) — para IDE local
 
-Nothing to configure. Your IDE starts swag2mcp automatically via the config above.
+Nada que configurar. Su IDE inicia swag2mcp automáticamente mediante la configuración anterior.
 
 ```bash
 swag2mcp mcp
 ```
 
-### SSE / Streamable HTTP — for remote access
+### SSE / HTTP Streamable — para acceso remoto
 
 ```bash
 swag2mcp mcp --transport sse --http-addr :8080
 ```
 
-Or configure in `swag2mcp.yaml`:
+O configure en `swag2mcp.yaml`:
 
 ```yaml
 mcp:
@@ -134,43 +134,43 @@ mcp:
   path: "/mcp"
 ```
 
-See [MCP Server reference](../configuration/mcp-server.md) for all flags.
+Consulte la [referencia del Servidor MCP](../configuration/mcp-server.md) para todas las banderas.
 
-### Filter specs by tags
+### Filtrar especificaciones por etiquetas
 
 ```bash
 swag2mcp mcp --tags weather,public
 ```
 
-Only specs with matching tags will be available to the LLM.
+Solo las especificaciones con etiquetas coincidentes estarán disponibles para el LLM.
 
-### Verify it's working
+### Verificar que funciona
 
-After connecting, ask your LLM agent:
+Después de conectarse, pregúntele a su agente LLM:
 
 ```bash
-"What MCP tools do you support?"
+"¿Qué herramientas MCP soportas?"
 ```
 
-If the agent lists swag2mcp tools (`spec_list`, `search`, `invoke`, etc.) — everything is working.
+Si el agente lista las herramientas de swag2mcp (`spec_list`, `search`, `invoke`, etc.) — todo está funcionando.
 
-### Example queries to try
+### Consultas de ejemplo para probar
 
-| Ask your agent | What happens |
-|-------|-------------|
-| "What's the weather in New York?" | `invoke` — calls Open-Meteo forecast API |
-| "What's the current BTC price?" | `invoke` — calls Binance ticker API |
-| "Tell me a dad joke" | `invoke` — calls icanhazdadjoke API |
-| "Show me Pikachu" | `invoke` — calls PokéAPI by name |
-| "Who is Rick Sanchez?" | `invoke` — calls Rick and Morty character API |
-| "What's the air quality in Beijing?" | `invoke` — calls Open-Meteo air quality API |
-| "How high are the waves near Portugal?" | `invoke` — calls Open-Meteo marine API |
-| "Search for jokes about dogs" | `invoke` — calls dadjoke search endpoint |
-| "List all Pokémon" | `invoke` — calls PokéAPI list endpoint |
-| "What's the elevation of Mount Everest?" | `invoke` — calls Open-Meteo elevation API |
+| Pregunte a su agente | Qué sucede |
+|----------------------|------------|
+| "¿Qué tiempo hace en Nueva York?" | `invoke` — llama a la API de pronóstico de Open-Meteo |
+| "¿Cuál es el precio actual de BTC?" | `invoke` — llama a la API de ticker de Binance |
+| "Cuéntame un chiste de papá" | `invoke` — llama a la API de icanhazdadjoke |
+| "Muéstrame a Pikachu" | `invoke` — llama a la API de PokéAPI por nombre |
+| "¿Quién es Rick Sanchez?" | `invoke` — llama a la API de personajes de Rick and Morty |
+| "¿Cuál es la calidad del aire en Pekín?" | `invoke` — llama a la API de calidad del aire de Open-Meteo |
+| "¿Qué tan altas son las olas cerca de Portugal?" | `invoke` — llama a la API marina de Open-Meteo |
+| "Busca chistes sobre perros" | `invoke` — llama al endpoint de búsqueda de dadjoke |
+| "Lista todos los Pokémon" | `invoke` — llama al endpoint de lista de PokéAPI |
+| "¿Cuál es la elevación del Monte Everest?" | `invoke` — llama a la API de elevación de Open-Meteo |
 
-## 5. What's Next?
+## 5. ¿Qué Sigue?
 
-- [Concepts](../concepts/overview.md) — understand the architecture
-- [Configuration](../configuration/config-file.md) — customize settings
-- [CLI Commands](../cli/overview.md) — full command reference
+- [Conceptos](../concepts/overview.md) — entienda la arquitectura
+- [Configuración](../configuration/config-file.md) — personalice los ajustes
+- [Comandos CLI](../cli/overview.md) — referencia completa de comandos

@@ -1,42 +1,42 @@
 # import
 
-## Purpose
+## Propósito
 
-Import spec files into the workspace or restore a full workspace from a ZIP backup. Three modes cover different scenarios: adding a single spec, bulk-importing from existing config, or restoring a complete workspace.
+Importar archivos de especificación al espacio de trabajo o restaurar un espacio de trabajo completo desde una copia de seguridad ZIP. Tres modos cubren diferentes escenarios: agregar una sola especificación, importación masiva desde configuración existente o restaurar un espacio de trabajo completo.
 
-## When to use
+## Cuándo usarlo
 
-- You have a spec URL or file and want to add it to the workspace
-- You want to download all spec files referenced in the config
-- You need to restore a workspace from a ZIP backup created by `export`
-- You are migrating swag2mcp to another machine
+- Tiene una URL o archivo de especificación y desea agregarlo al espacio de trabajo
+- Desea descargar todos los archivos de especificación referenciados en la configuración
+- Necesita restaurar un espacio de trabajo desde una copia de seguridad ZIP creada por `export`
+- Está migrando swag2mcp a otra máquina
 
-## Syntax
+## Sintaxis
 
 ```bash
 swag2mcp import [path] [source] [name] [flags]
 ```
 
-## Arguments
+## Argumentos
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
-| `source` | 2 | Varies | URL or local path to a spec file, or path to a ZIP archive |
-| `name` | 3 | Varies | Domain name for the new spec |
+| Argumento | Posición | Requerido | Descripción |
+|-----------|----------|-----------|-------------|
+| `path` | 1 | No | Directorio del espacio de trabajo. Si se omite, se resuelve mediante reglas de resolución de ruta. |
+| `source` | 2 | Varía | URL o ruta local a un archivo de especificación, o ruta a un archivo ZIP |
+| `name` | 3 | Varía | Nombre de dominio para la nueva especificación |
 
-## Flags
+## Banderas
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--spec` | `-s` | `stringSlice` | `nil` | Import collections from specified specs (comma-separated) |
-| `--from-zip` | | `string` | `""` | Restore workspace from a swag2mcp backup ZIP |
+| Bandera | Abreviatura | Tipo | Valor predeterminado | Descripción |
+|---------|-------------|------|---------------------|-------------|
+| `--spec` | `-s` | `stringSlice` | `nil` | Importar colecciones de las especificaciones indicadas (separadas por comas) |
+| `--from-zip` | | `string` | `""` | Restaurar espacio de trabajo desde un ZIP de copia de seguridad de swag2mcp |
 
-## How it works
+## Cómo funciona
 
-### Mode 1 — Single import from URL or file
+### Modo 1 — Importación única desde URL o archivo
 
-Download a spec file and add it to the workspace with a domain name:
+Descargue un archivo de especificación y agréguelo al espacio de trabajo con un nombre de dominio:
 
 ```bash
 swag2mcp import https://example.com/spec.yaml myspec
@@ -44,46 +44,46 @@ swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
 swag2mcp import ./local-spec.yaml myspec
 ```
 
-The spec file is saved to `specs/` and the config is updated with the new spec entry.
+El archivo de especificación se guarda en `specs/` y la configuración se actualiza con la nueva entrada de especificación.
 
-### Mode 2 — Bulk import from existing config
+### Modo 2 — Importación masiva desde configuración existente
 
-Download all collections for the specified domains from their configured URLs:
+Descargue todas las colecciones para los dominios especificados desde sus URL configuradas:
 
 ```bash
 swag2mcp import --spec meteo
 swag2mcp import /path/to/workspace --spec meteo,store
 ```
 
-Each collection's spec file is downloaded and saved to `specs/`. The config is updated to point to the local copies.
+El archivo de especificación de cada colección se descarga y se guarda en `specs/`. La configuración se actualiza para apuntar a las copias locales.
 
-### Mode 3 — Restore from ZIP backup
+### Modo 3 — Restaurar desde copia de seguridad ZIP
 
-Restore a full workspace from a ZIP archive created by `swag2mcp export`:
+Restaurar un espacio de trabajo completo desde un archivo ZIP creado por `swag2mcp export`:
 
 ```bash
 swag2mcp import --from-zip /path/to/backup.zip
 swag2mcp import /path/to/workspace /path/to/backup.zip
 ```
 
-> **The ZIP must be created by `swag2mcp export`.** Arbitrary ZIP files will not work — the archive has a specific internal structure (`swag2mcp.yaml`, `specs/`, `auth_scripts/`).
+> **El ZIP debe ser creado por `swag2mcp export`.** Los archivos ZIP arbitrarios no funcionarán — el archivo tiene una estructura interna específica (`swag2mcp.yaml`, `specs/`, `auth_scripts/`).
 
-## Post-command verification
+## Verificación posterior al comando
 
 ```bash
-# Single or bulk import
+# Importación única o masiva
 swag2mcp ls [path]
-# The new spec should appear in the list
+# La nueva especificación debería aparecer en la lista
 
-# ZIP restore
+# Restauración ZIP
 swag2mcp ls [path]
-# All specs from the backup should appear
+# Todas las especificaciones de la copia de seguridad deberían aparecer
 ```
 
-## Nuances
+## Matices
 
-- **Bulk mode requires config:** When using `--spec`, the config file must exist. Run `init` first if needed.
-- **Single import creates workspace:** If the workspace doesn't exist, it is created automatically.
-- **ZIP detection:** A positional argument ending in `.zip` is treated as a ZIP source. The `--from-zip` flag takes priority over positional detection.
-- **`--force`:** Available for ZIP restore to overwrite an existing workspace.
-- **HTTP client:** The global HTTP client settings from the config are applied during import (timeout, proxy, headers, etc.).
+- **El modo masivo requiere configuración:** Al usar `--spec`, el archivo de configuración debe existir. Ejecute `init` primero si es necesario.
+- **La importación única crea el espacio de trabajo:** Si el espacio de trabajo no existe, se crea automáticamente.
+- **Detección de ZIP:** Un argumento posicional que termina en `.zip` se trata como un origen ZIP. La bandera `--from-zip` tiene prioridad sobre la detección posicional.
+- **`--force`:** Disponible para la restauración ZIP para sobrescribir un espacio de trabajo existente.
+- **Cliente HTTP:** La configuración global del cliente HTTP se aplica durante la importación (tiempo de espera, proxy, encabezados, etc.).

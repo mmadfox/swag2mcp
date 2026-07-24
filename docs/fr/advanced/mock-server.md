@@ -1,24 +1,24 @@
-# Mock Server
+# Serveur Mock
 
-## Overview
+## Aperçu
 
-The mock server generates fake API responses based on your OpenAPI schemas. It lets you test your API integration without making real HTTP calls. This is useful for development, testing LLM agents, and demonstrations.
+Le serveur mock génère des réponses d'API factices basées sur vos schémas OpenAPI. Il vous permet de tester votre intégration API sans effectuer d'appels HTTP réels. C'est utile pour le développement, les tests d'agents LLM et les démonstrations.
 
-The mock server is a **separate binary** — `swag2mcp-mock`. It is not included in the main `swag2mcp` binary and must be installed separately.
+Le serveur mock est un **binaire séparé** — `swag2mcp-mock`. Il n'est pas inclus dans le binaire principal `swag2mcp` et doit être installé séparément.
 
 ## Installation
 
 ```bash
-# Option 1: Download from GitHub Releases
-# Look for swag2mcp-mock_<version>_<os>_<arch>.tar.gz
+# Option 1 : Téléchargement depuis GitHub Releases
+# Cherchez swag2mcp-mock_<version>_<os>_<arch>.tar.gz
 
-# Option 2: Install with Go
+# Option 2 : Installation avec Go
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 ```
 
 ## Configuration
 
-Enable the mock server in your config:
+Activez le serveur mock dans votre configuration :
 
 ```yaml
 mock_enabled: true
@@ -29,105 +29,105 @@ mock_auth:
 
 specs:
   - domain: jokes
-    llm_title: Dad Joke API
+    llm_title: API Dad Joke
     base_url: https://icanhazdadjoke.com
     collections:
-      - llm_title: Jokes
+      - llm_title: Blagues
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
         base_mock_url: "127.0.0.1:9090"
 ```
 
-## Parameters
+## Paramètres
 
 ### mock_enabled
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Effect:** When `true`, every active collection must have `base_mock_url` set. The mock server starts HTTP servers for each collection.
+- **Type :** `bool`
+- **Défaut :** `false`
+- **Effet :** Lorsque `true`, chaque collection active doit avoir `base_mock_url` défini. Le serveur mock démarre des serveurs HTTP pour chaque collection.
 
 ### mock_auth
 
-Ports for mock authentication servers. These simulate OAuth2, Digest, and HMAC auth endpoints so you can test authenticated APIs without real credentials.
+Ports pour les serveurs d'authentification mock. Ils simulent les points d'accès d'authentification OAuth2, Digest et HMAC afin que vous puissiez tester des API authentifiées sans identifiants réels.
 
-| Field | Default | Description |
-|-------|---------|-------------|
-| `oauth2_port` | `9090` | Port for the mock OAuth2 token server |
-| `digest_port` | `9091` | Port for the mock Digest auth server |
-| `hmac_port` | `9092` | Port for the mock HMAC auth server |
+| Champ | Défaut | Description |
+|-------|--------|-------------|
+| `oauth2_port` | `9090` | Port pour le serveur de jeton OAuth2 mock |
+| `digest_port` | `9091` | Port pour le serveur d'authentification Digest mock |
+| `hmac_port` | `9092` | Port pour le serveur d'authentification HMAC mock |
 
-### base_mock_url (per collection)
+### base_mock_url (par collection)
 
-- **Type:** `string`
-- **Required:** Yes (when `mock_enabled: true`)
-- **Format:** `host:port` (e.g., `localhost:8080`, `127.0.0.1:9000`)
-- **Effect:** Each collection gets its own HTTP server on this address. The server responds to all endpoints defined in the spec with randomly generated data.
+- **Type :** `string`
+- **Requis :** Oui (lorsque `mock_enabled: true`)
+- **Format :** `hôte:port` (par exemple, `localhost:8080`, `127.0.0.1:9000`)
+- **Effet :** Chaque collection obtient son propre serveur HTTP sur cette adresse. Le serveur répond à tous les points d'accès définis dans la spec avec des données générées aléatoirement.
 
-## Starting the mock server
+## Démarrage du serveur mock
 
 ```bash
-# Start with default config
+# Démarrage avec la configuration par défaut
 swag2mcp-mock mockserver
 
-# Start with TLS
+# Démarrage avec TLS
 swag2mcp-mock mockserver --tls
 
-# Start with custom TLS certificate
+# Démarrage avec un certificat TLS personnalisé
 swag2mcp-mock mockserver --tls --tls-cert cert.pem --tls-key key.pem
 ```
 
-### TLS flags
+### Drapeaux TLS
 
-| Flag | Description |
-|------|-------------|
-| `--tls` | Enable TLS with a self-signed certificate |
-| `--tls-cert` | Path to TLS certificate file |
-| `--tls-key` | Path to TLS key file |
+| Drapeau | Description |
+|---------|-------------|
+| `--tls` | Active TLS avec un certificat auto-signé |
+| `--tls-cert` | Chemin vers le fichier de certificat TLS |
+| `--tls-key` | Chemin vers le fichier de clé TLS |
 
-If `--tls` is set without `--tls-cert` and `--tls-key`, a self-signed certificate is generated automatically for `localhost`.
+Si `--tls` est défini sans `--tls-cert` et `--tls-key`, un certificat auto-signé est généré automatiquement pour `localhost`.
 
-## What the mock server does
+## Ce que fait le serveur mock
 
-When you start the mock server, it:
+Lorsque vous démarrez le serveur mock, il :
 
-1. **Parses all spec files** — reads each collection's OpenAPI/Swagger spec
-2. **Registers handlers** — creates an HTTP handler for every path and method defined in the spec
-3. **Generates fake data** — responds with randomly generated data that matches the response schema (correct types, formats, and structure)
-4. **Starts auth servers** — simulates OAuth2, Digest, and HMAC auth endpoints for testing
+1. **Analyse tous les fichiers de spécification** — lit la spécification OpenAPI/Swagger de chaque collection
+2. **Enregistre les gestionnaires** — crée un gestionnaire HTTP pour chaque chemin et méthode définis dans la spec
+3. **Génère des données factices** — répond avec des données générées aléatoirement qui correspondent au schéma de réponse (types, formats et structure corrects)
+4. **Démarre les serveurs d'authentification** — simule les points d'accès d'authentification OAuth2, Digest et HMAC pour les tests
 
-### Testing the mock
+### Test du mock
 
 ```bash
-# In one terminal:
+# Dans un terminal :
 swag2mcp-mock mockserver
 
-# In another terminal:
+# Dans un autre terminal :
 curl http://localhost:8080/pets
 # → [{"id":1,"name":"Pet_name","status":"available"}]
 ```
 
-## How fake data is generated
+## Comment les données factices sont générées
 
-The mock server generates realistic fake data based on the OpenAPI schema:
+Le serveur mock génère des données factices réalistes basées sur le schéma OpenAPI :
 
-- **Strings** — random words, sentences, or format-specific values (email, URL, UUID, date, phone, etc.)
-- **Numbers** — random integers and floats within the specified range
-- **Booleans** — random true/false
-- **Arrays** — 1 to 3 random items
-- **Objects** — all properties filled with random values
-- **Enums** — random value from the enum list
-- **Nullable fields** — sometimes returns `null` (~10% chance)
+- **Chaînes** — mots, phrases ou valeurs spécifiques au format (email, URL, UUID, date, téléphone, etc.)
+- **Nombres** — entiers et flottants aléatoires dans la plage spécifiée
+- **Booléens** — vrai/faux aléatoire
+- **Tableaux** — 1 à 3 éléments aléatoires
+- **Objets** — toutes les propriétés remplies avec des valeurs aléatoires
+- **Énumérations** — valeur aléatoire de la liste d'énumération
+- **Champs nullables** — retourne parfois `null` (~10% de chance)
 
-## Use cases
+## Cas d'utilisation
 
-- **Development** — test your integration without real API access
-- **Testing LLM agents** — verify the LLM can discover, inspect, and invoke endpoints
-- **Demonstrations** — show swag2mcp working without configuring real APIs
-- **Load testing** — test the MCP server under load without hitting real APIs
+- **Développement** — testez votre intégration sans accès API réel
+- **Test d'agents LLM** — vérifiez que le LLM peut découvrir, inspecter et invoquer des points d'accès
+- **Démonstrations** — montrez swag2mcp en fonctionnement sans configurer d'API réelles
+- **Tests de charge** — testez le serveur MCP sous charge sans solliciter des API réelles
 
-## Important notes
+## Notes importantes
 
-- **Separate binary** — `swag2mcp-mock` is not included in the main `swag2mcp` binary. Install it separately.
-- **Each collection gets its own port** — configure `base_mock_url` per collection
-- **Auth mock servers are global** — OAuth2, Digest, and HMAC servers run on the configured ports regardless of how many collections you have
-- **Spec parse failures are non-fatal** — if a collection's spec cannot be parsed, it is skipped with a warning
-- **Self-signed TLS** — when using `--tls` without certificates, a self-signed certificate is generated for localhost only
+- **Binaire séparé** — `swag2mcp-mock` n'est pas inclus dans le binaire principal `swag2mcp`. Installez-le séparément.
+- **Chaque collection obtient son propre port** — configurez `base_mock_url` par collection
+- **Les serveurs d'authentification mock sont globaux** — les serveurs OAuth2, Digest et HMAC fonctionnent sur les ports configurés, quel que soit le nombre de collections
+- **Les échecs d'analyse de spec ne sont pas fatals** — si la spec d'une collection ne peut pas être analysée, elle est ignorée avec un avertissement
+- **TLS auto-signé** — lors de l'utilisation de `--tls` sans certificats, un certificat auto-signé est généré pour localhost uniquement

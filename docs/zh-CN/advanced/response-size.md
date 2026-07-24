@@ -1,16 +1,16 @@
-# Response Size Management
+# 响应大小管理
 
-## Overview
+## 概述
 
-API responses can be very large — sometimes too large to fit in the LLM's context window. swag2mcp automatically manages response sizes by saving oversized responses to disk and providing tools to explore them.
+API 响应可能非常大 — 有时大到无法放入 LLM 的上下文窗口。swag2mcp 通过将过大的响应保存到磁盘并提供工具来探索它们，自动管理响应大小。
 
-## How it works
+## 工作原理
 
-1. **You call `invoke`** — swag2mcp makes the API request
-2. **If the response is small** (within the limit) — it is returned inline to the LLM
-3. **If the response is too large** (exceeds the limit) — it is saved to `{workspace}/responses/` as a JSON file. The LLM receives a file reference instead of the full response
+1. **你调用 `invoke`** — swag2mcp 发起 API 请求
+2. **如果响应很小**（在限制内）— 直接内联返回给 LLM
+3. **如果响应太大**（超过限制）— 保存到 `{workspace}/responses/` 作为 JSON 文件。LLM 收到文件引用而不是完整响应
 
-### Example: small response (inline)
+### 示例：小响应（内联）
 
 ```json
 {
@@ -23,7 +23,7 @@ API responses can be very large — sometimes too large to fit in the LLM's cont
 }
 ```
 
-### Example: large response (file reference)
+### 示例：大响应（文件引用）
 
 ```json
 {
@@ -39,29 +39,29 @@ API responses can be very large — sometimes too large to fit in the LLM's cont
 }
 ```
 
-## Configuration
+## 配置
 
 ```yaml
 http_client:
-  max_response_size: 1048576  # 1 MB in bytes
+  max_response_size: 1048576  # 1 MB（字节）
 ```
 
 ### max_response_size
 
-- **Type:** `int` (bytes)
-- **Default:** `1048576` (1 MB)
-- **Range:** 256 to 10,485,760 bytes (10 MB)
-- **Effect:** Responses larger than this are saved to disk instead of returned inline
-- **When to increase:** APIs that return large datasets (reports, logs, analytics)
-- **When to decrease:** Limited LLM context window, or when you prefer file-based access
+- **类型：** `int`（字节）
+- **默认值：** `1048576`（1 MB）
+- **范围：** 256 到 10,485,760 字节（10 MB）
+- **效果：** 超过此大小的响应将保存到磁盘，而不是内联返回
+- **何时增加：** 返回大数据集的 API（报告、日志、分析）
+- **何时减少：** LLM 上下文窗口有限，或你更倾向于基于文件的访问
 
-## Working with large responses
+## 处理大响应
 
-When `invoke` returns a `fileRef`, use these three tools to explore the data:
+当 `invoke` 返回 `fileRef` 时，使用这三个工具探索数据：
 
-### 1. response_outline — understand the structure
+### 1. response_outline — 了解结构
 
-Get a structural summary of the response: keys, types, array lengths, and navigation hints.
+获取响应的结构摘要：键、类型、数组长度和导航提示。
 
 ```json
 → response_outline(path: "/path/to/file.json")
@@ -77,17 +77,17 @@ Get a structural summary of the response: keys, types, array lengths, and naviga
   }
 ```
 
-### 2. response_compress — get a smaller version
+### 2. response_compress — 获取更小的版本
 
-Compress the data to fit inline. Multiple compression modes let you choose the right trade-off.
+压缩数据以适应内联。多种压缩模式让你选择合适的权衡。
 
-| Mode | Description | Best for |
-|------|-------------|----------|
-| `first_of_array` | Keep only the first element of an array | When all elements have the same structure |
-| `sample_array` | Keep head (3) and tail (2) of an array | When you need to see the range of values |
-| `truncate_strings` | Shorten every string to N characters | When strings are very long |
-| `keys_only` | Replace values with their type names | When you only need the structure |
-| `select_keys` | Keep only specified keys | When you need specific fields |
+| 模式 | 描述 | 最适合 |
+|------|------|--------|
+| `first_of_array` | 只保留数组的第一个元素 | 所有元素结构相同时 |
+| `sample_array` | 保留数组的头部（3）和尾部（2） | 需要查看值的范围时 |
+| `truncate_strings` | 将每个字符串缩短到 N 个字符 | 字符串非常长时 |
+| `keys_only` | 将值替换为类型名称 | 只需要结构时 |
+| `select_keys` | 只保留指定的键 | 需要特定字段时 |
 
 ```json
 → response_compress(path: "/path/to/file.json", mode: "first_of_array", jsonPath: "data")
@@ -97,9 +97,9 @@ Compress the data to fit inline. Multiple compression modes let you choose the r
   }
 ```
 
-### 3. response_slice — extract a specific fragment
+### 3. response_slice — 提取特定片段
 
-Get a specific element or value by JSON path or line range.
+通过 JSON 路径或行范围获取特定元素或值。
 
 ```json
 → response_slice(path: "/path/to/file.json", jsonPath: "data.0")
@@ -113,27 +113,27 @@ Get a specific element or value by JSON path or line range.
   }
 ```
 
-## Complete workflow
+## 完整工作流程
 
 ```
-1. invoke(endpoint) → fileRef (response is 1.5 MB)
-2. response_outline(path) → structure: { data: Array(500) }
-3. response_compress(path, mode: "first_of_array", jsonPath: "data") → first item
-4. response_slice(path, jsonPath: "data.0") → full first item details
-5. response_slice(path, jsonPath: "data.1") → second item
+1. invoke(endpoint) → fileRef（响应为 1.5 MB）
+2. response_outline(path) → 结构：{ data: Array(500) }
+3. response_compress(path, mode: "first_of_array", jsonPath: "data") → 第一个项目
+4. response_slice(path, jsonPath: "data.0") → 完整第一个项目详情
+5. response_slice(path, jsonPath: "data.1") → 第二个项目
 ```
 
-## Automatic cleanup
+## 自动清理
 
-When the MCP server starts (`swag2mcp mcp`), response files older than 48 hours are automatically removed. You can also clean them manually:
+当 MCP 服务器启动（`swag2mcp mcp`）时，超过 48 小时的响应文件会自动删除。你也可以手动清理：
 
 ```bash
 swag2mcp clean
 ```
 
-## Important notes
+## 重要说明
 
-- **The limit is in bytes** — `1048576` = 1 MB, `2097152` = 2 MB, etc.
-- **File references include an open command** — on macOS it's `open`, on Linux it's `xdg-open`
-- **Response files are named with random suffixes** — no conflicts between concurrent calls
-- **The responses directory is created automatically** — no manual setup needed
+- **限制以字节为单位** — `1048576` = 1 MB，`2097152` = 2 MB 等
+- **文件引用包含打开命令** — macOS 上为 `open`，Linux 上为 `xdg-open`
+- **响应文件使用随机后缀命名** — 并发调用之间不会冲突
+- **响应目录自动创建** — 无需手动设置

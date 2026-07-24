@@ -1,95 +1,95 @@
 # init
 
-## Purpose
+## 목적
 
-The `init` command creates a **workspace** — a directory with a `swag2mcp.yaml` config file and subdirectories for cache, specs, responses, and auth scripts. This is the first command to run when setting up swag2mcp.
+`init` 명령어는 **워크스페이스** — `swag2mcp.yaml` 설정 파일과 캐시, 명세, 응답, 인증 스크립트용 하위 디렉토리가 있는 디렉토리를 생성합니다. swag2mcp를 설정할 때 가장 먼저 실행하는 명령어입니다.
 
-## When to use
+## 사용 시기
 
-- You are setting up swag2mcp for the first time
-- You want to create a new workspace in a specific directory
-- You need to re-initialize a corrupted or missing workspace
+- swag2mcp를 처음 설정할 때
+- 특정 디렉토리에 새 워크스페이스를 생성하려고 할 때
+- 손상되었거나 누락된 워크스페이스를 다시 초기화해야 할 때
 
-## Syntax
+## 구문
 
 ```bash
 swag2mcp init [path] [flags]
 ```
 
-## Arguments
+## 인수
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, defaults to `~/.swag2mcp`. |
+| 인수 | 위치 | 필수 | 설명 |
+|------|------|------|------|
+| `path` | 1 | 아니요 | 워크스페이스 디렉토리. 생략 시 `~/.swag2mcp`로 기본 설정됩니다. |
 
-## Flags
+## 플래그
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--interactive` | `-i` | `bool` | `false` | Run the interactive TUI wizard |
-| `--force` | `-f` | `bool` | `false` | Overwrite existing configuration in a non-empty directory |
+| 플래그 | 약어 | 타입 | 기본값 | 설명 |
+|-------|------|------|--------|------|
+| `--interactive` | `-i` | `bool` | `false` | 대화형 TUI 마법사 실행 |
+| `--force` | `-f` | `bool` | `false` | 비어 있지 않은 디렉토리의 기존 설정 덮어쓰기 |
 
-## How it works
+## 작동 방식
 
-### Non-interactive mode (default)
+### 비대화형 모드 (기본값)
 
-Creates a minimal `swag2mcp.yaml` with no specs. You edit the file manually afterwards.
+spec이 없는 최소 `swag2mcp.yaml`을 생성합니다. 이후 수동으로 파일을 편집합니다.
 
 ```bash
 swag2mcp init
-# Creates ~/.swag2mcp/swag2mcp.yaml
+# ~/.swag2mcp/swag2mcp.yaml 생성
 
 swag2mcp init ./my-project
-# Creates ./my-project/swag2mcp.yaml
+# ./my-project/swag2mcp.yaml 생성
 
 swag2mcp init /absolute/path
-# Creates /absolute/path/swag2mcp.yaml
+# /absolute/path/swag2mcp.yaml 생성
 ```
 
-### Interactive mode (`-i`)
+### 대화형 모드 (`-i`)
 
-Launches an 18-step TUI wizard that guides you through:
+18단계 TUI 마법사를 실행하여 다음을 안내합니다:
 
-1. Choosing the workspace directory
-2. Adding specs with domain, title, base URL
-3. Configuring collections with location URLs
-4. Setting up authentication (all 9 methods)
-5. Configuring HTTP client settings (timeout, proxy, headers, etc.)
+1. 워크스페이스 디렉토리 선택
+2. 도메인, 제목, base URL로 spec 추가
+3. 위치 URL로 collection 설정
+4. 인증 설정 (9가지 방법 모두)
+5. HTTP 클라이언트 설정 (타임아웃, 프록시, 헤더 등)
 
 ```bash
 swag2mcp init -i
 ```
 
-### Force mode (`--force`)
+### 강제 모드 (`--force`)
 
-By default, `init` refuses to run in a non-empty directory. Use `--force` to overwrite:
+기본적으로 `init`은 비어 있지 않은 디렉토리에서 실행을 거부합니다. `--force`를 사용하여 덮어쓰세요:
 
 ```bash
 swag2mcp init -f
 swag2mcp init ./existing-dir -f
 ```
 
-## What gets created
+## 생성되는 항목
 
 ```
 ~/.swag2mcp/
-├── swag2mcp.yaml       # Configuration file
-├── cache/               # Downloaded remote spec files
-├── specs/               # Local spec files
-├── responses/           # Saved API invocation responses
-└── auth_scripts/        # Authentication scripts (for ScriptAuth type)
+├── swag2mcp.yaml       # 설정 파일
+├── cache/               # 다운로드된 원격 명세 파일
+├── specs/               # 로컬 명세 파일
+├── responses/           # 저장된 API 호출 응답
+└── auth_scripts/        # 인증 스크립트 (ScriptAuth 유형용)
 ```
 
-## Post-command verification
+## 명령 후 검증
 
 ```bash
 ls ~/.swag2mcp/swag2mcp.yaml
-# If the file exists, init succeeded
+# 파일이 존재하면 init 성공
 ```
 
-## Nuances
+## 세부 사항
 
-- **Path resolution:** `[path]` is a **workspace directory**, not a file path. The CLI appends `swag2mcp.yaml` automatically. Resolution order: explicit `[path]` → current directory (`./`) → `~/.swag2mcp/`.
-- **Non-empty directory check:** Without `--force`, `init` returns an error if the target directory exists and is not empty. This prevents accidental overwrites.
-- **Auth script stubs:** If any spec uses `ScriptAuth`, `init` creates stub script files (`.sh` on Unix, `.bat` on Windows) in `auth_scripts/`.
-- **Output:** On success, prints the config path and a hint: `"Next step: edit swag2mcp.yaml or run 'swag2mcp ls' to list configured specs"`.
+- **경로 해결:** `[path]`는 **워크스페이스 디렉토리**이지 파일 경로가 아닙니다. CLI가 자동으로 `swag2mcp.yaml`을 추가합니다. 해결 순서: 명시적 `[path]` → 현재 디렉토리(`./`) → `~/.swag2mcp/`.
+- **비어 있지 않은 디렉토리 확인:** `--force` 없이 `init`은 대상 디렉토리가 존재하고 비어 있지 않으면 오류를 반환합니다. 이는 실수로 인한 덮어쓰기를 방지합니다.
+- **인증 스크립트 스텁:** spec이 `ScriptAuth`를 사용하면 `init`이 `auth_scripts/`에 스텁 스크립트 파일(Unix는 `.sh`, Windows는 `.bat`)을 생성합니다.
+- **출력:** 성공 시 설정 경로와 힌트를 출력합니다: `"다음 단계: swag2mcp.yaml을 편집하거나 'swag2mcp ls'를 실행하여 설정된 spec을 확인하세요"`.

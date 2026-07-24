@@ -1,20 +1,20 @@
-# CLI Workflow
+# CLI ワークフロー
 
-This page shows real examples of using swag2mcp from the terminal — from initialization to daily operations.
+このページでは、初期化から日常的な操作まで、ターミナルから swag2mcp を使用する実際の例を示します。
 
-## Quick start
+## クイックスタート
 
 ```bash
-# 1. Initialize a workspace
+# 1. ワークスペースを初期化
 mkdir -p .swag2mcp && swag2mcp init ./.swag2mcp
 
-# 2. List your specs
+# 2. スペックを一覧表示
 swag2mcp ls
 ```
 
-## Adding a spec with YAML
+## YAML でスペックを追加
 
-### Simple spec (public API)
+### シンプルなスペック（公開 API）
 
 ```bash
 swag2mcp add spec --yaml - <<EOF
@@ -27,7 +27,7 @@ collections:
 EOF
 ```
 
-### Spec with auth (bearer token from env)
+### 認証付きスペック（環境変数からのベアラートークン）
 
 ```bash
 swag2mcp add spec --yaml - <<EOF
@@ -44,7 +44,7 @@ collections:
 EOF
 ```
 
-### Spec with multiple collections
+### 複数コレクションのスペック
 
 ```bash
 swag2mcp add spec --yaml - <<EOF
@@ -60,7 +60,7 @@ collections:
 EOF
 ```
 
-## Adding a collection to an existing spec
+## 既存のスペックにコレクションを追加
 
 ```bash
 swag2mcp add collection --yaml - <<EOF
@@ -70,7 +70,7 @@ location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/ma
 EOF
 ```
 
-## Listing specs
+## スペックの一覧表示
 
 ```bash
 $ swag2mcp ls
@@ -83,13 +83,13 @@ Specifications:
     marine (4 endpoints)
 ```
 
-### Filter by tags
+### タグでフィルタリング
 
 ```bash
 swag2mcp ls --tags=public
 ```
 
-## Viewing runtime info
+## ランタイム情報の表示
 
 ```bash
 $ swag2mcp info
@@ -117,7 +117,7 @@ $ swag2mcp info
 }
 ```
 
-## Validating configuration
+## 設定の検証
 
 ```bash
 $ swag2mcp validate
@@ -126,69 +126,69 @@ $ swag2mcp validate
 ✓ Spec meteo: OK
 ```
 
-## Starting the MCP server
+## MCP サーバーの起動
 
-### stdio (for IDE integration)
+### stdio（IDE 統合用）
 
 ```bash
 swag2mcp mcp
 ```
 
-### HTTP (for remote access)
+### HTTP（リモートアクセス用）
 
 ```bash
 swag2mcp mcp --transport sse --http-addr :8080
 ```
 
-### With tag filter
+### タグフィルター付き
 
 ```bash
 swag2mcp mcp --tags=public
 ```
 
-## Updating specs
+## スペックの更新
 
-Refresh all cached spec files:
+キャッシュされたすべてのスペックファイルを更新：
 
 ```bash
 swag2mcp update
 ```
 
-## Cleaning cache
+## キャッシュのクリーン
 
 ```bash
 swag2mcp clean
 ```
 
-## Export and import
+## エクスポートとインポート
 
-### Backup your workspace
+### ワークスペースのバックアップ
 
 ```bash
 swag2mcp export --output ~/backups/swag2mcp-2026-07-24.zip
 ```
 
-### Restore on another machine
+### 別のマシンで復元
 
 ```bash
-# On the new machine
+# 新しいマシンで
 swag2mcp import --from-zip swag2mcp-2026-07-24.zip
 ```
 
-## Interactive TUI explorer
+## 対話型 TUI エクスプローラー
 
 ```bash
 swag2mcp run
 ```
 
-Opens a full-screen terminal UI for searching, browsing, and invoking APIs.
+API の検索、ブラウズ、呼び出しのための全画面ターミナル UI が開きます。
 
-## Mock server
+## モックサーバー
 
 ```bash
-# Install the mock binary
+# モックバイナリをインストール
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 
-# Start mock servers
+# モックサーバーを起動
 swag2mcp-mock mockserver
 ```

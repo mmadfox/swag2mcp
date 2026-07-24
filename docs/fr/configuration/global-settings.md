@@ -1,15 +1,15 @@
-# Global Settings
+# Paramètres globaux
 
-Global settings are the top-level configuration blocks in `swag2mcp.yaml`. They apply to all specs unless overridden at the spec or collection level.
+Les paramètres globaux sont les blocs de configuration de premier niveau dans `swag2mcp.yaml`. Ils s'appliquent à toutes les spécifications, sauf s'ils sont remplacés au niveau de la spécification ou de la collection.
 
 ## Structure
 
 ```yaml
 http_client:
-  # HTTP client settings for all API calls
+  # Paramètres du client HTTP pour tous les appels API
 
 mcp:
-  # MCP server settings
+  # Paramètres du serveur MCP
 
 mock_enabled: false
 mock_auth:
@@ -21,21 +21,21 @@ disable_ratelimiter: false
 rate_limit_interval: 10s
 ```
 
-## HTTP Client
+## Client HTTP
 
-Controls how swag2mcp makes HTTP requests to APIs: timeout, response size limit, proxy, headers, cookies, redirects, and user-agent. These settings cascade down to specs and collections.
+Contrôle la manière dont swag2mcp effectue les requêtes HTTP vers les API : délai d'attente, limite de taille de réponse, proxy, en-têtes, cookies, redirections et user-agent. Ces paramètres se propagent en cascade vers les spécifications et les collections.
 
-See [HTTP Client](./http-client) for all parameters and examples.
+Consultez [Client HTTP](./http-client) pour tous les paramètres et exemples.
 
-## MCP Server
+## Serveur MCP
 
-Controls how the MCP server communicates with LLM agents: transport type (stdio, SSE, Streamable HTTP), address, path, and optional bearer token auth.
+Contrôle la manière dont le serveur MCP communique avec les agents LLM : type de transport (stdio, SSE, Streamable HTTP), adresse, chemin et authentification par jeton bearer optionnelle.
 
-See [MCP Server](./mcp-server) for all parameters, transports, and startup flags.
+Consultez [Serveur MCP](./mcp-server) pour tous les paramètres, transports et indicateurs de démarrage.
 
-## Mock Server
+## Serveur de simulation
 
-The mock server generates fake API responses based on OpenAPI schemas. Useful for testing without hitting real APIs.
+Le serveur de simulation génère des réponses API factices basées sur les schémas OpenAPI. Utile pour les tests sans solliciter les vraies API.
 
 ```yaml
 mock_enabled: true
@@ -47,24 +47,24 @@ mock_auth:
 
 ### mock_enabled
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Effect:** When `true`, swag2mcp starts mock servers for all specs that have `base_mock_url` configured. Each collection must have `base_mock_url` set.
-- **When to enable:** You want to test your API integration without making real HTTP calls. Mock servers return fake data based on the OpenAPI schema.
+- **Type :** `bool`
+- **Valeur par défaut :** `false`
+- **Effet :** Lorsqu'il est `true`, swag2mcp démarre des serveurs de simulation pour toutes les spécifications qui ont `base_mock_url` configuré. Chaque collection doit avoir `base_mock_url` défini.
+- **Quand l'activer :** Vous souhaitez tester votre intégration API sans effectuer de véritables appels HTTP. Les serveurs de simulation renvoient des données factices basées sur le schéma OpenAPI.
 
 ### mock_auth
 
-Port configuration for mock authentication servers. These are used when testing auth methods (OAuth2, Digest, HMAC) with the mock server.
+Configuration des ports pour les serveurs d'authentification de simulation. Ils sont utilisés lors des tests des méthodes d'authentification (OAuth2, Digest, HMAC) avec le serveur de simulation.
 
-| Field | Type | Default | Description |
+| Champ | Type | Valeur par défaut | Description |
 |-------|------|---------|-------------|
-| `oauth2_port` | int | `9090` | Port for the mock OAuth2 token server (1024-65535) |
-| `digest_port` | int | `9091` | Port for the mock Digest auth server (1024-65535) |
-| `hmac_port` | int | `9092` | Port for the mock HMAC auth server (1024-65535) |
+| `oauth2_port` | int | `9090` | Port du serveur de jeton OAuth2 de simulation (1024-65535) |
+| `digest_port` | int | `9091` | Port du serveur d'authentification Digest de simulation (1024-65535) |
+| `hmac_port` | int | `9092` | Port du serveur d'authentification HMAC de simulation (1024-65535) |
 
-## Rate Limiter
+## Limiteur de débit
 
-The rate limiter prevents the LLM from calling the same API endpoint too frequently. By default, each endpoint can be called once every 10 seconds.
+Le limiteur de débit empêche le LLM d'appeler le même point de terminaison API trop fréquemment. Par défaut, chaque point de terminaison peut être appelé une fois toutes les 10 secondes.
 
 ```yaml
 disable_ratelimiter: false
@@ -73,30 +73,30 @@ rate_limit_interval: 10s
 
 ### disable_ratelimiter
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Effect:** When `true`, the per-endpoint rate limiter is disabled entirely. The LLM can call the same endpoint repeatedly without waiting.
-- **When to enable:** Testing, debugging, or when you need to call the same endpoint multiple times in quick succession.
-- **When to keep disabled (recommended):** Production. The rate limiter prevents accidental abuse and respects API rate limits.
+- **Type :** `bool`
+- **Valeur par défaut :** `false`
+- **Effet :** Lorsqu'il est `true`, le limiteur de débit par point de terminaison est complètement désactivé. Le LLM peut appeler le même point de terminaison de manière répétée sans attendre.
+- **Quand l'activer :** Tests, débogage, ou lorsque vous devez appeler le même point de terminaison plusieurs fois rapidement.
+- **Quand le laisser désactivé (recommandé) :** Production. Le limiteur de débit empêche les abus accidentels et respecte les limites de débit des API.
 
 ### rate_limit_interval
 
-- **Type:** duration (Go format: `10s`, `30s`, `1m`)
-- **Default:** `10s`
-- **Effect:** Sets how long the LLM must wait between calls to the same endpoint.
-- **When to change:** Increase for APIs with strict rate limits. Decrease for internal APIs where you control the load.
-- **Range:** Any valid duration (e.g., `5s`, `30s`, `1m`, `2m`).
+- **Type :** durée (format Go : `10s`, `30s`, `1m`)
+- **Valeur par défaut :** `10s`
+- **Effet :** Définit le temps d'attente obligatoire du LLM entre les appels au même point de terminaison.
+- **Quand le modifier :** Augmentez pour les API avec des limites de débit strictes. Diminuez pour les API internes dont vous contrôlez la charge.
+- **Plage :** Toute durée valide (par exemple, `5s`, `30s`, `1m`, `2m`).
 
 ## Cascade
 
-Global settings can be overridden at the spec and collection levels. All `http_client` settings (timeout, proxy, user-agent, redirects, response size, randomizer, headers, cookies) can be overridden at both spec and collection levels.
+Les paramètres globaux peuvent être remplacés au niveau de la spécification et de la collection. Tous les paramètres `http_client` (délai d'attente, proxy, user-agent, redirections, taille de réponse, randomiseur, en-têtes, cookies) peuvent être remplacés aux niveaux spécification et collection.
 
 ```
 Global (http_client, mock_enabled, disable_ratelimiter, rate_limit_interval)
-    ↓ overrides (http_client only)
-Spec (specs[].http_client)
-    ↓ overrides (http_client only)
+    ↓ remplace (http_client uniquement)
+Spécification (specs[].http_client)
+    ↓ remplace (http_client uniquement)
 Collection (specs[].collections[].http_client)
 ```
 
-See [Configuration Cascade](./cascade) for details.
+Consultez [Cascade de configuration](./cascade) pour plus de détails.

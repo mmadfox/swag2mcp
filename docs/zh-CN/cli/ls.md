@@ -1,45 +1,45 @@
 # ls
 
-## Purpose
+## 用途
 
-List all configured **specs** and their **collections** in a human-readable format. This is the primary way to inspect what APIs are available in your workspace.
+以人类可读格式列出所有配置的 **spec** 及其 **collection**。这是检查工作区中可用 API 的主要方式。
 
-## When to use
+## 何时使用
 
-- You want to see what APIs are configured
-- You need to find a spec or collection ID
-- You want to check how many endpoints each collection has
-- You want to filter specs by tags
+- 你想查看配置了哪些 API
+- 你需要查找 spec 或 collection ID
+- 你想检查每个 collection 有多少端点
+- 你想按标签过滤 spec
 
-## Syntax
+## 语法
 
 ```bash
 swag2mcp ls [path] [flags]
 ```
 
-## Arguments
+## 参数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 参数 | 位置 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | 1 | 否 | 工作区目录。如果省略，通过路径解析规则解析。 |
 
-## Flags
+## 标志
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--tags` | `-t` | `string` | `""` | Filter specs by tags (comma-separated) |
+| 标志 | 简写 | 类型 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| `--tags` | `-t` | `string` | `""` | 按标签过滤 spec（逗号分隔） |
 
-## How it works
+## 工作原理
 
-### List all specs
+### 列出所有 spec
 
-Shows every spec with its domain, collections, and endpoint counts:
+显示每个 spec 及其域、collection 和端点计数：
 
 ```bash
 swag2mcp ls
 ```
 
-Example output:
+示例输出：
 
 ```
 Specifications:
@@ -52,21 +52,21 @@ Specifications:
     market-data (12 endpoints)
 ```
 
-### Filter by tags
+### 按标签过滤
 
-Show only specs that have the specified tags:
+仅显示具有指定标签的 spec：
 
 ```bash
 swag2mcp ls --tags=public
 swag2mcp ls --tags=public,internal
 ```
 
-## Post-command verification
+## 命令后验证
 
-Use `ls` after `add`, `delete`, `update`, or `import` to confirm the workspace state matches your expectations.
+在 `add`、`delete`、`update` 或 `import` 之后使用 `ls` 确认工作区状态符合预期。
 
-## Nuances
+## 细节
 
-- **Auto-init:** If no config file exists, `ls` automatically runs the init wizard first.
-- **Tag filtering:** Tags are comma-separated. Specs matching **any** of the specified tags are shown (OR logic).
-- **Output format:** The output is plain text, not JSON. For machine-readable output, use `info`.
+- **自动初始化：** 如果不存在配置文件，`ls` 会自动先运行初始化向导。
+- **标签过滤：** 标签以逗号分隔。显示匹配**任何**指定标签的 spec（OR 逻辑）。
+- **输出格式：** 输出是纯文本，不是 JSON。对于机器可读的输出，使用 `info`。

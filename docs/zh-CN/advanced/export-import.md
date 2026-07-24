@@ -1,113 +1,113 @@
-# Export and Import
+# 导出和导入
 
-## Overview
+## 概述
 
-swag2mcp supports full workspace round-trip via ZIP archives. You can export your entire workspace (config, spec files, auth scripts) to a ZIP file and restore it on another machine.
+swag2mcp 支持通过 ZIP 归档进行完整的工作区往返。你可以将整个工作区（配置、规范文件、认证脚本）导出到 ZIP 文件，并在另一台机器上恢复。
 
-## Export
+## 导出
 
-Creates a portable ZIP backup of your workspace.
+创建工作区的可移植 ZIP 备份。
 
 ```bash
-# Export to default file (swag2mcp-backup-<timestamp>.zip)
+# 导出到默认文件（swag2mcp-backup-<timestamp>.zip）
 swag2mcp export
 
-# Export with custom path
+# 使用自定义路径导出
 swag2mcp export --output ~/backups/swag2mcp-backup.zip
 
-# Export only specific specs
+# 仅导出特定 spec
 swag2mcp export --spec meteo
 swag2mcp export --spec meteo,store
 ```
 
-### What's included in the export
+### 导出包含的内容
 
-| Item | Description |
-|------|-------------|
-| `swag2mcp.yaml` | Configuration file |
-| `specs/` | All spec files (OpenAPI/Swagger/Postman) |
-| `auth_scripts/` | Authentication scripts |
-| `swag2mcp.meta` | Metadata (version info for compatibility) |
+| 项目 | 描述 |
+|------|------|
+| `swag2mcp.yaml` | 配置文件 |
+| `specs/` | 所有规范文件（OpenAPI/Swagger/Postman） |
+| `auth_scripts/` | 认证脚本 |
+| `swag2mcp.meta` | 元数据（版本信息，用于兼容性） |
 
-Cache and responses are **not** exported — they are transient and would be stale on restore.
+缓存和响应**不会被导出** — 它们是临时数据，恢复时已过时。
 
-### Default filename
+### 默认文件名
 
-If you don't specify an output path, the file is saved as `swag2mcp-backup-<YYYY-MM-DD-HHMMSS>.zip` in the current directory (UTC timestamp).
+如果你不指定输出路径，文件将保存为当前目录下的 `swag2mcp-backup-<YYYY-MM-DD-HHMMSS>.zip`（UTC 时间戳）。
 
-## Import
+## 导入
 
-Restore a workspace from a ZIP backup or import spec files.
+从 ZIP 备份恢复工作区或导入规范文件。
 
-### Restore from ZIP
+### 从 ZIP 恢复
 
 ```bash
-# Restore full workspace
+# 恢复完整工作区
 swag2mcp import --from-zip /path/to/backup.zip
 
-# Restore with overwrite
+# 覆盖恢复
 swag2mcp import --from-zip /path/to/backup.zip -f
 ```
 
-The ZIP must be created by `swag2mcp export` — arbitrary ZIP files will not work.
+ZIP 必须由 `swag2mcp export` 创建 — 任意 ZIP 文件将无法工作。
 
-### Import a single spec file
+### 导入单个规范文件
 
-Download a spec file and add it to the workspace:
+下载规范文件并添加到工作区：
 
 ```bash
 swag2mcp import https://example.com/spec.yaml myspec
 swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
 ```
 
-### Bulk import from existing config
+### 从现有配置批量导入
 
-Download all collection spec files for the specified specs (domains):
+下载指定 spec（域）的所有 collection 规范文件：
 
 ```bash
 swag2mcp import --spec meteo
 swag2mcp import /path/to/workspace --spec meteo,store
 ```
 
-This downloads each collection's spec file, saves it to `specs/`, and updates the config to point to the local copy.
+这会下载每个 collection 的规范文件，保存到 `specs/`，并更新配置以指向本地副本。
 
-## Use cases
+## 使用场景
 
-### Backup
+### 备份
 
 ```bash
 swag2mcp export --output swag2mcp-$(date +%Y-%m-%d).zip
 ```
 
-### Transfer to another machine
+### 迁移到另一台机器
 
 ```bash
-# On old machine
+# 在旧机器上
 swag2mcp export --output swag2mcp.zip
 
-# Copy the ZIP to the new machine, then:
+# 将 ZIP 复制到新机器，然后：
 swag2mcp import --from-zip swag2mcp.zip
 ```
 
-### Share configuration
+### 共享配置
 
 ```bash
 swag2mcp init
 swag2mcp export --output template.zip
-# Share template.zip with a colleague
+# 与同事共享 template.zip
 ```
 
-## Post-export verification
+## 导出后验证
 
-Always verify the ZIP file was created:
+始终验证 ZIP 文件是否已创建：
 
 ```bash
 ls -la swag2mcp-backup-*.zip
 ```
 
-## Important notes
+## 重要说明
 
-- **The output must be a file path ending in `.zip`** — do not pass a directory
-- **Cache and responses are excluded** — only the config, specs, and auth scripts are preserved
-- **The ZIP is self-contained** — it can be restored on any machine with swag2mcp installed
-- **Spec filter** — use `--spec` to export or import only specific specs
+- **输出必须是 `.zip` 结尾的文件路径** — 不要传递目录
+- **缓存和响应被排除** — 只保留配置、规范和认证脚本
+- **ZIP 是自包含的** — 可以在任何安装了 swag2mcp 的机器上恢复
+- **Spec 过滤器** — 使用 `--spec` 仅导出或导入特定 spec

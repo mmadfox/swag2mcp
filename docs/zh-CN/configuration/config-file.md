@@ -1,13 +1,13 @@
-# Configuration File
+# 配置文件
 
-swag2mcp uses a YAML configuration file. Created by `swag2mcp init`.
+swag2mcp 使用 YAML 配置文件。由 `swag2mcp init` 创建。
 
-## Location
+## 位置
 
-- **Linux/macOS**: `~/.swag2mcp/swag2mcp.yaml`
-- **Windows**: `%USERPROFILE%\.swag2mcp\swag2mcp.yaml`
+- **Linux/macOS**：`~/.swag2mcp/swag2mcp.yaml`
+- **Windows**：`%USERPROFILE%\.swag2mcp\swag2mcp.yaml`
 
-## Basic Structure
+## 基本结构
 
 ```yaml
 specs:
@@ -19,10 +19,10 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
 ```
 
-## Full Example
+## 完整示例
 
 ```yaml
-# ── Global HTTP client ──────────────────────────────────
+# ── 全局 HTTP 客户端 ──────────────────────────────────
 http_client:
   timeout: 30s
   max_response_size: 1048576
@@ -41,7 +41,7 @@ http_client:
     - name: "session"
       value: "abc123"
 
-# ── MCP server ──────────────────────────────────────────
+# ── MCP 服务器 ──────────────────────────────────────────
 mcp:
   transport: stdio
   addr: ":8080"
@@ -49,14 +49,14 @@ mcp:
   auth:
     token: ""
 
-# ── Mock server ─────────────────────────────────────────
+# ── 模拟服务器 ─────────────────────────────────────────
 mock_enabled: false
 mock_auth:
   oauth2_port: 9090
   digest_port: 9091
   hmac_port: 9092
 
-# ── Rate limiter ────────────────────────────────────────
+# ── 速率限制器 ────────────────────────────────────────
 disable_ratelimiter: false
 rate_limit_interval: 10s
 
@@ -92,9 +92,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## Environment Variables
+## 环境变量
 
-Use `$(VAR_NAME)` syntax to reference environment variables. swag2mcp resolves them at startup.
+使用 `$(VAR_NAME)` 语法引用环境变量。swag2mcp 在启动时解析它们。
 
 ```yaml
 specs:
@@ -109,21 +109,21 @@ mcp:
     token: "$(MCP_TOKEN)"
 ```
 
-`$(VAR)` is resolved in:
-- Auth config fields: `token`, `username`, `password`, `client_id`, `client_secret`, `api_key`, `secret_key`, `domain`
-- MCP server auth token: `mcp.auth.token`
-- HTTP client headers and cookie values
+`$(VAR)` 在以下位置被解析：
+- 认证配置字段：`token`、`username`、`password`、`client_id`、`client_secret`、`api_key`、`secret_key`、`domain`
+- MCP 服务器认证令牌：`mcp.auth.token`
+- HTTP 客户端头和 cookie 值
 
-`$(VAR)` is **not** resolved in base URLs or collection locations.
+`$(VAR)` **不会**在基础 URL 或 collection 位置中被解析。
 
-## Validation
+## 验证
 
 ```bash
-# Validate default workspace (~/.swag2mcp)
+# 验证默认工作区（~/.swag2mcp）
 swag2mcp validate
 
-# Validate a custom project workspace
+# 验证自定义项目工作区
 swag2mcp validate ./my-project
 ```
 
-If the workspace is not in the home directory (e.g., inside a project repository), always specify the path when running `validate`, `update`, `mcp`, or any other command. Otherwise swag2mcp will use the default `~/.swag2mcp` workspace.
+如果工作区不在主目录中（例如在项目仓库内），运行 `validate`、`update`、`mcp` 或任何其他命令时始终指定路径。否则 swag2mcp 将使用默认的 `~/.swag2mcp` 工作区。

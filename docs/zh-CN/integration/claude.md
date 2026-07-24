@@ -1,8 +1,8 @@
-# Claude Desktop Integration
+# Claude Desktop 集成
 
 ## stdio
 
-In `claude_desktop_config.json`:
+在 `claude_desktop_config.json` 中：
 
 ```json
 {
@@ -15,7 +15,7 @@ In `claude_desktop_config.json`:
 }
 ```
 
-## Custom Workspace
+## 自定义工作区
 
 ```json
 {
@@ -28,19 +28,19 @@ In `claude_desktop_config.json`:
 }
 ```
 
-## Usage
+## 使用
 
-After restarting Claude Desktop, you can:
+重启 Claude Desktop 后，你可以：
 
-- "Show me the list of all APIs"
-- "Find the endpoint for creating an order"
-- "Call the weather API for Moscow"
+- "显示所有 API 的列表"
+- "查找创建订单的端点"
+- "调用莫斯科的天气 API"
 
-## Others
+## 其他
 
-Don't see your client? All MCP integrations follow the same pattern:
-- Set the command to `swag2mcp` with argument `mcp`
-- Optionally add a workspace path: `mcp /path/to/workspace`
-- Check your client's documentation for the exact config file location and format
+没有看到你的客户端？所有 MCP 集成遵循相同的模式：
+- 将命令设置为 `swag2mcp`，参数为 `mcp`
+- 可选地添加工作区路径：`mcp /path/to/workspace`
+- 查看客户端的文档以了解确切的配置文件位置和格式
 
-Most MCP clients support stdio transport, and some support HTTP (SSE / Streamable HTTP).
+大多数 MCP 客户端支持 stdio 传输，部分支持 HTTP（SSE / Streamable HTTP）。

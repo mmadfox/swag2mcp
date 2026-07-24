@@ -1,17 +1,17 @@
-# Adding a New Auth Method
+# 添加新的认证方法
 
-## Steps
+## 步骤
 
-1. **Create the auth client** in `internal/auth/<name>.go`
-2. **Implement the `Authenticator` interface**
-3. **Add type constant** to `internal/auth/auth.go`
-4. **Add YAML decoder** to `internal/config/auth.go`
-5. **Register decoder** in the `authDecoders` map
-6. **Write tests**
+1. **创建认证客户端** 在 `internal/auth/<name>.go`
+2. **实现 `Authenticator` 接口**
+3. **添加类型常量** 到 `internal/auth/auth.go`
+4. **添加 YAML 解码器** 到 `internal/config/auth.go`
+5. **注册解码器** 到 `authDecoders` 映射
+6. **编写测试**
 
-## 1. Auth client
+## 1. 认证客户端
 
-Create `internal/auth/my_auth.go`:
+创建 `internal/auth/my_auth.go`：
 
 ```go
 package auth
@@ -44,30 +44,30 @@ func (c *MyAuthClient) Validate() error {
 }
 ```
 
-## 2. Authenticator interface
+## 2. Authenticator 接口
 
-Every auth client must implement:
+每个认证客户端必须实现：
 
 ```go
 type Authenticator interface {
-    New() error                    // Initialize, resolve env vars
-    Type() Type                    // Return the auth type identifier
-    Apply(req *http.Request, out *Info) error  // Apply auth to request
-    Validate() error               // Validate required fields
+    New() error                    // 初始化，解析环境变量
+    Type() Type                    // 返回认证类型标识符
+    Apply(req *http.Request, out *Info) error  // 将认证应用于请求
+    Validate() error               // 验证必需字段
 }
 ```
 
-## 3. Type constant
+## 3. 类型常量
 
-Add to `internal/auth/auth.go`:
+添加到 `internal/auth/auth.go`：
 
 ```go
 const MyAuth Type = "my-auth"
 ```
 
-## 4. YAML decoder
+## 4. YAML 解码器
 
-Add a decoder function in `internal/config/auth.go`. The decoder receives a `*yaml.Node` and must decode it into your auth client struct:
+在 `internal/config/auth.go` 中添加解码器函数。解码器接收 `*yaml.Node`，必须将其解码为你的认证客户端结构体：
 
 ```go
 func decodeMyAuth(node *yaml.Node) (auth.Authenticator, error) {
@@ -79,28 +79,28 @@ func decodeMyAuth(node *yaml.Node) (auth.Authenticator, error) {
 }
 ```
 
-The `decodeConfig` helper handles the common pattern: it checks that the node is not empty, decodes YAML into the struct, and returns a descriptive error on failure.
+`decodeConfig` 辅助函数处理常见模式：检查节点不为空，将 YAML 解码到结构体，失败时返回描述性错误。
 
-## 5. Register decoder
+## 5. 注册解码器
 
-Add your decoder to the `authDecoders` map in `internal/config/auth.go`:
+将你的解码器添加到 `internal/config/auth.go` 中的 `authDecoders` 映射：
 
 ```go
 var authDecoders = map[string]authDecoder{
-    // ... existing decoders
+    // ... 现有解码器
     auth.MyAuth.String(): decodeMyAuth,
 }
 ```
 
-The `UnmarshalYAML` method on `Auth` reads the `type` field from the YAML, normalises underscores to hyphens, looks up the decoder in `authDecoders`, and calls it with the `config` node. This is how swag2mcp knows which auth client to instantiate for each spec.
+`Auth` 上的 `UnmarshalYAML` 方法从 YAML 读取 `type` 字段，将下划线规范化为连字符，在 `authDecoders` 中查找解码器，并使用 `config` 节点调用它。这就是 swag2mcp 知道为每个 spec 实例化哪个认证客户端的方式。
 
-## 6. Tests
+## 6. 测试
 
-Create `internal/auth/my_auth_test.go` with table-driven tests covering:
+创建 `internal/auth/my_auth_test.go`，使用表格驱动测试覆盖：
 
-- `New()` resolves env vars correctly
-- `Type()` returns the correct type
-- `Apply()` sets the right headers/query params
-- `Apply()` handles empty values gracefully
-- `Validate()` passes for valid config
-- `Validate()` fails for missing required fields
+- `New()` 正确解析环境变量
+- `Type()` 返回正确的类型
+- `Apply()` 设置正确的头/查询参数
+- `Apply()` 优雅处理空值
+- `Validate()` 对有效配置通过
+- `Validate()` 对缺少必需字段失败

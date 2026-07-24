@@ -1,29 +1,29 @@
-# Rate Limiting
+# Ограничение частоты запросов
 
-## Overview
+## Обзор
 
-swag2mcp has a built-in rate limiter that prevents the LLM from calling the same API endpoint too frequently. This protects against accidental duplicate calls and respects API rate limits.
+swag2mcp имеет встроенный ограничитель частоты, который предотвращает слишком частые вызовы одного и того же эндпоинта API со стороны LLM. Это защищает от случайных дублирующих вызовов и соблюдает лимиты частоты API.
 
-## How it works
+## Как это работает
 
-Each endpoint has a cooldown period. If the LLM tries to call the same endpoint again within the cooldown, the call is rejected with a structured error.
+Каждый эндпоинт имеет период охлаждения. Если LLM пытается вызвать тот же эндпоинт снова в течение периода охлаждения, вызов отклоняется со структурированной ошибкой.
 
 ```
-t=0s  → invoke(endpoint) → executes
-t=2s  → invoke(endpoint) → rejected with rate_limit error
-t=12s → invoke(endpoint) → executes (cooldown has passed)
+t=0s  → invoke(endpoint) → выполняется
+t=2s  → invoke(endpoint) → отклонён с ошибкой rate_limit
+t=12s → invoke(endpoint) → выполняется (период охлаждения прошёл)
 ```
 
-### Default behavior
+### Поведение по умолчанию
 
-- **Cooldown:** 10 seconds per endpoint
-- **Scope:** Per-endpoint — calling endpoint A does not affect endpoint B
-- **Error response:** The LLM receives an `LLMError` with code `rate_limit` and a message indicating how long to wait
-- **Reset:** After 10 seconds of inactivity on that endpoint
+- **Период охлаждения:** 10 секунд на эндпоинт
+- **Область действия:** На эндпоинт — вызов эндпоинта A не влияет на эндпоинт B
+- **Ответ об ошибке:** LLM получает `LLMError` с кодом `rate_limit` и сообщением, указывающим, сколько ждать
+- **Сброс:** После 10 секунд бездействия на этом эндпоинте
 
-### Error format
+### Формат ошибки
 
-When rate limited, the LLM receives:
+При превышении лимита частоты LLM получает:
 
 ```json
 {
@@ -33,45 +33,45 @@ When rate limited, the LLM receives:
 }
 ```
 
-The LLM can use this information to wait and retry, or switch to a different endpoint.
+LLM может использовать эту информацию, чтобы подождать и повторить попытку или переключиться на другой эндпоинт.
 
-### Why it exists
+### Зачем это нужно
 
-- **Prevents accidental duplicate calls** — the LLM might call the same endpoint multiple times in quick succession
-- **Protects against API rate limits** — many APIs have their own rate limits, and hitting them would cause errors
-- **Saves resources** — reduces unnecessary network traffic
+- **Предотвращает случайные дублирующие вызовы** — LLM может вызывать один и тот же эндпоинт несколько раз подряд
+- **Защищает от лимитов частоты API** — многие API имеют собственные лимиты, и их превышение вызовет ошибки
+- **Экономит ресурсы** — уменьшает ненужный сетевой трафик
 
-## Configuration
+## Конфигурация
 
-You can disable the rate limiter or change the cooldown interval:
+Вы можете отключить ограничитель частоты или изменить интервал охлаждения:
 
 ```yaml
-# Disable the rate limiter entirely
+# Полное отключение ограничителя частоты
 disable_ratelimiter: true
 
-# Custom cooldown interval
+# Пользовательский интервал охлаждения
 rate_limit_interval: 30s
 ```
 
 ### disable_ratelimiter
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Effect:** When `true`, the per-endpoint rate limiter is disabled. The LLM can call the same endpoint repeatedly without waiting.
-- **When to enable:** Testing, debugging, or when you need to call the same endpoint multiple times in quick succession.
-- **When to keep disabled (recommended):** Production. The rate limiter prevents accidental abuse.
+- **Тип:** `bool`
+- **По умолчанию:** `false`
+- **Эффект:** При `true` ограничитель частоты на эндпоинт отключается. LLM может вызывать один и тот же эндпоинт повторно без ожидания.
+- **Когда включать:** Тестирование, отладка или когда нужно вызывать один и тот же эндпоинт несколько раз подряд.
+- **Когда оставлять отключённым (рекомендуется):** Продакшен. Ограничитель частоты предотвращает случайное злоупотребление.
 
 ### rate_limit_interval
 
-- **Type:** duration (Go format: `10s`, `30s`, `1m`)
-- **Default:** `10s`
-- **Effect:** Sets the cooldown period between calls to the same endpoint.
-- **When to increase:** APIs with strict rate limits (e.g., 10 requests per minute).
-- **When to decrease:** Internal APIs where you control the load.
-- **Examples:** `5s`, `30s`, `1m`, `2m`
+- **Тип:** duration (Go-формат: `10s`, `30s`, `1m`)
+- **По умолчанию:** `10s`
+- **Эффект:** Устанавливает период охлаждения между вызовами одного и того же эндпоинта.
+- **Когда увеличивать:** API со строгими лимитами частоты (например, 10 запросов в минуту).
+- **Когда уменьшать:** Внутренние API, где вы контролируете нагрузку.
+- **Примеры:** `5s`, `30s`, `1m`, `2m`
 
-## Important notes
+## Важные замечания
 
-- **Per-endpoint tracking** — each endpoint is tracked independently. Calling one endpoint does not affect others.
-- **Error returned to LLM** — the second call within the cooldown is rejected with a `rate_limit` error. The LLM receives the cooldown duration and can retry after waiting.
-- **No cleanup needed** — the rate limiter tracks endpoints automatically and does not require maintenance.
+- **Отслеживание на эндпоинт** — каждый эндпоинт отслеживается независимо. Вызов одного эндпоинта не влияет на другие.
+- **Ошибка возвращается LLM** — второй вызов в течение периода охлаждения отклоняется с ошибкой `rate_limit`. LLM получает длительность охлаждения и может повторить попытку после ожидания.
+- **Очистка не требуется** — ограничитель частоты отслеживает эндпоинты автоматически и не требует обслуживания.

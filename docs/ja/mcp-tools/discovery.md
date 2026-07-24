@@ -1,30 +1,30 @@
-# Discovery Tools
+# 発見ツール
 
-Discovery tools let the LLM navigate the spec hierarchy: find all specs, drill into a spec to see its collections, and explore tags within a collection. Start with `spec_list` to see what APIs are available, then use IDs to drill deeper.
+発見ツールを使用すると、LLM がスペック階層をナビゲートできます。すべてのスペックを検索し、スペックにドリルダウンしてコレクションを表示し、コレクション内のタグを探索できます。まず `spec_list` で利用可能な API を確認し、ID を使用してさらに深く掘り下げます。
 
 ---
 
 ## spec_list
 
-### Purpose
+### 目的
 
-List all API specifications registered in the workspace. This is the starting point for any session — the LLM calls it first to discover what APIs are available.
+ワークスペースに登録されているすべての API スペックを一覧表示します。これはセッションの開始点であり、LLM は最初にこれを呼び出して利用可能な API を発見します。
 
-### When to use
+### 使用するタイミング
 
-- At the start of a session to see what APIs are configured
-- After adding or removing specs to refresh the list
-- When you need a spec ID for other tools
+- セッションの開始時に設定されている API を確認する
+- スペックの追加または削除後にリストを更新する
+- 他のツールで使用するスペック ID が必要な場合
 
-### How it works
+### 動作方法
 
-Returns a list of all specs with their unique ID and domain name. No parameters needed.
+すべてのスペックを一意の ID とドメイン名とともに返します。パラメータは不要です。
 
-### Parameters
+### パラメータ
 
-None.
+なし。
 
-### Response
+### レスポンス
 
 ```json
 {
@@ -41,41 +41,41 @@ None.
 }
 ```
 
-| Field | Type | Description |
+| フィールド | 型 | 説明 |
 |-------|------|-------------|
-| `id` | string | 32-character MD5 hash, unique identifier for the spec |
-| `domain` | string | Domain name of the spec (e.g. "meteo", "dadjoke") |
+| `id` | string | 32 文字の MD5 ハッシュ、スペックの一意識別子 |
+| `domain` | string | スペックのドメイン名（例："meteo"、"dadjoke"） |
 
-### Nuances
+### 補足
 
-- Returns only `id` and `domain` — for full details (collections, tags), use `spec_by_id`
-- All IDs are 32-character MD5 hex strings (`^[0-9a-f]{32}$`)
-- If no specs are configured, returns an empty array
+- `id` と `domain` のみを返します。完全な詳細（コレクション、タグ）は `spec_by_id` を使用してください
+- すべての ID は 32 文字の MD5 16 進文字列です（`^[0-9a-f]{32}$`）
+- スペックが設定されていない場合は空の配列を返します
 
 ---
 
 ## spec_by_id
 
-### Purpose
+### 目的
 
-Get detailed information about a specific spec: its domain, all collections, and their statistics (tag count, method count).
+特定のスペックの詳細情報（ドメイン、すべてのコレクション、その統計情報（タグ数、メソッド数））を取得します。
 
-### When to use
+### 使用するタイミング
 
-- After `spec_list` to see the collections inside a spec
-- When you need collection IDs for further navigation
+- `spec_list` の後にスペック内のコレクションを確認する
+- さらにナビゲートするためにコレクション ID が必要な場合
 
-### How it works
+### 動作方法
 
-Takes a spec ID and returns the spec metadata plus all its collections with counts.
+スペック ID を受け取り、スペックのメタデータとすべてのコレクションをカウント付きで返します。
 
-### Parameters
+### パラメータ
 
-| Parameter | Type | Required | Description |
+| パラメータ | 型 | 必須 | 説明 |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the spec |
+| `id` | string | はい | スペックの 32 文字 MD5 ハッシュ |
 
-### Response
+### レスポンス
 
 ```json
 {
@@ -95,41 +95,41 @@ Takes a spec ID and returns the spec metadata plus all its collections with coun
 }
 ```
 
-| Field | Type | Description |
+| フィールド | 型 | 説明 |
 |-------|------|-------------|
-| `spec.id` | string | Spec identifier |
-| `spec.domain` | string | Spec domain name |
-| `collections[].id` | string | Collection identifier |
-| `collections[].title` | string | Human-readable title |
-| `collections[].llmTitle` | string | LLM-friendly title (optional) |
-| `collections[].countTags` | int | Number of tags in the collection |
-| `collections[].countMethods` | int | Number of HTTP methods in the collection |
+| `spec.id` | string | スペック識別子 |
+| `spec.domain` | string | スペックドメイン名 |
+| `collections[].id` | string | コレクション識別子 |
+| `collections[].title` | string | 人間可読なタイトル |
+| `collections[].llmTitle` | string | LLM 向けタイトル（オプション） |
+| `collections[].countTags` | int | コレクション内のタグ数 |
+| `collections[].countMethods` | int | コレクション内の HTTP メソッド数 |
 
-### Nuances
+### 補足
 
-- Returns `not_found` error if the spec ID does not exist
-- The `id` must be a valid 32-character MD5 hex string
+- スペック ID が存在しない場合は `not_found` エラーを返します
+- `id` は有効な 32 文字の MD5 16 進文字列である必要があります
 
 ---
 
 ## collection_by_spec
 
-### Purpose
+### 目的
 
-List all collections within a specific spec. Similar to `spec_by_id` but returns only the collection list without extra spec metadata.
+特定のスペック内のすべてのコレクションを一覧表示します。`spec_by_id` と似ていますが、余分なスペックメタデータなしでコレクションリストのみを返します。
 
-### When to use
+### 使用するタイミング
 
-- When you already have the spec ID and just need the collection list
-- As a lighter alternative to `spec_by_id`
+- すでにスペック ID を持っており、コレクションリストだけが必要な場合
+- `spec_by_id` の軽量な代替として
 
-### Parameters
+### パラメータ
 
-| Parameter | Type | Required | Description |
+| パラメータ | 型 | 必須 | 説明 |
 |-----------|------|----------|-------------|
-| `specId` | string | Yes | 32-character MD5 hash of the spec |
+| `specId` | string | はい | スペックの 32 文字 MD5 ハッシュ |
 
-### Response
+### レスポンス
 
 ```json
 {
@@ -149,31 +149,31 @@ List all collections within a specific spec. Similar to `spec_by_id` but returns
 }
 ```
 
-### Nuances
+### 補足
 
-- Returns `not_found` if the spec does not exist
-- Same data as `spec_by_id` but without the extra spec wrapper
+- スペックが存在しない場合は `not_found` を返します
+- `spec_by_id` と同じデータですが、余分なスペックラッパーはありません
 
 ---
 
 ## collection_by_id
 
-### Purpose
+### 目的
 
-Get detailed information about a specific collection: its metadata, the parent spec, and all tags within the collection.
+特定のコレクションの詳細情報（メタデータ、親スペック、コレクション内のすべてのタグ）を取得します。
 
-### When to use
+### 使用するタイミング
 
-- After `collection_by_spec` to see the tags inside a collection
-- When you need tag IDs for `tag_by_id` or `endpoint_by_tag`
+- `collection_by_spec` の後にコレクション内のタグを確認する
+- `tag_by_id` や `endpoint_by_tag` で使用するタグ ID が必要な場合
 
-### Parameters
+### パラメータ
 
-| Parameter | Type | Required | Description |
+| パラメータ | 型 | 必須 | 説明 |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the collection |
+| `id` | string | はい | コレクションの 32 文字 MD5 ハッシュ |
 
-### Response
+### レスポンス
 
 ```json
 {
@@ -201,37 +201,37 @@ Get detailed information about a specific collection: its metadata, the parent s
 }
 ```
 
-| Field | Type | Description |
+| フィールド | 型 | 説明 |
 |-------|------|-------------|
-| `spec` | object | Parent spec (id, domain) |
-| `collection` | object | Collection metadata (id, title, countMethods) |
-| `tags[]` | array | List of tags with id, title, countMethods |
+| `spec` | object | 親スペック（id、domain） |
+| `collection` | object | コレクションメタデータ（id、title、countMethods） |
+| `tags[]` | array | id、title、countMethods を持つタグのリスト |
 
-### Nuances
+### 補足
 
-- Returns `not_found` if the collection ID does not exist
-- Tags are returned with their IDs — use `endpoint_by_tag(tagId)` to see the actual endpoints
+- コレクション ID が存在しない場合は `not_found` を返します
+- タグは ID 付きで返されます。実際のエンドポイントを表示するには `endpoint_by_tag(tagId)` を使用してください
 
 ---
 
 ## tag_by_spec
 
-### Purpose
+### 目的
 
-List all tags across an entire spec, spanning all collections. Useful for getting a bird's-eye view of all available tags.
+すべてのコレクションにわたって、スペック全体のすべてのタグを一覧表示します。利用可能なすべてのタグの俯瞰ビューを取得するのに便利です。
 
-### When to use
+### 使用するタイミング
 
-- When you want to see all tags in a spec without drilling into each collection
-- When you don't know which collection contains the tag you need
+- 各コレクションにドリルダウンせずにスペック内のすべてのタグを表示したい場合
+- 必要なタグがどのコレクションに含まれているかわからない場合
 
-### Parameters
+### パラメータ
 
-| Parameter | Type | Required | Description |
+| パラメータ | 型 | 必須 | 説明 |
 |-----------|------|----------|-------------|
-| `specId` | string | Yes | 32-character MD5 hash of the spec |
+| `specId` | string | はい | スペックの 32 文字 MD5 ハッシュ |
 
-### Response
+### レスポンス
 
 ```json
 {
@@ -250,31 +250,31 @@ List all tags across an entire spec, spanning all collections. Useful for gettin
 }
 ```
 
-### Nuances
+### 補足
 
-- Returns `not_found` if the spec does not exist
-- Tags are aggregated from all collections in the spec
+- スペックが存在しない場合は `not_found` を返します
+- タグはスペック内のすべてのコレクションから集約されます
 
 ---
 
 ## tag_by_collection
 
-### Purpose
+### 目的
 
-List all tags within a specific collection. Unlike `tag_by_spec`, this also returns the parent spec and collection metadata.
+特定のコレクション内のすべてのタグを一覧表示します。`tag_by_spec` とは異なり、親スペックとコレクションのメタデータも返します。
 
-### When to use
+### 使用するタイミング
 
-- After `collection_by_id` to confirm the tag list
-- When you need the full context (spec + collection + tags)
+- `collection_by_id` の後にタグリストを確認する
+- 完全なコンテキスト（スペック + コレクション + タグ）が必要な場合
 
-### Parameters
+### パラメータ
 
-| Parameter | Type | Required | Description |
+| パラメータ | 型 | 必須 | 説明 |
 |-----------|------|----------|-------------|
-| `collectionId` | string | Yes | 32-character MD5 hash of the collection |
+| `collectionId` | string | はい | コレクションの 32 文字 MD5 ハッシュ |
 
-### Response
+### レスポンス
 
 ```json
 {
@@ -297,31 +297,31 @@ List all tags within a specific collection. Unlike `tag_by_spec`, this also retu
 }
 ```
 
-### Nuances
+### 補足
 
-- Returns `not_found` if the collection does not exist
-- Same tag data as `tag_by_spec` but scoped to one collection
+- コレクションが存在しない場合は `not_found` を返します
+- `tag_by_spec` と同じタグデータですが、1 つのコレクションにスコープされています
 
 ---
 
 ## tag_by_id
 
-### Purpose
+### 目的
 
-Get information about a single tag: its ID, title, and how many methods it contains. This tells you about the tag itself — to see the actual endpoints, use `endpoint_by_tag`.
+単一のタグに関する情報（ID、タイトル、含まれるメソッド数）を取得します。これはタグ自体に関する情報です。実際のエンドポイントを表示するには `endpoint_by_tag` を使用してください。
 
-### When to use
+### 使用するタイミング
 
-- When you have a tag ID and want to confirm its name and size
-- Before calling `endpoint_by_tag` to understand how many endpoints to expect
+- タグ ID を持っており、その名前とサイズを確認したい場合
+- `endpoint_by_tag` を呼び出す前に、期待されるエンドポイント数を把握するため
 
-### Parameters
+### パラメータ
 
-| Parameter | Type | Required | Description |
+| パラメータ | 型 | 必須 | 説明 |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the tag |
+| `id` | string | はい | タグの 32 文字 MD5 ハッシュ |
 
-### Response
+### レスポンス
 
 ```json
 {
@@ -333,13 +333,13 @@ Get information about a single tag: its ID, title, and how many methods it conta
 }
 ```
 
-| Field | Type | Description |
+| フィールド | 型 | 説明 |
 |-------|------|-------------|
-| `tag.id` | string | Tag identifier |
-| `tag.title` | string | Human-readable tag name |
-| `tag.countMethods` | int | Number of HTTP methods in this tag |
+| `tag.id` | string | タグ識別子 |
+| `tag.title` | string | 人間可読なタグ名 |
+| `tag.countMethods` | int | このタグ内の HTTP メソッド数 |
 
-### Nuances
+### 補足
 
-- Returns `not_found` if the tag does not exist
-- This tool returns tag metadata only — use `endpoint_by_tag` to get the actual list of endpoints
+- タグが存在しない場合は `not_found` を返します
+- このツールはタグのメタデータのみを返します。実際のエンドポイントリストを取得するには `endpoint_by_tag` を使用してください

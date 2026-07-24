@@ -1,20 +1,20 @@
-# CLI Workflow
+# CLI 工作流程
 
-This page shows real examples of using swag2mcp from the terminal — from initialization to daily operations.
+此页面展示了从初始化到日常操作的使用 swag2mcp 的真实终端示例。
 
-## Quick start
+## 快速开始
 
 ```bash
-# 1. Initialize a workspace
+# 1. 初始化工作区
 mkdir -p .swag2mcp && swag2mcp init ./.swag2mcp
 
-# 2. List your specs
+# 2. 列出你的 spec
 swag2mcp ls
 ```
 
-## Adding a spec with YAML
+## 使用 YAML 添加 spec
 
-### Simple spec (public API)
+### 简单 spec（公共 API）
 
 ```bash
 swag2mcp add spec --yaml - <<EOF
@@ -27,7 +27,7 @@ collections:
 EOF
 ```
 
-### Spec with auth (bearer token from env)
+### 带认证的 spec（来自环境变量的 bearer 令牌）
 
 ```bash
 swag2mcp add spec --yaml - <<EOF
@@ -44,7 +44,7 @@ collections:
 EOF
 ```
 
-### Spec with multiple collections
+### 带多个 collection 的 spec
 
 ```bash
 swag2mcp add spec --yaml - <<EOF
@@ -60,7 +60,7 @@ collections:
 EOF
 ```
 
-## Adding a collection to an existing spec
+## 向现有 spec 添加 collection
 
 ```bash
 swag2mcp add collection --yaml - <<EOF
@@ -70,7 +70,7 @@ location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/ma
 EOF
 ```
 
-## Listing specs
+## 列出 spec
 
 ```bash
 $ swag2mcp ls
@@ -83,13 +83,13 @@ Specifications:
     marine (4 endpoints)
 ```
 
-### Filter by tags
+### 按标签过滤
 
 ```bash
 swag2mcp ls --tags=public
 ```
 
-## Viewing runtime info
+## 查看运行时信息
 
 ```bash
 $ swag2mcp info
@@ -117,7 +117,7 @@ $ swag2mcp info
 }
 ```
 
-## Validating configuration
+## 验证配置
 
 ```bash
 $ swag2mcp validate
@@ -126,69 +126,69 @@ $ swag2mcp validate
 ✓ Spec meteo: OK
 ```
 
-## Starting the MCP server
+## 启动 MCP 服务器
 
-### stdio (for IDE integration)
+### stdio（用于 IDE 集成）
 
 ```bash
 swag2mcp mcp
 ```
 
-### HTTP (for remote access)
+### HTTP（用于远程访问）
 
 ```bash
 swag2mcp mcp --transport sse --http-addr :8080
 ```
 
-### With tag filter
+### 带标签过滤
 
 ```bash
 swag2mcp mcp --tags=public
 ```
 
-## Updating specs
+## 更新规范
 
-Refresh all cached spec files:
+刷新所有缓存的规范文件：
 
 ```bash
 swag2mcp update
 ```
 
-## Cleaning cache
+## 清理缓存
 
 ```bash
 swag2mcp clean
 ```
 
-## Export and import
+## 导出和导入
 
-### Backup your workspace
+### 备份你的工作区
 
 ```bash
 swag2mcp export --output ~/backups/swag2mcp-2026-07-24.zip
 ```
 
-### Restore on another machine
+### 在另一台机器上恢复
 
 ```bash
-# On the new machine
+# 在新机器上
 swag2mcp import --from-zip swag2mcp-2026-07-24.zip
 ```
 
-## Interactive TUI explorer
+## 交互式 TUI 浏览器
 
 ```bash
 swag2mcp run
 ```
 
-Opens a full-screen terminal UI for searching, browsing, and invoking APIs.
+打开一个全屏终端 UI，用于搜索、浏览和调用 API。
 
-## Mock server
+## 模拟服务器
 
 ```bash
-# Install the mock binary
+# 安装模拟二进制文件
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 
-# Start mock servers
+# 启动模拟服务器
 swag2mcp-mock mockserver
 ```

@@ -1,63 +1,63 @@
-# API Key
+# Clé API
 
-## Purpose
+## Objectif
 
-Authentication via an API key. The key can be sent as an HTTP header or as a URL query parameter.
+Authentification via une clé API. La clé peut être envoyée comme en-tête HTTP ou comme paramètre de requête URL.
 
-## When to use
+## Quand l'utiliser
 
-- Services that use API keys
-- Weather services, geodata, translation APIs
-- When the API expects a key in a header (`X-API-Key`) or query parameter (`?api_key=...`)
+- Services qui utilisent des clés API
+- Services météo, géodonnées, API de traduction
+- Quand l'API attend une clé dans un en-tête (`X-API-Key`) ou un paramètre de requête (`?api_key=...`)
 
 ## Configuration
 
-### Key in header
+### Clé dans l'en-tête
 
 ```yaml
 specs:
   - domain: jokes
-    llm_title: Dad Joke API
+    llm_title: API Dad Joke
     base_url: https://icanhazdadjoke.com
     collections:
-      - llm_title: Jokes
+      - llm_title: Blagues
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: api-key
       config:
         key: "X-API-Key"
         in: header
-        value: "$(API_KEY)"
+        value: "$(CLE_API)"
 ```
 
-### Key in query parameter
+### Clé dans le paramètre de requête
 
 ```yaml
 specs:
   - domain: jokes
-    llm_title: Dad Joke API
+    llm_title: API Dad Joke
     base_url: https://icanhazdadjoke.com
     collections:
-      - llm_title: Jokes
+      - llm_title: Blagues
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: api-key
       config:
         key: "api_key"
         in: query
-        value: "$(API_KEY)"
+        value: "$(CLE_API)"
 ```
 
-## Parameters
+## Paramètres
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `key` | Yes | Name of the header or query parameter |
-| `in` | Yes | Where to place the key: `header` or `query` |
-| `value` | Yes | The key value |
+| Paramètre | Requis | Description |
+|-----------|--------|-------------|
+| `key` | Oui | Nom de l'en-tête ou du paramètre de requête |
+| `in` | Oui | Où placer la clé : `header` ou `query` |
+| `value` | Oui | La valeur de la clé |
 
 ## Notes
 
-- In `header` mode, the key is added as an HTTP header
-- In `query` mode, the key is added as a URL parameter
-- Store the value in an environment variable: `value: "$(MY_API_KEY)"`
+- En mode `header`, la clé est ajoutée comme en-tête HTTP
+- En mode `query`, la clé est ajoutée comme paramètre URL
+- Stockez la valeur dans une variable d'environnement : `value: "$(MA_CLE_API)"`

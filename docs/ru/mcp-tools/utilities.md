@@ -1,37 +1,37 @@
-# Utility Tools
+# Инструменты-утилиты
 
-Utility tools provide supporting functionality: retrieving auth tokens, getting runtime information, and working with large API responses that don't fit inline.
+Инструменты-утилиты предоставляют вспомогательную функциональность: получение токенов аутентификации, информации о рантайме и работу с большими ответами API, которые не помещаются в строку.
 
 ---
 
 ## auth
 
-### Purpose
+### Назначение
 
-Retrieve an authentication token, headers, or query parameters for a specific spec. This gives the LLM access to credentials that can be used outside of swag2mcp (e.g., generating a curl command).
+Получение токена аутентификации, заголовков или query-параметров для конкретной спецификации. Это даёт LLM доступ к учётным данным, которые можно использовать вне swag2mcp (например, для генерации curl-команды).
 
-### When to use
+### Когда использовать
 
-- Only when the user explicitly asks for the raw token or credentials
-- When generating a curl command or code snippet that needs auth
-- When the user wants to see what auth method is configured
+- Только когда пользователь явно запрашивает сырой токен или учётные данные
+- При генерации curl-команды или фрагмента кода, требующего аутентификацию
+- Когда пользователь хочет увидеть, какой метод аутентификации настроен
 
-### When NOT to use
+### Когда НЕ использовать
 
-- **Do not** call `auth` before `inspect` or `invoke` — `invoke` automatically obtains and applies authentication
-- **Do not** call `auth` just to check if auth is configured — use `info` instead
+- **Не вызывайте** `auth` перед `inspect` или `invoke` — `invoke` автоматически получает и применяет аутентификацию
+- **Не вызывайте** `auth` просто для проверки, настроена ли аутентификация — используйте `info`
 
-### How it works
+### Как работает
 
-Looks up the spec's auth configuration and executes the auth flow (token exchange, script execution, etc.) to obtain the current credentials.
+Ищет конфигурацию аутентификации спецификации и выполняет поток аутентификации (обмен токена, выполнение скрипта и т.д.) для получения текущих учётных данных.
 
-### Parameters
+### Параметры
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `specId` | string | Yes | 32-character MD5 hash of the spec |
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `specId` | string | Да | 32-символьный MD5-хеш спецификации |
 
-### Response
+### Ответ
 
 ```json
 {
@@ -46,43 +46,43 @@ Looks up the spec's auth configuration and executes the auth flow (token exchang
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `token` | string | Raw token value (bearer token, API key, etc.) |
-| `headers` | object | HTTP headers to include in requests |
-| `queryParams` | object | Query parameters to include in requests |
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `token` | string | Сырое значение токена (bearer-токен, API-ключ и т.д.) |
+| `headers` | object | HTTP-заголовки для включения в запросы |
+| `queryParams` | object | Query-параметры для включения в запросы |
 
-### Nuances
+### Нюансы
 
-- **Disabled by default in production:** The `--disable-llm-auth` flag (default: `true`) removes the `auth` tool from the MCP tool list entirely. The LLM cannot see or request tokens. Set `--disable-llm-auth=false` to enable it for debugging or short-lived tokens.
-- **`invoke` handles auth automatically:** You do not need to call `auth` before `invoke`. The invoke service automatically obtains and applies the correct authentication.
-- **Supports 9 auth methods:** `none`, `basic`, `bearer`, `digest`, `hmac`, `oauth2-cc` (client credentials), `oauth2-pwd` (password), `api-key`, `script`.
-- Returns `auth_error` if the auth method fails (e.g., OAuth2 token endpoint unreachable, script execution failure).
+- **Отключён по умолчанию в продакшене:** Флаг `--disable-llm-auth` (по умолчанию: `true`) полностью удаляет инструмент `auth` из списка MCP-инструментов. LLM не может видеть или запрашивать токены. Установите `--disable-llm-auth=false` для включения при отладке или для короткоживущих токенов.
+- **`invoke` обрабатывает аутентификацию автоматически:** Не нужно вызывать `auth` перед `invoke`. Сервис invoke автоматически получает и применяет правильную аутентификацию.
+- **Поддерживает 9 методов аутентификации:** `none`, `basic`, `bearer`, `digest`, `hmac`, `oauth2-cc` (client credentials), `oauth2-pwd` (password), `api-key`, `script`.
+- Возвращает `auth_error`, если метод аутентификации не сработал (например, недоступна конечная точка OAuth2-токена, ошибка выполнения скрипта).
 
 ---
 
 ## info
 
-### Purpose
+### Назначение
 
-Return a comprehensive summary of the swag2mcp runtime: version, workspace path, active specs, HTTP client settings, MCP transport configuration, auth methods, and mock mode status.
+Возвращает комплексную сводку рантайма swag2mcp: версию, путь рабочей области, активные спецификации, настройки HTTP-клиента, конфигурацию MCP-транспорта, методы аутентификации и статус режима моков.
 
-### When to use
+### Когда использовать
 
-- When the user asks about the system configuration
-- When you need to check runtime settings (timeout, response size limit, transport)
-- When you need to know which auth methods are available
-- When troubleshooting configuration issues
+- Когда пользователь спрашивает о конфигурации системы
+- Когда нужно проверить настройки рантайма (таймаут, лимит размера ответа, транспорт)
+- Когда нужно узнать, какие методы аутентификации доступны
+- При устранении проблем с конфигурацией
 
-### How it works
+### Как работает
 
-Returns a pre-computed snapshot of the runtime state. No parameters needed.
+Возвращает предварительно вычисленный снимок состояния рантайма. Параметры не требуются.
 
-### Parameters
+### Параметры
 
-None.
+Нет.
 
-### Response
+### Ответ
 
 ```json
 {
@@ -121,50 +121,50 @@ None.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `version` | string | swag2mcp version |
-| `workspace` | string | Workspace directory path |
-| `uptime` | string | Server uptime (human-readable) |
-| `specs` | object | Spec summary: total, active, disabled, collections, endpoints |
-| `http_client` | object | HTTP client configuration |
-| `http_client.max_response_size` | string | Max response size in human-readable format (e.g. "2 KB") |
-| `mcp` | object | MCP server configuration |
-| `auth` | object | Available auth methods |
-| `mock` | object | Mock server status |
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `version` | string | Версия swag2mcp |
+| `workspace` | string | Путь к директории рабочей области |
+| `uptime` | string | Время работы сервера (человекочитаемое) |
+| `specs` | object | Сводка спецификаций: всего, активно, отключено, коллекций, эндпоинтов |
+| `http_client` | object | Конфигурация HTTP-клиента |
+| `http_client.max_response_size` | string | Максимальный размер ответа в человекочитаемом формате (например, "2 KB") |
+| `mcp` | object | Конфигурация MCP-сервера |
+| `auth` | object | Доступные методы аутентификации |
+| `mock` | object | Статус мок-сервера |
 
-### Nuances
+### Нюансы
 
-- `max_response_size` is shown in human-readable format (e.g., `"1 KB"`, `"2 MB"`)
-- `uptime` is computed from the server start time
-- The data is a snapshot taken at bootstrap time — it reflects the state when the MCP server started
+- `max_response_size` отображается в человекочитаемом формате (например, `"1 KB"`, `"2 MB"`)
+- `uptime` вычисляется из времени запуска сервера
+- Данные — это снимок, сделанный при загрузке; он отражает состояние на момент запуска MCP-сервера
 
 ---
 
 ## response_outline
 
-### Purpose
+### Назначение
 
-Get a high-level structural summary of a large JSON response file that was saved to disk by `invoke`. It returns the shape of the data — keys, types, array lengths, and navigation hints — without returning the actual values.
+Получение высокоуровневой структурной сводки большого JSON-файла ответа, который был сохранён на диск инструментом `invoke`. Возвращает форму данных — ключи, типы, длины массивов и подсказки для навигации — без возврата фактических значений.
 
-### When to use
+### Когда использовать
 
-- Immediately after `invoke` returns a `fileRef` (response too large for inline)
-- This is the **mandatory first step** in the large-response workflow
+- Сразу после того, как `invoke` вернул `fileRef` (ответ слишком большой для встраивания в строку)
+- Это **обязательный первый шаг** в рабочем процессе с большими ответами
 
-### How it works
+### Как работает
 
-Reads the saved response file and analyzes its structure: top-level type, keys, array lengths, nesting depth, and compression hints.
+Читает сохранённый файл ответа и анализирует его структуру: тип верхнего уровня, ключи, длины массивов, глубину вложенности и подсказки для сжатия.
 
-### Parameters
+### Параметры
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `path` | string | Yes | Absolute path from `fileRef.path` |
-| `maxDepth` | int | No | Maximum recursion depth (default: 3) |
-| `maxArrayItems` | int | No | How many array items to inspect (default: 5) |
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `path` | string | Да | Абсолютный путь из `fileRef.path` |
+| `maxDepth` | int | Нет | Максимальная глубина рекурсии (по умолчанию: 3) |
+| `maxArrayItems` | int | Нет | Сколько элементов массива проверять (по умолчанию: 5) |
 
-### Response
+### Ответ
 
 ```json
 {
@@ -205,67 +205,67 @@ Reads the saved response file and analyzes its structure: top-level type, keys, 
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `type` | string | Top-level type: "object" or "array" |
-| `size` | int | File size in bytes |
-| `lineCount` | int | Number of lines in the file |
-| `depth` | int | Maximum nesting depth inspected |
-| `structure` | object | Recursive structure with keys, types, array lengths |
-| `schemaHint` | string | One-line summary of the top-level shape |
-| `keys` | array | Top-level keys (for objects) |
-| `itemCount` | int | Array length (for arrays) |
-| `compressionHints` | array | Suggested `response_compress` calls with parameters |
-| `navigationHints` | object | Top-level paths and arrays with lengths |
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `type` | string | Тип верхнего уровня: "object" или "array" |
+| `size` | int | Размер файла в байтах |
+| `lineCount` | int | Количество строк в файле |
+| `depth` | int | Максимальная проверенная глубина вложенности |
+| `structure` | object | Рекурсивная структура с ключами, типами, длинами массивов |
+| `schemaHint` | string | Однострочная сводка формы верхнего уровня |
+| `keys` | array | Ключи верхнего уровня (для объектов) |
+| `itemCount` | int | Длина массива (для массивов) |
+| `compressionHints` | array | Предлагаемые вызовы `response_compress` с параметрами |
+| `navigationHints` | object | Пути верхнего уровня и массивы с длинами |
 
-### Nuances
+### Нюансы
 
-- Returns `validation_failed` if the path is invalid or not inside the responses directory
-- Returns `not_found` if the file does not exist
-- Returns `validation_failed` if the file is not valid JSON
-- The `compressionHints` field provides ready-to-use suggestions for `response_compress` calls
+- Возвращает `validation_failed`, если путь некорректен или не находится внутри директории responses
+- Возвращает `not_found`, если файл не существует
+- Возвращает `validation_failed`, если файл не является валидным JSON
+- Поле `compressionHints` предоставляет готовые к использованию предложения для вызовов `response_compress`
 
 ---
 
 ## response_compress
 
-### Purpose
+### Назначение
 
-Reduce a JSON value inside a saved response file so it fits within the response size limit and can be returned to the LLM inline. Multiple compression modes let you choose the right trade-off between size and information.
+Уменьшение JSON-значения внутри сохранённого файла ответа, чтобы оно поместилось в лимит размера ответа и могло быть возвращено LLM в строке. Несколько режимов сжатия позволяют выбрать правильный баланс между размером и информацией.
 
-### When to use
+### Когда использовать
 
-- After `response_outline` to understand the structure
-- When you need to get data from a large response inline
-- When `response_slice` is too narrow and you need a broader view
+- После `response_outline` для понимания структуры
+- Когда нужно получить данные из большого ответа в строке
+- Когда `response_slice` слишком узок и нужен более широкий обзор
 
-### How it works
+### Как работает
 
-Reads the saved response file, navigates to the specified JSON path, applies the compression mode, and returns the compressed result. If the result still exceeds the size limit, it is saved to a new file.
+Читает сохранённый файл ответа, переходит к указанному JSON-пути, применяет режим сжатия и возвращает сжатый результат. Если результат всё ещё превышает лимит размера, он сохраняется в новый файл.
 
-### Parameters
+### Параметры
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `path` | string | Yes | Absolute path from `fileRef.path` |
-| `jsonPath` | string | No | Path to the value to compress (e.g. `data` or `data.0`) |
-| `mode` | string | Yes | Compression mode (see table below) |
-| `arrayHead` | int | No | Leading items to keep in `sample_array` mode (default: 3) |
-| `arrayTail` | int | No | Trailing items to keep in `sample_array` mode (default: 2) |
-| `stringLen` | int | No | Max string length in `truncate_strings` mode (default: 80) |
-| `selectKeys` | array | No | Keys to keep in `select_keys` mode |
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `path` | string | Да | Абсолютный путь из `fileRef.path` |
+| `jsonPath` | string | Нет | Путь к значению для сжатия (например, `data` или `data.0`) |
+| `mode` | string | Да | Режим сжатия (см. таблицу ниже) |
+| `arrayHead` | int | Нет | Начальные элементы для сохранения в режиме `sample_array` (по умолчанию: 3) |
+| `arrayTail` | int | Нет | Конечные элементы для сохранения в режиме `sample_array` (по умолчанию: 2) |
+| `stringLen` | int | Нет | Максимальная длина строки в режиме `truncate_strings` (по умолчанию: 80) |
+| `selectKeys` | array | Нет | Ключи для сохранения в режиме `select_keys` |
 
-### Compression modes
+### Режимы сжатия
 
-| Mode | Description | Best for |
-|------|-------------|----------|
-| `first_of_array` | Keep only the first element of an array | When all elements have the same structure |
-| `sample_array` | Keep head and tail of an array | When you need to see the range of values |
-| `truncate_strings` | Shorten every string to `stringLen` characters | When strings are very long but structure matters |
-| `keys_only` | Replace object values with their type names | When you only need the structure |
-| `select_keys` | Keep only specified keys in every object | When you need specific fields from many objects |
+| Режим | Описание | Лучше всего для |
+|-------|----------|-----------------|
+| `first_of_array` | Сохранить только первый элемент массива | Когда все элементы имеют одинаковую структуру |
+| `sample_array` | Сохранить начало и конец массива | Когда нужно увидеть диапазон значений |
+| `truncate_strings` | Укоротить каждую строку до `stringLen` символов | Когда строки очень длинные, но структура важна |
+| `keys_only` | Заменить значения объектов на имена их типов | Когда нужна только структура |
+| `select_keys` | Сохранить только указанные ключи в каждом объекте | Когда нужны конкретные поля из многих объектов |
 
-### Response
+### Ответ
 
 ```json
 {
@@ -277,48 +277,48 @@ Reads the saved response file, navigates to the specified JSON path, applies the
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `body` | any | Compressed JSON value (present when within size limit) |
-| `fileRef` | object | File reference (present when still too large) |
-| `hint` | string | Explanation of what was compressed |
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `body` | any | Сжатое JSON-значение (присутствует, когда в пределах лимита размера) |
+| `fileRef` | object | Ссылка на файл (присутствует, когда всё ещё слишком большой) |
+| `hint` | string | Объяснение того, что было сжато |
 
-### Nuances
+### Нюансы
 
-- If the compressed result still exceeds `max_response_size`, it is saved to a new file and a `FileReference` is returned
-- Default values: `arrayHead=3`, `arrayTail=2`, `stringLen=80`
-- Returns `validation_failed` for invalid path, invalid JSONPath, or non-JSON file
-- Returns `not_found` if the file does not exist or JSONPath does not match
+- Если сжатый результат всё ещё превышает `max_response_size`, он сохраняется в новый файл и возвращается `FileReference`
+- Значения по умолчанию: `arrayHead=3`, `arrayTail=2`, `stringLen=80`
+- Возвращает `validation_failed` для неверного пути, неверного JSONPath или не-JSON файла
+- Возвращает `not_found`, если файл не существует или JSONPath не совпадает
 
 ---
 
 ## response_slice
 
-### Purpose
+### Назначение
 
-Extract a specific fragment of a saved JSON response file by logical JSON path or by line range. Unlike `response_compress`, this gives you the raw, unmodified data.
+Извлечение конкретного фрагмента сохранённого JSON-файла ответа по логическому JSON-пути или по диапазону строк. В отличие от `response_compress`, возвращает сырые, неизменённые данные.
 
-### When to use
+### Когда использовать
 
-- When you need a specific element or value from a large response
-- When `response_compress` doesn't give you enough detail
-- When you want to navigate through a response step by step
+- Когда нужен конкретный элемент или значение из большого ответа
+- Когда `response_compress` не даёт достаточно деталей
+- Когда нужно перемещаться по ответу шаг за шагом
 
-### How it works
+### Как работает
 
-Reads the saved response file and extracts a fragment by JSON path (e.g., `data.3.name`) or by line range (e.g., `120-240`). Returns navigation hints for stepping through arrays and objects.
+Читает сохранённый файл ответа и извлекает фрагмент по JSON-пути (например, `data.3.name`) или по диапазону строк (например, `120-240`). Возвращает подсказки для навигации по массивам и объектам.
 
-### Parameters
+### Параметры
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `path` | string | Yes | Absolute path from `fileRef.path` |
-| `jsonPath` | string | No | Logical path to the value (e.g. `data.3.name`) |
-| `line` | int | No | 1-based line number to center the fragment on |
-| `range` | string | No | Line range as `start-end` (e.g. `120-240`) |
-| `around` | int | No | Lines to include around `line` (default: 20) |
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `path` | string | Да | Абсолютный путь из `fileRef.path` |
+| `jsonPath` | string | Нет | Логический путь к значению (например, `data.3.name`) |
+| `line` | int | Нет | Номер строки (начиная с 1) для центрирования фрагмента |
+| `range` | string | Нет | Диапазон строк в формате `start-end` (например, `120-240`) |
+| `around` | int | Нет | Строк для включения вокруг `line` (по умолчанию: 20) |
 
-### Response
+### Ответ
 
 ```json
 {
@@ -340,24 +340,24 @@ Reads the saved response file and extracts a fragment by JSON path (e.g., `data.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `lines` | array | 1-based line range [start, end] |
-| `fragment` | string | Raw JSON text (when small enough) |
-| `value` | any | Extracted JSON value |
-| `jsonPath` | string | The JSON path used |
-| `context` | string | "object", "array", or "value" |
-| `isComplete` | bool | True when the value is a valid JSON fragment |
-| `nextLine` | int | Suggested next line for line-based navigation |
-| `prevLine` | int | Suggested previous line |
-| `nextPath` | string | Suggested next JSON path for array navigation |
-| `prevPath` | string | Suggested previous JSON path |
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `lines` | array | Диапазон строк [начало, конец] (начиная с 1) |
+| `fragment` | string | Сырой JSON-текст (когда достаточно мал) |
+| `value` | any | Извлечённое JSON-значение |
+| `jsonPath` | string | Использованный JSON-путь |
+| `context` | string | "object", "array" или "value" |
+| `isComplete` | bool | True, когда значение является валидным JSON-фрагментом |
+| `nextLine` | int | Предлагаемая следующая строка для построчной навигации |
+| `prevLine` | int | Предлагаемая предыдущая строка |
+| `nextPath` | string | Предлагаемый следующий JSON-путь для навигации по массиву |
+| `prevPath` | string | Предлагаемый предыдущий JSON-путь |
 
-### Nuances
+### Нюансы
 
-- **Prefer `jsonPath` over line numbers** — JSON paths are stable and descriptive, line numbers change if the file is regenerated
-- If the extracted fragment exceeds `max_response_size`, it is saved to a new file and a `FileReference` is returned
-- Default `around` is 20 lines
-- The response includes `nextPath`/`prevPath` for stepping through arrays and `nextLine`/`prevLine` for line-based navigation
-- Returns `validation_failed` for invalid path, invalid JSONPath, invalid line/range, or non-JSON file
-- Returns `not_found` if the file does not exist or JSONPath does not match
+- **Предпочитайте `jsonPath` номерам строк** — JSON-пути стабильны и описательны, номера строк меняются при перегенерации файла
+- Если извлечённый фрагмент превышает `max_response_size`, он сохраняется в новый файл и возвращается `FileReference`
+- По умолчанию `around` равен 20 строкам
+- Ответ включает `nextPath`/`prevPath` для навигации по массивам и `nextLine`/`prevLine` для построчной навигации
+- Возвращает `validation_failed` для неверного пути, неверного JSONPath, неверной строки/диапазона или не-JSON файла
+- Возвращает `not_found`, если файл не существует или JSONPath не совпадает

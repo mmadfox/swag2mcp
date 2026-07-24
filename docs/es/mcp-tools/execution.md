@@ -1,52 +1,52 @@
-# Execution Tools
+# Herramientas de Ejecución
 
-Execution tools are the core of swag2mcp: **search** finds endpoints when you don't have an ID, **inspect** reveals the full OpenAPI contract, and **invoke** makes the actual API call. Always use them in this order: search → inspect → invoke.
+Las herramientas de ejecución son el núcleo de swag2mcp: **search** encuentra endpoints cuando no tiene un ID, **inspect** revela el contrato OpenAPI completo, e **invoke** realiza la llamada real a la API. Úselas siempre en este orden: search → inspect → invoke.
 
 ---
 
 ## search
 
-### Purpose
+### Propósito
 
-The only tool for finding endpoints when you don't have an endpoint ID. Performs full-text search across all endpoints in all specs using the bluge search engine.
+La única herramienta para encontrar endpoints cuando no tiene un ID de endpoint. Realiza búsqueda de texto completo en todos los endpoints de todas las especificaciones usando el motor de búsqueda bluge.
 
-### When to use
+### Cuándo usarlo
 
-- When you don't know the endpoint ID
-- When you want to find endpoints by keywords, method, tag, or path
-- When you need to discover what endpoints exist for a specific feature
+- Cuando no conoce el ID del endpoint
+- Cuando desea encontrar endpoints por palabras clave, método, etiqueta o ruta
+- Cuando necesita descubrir qué endpoints existen para una característica específica
 
-### How it works
+### Cómo funciona
 
-Searches the full-text index across all specs. Supports structured queries with field filters, boolean operators, fuzzy matching, wildcards, and more.
+Busca en el índice de texto completo en todas las especificaciones. Admite consultas estructuradas con filtros de campo, operadores booleanos, coincidencia difusa, comodines y más.
 
-### Parameters
+### Parámetros
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `query` | string | Yes | Search query (supports structured syntax) |
-| `limit` | int | Yes | Maximum results to return (1-50) |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `query` | string | Sí | Consulta de búsqueda (admite sintaxis estructurada) |
+| `limit` | int | Sí | Resultados máximos a devolver (1-50) |
 
-### Query syntax
+### Sintaxis de consulta
 
-| Example | Description |
+| Ejemplo | Descripción |
 |---------|-------------|
-| `pet` | Simple text search across all fields |
-| `method:GET` | Filter by HTTP method |
-| `tag:pet` | Filter by tag name |
-| `path:"/api/v1/users"` | Exact path search |
-| `+method:POST +tag:pet` | Must match both conditions |
-| `-method:DELETE` | Exclude DELETE methods |
-| `create~` | Fuzzy search (typo-tolerant) |
-| `path:/api/v1/*` | Wildcard path search |
-| `/pattern/` | Regex search |
-| `term^3` | Boost a term's relevance |
+| `pet` | Búsqueda de texto simple en todos los campos |
+| `method:GET` | Filtrar por método HTTP |
+| `tag:pet` | Filtrar por nombre de etiqueta |
+| `path:"/api/v1/users"` | Búsqueda de ruta exacta |
+| `+method:POST +tag:pet` | Debe coincidir con ambas condiciones |
+| `-method:DELETE` | Excluir métodos DELETE |
+| `create~` | Búsqueda difusa (tolerante a errores tipográficos) |
+| `path:/api/v1/*` | Búsqueda de ruta con comodín |
+| `/pattern/` | Búsqueda regex |
+| `term^3` | Aumentar la relevancia de un término |
 
-**Searchable fields:** `method` (keyword), `tag` (keyword), `path` (text), `summary` (text), `_all` (default text field).
+**Campos buscables:** `method` (palabra clave), `tag` (palabra clave), `path` (texto), `summary` (texto), `_all` (campo de texto predeterminado).
 
-**Not supported:** parentheses for grouping, explicit `AND`/`OR` operators, field grouping.
+**No soportado:** paréntesis para agrupación, operadores `AND`/`OR` explícitos, agrupación de campos.
 
-### Response
+### Respuesta
 
 ```json
 {
@@ -67,41 +67,41 @@ Searches the full-text index across all specs. Supports structured queries with 
 }
 ```
 
-Each result includes the full ancestry (spec → collection → tag) so the LLM can navigate to related endpoints.
+Cada resultado incluye la ascendencia completa (especificación → colección → etiqueta) para que el LLM pueda navegar a endpoints relacionados.
 
-### Nuances
+### Matices
 
-- `limit` must be between 1 and 50 (returns `validation_failed` otherwise)
-- `query` is required (returns `validation_failed` if empty)
-- Results are returned in relevance order (best match first)
-- Use field filters (`method:GET`, `tag:pet`) to narrow results
-- For exact path matching, use quotes: `path:"/v1/forecast"`
+- `limit` debe estar entre 1 y 50 (devuelve `validation_failed` de lo contrario)
+- `query` es requerido (devuelve `validation_failed` si está vacío)
+- Los resultados se devuelven en orden de relevancia (mejor coincidencia primero)
+- Use filtros de campo (`method:GET`, `tag:pet`) para acotar los resultados
+- Para coincidencia exacta de ruta, use comillas: `path:"/v1/forecast"`
 
 ---
 
 ## inspect
 
-### Purpose
+### Propósito
 
-Retrieve the full OpenAPI operation object for an endpoint: all parameters, request body schema, response schemas, base URL, and full URL. This is the tool to call **before** `invoke` to understand the endpoint's contract.
+Recuperar el objeto de operación OpenAPI completo para un endpoint: todos los parámetros, esquema del cuerpo de solicitud, esquemas de respuesta, URL base y URL completa. Esta es la herramienta a llamar **antes** de `invoke` para entender el contrato del endpoint.
 
-### When to use
+### Cuándo usarlo
 
-- Always before `invoke` — you need the full contract to make a correct call
-- When you need to explain an API's technical details to the user
-- When you need to know required parameters, request body structure, or response format
+- Siempre antes de `invoke` — necesita el contrato completo para hacer una llamada correcta
+- Cuando necesita explicar los detalles técnicos de una API al usuario
+- Cuando necesita conocer los parámetros requeridos, la estructura del cuerpo de solicitud o el formato de respuesta
 
-### How it works
+### Cómo funciona
 
-Looks up the endpoint in the index and returns the complete OpenAPI operation object with all schemas resolved.
+Busca el endpoint en el índice y devuelve el objeto de operación OpenAPI completo con todos los esquemas resueltos.
 
-### Parameters
+### Parámetros
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `endpointId` | string | Yes | 32-character MD5 hash of the endpoint |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `endpointId` | string | Sí | Hash MD5 de 32 caracteres del endpoint |
 
-### Response
+### Respuesta
 
 ```json
 {
@@ -167,58 +167,58 @@ Looks up the endpoint in the index and returns the complete OpenAPI operation ob
 }
 ```
 
-| Field | Type | Description |
+| Campo | Tipo | Descripción |
 |-------|------|-------------|
-| `baseUrl` | string | Base URL of the API (from config) |
-| `fullUrl` | string | Full URL of the endpoint (base + path) |
-| `operation.parameters[]` | array | Parameters with name, location (path/query/header/cookie), description, required flag, and schema |
-| `operation.requestBody` | object | Request body with content type and schema |
-| `operation.responses` | map | Response codes with descriptions and schemas |
-| `operation.deprecated` | bool | Whether the endpoint is deprecated |
+| `baseUrl` | string | URL base de la API (de la configuración) |
+| `fullUrl` | string | URL completa del endpoint (base + path) |
+| `operation.parameters[]` | array | Parámetros con nombre, ubicación (path/query/header/cookie), descripción, indicador required y esquema |
+| `operation.requestBody` | object | Cuerpo de solicitud con tipo de contenido y esquema |
+| `operation.responses` | map | Códigos de respuesta con descripciones y esquemas |
+| `operation.deprecated` | bool | Indica si el endpoint está obsoleto |
 
-### Nuances
+### Matices
 
-- Returns `not_found` if the endpoint does not exist
-- This is the **only** tool that returns the full OpenAPI operation — `endpoint_by_id` returns only a summary
-- Always call `inspect` before `invoke` to understand required parameters and body structure
-- The `operation` object includes `$ref` references that are resolved to their full schema definitions
+- Devuelve `not_found` si el endpoint no existe
+- Esta es la **única** herramienta que devuelve la operación OpenAPI completa — `endpoint_by_id` devuelve solo un resumen
+- Siempre llame a `inspect` antes de `invoke` para entender los parámetros requeridos y la estructura del cuerpo
+- El objeto `operation` incluye referencias `$ref` que se resuelven a sus definiciones de esquema completas
 
 ---
 
 ## invoke
 
-### Purpose
+### Propósito
 
-Execute a real API call to an endpoint. This is the only tool that makes actual HTTP requests. Auth is applied automatically — you do not need to call `auth` first.
+Ejecutar una llamada real a la API en un endpoint. Esta es la única herramienta que realiza solicitudes HTTP reales. La autenticación se aplica automáticamente — no necesita llamar a `auth` primero.
 
-### When to use
+### Cuándo usarlo
 
-- Only after calling `inspect` to understand the endpoint's contract
-- Only with explicit user confirmation for destructive operations (POST, PUT, PATCH, DELETE)
-- When the user asks to call an API and you have all required parameters
+- Solo después de llamar a `inspect` para entender el contrato del endpoint
+- Solo con confirmación explícita del usuario para operaciones destructivas (POST, PUT, PATCH, DELETE)
+- Cuando el usuario pide llamar a una API y usted tiene todos los parámetros requeridos
 
-### How it works
+### Cómo funciona
 
-1. Looks up the endpoint in the index
-2. Substitutes path parameters into the URL
-3. Appends query parameters
-4. Adds headers and cookies
-5. Serializes the request body as JSON
-6. Automatically obtains and applies auth (token, headers, query params)
-7. Makes the HTTP request
-8. Returns the response or saves it to a file if too large
+1. Busca el endpoint en el índice
+2. Sustituye los parámetros de ruta en la URL
+3. Agrega los parámetros de consulta
+4. Agrega encabezados y cookies
+5. Serializa el cuerpo de la solicitud como JSON
+6. Obtiene y aplica automáticamente la autenticación (token, encabezados, parámetros de consulta)
+7. Realiza la solicitud HTTP
+8. Devuelve la respuesta o la guarda en un archivo si es demasiado grande
 
-### Parameters
+### Parámetros
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `endpointId` | string | Yes | 32-character MD5 hash of the endpoint |
-| `parameters` | object | No | Path, query, and header parameters as key-value pairs |
-| `requestBody` | object | No | Request body for POST/PUT/PATCH requests |
-| `headers` | object | No | Additional HTTP headers to send |
-| `cookies` | object | No | Additional HTTP cookies to send |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `endpointId` | string | Sí | Hash MD5 de 32 caracteres del endpoint |
+| `parameters` | object | No | Parámetros de ruta, consulta y encabezado como pares clave-valor |
+| `requestBody` | object | No | Cuerpo de solicitud para solicitudes POST/PUT/PATCH |
+| `headers` | object | No | Encabezados HTTP adicionales a enviar |
+| `cookies` | object | No | Cookies HTTP adicionales a enviar |
 
-### Response (inline)
+### Respuesta (en línea)
 
 ```json
 {
@@ -234,7 +234,7 @@ Execute a real API call to an endpoint. This is the only tool that makes actual 
 }
 ```
 
-### Response (file reference — when body exceeds size limit)
+### Respuesta (referencia de archivo — cuando el cuerpo excede el límite de tamaño)
 
 ```json
 {
@@ -247,33 +247,33 @@ Execute a real API call to an endpoint. This is the only tool that makes actual 
     "size": 1572864,
     "sizeHint": "1.5 MB",
     "maxSizeHint": "2 KB",
-    "message": "Response exceeds the 2 KB limit and has been saved to disk.",
+    "message": "La respuesta excede el límite de 2 KB y se ha guardado en disco.",
     "openCmd": "open /Users/user/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }
 ```
 
-| Field | Type | Description |
+| Campo | Tipo | Descripción |
 |-------|------|-------------|
-| `statusCode` | int | HTTP response status code |
-| `headers` | object | HTTP response headers |
-| `body` | any | Response body (present when within size limit) |
-| `fileRef` | object | File reference (present when body exceeds size limit) |
+| `statusCode` | int | Código de estado de la respuesta HTTP |
+| `headers` | object | Encabezados de la respuesta HTTP |
+| `body` | any | Cuerpo de la respuesta (presente cuando está dentro del límite de tamaño) |
+| `fileRef` | object | Referencia de archivo (presente cuando el cuerpo excede el límite de tamaño) |
 
-### Working with large responses
+### Trabajar con respuestas grandes
 
-When `invoke` returns a `fileRef`, use the response tools to explore the data:
+Cuando `invoke` devuelve un `fileRef`, use las herramientas de respuesta para explorar los datos:
 
-1. **`response_outline(path)`** — get the structural summary (keys, types, array lengths)
-2. **`response_compress(path, mode)`** — compress the data to fit inline
-3. **`response_slice(path, jsonPath)`** — extract a specific fragment
+1. **`response_outline(path)`** — obtener el resumen estructural (claves, tipos, longitudes de arreglos)
+2. **`response_compress(path, mode)`** — comprimir los datos para que quepan en línea
+3. **`response_slice(path, jsonPath)`** — extraer un fragmento específico
 
-### Nuances
+### Matices
 
-- **Auth is automatic:** The `invoke` tool automatically obtains and applies authentication from the spec's auth configuration. You do **not** need to call `auth` first.
-- **Rate limiting:** Each endpoint has a 10-second cooldown. A second call to the same endpoint within 10 seconds is silently blocked (returns `rate_limit` error).
-- **Response size limit:** Default is 2 KB (configurable via `max_response_size`). If the response exceeds this limit, it is saved to `{workspace}/responses/` and a `FileReference` is returned instead of inline `body`.
-- **Parameter handling:** Path parameters are substituted into the URL. Query parameters are appended. Parameters from the request override operation spec defaults.
-- **Request body:** For POST/PUT/PATCH, the body is serialized as JSON. `Content-Type` is set to `application/json` automatically.
-- **Error handling:** HTTP errors (non-2xx) are returned as `invoke_error` with the status code and response body in the hint.
-- **Destructive operations:** Never invoke POST/PUT/PATCH/DELETE without explicit user confirmation.
+- **La autenticación es automática:** La herramienta `invoke` obtiene y aplica automáticamente la autenticación de la configuración de la especificación. **No** necesita llamar a `auth` primero.
+- **Limitación de velocidad:** Cada endpoint tiene un enfriamiento de 10 segundos. Una segunda llamada al mismo endpoint dentro de 10 segundos se bloquea silenciosamente (devuelve error `rate_limit`).
+- **Límite de tamaño de respuesta:** El valor predeterminado es 2 KB (configurable mediante `max_response_size`). Si la respuesta excede este límite, se guarda en `{workspace}/responses/` y se devuelve un `FileReference` en lugar del `body` en línea.
+- **Manejo de parámetros:** Los parámetros de ruta se sustituyen en la URL. Los parámetros de consulta se agregan. Los parámetros de la solicitud anulan los valores predeterminados de la operación.
+- **Cuerpo de solicitud:** Para POST/PUT/PATCH, el cuerpo se serializa como JSON. `Content-Type` se establece en `application/json` automáticamente.
+- **Manejo de errores:** Los errores HTTP (no 2xx) se devuelven como `invoke_error` con el código de estado y el cuerpo de la respuesta en la sugerencia.
+- **Operaciones destructivas:** Nunca invoque POST/PUT/PATCH/DELETE sin confirmación explícita del usuario.

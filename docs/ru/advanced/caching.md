@@ -1,68 +1,68 @@
-# Caching
+# Кэширование
 
-## Overview
+## Обзор
 
-swag2mcp caches downloaded spec files so the MCP server starts faster on subsequent runs. Instead of downloading the same spec file every time, it reuses the cached copy.
+swag2mcp кэширует скачанные файлы спецификаций, чтобы MCP-сервер запускался быстрее при последующих запусках. Вместо загрузки одного и того же файла спецификации каждый раз используется кэшированная копия.
 
-## How caching works
+## Как работает кэширование
 
-When you add a spec with a remote URL, swag2mcp downloads it and saves it to the `cache/` directory. On the next startup, it checks if the cached copy is still fresh. If it is, the download is skipped.
+Когда вы добавляете спецификацию с удалённым URL, swag2mcp скачивает её и сохраняет в директорию `cache/`. При следующем запуске он проверяет, актуальна ли кэшированная копия. Если да, загрузка пропускается.
 
-### What gets cached
+### Что кэшируется
 
-| Source | Behavior |
+| Источник | Поведение |
 |--------|----------|
-| **Remote URL** (http/https) | Always cached. Downloaded once, reused until the cache expires. |
-| **Local file in `specs/`** | Used directly from the `specs/` directory. Never cached — changes are immediately visible. |
-| **Local file outside `specs/`** | Copied to the cache. If the source file changes (modification time), the cache is invalidated. |
+| **Удалённый URL** (http/https) | Всегда кэшируется. Скачивается один раз, используется повторно до истечения кэша. |
+| **Локальный файл в `specs/`** | Используется напрямую из директории `specs/`. Никогда не кэшируется — изменения видны сразу. |
+| **Локальный файл вне `specs/`** | Копируется в кэш. Если исходный файл изменяется (время модификации), кэш аннулируется. |
 
-### Cache expiration (TTL)
+### Истечение кэша (TTL)
 
-Each cached file gets a random expiration time between **1 hour and 48 hours**. The randomness prevents all cached files from expiring at the same time (which would cause a thundering herd of downloads).
+Каждый кэшированный файл получает случайное время истечения от **1 часа до 48 часов**. Случайность предотвращает одновременное истечение всех кэшированных файлов (что вызвало бы "толпящееся стадо" загрузок).
 
-- The TTL is reset every time the MCP server starts
-- If a cached file is still within its TTL, it is reused
-- If the TTL has expired, the file is downloaded again
+- TTL сбрасывается каждый раз при запуске MCP-сервера
+- Если кэшированный файл всё ещё в пределах TTL, он используется повторно
+- Если TTL истёк, файл загружается снова
 
-### Cache structure
+### Структура кэша
 
 ```
 ~/.swag2mcp/cache/
-├── a1b2c3d4e5f6a7b8.spec    # Cached spec file
-├── a1b2c3d4e5f6a7b8.meta    # Metadata (source, TTL, cached at)
+├── a1b2c3d4e5f6a7b8.spec    # Кэшированный файл спецификации
+├── a1b2c3d4e5f6a7b8.meta    # Метаданные (источник, TTL, время кэширования)
 ├── b2c3d4e5f6a7b8c9.spec
 ├── b2c3d4e5f6a7b8c9.meta
 └── ...
 ```
 
-The cache key is derived from the spec file URL or path. Each cached file has a companion `.meta` file that stores when it was cached and when it expires.
+Ключ кэша формируется из URL или пути файла спецификации. Каждый кэшированный файл имеет сопутствующий файл `.meta`, в котором хранится время кэширования и истечения.
 
-## Managing the cache
+## Управление кэшем
 
-### Force a refresh
+### Принудительное обновление
 
-Run `swag2mcp update` to clear the entire cache and re-download all spec files:
+Выполните `swag2mcp update`, чтобы очистить весь кэш и перезагрузить все файлы спецификаций:
 
 ```bash
 swag2mcp update
 ```
 
-This validates the config, clears the cache, and downloads everything fresh.
+Это проверяет конфиг, очищает кэш и загружает всё заново.
 
-### Clear the cache manually
+### Ручная очистка кэша
 
 ```bash
 swag2mcp clean
 ```
 
-This removes all cached spec files and saved API responses. The next time you start the MCP server, all specs will be downloaded again.
+Это удаляет все кэшированные файлы спецификаций и сохранённые ответы API. При следующем запуске MCP-сервера все спецификации будут загружены снова.
 
-### Automatic cleanup
+### Автоматическая очистка
 
-When the MCP server starts (`swag2mcp mcp`), saved API responses older than 48 hours are automatically removed. This prevents the `responses/` directory from growing indefinitely.
+При запуске MCP-сервера (`swag2mcp mcp`) сохранённые ответы API старше 48 часов автоматически удаляются. Это предотвращает бесконечный рост директории `responses/`.
 
-## Important notes
+## Важные замечания
 
-- **Local files in `specs/` are never cached** — if you edit a spec file directly in the `specs/` directory, the changes are immediately visible without clearing the cache
-- **Remote URLs are always cached** — there is no way to bypass the cache for remote URLs except by running `swag2mcp update` or `swag2mcp clean`
-- **The cache is local** — it is stored on disk and does not sync between machines. Use `swag2mcp export` and `swag2mcp import` to transfer specs between machines
+- **Локальные файлы в `specs/` никогда не кэшируются** — если вы редактируете файл спецификации напрямую в директории `specs/`, изменения видны сразу без очистки кэша
+- **Удалённые URL всегда кэшируются** — нет способа обойти кэш для удалённых URL, кроме выполнения `swag2mcp update` или `swag2mcp clean`
+- **Кэш локальный** — он хранится на диске и не синхронизируется между машинами. Используйте `swag2mcp export` и `swag2mcp import` для переноса спецификаций между машинами

@@ -1,70 +1,70 @@
 # clean
 
-## Purpose
+## Назначение
 
-Remove cached remote specs and saved API invocation responses. This frees up disk space and forces a fresh download of spec files on the next `update` or `mcp` start.
+Удалить кэшированные удалённые спецификации и сохранённые ответы на вызовы API. Это освобождает дисковое пространство и принудительно загружает свежие копии файлов спецификаций при следующем `update` или запуске `mcp`.
 
-## When to use
+## Когда использовать
 
-- Spec files have changed on the remote server and you want to force a refresh
-- You want to free up disk space
-- You are troubleshooting stale cache issues
-- Before running `update` to ensure a clean re-cache
+- Файлы спецификаций изменились на удалённом сервере, и вы хотите принудительно обновить кэш
+- Вы хотите освободить дисковое пространство
+- Вы диагностируете проблемы с устаревшим кэшем
+- Перед запуском `update` для обеспечения чистой перекэшировки
 
-## Syntax
+## Синтаксис
 
 ```bash
 swag2mcp clean [path]
 ```
 
-## Arguments
+## Аргументы
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Аргумент | Позиция | Обязательно | Описание |
+|----------|----------|-------------|----------|
+| `path` | 1 | Нет | Директория рабочей области. Если не указан, разрешается по правилам разрешения пути. |
 
-## Flags
+## Флаги
 
-None.
+Нет.
 
-## How it works
+## Как это работает
 
 ```bash
 swag2mcp clean
 swag2mcp clean ./my-workspace
 ```
 
-## What is cleaned
+## Что очищается
 
-| Directory | Contents | Why |
+| Директория | Содержимое | Зачем |
 |-----------|----------|-----|
-| `cache/` | Downloaded remote spec files | Forces re-download on next access |
-| `responses/` | Saved API invocation responses | Frees disk space |
+| `cache/` | Скачанные удалённые файлы спецификаций | Принудительная перезагрузка при следующем обращении |
+| `responses/` | Сохранённые ответы на вызовы API | Освобождение дискового пространства |
 
-## What is preserved
+## Что сохраняется
 
-| Directory | Contents | Why |
+| Директория | Содержимое | Зачем |
 |-----------|----------|-----|
-| `specs/` | Local spec files | These are your source files, not cache |
-| `auth_scripts/` | Authentication scripts | These are user-created, not cache |
+| `specs/` | Локальные файлы спецификаций | Это ваши исходные файлы, а не кэш |
+| `auth_scripts/` | Скрипты аутентификации | Они созданы пользователем, а не кэш |
 
-## Orphan auth script cleanup
+## Очистка осиротевших скриптов аутентификации
 
-After cleaning, `clean` also removes auth scripts for specs that no longer exist in the configuration. This prevents stale scripts from accumulating.
+После очистки `clean` также удаляет скрипты аутентификации для спецификаций, которые больше не существуют в конфигурации. Это предотвращает накопление устаревших скриптов.
 
-## Automatic cleanup
+## Автоматическая очистка
 
-When the MCP server starts (`swag2mcp mcp`), responses older than 48 hours are removed automatically. You typically don't need to run `clean` manually for routine maintenance.
+При запуске MCP-сервера (`swag2mcp mcp`) ответы старше 48 часов удаляются автоматически. Обычно вам не нужно запускать `clean` вручную для routine-обслуживания.
 
-## Post-command verification
+## Проверка после команды
 
 ```bash
 ls ~/.swag2mcp/cache
-# Should be empty (directory exists but has no files)
+# Должен быть пустым (директория существует, но файлов нет)
 ```
 
-## Nuances
+## Нюансы
 
-- **No config required:** `clean` works even without a valid config file. It simply removes the cache and responses directories.
-- **Orphan cleanup is best-effort:** If the config file is corrupted or unreadable, orphan auth script cleanup is skipped (not fatal).
-- **Directories are preserved:** The `cache/` and `responses/` directories themselves are kept — only their contents are removed.
+- **Конфиг не требуется:** `clean` работает даже без валидного файла конфигурации. Он просто удаляет директории кэша и ответов.
+- **Очистка осиротевших скриптов — best-effort:** Если файл конфигурации повреждён или нечитаем, очистка осиротевших скриптов пропускается (не фатально).
+- **Директории сохраняются:** Сами директории `cache/` и `responses/` остаются — удаляется только их содержимое.

@@ -1,28 +1,28 @@
-# Adding a New MCP Tool
+# 添加新的 MCP 工具
 
-## Steps
+## 步骤
 
-1. **Add a tool name constant** in `internal/service/service.go`
-2. **Create request/response types** in `internal/service/types.go`
-3. **Implement the service** in `internal/service/` (new file or add to existing)
-4. **Create a markdown definition** in `internal/service/definitions/` — this is what `MakeToolDefinitions` reads
-5. **Add method to `Svc` interface** in `internal/server/mcp/handler.go`
-6. **Add handler** in `handler.go`
-7. **Register tool** in `registerTools` in `mcp.go`
-8. **Generate mocks**: `go generate ./...`
-9. **Write tests**
+1. **在 `internal/service/service.go` 中添加工具名称常量**
+2. **在 `internal/service/types.go` 中创建请求/响应类型**
+3. **在 `internal/service/` 中实现服务**（新文件或添加到现有文件）
+4. **在 `internal/service/definitions/` 中创建 markdown 定义** — 这是 `MakeToolDefinitions` 读取的内容
+5. **在 `internal/server/mcp/handler.go` 中向 `Svc` 接口添加方法**
+6. **在 `handler.go` 中添加处理程序**
+7. **在 `mcp.go` 的 `registerTools` 中注册工具**
+8. **生成模拟**：`go generate ./...`
+9. **编写测试**
 
-## 1. Tool name constant
+## 1. 工具名称常量
 
-Add a constant in `internal/service/service.go`:
+在 `internal/service/service.go` 中添加常量：
 
 ```go
 const MyNewTool = "my_new_tool"
 ```
 
-## 2. Request/Response types
+## 2. 请求/响应类型
 
-Define in `internal/service/types.go`:
+在 `internal/service/types.go` 中定义：
 
 ```go
 type MyNewToolRequest struct {
@@ -34,23 +34,23 @@ type MyNewToolResponse struct {
 }
 ```
 
-## 3. Service implementation
+## 3. 服务实现
 
-Create `internal/service/my_new_tool.go` or add to an existing service file. Follow the standard service pattern: validate → lookup → execute → return:
+创建 `internal/service/my_new_tool.go` 或添加到现有服务文件。遵循标准服务模式：验证 → 查找 → 执行 → 返回：
 
 ```go
 func (s *Service) MyNewTool(ctx context.Context, req MyNewToolRequest) (MyNewToolResponse, error) {
     if err := s.validateRequest(req); err != nil {
         return MyNewToolResponse{}, NewLLMError(validationFailedErrCode, err.Error())
     }
-    // business logic
+    // 业务逻辑
     return MyNewToolResponse{Result: "ok"}, nil
 }
 ```
 
-## 4. Markdown definition
+## 4. Markdown 定义
 
-Create `internal/service/definitions/my_new_tool.md`. This file is read by `MakeToolDefinitions()` and embedded into the binary. The frontmatter `name:` field must match the constant:
+创建 `internal/service/definitions/my_new_tool.md`。此文件由 `MakeToolDefinitions()` 读取并嵌入到二进制文件中。frontmatter 的 `name:` 字段必须与常量匹配：
 
 ```markdown
 ---
@@ -59,31 +59,31 @@ name: my_new_tool
 
 # my_new_tool
 
-Description of the tool.
+工具的说明。
 
-## Parameters
+## 参数
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `param1` | string | Description |
+| 参数 | 类型 | 描述 |
+|------|------|------|
+| `param1` | string | 描述 |
 ```
 
-The `MakeToolDefinitions()` function in `tools.go` reads all `.md` files from the embedded `definitions/` directory, parses the YAML frontmatter for the `name` field, and uses the body as the tool description. The `instruction.md` file is treated specially — it becomes the system instruction for the LLM.
+`tools.go` 中的 `MakeToolDefinitions()` 函数从嵌入的 `definitions/` 目录读取所有 `.md` 文件，解析 YAML frontmatter 中的 `name` 字段，并将正文用作工具描述。`instruction.md` 文件被特殊处理 — 它成为 LLM 的系统指令。
 
-## 5. Svc Interface
+## 5. Svc 接口
 
-Add a method to the composed `Svc` interface in `handler.go`:
+在 `handler.go` 中向组合的 `Svc` 接口添加方法：
 
 ```go
 type Svc interface {
-    // ... existing methods
+    // ... 现有方法
     MyNewTool(ctx context.Context, req service.MyNewToolRequest) (service.MyNewToolResponse, error)
 }
 ```
 
-## 6. Handler
+## 6. 处理程序
 
-Add a handler method on `handler` in `handler.go`. The handler delegates to the service and wraps the result in `StructuredContent`:
+在 `handler.go` 中添加 `handler` 上的处理程序方法。处理程序委托给服务并将结果包装在 `StructuredContent` 中：
 
 ```go
 func (h *handler) handleMyNewTool(
@@ -101,21 +101,21 @@ func (h *handler) handleMyNewTool(
 }
 ```
 
-## 7. Registration
+## 7. 注册
 
-Register the tool in the `registerTools` function in `mcp.go`. Add an entry to the `toolRegistrations` map:
+在 `mcp.go` 的 `registerTools` 函数中注册工具。向 `toolRegistrations` 映射添加条目：
 
 ```go
 service.MyNewTool: {
     addTool[service.MyNewToolRequest](mcpServer, h.handleMyNewTool),
-    true, // false if the tool is mutable (like invoke or auth)
+    true, // 如果工具是可变的（如 invoke 或 auth），则为 false
 },
 ```
 
-The `registerTools` function signature is:
+`registerTools` 函数签名是：
 
 ```go
 func registerTools(mcpServer *sdkmcp.Server, tools []service.Tool, h handler) {
 ```
 
-It iterates over the tool definitions returned by `MakeToolDefinitions()` and registers each one with its typed handler. The `toolRegistrations` map connects tool name constants to their handlers.
+它遍历 `MakeToolDefinitions()` 返回的工具定义，并使用其类型化处理程序注册每个工具。`toolRegistrations` 映射将工具名称常量连接到它们的处理程序。

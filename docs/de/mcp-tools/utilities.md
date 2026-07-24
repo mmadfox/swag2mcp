@@ -1,37 +1,37 @@
-# Utility Tools
+# Hilfsprogramm-Tools
 
-Utility tools provide supporting functionality: retrieving auth tokens, getting runtime information, and working with large API responses that don't fit inline.
+Hilfsprogramm-Tools bieten unterstützende Funktionen: Abrufen von Auth-Tokens, Abrufen von Laufzeitinformationen und Arbeiten mit großen API-Antworten, die nicht inline passen.
 
 ---
 
 ## auth
 
-### Purpose
+### Zweck
 
-Retrieve an authentication token, headers, or query parameters for a specific spec. This gives the LLM access to credentials that can be used outside of swag2mcp (e.g., generating a curl command).
+Ruft ein Authentifizierungstoken, Header oder Abfrageparameter für eine bestimmte Spec ab. Dies gibt dem LLM Zugriff auf Anmeldeinformationen, die außerhalb von swag2mcp verwendet werden können (z. B. zum Generieren eines curl-Befehls).
 
-### When to use
+### Wann verwenden
 
-- Only when the user explicitly asks for the raw token or credentials
-- When generating a curl command or code snippet that needs auth
-- When the user wants to see what auth method is configured
+- Nur wenn der Benutzer explizit nach dem rohen Token oder den Anmeldeinformationen fragt
+- Beim Generieren eines curl-Befehls oder Code-Snippets, das Auth benötigt
+- Wenn der Benutzer sehen möchte, welche Auth-Methode konfiguriert ist
 
-### When NOT to use
+### Wann NICHT verwenden
 
-- **Do not** call `auth` before `inspect` or `invoke` — `invoke` automatically obtains and applies authentication
-- **Do not** call `auth` just to check if auth is configured — use `info` instead
+- **Rufen Sie `auth` nicht** vor `inspect` oder `invoke` auf — `invoke` holt und wendet die Authentifizierung automatisch an
+- **Rufen Sie `auth` nicht** nur auf, um zu prüfen, ob Auth konfiguriert ist — verwenden Sie stattdessen `info`
 
-### How it works
+### Wie es funktioniert
 
-Looks up the spec's auth configuration and executes the auth flow (token exchange, script execution, etc.) to obtain the current credentials.
+Sucht die Auth-Konfiguration der Spec und führt den Auth-Ablauf aus (Token-Austausch, Skriptausführung usw.), um die aktuellen Anmeldeinformationen zu erhalten.
 
-### Parameters
+### Parameter
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `specId` | string | Yes | 32-character MD5 hash of the spec |
+| Parameter | Typ | Erforderlich | Beschreibung |
+|-----------|-----|-------------|--------------|
+| `specId` | string | Ja | 32-stelliger MD5-Hash der Spec |
 
-### Response
+### Antwort
 
 ```json
 {
@@ -46,43 +46,43 @@ Looks up the spec's auth configuration and executes the auth flow (token exchang
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `token` | string | Raw token value (bearer token, API key, etc.) |
-| `headers` | object | HTTP headers to include in requests |
-| `queryParams` | object | Query parameters to include in requests |
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| `token` | string | Roher Token-Wert (Bearer-Token, API-Schlüssel usw.) |
+| `headers` | object | HTTP-Header, die in Anfragen eingefügt werden sollen |
+| `queryParams` | object | Abfrageparameter, die in Anfragen eingefügt werden sollen |
 
-### Nuances
+### Nuancen
 
-- **Disabled by default in production:** The `--disable-llm-auth` flag (default: `true`) removes the `auth` tool from the MCP tool list entirely. The LLM cannot see or request tokens. Set `--disable-llm-auth=false` to enable it for debugging or short-lived tokens.
-- **`invoke` handles auth automatically:** You do not need to call `auth` before `invoke`. The invoke service automatically obtains and applies the correct authentication.
-- **Supports 9 auth methods:** `none`, `basic`, `bearer`, `digest`, `hmac`, `oauth2-cc` (client credentials), `oauth2-pwd` (password), `api-key`, `script`.
-- Returns `auth_error` if the auth method fails (e.g., OAuth2 token endpoint unreachable, script execution failure).
+- **Standardmäßig in der Produktion deaktiviert:** Das Flag `--disable-llm-auth` (Standard: `true`) entfernt das `auth`-Tool vollständig aus der MCP-Tool-Liste. Der LLM kann Tokens weder sehen noch anfordern. Setzen Sie `--disable-llm-auth=false`, um es für Debugging oder kurzlebige Tokens zu aktivieren.
+- **`invoke` behandelt Auth automatisch:** Sie müssen `auth` nicht vor `invoke` aufrufen. Der Invoke-Dienst holt und wendet automatisch die korrekte Authentifizierung an.
+- **Unterstützt 9 Auth-Methoden:** `none`, `basic`, `bearer`, `digest`, `hmac`, `oauth2-cc` (Client Credentials), `oauth2-pwd` (Passwort), `api-key`, `script`.
+- Gibt `auth_error` zurück, wenn die Auth-Methode fehlschlägt (z. B. OAuth2-Token-Endpunkt nicht erreichbar, Skriptausführung fehlgeschlagen).
 
 ---
 
 ## info
 
-### Purpose
+### Zweck
 
-Return a comprehensive summary of the swag2mcp runtime: version, workspace path, active specs, HTTP client settings, MCP transport configuration, auth methods, and mock mode status.
+Gibt eine umfassende Zusammenfassung der swag2mcp-Laufzeit zurück: Version, Arbeitsbereichspfad, aktive Specs, HTTP-Client-Einstellungen, MCP-Transportkonfiguration, Auth-Methoden und Mock-Modus-Status.
 
-### When to use
+### Wann verwenden
 
-- When the user asks about the system configuration
-- When you need to check runtime settings (timeout, response size limit, transport)
-- When you need to know which auth methods are available
-- When troubleshooting configuration issues
+- Wenn der Benutzer nach der Systemkonfiguration fragt
+- Wenn Sie Laufzeiteinstellungen überprüfen müssen (Timeout, Antwortgrößenlimit, Transport)
+- Wenn Sie wissen müssen, welche Auth-Methoden verfügbar sind
+- Bei der Fehlerbehebung von Konfigurationsproblemen
 
-### How it works
+### Wie es funktioniert
 
-Returns a pre-computed snapshot of the runtime state. No parameters needed.
+Gibt eine vorberechnete Momentaufnahme des Laufzeitzustands zurück. Keine Parameter erforderlich.
 
-### Parameters
+### Parameter
 
-None.
+Keine.
 
-### Response
+### Antwort
 
 ```json
 {
@@ -121,50 +121,50 @@ None.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `version` | string | swag2mcp version |
-| `workspace` | string | Workspace directory path |
-| `uptime` | string | Server uptime (human-readable) |
-| `specs` | object | Spec summary: total, active, disabled, collections, endpoints |
-| `http_client` | object | HTTP client configuration |
-| `http_client.max_response_size` | string | Max response size in human-readable format (e.g. "2 KB") |
-| `mcp` | object | MCP server configuration |
-| `auth` | object | Available auth methods |
-| `mock` | object | Mock server status |
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| `version` | string | swag2mcp-Version |
+| `workspace` | string | Pfad zum Arbeitsbereichsverzeichnis |
+| `uptime` | string | Server-Betriebszeit (menschenlesbar) |
+| `specs` | object | Spec-Zusammenfassung: gesamt, aktiv, deaktiviert, Collections, Endpunkte |
+| `http_client` | object | HTTP-Client-Konfiguration |
+| `http_client.max_response_size` | string | Maximale Antwortgröße in menschenlesbarem Format (z. B. "2 KB") |
+| `mcp` | object | MCP-Server-Konfiguration |
+| `auth` | object | Verfügbare Auth-Methoden |
+| `mock` | object | Mock-Server-Status |
 
-### Nuances
+### Nuancen
 
-- `max_response_size` is shown in human-readable format (e.g., `"1 KB"`, `"2 MB"`)
-- `uptime` is computed from the server start time
-- The data is a snapshot taken at bootstrap time — it reflects the state when the MCP server started
+- `max_response_size` wird in menschenlesbarem Format angezeigt (z. B. `"1 KB"`, `"2 MB"`)
+- `uptime` wird aus der Server-Startzeit berechnet
+- Die Daten sind eine Momentaufnahme zum Zeitpunkt des Bootstraps — sie spiegeln den Zustand wider, als der MCP-Server gestartet wurde
 
 ---
 
 ## response_outline
 
-### Purpose
+### Zweck
 
-Get a high-level structural summary of a large JSON response file that was saved to disk by `invoke`. It returns the shape of the data — keys, types, array lengths, and navigation hints — without returning the actual values.
+Ruft eine strukturelle Zusammenfassung auf hoher Ebene einer großen JSON-Antwortdatei ab, die von `invoke` auf der Festplatte gespeichert wurde. Sie gibt die Form der Daten zurück — Schlüssel, Typen, Array-Längen und Navigationshinweise — ohne die tatsächlichen Werte zurückzugeben.
 
-### When to use
+### Wann verwenden
 
-- Immediately after `invoke` returns a `fileRef` (response too large for inline)
-- This is the **mandatory first step** in the large-response workflow
+- Unmittelbar nachdem `invoke` einen `fileRef` zurückgegeben hat (Antwort zu groß für inline)
+- Dies ist der **obligatorische erste Schritt** im Arbeitsablauf für große Antworten
 
-### How it works
+### Wie es funktioniert
 
-Reads the saved response file and analyzes its structure: top-level type, keys, array lengths, nesting depth, and compression hints.
+Liest die gespeicherte Antwortdatei und analysiert ihre Struktur: Typ der obersten Ebene, Schlüssel, Array-Längen, Verschachtelungstiefe und Komprimierungshinweise.
 
-### Parameters
+### Parameter
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `path` | string | Yes | Absolute path from `fileRef.path` |
-| `maxDepth` | int | No | Maximum recursion depth (default: 3) |
-| `maxArrayItems` | int | No | How many array items to inspect (default: 5) |
+| Parameter | Typ | Erforderlich | Beschreibung |
+|-----------|-----|-------------|--------------|
+| `path` | string | Ja | Absoluter Pfad von `fileRef.path` |
+| `maxDepth` | int | Nein | Maximale Rekursionstiefe (Standard: 3) |
+| `maxArrayItems` | int | Nein | Wie viele Array-Elemente inspiziert werden sollen (Standard: 5) |
 
-### Response
+### Antwort
 
 ```json
 {
@@ -185,7 +185,7 @@ Reads the saved response file and analyzes its structure: top-level type, keys, 
         }
       }
     },
-    "schemaHint": "object with 3 keys: data (array[500]), meta (object), error (null)",
+    "schemaHint": "Objekt mit 3 Schlüsseln: data (array[500]), meta (object), error (null)",
     "keys": ["data", "meta", "error"],
     "itemCount": 500,
     "itemType": "object",
@@ -205,67 +205,67 @@ Reads the saved response file and analyzes its structure: top-level type, keys, 
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `type` | string | Top-level type: "object" or "array" |
-| `size` | int | File size in bytes |
-| `lineCount` | int | Number of lines in the file |
-| `depth` | int | Maximum nesting depth inspected |
-| `structure` | object | Recursive structure with keys, types, array lengths |
-| `schemaHint` | string | One-line summary of the top-level shape |
-| `keys` | array | Top-level keys (for objects) |
-| `itemCount` | int | Array length (for arrays) |
-| `compressionHints` | array | Suggested `response_compress` calls with parameters |
-| `navigationHints` | object | Top-level paths and arrays with lengths |
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| `type` | string | Typ der obersten Ebene: "object" oder "array" |
+| `size` | int | Dateigröße in Bytes |
+| `lineCount` | int | Anzahl der Zeilen in der Datei |
+| `depth` | int | Maximale inspizierte Verschachtelungstiefe |
+| `structure` | object | Rekursive Struktur mit Schlüsseln, Typen, Array-Längen |
+| `schemaHint` | string | Einzeilige Zusammenfassung der Form der obersten Ebene |
+| `keys` | array | Schlüssel der obersten Ebene (für Objekte) |
+| `itemCount` | int | Array-Länge (für Arrays) |
+| `compressionHints` | array | Vorgeschlagene `response_compress`-Aufrufe mit Parametern |
+| `navigationHints` | object | Pfade und Arrays der obersten Ebene mit Längen |
 
-### Nuances
+### Nuancen
 
-- Returns `validation_failed` if the path is invalid or not inside the responses directory
-- Returns `not_found` if the file does not exist
-- Returns `validation_failed` if the file is not valid JSON
-- The `compressionHints` field provides ready-to-use suggestions for `response_compress` calls
+- Gibt `validation_failed` zurück, wenn der Pfad ungültig ist oder nicht im Antwortverzeichnis liegt
+- Gibt `not_found` zurück, wenn die Datei nicht existiert
+- Gibt `validation_failed` zurück, wenn die Datei kein gültiges JSON ist
+- Das Feld `compressionHints` bietet gebrauchsfertige Vorschläge für `response_compress`-Aufrufe
 
 ---
 
 ## response_compress
 
-### Purpose
+### Zweck
 
-Reduce a JSON value inside a saved response file so it fits within the response size limit and can be returned to the LLM inline. Multiple compression modes let you choose the right trade-off between size and information.
+Reduziert einen JSON-Wert innerhalb einer gespeicherten Antwortdatei, sodass er innerhalb des Antwortgrößenlimits liegt und inline an den LLM zurückgegeben werden kann. Mehrere Komprimierungsmodi ermöglichen Ihnen den richtigen Kompromiss zwischen Größe und Informationsgehalt.
 
-### When to use
+### Wann verwenden
 
-- After `response_outline` to understand the structure
-- When you need to get data from a large response inline
-- When `response_slice` is too narrow and you need a broader view
+- Nach `response_outline`, um die Struktur zu verstehen
+- Wenn Sie Daten aus einer großen Antwort inline benötigen
+- Wenn `response_slice` zu eng ist und Sie eine breitere Ansicht benötigen
 
-### How it works
+### Wie es funktioniert
 
-Reads the saved response file, navigates to the specified JSON path, applies the compression mode, and returns the compressed result. If the result still exceeds the size limit, it is saved to a new file.
+Liest die gespeicherte Antwortdatei, navigiert zum angegebenen JSON-Pfad, wendet den Komprimierungsmodus an und gibt das komprimierte Ergebnis zurück. Wenn das Ergebnis immer noch die Größenbeschränkung überschreitet, wird es in einer neuen Datei gespeichert.
 
-### Parameters
+### Parameter
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `path` | string | Yes | Absolute path from `fileRef.path` |
-| `jsonPath` | string | No | Path to the value to compress (e.g. `data` or `data.0`) |
-| `mode` | string | Yes | Compression mode (see table below) |
-| `arrayHead` | int | No | Leading items to keep in `sample_array` mode (default: 3) |
-| `arrayTail` | int | No | Trailing items to keep in `sample_array` mode (default: 2) |
-| `stringLen` | int | No | Max string length in `truncate_strings` mode (default: 80) |
-| `selectKeys` | array | No | Keys to keep in `select_keys` mode |
+| Parameter | Typ | Erforderlich | Beschreibung |
+|-----------|-----|-------------|--------------|
+| `path` | string | Ja | Absoluter Pfad von `fileRef.path` |
+| `jsonPath` | string | Nein | Pfad zum zu komprimierenden Wert (z. B. `data` oder `data.0`) |
+| `mode` | string | Ja | Komprimierungsmodus (siehe Tabelle unten) |
+| `arrayHead` | int | Nein | Führende Elemente, die im `sample_array`-Modus behalten werden sollen (Standard: 3) |
+| `arrayTail` | int | Nein | Nachfolgende Elemente, die im `sample_array`-Modus behalten werden sollen (Standard: 2) |
+| `stringLen` | int | Nein | Maximale Zeichenfolgenlänge im `truncate_strings`-Modus (Standard: 80) |
+| `selectKeys` | array | Nein | Schlüssel, die im `select_keys`-Modus behalten werden sollen |
 
-### Compression modes
+### Komprimierungsmodi
 
-| Mode | Description | Best for |
-|------|-------------|----------|
-| `first_of_array` | Keep only the first element of an array | When all elements have the same structure |
-| `sample_array` | Keep head and tail of an array | When you need to see the range of values |
-| `truncate_strings` | Shorten every string to `stringLen` characters | When strings are very long but structure matters |
-| `keys_only` | Replace object values with their type names | When you only need the structure |
-| `select_keys` | Keep only specified keys in every object | When you need specific fields from many objects |
+| Modus | Beschreibung | Am besten für |
+|-------|-------------|---------------|
+| `first_of_array` | Nur das erste Element eines Arrays behalten | Wenn alle Elemente dieselbe Struktur haben |
+| `sample_array` | Kopf und Ende eines Arrays behalten | Wenn Sie die Wertspanne sehen müssen |
+| `truncate_strings` | Jede Zeichenfolge auf `stringLen` Zeichen kürzen | Wenn Zeichenfolgen sehr lang sind, aber die Struktur wichtig ist |
+| `keys_only` | Objektwerte durch ihre Typnamen ersetzen | Wenn Sie nur die Struktur benötigen |
+| `select_keys` | Nur bestimmte Schlüssel in jedem Objekt behalten | Wenn Sie bestimmte Felder aus vielen Objekten benötigen |
 
-### Response
+### Antwort
 
 ```json
 {
@@ -273,52 +273,52 @@ Reads the saved response file, navigates to the specified JSON path, applies the
     { "id": 1, "name": "Rex", "status": "available" },
     { "id": 2, "name": "Max", "status": "pending" }
   ],
-  "hint": "Compressed array from 500 to 2 items using first_of_array mode"
+  "hint": "Array von 500 auf 2 Elemente mit first_of_array-Modus komprimiert"
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `body` | any | Compressed JSON value (present when within size limit) |
-| `fileRef` | object | File reference (present when still too large) |
-| `hint` | string | Explanation of what was compressed |
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| `body` | any | Komprimierter JSON-Wert (vorhanden, wenn innerhalb der Größenbeschränkung) |
+| `fileRef` | object | Dateiverweis (vorhanden, wenn immer noch zu groß) |
+| `hint` | string | Erklärung, was komprimiert wurde |
 
-### Nuances
+### Nuancen
 
-- If the compressed result still exceeds `max_response_size`, it is saved to a new file and a `FileReference` is returned
-- Default values: `arrayHead=3`, `arrayTail=2`, `stringLen=80`
-- Returns `validation_failed` for invalid path, invalid JSONPath, or non-JSON file
-- Returns `not_found` if the file does not exist or JSONPath does not match
+- Wenn das komprimierte Ergebnis immer noch `max_response_size` überschreitet, wird es in einer neuen Datei gespeichert und ein `FileReference` zurückgegeben
+- Standardwerte: `arrayHead=3`, `arrayTail=2`, `stringLen=80`
+- Gibt `validation_failed` für ungültigen Pfad, ungültigen JSONPath oder Nicht-JSON-Datei zurück
+- Gibt `not_found` zurück, wenn die Datei nicht existiert oder JSONPath nicht übereinstimmt
 
 ---
 
 ## response_slice
 
-### Purpose
+### Zweck
 
-Extract a specific fragment of a saved JSON response file by logical JSON path or by line range. Unlike `response_compress`, this gives you the raw, unmodified data.
+Extrahiert ein bestimmtes Fragment einer gespeicherten JSON-Antwortdatei nach logischem JSON-Pfad oder nach Zeilenbereich. Im Gegensatz zu `response_compress` erhalten Sie hier die rohen, unveränderten Daten.
 
-### When to use
+### Wann verwenden
 
-- When you need a specific element or value from a large response
-- When `response_compress` doesn't give you enough detail
-- When you want to navigate through a response step by step
+- Wenn Sie ein bestimmtes Element oder einen bestimmten Wert aus einer großen Antwort benötigen
+- Wenn `response_compress` nicht genügend Details liefert
+- Wenn Sie Schritt für Schritt durch eine Antwort navigieren möchten
 
-### How it works
+### Wie es funktioniert
 
-Reads the saved response file and extracts a fragment by JSON path (e.g., `data.3.name`) or by line range (e.g., `120-240`). Returns navigation hints for stepping through arrays and objects.
+Liest die gespeicherte Antwortdatei und extrahiert ein Fragment nach JSON-Pfad (z. B. `data.3.name`) oder nach Zeilenbereich (z. B. `120-240`). Gibt Navigationshinweise zum Durchlaufen von Arrays und Objekten zurück.
 
-### Parameters
+### Parameter
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `path` | string | Yes | Absolute path from `fileRef.path` |
-| `jsonPath` | string | No | Logical path to the value (e.g. `data.3.name`) |
-| `line` | int | No | 1-based line number to center the fragment on |
-| `range` | string | No | Line range as `start-end` (e.g. `120-240`) |
-| `around` | int | No | Lines to include around `line` (default: 20) |
+| Parameter | Typ | Erforderlich | Beschreibung |
+|-----------|-----|-------------|--------------|
+| `path` | string | Ja | Absoluter Pfad von `fileRef.path` |
+| `jsonPath` | string | Nein | Logischer Pfad zum Wert (z. B. `data.3.name`) |
+| `line` | int | Nein | 1-basierte Zeilennummer, um die das Fragment zentriert werden soll |
+| `range` | string | Nein | Zeilenbereich als `start-end` (z. B. `120-240`) |
+| `around` | int | Nein | Zeilen, die um `line` herum eingeschlossen werden sollen (Standard: 20) |
 
-### Response
+### Antwort
 
 ```json
 {
@@ -340,24 +340,24 @@ Reads the saved response file and extracts a fragment by JSON path (e.g., `data.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `lines` | array | 1-based line range [start, end] |
-| `fragment` | string | Raw JSON text (when small enough) |
-| `value` | any | Extracted JSON value |
-| `jsonPath` | string | The JSON path used |
-| `context` | string | "object", "array", or "value" |
-| `isComplete` | bool | True when the value is a valid JSON fragment |
-| `nextLine` | int | Suggested next line for line-based navigation |
-| `prevLine` | int | Suggested previous line |
-| `nextPath` | string | Suggested next JSON path for array navigation |
-| `prevPath` | string | Suggested previous JSON path |
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| `lines` | array | 1-basierter Zeilenbereich [start, end] |
+| `fragment` | string | Roher JSON-Text (wenn klein genug) |
+| `value` | any | Extrahierter JSON-Wert |
+| `jsonPath` | string | Der verwendete JSON-Pfad |
+| `context` | string | "object", "array" oder "value" |
+| `isComplete` | bool | Wahr, wenn der Wert ein gültiges JSON-Fragment ist |
+| `nextLine` | int | Vorgeschlagene nächste Zeile für zeilenbasierte Navigation |
+| `prevLine` | int | Vorgeschlagene vorherige Zeile |
+| `nextPath` | string | Vorgeschlagener nächster JSON-Pfad für Array-Navigation |
+| `prevPath` | string | Vorgeschlagener vorheriger JSON-Pfad |
 
-### Nuances
+### Nuancen
 
-- **Prefer `jsonPath` over line numbers** — JSON paths are stable and descriptive, line numbers change if the file is regenerated
-- If the extracted fragment exceeds `max_response_size`, it is saved to a new file and a `FileReference` is returned
-- Default `around` is 20 lines
-- The response includes `nextPath`/`prevPath` for stepping through arrays and `nextLine`/`prevLine` for line-based navigation
-- Returns `validation_failed` for invalid path, invalid JSONPath, invalid line/range, or non-JSON file
-- Returns `not_found` if the file does not exist or JSONPath does not match
+- **Bevorzugen Sie `jsonPath` gegenüber Zeilennummern** — JSON-Pfade sind stabil und beschreibend, Zeilennummern ändern sich, wenn die Datei neu generiert wird
+- Wenn das extrahierte Fragment `max_response_size` überschreitet, wird es in einer neuen Datei gespeichert und ein `FileReference` zurückgegeben
+- Standard `around` ist 20 Zeilen
+- Die Antwort enthält `nextPath`/`prevPath` zum Durchlaufen von Arrays und `nextLine`/`prevLine` für zeilenbasierte Navigation
+- Gibt `validation_failed` für ungültigen Pfad, ungültigen JSONPath, ungültige Zeile/ Bereich oder Nicht-JSON-Datei zurück
+- Gibt `not_found` zurück, wenn die Datei nicht existiert oder JSONPath nicht übereinstimmt

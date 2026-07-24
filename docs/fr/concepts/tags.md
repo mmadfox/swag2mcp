@@ -1,68 +1,68 @@
-# Tags
+# Étiquettes
 
-A tag is a category that groups related endpoints within a collection. Tags may or may not exist — not all collections have them, and a collection can have any number of tags.
+Une étiquette (tag) est une catégorie qui regroupe des points d'accès connexes au sein d'une collection. Les étiquettes peuvent exister ou non — toutes les collections n'en ont pas, et une collection peut avoir n'importe quel nombre d'étiquettes.
 
-Tags come from the OpenAPI/Swagger/Postman file itself. There are **no YAML config settings** for tags — you cannot create, rename, or delete tags in `swag2mcp.yaml`. The only way to change tags is to edit the original spec file.
+Les étiquettes proviennent du fichier OpenAPI/Swagger/Postman lui-même. Il n'y a **aucun paramètre de configuration YAML** pour les étiquettes — vous ne pouvez pas créer, renommer ou supprimer des étiquettes dans `swag2mcp.yaml`. La seule façon de modifier les étiquettes est de modifier le fichier de spécification original.
 
-## Hierarchy
+## Hiérarchie
 
 ```
-Spec (domain, e.g. "meteo")
-  └── Collection (spec file, e.g. forecast.yml)
-        └── Tag "weather"
+Spec (domaine, par ex. « meteo »)
+  └── Collection (fichier de spec, par ex. forecast.yml)
+        └── Étiquette « meteo »
               └── GET /forecast
               └── GET /forecast/hourly
-        └── Tag "alerts"
+        └── Étiquette « alertes »
               └── GET /alerts
 ```
 
-## How Tags Are Created
+## Comment les étiquettes sont créées
 
-Tags are extracted from the spec document during parsing:
+Les étiquettes sont extraites du document de spécification lors de l'analyse :
 
-**OpenAPI 3.x / Swagger 2.0** — each operation's `tags` list becomes tags:
+**OpenAPI 3.x / Swagger 2.0** — la liste `tags` de chaque opération devient des étiquettes :
 
 ```yaml
 paths:
-  /pet:
+  /animal:
     get:
-      tags: ["pets"]
-      summary: "Find pet by ID"
+      tags: ["animaux"]
+      summary: "Trouver un animal par ID"
     post:
-      tags: ["pets"]
-      summary: "Add a new pet"
-  /pet/{petId}/uploadImage:
+      tags: ["animaux"]
+      summary: "Ajouter un nouvel animal"
+  /animal/{animalId}/uploadImage:
     post:
-      tags: ["pet_images"]
-      summary: "Uploads an image"
+      tags: ["images_animal"]
+      summary: "Télécharge une image"
 ```
 
-**Postman** — each top-level folder becomes a tag. Nested folders use the last folder name.
+**Postman** — chaque dossier de premier niveau devient une étiquette. Les dossiers imbriqués utilisent le nom du dernier dossier.
 
-If an endpoint has no tags, it is placed under a `"default"` tag.
+Si un point d'accès n'a pas d'étiquette, il est placé sous une étiquette `"default"`.
 
-## Purpose
+## Objectif
 
-Tags help the LLM find groups of related endpoints. Instead of searching through every endpoint in a collection, the LLM can first find the right tag, then list only the endpoints within it.
+Les étiquettes aident le LLM à trouver des groupes de points d'accès connexes. Au lieu de rechercher dans tous les points d'accès d'une collection, le LLM peut d'abord trouver la bonne étiquette, puis lister uniquement les points d'accès qu'elle contient.
 
-## MCP Tools for Tags
+## Outils MCP pour les étiquettes
 
-| Tool | Description |
-|------|-------------|
-| `tag_by_spec` | All tags across an entire spec |
-| `tag_by_collection` | Tags within a specific collection |
-| `tag_by_id` | Tag details (title, method count) |
-| `endpoint_by_tag` | Endpoints grouped under a tag |
+| Outil | Description |
+|-------|-------------|
+| `tag_by_spec` | Toutes les étiquettes dans une spec entière |
+| `tag_by_collection` | Étiquettes dans une collection spécifique |
+| `tag_by_id` | Détails de l'étiquette (titre, nombre de méthodes) |
+| `endpoint_by_tag` | Points d'accès regroupés sous une étiquette |
 
-## Example
+## Exemple
 
 ```
-Query: "Show all tags in the pet collection"
+Requête : "Afficher toutes les étiquettes dans la collection animaux"
 → tag_by_collection(collectionId: "...")
-→ Result: pets (5 methods), pet_images (1 method)
+→ Résultat : animaux (5 méthodes), images_animal (1 méthode)
 ```
 
 ## Limitations
 
-- Tags are read-only from the config perspective. To add, rename, or remove tags, edit the original OpenAPI/Swagger/Postman file and run `swag2mcp update`.
-- Tags cannot be filtered or disabled per-collection in the YAML config.
+- Les étiquettes sont en lecture seule du point de vue de la configuration. Pour ajouter, renommer ou supprimer des étiquettes, modifiez le fichier OpenAPI/Swagger/Postman original et exécutez `swag2mcp update`.
+- Les étiquettes ne peuvent pas être filtrées ou désactivées par collection dans la configuration YAML.

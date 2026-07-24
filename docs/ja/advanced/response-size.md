@@ -1,16 +1,16 @@
-# Response Size Management
+# レスポンスサイズ管理
 
-## Overview
+## 概要
 
-API responses can be very large — sometimes too large to fit in the LLM's context window. swag2mcp automatically manages response sizes by saving oversized responses to disk and providing tools to explore them.
+API レスポンスは非常に大きくなる可能性があります — LLM のコンテキストウィンドウに収まらないこともあります。swag2mcp は、大きすぎるレスポンスをディスクに保存し、探索するためのツールを提供することで、自動的にレスポンスサイズを管理します。
 
-## How it works
+## 仕組み
 
-1. **You call `invoke`** — swag2mcp makes the API request
-2. **If the response is small** (within the limit) — it is returned inline to the LLM
-3. **If the response is too large** (exceeds the limit) — it is saved to `{workspace}/responses/` as a JSON file. The LLM receives a file reference instead of the full response
+1. **`invoke` を呼び出す** — swag2mcp が API リクエストを実行
+2. **レスポンスが小さい場合**（制限内）— インラインで LLM に返される
+3. **レスポンスが大きすぎる場合**（制限超過）— `{workspace}/responses/` に JSON ファイルとして保存。LLM は完全なレスポンスの代わりにファイル参照を受け取る
 
-### Example: small response (inline)
+### 例：小さいレスポンス（インライン）
 
 ```json
 {
@@ -23,7 +23,7 @@ API responses can be very large — sometimes too large to fit in the LLM's cont
 }
 ```
 
-### Example: large response (file reference)
+### 例：大きいレスポンス（ファイル参照）
 
 ```json
 {
@@ -39,29 +39,29 @@ API responses can be very large — sometimes too large to fit in the LLM's cont
 }
 ```
 
-## Configuration
+## 設定
 
 ```yaml
 http_client:
-  max_response_size: 1048576  # 1 MB in bytes
+  max_response_size: 1048576  # 1 MB（バイト単位）
 ```
 
 ### max_response_size
 
-- **Type:** `int` (bytes)
-- **Default:** `1048576` (1 MB)
-- **Range:** 256 to 10,485,760 bytes (10 MB)
-- **Effect:** Responses larger than this are saved to disk instead of returned inline
-- **When to increase:** APIs that return large datasets (reports, logs, analytics)
-- **When to decrease:** Limited LLM context window, or when you prefer file-based access
+- **型:** `int`（バイト）
+- **デフォルト:** `1048576`（1 MB）
+- **範囲:** 256 〜 10,485,760 バイト（10 MB）
+- **効果:** このサイズを超えるレスポンスはインラインで返されず、ディスクに保存されます
+- **増やすタイミング:** 大規模なデータセットを返す API（レポート、ログ、分析）
+- **減らすタイミング:** LLM のコンテキストウィンドウが限られている場合、またはファイルベースのアクセスを希望する場合
 
-## Working with large responses
+## 大きなレスポンスの操作
 
-When `invoke` returns a `fileRef`, use these three tools to explore the data:
+`invoke` が `fileRef` を返した場合、次の 3 つのツールを使用してデータを探索します：
 
-### 1. response_outline — understand the structure
+### 1. response_outline — 構造を理解
 
-Get a structural summary of the response: keys, types, array lengths, and navigation hints.
+レスポンスの構造サマリーを取得：キー、型、配列の長さ、ナビゲーションヒント。
 
 ```json
 → response_outline(path: "/path/to/file.json")
@@ -77,17 +77,17 @@ Get a structural summary of the response: keys, types, array lengths, and naviga
   }
 ```
 
-### 2. response_compress — get a smaller version
+### 2. response_compress — 小さなバージョンを取得
 
-Compress the data to fit inline. Multiple compression modes let you choose the right trade-off.
+データを圧縮してインラインに収めます。複数の圧縮モードから適切なトレードオフを選択できます。
 
-| Mode | Description | Best for |
-|------|-------------|----------|
-| `first_of_array` | Keep only the first element of an array | When all elements have the same structure |
-| `sample_array` | Keep head (3) and tail (2) of an array | When you need to see the range of values |
-| `truncate_strings` | Shorten every string to N characters | When strings are very long |
-| `keys_only` | Replace values with their type names | When you only need the structure |
-| `select_keys` | Keep only specified keys | When you need specific fields |
+| モード | 説明 | 最適な用途 |
+|-------|------|-----------|
+| `first_of_array` | 配列の最初の要素のみ保持 | すべての要素が同じ構造の場合 |
+| `sample_array` | 配列の先頭（3）と末尾（2）を保持 | 値の範囲を確認したい場合 |
+| `truncate_strings` | すべての文字列を N 文字に短縮 | 文字列が非常に長い場合 |
+| `keys_only` | 値を型名に置換 | 構造のみが必要な場合 |
+| `select_keys` | 指定されたキーのみ保持 | 特定のフィールドのみが必要な場合 |
 
 ```json
 → response_compress(path: "/path/to/file.json", mode: "first_of_array", jsonPath: "data")
@@ -97,9 +97,9 @@ Compress the data to fit inline. Multiple compression modes let you choose the r
   }
 ```
 
-### 3. response_slice — extract a specific fragment
+### 3. response_slice — 特定の断片を抽出
 
-Get a specific element or value by JSON path or line range.
+JSON パスまたは行範囲で特定の要素または値を取得します。
 
 ```json
 → response_slice(path: "/path/to/file.json", jsonPath: "data.0")
@@ -113,27 +113,27 @@ Get a specific element or value by JSON path or line range.
   }
 ```
 
-## Complete workflow
+## 完全なワークフロー
 
 ```
-1. invoke(endpoint) → fileRef (response is 1.5 MB)
-2. response_outline(path) → structure: { data: Array(500) }
-3. response_compress(path, mode: "first_of_array", jsonPath: "data") → first item
-4. response_slice(path, jsonPath: "data.0") → full first item details
-5. response_slice(path, jsonPath: "data.1") → second item
+1. invoke(endpoint) → fileRef（レスポンス 1.5 MB）
+2. response_outline(path) → 構造: { data: Array(500) }
+3. response_compress(path, mode: "first_of_array", jsonPath: "data") → 最初の項目
+4. response_slice(path, jsonPath: "data.0") → 最初の項目の詳細
+5. response_slice(path, jsonPath: "data.1") → 2 番目の項目
 ```
 
-## Automatic cleanup
+## 自動クリーンアップ
 
-When the MCP server starts (`swag2mcp mcp`), response files older than 48 hours are automatically removed. You can also clean them manually:
+MCP サーバーが起動するとき（`swag2mcp mcp`）、48 時間以上経過したレスポンスファイルが自動的に削除されます。手動でクリーンアップすることもできます：
 
 ```bash
 swag2mcp clean
 ```
 
-## Important notes
+## 重要な注意点
 
-- **The limit is in bytes** — `1048576` = 1 MB, `2097152` = 2 MB, etc.
-- **File references include an open command** — on macOS it's `open`, on Linux it's `xdg-open`
-- **Response files are named with random suffixes** — no conflicts between concurrent calls
-- **The responses directory is created automatically** — no manual setup needed
+- **制限はバイト単位** — `1048576` = 1 MB、`2097152` = 2 MB など
+- **ファイル参照には open コマンドが含まれます** — macOS では `open`、Linux では `xdg-open`
+- **レスポンスファイルはランダムなサフィックスで命名されます** — 同時呼び出し間で競合しません
+- **responses ディレクトリは自動的に作成されます** — 手動設定は不要です

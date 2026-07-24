@@ -1,13 +1,13 @@
-# Configuration File
+# 설정 파일
 
-swag2mcp uses a YAML configuration file. Created by `swag2mcp init`.
+swag2mcp는 YAML 설정 파일을 사용합니다. `swag2mcp init`으로 생성됩니다.
 
-## Location
+## 위치
 
 - **Linux/macOS**: `~/.swag2mcp/swag2mcp.yaml`
 - **Windows**: `%USERPROFILE%\.swag2mcp\swag2mcp.yaml`
 
-## Basic Structure
+## 기본 구조
 
 ```yaml
 specs:
@@ -19,10 +19,10 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
 ```
 
-## Full Example
+## 전체 예시
 
 ```yaml
-# ── Global HTTP client ──────────────────────────────────
+# ── 전역 HTTP 클라이언트 ──────────────────────────────────
 http_client:
   timeout: 30s
   max_response_size: 1048576
@@ -41,7 +41,7 @@ http_client:
     - name: "session"
       value: "abc123"
 
-# ── MCP server ──────────────────────────────────────────
+# ── MCP 서버 ──────────────────────────────────────────
 mcp:
   transport: stdio
   addr: ":8080"
@@ -49,14 +49,14 @@ mcp:
   auth:
     token: ""
 
-# ── Mock server ─────────────────────────────────────────
+# ── 모의 서버 ─────────────────────────────────────────
 mock_enabled: false
 mock_auth:
   oauth2_port: 9090
   digest_port: 9091
   hmac_port: 9092
 
-# ── Rate limiter ────────────────────────────────────────
+# ── 속도 제한기 ────────────────────────────────────────
 disable_ratelimiter: false
 rate_limit_interval: 10s
 
@@ -64,7 +64,7 @@ rate_limit_interval: 10s
 specs:
   - domain: meteo
     llm_title: Open-Meteo Weather APIs
-    llm_instruction: "Use this API for weather forecasts and climate data"
+    llm_instruction: "날씨 예보 및 기후 데이터에 이 API를 사용하세요"
     base_url: https://api.open-meteo.com
     disable: false
     tags: ["weather", "climate"]
@@ -92,9 +92,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## Environment Variables
+## 환경 변수
 
-Use `$(VAR_NAME)` syntax to reference environment variables. swag2mcp resolves them at startup.
+`$(VAR_NAME)` 구문을 사용하여 환경 변수를 참조하세요. swag2mcp는 시작 시 이를 해결합니다.
 
 ```yaml
 specs:
@@ -109,21 +109,21 @@ mcp:
     token: "$(MCP_TOKEN)"
 ```
 
-`$(VAR)` is resolved in:
-- Auth config fields: `token`, `username`, `password`, `client_id`, `client_secret`, `api_key`, `secret_key`, `domain`
-- MCP server auth token: `mcp.auth.token`
-- HTTP client headers and cookie values
+`$(VAR)`은 다음에서 해결됩니다:
+- 인증 설정 필드: `token`, `username`, `password`, `client_id`, `client_secret`, `api_key`, `secret_key`, `domain`
+- MCP 서버 인증 토큰: `mcp.auth.token`
+- HTTP 클라이언트 헤더 및 쿠키 값
 
-`$(VAR)` is **not** resolved in base URLs or collection locations.
+`$(VAR)`은 base URL 또는 collection location에서 **해결되지 않습니다**.
 
-## Validation
+## 검증
 
 ```bash
-# Validate default workspace (~/.swag2mcp)
+# 기본 워크스페이스 검증 (~/.swag2mcp)
 swag2mcp validate
 
-# Validate a custom project workspace
+# 커스텀 프로젝트 워크스페이스 검증
 swag2mcp validate ./my-project
 ```
 
-If the workspace is not in the home directory (e.g., inside a project repository), always specify the path when running `validate`, `update`, `mcp`, or any other command. Otherwise swag2mcp will use the default `~/.swag2mcp` workspace.
+워크스페이스가 홈 디렉토리에 없는 경우(예: 프로젝트 저장소 내부) `validate`, `update`, `mcp` 또는 다른 명령어를 실행할 때 항상 경로를 지정하세요. 그렇지 않으면 swag2mcp가 기본 `~/.swag2mcp` 워크스페이스를 사용합니다.

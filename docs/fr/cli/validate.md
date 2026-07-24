@@ -1,79 +1,79 @@
 # validate
 
-## Purpose
+## Objectif
 
-Check the configuration file and all referenced spec files for errors. This is a **read-only** diagnostic command — it never modifies anything.
+Vérifier le fichier de configuration et tous les fichiers de spécification référencés pour détecter les erreurs. C'est une commande de diagnostic **en lecture seule** — elle ne modifie jamais rien.
 
-## When to use
+## Quand l'utiliser
 
-- After editing `swag2mcp.yaml` manually
-- Before running `mcp` or `update` to catch issues early
-- When troubleshooting why a spec isn't loading
-- In CI/CD pipelines to validate configuration changes
+- Après avoir modifié `swag2mcp.yaml` manuellement
+- Avant d'exécuter `mcp` ou `update` pour détecter les problèmes tôt
+- Lors du dépannage pour savoir pourquoi une spec ne se charge pas
+- Dans les pipelines CI/CD pour valider les modifications de configuration
 
-## Syntax
+## Syntaxe
 
 ```bash
-swag2mcp validate [path] [flags]
+swag2mcp validate [chemin] [drapeaux]
 ```
 
 ## Arguments
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Argument | Position | Requis | Description |
+|----------|----------|--------|-------------|
+| `chemin` | 1 | Non | Répertoire de l'espace de travail. S'il est omis, résolution via les règles de résolution de chemin. |
 
-## Flags
+## Drapeaux
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--tags` | `-t` | `string` | `""` | Validate only specs with matching tags (comma-separated) |
+| Drapeau | Raccourci | Type | Défaut | Description |
+|---------|-----------|------|--------|-------------|
+| `--tags` | `-t` | `string` | `""` | Valider uniquement les specs avec des étiquettes correspondantes (séparées par des virgules) |
 
-## How it works
+## Comment cela fonctionne
 
 ```bash
 swag2mcp validate
-swag2mcp validate ./my-workspace
+swag2mcp validate ./mon-espace-travail
 swag2mcp validate --tags=public
 ```
 
-## What is checked
+## Ce qui est vérifié
 
-| Check | Description |
-|-------|-------------|
-| YAML syntax | The config file must be valid YAML |
-| Config structure | All required fields present, types are correct |
-| Domain uniqueness | No duplicate domains |
-| Domain format | Lowercase, digits, hyphens only |
-| Spec file existence | The `location` file or URL must be reachable |
-| Spec format | The file must be valid OpenAPI 3.x, Swagger 2.0, or Postman collection |
-| Auth settings | Auth type and config are valid for the selected method |
-| HTTP client | HTTP client settings are valid |
+| Vérification | Description |
+|--------------|-------------|
+| Syntaxe YAML | Le fichier de configuration doit être un YAML valide |
+| Structure de la configuration | Tous les champs requis présents, les types sont corrects |
+| Unicité des domaines | Pas de domaines en double |
+| Format du domaine | Uniquement minuscules, chiffres, tirets |
+| Existence du fichier de spécification | Le fichier ou l'URL `location` doit être accessible |
+| Format de la spécification | Le fichier doit être un OpenAPI 3.x, Swagger 2.0 ou Postman valide |
+| Paramètres d'authentification | Le type et la configuration d'auth sont valides pour la méthode sélectionnée |
+| Client HTTP | Les paramètres du client HTTP sont valides |
 
-## What is NOT checked
+## Ce qui n'est PAS vérifié
 
-| Not checked | Reason |
+| Non vérifié | Raison |
 |-------------|--------|
-| Authentication endpoints | `validate` checks auth config syntax but does not test login/token exchange |
-| API endpoint availability | Only the spec file URL is checked, not the `base_url` |
-| `base_url` correctness | Format is validated, but no test request is made |
-| Mock server configuration | `base_mock_url` is not verified for connectivity |
+| Points d'accès d'authentification | `validate` vérifie la syntaxe de la configuration d'auth mais ne teste pas la connexion/l'échange de jetons |
+| Disponibilité des points d'accès API | Seule l'URL du fichier de spécification est vérifiée, pas la `base_url` |
+| Exactitude de `base_url` | Le format est validé, mais aucune requête de test n'est effectuée |
+| Configuration du serveur mock | `base_mock_url` n'est pas vérifié pour la connectivité |
 
-## Example output
+## Exemple de sortie
 
 ```
-✅ Configuration is valid.
-✓ Spec petstore: OK
-✓ Spec meteo: OK
-✗ Spec old-api: file not found
+✅ La configuration est valide.
+✓ Spec animalerie : OK
+✓ Spec meteo : OK
+✗ Spec ancienne-api : fichier introuvable
 ```
 
-## Post-command verification
+## Vérification post-commande
 
-If validation passes, the configuration is ready for `mcp`, `update`, or `run`.
+Si la validation réussit, la configuration est prête pour `mcp`, `update` ou `run`.
 
 ## Nuances
 
-- **No auto-init:** Unlike `add`, `ls`, or `run`, `validate` does **not** auto-initialize if the config is missing. It returns an error: `"configuration not found at <path>"`.
-- **Network access:** Remote spec URLs are fetched during validation. The command may take longer if specs are hosted on slow servers.
-- **Tag filtering:** When `--tags` is set, only specs matching the specified tags are validated. Other specs are skipped.
+- **Pas d'auto-initialisation :** Contrairement à `add`, `ls` ou `run`, `validate` ne s'auto-initialise **pas** si la configuration est manquante. Il retourne une erreur : « configuration introuvable à <chemin> ».
+- **Accès réseau :** Les URL de spécification distantes sont récupérées pendant la validation. La commande peut prendre plus de temps si les specs sont hébergées sur des serveurs lents.
+- **Filtrage par étiquettes :** Lorsque `--tags` est défini, seules les specs correspondant aux étiquettes spécifiées sont validées. Les autres specs sont ignorées.

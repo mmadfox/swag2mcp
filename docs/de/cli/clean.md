@@ -1,15 +1,15 @@
 # clean
 
-## Purpose
+## Zweck
 
-Remove cached remote specs and saved API invocation responses. This frees up disk space and forces a fresh download of spec files on the next `update` or `mcp` start.
+Entfernt zwischengespeicherte entfernte Spezifikationen und gespeicherte API-Aufrufantworten. Dies gibt Speicherplatz frei und erzwingt einen frischen Download der Spezifikationsdateien beim nächsten `update` oder `mcp`-Start.
 
-## When to use
+## Wann verwenden
 
-- Spec files have changed on the remote server and you want to force a refresh
-- You want to free up disk space
-- You are troubleshooting stale cache issues
-- Before running `update` to ensure a clean re-cache
+- Spezifikationsdateien haben sich auf dem entfernten Server geändert und Sie möchten eine Aktualisierung erzwingen
+- Sie möchten Speicherplatz freigeben
+- Sie beheben Probleme mit veraltetem Cache
+- Vor dem Ausführen von `update`, um eine saubere Neucachesicherzustellen
 
 ## Syntax
 
@@ -17,54 +17,54 @@ Remove cached remote specs and saved API invocation responses. This frees up dis
 swag2mcp clean [path]
 ```
 
-## Arguments
+## Argumente
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Argument | Position | Erforderlich | Beschreibung |
+|----------|----------|-------------|--------------|
+| `path` | 1 | Nein | Arbeitsbereichsverzeichnis. Wenn nicht angegeben, wird über die Pfadauflösungsregeln ermittelt. |
 
 ## Flags
 
-None.
+Keine.
 
-## How it works
+## Wie es funktioniert
 
 ```bash
 swag2mcp clean
 swag2mcp clean ./my-workspace
 ```
 
-## What is cleaned
+## Was bereinigt wird
 
-| Directory | Contents | Why |
-|-----------|----------|-----|
-| `cache/` | Downloaded remote spec files | Forces re-download on next access |
-| `responses/` | Saved API invocation responses | Frees disk space |
+| Verzeichnis | Inhalt | Warum |
+|-------------|--------|-------|
+| `cache/` | Heruntergeladene entfernte Spezifikationsdateien | Erzwingt erneuten Download beim nächsten Zugriff |
+| `responses/` | Gespeicherte API-Aufrufantworten | Gibt Speicherplatz frei |
 
-## What is preserved
+## Was erhalten bleibt
 
-| Directory | Contents | Why |
-|-----------|----------|-----|
-| `specs/` | Local spec files | These are your source files, not cache |
-| `auth_scripts/` | Authentication scripts | These are user-created, not cache |
+| Verzeichnis | Inhalt | Warum |
+|-------------|--------|-------|
+| `specs/` | Lokale Spezifikationsdateien | Dies sind Ihre Quelldateien, kein Cache |
+| `auth_scripts/` | Authentifizierungsskripte | Diese wurden vom Benutzer erstellt, kein Cache |
 
-## Orphan auth script cleanup
+## Bereinigung verwaister Auth-Skripte
 
-After cleaning, `clean` also removes auth scripts for specs that no longer exist in the configuration. This prevents stale scripts from accumulating.
+Nach der Bereinigung entfernt `clean` auch Auth-Skripte für Specs, die nicht mehr in der Konfiguration existieren. Dies verhindert die Ansammlung veralteter Skripte.
 
-## Automatic cleanup
+## Automatische Bereinigung
 
-When the MCP server starts (`swag2mcp mcp`), responses older than 48 hours are removed automatically. You typically don't need to run `clean` manually for routine maintenance.
+Beim Start des MCP-Servers (`swag2mcp mcp`) werden Antworten, die älter als 48 Stunden sind, automatisch entfernt. Normalerweise müssen Sie `clean` für die routinemäßige Wartung nicht manuell ausführen.
 
-## Post-command verification
+## Überprüfung nach dem Befehl
 
 ```bash
 ls ~/.swag2mcp/cache
-# Should be empty (directory exists but has no files)
+# Sollte leer sein (Verzeichnis existiert, hat aber keine Dateien)
 ```
 
-## Nuances
+## Nuancen
 
-- **No config required:** `clean` works even without a valid config file. It simply removes the cache and responses directories.
-- **Orphan cleanup is best-effort:** If the config file is corrupted or unreadable, orphan auth script cleanup is skipped (not fatal).
-- **Directories are preserved:** The `cache/` and `responses/` directories themselves are kept — only their contents are removed.
+- **Keine Konfiguration erforderlich:** `clean` funktioniert auch ohne gültige Konfigurationsdatei. Es entfernt einfach die Cache- und Antwortverzeichnisse.
+- **Bereinigung verwaister Einträge nach bestem Bemühen:** Wenn die Konfigurationsdatei beschädigt oder nicht lesbar ist, wird die Bereinigung verwaister Auth-Skripte übersprungen (nicht fatal).
+- **Verzeichnisse bleiben erhalten:** Die Verzeichnisse `cache/` und `responses/` selbst bleiben erhalten — nur ihr Inhalt wird entfernt.

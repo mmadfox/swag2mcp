@@ -1,28 +1,28 @@
-# Endpoint Tools
+# Herramientas de Endpoints
 
-Endpoint tools let the LLM view API endpoints at different levels of the hierarchy: all endpoints in a spec, in a collection, in a tag, or a single endpoint summary. Use these to discover available operations before inspecting or invoking.
+Las herramientas de endpoints permiten al LLM ver los endpoints de API en diferentes niveles de la jerarquía: todos los endpoints en una especificación, en una colección, en una etiqueta o un resumen de un solo endpoint. Úselas para descubrir operaciones disponibles antes de inspeccionar o invocar.
 
 ---
 
 ## endpoint_by_spec
 
-### Purpose
+### Propósito
 
-List all endpoints across an entire spec, spanning all collections and tags. Returns the most comprehensive view — every endpoint in the spec with its full context (tag, collection, spec).
+Listar todos los endpoints en una especificación completa, abarcando todas las colecciones y etiquetas. Devuelve la vista más completa — cada endpoint en la especificación con su contexto completo (etiqueta, colección, especificación).
 
-### When to use
+### Cuándo usarlo
 
-- When you want to see every endpoint available in a spec
-- When you don't know which collection or tag contains the endpoint you need
-- After `spec_by_id` to get the full endpoint list
+- Cuando desea ver cada endpoint disponible en una especificación
+- Cuando no sabe qué colección o etiqueta contiene el endpoint que necesita
+- Después de `spec_by_id` para obtener la lista completa de endpoints
 
-### Parameters
+### Parámetros
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `specId` | string | Yes | 32-character MD5 hash of the spec |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `specId` | string | Sí | Hash MD5 de 32 caracteres de la especificación |
 
-### Response
+### Respuesta
 
 ```json
 {
@@ -43,45 +43,45 @@ List all endpoints across an entire spec, spanning all collections and tags. Ret
 }
 ```
 
-| Field | Type | Description |
+| Campo | Tipo | Descripción |
 |-------|------|-------------|
-| `id` | string | Endpoint identifier |
-| `tagId` | string | Parent tag identifier |
-| `tagName` | string | Human-readable tag name |
-| `collectionId` | string | Parent collection identifier |
-| `collectionTitle` | string | Human-readable collection title |
-| `specId` | string | Parent spec identifier |
-| `specDomain` | string | Spec domain name |
-| `method` | string | HTTP method (GET, POST, PUT, DELETE, etc.) |
-| `path` | string | API path (e.g. /v1/forecast) |
-| `summary` | string | Human-readable summary of what the endpoint does |
+| `id` | string | Identificador del endpoint |
+| `tagId` | string | Identificador de la etiqueta padre |
+| `tagName` | string | Nombre de etiqueta legible por humanos |
+| `collectionId` | string | Identificador de la colección padre |
+| `collectionTitle` | string | Título de colección legible por humanos |
+| `specId` | string | Identificador de la especificación padre |
+| `specDomain` | string | Nombre de dominio de la especificación |
+| `method` | string | Método HTTP (GET, POST, PUT, DELETE, etc.) |
+| `path` | string | Ruta de la API (por ejemplo, /v1/forecast) |
+| `summary` | string | Resumen legible por humanos de lo que hace el endpoint |
 
-### Nuances
+### Matices
 
-- Returns `not_found` if the spec does not exist
-- Each endpoint includes its full ancestry (spec → collection → tag) for context
-- For a quick summary of a single endpoint, use `endpoint_by_id`
+- Devuelve `not_found` si la especificación no existe
+- Cada endpoint incluye su ascendencia completa (especificación → colección → etiqueta) para contexto
+- Para un resumen rápido de un solo endpoint, use `endpoint_by_id`
 
 ---
 
 ## endpoint_by_collection
 
-### Purpose
+### Propósito
 
-List all endpoints within a specific collection, regardless of their tag. Returns endpoints grouped by collection with spec and collection metadata.
+Listar todos los endpoints dentro de una colección específica, independientemente de su etiqueta. Devuelve endpoints agrupados por colección con metadatos de especificación y colección.
 
-### When to use
+### Cuándo usarlo
 
-- After `collection_by_id` to see all endpoints in a collection
-- When you want to explore a collection's full API surface
+- Después de `collection_by_id` para ver todos los endpoints en una colección
+- Cuando desea explorar la superficie de API completa de una colección
 
-### Parameters
+### Parámetros
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `collectionId` | string | Yes | 32-character MD5 hash of the collection |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `collectionId` | string | Sí | Hash MD5 de 32 caracteres de la colección |
 
-### Response
+### Respuesta
 
 ```json
 {
@@ -107,32 +107,32 @@ List all endpoints within a specific collection, regardless of their tag. Return
 }
 ```
 
-### Nuances
+### Matices
 
-- Returns `not_found` if the collection does not exist
-- Includes spec and collection metadata for context
-- Endpoints from all tags within the collection are returned together
+- Devuelve `not_found` si la colección no existe
+- Incluye metadatos de especificación y colección para contexto
+- Los endpoints de todas las etiquetas dentro de la colección se devuelven juntos
 
 ---
 
 ## endpoint_by_tag
 
-### Purpose
+### Propósito
 
-List all endpoints grouped under a specific tag. This is the most focused view — endpoints in one tag within one collection.
+Listar todos los endpoints agrupados bajo una etiqueta específica. Esta es la vista más enfocada — endpoints en una etiqueta dentro de una colección.
 
-### When to use
+### Cuándo usarlo
 
-- After `tag_by_id` to see the actual endpoints in a tag
-- When you know the tag and want to see its operations
+- Después de `tag_by_id` para ver los endpoints reales en una etiqueta
+- Cuando conoce la etiqueta y desea ver sus operaciones
 
-### Parameters
+### Parámetros
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `tagId` | string | Yes | 32-character MD5 hash of the tag |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `tagId` | string | Sí | Hash MD5 de 32 caracteres de la etiqueta |
 
-### Response
+### Respuesta
 
 ```json
 {
@@ -161,33 +161,33 @@ List all endpoints grouped under a specific tag. This is the most focused view �
 }
 ```
 
-### Nuances
+### Matices
 
-- Returns `not_found` if the tag does not exist
-- Includes full context: spec, collection, and tag metadata
-- Endpoints are scoped to a single tag within a single collection
+- Devuelve `not_found` si la etiqueta no existe
+- Incluye contexto completo: metadatos de especificación, colección y etiqueta
+- Los endpoints están limitados a una sola etiqueta dentro de una sola colección
 
 ---
 
 ## endpoint_by_id
 
-### Purpose
+### Propósito
 
-Get a quick summary of a single endpoint: method, path, summary, and deprecation status. This is a lightweight tool — for the full OpenAPI operation object (parameters, request body, response schemas), use `inspect`.
+Obtener un resumen rápido de un solo endpoint: método, ruta, resumen y estado de obsolescencia. Esta es una herramienta ligera — para el objeto de operación OpenAPI completo (parámetros, cuerpo de solicitud, esquemas de respuesta), use `inspect`.
 
-### When to use
+### Cuándo usarlo
 
-- When you have an endpoint ID and want a quick reminder of what it does
-- Before deciding whether to call `inspect` for full details
-- When you need to confirm the method and path before invoking
+- Cuando tiene un ID de endpoint y desea un recordatorio rápido de lo que hace
+- Antes de decidir si llamar a `inspect` para detalles completos
+- Cuando necesita confirmar el método y la ruta antes de invocar
 
-### Parameters
+### Parámetros
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the endpoint |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `id` | string | Sí | Hash MD5 de 32 caracteres del endpoint |
 
-### Response
+### Respuesta
 
 ```json
 {
@@ -214,15 +214,15 @@ Get a quick summary of a single endpoint: method, path, summary, and deprecation
 }
 ```
 
-| Field | Type | Description |
+| Campo | Tipo | Descripción |
 |-------|------|-------------|
-| `endpoint.id` | string | Endpoint identifier |
-| `endpoint.method` | string | HTTP method |
-| `endpoint.path` | string | API path |
-| `endpoint.summary` | string | Human-readable summary |
+| `endpoint.id` | string | Identificador del endpoint |
+| `endpoint.method` | string | Método HTTP |
+| `endpoint.path` | string | Ruta de la API |
+| `endpoint.summary` | string | Resumen legible por humanos |
 
-### Nuances
+### Matices
 
-- Returns `not_found` if the endpoint does not exist
-- This is a **quick summary** — it does not return parameters, request body, or response schemas
-- For full technical details (required before `invoke`), use `inspect`
+- Devuelve `not_found` si el endpoint no existe
+- Este es un **resumen rápido** — no devuelve parámetros, cuerpo de solicitud ni esquemas de respuesta
+- Para detalles técnicos completos (requeridos antes de `invoke`), use `inspect`

@@ -1,12 +1,12 @@
-# Environment Variables
+# Variables d'environnement
 
-## Overview
+## Aperçu
 
-swag2mcp supports environment variable substitution in the configuration file using `$(VAR_NAME)` syntax. This lets you keep sensitive data (tokens, passwords, keys) out of the YAML file.
+swag2mcp prend en charge la substitution de variables d'environnement dans le fichier de configuration en utilisant la syntaxe `$(NOM_VAR)`. Cela vous permet de garder les données sensibles (jetons, mots de passe, clés) hors du fichier YAML.
 
-## How it works
+## Comment cela fonctionne
 
-When swag2mcp starts, it scans the configuration for `$(VAR_NAME)` patterns and replaces them with the value of the corresponding environment variable.
+Lorsque swag2mcp démarre, il analyse la configuration pour les motifs `$(NOM_VAR)` et les remplace par la valeur de la variable d'environnement correspondante.
 
 ```yaml
 specs:
@@ -14,49 +14,49 @@ specs:
     auth:
       type: bearer
       config:
-        token: "$(API_TOKEN)"
+        token: "$(JETON_API)"
 ```
 
-If the environment variable `API_TOKEN` is set, it will be substituted. If it is not set, the value becomes empty.
+Si la variable d'environnement `JETON_API` est définie, elle sera substituée. Si elle n'est pas définie, la valeur devient vide.
 
-## Where `$(VAR)` is resolved
+## Où `$(VAR)` est résolu
 
-| Field | Example |
+| Champ | Exemple |
 |-------|---------|
-| Auth `token` (bearer) | `token: "$(API_TOKEN)"` |
-| Auth `username` / `password` (basic, digest) | `password: "$(API_PASSWORD)"` |
-| Auth `client_id` / `client_secret` (oauth2-cc, oauth2-pwd) | `client_secret: "$(OAUTH_SECRET)"` |
-| Auth `api_key` / `secret_key` (hmac) | `api_key: "$(BINANCE_API_KEY)"` |
-| Auth `domain` (script) | `domain: "$(AUTH_DOMAIN)"` |
-| MCP server token | `token: "$(MCP_TOKEN)"` |
-| HTTP client headers | `"X-API-Key": "$(API_KEY)"` |
-| HTTP client cookie values | `value: "$(SESSION_TOKEN)"` |
+| Jeton `token` (bearer) | `token: "$(JETON_API)"` |
+| `username` / `password` (basic, digest) | `password: "$(MOT_DE_PASSE_API)"` |
+| `client_id` / `client_secret` (oauth2-cc, oauth2-pwd) | `client_secret: "$(SECRET_OAUTH)"` |
+| `api_key` / `secret_key` (hmac) | `api_key: "$(CLE_API_BINANCE)"` |
+| `domain` (script) | `domain: "$(DOMAINE_AUTH)"` |
+| Jeton du serveur MCP | `token: "$(JETON_MCP)"` |
+| En-têtes du client HTTP | `"X-API-Key": "$(CLE_API)"` |
+| Valeurs de cookies du client HTTP | `value: "$(JETON_SESSION)"` |
 
-## Where `$(VAR)` is NOT resolved
+## Où `$(VAR)` n'est PAS résolu
 
-- Base URLs (`base_url`)
-- Collection locations (`location`)
-- Spec domain names (`domain`)
+- URL de base (`base_url`)
+- Emplacements de collections (`location`)
+- Noms de domaine de spec (`domain`)
 
-## Example
+## Exemple
 
 ```bash
-export API_TOKEN="eyJhbGciOiJIUzI1NiIs..."
-export MCP_TOKEN="my-secret-token"
+export JETON_API="eyJhbGciOiJIUzI1NiIs..."
+export JETON_MCP="mon-jeton-secret"
 
 swag2mcp mcp
 ```
 
-## Security best practices
+## Bonnes pratiques de sécurité
 
-- **Never** store secrets directly in the YAML file
-- Use environment variables or an external secret manager
-- Add the YAML file to `.gitignore` if it contains any hardcoded secrets
-- Set environment variables in your shell profile, IDE configuration, or deployment pipeline
+- **Ne stockez jamais** les secrets directement dans le fichier YAML
+- Utilisez des variables d'environnement ou un gestionnaire de secrets externe
+- Ajoutez le fichier YAML à `.gitignore` s'il contient des secrets codés en dur
+- Définissez les variables d'environnement dans votre profil shell, la configuration de votre IDE ou votre pipeline de déploiement
 
-## Syntax details
+## Détails de syntaxe
 
-- `$(VAR_NAME)` — standard syntax
-- `$( VAR_NAME )` — whitespace inside parentheses is allowed and trimmed
-- `$()` — empty variable name returns the original string unchanged
-- Nested `$(...)` patterns are not resolved
+- `$(NOM_VAR)` — syntaxe standard
+- `$( NOM_VAR )` — les espaces entre parenthèses sont autorisés et supprimés
+- `$()` — un nom de variable vide retourne la chaîne d'origine inchangée
+- Les motifs `$(...)` imbriqués ne sont pas résolus

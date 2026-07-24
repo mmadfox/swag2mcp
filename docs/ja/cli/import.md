@@ -1,42 +1,42 @@
 # import
 
-## Purpose
+## 目的
 
-Import spec files into the workspace or restore a full workspace from a ZIP backup. Three modes cover different scenarios: adding a single spec, bulk-importing from existing config, or restoring a complete workspace.
+spec ファイルをワークスペースにインポートするか、ZIP バックアップからワークスペース全体を復元します。3 つのモードが異なるシナリオをカバーします：単一 spec の追加、既存設定からの一括インポート、または完全なワークスペースの復元。
 
-## When to use
+## 使用するタイミング
 
-- You have a spec URL or file and want to add it to the workspace
-- You want to download all spec files referenced in the config
-- You need to restore a workspace from a ZIP backup created by `export`
-- You are migrating swag2mcp to another machine
+- spec URL またはファイルがあり、ワークスペースに追加したい場合
+- 設定で参照されているすべての spec ファイルをダウンロードしたい場合
+- `export` で作成された ZIP バックアップからワークスペースを復元する必要がある場合
+- swag2mcp を別のマシンに移行する場合
 
-## Syntax
+## 構文
 
 ```bash
 swag2mcp import [path] [source] [name] [flags]
 ```
 
-## Arguments
+## 引数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
-| `source` | 2 | Varies | URL or local path to a spec file, or path to a ZIP archive |
-| `name` | 3 | Varies | Domain name for the new spec |
+| 引数 | 位置 | 必須 | 説明 |
+|------|------|------|------|
+| `path` | 1 | いいえ | ワークスペースディレクトリ。省略時はパス解決ルールに従います。 |
+| `source` | 2 | 場合による | spec ファイルの URL またはローカルパス、または ZIP アーカイブへのパス |
+| `name` | 3 | 場合による | 新しい spec のドメイン名 |
 
-## Flags
+## フラグ
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--spec` | `-s` | `stringSlice` | `nil` | Import collections from specified specs (comma-separated) |
-| `--from-zip` | | `string` | `""` | Restore workspace from a swag2mcp backup ZIP |
+| フラグ | 省略形 | 型 | デフォルト | 説明 |
+|-------|--------|-----|-----------|------|
+| `--spec` | `-s` | `stringSlice` | `nil` | 指定された spec から collection をインポート（カンマ区切り） |
+| `--from-zip` | | `string` | `""` | swag2mcp バックアップ ZIP からワークスペースを復元 |
 
-## How it works
+## 仕組み
 
-### Mode 1 — Single import from URL or file
+### モード 1 — URL またはファイルからの単一インポート
 
-Download a spec file and add it to the workspace with a domain name:
+spec ファイルをダウンロードし、ドメイン名を付けてワークスペースに追加します：
 
 ```bash
 swag2mcp import https://example.com/spec.yaml myspec
@@ -44,46 +44,46 @@ swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
 swag2mcp import ./local-spec.yaml myspec
 ```
 
-The spec file is saved to `specs/` and the config is updated with the new spec entry.
+spec ファイルは `specs/` に保存され、設定が新しい spec エントリで更新されます。
 
-### Mode 2 — Bulk import from existing config
+### モード 2 — 既存設定からの一括インポート
 
-Download all collections for the specified domains from their configured URLs:
+指定されたドメインのすべての collection を、設定された URL からダウンロードします：
 
 ```bash
 swag2mcp import --spec meteo
 swag2mcp import /path/to/workspace --spec meteo,store
 ```
 
-Each collection's spec file is downloaded and saved to `specs/`. The config is updated to point to the local copies.
+各 collection の spec ファイルがダウンロードされ、`specs/` に保存されます。設定はローカルコピーを指すように更新されます。
 
-### Mode 3 — Restore from ZIP backup
+### モード 3 — ZIP バックアップからの復元
 
-Restore a full workspace from a ZIP archive created by `swag2mcp export`:
+`swag2mcp export` で作成された ZIP アーカイブからワークスペース全体を復元します：
 
 ```bash
 swag2mcp import --from-zip /path/to/backup.zip
 swag2mcp import /path/to/workspace /path/to/backup.zip
 ```
 
-> **The ZIP must be created by `swag2mcp export`.** Arbitrary ZIP files will not work — the archive has a specific internal structure (`swag2mcp.yaml`, `specs/`, `auth_scripts/`).
+> **ZIP は `swag2mcp export` で作成されたものである必要があります。** 任意の ZIP ファイルは機能しません — アーカイブは特定の内部構造（`swag2mcp.yaml`、`specs/`、`auth_scripts/`）を持っています。
 
-## Post-command verification
+## コマンド実行後の確認
 
 ```bash
-# Single or bulk import
+# 単一または一括インポート
 swag2mcp ls [path]
-# The new spec should appear in the list
+# 新しい spec がリストに表示されるはずです
 
-# ZIP restore
+# ZIP 復元
 swag2mcp ls [path]
-# All specs from the backup should appear
+# バックアップのすべての spec が表示されるはずです
 ```
 
-## Nuances
+## ニュアンス
 
-- **Bulk mode requires config:** When using `--spec`, the config file must exist. Run `init` first if needed.
-- **Single import creates workspace:** If the workspace doesn't exist, it is created automatically.
-- **ZIP detection:** A positional argument ending in `.zip` is treated as a ZIP source. The `--from-zip` flag takes priority over positional detection.
-- **`--force`:** Available for ZIP restore to overwrite an existing workspace.
-- **HTTP client:** The global HTTP client settings from the config are applied during import (timeout, proxy, headers, etc.).
+- **一括モードには設定が必要:** `--spec` を使用する場合、設定ファイルが存在する必要があります。必要に応じて最初に `init` を実行してください。
+- **単一インポートはワークスペースを作成:** ワークスペースが存在しない場合、自動的に作成されます。
+- **ZIP 検出:** `.zip` で終わる位置引数は ZIP ソースとして扱われます。`--from-zip` フラグは位置検出より優先されます。
+- **`--force`:** ZIP 復元時に既存のワークスペースを上書きするために使用できます。
+- **HTTP クライアント:** 設定からのグローバル HTTP クライアント設定がインポート中に適用されます（タイムアウト、プロキシ、ヘッダーなど）。

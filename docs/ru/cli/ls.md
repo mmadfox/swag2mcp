@@ -1,45 +1,45 @@
 # ls
 
-## Purpose
+## Назначение
 
-List all configured **specs** and their **collections** in a human-readable format. This is the primary way to inspect what APIs are available in your workspace.
+Показать список всех настроенных **спецификаций** и их **коллекций** в человекочитаемом формате. Это основной способ просмотра того, какие API доступны в вашей рабочей области.
 
-## When to use
+## Когда использовать
 
-- You want to see what APIs are configured
-- You need to find a spec or collection ID
-- You want to check how many endpoints each collection has
-- You want to filter specs by tags
+- Вы хотите увидеть, какие API настроены
+- Вам нужно найти ID спецификации или коллекции
+- Вы хотите проверить, сколько эндпоинтов имеет каждая коллекция
+- Вы хотите отфильтровать спецификации по тегам
 
-## Syntax
+## Синтаксис
 
 ```bash
 swag2mcp ls [path] [flags]
 ```
 
-## Arguments
+## Аргументы
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Аргумент | Позиция | Обязательно | Описание |
+|----------|----------|-------------|----------|
+| `path` | 1 | Нет | Директория рабочей области. Если не указан, разрешается по правилам разрешения пути. |
 
-## Flags
+## Флаги
 
-| Flag | Shorthand | Type | Default | Description |
+| Флаг | Сокращение | Тип | По умолчанию | Описание |
 |------|-----------|------|---------|-------------|
-| `--tags` | `-t` | `string` | `""` | Filter specs by tags (comma-separated) |
+| `--tags` | `-t` | `string` | `""` | Фильтр спецификаций по тегам (через запятую) |
 
-## How it works
+## Как это работает
 
-### List all specs
+### Список всех спецификаций
 
-Shows every spec with its domain, collections, and endpoint counts:
+Показывает каждую спецификацию с её доменом, коллекциями и количеством эндпоинтов:
 
 ```bash
 swag2mcp ls
 ```
 
-Example output:
+Пример вывода:
 
 ```
 Specifications:
@@ -52,21 +52,21 @@ Specifications:
     market-data (12 endpoints)
 ```
 
-### Filter by tags
+### Фильтр по тегам
 
-Show only specs that have the specified tags:
+Показать только спецификации, имеющие указанные теги:
 
 ```bash
 swag2mcp ls --tags=public
 swag2mcp ls --tags=public,internal
 ```
 
-## Post-command verification
+## Проверка после команды
 
-Use `ls` after `add`, `delete`, `update`, or `import` to confirm the workspace state matches your expectations.
+Используйте `ls` после `add`, `delete`, `update` или `import`, чтобы убедиться, что состояние рабочей области соответствует ожиданиям.
 
-## Nuances
+## Нюансы
 
-- **Auto-init:** If no config file exists, `ls` automatically runs the init wizard first.
-- **Tag filtering:** Tags are comma-separated. Specs matching **any** of the specified tags are shown (OR logic).
-- **Output format:** The output is plain text, not JSON. For machine-readable output, use `info`.
+- **Автоинициализация:** Если файл конфигурации не существует, `ls` автоматически запускает мастер инициализации.
+- **Фильтрация по тегам:** Теги разделяются запятыми. Показываются спецификации, соответствующие **любому** из указанных тегов (логика ИЛИ).
+- **Формат вывода:** Вывод в виде обычного текста, не JSON. Для машиночитаемого вывода используйте `info`.

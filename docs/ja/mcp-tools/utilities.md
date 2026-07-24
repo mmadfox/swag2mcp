@@ -1,37 +1,37 @@
-# Utility Tools
+# ユーティリティツール
 
-Utility tools provide supporting functionality: retrieving auth tokens, getting runtime information, and working with large API responses that don't fit inline.
+ユーティリティツールは、認証トークンの取得、ランタイム情報の取得、インラインに収まらない大規模な API レスポンスの操作など、補助的な機能を提供します。
 
 ---
 
 ## auth
 
-### Purpose
+### 目的
 
-Retrieve an authentication token, headers, or query parameters for a specific spec. This gives the LLM access to credentials that can be used outside of swag2mcp (e.g., generating a curl command).
+特定のスペックの認証トークン、ヘッダー、またはクエリパラメータを取得します。これにより、LLM は swag2mcp の外部で使用できる認証情報（例：curl コマンドの生成）にアクセスできます。
 
-### When to use
+### 使用するタイミング
 
-- Only when the user explicitly asks for the raw token or credentials
-- When generating a curl command or code snippet that needs auth
-- When the user wants to see what auth method is configured
+- ユーザーが明示的に生のトークンや認証情報を要求した場合のみ
+- 認証が必要な curl コマンドやコードスニペットを生成する場合
+- ユーザーが設定されている認証方法を確認したい場合
 
-### When NOT to use
+### 使用すべきでないタイミング
 
-- **Do not** call `auth` before `inspect` or `invoke` — `invoke` automatically obtains and applies authentication
-- **Do not** call `auth` just to check if auth is configured — use `info` instead
+- `inspect` や `invoke` の前に `auth` を呼び出さ**ないでください**。`invoke` は自動的に認証を取得して適用します
+- 認証が設定されているかどうかを確認するためだけに `auth` を呼び出さ**ないでください**。代わりに `info` を使用してください
 
-### How it works
+### 動作方法
 
-Looks up the spec's auth configuration and executes the auth flow (token exchange, script execution, etc.) to obtain the current credentials.
+スペックの認証設定を検索し、認証フロー（トークン交換、スクリプト実行など）を実行して現在の認証情報を取得します。
 
-### Parameters
+### パラメータ
 
-| Parameter | Type | Required | Description |
+| パラメータ | 型 | 必須 | 説明 |
 |-----------|------|----------|-------------|
-| `specId` | string | Yes | 32-character MD5 hash of the spec |
+| `specId` | string | はい | スペックの 32 文字 MD5 ハッシュ |
 
-### Response
+### レスポンス
 
 ```json
 {
@@ -46,43 +46,43 @@ Looks up the spec's auth configuration and executes the auth flow (token exchang
 }
 ```
 
-| Field | Type | Description |
+| フィールド | 型 | 説明 |
 |-------|------|-------------|
-| `token` | string | Raw token value (bearer token, API key, etc.) |
-| `headers` | object | HTTP headers to include in requests |
-| `queryParams` | object | Query parameters to include in requests |
+| `token` | string | 生のトークン値（ベアラートークン、API キーなど） |
+| `headers` | object | リクエストに含める HTTP ヘッダー |
+| `queryParams` | object | リクエストに含めるクエリパラメータ |
 
-### Nuances
+### 補足
 
-- **Disabled by default in production:** The `--disable-llm-auth` flag (default: `true`) removes the `auth` tool from the MCP tool list entirely. The LLM cannot see or request tokens. Set `--disable-llm-auth=false` to enable it for debugging or short-lived tokens.
-- **`invoke` handles auth automatically:** You do not need to call `auth` before `invoke`. The invoke service automatically obtains and applies the correct authentication.
-- **Supports 9 auth methods:** `none`, `basic`, `bearer`, `digest`, `hmac`, `oauth2-cc` (client credentials), `oauth2-pwd` (password), `api-key`, `script`.
-- Returns `auth_error` if the auth method fails (e.g., OAuth2 token endpoint unreachable, script execution failure).
+- **デフォルトで本番環境では無効：** `--disable-llm-auth` フラグ（デフォルト：`true`）は、MCP ツールリストから `auth` ツールを完全に削除します。LLM はトークンを表示したり要求したりできません。デバッグや短期間のトークンには `--disable-llm-auth=false` を設定して有効にします。
+- **`invoke` は認証を自動処理：** `invoke` の前に `auth` を呼び出す必要はありません。invoke サービスは自動的に正しい認証を取得して適用します。
+- **9 つの認証方法をサポート：** `none`、`basic`、`bearer`、`digest`、`hmac`、`oauth2-cc`（クライアントクレデンシャル）、`oauth2-pwd`（パスワード）、`api-key`、`script`。
+- 認証方法が失敗した場合（例：OAuth2 トークンエンドポイントに到達できない、スクリプト実行の失敗）、`auth_error` を返します。
 
 ---
 
 ## info
 
-### Purpose
+### 目的
 
-Return a comprehensive summary of the swag2mcp runtime: version, workspace path, active specs, HTTP client settings, MCP transport configuration, auth methods, and mock mode status.
+swag2mcp ランタイムの包括的な概要（バージョン、ワークスペースパス、アクティブなスペック、HTTP クライアント設定、MCP トランスポート設定、認証方法、モックモードステータス）を返します。
 
-### When to use
+### 使用するタイミング
 
-- When the user asks about the system configuration
-- When you need to check runtime settings (timeout, response size limit, transport)
-- When you need to know which auth methods are available
-- When troubleshooting configuration issues
+- ユーザーがシステム設定について質問した場合
+- ランタイム設定（タイムアウト、レスポンスサイズ制限、トランスポート）を確認する必要がある場合
+- どの認証方法が利用可能かを知る必要がある場合
+- 設定の問題をトラブルシューティングする場合
 
-### How it works
+### 動作方法
 
-Returns a pre-computed snapshot of the runtime state. No parameters needed.
+ランタイム状態の事前計算されたスナップショットを返します。パラメータは不要です。
 
-### Parameters
+### パラメータ
 
-None.
+なし。
 
-### Response
+### レスポンス
 
 ```json
 {
@@ -121,50 +121,50 @@ None.
 }
 ```
 
-| Field | Type | Description |
+| フィールド | 型 | 説明 |
 |-------|------|-------------|
-| `version` | string | swag2mcp version |
-| `workspace` | string | Workspace directory path |
-| `uptime` | string | Server uptime (human-readable) |
-| `specs` | object | Spec summary: total, active, disabled, collections, endpoints |
-| `http_client` | object | HTTP client configuration |
-| `http_client.max_response_size` | string | Max response size in human-readable format (e.g. "2 KB") |
-| `mcp` | object | MCP server configuration |
-| `auth` | object | Available auth methods |
-| `mock` | object | Mock server status |
+| `version` | string | swag2mcp バージョン |
+| `workspace` | string | ワークスペースディレクトリパス |
+| `uptime` | string | サーバー稼働時間（人間可読） |
+| `specs` | object | スペック概要：total、active、disabled、collections、endpoints |
+| `http_client` | object | HTTP クライアント設定 |
+| `http_client.max_response_size` | string | 人間可読形式の最大レスポンスサイズ（例："2 KB"） |
+| `mcp` | object | MCP サーバー設定 |
+| `auth` | object | 利用可能な認証方法 |
+| `mock` | object | モックサーバーステータス |
 
-### Nuances
+### 補足
 
-- `max_response_size` is shown in human-readable format (e.g., `"1 KB"`, `"2 MB"`)
-- `uptime` is computed from the server start time
-- The data is a snapshot taken at bootstrap time — it reflects the state when the MCP server started
+- `max_response_size` は人間可読形式で表示されます（例：`"1 KB"`、`"2 MB"`）
+- `uptime` はサーバー起動時間から計算されます
+- データはブートストラップ時に取得されたスナップショットであり、MCP サーバー起動時の状態を反映します
 
 ---
 
 ## response_outline
 
-### Purpose
+### 目的
 
-Get a high-level structural summary of a large JSON response file that was saved to disk by `invoke`. It returns the shape of the data — keys, types, array lengths, and navigation hints — without returning the actual values.
+`invoke` によってディスクに保存された大規模な JSON レスポンスファイルの高レベルの構造概要を取得します。実際の値を返さずに、データの形状（キー、型、配列長、ナビゲーションヒント）を返します。
 
-### When to use
+### 使用するタイミング
 
-- Immediately after `invoke` returns a `fileRef` (response too large for inline)
-- This is the **mandatory first step** in the large-response workflow
+- `invoke` が `fileRef` を返した直後（レスポンスがインラインに大きすぎる場合）
+- これは大規模レスポンスワークフローの**必須の最初のステップ**です
 
-### How it works
+### 動作方法
 
-Reads the saved response file and analyzes its structure: top-level type, keys, array lengths, nesting depth, and compression hints.
+保存されたレスポンスファイルを読み取り、その構造を分析します：トップレベルの型、キー、配列長、ネスト深度、圧縮ヒント。
 
-### Parameters
+### パラメータ
 
-| Parameter | Type | Required | Description |
+| パラメータ | 型 | 必須 | 説明 |
 |-----------|------|----------|-------------|
-| `path` | string | Yes | Absolute path from `fileRef.path` |
-| `maxDepth` | int | No | Maximum recursion depth (default: 3) |
-| `maxArrayItems` | int | No | How many array items to inspect (default: 5) |
+| `path` | string | はい | `fileRef.path` からの絶対パス |
+| `maxDepth` | int | いいえ | 最大再帰深度（デフォルト：3） |
+| `maxArrayItems` | int | いいえ | 検査する配列アイテム数（デフォルト：5） |
 
-### Response
+### レスポンス
 
 ```json
 {
@@ -205,67 +205,67 @@ Reads the saved response file and analyzes its structure: top-level type, keys, 
 }
 ```
 
-| Field | Type | Description |
+| フィールド | 型 | 説明 |
 |-------|------|-------------|
-| `type` | string | Top-level type: "object" or "array" |
-| `size` | int | File size in bytes |
-| `lineCount` | int | Number of lines in the file |
-| `depth` | int | Maximum nesting depth inspected |
-| `structure` | object | Recursive structure with keys, types, array lengths |
-| `schemaHint` | string | One-line summary of the top-level shape |
-| `keys` | array | Top-level keys (for objects) |
-| `itemCount` | int | Array length (for arrays) |
-| `compressionHints` | array | Suggested `response_compress` calls with parameters |
-| `navigationHints` | object | Top-level paths and arrays with lengths |
+| `type` | string | トップレベルの型："object" または "array" |
+| `size` | int | ファイルサイズ（バイト） |
+| `lineCount` | int | ファイルの行数 |
+| `depth` | int | 検査された最大ネスト深度 |
+| `structure` | object | キー、型、配列長を持つ再帰的構造 |
+| `schemaHint` | string | トップレベルの形状の 1 行サマリー |
+| `keys` | array | トップレベルのキー（オブジェクトの場合） |
+| `itemCount` | int | 配列の長さ（配列の場合） |
+| `compressionHints` | array | パラメータ付きの推奨 `response_compress` 呼び出し |
+| `navigationHints` | object | トップレベルのパスと長さ付きの配列 |
 
-### Nuances
+### 補足
 
-- Returns `validation_failed` if the path is invalid or not inside the responses directory
-- Returns `not_found` if the file does not exist
-- Returns `validation_failed` if the file is not valid JSON
-- The `compressionHints` field provides ready-to-use suggestions for `response_compress` calls
+- パスが無効またはレスポンスディレクトリ内にない場合は `validation_failed` を返します
+- ファイルが存在しない場合は `not_found` を返します
+- ファイルが有効な JSON でない場合は `validation_failed` を返します
+- `compressionHints` フィールドは、`response_compress` 呼び出しのすぐに使用できる提案を提供します
 
 ---
 
 ## response_compress
 
-### Purpose
+### 目的
 
-Reduce a JSON value inside a saved response file so it fits within the response size limit and can be returned to the LLM inline. Multiple compression modes let you choose the right trade-off between size and information.
+保存されたレスポンスファイル内の JSON 値を削減してレスポンスサイズ制限内に収め、LLM にインラインで返せるようにします。複数の圧縮モードから、サイズと情報の適切なトレードオフを選択できます。
 
-### When to use
+### 使用するタイミング
 
-- After `response_outline` to understand the structure
-- When you need to get data from a large response inline
-- When `response_slice` is too narrow and you need a broader view
+- `response_outline` の後に構造を理解するため
+- 大規模レスポンスからインラインでデータを取得する必要がある場合
+- `response_slice` が狭すぎて、より広いビューが必要な場合
 
-### How it works
+### 動作方法
 
-Reads the saved response file, navigates to the specified JSON path, applies the compression mode, and returns the compressed result. If the result still exceeds the size limit, it is saved to a new file.
+保存されたレスポンスファイルを読み取り、指定された JSON パスに移動し、圧縮モードを適用して、圧縮結果を返します。結果がまだサイズ制限を超えている場合は、新しいファイルに保存されます。
 
-### Parameters
+### パラメータ
 
-| Parameter | Type | Required | Description |
+| パラメータ | 型 | 必須 | 説明 |
 |-----------|------|----------|-------------|
-| `path` | string | Yes | Absolute path from `fileRef.path` |
-| `jsonPath` | string | No | Path to the value to compress (e.g. `data` or `data.0`) |
-| `mode` | string | Yes | Compression mode (see table below) |
-| `arrayHead` | int | No | Leading items to keep in `sample_array` mode (default: 3) |
-| `arrayTail` | int | No | Trailing items to keep in `sample_array` mode (default: 2) |
-| `stringLen` | int | No | Max string length in `truncate_strings` mode (default: 80) |
-| `selectKeys` | array | No | Keys to keep in `select_keys` mode |
+| `path` | string | はい | `fileRef.path` からの絶対パス |
+| `jsonPath` | string | いいえ | 圧縮する値へのパス（例：`data` または `data.0`） |
+| `mode` | string | はい | 圧縮モード（以下の表を参照） |
+| `arrayHead` | int | いいえ | `sample_array` モードで保持する先頭アイテム数（デフォルト：3） |
+| `arrayTail` | int | いいえ | `sample_array` モードで保持する末尾アイテム数（デフォルト：2） |
+| `stringLen` | int | いいえ | `truncate_strings` モードの最大文字列長（デフォルト：80） |
+| `selectKeys` | array | いいえ | `select_keys` モードで保持するキー |
 
-### Compression modes
+### 圧縮モード
 
-| Mode | Description | Best for |
+| モード | 説明 | 最適な用途 |
 |------|-------------|----------|
-| `first_of_array` | Keep only the first element of an array | When all elements have the same structure |
-| `sample_array` | Keep head and tail of an array | When you need to see the range of values |
-| `truncate_strings` | Shorten every string to `stringLen` characters | When strings are very long but structure matters |
-| `keys_only` | Replace object values with their type names | When you only need the structure |
-| `select_keys` | Keep only specified keys in every object | When you need specific fields from many objects |
+| `first_of_array` | 配列の最初の要素のみを保持 | すべての要素が同じ構造を持つ場合 |
+| `sample_array` | 配列の先頭と末尾を保持 | 値の範囲を確認する必要がある場合 |
+| `truncate_strings` | すべての文字列を `stringLen` 文字に短縮 | 文字列が非常に長いが構造が重要な場合 |
+| `keys_only` | オブジェクトの値を型名に置換 | 構造のみが必要な場合 |
+| `select_keys` | すべてのオブジェクトで指定されたキーのみを保持 | 多くのオブジェクトから特定のフィールドが必要な場合 |
 
-### Response
+### レスポンス
 
 ```json
 {
@@ -277,48 +277,48 @@ Reads the saved response file, navigates to the specified JSON path, applies the
 }
 ```
 
-| Field | Type | Description |
+| フィールド | 型 | 説明 |
 |-------|------|-------------|
-| `body` | any | Compressed JSON value (present when within size limit) |
-| `fileRef` | object | File reference (present when still too large) |
-| `hint` | string | Explanation of what was compressed |
+| `body` | any | 圧縮された JSON 値（サイズ制限内の場合に存在） |
+| `fileRef` | object | ファイル参照（まだ大きすぎる場合に存在） |
+| `hint` | string | 何が圧縮されたかの説明 |
 
-### Nuances
+### 補足
 
-- If the compressed result still exceeds `max_response_size`, it is saved to a new file and a `FileReference` is returned
-- Default values: `arrayHead=3`, `arrayTail=2`, `stringLen=80`
-- Returns `validation_failed` for invalid path, invalid JSONPath, or non-JSON file
-- Returns `not_found` if the file does not exist or JSONPath does not match
+- 圧縮結果がまだ `max_response_size` を超える場合は、新しいファイルに保存され、`FileReference` が返されます
+- デフォルト値：`arrayHead=3`、`arrayTail=2`、`stringLen=80`
+- 無効なパス、無効な JSONPath、または JSON 以外のファイルの場合は `validation_failed` を返します
+- ファイルが存在しないか JSONPath が一致しない場合は `not_found` を返します
 
 ---
 
 ## response_slice
 
-### Purpose
+### 目的
 
-Extract a specific fragment of a saved JSON response file by logical JSON path or by line range. Unlike `response_compress`, this gives you the raw, unmodified data.
+保存された JSON レスポンスファイルの特定の断片を、論理的な JSON パスまたは行範囲で抽出します。`response_compress` とは異なり、未加工の変更されていないデータを提供します。
 
-### When to use
+### 使用するタイミング
 
-- When you need a specific element or value from a large response
-- When `response_compress` doesn't give you enough detail
-- When you want to navigate through a response step by step
+- 大規模レスポンスから特定の要素や値を取得する必要がある場合
+- `response_compress` で十分な詳細が得られない場合
+- レスポンスを段階的にナビゲートしたい場合
 
-### How it works
+### 動作方法
 
-Reads the saved response file and extracts a fragment by JSON path (e.g., `data.3.name`) or by line range (e.g., `120-240`). Returns navigation hints for stepping through arrays and objects.
+保存されたレスポンスファイルを読み取り、JSON パス（例：`data.3.name`）または行範囲（例：`120-240`）で断片を抽出します。配列やオブジェクトをステップ実行するためのナビゲーションヒントを返します。
 
-### Parameters
+### パラメータ
 
-| Parameter | Type | Required | Description |
+| パラメータ | 型 | 必須 | 説明 |
 |-----------|------|----------|-------------|
-| `path` | string | Yes | Absolute path from `fileRef.path` |
-| `jsonPath` | string | No | Logical path to the value (e.g. `data.3.name`) |
-| `line` | int | No | 1-based line number to center the fragment on |
-| `range` | string | No | Line range as `start-end` (e.g. `120-240`) |
-| `around` | int | No | Lines to include around `line` (default: 20) |
+| `path` | string | はい | `fileRef.path` からの絶対パス |
+| `jsonPath` | string | いいえ | 値への論理パス（例：`data.3.name`） |
+| `line` | int | いいえ | 断片を中心とする 1 ベースの行番号 |
+| `range` | string | いいえ | `start-end` 形式の行範囲（例：`120-240`） |
+| `around` | int | いいえ | `line` の前後に含める行数（デフォルト：20） |
 
-### Response
+### レスポンス
 
 ```json
 {
@@ -340,24 +340,24 @@ Reads the saved response file and extracts a fragment by JSON path (e.g., `data.
 }
 ```
 
-| Field | Type | Description |
+| フィールド | 型 | 説明 |
 |-------|------|-------------|
-| `lines` | array | 1-based line range [start, end] |
-| `fragment` | string | Raw JSON text (when small enough) |
-| `value` | any | Extracted JSON value |
-| `jsonPath` | string | The JSON path used |
-| `context` | string | "object", "array", or "value" |
-| `isComplete` | bool | True when the value is a valid JSON fragment |
-| `nextLine` | int | Suggested next line for line-based navigation |
-| `prevLine` | int | Suggested previous line |
-| `nextPath` | string | Suggested next JSON path for array navigation |
-| `prevPath` | string | Suggested previous JSON path |
+| `lines` | array | 1 ベースの行範囲 [start, end] |
+| `fragment` | string | 生の JSON テキスト（十分に小さい場合） |
+| `value` | any | 抽出された JSON 値 |
+| `jsonPath` | string | 使用された JSON パス |
+| `context` | string | "object"、"array"、または "value" |
+| `isComplete` | bool | 値が有効な JSON 断片の場合は true |
+| `nextLine` | int | 行ベースのナビゲーションのための次の推奨行 |
+| `prevLine` | int | 推奨される前の行 |
+| `nextPath` | string | 配列ナビゲーションのための次の推奨 JSON パス |
+| `prevPath` | string | 推奨される前の JSON パス |
 
-### Nuances
+### 補足
 
-- **Prefer `jsonPath` over line numbers** — JSON paths are stable and descriptive, line numbers change if the file is regenerated
-- If the extracted fragment exceeds `max_response_size`, it is saved to a new file and a `FileReference` is returned
-- Default `around` is 20 lines
-- The response includes `nextPath`/`prevPath` for stepping through arrays and `nextLine`/`prevLine` for line-based navigation
-- Returns `validation_failed` for invalid path, invalid JSONPath, invalid line/range, or non-JSON file
-- Returns `not_found` if the file does not exist or JSONPath does not match
+- **行番号よりも `jsonPath` を優先**してください。JSON パスは安定していて説明的ですが、行番号はファイルが再生成されると変わります
+- 抽出された断片が `max_response_size` を超える場合は、新しいファイルに保存され、`FileReference` が返されます
+- デフォルトの `around` は 20 行です
+- レスポンスには、配列をステップ実行するための `nextPath`/`prevPath` と、行ベースのナビゲーションのための `nextLine`/`prevLine` が含まれます
+- 無効なパス、無効な JSONPath、無効な行/範囲、または JSON 以外のファイルの場合は `validation_failed` を返します
+- ファイルが存在しないか JSONPath が一致しない場合は `not_found` を返します

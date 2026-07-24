@@ -1,197 +1,197 @@
-# Workspace
+# Espace de travail
 
-The workspace is the directory where swag2mcp stores all its data — config, cached specs, local spec files, saved responses, and auth scripts.
+L'espace de travail est le répertoire où swag2mcp stocke toutes ses données — configuration, specs en cache, fichiers de spécification locaux, réponses sauvegardées et scripts d'authentification.
 
 ## Structure
 
 ```
-~/.swag2mcp/                          # Workspace root (default)
-├── swag2mcp.yaml                     # Configuration file
-├── cache/                            # Cached remote spec files
-│   ├── a1b2c3d4e5f6...spec          # Cached spec content
-│   └── a1b2c3d4e5f6...meta          # Cache metadata (JSON)
-├── specs/                            # Local spec files
-│   └── my-api.yaml
-├── responses/                        # Saved API responses (large responses)
+~/.swag2mcp/                          # Racine de l'espace de travail (par défaut)
+├── swag2mcp.yaml                     # Fichier de configuration
+├── cache/                            # Fichiers de spécification distants en cache
+│   ├── a1b2c3d4e5f6...spec          # Contenu de la spec en cache
+│   └── a1b2c3d4e5f6...meta          # Métadonnées du cache (JSON)
+├── specs/                            # Fichiers de spécification locaux
+│   └── mon-api.yaml
+├── responses/                        # Réponses API sauvegardées (grandes réponses)
 │   ├── meteo-get-forecast-abc123.json
 │   └── response-fragment-def456.json
-└── auth_scripts/                     # Authentication scripts
-    ├── meteo.sh                      # Unix shell script
-    └── meteo.bat                     # Windows batch script
+└── auth_scripts/                     # Scripts d'authentification
+    ├── meteo.sh                      # Script shell Unix
+    └── meteo.bat                     # Script batch Windows
 ```
 
-## Default Path
+## Chemin par défaut
 
-- **Linux/macOS**: `~/.swag2mcp/`
-- **Windows**: `%USERPROFILE%\.swag2mcp\`
+- **Linux/macOS** : `~/.swag2mcp/`
+- **Windows** : `%USERPROFILE%\.swag2mcp\`
 
-## Custom Path
+## Chemin personnalisé
 
 ```bash
-swag2mcp mcp /path/to/workspace
-swag2mcp mcp ./my-workspace
+swag2mcp mcp /chemin/vers/espace-travail
+swag2mcp mcp ./mon-espace-travail
 ```
 
-## Directories
+## Répertoires
 
 ### cache/
 
-Stores downloaded remote spec files. Each file is cached with a SHA-256 hash of its URL as the filename:
+Stocke les fichiers de spécification distants téléchargés. Chaque fichier est mis en cache avec un hachage SHA-256 de son URL comme nom de fichier :
 
-- `{hash}.spec` — the cached spec file content
-- `{hash}.meta` — JSON metadata (source URL, cache time, TTL)
+- `{hachage}.spec` — le contenu du fichier de spécification en cache
+- `{hachage}.meta` — métadonnées JSON (URL source, heure de mise en cache, TTL)
 
-Each cached file has a random TTL between 1 hour and 48 hours. The cache is automatically checked on every startup — if a valid (non-expired) entry exists, it is reused without downloading.
+Chaque fichier en cache a un TTL aléatoire entre 1 heure et 48 heures. Le cache est automatiquement vérifié à chaque démarrage — si une entrée valide (non expirée) existe, elle est réutilisée sans téléchargement.
 
-**Commands:**
-- `swag2mcp update` — clears cache and re-downloads all specs
-- `swag2mcp clean` — clears cache and responses
+**Commandes :**
+- `swag2mcp update` — vide le cache et retélécharge toutes les specs
+- `swag2mcp clean` — vide le cache et les réponses
 
 ### specs/
 
-Stores local spec files that collections point to via `location: specs/{name}`. Files here are used directly without caching.
+Stocke les fichiers de spécification locaux vers lesquels les collections pointent via `location: specs/{nom}`. Les fichiers ici sont utilisés directement sans mise en cache.
 
-This directory is populated by:
-- `swag2mcp import <source> <name>` — downloads a remote spec and saves it here
-- `swag2mcp export` — copies specs here into the export ZIP
-- Manual placement — you can copy spec files here yourself
+Ce répertoire est rempli par :
+- `swag2mcp import <source> <nom>` — télécharge une spec distante et la sauvegarde ici
+- `swag2mcp export` — copie les specs ici dans le ZIP d'exportation
+- Placement manuel — vous pouvez copier vous-même des fichiers de spécification ici
 
 ### responses/
 
-Stores API responses that exceed the `max_response_size` limit (default 1 MB). When the LLM invokes an endpoint and the response is too large, swag2mcp saves it here and returns a file reference instead.
+Stocke les réponses API qui dépassent la limite `max_response_size` (par défaut 1 Mo). Lorsque le LLM invoque un point d'accès et que la réponse est trop volumineuse, swag2mcp la sauvegarde ici et retourne une référence de fichier à la place.
 
-Naming convention: `{domain}-{method}-{path_with_underscores}-{6char_hex}.json`
+Convention de nommage : `{domaine}-{méthode}-{chemin_avec_tirets_bas}-{6car_hex}.json`
 
-Old responses are cleaned automatically after 48 hours on MCP server start.
+Les anciennes réponses sont nettoyées automatiquement après 48 heures au démarrage du serveur MCP.
 
 ### auth_scripts/
 
-Stores authentication scripts for the `script` auth type. Each script is named after the spec's domain.
+Stocke les scripts d'authentification pour le type d'auth `script`. Chaque script est nommé d'après le domaine de la spec.
 
-#### Naming Convention
+#### Convention de nommage
 
-| Platform | Filename | Example |
-|----------|----------|---------|
-| Unix (Linux, macOS) | `{domain}.sh` | `meteo.sh` |
-| Windows | `{domain}.bat` | `meteo.bat` |
+| Plateforme | Nom de fichier | Exemple |
+|------------|----------------|---------|
+| Unix (Linux, macOS) | `{domaine}.sh` | `meteo.sh` |
+| Windows | `{domaine}.bat` | `meteo.bat` |
 
-The domain must not contain `/` or `\` characters.
+Le domaine ne doit pas contenir de caractères `/` ou `\`.
 
-#### How Scripts Work
+#### Comment les scripts fonctionnent
 
-1. swag2mcp runs the script with a 30-second timeout
-2. The script must output valid JSON to stdout
-3. swag2mcp parses the JSON and uses the token for API requests
+1. swag2mcp exécute le script avec un délai d'attente de 30 secondes
+2. Le script doit produire du JSON valide sur stdout
+3. swag2mcp analyse le JSON et utilise le jeton pour les requêtes API
 
-#### Expected Output Format
+#### Format de sortie attendu
 
 ```json
 {
-  "token": "your-token-here",
+  "token": "votre-jeton-ici",
   "expires_in": 3600
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `token` | string | ✅ | The authentication token |
-| `access_token` | string | ❌ | Alternative to `token` (checked first) |
-| `token_type` | string | ❌ | Token type (e.g., "Bearer") |
-| `expires_in` | number | ❌ | Token lifetime in seconds (default: 3600) |
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| `token` | string | ✅ | Le jeton d'authentification |
+| `access_token` | string | ❌ | Alternative à `token` (vérifié en premier) |
+| `token_type` | string | ❌ | Type de jeton (par ex., « Bearer ») |
+| `expires_in` | number | ❌ | Durée de vie du jeton en secondes (défaut : 3600) |
 
-#### Execution
+#### Exécution
 
-| Platform | Command |
-|----------|---------|
-| Unix | `sh {domain}.sh` |
-| Windows | `cmd /c {domain}.bat` |
+| Plateforme | Commande |
+|------------|---------|
+| Unix | `sh {domaine}.sh` |
+| Windows | `cmd /c {domaine}.bat` |
 
-#### Token Caching
+#### Mise en cache du jeton
 
-The token is cached in memory until it expires. On each API call, swag2mcp checks the cache first — the script is only executed when the cached token has expired.
+Le jeton est mis en cache en mémoire jusqu'à son expiration. À chaque appel API, swag2mcp vérifie d'abord le cache — le script n'est exécuté que lorsque le jeton en cache a expiré.
 
-#### Stub Creation
+#### Création de stub
 
-When you configure `auth: { type: script, config: { domain: "myapi" } }`, swag2mcp creates a stub script automatically:
+Lorsque vous configurez `auth: { type: script, config: { domain: "monapi" } }`, swag2mcp crée un script stub automatiquement :
 
-**Unix (`auth_scripts/myapi.sh`):**
+**Unix (`auth_scripts/monapi.sh`) :**
 ```bash
 #!/bin/sh
-echo '{"token": "your-token-here", "expires_in": 3600}'
+echo '{"token": "votre-jeton-ici", "expires_in": 3600}'
 ```
 
-**Windows (`auth_scripts/myapi.bat`):**
+**Windows (`auth_scripts/monapi.bat`) :**
 ```bat
 @echo off
-echo {"token": "your-token-here", "expires_in": 3600}
+echo {"token": "votre-jeton-ici", "expires_in": 3600}
 ```
 
-Replace the placeholder token with your actual authentication logic.
+Remplacez le jeton factice par votre logique d'authentification réelle.
 
-#### Orphan Cleanup
+#### Nettoyage des orphelins
 
-When you delete a spec, its auth script becomes orphaned. swag2mcp automatically removes orphan scripts on:
+Lorsque vous supprimez une spec, son script d'authentification devient orphelin. swag2mcp supprime automatiquement les scripts orphelins lors de :
 - `swag2mcp update`
 - `swag2mcp clean`
 
-## Commands
+## Commandes
 
 ### update
 
 ```bash
-swag2mcp update [path]
+swag2mcp update [chemin]
 ```
 
-Validates the config, clears the cache and responses, then re-downloads all spec files. Also ensures auth scripts exist and removes orphan scripts.
+Valide la configuration, vide le cache et les réponses, puis retélécharge tous les fichiers de spécification. Assure également que les scripts d'authentification existent et supprime les scripts orphelins.
 
-Use this command after:
-- Adding or removing collections
-- Changing collection locations
-- Editing spec files that need re-caching
+Utilisez cette commande après :
+- Ajout ou suppression de collections
+- Changement d'emplacements de collections
+- Modification de fichiers de spécification qui nécessitent un re-cache
 
 ### clean
 
 ```bash
-swag2mcp clean [path]
+swag2mcp clean [chemin]
 ```
 
-Removes all contents of `cache/` and `responses/`, plus orphan auth scripts. Does NOT re-cache specs — use `update` for that.
+Supprime tout le contenu de `cache/` et `responses/`, plus les scripts d'authentification orphelins. Ne remet PAS en cache les specs — utilisez `update` pour cela.
 
 ### validate
 
 ```bash
-swag2mcp validate [path]
+swag2mcp validate [chemin]
 ```
 
-Validates the config including all collection locations. See [CLI: validate](../cli/validate.md).
+Valide la configuration, y compris tous les emplacements de collection. Voir [CLI : validate](../cli/validate.md).
 
-## Export and Import
+## Exportation et importation
 
 ```bash
-# Export workspace to ZIP (default name: swag2mcp-backup-{date}.zip)
+# Exporter l'espace de travail vers ZIP (nom par défaut : swag2mcp-backup-{date}.zip)
 swag2mcp export
 
-# Export to a specific path
-swag2mcp export /path/to/workspace /path/to/backup.zip
+# Exporter vers un chemin spécifique
+swag2mcp export /chemin/vers/espace-travail /chemin/vers/sauvegarde.zip
 
-# Export only specific specs
+# Exporter uniquement des specs spécifiques
 swag2mcp export --spec meteo
 
-# Restore from backup
-swag2mcp import --from-zip /path/to/backup.zip
-swag2mcp import /path/to/workspace /path/to/backup.zip
+# Restaurer depuis une sauvegarde
+swag2mcp import --from-zip /chemin/vers/sauvegarde.zip
+swag2mcp import /chemin/vers/espace-travail /chemin/vers/sauvegarde.zip
 ```
 
-Export includes: `swag2mcp.yaml`, `specs/`, `auth_scripts/`. Cache and responses are excluded (they are local data).
+L'exportation inclut : `swag2mcp.yaml`, `specs/`, `auth_scripts/`. Le cache et les réponses sont exclus (ce sont des données locales).
 
 ## .gitignore
 
-If your workspace is inside a Git repository, add these entries to `.gitignore`:
+Si votre espace de travail se trouve dans un dépôt Git, ajoutez ces entrées à `.gitignore` :
 
 ```gitignore
-# swag2mcp — local data only
+# swag2mcp — données locales uniquement
 .swag2mcp/cache/
 .swag2mcp/responses/
 ```
 
-The `cache/` and `responses/` directories contain local, machine-specific data that should not be committed. Everything else (`swag2mcp.yaml`, `specs/`, `auth_scripts/`) should be in the repository so the configuration is shared across the team.
+Les répertoires `cache/` et `responses/` contiennent des données locales spécifiques à la machine qui ne doivent pas être commitées. Tout le reste (`swag2mcp.yaml`, `specs/`, `auth_scripts/`) doit être dans le dépôt afin que la configuration soit partagée dans toute l'équipe.

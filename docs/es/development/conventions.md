@@ -1,16 +1,16 @@
-# Code Conventions
+# Convenciones de Código
 
 ## Go
 
 - **Go 1.26+**
 - **gofmt** / **gofumpt** / **goimports** / **gci**
-- **120 characters** per line
-- **Guard clauses** instead of nested ifs
-- **Naming**: `camelCase` for private, `PascalCase` for exported
+- **120 caracteres** por línea
+- **Cláusulas de guarda** en lugar de ifs anidados
+- **Nomenclatura**: `camelCase` para privado, `PascalCase` para exportado
 
-## Errors
+## Errores
 
-Use `LLMError` for LLM-visible errors:
+Use `LLMError` para errores visibles por el LLM:
 
 ```go
 type LLMError struct {
@@ -19,28 +19,28 @@ type LLMError struct {
 }
 ```
 
-Error codes:
-- `validation_failed` — invalid parameters
-- `not_found` — resource not found
-- `rate_limit` — rate limit exceeded
-- `invoke_error` — API call error
+Códigos de error:
+- `validation_failed` — parámetros inválidos
+- `not_found` — recurso no encontrado
+- `rate_limit` — límite de velocidad excedido
+- `invoke_error` — error de llamada a la API
 
 ## Interfaces
 
-- Small interfaces (1-3 methods)
-- Interface composition
-- Functional options for configuration
+- Interfaces pequeñas (1-3 métodos)
+- Composición de interfaces
+- Opciones funcionales para configuración
 
-## Testing
+## Pruebas
 
-- Table-driven tests
-- Test helpers (`newTestService()`, `seedTestData()`)
-- Mocks via `go.uber.org/mock`
-- 80%+ coverage for core packages
+- Pruebas basadas en tablas
+- Ayudantes de prueba (`newTestService()`, `seedTestData()`)
+- Mocks mediante `go.uber.org/mock`
+- 80%+ de cobertura para paquetes principales
 
-## Configuration
+## Configuración
 
-- YAML format
-- Cascade: global → spec → collection
-- Validation via `go-playground/validator`
-- Environment variables via `$(VAR)`
+- Formato YAML
+- Cascada: global → especificación → colección
+- Validación mediante `go-playground/validator`
+- Variables de entorno mediante `$(VAR)`

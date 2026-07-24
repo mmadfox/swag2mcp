@@ -1,46 +1,46 @@
 # swag2mcp
 
 <div style="background: #dc2626; color: white; padding: 20px 24px; border-radius: 12px; text-align: center; font-size: 1.4em; font-weight: 700; margin: 24px 0;">
-  🚧 WORK IN PROGRESS — release coming soon!
+  🚧 TRAVAUX EN COURS — version bientôt disponible !
 </div>
 
-Bridges OpenAPI/Swagger/Postman API specifications with LLM agents via the Model Context Protocol (MCP).
+Fait le pont entre les spécifications d'API OpenAPI/Swagger/Postman et les agents LLM via le Model Context Protocol (MCP).
 
 <a href="https://www.youtube.com/watch?v=1Da4UmE2f9U" target="_blank">
-  <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/docs/cover.png" alt="Preview">
+  <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/docs/cover.png" alt="Aperçu">
 </a>
 
-## Your API speaks LLM
+## Votre API parle LLM
 
-One line of config turns any OpenAPI/Swagger/Postman file into an MCP server. LLM agents discover, inspect, and invoke your APIs — zero integration code.
+Une ligne de configuration transforme n'importe quel fichier OpenAPI/Swagger/Postman en serveur MCP. Les agents LLM découvrent, inspectent et invoquent vos API — zéro code d'intégration.
 
-<img src="/architecture.svg" width="700" alt="swag2mcp architecture">
+<img src="/architecture.svg" width="700" alt="Architecture swag2mcp">
 
-## Stop writing wrappers
+## Arrêtez d'écrire des adaptateurs
 
-Every time you connect a new API to an LLM, you write the same boilerplate: spec parsing, authentication, error handling, rate limiting. swag2mcp does it for you — 19 ready-made MCP tools.
+Chaque fois que vous connectez une nouvelle API à un LLM, vous écrivez le même code passe-partout : analyse de spécification, authentification, gestion des erreurs, limitation de débit. swag2mcp le fait pour vous — 19 outils MCP prêts à l'emploi.
 
-## Who needs this
+## Qui a besoin de cela
 
-| Role | Why |
-|------|-----|
-| **AI Agent Developer** | Connect any API in 2 minutes, not 2 days |
-| **MCP Engineer** | No handler code — just point to a spec |
-| **Architect** | Single API integration layer for all LLMs in your company |
-| **Data Analyst** | Access APIs via natural language, no coding |
-| **DevOps / SRE** | Monitoring and automation through LLM without extra services |
-| **Integrator** | 9 auth methods out of the box — Basic to OAuth2 to HMAC |
-| **QA Engineer** | Mock server for isolated testing without real APIs |
-| **Product Manager** | Rapid AI feature prototypes without backend work |
-| **and many others** | |
+| Rôle | Pourquoi |
+|------|---------|
+| **Développeur d'agent IA** | Connectez n'importe quelle API en 2 minutes, pas en 2 jours |
+| **Ingénieur MCP** | Pas de code de gestion — pointez simplement vers une spécification |
+| **Architecte** | Couche d'intégration API unique pour tous les LLM de votre entreprise |
+| **Analyste de données** | Accédez aux API en langage naturel, sans codage |
+| **DevOps / SRE** | Surveillance et automatisation via LLM sans services supplémentaires |
+| **Intégrateur** | 9 méthodes d'authentification prêtes à l'emploi — Basic à OAuth2 en passant par HMAC |
+| **Ingénieur QA** | Serveur mock pour des tests isolés sans API réelles |
+| **Chef de produit** | Prototypes rapides de fonctionnalités IA sans travail backend |
+| **et bien d'autres** | |
 
 ---
 
-## License
+## Licence
 
-Licensed under the **GNU Affero General Public License v3.0** (AGPL v3).
+Sous licence **GNU Affero General Public License v3.0** (AGPL v3).
 
-See [LICENSE](https://github.com/mmadfox/swag2mcp/blob/main/LICENSE) for the full license text.
+Voir [LICENSE](https://github.com/mmadfox/swag2mcp/blob/main/LICENSE) pour le texte complet de la licence.
 
 ```
 SPDX-License-Identifier: AGPL-3.0-only

@@ -1,26 +1,26 @@
-# Tags
+# Etiquetas
 
-A tag is a category that groups related endpoints within a collection. Tags may or may not exist — not all collections have them, and a collection can have any number of tags.
+Una etiqueta es una categoría que agrupa endpoints relacionados dentro de una colección. Las etiquetas pueden existir o no — no todas las colecciones las tienen, y una colección puede tener cualquier número de etiquetas.
 
-Tags come from the OpenAPI/Swagger/Postman file itself. There are **no YAML config settings** for tags — you cannot create, rename, or delete tags in `swag2mcp.yaml`. The only way to change tags is to edit the original spec file.
+Las etiquetas provienen del propio archivo OpenAPI/Swagger/Postman. **No hay configuraciones YAML** para las etiquetas — no puede crear, renombrar ni eliminar etiquetas en `swag2mcp.yaml`. La única forma de cambiar las etiquetas es editar el archivo de especificación original.
 
-## Hierarchy
+## Jerarquía
 
 ```
-Spec (domain, e.g. "meteo")
-  └── Collection (spec file, e.g. forecast.yml)
-        └── Tag "weather"
+Especificación (dominio, por ejemplo "meteo")
+  └── Colección (archivo de especificación, por ejemplo forecast.yml)
+        └── Etiqueta "weather"
               └── GET /forecast
               └── GET /forecast/hourly
-        └── Tag "alerts"
+        └── Etiqueta "alerts"
               └── GET /alerts
 ```
 
-## How Tags Are Created
+## Cómo se Crean las Etiquetas
 
-Tags are extracted from the spec document during parsing:
+Las etiquetas se extraen del documento de especificación durante el análisis:
 
-**OpenAPI 3.x / Swagger 2.0** — each operation's `tags` list becomes tags:
+**OpenAPI 3.x / Swagger 2.0** — la lista `tags` de cada operación se convierte en etiquetas:
 
 ```yaml
 paths:
@@ -37,32 +37,32 @@ paths:
       summary: "Uploads an image"
 ```
 
-**Postman** — each top-level folder becomes a tag. Nested folders use the last folder name.
+**Postman** — cada carpeta de nivel superior se convierte en una etiqueta. Las carpetas anidadas usan el nombre de la última carpeta.
 
-If an endpoint has no tags, it is placed under a `"default"` tag.
+Si un endpoint no tiene etiquetas, se coloca bajo una etiqueta `"default"`.
 
-## Purpose
+## Propósito
 
-Tags help the LLM find groups of related endpoints. Instead of searching through every endpoint in a collection, the LLM can first find the right tag, then list only the endpoints within it.
+Las etiquetas ayudan al LLM a encontrar grupos de endpoints relacionados. En lugar de buscar en todos los endpoints de una colección, el LLM puede primero encontrar la etiqueta correcta, luego listar solo los endpoints dentro de ella.
 
-## MCP Tools for Tags
+## Herramientas MCP para Etiquetas
 
-| Tool | Description |
-|------|-------------|
-| `tag_by_spec` | All tags across an entire spec |
-| `tag_by_collection` | Tags within a specific collection |
-| `tag_by_id` | Tag details (title, method count) |
-| `endpoint_by_tag` | Endpoints grouped under a tag |
+| Herramienta | Descripción |
+|-------------|-------------|
+| `tag_by_spec` | Todas las etiquetas en una especificación completa |
+| `tag_by_collection` | Etiquetas dentro de una colección específica |
+| `tag_by_id` | Detalles de la etiqueta (título, recuento de métodos) |
+| `endpoint_by_tag` | Endpoints agrupados bajo una etiqueta |
 
-## Example
+## Ejemplo
 
 ```
-Query: "Show all tags in the pet collection"
+Consulta: "Muestra todas las etiquetas en la colección de mascotas"
 → tag_by_collection(collectionId: "...")
-→ Result: pets (5 methods), pet_images (1 method)
+→ Resultado: pets (5 métodos), pet_images (1 método)
 ```
 
-## Limitations
+## Limitaciones
 
-- Tags are read-only from the config perspective. To add, rename, or remove tags, edit the original OpenAPI/Swagger/Postman file and run `swag2mcp update`.
-- Tags cannot be filtered or disabled per-collection in the YAML config.
+- Las etiquetas son de solo lectura desde la perspectiva de la configuración. Para agregar, renombrar o eliminar etiquetas, edite el archivo OpenAPI/Swagger/Postman original y ejecute `swag2mcp update`.
+- Las etiquetas no se pueden filtrar ni deshabilitar por colección en la configuración YAML.

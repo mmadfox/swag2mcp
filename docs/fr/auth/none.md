@@ -1,36 +1,36 @@
-# None
+# Aucune
 
-## Purpose
+## Objectif
 
-No authentication required. The API is accessible without tokens or keys.
+Aucune authentification requise. L'API est accessible sans jetons ni clés.
 
-## When to use
+## Quand l'utiliser
 
-- Public APIs (Open-Meteo, icanhazdadjoke, PokéAPI)
-- Test and demo environments
-- When the API does not require authorization
+- API publiques (Open-Meteo, icanhazdadjoke, PokéAPI)
+- Environnements de test et de démonstration
+- Quand l'API ne nécessite pas d'autorisation
 
 ## Configuration
 
-Set `type: none` or simply omit the `auth` section:
+Définissez `type: none` ou omettez simplement la section `auth` :
 
 ```yaml
 specs:
   - domain: jokes
-    llm_title: Dad Joke API
+    llm_title: API Dad Joke
     base_url: https://icanhazdadjoke.com
     collections:
-      - llm_title: Jokes
+      - llm_title: Blagues
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: none
 ```
 
-## Parameters
+## Paramètres
 
-None.
+Aucun.
 
 ## Notes
 
-- If the `auth` section is completely absent from the config, it is equivalent to `type: none`
-- No authorization headers are added to requests
+- Si la section `auth` est complètement absente de la configuration, cela équivaut à `type: none`
+- Aucun en-tête d'autorisation n'est ajouté aux requêtes

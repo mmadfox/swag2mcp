@@ -1,49 +1,49 @@
-# Testing
+# Pruebas
 
-## Commands
+## Comandos
 
 ```bash
-# Unit tests
+# Pruebas unitarias
 go test ./...
 
-# Specific package
+# Paquete específico
 go test ./internal/service/...
 
-# Integration tests
+# Pruebas de integración
 make integration-tests
 
-# Coverage
+# Cobertura
 make cover
 
-# All tests
+# Todas las pruebas
 make testall
 ```
 
-## Test Structure
+## Estructura de Pruebas
 
 ```
 tests/
-├── main_test.go              # Entry point
-├── suite_test.go             # Suite setup
-├── suite_auth_test.go        # Auth tests
-├── suite_config_test.go      # Config tests
-├── suite_mcp_tools_test.go   # MCP tools tests
-├── suite_search_test.go      # Search tests
-├── suite_ratelimit_test.go   # Rate limit tests
-├── suite_response_test.go    # Response tests
-├── suite_export_test.go      # Export tests
-├── suite_import_test.go      # Import tests
-├── suite_parsing_test.go     # Parsing tests
-├── suite_transport_test.go   # Transport tests
-├── suite_mock_test.go        # Mock server tests
-├── suite_workspace_test.go   # Workspace tests
-├── suite_errors_test.go      # Error tests
-└── suite_version_test.go     # Version tests
+├── main_test.go              # Punto de entrada
+├── suite_test.go             # Configuración del conjunto
+├── suite_auth_test.go        # Pruebas de autenticación
+├── suite_config_test.go      # Pruebas de configuración
+├── suite_mcp_tools_test.go   # Pruebas de herramientas MCP
+├── suite_search_test.go      # Pruebas de búsqueda
+├── suite_ratelimit_test.go   # Pruebas de límite de velocidad
+├── suite_response_test.go    # Pruebas de respuesta
+├── suite_export_test.go      # Pruebas de exportación
+├── suite_import_test.go      # Pruebas de importación
+├── suite_parsing_test.go     # Pruebas de análisis
+├── suite_transport_test.go   # Pruebas de transporte
+├── suite_mock_test.go        # Pruebas del servidor simulado
+├── suite_workspace_test.go   # Pruebas del espacio de trabajo
+├── suite_errors_test.go      # Pruebas de errores
+└── suite_version_test.go     # Pruebas de versión
 ```
 
-## Coverage
+## Cobertura
 
-Target: 80%+ for core packages:
+Objetivo: 80%+ para paquetes principales:
 
 - `auth`
 - `cache`
@@ -59,15 +59,15 @@ Target: 80%+ for core packages:
 
 ## Mocks
 
-Uses `go.uber.org/mock` for MCP server tests:
+Usa `go.uber.org/mock` para pruebas del servidor MCP:
 
 ```bash
 go generate ./...
 ```
 
-Generates `internal/server/mcp/mock_svc_test.go` from `handler.go`.
+Genera `internal/server/mcp/mock_svc_test.go` a partir de `handler.go`.
 
-## Table-Driven Tests
+## Pruebas Basadas en Tablas
 
 ```go
 func TestSomething(t *testing.T) {
@@ -77,8 +77,8 @@ func TestSomething(t *testing.T) {
         want    string
         wantErr bool
     }{
-        {"valid input", "hello", "HELLO", false},
-        {"empty input", "", "", true},
+        {"entrada válida", "hello", "HELLO", false},
+        {"entrada vacía", "", "", true},
     }
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {

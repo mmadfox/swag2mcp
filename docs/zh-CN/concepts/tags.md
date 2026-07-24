@@ -1,10 +1,10 @@
-# Tags
+# 标签
 
-A tag is a category that groups related endpoints within a collection. Tags may or may not exist — not all collections have them, and a collection can have any number of tags.
+标签是 collection 内对相关端点进行分组的类别。标签可能存在也可能不存在 — 并非所有 collection 都有标签，一个 collection 可以有任意数量的标签。
 
-Tags come from the OpenAPI/Swagger/Postman file itself. There are **no YAML config settings** for tags — you cannot create, rename, or delete tags in `swag2mcp.yaml`. The only way to change tags is to edit the original spec file.
+标签来自 OpenAPI/Swagger/Postman 文件本身。标签**没有 YAML 配置设置** — 你不能在 `swag2mcp.yaml` 中创建、重命名或删除标签。更改标签的唯一方法是编辑原始规范文件。
 
-## Hierarchy
+## 层次结构
 
 ```
 Spec (domain, e.g. "meteo")
@@ -16,11 +16,11 @@ Spec (domain, e.g. "meteo")
               └── GET /alerts
 ```
 
-## How Tags Are Created
+## 标签的创建方式
 
-Tags are extracted from the spec document during parsing:
+标签在解析过程中从规范文档中提取：
 
-**OpenAPI 3.x / Swagger 2.0** — each operation's `tags` list becomes tags:
+**OpenAPI 3.x / Swagger 2.0** — 每个操作的 `tags` 列表成为标签：
 
 ```yaml
 paths:
@@ -37,32 +37,32 @@ paths:
       summary: "Uploads an image"
 ```
 
-**Postman** — each top-level folder becomes a tag. Nested folders use the last folder name.
+**Postman** — 每个顶级文件夹成为一个标签。嵌套文件夹使用最后一个文件夹名称。
 
-If an endpoint has no tags, it is placed under a `"default"` tag.
+如果端点没有标签，它会被放在 `"default"` 标签下。
 
-## Purpose
+## 用途
 
-Tags help the LLM find groups of related endpoints. Instead of searching through every endpoint in a collection, the LLM can first find the right tag, then list only the endpoints within it.
+标签帮助 LLM 找到相关端点组。LLM 无需搜索 collection 中的每个端点，而是可以先找到正确的标签，然后只列出其中的端点。
 
-## MCP Tools for Tags
+## 标签的 MCP 工具
 
-| Tool | Description |
-|------|-------------|
-| `tag_by_spec` | All tags across an entire spec |
-| `tag_by_collection` | Tags within a specific collection |
-| `tag_by_id` | Tag details (title, method count) |
-| `endpoint_by_tag` | Endpoints grouped under a tag |
+| 工具 | 描述 |
+|------|------|
+| `tag_by_spec` | 整个 spec 中的所有标签 |
+| `tag_by_collection` | 特定 collection 中的标签 |
+| `tag_by_id` | 标签详情（标题、方法计数） |
+| `endpoint_by_tag` | 按标签分组的端点 |
 
-## Example
+## 示例
 
 ```
-Query: "Show all tags in the pet collection"
+查询："Show all tags in the pet collection"
 → tag_by_collection(collectionId: "...")
-→ Result: pets (5 methods), pet_images (1 method)
+→ 结果：pets (5 methods), pet_images (1 method)
 ```
 
-## Limitations
+## 限制
 
-- Tags are read-only from the config perspective. To add, rename, or remove tags, edit the original OpenAPI/Swagger/Postman file and run `swag2mcp update`.
-- Tags cannot be filtered or disabled per-collection in the YAML config.
+- 从配置角度来看，标签是只读的。要添加、重命名或删除标签，请编辑原始的 OpenAPI/Swagger/Postman 文件并运行 `swag2mcp update`。
+- 不能在 YAML 配置中按 collection 过滤或禁用标签。

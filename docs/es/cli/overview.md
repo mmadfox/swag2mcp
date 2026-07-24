@@ -1,50 +1,50 @@
-# CLI Commands
+# Comandos CLI
 
-## Overview
+## Descripción General
 
-The `swag2mcp` CLI is the single entry point for all operations — from initializing a workspace and managing API specifications to starting an MCP server for LLM integration. It provides **13 commands** that cover the full lifecycle of working with OpenAPI/Swagger/Postman specs.
+La CLI de `swag2mcp` es el punto de entrada único para todas las operaciones — desde inicializar un espacio de trabajo y gestionar especificaciones de API hasta iniciar un servidor MCP para integración con LLM. Proporciona **13 comandos** que cubren el ciclo de vida completo del trabajo con especificaciones OpenAPI/Swagger/Postman.
 
-### What the CLI solves
+### Qué resuelve la CLI
 
-- **Workspace lifecycle** — create (`init`), inspect (`info`, `ls`), clean (`clean`), update (`update`), and remove (`delete`) workspaces and their contents
-- **Spec & collection management** — add (`add`), list (`ls`), and delete (`delete`) API specifications and their collections
-- **Running modes** — start the MCP server for LLM tool access (`mcp`) or launch the interactive TUI explorer (`run`)
-- **Diagnostics** — validate configuration (`validate`), show version (`version`), display runtime info (`info`)
-- **Backup & restore** — full workspace round-trip via ZIP (`export`, `import`)
+- **Ciclo de vida del espacio de trabajo** — crear (`init`), inspeccionar (`info`, `ls`), limpiar (`clean`), actualizar (`update`) y eliminar (`delete`) espacios de trabajo y su contenido
+- **Gestión de especificaciones y colecciones** — agregar (`add`), listar (`ls`) y eliminar (`delete`) especificaciones de API y sus colecciones
+- **Modos de ejecución** — iniciar el servidor MCP para acceso a herramientas LLM (`mcp`) o lanzar el explorador TUI interactivo (`run`)
+- **Diagnóstico** — validar configuración (`validate`), mostrar versión (`version`), mostrar información de ejecución (`info`)
+- **Copia de seguridad y restauración** — ciclo completo del espacio de trabajo mediante ZIP (`export`, `import`)
 
-### Key nuances
+### Matices clave
 
-- **Path resolution** — commands that accept `[path]` expect a **workspace directory** (not a file path). Resolution order: explicit `[path]` → current directory (`./`) → `~/.swag2mcp/`. The CLI appends `swag2mcp.yaml` automatically. Always pass an explicit path when running as a service or in IDE config to avoid loading the wrong workspace.
-- **Spec vs Collection** — a **spec** represents a logical API service (e.g. "Open-Meteo API"), while a **collection** is one OpenAPI/Swagger/Postman file. A spec can have multiple collections.
-- **`--version`** is supported both as a flag (`swag2mcp --version`) and as a subcommand (`swag2mcp version`).
-- **`add spec` / `add collection`** accept YAML input via `--yaml` (inline string or `-` for stdin). Piping from a file or heredoc avoids shell quoting issues with special characters.
-- **`delete`** requires a TTY (interactive terminal). There is no `--force` or `--yes` flag — it always prompts for selection and confirmation.
-- **`mcp`** is the primary command for LLM integration. It supports three transports: `stdio` (default), `sse`, and `streamable-http`. The `--disable-llm-auth` flag (default: `true`) removes the `auth` tool from the MCP tool list, preventing the LLM from seeing or requesting tokens. Auth still works — tokens are obtained through the standard config mechanism, not via the LLM. This mode is recommended for **production** (LLM never has access to credentials). For **debugging** or when using short-lived tokens, set `--disable-llm-auth=false` to let the LLM request fresh tokens via the `auth` tool.
-- **`validate`** checks YAML syntax, config structure, spec file existence, URL reachability, spec format (OpenAPI/Swagger/Postman), auth settings, and HTTP client correctness. It does **not** test authentication endpoints or API endpoint availability.
-- **`export` / `import`** provide a full workspace round-trip — config file, spec files, cache, and auth scripts are all included in the ZIP archive.
-- **`clean`** removes `cache/` and `responses/` directories but preserves `specs/` and `auth_scripts/`. Old responses (>48h) are also cleaned automatically on `mcp` startup.
+- **Resolución de ruta** — los comandos que aceptan `[path]` esperan un **directorio de espacio de trabajo** (no una ruta de archivo). Orden de resolución: `[path]` explícito → directorio actual (`./`) → `~/.swag2mcp/`. La CLI agrega `swag2mcp.yaml` automáticamente. Siempre pase una ruta explícita cuando ejecute como servicio o en la configuración del IDE para evitar cargar el espacio de trabajo incorrecto.
+- **Especificación vs Colección** — una **especificación** representa un servicio de API lógico (por ejemplo, "Open-Meteo API"), mientras que una **colección** es un archivo OpenAPI/Swagger/Postman. Una especificación puede tener múltiples colecciones.
+- **`--version`** se admite tanto como bandera (`swag2mcp --version`) como subcomando (`swag2mcp version`).
+- **`add spec` / `add collection`** aceptan entrada YAML a través de `--yaml` (cadena en línea o `-` para stdin). Redirigir desde un archivo o heredoc evita problemas de comillas del shell con caracteres especiales.
+- **`delete`** requiere un TTY (terminal interactiva). No hay una bandera `--force` o `--yes` — siempre solicita selección y confirmación.
+- **`mcp`** es el comando principal para la integración con LLM. Admite tres transportes: `stdio` (predeterminado), `sse` y `streamable-http`. La bandera `--disable-llm-auth` (predeterminado: `true`) elimina la herramienta `auth` de la lista de herramientas MCP, evitando que el LLM vea o solicite tokens. La autenticación sigue funcionando — los tokens se obtienen a través del mecanismo de configuración estándar, no a través del LLM. Este modo se recomienda para **producción** (el LLM nunca tiene acceso a las credenciales). Para **depuración** o cuando se usan tokens de corta duración, establezca `--disable-llm-auth=false` para permitir que el LLM solicite tokens frescos a través de la herramienta `auth`.
+- **`validate`** verifica la sintaxis YAML, la estructura de configuración, la existencia de archivos de especificación, el alcance de URL, el formato de especificación (OpenAPI/Swagger/Postman), la configuración de autenticación y la corrección del cliente HTTP. **No** prueba los endpoints de autenticación ni la disponibilidad de endpoints de API.
+- **`export` / `import`** proporcionan un ciclo completo del espacio de trabajo — el archivo de configuración, los archivos de especificación y los scripts de autenticación se incluyen en el archivo ZIP.
+- **`clean`** elimina los directorios `cache/` y `responses/` pero conserva `specs/` y `auth_scripts/`. Las respuestas antiguas (>48h) también se limpian automáticamente al iniciar `mcp`.
 
-## Commands
+## Comandos
 
-| Command | Description |
+| Comando | Descripción |
 |---------|-------------|
-| [`init`](/cli/init) | Initialize a workspace directory with default config |
-| [`add`](/cli/add) | Add a spec or collection to the configuration |
-| [`delete`](/cli/delete) | Delete a spec or collection interactively |
-| [`ls`](/cli/ls) | List all specs and their collections |
-| [`run`](/cli/run) | Launch the interactive TUI API explorer |
-| [`validate`](/cli/validate) | Validate configuration and spec files |
-| [`clean`](/cli/clean) | Clear cached specs and invocation responses |
-| [`update`](/cli/update) | Re-validate, re-cache, and re-index all specs |
-| [`mcp`](/cli/mcp) | Start the MCP server for LLM tool access |
-| [`version`](/cli/version) | Print the swag2mcp version |
-| [`info`](/cli/info) | Show detailed configuration and runtime information |
-| [`import`](/cli/import) | Import spec files or restore workspace from ZIP |
-| [`export`](/cli/export) | Export workspace as a portable ZIP backup |
+| [`init`](/cli/init) | Inicializar un directorio de espacio de trabajo con configuración predeterminada |
+| [`add`](/cli/add) | Agregar una especificación o colección a la configuración |
+| [`delete`](/cli/delete) | Eliminar una especificación o colección de forma interactiva |
+| [`ls`](/cli/ls) | Listar todas las especificaciones y sus colecciones |
+| [`run`](/cli/run) | Iniciar el explorador de API TUI interactivo |
+| [`validate`](/cli/validate) | Validar la configuración y los archivos de especificación |
+| [`clean`](/cli/clean) | Limpiar especificaciones en caché y respuestas de invocación |
+| [`update`](/cli/update) | Revalidar, recargar en caché y reindexar todas las especificaciones |
+| [`mcp`](/cli/mcp) | Iniciar el servidor MCP para acceso a herramientas LLM |
+| [`version`](/cli/version) | Imprimir la versión de swag2mcp |
+| [`info`](/cli/info) | Mostrar información detallada de configuración y ejecución |
+| [`import`](/cli/import) | Importar archivos de especificación o restaurar espacio de trabajo desde ZIP |
+| [`export`](/cli/export) | Exportar espacio de trabajo como copia de seguridad ZIP portátil |
 
-## Global Flags
+## Banderas Globales
 
-| Flag | Description |
-|------|-------------|
-| `--version` | Show version (same as `version` subcommand) |
-| `--help` | Show help for any command |
+| Bandera | Descripción |
+|---------|-------------|
+| `--version` | Mostrar versión (igual que el subcomando `version`) |
+| `--help` | Mostrar ayuda para cualquier comando |

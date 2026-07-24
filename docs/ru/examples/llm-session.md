@@ -1,19 +1,19 @@
-# LLM Session Examples
+# Примеры LLM-сессий
 
-This page shows real dialogues between a user and an LLM agent powered by swag2mcp. Each example includes the user's request, the MCP tool call, and the response.
+На этой странице показаны реальные диалоги между пользователем и LLM-агентом на базе swag2mcp. Каждый пример включает запрос пользователя, вызов MCP-инструмента и ответ.
 
-## Setup
+## Настройка
 
-The workspace has two APIs configured:
+В рабочей области настроены два API:
 
-- **icanhazdadjoke** — public dad jokes API
-- **Open-Meteo** — weather forecast API
+- **icanhazdadjoke** — публичное API шуток про пап
+- **Open-Meteo** — API прогноза погоды
 
 ---
 
-## Discovering available APIs
+## Обнаружение доступных API
 
-**User:** What APIs do you have access to?
+**Пользователь:** К каким API у тебя есть доступ?
 
 **LLM → MCP:** `spec_list()`
 
@@ -24,13 +24,13 @@ Specifications:
   meteo (Open-Meteo Weather API)
 ```
 
-**LLM:** I have access to two APIs: icanhazdadjoke for dad jokes and Open-Meteo for weather data.
+**LLM:** У меня есть доступ к двум API: icanhazdadjoke для шуток про пап и Open-Meteo для данных о погоде.
 
 ---
 
-## Getting spec details
+## Получение деталей спецификации
 
-**User:** Tell me more about the dadjoke API.
+**Пользователь:** Расскажи подробнее об API dadjoke.
 
 **LLM → MCP:** `spec_by_id(id: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")`
 
@@ -41,13 +41,13 @@ Collections:
   - Jokes (3 endpoints, 1 tag)
 ```
 
-**LLM:** The dadjoke API has one collection called "Jokes" with 3 endpoints under a single tag.
+**LLM:** API dadjoke имеет одну коллекцию "Jokes" с 3 эндпоинтами в одном теге.
 
 ---
 
-## Searching for endpoints
+## Поиск эндпоинтов
 
-**User:** Find me an endpoint to get a random dad joke.
+**Пользователь:** Найди эндпоинт для получения случайной шутки про пап.
 
 **LLM → MCP:** `search(query: "random joke", limit: 5)`
 
@@ -59,13 +59,13 @@ Endpoints:
   GET /search — Search for dad jokes
 ```
 
-**LLM:** I found three endpoints. The main one is `GET /` which returns a random dad joke.
+**LLM:** Я нашёл три эндпоинта. Основной — `GET /`, который возвращает случайную шутку про пап.
 
 ---
 
-## Inspecting an endpoint
+## Проверка эндпоинта
 
-**User:** What parameters does the random joke endpoint need?
+**Пользователь:** Какие параметры нужны эндпоинту случайной шутки?
 
 **LLM → MCP:** `inspect(endpointId: "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6")`
 
@@ -82,13 +82,13 @@ Responses:
     Headers: Accept: text/plain
 ```
 
-**LLM:** The endpoint takes no parameters. Just call it and you'll get a random joke.
+**LLM:** Эндпоинт не требует параметров. Просто вызовите его, и вы получите случайную шутку.
 
 ---
 
-## Invoking an API
+## Вызов API
 
-**User:** Give me a random dad joke!
+**Пользователь:** Расскажи случайную шутку про пап!
 
 **LLM → MCP:** `invoke(endpointId: "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6")`
 
@@ -100,13 +100,13 @@ Responses:
 }
 ```
 
-**LLM:** Here's your dad joke: "Why don't scientists trust atoms? Because they make up everything!"
+**LLM:** Вот ваша шутка: "Why don't scientists trust atoms? Because they make up everything!"
 
 ---
 
-## Working with large responses
+## Работа с большими ответами
 
-**User:** Get me the weather forecast for Berlin.
+**Пользователь:** Получи прогноз погоды для Берлина.
 
 **LLM → MCP:** `search(query: "weather forecast", limit: 5)`
 
@@ -146,7 +146,7 @@ Responses:
 }
 ```
 
-**LLM:** The response is large (1.5 MB). Let me explore its structure.
+**LLM:** Ответ большой (1.5 МБ). Давайте исследуем его структуру.
 
 **LLM → MCP:** `response_outline(path: "/home/user/.swag2mcp/responses/response_x7k9m2.json")`
 
@@ -181,13 +181,13 @@ Arrays:
 }
 ```
 
-**LLM:** Here's the Berlin weather forecast. Temperatures range from 16.9°C at night to around 20°C in the evening.
+**LLM:** Вот прогноз погоды для Берлина. Температура колеблется от 16.9°C ночью до около 20°C вечером.
 
 ---
 
-## Auth token retrieval
+## Получение токена аутентификации
 
-**User:** Show me the auth token for my API so I can test it with curl.
+**Пользователь:** Покажи токен аутентификации для моего API, чтобы я мог протестировать его через curl.
 
 **LLM → MCP:** `auth(specId: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")`
 
@@ -196,7 +196,7 @@ Arrays:
 Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 ```
 
-**LLM:** Here's the token. You can use it in curl:
+**LLM:** Вот токен. Вы можете использовать его в curl:
 
 ```bash
 curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/v1/users
@@ -204,9 +204,9 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/
 
 ---
 
-## Runtime info
+## Информация о рантайме
 
-**User:** What's the current system status?
+**Пользователь:** Каков текущий статус системы?
 
 **LLM → MCP:** `info()`
 
@@ -231,13 +231,13 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/
 }
 ```
 
-**LLM:** The system has been running for 2 hours and 15 minutes. Two specs are active with 20 endpoints total. The HTTP client has a 30-second timeout and a 2 KB response size limit.
+**LLM:** Система работает 2 часа 15 минут. Активны две спецификации с 20 эндпоинтами. HTTP-клиент имеет таймаут 30 секунд и лимит размера ответа 2 КБ.
 
 ---
 
-## Full conversation: planning a trip
+## Полный разговор: планирование поездки
 
-**User:** I'm planning a trip to Tokyo next week. Can you help me prepare?
+**Пользователь:** Я планирую поездку в Токио на следующей неделе. Можешь помочь подготовиться?
 
 **LLM → MCP:** `search(query: "weather forecast", limit: 5)`
 
@@ -277,23 +277,23 @@ Parameters:
 }
 ```
 
-**LLM:** Here's the Tokyo weather forecast for next week:
+**LLM:** Вот прогноз погоды для Токио на следующую неделю:
 
-| Date | Max | Min | Rain |
-|------|-----|-----|------|
-| Jul 28 | 32°C | 25°C | 0 mm |
-| Jul 29 | 33°C | 26°C | 0.5 mm |
-| Jul 30 | 31°C | 24°C | 2.1 mm |
-| Jul 31 | 30°C | 23°C | 0 mm |
-| Aug 1 | 29°C | 22°C | 0 mm |
+| Дата | Макс | Мин | Дождь |
+|------|------|-----|-------|
+| 28 июл | 32°C | 25°C | 0 мм |
+| 29 июл | 33°C | 26°C | 0.5 мм |
+| 30 июл | 31°C | 24°C | 2.1 мм |
+| 31 июл | 30°C | 23°C | 0 мм |
+| 1 авг | 29°C | 22°C | 0 мм |
 
-Looks like hot and mostly dry weather. Pack light clothes and an umbrella just in case for July 30!
+Похоже на жаркую и в основном сухую погоду. Берите лёгкую одежду и зонтик на всякий случай на 30 июля!
 
 ---
 
-## Full conversation: finding a joke
+## Полный разговор: поиск шутки
 
-**User:** Tell me something funny!
+**Пользователь:** Расскажи что-нибудь смешное!
 
 **LLM → MCP:** `spec_list()`
 
@@ -322,4 +322,4 @@ Endpoints:
 }
 ```
 
-**LLM:** Here you go: "I told my wife she was drawing her eyebrows too high. She looked surprised."
+**LLM:** Держите: "I told my wife she was drawing her eyebrows too high. She looked surprised."

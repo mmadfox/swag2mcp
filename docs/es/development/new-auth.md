@@ -1,17 +1,17 @@
-# Adding a New Auth Method
+# Agregar un Nuevo Método de Autenticación
 
-## Steps
+## Pasos
 
-1. **Create the auth client** in `internal/auth/<name>.go`
-2. **Implement the `Authenticator` interface**
-3. **Add type constant** to `internal/auth/auth.go`
-4. **Add YAML decoder** to `internal/config/auth.go`
-5. **Register decoder** in the `authDecoders` map
-6. **Write tests**
+1. **Crear el cliente de autenticación** en `internal/auth/<nombre>.go`
+2. **Implementar la interfaz `Authenticator`**
+3. **Agregar constante de tipo** a `internal/auth/auth.go`
+4. **Agregar decodificador YAML** a `internal/config/auth.go`
+5. **Registrar decodificador** en el mapa `authDecoders`
+6. **Escribir pruebas**
 
-## 1. Auth client
+## 1. Cliente de autenticación
 
-Create `internal/auth/my_auth.go`:
+Cree `internal/auth/my_auth.go`:
 
 ```go
 package auth
@@ -44,30 +44,30 @@ func (c *MyAuthClient) Validate() error {
 }
 ```
 
-## 2. Authenticator interface
+## 2. Interfaz Authenticator
 
-Every auth client must implement:
+Cada cliente de autenticación debe implementar:
 
 ```go
 type Authenticator interface {
-    New() error                    // Initialize, resolve env vars
-    Type() Type                    // Return the auth type identifier
-    Apply(req *http.Request, out *Info) error  // Apply auth to request
-    Validate() error               // Validate required fields
+    New() error                    // Inicializar, resolver variables de entorno
+    Type() Type                    // Devolver el identificador de tipo de autenticación
+    Apply(req *http.Request, out *Info) error  // Aplicar autenticación a la solicitud
+    Validate() error               // Validar campos requeridos
 }
 ```
 
-## 3. Type constant
+## 3. Constante de tipo
 
-Add to `internal/auth/auth.go`:
+Agregue a `internal/auth/auth.go`:
 
 ```go
 const MyAuth Type = "my-auth"
 ```
 
-## 4. YAML decoder
+## 4. Decodificador YAML
 
-Add a decoder function in `internal/config/auth.go`. The decoder receives a `*yaml.Node` and must decode it into your auth client struct:
+Agregue una función decodificadora en `internal/config/auth.go`. El decodificador recibe un `*yaml.Node` y debe decodificarlo en su estructura de cliente de autenticación:
 
 ```go
 func decodeMyAuth(node *yaml.Node) (auth.Authenticator, error) {
@@ -79,28 +79,28 @@ func decodeMyAuth(node *yaml.Node) (auth.Authenticator, error) {
 }
 ```
 
-The `decodeConfig` helper handles the common pattern: it checks that the node is not empty, decodes YAML into the struct, and returns a descriptive error on failure.
+El ayudante `decodeConfig` maneja el patrón común: verifica que el nodo no esté vacío, decodifica YAML en la estructura y devuelve un error descriptivo en caso de fallo.
 
-## 5. Register decoder
+## 5. Registrar decodificador
 
-Add your decoder to the `authDecoders` map in `internal/config/auth.go`:
+Agregue su decodificador al mapa `authDecoders` en `internal/config/auth.go`:
 
 ```go
 var authDecoders = map[string]authDecoder{
-    // ... existing decoders
+    // ... decodificadores existentes
     auth.MyAuth.String(): decodeMyAuth,
 }
 ```
 
-The `UnmarshalYAML` method on `Auth` reads the `type` field from the YAML, normalises underscores to hyphens, looks up the decoder in `authDecoders`, and calls it with the `config` node. This is how swag2mcp knows which auth client to instantiate for each spec.
+El método `UnmarshalYAML` en `Auth` lee el campo `type` del YAML, normaliza los guiones bajos a guiones, busca el decodificador en `authDecoders` y lo llama con el nodo `config`. Así es como swag2mcp sabe qué cliente de autenticación instanciar para cada especificación.
 
-## 6. Tests
+## 6. Pruebas
 
-Create `internal/auth/my_auth_test.go` with table-driven tests covering:
+Cree `internal/auth/my_auth_test.go` con pruebas basadas en tablas que cubran:
 
-- `New()` resolves env vars correctly
-- `Type()` returns the correct type
-- `Apply()` sets the right headers/query params
-- `Apply()` handles empty values gracefully
-- `Validate()` passes for valid config
-- `Validate()` fails for missing required fields
+- `New()` resuelve las variables de entorno correctamente
+- `Type()` devuelve el tipo correcto
+- `Apply()` establece los encabezados/parámetros de consulta correctos
+- `Apply()` maneja valores vacíos correctamente
+- `Validate()` pasa para configuración válida
+- `Validate()` falla para campos requeridos faltantes

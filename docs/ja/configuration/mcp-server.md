@@ -1,8 +1,8 @@
-# MCP Server
+# MCP サーバー
 
-The MCP server is the main interaction point for LLM agents. It exposes all configured APIs as MCP tools that the LLM can call.
+MCP サーバーは LLM エージェントの主要な対話ポイントです。設定されたすべての API を LLM が呼び出せる MCP ツールとして公開します。
 
-## Configuration
+## 設定
 
 ```yaml
 mcp:
@@ -13,19 +13,19 @@ mcp:
     token: ""
 ```
 
-## Transports
+## トランスポート
 
-Three transport types are available:
+3 つのトランスポートタイプが利用可能です：
 
-| Transport | Description | When to Use |
-|-----------|-------------|-------------|
-| `stdio` | Standard input/output | Local LLM clients (VS Code, Cursor, Claude Desktop) |
-| `sse` | Server-Sent Events | Remote clients, HTTP-based communication |
-| `streamable-http` | HTTP with streaming | Web clients, modern MCP clients |
+| トランスポート | 説明 | 使用するタイミング |
+|-----------|------|----------------|
+| `stdio` | 標準入出力 | ローカル LLM クライアント（VS Code、Cursor、Claude Desktop） |
+| `sse` | Server-Sent Events | リモートクライアント、HTTP ベースの通信 |
+| `streamable-http` | HTTP ストリーミング | Web クライアント、最新の MCP クライアント |
 
-### stdio (default)
+### stdio（デフォルト）
 
-The LLM client runs swag2mcp as a child process. Communication happens over standard input and output. No network port is needed.
+LLM クライアントは swag2mcp を子プロセスとして実行します。通信は標準入出力を介して行われます。ネットワークポートは不要です。
 
 ```yaml
 mcp:
@@ -38,7 +38,7 @@ swag2mcp mcp
 
 ### SSE
 
-Server-Sent Events transport for HTTP-based communication. The MCP server listens on an HTTP port and the LLM client connects remotely.
+HTTP ベースの通信のための Server-Sent Events トランスポート。MCP サーバーは HTTP ポートでリッスンし、LLM クライアントはリモートから接続します。
 
 ```yaml
 mcp:
@@ -53,7 +53,7 @@ swag2mcp mcp --transport sse --http-addr 127.0.0.1:8080
 
 ### Streamable HTTP
 
-Modern HTTP transport that supports streaming responses. Similar to SSE but uses a different protocol.
+ストリーミングレスポンスをサポートする最新の HTTP トランスポート。SSE と似ていますが、異なるプロトコルを使用します。
 
 ```yaml
 mcp:
@@ -66,39 +66,39 @@ mcp:
 swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 ```
 
-## Parameters
+## パラメーター
 
 ### transport
 
-- **Type:** `string`
-- **Default:** `"stdio"`
-- **Options:** `stdio`, `sse`, `streamable-http`
-- **Effect:** Determines how the MCP server communicates with the LLM client.
+- **型:** `string`
+- **デフォルト:** `"stdio"`
+- **オプション:** `stdio`、`sse`、`streamable-http`
+- **効果:** MCP サーバーが LLM クライアントと通信する方法を決定します。
 
 ### addr
 
-- **Type:** `string`
-- **Default:** `":8080"`
-- **Description:** Listen address for SSE and Streamable HTTP transports. Format: `host:port`.
-- **Examples:** `":8080"`, `"127.0.0.1:8080"`, `"0.0.0.0:9000"`
+- **型:** `string`
+- **デフォルト:** `":8080"`
+- **説明:** SSE および Streamable HTTP トランスポートのリッスンアドレス。形式：`host:port`。
+- **例:** `":8080"`、`"127.0.0.1:8080"`、`"0.0.0.0:9000"`
 
 ### path
 
-- **Type:** `string`
-- **Default:** `"/mcp"`
-- **Description:** URL path for the MCP endpoint. The LLM client sends requests to `http://<addr><path>`.
-- **Examples:** `"/mcp"`, `"/api/mcp"`, `"/v1/mcp"`
+- **型:** `string`
+- **デフォルト:** `"/mcp"`
+- **説明:** MCP エンドポイントの URL パス。LLM クライアントは `http://<addr><path>` にリクエストを送信します。
+- **例:** `"/mcp"`、`"/api/mcp"`、`"/v1/mcp"`
 
 ### auth.token
 
-- **Type:** `string`
-- **Default:** `""` (no auth)
-- **Description:** Bearer token for HTTP transport authentication. When set, the LLM client must include `Authorization: Bearer <token>` in every request.
-- **Note:** Supports `$(ENV_VAR)` resolution.
+- **型:** `string`
+- **デフォルト:** `""`（認証なし）
+- **説明:** HTTP トランスポート認証用の Bearer トークン。設定すると、LLM クライアントはすべてのリクエストに `Authorization: Bearer <token>` を含める必要があります。
+- **注:** `$(ENV_VAR)` 解決をサポートします。
 
-## HTTP Authentication
+## HTTP 認証
 
-Protect the MCP HTTP endpoint with a bearer token:
+MCP HTTP エンドポイントを Bearer トークンで保護します：
 
 ```yaml
 mcp:
@@ -106,32 +106,32 @@ mcp:
     token: "my-secret-token"
 ```
 
-Or via CLI flag:
+または CLI フラグ経由：
 
 ```bash
 swag2mcp mcp --auth-token "my-secret-token"
 ```
 
-## Health Check
+## ヘルスチェック
 
-The MCP server provides a health check endpoint that works without MCP initialization:
+MCP サーバーは MCP 初期化なしで動作するヘルスチェックエンドポイントを提供します：
 
 ```bash
 curl http://127.0.0.1:8080/health
 # {"status":"ok","version":"v1.2.0"}
 ```
 
-## Startup Flags
+## 起動フラグ
 
-CLI flags override the YAML configuration. If a flag is not set, the value from `mcp` section in YAML is used as fallback.
+CLI フラグは YAML 設定を上書きします。フラグが設定されていない場合、YAML の `mcp` セクションの値がフォールバックとして使用されます。
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--transport` | string | `"stdio"` | Transport type: `stdio`, `sse`, `streamable-http` |
-| `--http-addr` | string | `":8080"` | HTTP server address (for SSE and Streamable HTTP) |
-| `--http-path` | string | `"/mcp"` | URL path for the MCP handler |
-| `--auth-token` | string | `""` | Bearer token for HTTP transport authentication |
-| `--logfile` | string | `""` | Log file path (logs to stderr if unset) |
-| `--disable-llm-auth` | bool | `true` | Remove the `auth` tool from the MCP tool list |
-| `--dump-dir` | string | `""` | Directory to dump HTTP requests for debugging |
-| `--tags` | string | `""` | Filter specs by tags (comma-separated) |
+| フラグ | 型 | デフォルト | 説明 |
+|-------|------|---------|------|
+| `--transport` | string | `"stdio"` | トランスポートタイプ：`stdio`、`sse`、`streamable-http` |
+| `--http-addr` | string | `":8080"` | HTTP サーバーアドレス（SSE および Streamable HTTP 用） |
+| `--http-path` | string | `"/mcp"` | MCP ハンドラーの URL パス |
+| `--auth-token` | string | `""` | HTTP トランスポート認証用の Bearer トークン |
+| `--logfile` | string | `""` | ログファイルパス（未設定の場合は stderr に出力） |
+| `--disable-llm-auth` | bool | `true` | MCP ツールリストから `auth` ツールを削除 |
+| `--dump-dir` | string | `""` | デバッグ用に HTTP リクエストをダンプするディレクトリ |
+| `--tags` | string | `""` | タグで spec をフィルタリング（カンマ区切り） |

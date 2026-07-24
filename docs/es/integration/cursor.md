@@ -1,8 +1,8 @@
-# Cursor Integration
+# Integración con Cursor
 
 ## stdio
 
-In Cursor settings, add the MCP server:
+En la configuración de Cursor, agregue el servidor MCP:
 
 ```json
 {
@@ -15,20 +15,20 @@ In Cursor settings, add the MCP server:
 }
 ```
 
-## Usage
+## Uso
 
-After connecting, Cursor AI Agent can:
+Después de conectarse, el Agente IA de Cursor puede:
 
-- Explore your APIs
-- Find relevant endpoints
-- Call APIs and show results
-- Help debug requests
+- Explorar sus APIs
+- Encontrar endpoints relevantes
+- Llamar APIs y mostrar resultados
+- Ayudar a depurar solicitudes
 
-## Others
+## Otros
 
-Don't see your client? All MCP integrations follow the same pattern:
-- Set the command to `swag2mcp` with argument `mcp`
-- Optionally add a workspace path: `mcp /path/to/workspace`
-- Check your client's documentation for the exact config file location and format
+¿No ve su cliente? Todas las integraciones MCP siguen el mismo patrón:
+- Establezca el comando a `swag2mcp` con el argumento `mcp`
+- Opcionalmente agregue una ruta de espacio de trabajo: `mcp /path/to/workspace`
+- Consulte la documentación de su cliente para la ubicación y formato exactos del archivo de configuración
 
-Most MCP clients support stdio transport, and some support HTTP (SSE / Streamable HTTP).
+La mayoría de los clientes MCP admiten el transporte stdio, y algunos admiten HTTP (SSE / HTTP Streamable).

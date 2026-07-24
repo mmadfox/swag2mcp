@@ -1,76 +1,76 @@
-# MCP Tools
+# MCP Инструменты
 
-## Overview
+## Обзор
 
-swag2mcp provides **19 MCP tools** that give an LLM agent full access to your APIs through the Model Context Protocol. These tools cover the complete workflow: discovering what APIs are available, navigating the spec hierarchy, searching and inspecting endpoints, executing API calls, and working with large responses.
+swag2mcp предоставляет **19 MCP инструментов**, которые дают LLM-агенту полный доступ к вашим API через протокол Model Context Protocol. Эти инструменты покрывают полный рабочий процесс: обнаружение доступных API, навигацию по иерархии спецификаций, поиск и проверку эндпоинтов, выполнение API-вызовов и работу с большими ответами.
 
-### What the tools solve
+### Что решают инструменты
 
-- **Discovery** — the LLM can find specs, collections, and tags without knowing IDs in advance
-- **Navigation** — drill down from spec → collection → tag → endpoint in a structured hierarchy
-- **Search** — full-text search across all endpoints when you don't have an ID
-- **Inspection** — get the full OpenAPI operation object before making a call
-- **Execution** — invoke real API calls with automatic authentication
-- **Large response handling** — outline, compress, and slice oversized responses that don't fit inline
+- **Обнаружение** — LLM может находить спецификации, коллекции и теги без предварительного знания ID
+- **Навигация** — спуск от спецификации → коллекции → тега → эндпоинта по структурированной иерархии
+- **Поиск** — полнотекстовый поиск по всем эндпоинтам, когда нет ID
+- **Проверка** — получение полного объекта OpenAPI-операции перед вызовом
+- **Выполнение** — выполнение реальных API-вызовов с автоматической аутентификацией
+- **Обработка больших ответов** — обзор, сжатие и извлечение фрагментов ответов, которые не помещаются в строку
 
-### Read-only vs Mutable
+### Только чтение vs Изменяемые
 
-| Type | Count | Tools |
-|------|-------|-------|
-| **Read-only** | 17 | All discovery, endpoint, search, inspect, info, and response tools |
-| **Mutable** | 2 | `invoke` (makes real HTTP calls), `auth` (retrieves tokens) |
+| Тип | Количество | Инструменты |
+|-----|------------|-------------|
+| **Только чтение** | 17 | Все инструменты обнаружения, эндпоинтов, поиска, проверки, информации и ответов |
+| **Изменяемые** | 2 | `invoke` (выполняет реальные HTTP-вызовы), `auth` (получает токены) |
 
-Read-only tools are marked with `ReadOnlyHint=true` and `IdempotentHint=true` in the MCP protocol, signaling to the LLM that they are safe to call without side effects.
+Инструменты только для чтения помечены флагами `ReadOnlyHint=true` и `IdempotentHint=true` в протоколе MCP, сообщая LLM, что их можно безопасно вызывать без побочных эффектов.
 
-### Error handling
+### Обработка ошибок
 
-All tools return errors as structured `LLMError` objects with a machine-readable code and a human-readable message that explains what went wrong and what to do next:
+Все инструменты возвращают ошибки в виде структурированных объектов `LLMError` с машиночитаемым кодом и человекочитаемым сообщением, объясняющим, что пошло не так и что делать дальше:
 
-| Error code | Meaning |
-|------------|---------|
-| `validation_failed` | Invalid input (bad ID format, missing required fields) |
-| `not_found` | Entity not found in the index or workspace |
-| `rate_limit` | Second `invoke` call within 10 seconds on the same endpoint |
-| `invoke_error` | HTTP call failure, download failure |
-| `auth_error` | Auth token retrieval failure |
-| `config_error` | Config file load or save failure |
-| `parse_error` | Spec file parse failure |
+| Код ошибки | Значение |
+|------------|----------|
+| `validation_failed` | Некорректный ввод (неверный формат ID, отсутствуют обязательные поля) |
+| `not_found` | Сущность не найдена в индексе или рабочей области |
+| `rate_limit` | Второй вызов `invoke` в течение 10 секунд на том же эндпоинте |
+| `invoke_error` | Ошибка HTTP-вызова, ошибка загрузки |
+| `auth_error` | Ошибка получения токена аутентификации |
+| `config_error` | Ошибка загрузки или сохранения конфигурационного файла |
+| `parse_error` | Ошибка парсинга файла спецификации |
 
-## Categories
+## Категории
 
-| Category | Tools | Description |
-|----------|-------|-------------|
-| **Discovery** | `spec_list`, `spec_by_id`, `collection_by_spec`, `collection_by_id`, `tag_by_spec`, `tag_by_collection`, `tag_by_id` | Navigate the spec hierarchy: find specs, collections, and tags |
-| **Endpoints** | `endpoint_by_spec`, `endpoint_by_collection`, `endpoint_by_tag`, `endpoint_by_id` | View endpoints at different levels of the hierarchy |
-| **Execution** | `search`, `inspect`, `invoke` | Search, inspect the full contract, and call APIs |
-| **Utilities** | `auth`, `info`, `response_outline`, `response_compress`, `response_slice` | Auth tokens, runtime info, and large response handling |
-| **Skills** | [Formatting guide](/mcp-tools/skills) | Customize how tool responses are displayed |
+| Категория | Инструменты | Описание |
+|-----------|-------------|----------|
+| **Обнаружение** | `spec_list`, `spec_by_id`, `collection_by_spec`, `collection_by_id`, `tag_by_spec`, `tag_by_collection`, `tag_by_id` | Навигация по иерархии спецификаций: поиск спецификаций, коллекций и тегов |
+| **Эндпоинты** | `endpoint_by_spec`, `endpoint_by_collection`, `endpoint_by_tag`, `endpoint_by_id` | Просмотр эндпоинтов на разных уровнях иерархии |
+| **Выполнение** | `search`, `inspect`, `invoke` | Поиск, проверка полного контракта и вызов API |
+| **Утилиты** | `auth`, `info`, `response_outline`, `response_compress`, `response_slice` | Токены аутентификации, информация о рантайме и обработка больших ответов |
+| **Навыки** | [Руководство по форматированию](/mcp-tools/skills) | Настройка отображения ответов инструментов |
 
-## Full List
+## Полный список
 
-| Tool | Description |
-|------|-------------|
-| `spec_list` | List all API specifications in the workspace |
-| `spec_by_id` | Get detailed spec information with collections |
-| `collection_by_spec` | List collections within a spec |
-| `collection_by_id` | Get collection details with tags |
-| `tag_by_spec` | List all tags across a spec |
-| `tag_by_collection` | List tags within a collection |
-| `tag_by_id` | Get tag details (ID, title, method count) |
-| `endpoint_by_spec` | List all endpoints in a spec |
-| `endpoint_by_collection` | List endpoints in a collection |
-| `endpoint_by_tag` | List endpoints in a tag |
-| `endpoint_by_id` | Quick endpoint summary (method, path, summary) |
-| `search` | Full-text search across all endpoints |
-| `inspect` | Full OpenAPI operation details (parameters, schemas) |
-| `invoke` | Execute a real API call |
-| `auth` | Get auth token or headers for a spec |
-| `info` | Runtime information (version, specs, config) |
-| `response_outline` | Structural summary of a large response file |
-| `response_compress` | Compress a large response to fit inline |
-| `response_slice` | Extract a fragment of a large response |
+| Инструмент | Описание |
+|------------|----------|
+| `spec_list` | Список всех спецификаций API в рабочей области |
+| `spec_by_id` | Детальная информация о спецификации с коллекциями |
+| `collection_by_spec` | Список коллекций в спецификации |
+| `collection_by_id` | Детали коллекции с тегами |
+| `tag_by_spec` | Список всех тегов в спецификации |
+| `tag_by_collection` | Список тегов в коллекции |
+| `tag_by_id` | Детали тега (ID, название, количество методов) |
+| `endpoint_by_spec` | Список всех эндпоинтов в спецификации |
+| `endpoint_by_collection` | Список эндпоинтов в коллекции |
+| `endpoint_by_tag` | Список эндпоинтов в теге |
+| `endpoint_by_id` | Краткая сводка эндпоинта (метод, путь, описание) |
+| `search` | Полнотекстовый поиск по всем эндпоинтам |
+| `inspect` | Полные детали OpenAPI-операции (параметры, схемы) |
+| `invoke` | Выполнение реального API-вызова |
+| `auth` | Получение токена или заголовков аутентификации для спецификации |
+| `info` | Информация о рантайме (версия, спецификации, конфиг) |
+| `response_outline` | Структурная сводка большого файла ответа |
+| `response_compress` | Сжатие большого ответа для встраивания в строку |
+| `response_slice` | Извлечение фрагмента большого ответа |
 
-## Navigation Hierarchy
+## Иерархия навигации
 
 ```
 spec_list
@@ -85,4 +85,4 @@ spec_list
                                                   └── invoke(endpointId)
 ```
 
-When you don't have an ID, use `search` to find endpoints by query. When `invoke` returns a `fileRef` (response too large), use `response_outline` → `response_compress` or `response_slice` to explore the data.
+Когда у вас нет ID, используйте `search` для поиска эндпоинтов по запросу. Когда `invoke` возвращает `fileRef` (ответ слишком большой), используйте `response_outline` → `response_compress` или `response_slice` для изучения данных.

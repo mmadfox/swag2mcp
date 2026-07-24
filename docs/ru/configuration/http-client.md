@@ -1,8 +1,8 @@
-# HTTP Client
+# HTTP-клиент
 
-swag2mcp uses a configurable HTTP client for all API calls. These settings are defined globally and can be overridden at the spec and collection levels.
+swag2mcp использует настраиваемый HTTP-клиент для всех вызовов API. Эти настройки определяются глобально и могут быть переопределены на уровне спецификации и коллекции.
 
-## Configuration
+## Конфигурация
 
 ```yaml
 http_client:
@@ -26,124 +26,124 @@ http_client:
       path: "/"
 ```
 
-## Timeout
+## Таймаут
 
-Controls how long swag2mcp waits for an API response before giving up.
+Управляет тем, как долго swag2mcp ждёт ответа от API, прежде чем отказаться от запроса.
 
-- **Type:** duration (Go format: `30s`, `60s`, `2m`)
-- **Default:** `30s`
-- **Range:** 1 second to 5 minutes
-- **Effect:** If the API does not respond within this time, the request fails with a timeout error.
-- **When to increase:** Slow APIs, large payloads, unreliable networks.
-- **When to decrease:** Internal APIs, health checks, fast-fail scenarios.
+- **Тип:** duration (Go-формат: `30s`, `60s`, `2m`)
+- **По умолчанию:** `30s`
+- **Диапазон:** от 1 секунды до 5 минут
+- **Эффект:** Если API не отвечает в течение этого времени, запрос завершается ошибкой таймаута.
+- **Когда увеличивать:** Медленные API, большие полезные нагрузки, ненадёжные сети.
+- **Когда уменьшать:** Внутренние API, health checks, сценарии быстрого отказа.
 
 ```yaml
 http_client:
   timeout: 60s
 ```
 
-## Max Response Size
+## Максимальный размер ответа
 
-Limits how large a response can be before swag2mcp saves it to disk instead of returning it inline to the LLM.
+Ограничивает размер ответа, прежде чем swag2mcp сохранит его на диск вместо возврата LLM.
 
-- **Type:** `int` (bytes)
-- **Default:** `1048576` (1 MB)
-- **Range:** 256 to 10,485,760 bytes (10 MB)
-- **Effect:** When a response exceeds this limit, it is saved to `{workspace}/responses/` as a JSON file. The LLM receives a file reference and can explore it with `response_outline`, `response_compress`, and `response_slice` tools.
-- **When to increase:** APIs that return large datasets (reports, logs, analytics).
-- **When to decrease:** Limited LLM context window, or when you prefer file-based access for all responses.
+- **Тип:** `int` (байты)
+- **По умолчанию:** `1048576` (1 МБ)
+- **Диапазон:** от 256 до 10 485 760 байт (10 МБ)
+- **Эффект:** Когда ответ превышает этот лимит, он сохраняется в `{workspace}/responses/` как JSON-файл. LLM получает ссылку на файл и может исследовать его с помощью инструментов `response_outline`, `response_compress` и `response_slice`.
+- **Когда увеличивать:** API, возвращающие большие наборы данных (отчёты, логи, аналитика).
+- **Когда уменьшать:** Ограниченный контекст LLM или когда вы предпочитаете файловый доступ для всех ответов.
 
 ```yaml
 http_client:
-  max_response_size: 4194304  # 4 MB
+  max_response_size: 4194304  # 4 МБ
 ```
 
 ## User-Agent
 
-The `User-Agent` header sent with every request. Some APIs require a specific user-agent or block known bot user-agents.
+Заголовок `User-Agent`, отправляемый с каждым запросом. Некоторые API требуют определённый user-agent или блокируют известные ботовые user-agent'ы.
 
-- **Type:** `string`
-- **Default:** `"swag2mcp-global/1.0"`
-- **Effect:** Identifies your application to the API server.
-- **When to change:** The API requires a specific user-agent, or you want to identify your application for analytics.
+- **Тип:** `string`
+- **По умолчанию:** `"swag2mcp-global/1.0"`
+- **Эффект:** Идентифицирует ваше приложение для сервера API.
+- **Когда изменять:** API требует определённый user-agent, или вы хотите идентифицировать своё приложение для аналитики.
 
 ```yaml
 http_client:
   user_agent: "MyApp/1.0"
 ```
 
-## Follow Redirects
+## Следовать перенаправлениям
 
-Controls whether swag2mcp automatically follows HTTP redirects (3xx status codes).
+Управляет тем, будет ли swag2mcp автоматически следовать HTTP-перенаправлениям (коды статуса 3xx).
 
-- **Type:** `bool`
-- **Default:** `true`
-- **Effect:** When `true`, swag2mcp follows redirects up to `max_redirects` times. When `false`, the redirect response is returned as-is.
-- **When to disable:** APIs that redirect in a loop, security-sensitive endpoints where you want to inspect redirect targets manually.
+- **Тип:** `bool`
+- **По умолчанию:** `true`
+- **Эффект:** Если `true`, swag2mcp следует перенаправлениям до `max_redirects` раз. Если `false`, ответ с перенаправлением возвращается как есть.
+- **Когда отключать:** API, которые перенаправляют по циклу, эндпоинты, чувствительные к безопасности, где вы хотите вручную проверять цели перенаправления.
 
 ```yaml
 http_client:
   follow_redirects: false
 ```
 
-## Max Redirects
+## Максимум перенаправлений
 
-Limits how many redirects swag2mcp follows before stopping.
+Ограничивает количество перенаправлений, которым следует swag2mcp, прежде чем остановиться.
 
-- **Type:** `int`
-- **Default:** `10`
-- **Range:** 0 to 50
-- **Effect:** If the API redirects more times than this limit, the request fails.
-- **When to change:** APIs with long redirect chains, or reduce for faster failure on redirect loops.
+- **Тип:** `int`
+- **По умолчанию:** `10`
+- **Диапазон:** от 0 до 50
+- **Эффект:** Если API перенаправляет больше раз, чем этот лимит, запрос завершается ошибкой.
+- **Когда изменять:** API с длинными цепочками перенаправлений или уменьшить для более быстрого отказа при циклах перенаправлений.
 
 ```yaml
 http_client:
   max_redirects: 5
 ```
 
-## Randomizer
+## Рандомизатор
 
-Adds random browser-like headers to each request to avoid fingerprinting and blocking.
+Добавляет случайные браузероподобные заголовки к каждому запросу, чтобы избежать fingerprinting и блокировок.
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Effect:** When `true`, swag2mcp generates random headers for each request: `User-Agent` (from a pool of real browser strings), `Accept`, `Accept-Language`, `Accept-Encoding`, `Cache-Control`. This overrides the `user_agent` setting.
-- **When to enable:** APIs that block requests based on User-Agent or header patterns, scraping scenarios.
+- **Тип:** `bool`
+- **По умолчанию:** `false`
+- **Эффект:** Если `true`, swag2mcp генерирует случайные заголовки для каждого запроса: `User-Agent` (из пула реальных браузерных строк), `Accept`, `Accept-Language`, `Accept-Encoding`, `Cache-Control`. Это переопределяет настройку `user_agent`.
+- **Когда включать:** API, которые блокируют запросы на основе User-Agent или шаблонов заголовков, сценарии парсинга.
 
 ```yaml
 http_client:
   random: true
 ```
 
-## Proxy
+## Прокси
 
-A proxy server acts as an intermediary between swag2mcp and the target API. All HTTP traffic is routed through it.
+Прокси-сервер выступает в роли посредника между swag2mcp и целевым API. Весь HTTP-трафик направляется через него.
 
-**When you might need a proxy:**
-- **Corporate network** — all outbound traffic must go through a company proxy
-- **Geographic restrictions** — some APIs are region-locked, a proxy in the right region bypasses this
-- **Static IP** — APIs that require IP allowlisting
-- **Anonymity** — hide the origin IP from the target API
+**Когда может понадобиться прокси:**
+- **Корпоративная сеть** — весь исходящий трафик должен проходить через корпоративный прокси
+- **Географические ограничения** — некоторые API ограничены по региону, прокси в нужном регионе обходит это
+- **Статический IP** — API, требующие белый список IP
+- **Анонимность** — скрыть исходный IP от целевого API
 
-### Proxy URL
+### URL прокси
 
-- **Type:** `string`
-- **Default:** `""` (no proxy)
-- **Supported schemes:** `http`, `https`, `socks5`, `socks5h`
-- **Supports `$(VAR)`:** ✅ resolved at runtime
+- **Тип:** `string`
+- **По умолчанию:** `""` (без прокси)
+- **Поддерживаемые схемы:** `http`, `https`, `socks5`, `socks5h`
+- **Поддерживает `$(VAR)`:** ✅ разрешается во время выполнения
 
-| Scheme | Description | Use Case |
+| Схема | Описание | Сценарий использования |
 |--------|-------------|----------|
-| `http` | HTTP proxy for HTTP traffic | Corporate proxies, basic proxying |
-| `https` | HTTPS proxy (CONNECT tunnel) | Secure corporate proxies |
-| `socks5` | SOCKS5 proxy (DNS resolved locally) | General purpose, any protocol |
-| `socks5h` | SOCKS5 proxy (DNS resolved on proxy) | When proxy has better DNS resolution |
+| `http` | HTTP-прокси для HTTP-трафика | Корпоративные прокси, базовое проксирование |
+| `https` | HTTPS-прокси (CONNECT-туннель) | Безопасные корпоративные прокси |
+| `socks5` | SOCKS5-прокси (DNS разрешается локально) | Общего назначения, любой протокол |
+| `socks5h` | SOCKS5-прокси (DNS разрешается на прокси) | Когда у прокси лучшее DNS-разрешение |
 
-### Proxy Authentication
+### Аутентификация прокси
 
-If the proxy requires authentication, provide `username` and `password`:
+Если прокси требует аутентификации, укажите `username` и `password`:
 
-- **Supports `$(VAR)`:** ✅ resolved at runtime for all three fields (`url`, `username`, `password`)
+- **Поддерживает `$(VAR)`:** ✅ разрешается во время выполнения для всех трёх полей (`url`, `username`, `password`)
 
 ```yaml
 http_client:
@@ -153,9 +153,9 @@ http_client:
     password: "$(PROXY_PASSWORD)"
 ```
 
-### Proxy Bypass
+### Исключения прокси
 
-A list of domains that should **not** go through the proxy. Useful for internal services, localhost, or APIs that are only accessible directly.
+Список доменов, которые **не должны** проходить через прокси. Полезно для внутренних сервисов, localhost или API, доступных только напрямую.
 
 ```yaml
 http_client:
@@ -168,17 +168,17 @@ http_client:
       - "api.local"
 ```
 
-Bypass supports wildcard patterns (`*.example.com` matches any subdomain).
+Исключения поддерживают шаблоны с подстановочными знаками (`*.example.com` соответствует любому поддомену).
 
-## Headers
+## Заголовки
 
-Custom HTTP headers added to every request. Headers are merged across cascade levels:
+Пользовательские HTTP-заголовки, добавляемые к каждому запросу. Заголовки объединяются по уровням каскада:
 
 ```
-Global headers → Spec headers (merged) → Collection headers (merged)
+Глобальные заголовки → Заголовки спецификации (объединяются) → Заголовки коллекции (объединяются)
 ```
 
-Collection headers override spec headers, which override global headers for the same key.
+Заголовки коллекции переопределяют заголовки спецификации, которые переопределяют глобальные заголовки для одного и того же ключа.
 
 ```yaml
 http_client:
@@ -187,11 +187,11 @@ http_client:
     "Accept-Language": "en-US"
 ```
 
-Header values support `$(ENV_VAR)` resolution.
+Значения заголовков поддерживают разрешение `$(ENV_VAR)`.
 
-## Cookies
+## Куки
 
-Cookies sent with every request. Cookies are merged across cascade levels (lower level overrides global for the same cookie name).
+Куки, отправляемые с каждым запросом. Куки объединяются по уровням каскада (нижний уровень переопределяет глобальный для того же имени куки).
 
 ```yaml
 http_client:
@@ -204,18 +204,18 @@ http_client:
       http_only: false
 ```
 
-### Cookie Fields
+### Поля куки
 
-| Field | Required | Description |
+| Поле | Обязательно | Описание |
 |-------|----------|-------------|
-| `name` | Yes | Cookie name |
-| `value` | Yes | Cookie value (supports `$(ENV_VAR)` resolution) |
-| `domain` | No | Domain scope (e.g., `.example.com`) |
-| `path` | No | Path scope (e.g., `/`) |
-| `secure` | No | Only send over HTTPS |
-| `http_only` | No | Not accessible via JavaScript |
+| `name` | Да | Имя куки |
+| `value` | Да | Значение куки (поддерживает разрешение `$(ENV_VAR)`) |
+| `domain` | Нет | Область действия домена (например, `.example.com`) |
+| `path` | Нет | Область действия пути (например, `/`) |
+| `secure` | Нет | Отправлять только через HTTPS |
+| `http_only` | Нет | Недоступно через JavaScript |
 
-## Custom Headers at Spec Level
+## Пользовательские заголовки на уровне спецификации
 
 ```yaml
 specs:
@@ -230,7 +230,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## Cookies at Spec Level
+## Куки на уровне спецификации
 
 ```yaml
 specs:
@@ -248,18 +248,18 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## Cascade
+## Каскад
 
-HTTP client settings cascade from global to spec to collection. All settings can be overridden at every level:
+Настройки HTTP-клиента каскадируются от глобального уровня к спецификации и коллекции. Все настройки могут быть переопределены на каждом уровне:
 
 ```
 Global (http_client)
-    ↓ overrides (all settings)
+    ↓ переопределяет (все настройки)
 Spec (specs[].http_client)
-    ↓ overrides (all settings)
+    ↓ переопределяет (все настройки)
 Collection (specs[].collections[].http_client)
 ```
 
-**All HTTP client settings** (timeout, proxy, user-agent, redirects, response size, randomizer, headers, cookies) can be overridden at both spec and collection levels.
+**Все настройки HTTP-клиента** (таймаут, прокси, user-agent, перенаправления, размер ответа, рандомизатор, заголовки, куки) могут быть переопределены на уровнях спецификации и коллекции.
 
-See [Configuration Cascade](./cascade) for details.
+Подробнее: [Каскад конфигурации](./cascade).

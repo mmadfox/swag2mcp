@@ -1,43 +1,43 @@
-# Full-Text Search
+# 全文搜索
 
-## Overview
+## 概述
 
-swag2mcp includes a built-in full-text search engine (bluge) that indexes all endpoints across all specs. The LLM can search for endpoints by method, path, summary, or tag — even without knowing the endpoint ID.
+swag2mcp 包含一个内置的全文搜索引擎（bluge），用于索引所有 spec 中的所有端点。LLM 可以按方法、路径、摘要或标签搜索端点 — 即使不知道端点 ID。
 
-## How indexing works
+## 索引工作原理
 
-When a spec is added or updated, every endpoint is indexed. The following fields are searchable:
+当添加或更新 spec 时，每个端点都会被索引。以下字段可搜索：
 
-| Field | Description | Example |
-|-------|-------------|---------|
-| `method` | HTTP method | `GET`, `POST`, `PUT` |
-| `path` | API endpoint path | `/api/v1/users/{id}` |
-| `summary` | OpenAPI summary | "Find pet by ID" |
-| `tag` | Endpoint category | "pets", "users" |
-| `_all` | All fields combined | method + path + tag + summary |
+| 字段 | 描述 | 示例 |
+|------|------|------|
+| `method` | HTTP 方法 | `GET`、`POST`、`PUT` |
+| `path` | API 端点路径 | `/api/v1/users/{id}` |
+| `summary` | OpenAPI 摘要 | "Find pet by ID" |
+| `tag` | 端点类别 | "pets"、"users" |
+| `_all` | 所有字段组合 | method + path + tag + summary |
 
-The index is rebuilt on every MCP server start. It is stored in memory for fast searches.
+索引在每次 MCP 服务器启动时重建。它存储在内存中以实现快速搜索。
 
-## Query syntax
+## 查询语法
 
-The search supports a rich query syntax for precise filtering:
+搜索支持丰富的查询语法，用于精确过滤：
 
-| Example | Description |
-|---------|-------------|
-| `pet` | Simple text search across all fields |
-| `method:GET` | Find all GET endpoints |
-| `tag:pets` | Find endpoints in the "pets" tag |
-| `path:"/api/v1/users"` | Exact path match |
-| `+method:POST +tag:pet` | Must match both conditions |
-| `-method:DELETE` | Exclude DELETE methods |
-| `create~` | Fuzzy search (typo-tolerant) |
-| `cr*` | Wildcard search |
-| `"find pet"` | Phrase search |
-| `+summary:pet -method:DELETE` | Include "pet" in summary, exclude DELETE |
+| 示例 | 描述 |
+|------|------|
+| `pet` | 跨所有字段的简单文本搜索 |
+| `method:GET` | 查找所有 GET 端点 |
+| `tag:pets` | 查找 "pets" 标签中的端点 |
+| `path:"/api/v1/users"` | 精确路径匹配 |
+| `+method:POST +tag:pet` | 必须匹配两个条件 |
+| `-method:DELETE` | 排除 DELETE 方法 |
+| `create~` | 模糊搜索（容错） |
+| `cr*` | 通配符搜索 |
+| `"find pet"` | 短语搜索 |
+| `+summary:pet -method:DELETE` | 摘要中包含 "pet"，排除 DELETE |
 
-### Field-specific search
+### 字段特定搜索
 
-You can search within specific fields using the `field:value` syntax:
+你可以使用 `field:value` 语法在特定字段内搜索：
 
 ```
 method:GET
@@ -46,43 +46,43 @@ path:"/pet/findByStatus"
 summary:"find pet by status"
 ```
 
-### Boolean operators
+### 布尔运算符
 
-- `+` — the term must match (AND)
-- `-` — the term must not match (NOT)
-- Space between terms — OR (any term can match)
+- `+` — 必须匹配（AND）
+- `-` — 必须不匹配（NOT）
+- 术语之间的空格 — OR（任何术语可以匹配）
 
-### Fuzzy and wildcard
+### 模糊和通配符
 
-- `term~` — fuzzy search (matches similar words, handles typos)
-- `te*` — wildcard (matches any characters)
-- `te?t` — single character wildcard
+- `term~` — 模糊搜索（匹配相似单词，处理拼写错误）
+- `te*` — 通配符（匹配任意字符）
+- `te?t` — 单字符通配符
 
-## Examples
+## 示例
 
 ```
-# Find all GET requests
+# 查找所有 GET 请求
 method:GET
 
-# Find POST requests in the pet tag
+# 查找 pet 标签中的 POST 请求
 +method:POST +tag:pet
 
-# Find endpoints by exact path
+# 按精确路径查找端点
 path:"/pet/findByStatus"
 
-# Find by description
+# 按描述查找
 "find pet by status"
 
-# Find everything except DELETE
+# 查找除 DELETE 之外的所有内容
 +summary:pet -method:DELETE
 
-# Fuzzy search for "create" (handles typos)
+# "create" 的模糊搜索（处理拼写错误）
 create~
 ```
 
-## MCP tool
+## MCP 工具
 
-The `search` MCP tool exposes the search engine to the LLM:
+`search` MCP 工具将搜索引擎暴露给 LLM：
 
 ```
 → search(query: "find pet by status", limit: 5)
@@ -90,17 +90,17 @@ The `search` MCP tool exposes the search engine to the LLM:
    GET /pet/{petId} — Find pet by ID
 ```
 
-### Parameters
+### 参数
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `query` | Yes | Search query (supports structured syntax) |
-| `limit` | Yes | Maximum results (1-50) |
+| 参数 | 必需 | 描述 |
+|------|------|------|
+| `query` | 是 | 搜索查询（支持结构化语法） |
+| `limit` | 是 | 最大结果数（1-50） |
 
-## Important notes
+## 重要说明
 
-- **The index is in-memory** — it is rebuilt every time the MCP server starts. There is no persistent index file.
-- **All fields are lowercased** — searches are case-insensitive
-- **Limit is capped at 50** — you cannot request more than 50 results
-- **Invalid query syntax** returns a helpful error message with examples
-- **The `_all` field** combines method, path, tag, and summary for simple text searches
+- **索引在内存中** — 每次 MCP 服务器启动时重建。没有持久的索引文件。
+- **所有字段小写** — 搜索不区分大小写
+- **限制上限为 50** — 你不能请求超过 50 个结果
+- **无效的查询语法** 返回带有示例的帮助性错误消息
+- **`_all` 字段** 组合 method、path、tag 和 summary 用于简单文本搜索

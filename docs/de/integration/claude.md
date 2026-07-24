@@ -1,4 +1,4 @@
-# Claude Desktop Integration
+# Claude Desktop-Integration
 
 ## stdio
 
@@ -15,32 +15,32 @@ In `claude_desktop_config.json`:
 }
 ```
 
-## Custom Workspace
+## Benutzerdefinierter Arbeitsbereich
 
 ```json
 {
   "mcpServers": {
     "swag2mcp": {
       "command": "swag2mcp",
-      "args": ["mcp", "/path/to/workspace"]
+      "args": ["mcp", "/pfad/zu/arbeitsbereich"]
     }
   }
 }
 ```
 
-## Usage
+## Verwendung
 
-After restarting Claude Desktop, you can:
+Nach dem Neustart von Claude Desktop können Sie:
 
-- "Show me the list of all APIs"
-- "Find the endpoint for creating an order"
-- "Call the weather API for Moscow"
+- "Zeig mir die Liste aller APIs"
+- "Finde den Endpunkt zum Erstellen einer Bestellung"
+- "Rufe die Wetter-API für Moskau auf"
 
-## Others
+## Andere
 
-Don't see your client? All MCP integrations follow the same pattern:
-- Set the command to `swag2mcp` with argument `mcp`
-- Optionally add a workspace path: `mcp /path/to/workspace`
-- Check your client's documentation for the exact config file location and format
+Ihr Client ist nicht dabei? Alle MCP-Integrationen folgen dem gleichen Muster:
+- Setzen Sie den Befehl auf `swag2mcp` mit dem Argument `mcp`
+- Optional einen Arbeitsbereichspfad hinzufügen: `mcp /pfad/zu/arbeitsbereich`
+- Überprüfen Sie die Dokumentation Ihres Clients für den genauen Konfigurationsdatei-Speicherort und das Format
 
-Most MCP clients support stdio transport, and some support HTTP (SSE / Streamable HTTP).
+Die meisten MCP-Clients unterstützen den stdio-Transport, und einige unterstützen HTTP (SSE / Streamable HTTP).

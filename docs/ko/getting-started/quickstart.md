@@ -1,30 +1,30 @@
-# Quick Start
+# 빠른 시작
 
-Get swag2mcp running in 2 minutes.
+2분 만에 swag2mcp를 실행하세요.
 
-## 1. Initialize
+## 1. 초기화
 
-### Home directory (recommended)
+### 홈 디렉토리 (권장)
 
-One-time setup for your entire system. Config is stored in your home folder.
+전체 시스템을 위한 일회성 설정입니다. 설정이 홈 폴더에 저장됩니다.
 
 ::: code-group
 
 ```bash [macOS / Linux]
 swag2mcp init
-# Creates ~/.swag2mcp/swag2mcp.yaml
+# ~/.swag2mcp/swag2mcp.yaml 생성
 ```
 
 ```powershell [Windows]
 swag2mcp.exe init
-# Creates %USERPROFILE%\.swag2mcp\swag2mcp.yaml
+# %USERPROFILE%\.swag2mcp\swag2mcp.yaml 생성
 ```
 
 :::
 
-### Project directory
+### 프로젝트 디렉토리
 
-For an isolated workspace inside your project.
+프로젝트 내부의 격리된 워크스페이스용입니다.
 
 ::: code-group
 
@@ -38,30 +38,30 @@ mkdir ./swag2mcp; swag2mcp.exe init ./swag2mcp
 
 :::
 
-### From ZIP
+### ZIP에서
 
-If you have a ready-made workspace (e.g., from a colleague):
+준비된 워크스페이스가 있는 경우(예: 동료로부터):
 
 ```bash
 swag2mcp import --from-zip workspace.zip
 ```
 
-## 2. Install Agent Skills (recommended)
+## 2. 에이전트 스킬 설치 (권장)
 
-Install the swag2mcp skills to teach your AI agent all commands, flags, config format, and real-world examples.
+swag2mcp 스킬을 설치하여 AI 에이전트에게 모든 명령어, 플래그, 설정 형식, 실제 예시를 가르치세요.
 
-Ask your agent:
+에이전트에게 요청:
 
 ```bash
-"Add the swag2mcp-cli skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
-"Add the swag2mcp-format skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md"
+"https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md에서 swag2mcp-cli 스킬을 추가하세요"
+"https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md에서 swag2mcp-format 스킬을 추가하세요"
 ```
 
-> Some IDEs require a restart after adding skills.
+> 일부 IDE는 스킬 추가 후 재시작이 필요합니다.
 
-## 3. LLM Client / IDE Configuration
+## 3. LLM 클라이언트 / IDE 설정
 
-Configure your IDE to connect to swag2mcp. The IDE will start the MCP server automatically when needed.
+swag2mcp에 연결하도록 IDE를 설정하세요. IDE는 필요할 때 MCP 서버를 자동으로 시작합니다.
 
 ::: code-group
 
@@ -102,30 +102,30 @@ Configure your IDE to connect to swag2mcp. The IDE will start the MCP server aut
 
 :::
 
-For other IDEs (Cursor, VS Code, JetBrains) see the [Integration guide](../integration/opencode.md).
+다른 IDE(Cursor, VS Code, JetBrains)는 [통합 가이드](../integration/opencode.md)를 참조하세요.
 
-> If you initialized the workspace at a custom path (e.g. `./swag2mcp`), use the full path in the command:
+> 커스텀 경로(예: `./swag2mcp`)에 워크스페이스를 초기화한 경우 명령어에 전체 경로를 사용하세요:
 > `"command": ["swag2mcp", "mcp", "/absolute/path/to/swag2mcp"]`
 
-> **After any config change, restart the MCP server** for the changes to take effect.
+> **설정 변경 후에는 변경 사항을 적용하려면 MCP 서버를 다시 시작하세요.**
 
-## 4. Start MCP Server
+## 4. MCP 서버 시작
 
-### stdio (default) — for local IDE
+### stdio (기본값) — 로컬 IDE용
 
-Nothing to configure. Your IDE starts swag2mcp automatically via the config above.
+설정할 것이 없습니다. IDE가 위 설정을 통해 swag2mcp를 자동으로 시작합니다.
 
 ```bash
 swag2mcp mcp
 ```
 
-### SSE / Streamable HTTP — for remote access
+### SSE / Streamable HTTP — 원격 접근용
 
 ```bash
 swag2mcp mcp --transport sse --http-addr :8080
 ```
 
-Or configure in `swag2mcp.yaml`:
+또는 `swag2mcp.yaml`에서 설정:
 
 ```yaml
 mcp:
@@ -134,43 +134,43 @@ mcp:
   path: "/mcp"
 ```
 
-See [MCP Server reference](../configuration/mcp-server.md) for all flags.
+모든 플래그는 [MCP 서버 참조](../configuration/mcp-server.md)를 참조하세요.
 
-### Filter specs by tags
+### 태그로 spec 필터링
 
 ```bash
 swag2mcp mcp --tags weather,public
 ```
 
-Only specs with matching tags will be available to the LLM.
+일치하는 태그가 있는 spec만 LLM이 사용할 수 있습니다.
 
-### Verify it's working
+### 작동 확인
 
-After connecting, ask your LLM agent:
+연결 후 LLM 에이전트에게 물어보세요:
 
 ```bash
-"What MCP tools do you support?"
+"어떤 MCP 도구를 지원하나요?"
 ```
 
-If the agent lists swag2mcp tools (`spec_list`, `search`, `invoke`, etc.) — everything is working.
+에이전트가 swag2mcp 도구(`spec_list`, `search`, `invoke` 등)를 나열하면 모든 것이 정상입니다.
 
-### Example queries to try
+### 시도해 볼 예시 쿼리
 
-| Ask your agent | What happens |
-|-------|-------------|
-| "What's the weather in New York?" | `invoke` — calls Open-Meteo forecast API |
-| "What's the current BTC price?" | `invoke` — calls Binance ticker API |
-| "Tell me a dad joke" | `invoke` — calls icanhazdadjoke API |
-| "Show me Pikachu" | `invoke` — calls PokéAPI by name |
-| "Who is Rick Sanchez?" | `invoke` — calls Rick and Morty character API |
-| "What's the air quality in Beijing?" | `invoke` — calls Open-Meteo air quality API |
-| "How high are the waves near Portugal?" | `invoke` — calls Open-Meteo marine API |
-| "Search for jokes about dogs" | `invoke` — calls dadjoke search endpoint |
-| "List all Pokémon" | `invoke` — calls PokéAPI list endpoint |
-| "What's the elevation of Mount Everest?" | `invoke` — calls Open-Meteo elevation API |
+| 에이전트에게 물어보기 | 결과 |
+|-----------------|------|
+| "뉴욕 날씨는 어떤가요?" | `invoke` — Open-Meteo 예보 API 호출 |
+| "현재 BTC 가격은 얼마인가요?" | `invoke` — Binance 티커 API 호출 |
+| "아재개그 해주세요" | `invoke` — icanhazdadjoke API 호출 |
+| "피카츄 보여주세요" | `invoke` — 이름으로 PokéAPI 호출 |
+| "릭 산체스는 누구인가요?" | `invoke` — Rick and Morty 캐릭터 API 호출 |
+| "베이징의 대기질은 어떤가요?" | `invoke` — Open-Meteo 대기질 API 호출 |
+| "포르투갈 근처 파도는 얼마나 높나요?" | `invoke` — Open-Meteo 해양 API 호출 |
+| "개에 관한 농담 검색" | `invoke` — dadjoke 검색 엔드포인트 호출 |
+| "모든 포켓몬 나열" | `invoke` — PokéAPI 목록 엔드포인트 호출 |
+| "에베레스트 산의 고도는?" | `invoke` — Open-Meteo 고도 API 호출 |
 
-## 5. What's Next?
+## 5. 다음 단계
 
-- [Concepts](../concepts/overview.md) — understand the architecture
-- [Configuration](../configuration/config-file.md) — customize settings
-- [CLI Commands](../cli/overview.md) — full command reference
+- [개념](../concepts/overview.md) — 아키텍처 이해
+- [설정](../configuration/config-file.md) — 설정 사용자 정의
+- [CLI 명령어](../cli/overview.md) — 전체 명령어 참조

@@ -1,31 +1,31 @@
 # version
 
-## Purpose
+## 目的
 
-Print the swag2mcp version. Useful for verifying the installed version, reporting bugs, or checking compatibility.
+swag2mcp のバージョンを表示します。インストールされたバージョンの確認、バグ報告、互換性の確認に便利です。
 
-## When to use
+## 使用するタイミング
 
-- You want to check which version of swag2mcp is installed
-- You are reporting a bug and need to include the version
-- You want to verify a successful installation
+- インストールされている swag2mcp のバージョンを確認したい場合
+- バグを報告する際にバージョンを含める必要がある場合
+- インストールが成功したことを確認したい場合
 
-## Syntax
+## 構文
 
 ```bash
 swag2mcp version
 swag2mcp --version
 ```
 
-## Arguments
+## 引数
 
-None.
+なし。
 
-## Flags
+## フラグ
 
-None.
+なし。
 
-## How it works
+## 仕組み
 
 ```bash
 swag2mcp version
@@ -35,15 +35,15 @@ swag2mcp --version
 # swag2mcp v1.2.0
 ```
 
-## Output format
+## 出力形式
 
 ```
 swag2mcp <version>
 ```
 
-The version is set at build time via `ldflags`. If not set, it defaults to `"dev"`.
+バージョンはビルド時に `ldflags` で設定されます。設定されていない場合、デフォルトで `"dev"` になります。
 
-## Nuances
+## ニュアンス
 
-- **Two forms:** Both `swag2mcp version` (subcommand) and `swag2mcp --version` (global flag) produce the same output.
-- **No config required:** This command works without a workspace or config file.
+- **2 つの形式:** `swag2mcp version`（サブコマンド）と `swag2mcp --version`（グローバルフラグ）は同じ出力を生成します。
+- **設定不要:** このコマンドはワークスペースや設定ファイルなしで動作します。

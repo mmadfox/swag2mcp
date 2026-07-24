@@ -1,45 +1,45 @@
 # ls
 
-## Purpose
+## 目的
 
-List all configured **specs** and their **collections** in a human-readable format. This is the primary way to inspect what APIs are available in your workspace.
+設定されているすべての **spec** とその **collection** を人間が読める形式で一覧表示します。ワークスペースで利用可能な API を確認するための主要な方法です。
 
-## When to use
+## 使用するタイミング
 
-- You want to see what APIs are configured
-- You need to find a spec or collection ID
-- You want to check how many endpoints each collection has
-- You want to filter specs by tags
+- 設定されている API を確認したい場合
+- spec または collection の ID を見つける必要がある場合
+- 各 collection のエンドポイント数を確認したい場合
+- タグで spec をフィルタリングしたい場合
 
-## Syntax
+## 構文
 
 ```bash
 swag2mcp ls [path] [flags]
 ```
 
-## Arguments
+## 引数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 引数 | 位置 | 必須 | 説明 |
+|------|------|------|------|
+| `path` | 1 | いいえ | ワークスペースディレクトリ。省略時はパス解決ルールに従います。 |
 
-## Flags
+## フラグ
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--tags` | `-t` | `string` | `""` | Filter specs by tags (comma-separated) |
+| フラグ | 省略形 | 型 | デフォルト | 説明 |
+|-------|--------|-----|-----------|------|
+| `--tags` | `-t` | `string` | `""` | タグで spec をフィルタリング（カンマ区切り） |
 
-## How it works
+## 仕組み
 
-### List all specs
+### すべての spec を一覧表示
 
-Shows every spec with its domain, collections, and endpoint counts:
+各 spec をドメイン、collection、エンドポイント数とともに表示します：
 
 ```bash
 swag2mcp ls
 ```
 
-Example output:
+出力例：
 
 ```
 Specifications:
@@ -52,21 +52,21 @@ Specifications:
     market-data (12 endpoints)
 ```
 
-### Filter by tags
+### タグでフィルタリング
 
-Show only specs that have the specified tags:
+指定されたタグを持つ spec のみを表示します：
 
 ```bash
 swag2mcp ls --tags=public
 swag2mcp ls --tags=public,internal
 ```
 
-## Post-command verification
+## コマンド実行後の確認
 
-Use `ls` after `add`, `delete`, `update`, or `import` to confirm the workspace state matches your expectations.
+`add`、`delete`、`update`、`import` の後に `ls` を使用して、ワークスペースの状態が期待通りであることを確認します。
 
-## Nuances
+## ニュアンス
 
-- **Auto-init:** If no config file exists, `ls` automatically runs the init wizard first.
-- **Tag filtering:** Tags are comma-separated. Specs matching **any** of the specified tags are shown (OR logic).
-- **Output format:** The output is plain text, not JSON. For machine-readable output, use `info`.
+- **自動初期化:** 設定ファイルが存在しない場合、`ls` は自動的に init ウィザードを実行します。
+- **タグフィルタリング:** タグはカンマ区切りです。指定されたタグの**いずれか**に一致する spec が表示されます（OR 論理）。
+- **出力形式:** 出力はプレーンテキストで、JSON ではありません。機械可読な出力には `info` を使用してください。

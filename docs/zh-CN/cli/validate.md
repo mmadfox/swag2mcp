@@ -1,35 +1,35 @@
 # validate
 
-## Purpose
+## 用途
 
-Check the configuration file and all referenced spec files for errors. This is a **read-only** diagnostic command — it never modifies anything.
+检查配置文件和所有引用的规范文件是否存在错误。这是一个**只读**诊断命令 — 它从不修改任何内容。
 
-## When to use
+## 何时使用
 
-- After editing `swag2mcp.yaml` manually
-- Before running `mcp` or `update` to catch issues early
-- When troubleshooting why a spec isn't loading
-- In CI/CD pipelines to validate configuration changes
+- 手动编辑 `swag2mcp.yaml` 后
+- 在运行 `mcp` 或 `update` 之前及早发现问题
+- 排查为什么 spec 没有加载时
+- 在 CI/CD 管道中验证配置更改
 
-## Syntax
+## 语法
 
 ```bash
 swag2mcp validate [path] [flags]
 ```
 
-## Arguments
+## 参数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 参数 | 位置 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | 1 | 否 | 工作区目录。如果省略，通过路径解析规则解析。 |
 
-## Flags
+## 标志
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--tags` | `-t` | `string` | `""` | Validate only specs with matching tags (comma-separated) |
+| 标志 | 简写 | 类型 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| `--tags` | `-t` | `string` | `""` | 仅验证具有匹配标签的 spec（逗号分隔） |
 
-## How it works
+## 工作原理
 
 ```bash
 swag2mcp validate
@@ -37,29 +37,29 @@ swag2mcp validate ./my-workspace
 swag2mcp validate --tags=public
 ```
 
-## What is checked
+## 检查的内容
 
-| Check | Description |
-|-------|-------------|
-| YAML syntax | The config file must be valid YAML |
-| Config structure | All required fields present, types are correct |
-| Domain uniqueness | No duplicate domains |
-| Domain format | Lowercase, digits, hyphens only |
-| Spec file existence | The `location` file or URL must be reachable |
-| Spec format | The file must be valid OpenAPI 3.x, Swagger 2.0, or Postman collection |
-| Auth settings | Auth type and config are valid for the selected method |
-| HTTP client | HTTP client settings are valid |
+| 检查项 | 描述 |
+|--------|------|
+| YAML 语法 | 配置文件必须是有效的 YAML |
+| 配置结构 | 所有必需字段存在，类型正确 |
+| 域唯一性 | 没有重复的域 |
+| 域格式 | 仅限小写字母、数字、连字符 |
+| 规范文件存在性 | `location` 文件或 URL 必须可达 |
+| 规范格式 | 文件必须是有效的 OpenAPI 3.x、Swagger 2.0 或 Postman collection |
+| 认证设置 | 认证类型和配置对所选方法有效 |
+| HTTP 客户端 | HTTP 客户端设置有效 |
 
-## What is NOT checked
+## 不检查的内容
 
-| Not checked | Reason |
-|-------------|--------|
-| Authentication endpoints | `validate` checks auth config syntax but does not test login/token exchange |
-| API endpoint availability | Only the spec file URL is checked, not the `base_url` |
-| `base_url` correctness | Format is validated, but no test request is made |
-| Mock server configuration | `base_mock_url` is not verified for connectivity |
+| 不检查 | 原因 |
+|--------|------|
+| 认证端点 | `validate` 检查认证配置语法，但不测试登录/令牌交换 |
+| API 端点可用性 | 只检查规范文件 URL，不检查 `base_url` |
+| `base_url` 正确性 | 验证格式，但不发送测试请求 |
+| 模拟服务器配置 | `base_mock_url` 不验证连接性 |
 
-## Example output
+## 示例输出
 
 ```
 ✅ Configuration is valid.
@@ -68,12 +68,12 @@ swag2mcp validate --tags=public
 ✗ Spec old-api: file not found
 ```
 
-## Post-command verification
+## 命令后验证
 
-If validation passes, the configuration is ready for `mcp`, `update`, or `run`.
+如果验证通过，配置即可用于 `mcp`、`update` 或 `run`。
 
-## Nuances
+## 细节
 
-- **No auto-init:** Unlike `add`, `ls`, or `run`, `validate` does **not** auto-initialize if the config is missing. It returns an error: `"configuration not found at <path>"`.
-- **Network access:** Remote spec URLs are fetched during validation. The command may take longer if specs are hosted on slow servers.
-- **Tag filtering:** When `--tags` is set, only specs matching the specified tags are validated. Other specs are skipped.
+- **无自动初始化：** 与 `add`、`ls` 或 `run` 不同，如果配置缺失，`validate` **不会**自动初始化。它返回错误：`"configuration not found at <path>"`。
+- **网络访问：** 验证期间会获取远程规范 URL。如果规范托管在慢速服务器上，命令可能需要更长时间。
+- **标签过滤：** 设置 `--tags` 时，只验证匹配指定标签的 spec。其他 spec 被跳过。

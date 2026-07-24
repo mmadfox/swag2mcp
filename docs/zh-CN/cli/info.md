@@ -1,42 +1,42 @@
 # info
 
-## Purpose
+## 用途
 
-Show a comprehensive summary of the swag2mcp runtime as **JSON**. This includes version, workspace path, specs summary, HTTP client settings, MCP transport configuration, auth methods, and mock mode status.
+以 **JSON** 格式显示 swag2mcp 运行时的全面摘要。包括版本、工作区路径、spec 摘要、HTTP 客户端设置、MCP 传输配置、认证方法和模拟模式状态。
 
-## When to use
+## 何时使用
 
-- You want a machine-readable overview of the workspace
-- You need to check the runtime configuration for debugging
-- You want to see how many specs and endpoints are active
-- You need to verify HTTP client or MCP transport settings
+- 你想要工作区的机器可读概览
+- 你需要检查运行时配置以进行调试
+- 你想查看有多少 spec 和端点处于活动状态
+- 你需要验证 HTTP 客户端或 MCP 传输设置
 
-## Syntax
+## 语法
 
 ```bash
 swag2mcp info [path]
 ```
 
-## Arguments
+## 参数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 参数 | 位置 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | 1 | 否 | 工作区目录。如果省略，通过路径解析规则解析。 |
 
-## Flags
+## 标志
 
-None.
+无。
 
-## How it works
+## 工作原理
 
 ```bash
 swag2mcp info
 swag2mcp info ./my-workspace
 ```
 
-## Output
+## 输出
 
-The output is a JSON object with the following structure:
+输出是具有以下结构的 JSON 对象：
 
 ```json
 {
@@ -68,13 +68,13 @@ The output is a JSON object with the following structure:
 }
 ```
 
-## Post-command verification
+## 命令后验证
 
-Use `info` to confirm that the workspace loaded correctly and all specs are active before starting the MCP server.
+在启动 MCP 服务器之前，使用 `info` 确认工作区加载正确且所有 spec 处于活动状态。
 
-## Nuances
+## 细节
 
-- **Auto-init:** If no config file exists, `info` automatically runs the init wizard first.
-- **JSON only:** The output is always JSON. For human-readable output, use `ls`.
-- **`max_response_size`:** Shown in human-readable format (e.g., `"1 KB"`, `"2 MB"`).
-- **No full-text index:** `info` disables full-text indexing since it only needs config and spec metadata.
+- **自动初始化：** 如果不存在配置文件，`info` 会自动先运行初始化向导。
+- **仅 JSON：** 输出始终是 JSON。对于人类可读的输出，使用 `ls`。
+- **`max_response_size`：** 以人类可读格式显示（例如 `"1 KB"`、`"2 MB"`）。
+- **无全文索引：** `info` 禁用全文索引，因为它只需要配置和 spec 元数据。

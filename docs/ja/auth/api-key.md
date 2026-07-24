@@ -1,18 +1,18 @@
-# API Key
+# API キー
 
-## Purpose
+## 目的
 
-Authentication via an API key. The key can be sent as an HTTP header or as a URL query parameter.
+API キーによる認証。キーは HTTP ヘッダーまたは URL クエリパラメーターとして送信できます。
 
-## When to use
+## 使用するタイミング
 
-- Services that use API keys
-- Weather services, geodata, translation APIs
-- When the API expects a key in a header (`X-API-Key`) or query parameter (`?api_key=...`)
+- API キーを使用するサービス
+- 気象サービス、地理データ、翻訳 API
+- API がヘッダー（`X-API-Key`）またはクエリパラメーター（`?api_key=...`）でキーを期待する場合
 
-## Configuration
+## 設定
 
-### Key in header
+### ヘッダー内のキー
 
 ```yaml
 specs:
@@ -30,7 +30,7 @@ specs:
         value: "$(API_KEY)"
 ```
 
-### Key in query parameter
+### クエリパラメーター内のキー
 
 ```yaml
 specs:
@@ -48,16 +48,16 @@ specs:
         value: "$(API_KEY)"
 ```
 
-## Parameters
+## パラメーター
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `key` | Yes | Name of the header or query parameter |
-| `in` | Yes | Where to place the key: `header` or `query` |
-| `value` | Yes | The key value |
+| パラメーター | 必須 | 説明 |
+|-----------|------|------|
+| `key` | はい | ヘッダーまたはクエリパラメーターの名前 |
+| `in` | はい | キーの配置場所：`header` または `query` |
+| `value` | はい | キーの値 |
 
-## Notes
+## 注意点
 
-- In `header` mode, the key is added as an HTTP header
-- In `query` mode, the key is added as a URL parameter
-- Store the value in an environment variable: `value: "$(MY_API_KEY)"`
+- `header` モードでは、キーは HTTP ヘッダーとして追加されます
+- `query` モードでは、キーは URL パラメーターとして追加されます
+- 値は環境変数に保存：`value: "$(MY_API_KEY)"`

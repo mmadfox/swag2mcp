@@ -1,20 +1,20 @@
-# Configuration Cascade
+# Каскад конфигурации
 
-swag2mcp uses a three-level configuration cascade. Each level overrides the previous. This lets you set sensible defaults globally and fine-tune settings for specific specs or collections.
+swag2mcp использует трёхуровневый каскад конфигурации. Каждый уровень переопределяет предыдущий. Это позволяет задавать разумные значения по умолчанию глобально и точно настраивать параметры для конкретных спецификаций или коллекций.
 
-## Levels
+## Уровни
 
 ```
 Global (http_client, mcp, mock_enabled, disable_ratelimiter, rate_limit_interval)
-    ↓ overrides
+    ↓ переопределяет
 Spec (specs[].http_client, specs[].auth, specs[].base_url, specs[].disable, specs[].tags)
-    ↓ overrides
+    ↓ переопределяет
 Collection (specs[].collections[].http_client, specs[].collections[].base_url, specs[].collections[].disable)
 ```
 
-## What Overrides What
+## Что переопределяет что
 
-| Parameter | Global | Spec | Collection |
+| Параметр | Global | Spec | Collection |
 |-----------|--------|------|------------|
 | `http_client.timeout` | ✅ | ✅ | ✅ |
 | `http_client.max_response_size` | ✅ | ✅ | ✅ |
@@ -33,9 +33,9 @@ Collection (specs[].collections[].http_client, specs[].collections[].base_url, s
 | `disable_ratelimiter` | ✅ | ❌ | ❌ |
 | `rate_limit_interval` | ✅ | ❌ | ❌ |
 
-All `http_client` settings can be overridden at every level. Collection-level settings take full precedence over spec and global.
+Все настройки `http_client` могут быть переопределены на каждом уровне. Настройки уровня коллекции имеют полный приоритет над спецификацией и глобальным уровнем.
 
-## Cascade Example
+## Пример каскада
 
 ```yaml
 http_client:
@@ -49,43 +49,43 @@ specs:
     llm_title: Open-Meteo Weather APIs
     base_url: https://api.open-meteo.com
     http_client:
-      timeout: 60s  # overrides global timeout
+      timeout: 60s  # переопределяет глобальный timeout
       headers:
-        "X-API-Version": "2"  # added to global headers
+        "X-API-Version": "2"  # добавляется к глобальным заголовкам
     collections:
       - llm_title: Forecast
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
         http_client:
-          timeout: 120s  # overrides spec timeout
+          timeout: 120s  # переопределяет timeout спецификации
           headers:
-            "X-Custom": "value"  # added to spec + global headers
+            "X-Custom": "value"  # добавляется к заголовкам спецификации + глобальным
 ```
 
-## Effective Settings for "Forecast" Collection
+## Результирующие настройки для коллекции "Forecast"
 
 ```
-timeout: 120s (from collection, overrides spec 60s and global 30s)
-max_response_size: 1048576 (from global)
+timeout: 120s (из коллекции, переопределяет 60s спецификации и 30s глобальные)
+max_response_size: 1048576 (из глобальных)
 headers:
-  - User-Agent: swag2mcp/1.0 (from global)
-  - X-API-Version: 2 (from spec)
-  - X-Custom: value (from collection)
+  - User-Agent: swag2mcp/1.0 (из глобальных)
+  - X-API-Version: 2 (из спецификации)
+  - X-Custom: value (из коллекции)
 ```
 
-## How Merging Works
+## Как работает объединение
 
-### HTTP Client Settings
+### Настройки HTTP-клиента
 
-Simple values (`timeout`, `max_response_size`, `user_agent`, `follow_redirects`, `max_redirects`, `random`) are **replaced** at each level. If a spec sets `timeout: 60s`, it completely replaces the global `30s`.
+Простые значения (`timeout`, `max_response_size`, `user_agent`, `follow_redirects`, `max_redirects`, `random`) **заменяются** на каждом уровне. Если спецификация устанавливает `timeout: 60s`, это полностью заменяет глобальное `30s`.
 
-### Headers
+### Заголовки
 
-Headers are **merged** across levels. All three levels' headers are combined. If the same header key appears at multiple levels, the lowest level wins.
+Заголовки **объединяются** по уровням. Заголовки всех трёх уровней комбинируются. Если один и тот же ключ заголовка появляется на нескольких уровнях, побеждает самый нижний уровень.
 
-### Cookies
+### Куки
 
-Cookies are **merged** across levels. If the same cookie name appears at multiple levels, the lowest level wins.
+Куки **объединяются** по уровням. Если одно и то же имя куки появляется на нескольких уровнях, побеждает самый нижний уровень.
 
-### Proxy
+### Прокси
 
-Proxy is **replaced** at each level. If a spec sets a proxy, it completely replaces the global proxy for that spec.
+Прокси **заменяется** на каждом уровне. Если спецификация устанавливает прокси, он полностью заменяет глобальный прокси для этой спецификации.

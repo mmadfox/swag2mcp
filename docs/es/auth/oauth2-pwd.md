@@ -1,16 +1,16 @@
-# OAuth2 Password Grant
+# OAuth2 Concesión de Contraseña
 
-## Purpose
+## Propósito
 
-OAuth2 Resource Owner Password Grant — authentication using a user's username and password. Suitable for first-party applications where the user trusts the app with their credentials.
+Concesión de Contraseña del Propietario del Recurso OAuth2 — autenticación usando el nombre de usuario y contraseña de un usuario. Adecuado para aplicaciones de primera parte donde el usuario confía en la aplicación con sus credenciales.
 
-## When to use
+## Cuándo usarlo
 
-- First-party applications (mobile, web)
-- Integration with Keycloak and similar Identity Providers
-- When the API supports OAuth2 Password Grant
+- Aplicaciones de primera parte (móvil, web)
+- Integración con Keycloak y Proveedores de Identidad similares
+- Cuando la API admite la Concesión de Contraseña OAuth2
 
-## Configuration
+## Configuración
 
 ```yaml
 specs:
@@ -33,20 +33,20 @@ specs:
           - profile
 ```
 
-## Parameters
+## Parámetros
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `client_id` | Yes | Client identifier |
-| `username` | Yes | Username |
-| `password` | Yes | Password |
-| `token_url` | Yes | Token endpoint URL |
-| `client_secret` | No | Client secret (optional, for public clients) |
-| `scopes` | No | List of permissions (optional) |
+| Parámetro | Requerido | Descripción |
+|-----------|-----------|-------------|
+| `client_id` | Sí | Identificador del cliente |
+| `username` | Sí | Nombre de usuario |
+| `password` | Sí | Contraseña |
+| `token_url` | Sí | URL del endpoint de token |
+| `client_secret` | No | Secreto del cliente (opcional, para clientes públicos) |
+| `scopes` | No | Lista de permisos (opcional) |
 
-## Notes
+## Notas
 
-- `client_secret` is optional — **public clients** are supported (e.g., Keycloak)
-- swag2mcp automatically refreshes the token when it expires
-- The token is cached until expiry
-- All parameters can be stored in environment variables
+- `client_secret` es opcional — se admiten **clientes públicos** (por ejemplo, Keycloak)
+- swag2mcp renueva automáticamente el token cuando expira
+- El token se almacena en caché hasta su expiración
+- Todos los parámetros pueden almacenarse en variables de entorno

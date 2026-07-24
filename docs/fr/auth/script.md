@@ -1,71 +1,71 @@
-# Script Auth
+# Authentification par script
 
-## Purpose
+## Objectif
 
-Authentication via an external script — the most flexible method. You can write a script in any language (bash, Python, etc.) that obtains a token however you like and returns it to swag2mcp.
+Authentification via un script externe — la méthode la plus flexible. Vous pouvez écrire un script dans n'importe quel langage (bash, Python, etc.) qui obtient un jeton comme vous le souhaitez et le retourne à swag2mcp.
 
-## When to use
+## Quand l'utiliser
 
-- Custom or non-standard authentication schemes
-- Complex token acquisition logic (multi-step, with additional checks)
-- When none of the standard methods fit your needs
+- Schémas d'authentification personnalisés ou non standard
+- Logique d'acquisition de jeton complexe (multi-étapes, avec vérifications supplémentaires)
+- Quand aucune des méthodes standard ne correspond à vos besoins
 
 ## Configuration
 
 ```yaml
 specs:
   - domain: jokes
-    llm_title: Dad Joke API
+    llm_title: API Dad Joke
     base_url: https://icanhazdadjoke.com
     collections:
-      - llm_title: Jokes
+      - llm_title: Blagues
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: script
       config:
-        domain: "my-auth"
+        domain: "mon-auth"
 ```
 
-## Parameters
+## Paramètres
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `domain` | Yes | Script file name (without extension) |
+| Paramètre | Requis | Description |
+|-----------|--------|-------------|
+| `domain` | Oui | Nom du fichier de script (sans extension) |
 
-## Script location
+## Emplacement du script
 
-The script must be placed in the `auth_scripts` directory of your workspace:
+Le script doit être placé dans le répertoire `auth_scripts` de votre espace de travail :
 
-- **Linux / macOS:** `{workspace}/auth_scripts/{domain}.sh`
-- **Windows:** `{workspace}/auth_scripts/{domain}.bat`
+- **Linux / macOS :** `{espace-travail}/auth_scripts/{domaine}.sh`
+- **Windows :** `{espace-travail}/auth_scripts/{domaine}.bat`
 
-## Script output format
+## Format de sortie du script
 
-The script must output JSON to stdout with the token and its expiry time:
+Le script doit produire du JSON sur stdout avec le jeton et son temps d'expiration :
 
 ```bash
 #!/bin/bash
-# auth_scripts/my-auth.sh
+# auth_scripts/mon-auth.sh
 
-TOKEN=$(curl -s -X POST https://auth.example.com/token \
+JETON=$(curl -s -X POST https://auth.example.com/token \
   -d "grant_type=client_credentials" \
-  -d "client_id=$CLIENT_ID" \
-  -d "client_secret=$CLIENT_SECRET" | jq -r '.access_token')
+  -d "client_id=$ID_CLIENT" \
+  -d "client_secret=$SECRET_CLIENT" | jq -r '.access_token')
 
-echo "{\"token\": \"$TOKEN\", \"expires_in\": 3600}"
+echo "{\"token\": \"$JETON\", \"expires_in\": 3600}"
 ```
 
-### JSON fields
+### Champs JSON
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `token` | Yes | Authentication token |
-| `expires_in` | No | Token lifetime in seconds (default: 3600) |
+| Champ | Requis | Description |
+|-------|--------|-------------|
+| `token` | Oui | Jeton d'authentification |
+| `expires_in` | Non | Durée de vie du jeton en secondes (défaut : 3600) |
 
 ## Notes
 
-- swag2mcp runs the script on every request if the cached token has expired
-- The script must complete within 30 seconds
-- The token is cached until its expiry time
-- Script filename = `{domain}.sh` (Unix) or `{domain}.bat` (Windows)
-- `domain` must not contain `/` or `\`
+- swag2mcp exécute le script à chaque requête si le jeton en cache a expiré
+- Le script doit se terminer dans les 30 secondes
+- Le jeton est mis en cache jusqu'à sa date d'expiration
+- Nom du fichier de script = `{domaine}.sh` (Unix) ou `{domaine}.bat` (Windows)
+- `domain` ne doit pas contenir `/` ou `\`

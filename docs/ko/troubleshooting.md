@@ -1,552 +1,552 @@
-# Troubleshooting
+# 문제 해결
 
-## Installation Problems
+## 설치 문제
 
 ### swag2mcp: command not found
 
-The binary is not in your PATH.
+바이너리가 PATH에 없습니다.
 
 ```bash
-# Check if Go is installed
+# Go가 설치되어 있는지 확인
 go version
 
-# Find where Go installs binaries
+# Go가 바이너리를 설치하는 위치 확인
 go env GOPATH
-# Usually ~/go or ~/go/bin
+# 일반적으로 ~/go 또는 ~/go/bin
 
-# Add to PATH (add this to ~/.zshrc or ~/.bashrc)
+# PATH에 추가 (~/.zshrc 또는 ~/.bashrc에 추가)
 export PATH=$PATH:$(go env GOPATH)/bin
 
-# Or use the full path
+# 또는 전체 경로 사용
 ~/go/bin/swag2mcp --version
 ```
 
-If you downloaded a binary from GitHub Releases, make sure it's in a directory that's in your PATH:
+GitHub Releases에서 바이너리를 다운로드한 경우 PATH에 있는 디렉토리에 있는지 확인하세요:
 
 ```bash
-# Move to /usr/local/bin (macOS/Linux)
+# /usr/local/bin으로 이동 (macOS/Linux)
 sudo mv swag2mcp /usr/local/bin/
 ```
 
 ### permission denied
 
-The binary does not have execute permissions.
+바이너리에 실행 권한이 없습니다.
 
 ```bash
-# For go install (fix ownership)
+# go install의 경우 (소유권 수정)
 sudo chown -R $(whoami) $(go env GOPATH)
 
-# For downloaded binary
+# 다운로드한 바이너리의 경우
 chmod +x /path/to/swag2mcp
 ```
 
-### Go version too old
+### Go 버전이 너무 오래됨
 
-swag2mcp requires Go 1.23+.
+swag2mcp는 Go 1.23+이 필요합니다.
 
 ```bash
 go version
-# If version < 1.23, update Go:
+# 버전이 1.23 미만이면 Go 업데이트:
 # https://go.dev/dl/
 ```
 
-### Mock server not found
+### 모의 서버를 찾을 수 없음
 
-The mock server is a separate binary. Install it explicitly:
+모의 서버는 별도의 바이너리입니다. 명시적으로 설치하세요:
 
 ```bash
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 ```
 
-## Configuration Problems
+## 설정 문제
 
-### Configuration file not found
+### 설정 파일을 찾을 수 없음
 
-swag2mcp cannot find `swag2mcp.yaml`.
+swag2mcp가 `swag2mcp.yaml`을 찾을 수 없습니다.
 
 ```bash
-# Create a new config
+# 새 설정 생성
 swag2mcp init
 
-# Or specify the path explicitly
+# 또는 경로를 명시적으로 지정
 swag2mcp mcp /path/to/workspace
 swag2mcp ls /path/to/workspace
 ```
 
-**Common cause:** You ran `swag2mcp mcp` from a random directory and it looked for `~/.swag2mcp/` instead of your project's workspace. Always pass the path explicitly.
+**일반적인 원인:** 임의의 디렉토리에서 `swag2mcp mcp`를 실행하여 프로젝트의 워크스페이스 대신 `~/.swag2mcp/`를 찾았습니다. 항상 경로를 명시적으로 전달하세요.
 
-### Wrong workspace loaded
+### 잘못된 워크스페이스가 로드됨
 
-swag2mcp loaded a different workspace than expected.
+예상과 다른 워크스페이스가 로드되었습니다.
 
-**Resolution order:** Explicit `[path]` → current directory (`./`) → `~/.swag2mcp/`. If you run `swag2mcp mcp` without a path from a directory that doesn't have `swag2mcp.yaml`, it falls back to `~/.swag2mcp/`.
+**해결 순서:** 명시적 `[path]` → 현재 디렉토리(`./`) → `~/.swag2mcp/`. 경로 없이 `swag2mcp mcp`를 `swag2mcp.yaml`이 없는 디렉토리에서 실행하면 `~/.swag2mcp/`로 폴백됩니다.
 
-**Fix:** Always pass the workspace path: `swag2mcp mcp /path/to/your/workspace`
+**해결 방법:** 항상 워크스페이스 경로를 전달하세요: `swag2mcp mcp /path/to/your/workspace`
 
-### YAML parsing error
+### YAML 파싱 오류
 
-The config file has invalid YAML syntax.
+설정 파일에 잘못된 YAML 구문이 있습니다.
 
 ```bash
-# Validate the config
+# 설정 검증
 swag2mcp validate
 
-# Common mistakes:
-# - Tabs instead of spaces (YAML requires spaces)
-# - Missing indentation for nested fields
-# - Unquoted strings with special characters (: # & {)
+# 일반적인 실수:
+# - 공백 대신 탭 사용 (YAML은 공백 필요)
+# - 중첩 필드의 들여쓰기 누락
+# - 특수 문자가 있는 따옴표 없는 문자열 (: # & {)
 ```
 
-**Tip:** Use a YAML linter or editor with YAML support to catch syntax errors.
+**팁:** YAML 린터 또는 YAML을 지원하는 편집기를 사용하여 구문 오류를 찾으세요.
 
-### Validation fails: "no specifications defined"
+### 검증 실패: "no specifications defined"
 
-The config file exists but has no specs.
+설정 파일이 존재하지만 spec이 없습니다.
 
 ```bash
-# Add a spec
+# spec 추가
 swag2mcp add spec
 
-# Or edit swag2mcp.yaml and add at least one spec
+# 또는 swag2mcp.yaml을 편집하여 최소 하나의 spec 추가
 ```
 
-### Validation fails: "duplicate domain"
+### 검증 실패: "duplicate domain"
 
-Two specs have the same `domain` value. Domains must be unique.
+두 spec이 동일한 `domain` 값을 가지고 있습니다. 도메인은 고유해야 합니다.
 
 ```bash
-# List current specs
+# 현재 spec 목록 보기
 swag2mcp ls
 
-# Check for duplicate domains in swag2mcp.yaml
+# swag2mcp.yaml에서 중복 도메인 확인
 ```
 
-### Validation fails: "invalid spec location"
+### 검증 실패: "invalid spec location"
 
-The `location` URL or file path is not accessible or not a valid spec file.
+`location` URL 또는 파일 경로에 접근할 수 없거나 유효한 spec 파일이 아닙니다.
 
 ```bash
-# Check if the URL is reachable
+# URL에 접근 가능한지 확인
 curl -I https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 
-# Check if the local file exists
+# 로컬 파일이 존재하는지 확인
 ls -la ./specs/my-api.yaml
 
-# Verify the file is valid OpenAPI/Swagger/Postman
-# (not just any JSON or HTML page)
+# 파일이 유효한 OpenAPI/Swagger/Postman인지 확인
+# (단순한 JSON이나 HTML 페이지가 아닌지)
 ```
 
-**Common cause:** The `location` field points to the API endpoint itself (e.g., `https://api.example.com/v1/users`) instead of the spec file URL. The location must point to an OpenAPI/Swagger/Postman file.
+**일반적인 원인:** `location` 필드가 API 엔드포인트 자체(예: `https://api.example.com/v1/users`)를 가리키고 있습니다. 위치는 OpenAPI/Swagger/Postman 파일을 가리켜야 합니다.
 
-## MCP Server Problems
+## MCP 서버 문제
 
-### Port already in use
+### 포트가 이미 사용 중
 
-Another process is using the port.
+다른 프로세스가 포트를 사용 중입니다.
 
 ```bash
-# Find the process
+# 프로세스 찾기
 lsof -i :8080
 
-# Kill it
+# 종료
 kill <PID>
 
-# Or use a different port
+# 또는 다른 포트 사용
 swag2mcp mcp --transport sse --http-addr :9090
 ```
 
-### Connection refused
+### 연결 거부됨
 
-The MCP server is not running or not reachable.
+MCP 서버가 실행 중이 아니거나 접근할 수 없습니다.
 
 ```bash
-# Make sure the server is running
+# 서버가 실행 중인지 확인
 swag2mcp mcp --transport sse --http-addr 127.0.0.1:8080
 
-# In another terminal, check the health endpoint
+# 다른 터미널에서 health 엔드포인트 확인
 curl http://127.0.0.1:8080/health
 
-# If using a custom path
+# 커스텀 경로 사용 시
 curl http://127.0.0.1:8080/custom-path/health
 ```
 
-### MCP tools not showing up in the LLM client
+### MCP 도구가 LLM 클라이언트에 표시되지 않음
 
-The LLM client cannot see any tools.
+LLM 클라이언트가 도구를 볼 수 없습니다.
 
 ```bash
-# Check that specs are loaded
+# spec이 로드되었는지 확인
 swag2mcp ls
 
-# Check that specs are not disabled
+# spec이 비활성화되지 않았는지 확인
 swag2mcp validate
 
-# Check the server logs
+# 서버 로그 확인
 swag2mcp mcp --logfile /tmp/swag2mcp.log
 cat /tmp/swag2mcp.log
 
-# Verify the workspace path in your IDE config is correct
-# (must be an absolute path)
+# IDE 설정의 워크스페이스 경로가 올바른지 확인
+# (절대 경로여야 함)
 ```
 
-**Common causes:**
-- Wrong workspace path in IDE config
-- All specs have `disable: true`
-- Specs are filtered out by `--tags`
-- Config file doesn't exist at the specified path
+**일반적인 원인:**
+- IDE 설정의 잘못된 워크스페이스 경로
+- 모든 spec에 `disable: true` 설정
+- `--tags`로 인해 spec이 필터링됨
+- 지정된 경로에 설정 파일이 없음
 
-### MCP handshake fails (HTTP transport)
+### MCP 핸드셰이크 실패 (HTTP 전송)
 
-For SSE and Streamable HTTP transports, the MCP protocol requires initialization before tool calls work.
+SSE 및 Streamable HTTP 전송의 경우 MCP 프로토콜은 도구 호출 전에 초기화가 필요합니다.
 
 ```
-Step 1: POST /mcp → {"method":"initialize", ...}
-Step 2: POST /mcp → {"method":"notifications/initialized"}
-Step 3: POST /mcp → {"method":"tools/list", ...}  ← now works
+1단계: POST /mcp → {"method":"initialize", ...}
+2단계: POST /mcp → {"method":"notifications/initialized"}
+3단계: POST /mcp → {"method":"tools/list", ...}  ← 이제 작동
 ```
 
-Make sure your LLM client completes the handshake before calling tools.
+LLM 클라이언트가 도구를 호출하기 전에 핸드셰이크를 완료하는지 확인하세요.
 
-### Health check returns 404
+### Health check가 404 반환
 
-The health endpoint path may differ from the MCP path.
+Health 엔드포인트 경로가 MCP 경로와 다를 수 있습니다.
 
 ```bash
-# Default health endpoint
+# 기본 health 엔드포인트
 curl http://127.0.0.1:8080/health
 
-# If you changed the MCP path, health is still at /health
-# (not affected by --http-path)
+# MCP 경로를 변경해도 health는 여전히 /health에 있습니다
+# (--http-path의 영향을 받지 않음)
 ```
 
-### Auth tool not available
+### Auth 도구를 사용할 수 없음
 
-The `auth` MCP tool is not showing up.
+`auth` MCP 도구가 표시되지 않습니다.
 
-The `auth` tool is **disabled by default** (`--disable-llm-auth=true`). This is intentional for production security.
+`auth` 도구는 **기본적으로 비활성화**되어 있습니다(`--disable-llm-auth=true`). 이는 프로덕션 보안을 위한 의도적인 설정입니다.
 
 ```bash
-# Enable the auth tool
+# auth 도구 활성화
 swag2mcp mcp --disable-llm-auth=false
 ```
 
-## Authentication Problems
+## 인증 문제
 
 ### 401 Unauthorized
 
-The API rejected the request due to missing or invalid credentials.
+자격 증명이 없거나 유효하지 않아 API가 요청을 거부했습니다.
 
 ```bash
-# Check that auth is configured
+# 인증이 설정되었는지 확인
 swag2mcp info
 
-# Validate the config
+# 설정 검증
 swag2mcp validate
 
-# Check that environment variables are set
+# 환경 변수가 설정되었는지 확인
 echo $MY_TOKEN
 
-# Verify the token is not expired (bearer tokens are static)
+# 토큰이 만료되지 않았는지 확인 (bearer 토큰은 정적)
 ```
 
-**Common causes:**
-- Token is missing or empty
-- Environment variable not set
-- Token has expired (bearer tokens don't auto-refresh)
-- Wrong auth type configured
+**일반적인 원인:**
+- 토큰이 없거나 비어 있음
+- 환경 변수가 설정되지 않음
+- 토큰이 만료됨 (bearer 토큰은 자동 갱신되지 않음)
+- 잘못된 인증 유형 설정
 
 ### 403 Forbidden
 
-The API rejected the request due to insufficient permissions.
+권한이 부족하여 API가 요청을 거부했습니다.
 
-- The token may not have the required scopes
-- The API key may not have access to this resource
-- Check the API documentation for required permissions
+- 토큰에 필요한 범위가 없을 수 있습니다
+- API 키가 이 리소스에 접근 권한이 없을 수 있습니다
+- 필요한 권한에 대한 API 문서를 확인하세요
 
-### OAuth2 token endpoint unreachable
+### OAuth2 토큰 엔드포인트에 연결할 수 없음
 
-swag2mcp cannot reach the OAuth2 token URL.
+swag2mcp가 OAuth2 토큰 URL에 연결할 수 없습니다.
 
 ```bash
-# Check the token_url in your config
-# Verify the URL is correct and reachable
+# 설정의 token_url 확인
+# URL이 올바르고 접근 가능한지 확인
 curl -X POST https://auth.example.com/oauth/token \
   -d "grant_type=client_credentials" \
   -d "client_id=test" \
   -d "client_secret=test"
 
-# Check network connectivity
-# Check proxy settings if behind a corporate proxy
+# 네트워크 연결 확인
+# 회사 프록시 뒤에 있는 경우 프록시 설정 확인
 ```
 
-### Digest auth fails
+### Digest 인증 실패
 
-swag2mcp cannot complete the Digest authentication handshake.
+swag2mcp가 Digest 인증 핸드셰이크를 완료할 수 없습니다.
 
-- The server must return a `WWW-Authenticate: Digest ...` header with a 401 response
-- The challenge is cached for 5 minutes — if the server changes its nonce, wait for the cache to expire
-- Check that username and password are correct
+- 서버가 401 응답과 함께 `WWW-Authenticate: Digest ...` 헤더를 반환해야 합니다
+- 챌린지는 5분 동안 캐시됩니다 — 서버가 nonce를 변경하면 캐시가 만료될 때까지 기다리세요
+- 사용자 이름과 비밀번호가 올바른지 확인하세요
 
-### HMAC signature mismatch
+### HMAC 서명 불일치
 
-The API rejected the HMAC-signed request.
+API가 HMAC 서명된 요청을 거부했습니다.
 
-- Verify that `api_key` and `secret_key` are correct
-- Check that the API uses Binance-style HMAC-SHA256 signing
-- Some exchanges use different signing methods — HMAC auth is specifically for Binance-compatible APIs
+- `api_key`와 `secret_key`가 올바른지 확인하세요
+- API가 Binance 스타일 HMAC-SHA256 서명을 사용하는지 확인하세요
+- 일부 거래소는 다른 서명 방식을 사용합니다 — HMAC 인증은 Binance 호환 API 전용입니다
 
-### Script auth fails
+### Script 인증 실패
 
-The external auth script failed.
+외부 인증 스크립트가 실패했습니다.
 
 ```bash
-# Check that the script exists
+# 스크립트가 존재하는지 확인
 ls -la ~/.swag2mcp/auth_scripts/my-domain.sh
 
-# Run the script manually to test
+# 수동으로 스크립트 실행 테스트
 sh ~/.swag2mcp/auth_scripts/my-domain.sh
 
-# Check the script output format (must be JSON: {"token": "...", "expires_in": 3600})
-# Check that the script completes within 30 seconds
-# Check that the script has execute permissions
+# 스크립트 출력 형식 확인 (JSON이어야 함: {"token": "...", "expires_in": 3600})
+# 스크립트가 30초 이내에 완료되는지 확인
+# 스크립트에 실행 권한이 있는지 확인
 chmod +x ~/.swag2mcp/auth_scripts/my-domain.sh
 ```
 
-## Search Problems
+## 검색 문제
 
-### No search results
+### 검색 결과 없음
 
-The search returned no endpoints.
+검색 결과가 없습니다.
 
 ```bash
-# Check that specs are loaded
+# spec이 로드되었는지 확인
 swag2mcp ls
 
-# Check that specs are not disabled
+# spec이 비활성화되지 않았는지 확인
 swag2mcp validate
 
-# Try a simpler query
-# Try searching by method: method:GET
-# Try searching by tag: tag:pets
+# 더 간단한 쿼리 시도
+# method로 검색: method:GET
+# tag로 검색: tag:pets
 
-# The index is rebuilt on every MCP server start
-# If you just added a spec, restart the server
+# 인덱스는 MCP 서버 시작 시마다 재구축됩니다
+# 방금 spec을 추가했다면 서버를 다시 시작하세요
 ```
 
-### Search returns irrelevant results
+### 검색 결과가 관련 없음
 
-The query is too broad or ambiguous.
+쿼리가 너무 광범위하거나 모호합니다.
 
-- Use field filters to narrow: `method:GET +tag:pets`
-- Use exact phrases: `"find pet by status"`
-- Use the `limit` parameter to get more focused results
+- 필드 필터를 사용하여 좁히기: `method:GET +tag:pets`
+- 정확한 구문 사용: `"find pet by status"`
+- `limit` 매개변수를 사용하여 더 집중된 결과 얻기
 
-## API Call Problems
+## API 호출 문제
 
-### invoke returns an error
+### invoke가 오류 반환
 
-The API call failed.
+API 호출이 실패했습니다.
 
 ```bash
-# Check the error message — it includes the HTTP status code
-# 4xx errors: check parameters, auth, or permissions
-# 5xx errors: the API server has a problem
+# 오류 메시지 확인 — HTTP 상태 코드 포함
+# 4xx 오류: 매개변수, 인증 또는 권한 확인
+# 5xx 오류: API 서버에 문제가 있음
 
-# Always inspect the endpoint before invoking
+# 호출 전에 항상 엔드포인트 검사
 inspect(endpointId: "...")
 
-# Check that all required parameters are provided
-# Check parameter types (string, number, boolean)
+# 모든 필수 매개변수가 제공되었는지 확인
+# 매개변수 유형 확인 (문자열, 숫자, 부울)
 ```
 
-### Rate limit error
+### 속도 제한 오류
 
-The LLM called the same endpoint too quickly.
+LLM이 동일한 엔드포인트를 너무 빨리 호출했습니다.
 
-Each endpoint has a 10-second cooldown. Wait before calling again, or disable the rate limiter:
+각 엔드포인트에는 10초의 쿨다운이 있습니다. 다시 호출하기 전에 기다리거나 속도 제한기를 비활성화하세요:
 
 ```yaml
 disable_ratelimiter: true
 ```
 
-### Response too large (fileRef returned)
+### 응답이 너무 큼 (fileRef 반환)
 
-The response exceeded `max_response_size`.
+응답이 `max_response_size`를 초과했습니다.
 
-This is normal. Use the response tools to explore the data:
+정상적인 현상입니다. 응답 도구를 사용하여 데이터를 탐색하세요:
 
 ```
-1. response_outline(path) → understand the structure
-2. response_compress(path, mode: "first_of_array") → get a sample
-3. response_slice(path, jsonPath: "data.0") → get specific data
+1. response_outline(path) → 구조 이해
+2. response_compress(path, mode: "first_of_array") → 샘플 얻기
+3. response_slice(path, jsonPath: "data.0") → 특정 데이터 얻기
 ```
 
-Or increase the limit:
+또는 제한을 늘리세요:
 
 ```yaml
 http_client:
   max_response_size: 4194304  # 4 MB
 ```
 
-### Slow API responses
+### 느린 API 응답
 
-The API is taking too long to respond.
+API 응답 시간이 너무 깁니다.
 
 ```yaml
 http_client:
-  timeout: 120s  # Increase from default 30s
+  timeout: 120s  # 기본 30s에서 증가
 ```
 
-## Workspace Problems
+## 워크스페이스 문제
 
-### swag2mcp init fails: "directory is not empty"
+### swag2mcp init 실패: "directory is not empty"
 
-The target directory already has files.
+대상 디렉토리에 이미 파일이 있습니다.
 
 ```bash
-# Use --force to overwrite
+# --force를 사용하여 덮어쓰기
 swag2mcp init --force
 
-# Or use a different directory
+# 또는 다른 디렉토리 사용
 swag2mcp init ./new-workspace
 ```
 
-### swag2mcp update fails
+### swag2mcp update 실패
 
-One or more spec files could not be downloaded.
+하나 이상의 spec 파일을 다운로드할 수 없습니다.
 
 ```bash
-# Check the error message for which URL failed
-# Verify the URL is accessible
+# 어떤 URL이 실패했는지 오류 메시지 확인
+# URL에 접근 가능한지 확인
 curl -I <failed-url>
 
-# Check network connectivity
-# Check proxy settings
+# 네트워크 연결 확인
+# 프록시 설정 확인
 ```
 
-### Export creates no ZIP
+### 내보내기에서 ZIP이 생성되지 않음
 
-The `[output]` argument must be a file path ending in `.zip`, not a directory.
+`[output]` 인수는 디렉토리가 아닌 `.zip`으로 끝나는 파일 경로여야 합니다.
 
 ```bash
-# Correct
+# 올바름
 swag2mcp export /path/to/workspace /path/to/backup.zip
 
-# Wrong (no ZIP will be created)
+# 잘못됨 (ZIP이 생성되지 않음)
 swag2mcp export /path/to/workspace /some/directory
 ```
 
-### Import fails: "not a valid swag2mcp backup"
+### 가져오기 실패: "not a valid swag2mcp backup"
 
-The ZIP file was not created by `swag2mcp export`.
+ZIP 파일이 `swag2mcp export`로 생성되지 않았습니다.
 
-Only ZIP archives created by `swag2mcp export` can be imported. The archive has a specific internal structure (`swag2mcp.yaml`, `specs/`, `auth_scripts/`).
+`swag2mcp export`로 생성된 ZIP 아카이브만 가져올 수 있습니다. 아카이브에는 특정 내부 구조(`swag2mcp.yaml`, `specs/`, `auth_scripts/`)가 있습니다.
 
-## TUI Problems
+## TUI 문제
 
-### TUI doesn't render correctly
+### TUI가 올바르게 렌더링되지 않음
 
-The terminal is too small or doesn't support the required features.
+터미널이 너무 작거나 필요한 기능을 지원하지 않습니다.
 
-- Minimum terminal size: 80×24 characters
-- The TUI uses Bubbletea and works in most modern terminals
-- Try resizing your terminal window
-- Try a different terminal emulator
+- 최소 터미널 크기: 80×24 문자
+- TUI는 Bubbletea를 사용하며 대부분의 최신 터미널에서 작동합니다
+- 터미널 창 크기를 조정해 보세요
+- 다른 터미널 에뮬레이터를 시도해 보세요
 
-### TUI shows "no specs found"
+### TUI에 "no specs found" 표시
 
-The workspace has no configured specs.
+워크스페이스에 설정된 spec이 없습니다.
 
 ```bash
-# Check specs
+# spec 확인
 swag2mcp ls
 
-# Add a spec
+# spec 추가
 swag2mcp add spec
 ```
 
-## Mock Server Problems
+## 모의 서버 문제
 
-### Mock server doesn't start
+### 모의 서버가 시작되지 않음
 
 ```bash
-# Check that mock_enabled: true in config
-# Check that every collection has base_mock_url set
-# Check that ports are not in use
+# 설정에 mock_enabled: true가 있는지 확인
+# 모든 collection에 base_mock_url이 설정되어 있는지 확인
+# 포트가 사용 중이 아닌지 확인
 lsof -i :9090
 
-# Check the mock server logs
+# 모의 서버 로그 확인
 swag2mcp-mock mockserver
 ```
 
-### Mock server returns empty responses
+### 모의 서버가 빈 응답 반환
 
-The spec file may not have response schemas defined.
+명세 파일에 응답 스키마가 정의되지 않았을 수 있습니다.
 
-- Mock server generates data from response schemas
-- If no schema is found, it returns `{}`
-- Check that your OpenAPI spec has `responses` with `schema` defined
+- 모의 서버는 응답 스키마에서 데이터를 생성합니다
+- 스키마가 없으면 `{}`를 반환합니다
+- OpenAPI 명세에 `responses`와 `schema`가 정의되어 있는지 확인하세요
 
-## Network Problems
+## 네트워크 문제
 
-### Proxy connection failed
+### 프록시 연결 실패
 
-swag2mcp cannot connect through the configured proxy.
+swag2mcp가 설정된 프록시를 통해 연결할 수 없습니다.
 
 ```bash
-# Check proxy URL format (must include scheme: http://, https://, socks5://)
-# Check proxy credentials
-# Check bypass list — the target may be in the bypass list
-# Test the proxy with curl
+# 프록시 URL 형식 확인 (스키마 포함: http://, https://, socks5://)
+# 프록시 자격 증명 확인
+# 바이패스 목록 확인 — 대상이 바이패스 목록에 있을 수 있음
+# curl로 프록시 테스트
 curl -x http://proxy.company.com:8080 https://api.example.com
 ```
 
-### TLS/SSL errors
+### TLS/SSL 오류
 
-Certificate verification failed.
+인증서 검증에 실패했습니다.
 
-- If using a self-signed certificate for the MCP server, the client must trust it
-- For the mock server with `--tls`, a self-signed certificate is generated automatically
-- For API calls, swag2mcp uses the system's certificate store
+- MCP 서버에 자체 서명 인증서를 사용하는 경우 클라이언트가 이를 신뢰해야 합니다
+- `--tls`와 함께 모의 서버를 사용하면 자체 서명 인증서가 자동으로 생성됩니다
+- API 호출의 경우 swag2mcp는 시스템의 인증서 저장소를 사용합니다
 
-## Other Problems
+## 기타 문제
 
-### High disk usage
+### 높은 디스크 사용량
 
-The cache and responses directories can grow over time.
+캐시 및 응답 디렉토리가 시간이 지남에 따라 커질 수 있습니다.
 
 ```bash
-# Clean everything
+# 모든 항목 정리
 swag2mcp clean
 
-# Old responses (>48h) are cleaned automatically on MCP server start
-# Cache files expire randomly between 1-48 hours
+# 오래된 응답(48시간 초과)은 MCP 서버 시작 시 자동으로 정리됩니다
+# 캐시 파일은 1-48시간 사이에 무작위로 만료됩니다
 ```
 
 ### "command not found" after go install
 
-The `go install` directory is not in your PATH.
+`go install` 디렉토리가 PATH에 없습니다.
 
 ```bash
-# Find where Go installs binaries
+# Go가 바이너리를 설치하는 위치 확인
 go env GOPATH
-# Add to PATH
+# PATH에 추가
 export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
-### LLM doesn't use the tools correctly
+### LLM이 도구를 올바르게 사용하지 않음
 
-The LLM may need better instructions or a formatting skill.
+LLM에 더 나은 지침이나 포맷팅 스킬이 필요할 수 있습니다.
 
-- Use `llm_instruction` in your spec config to describe what the API does
-- Consider using the [swag2mcp-format skill](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md) for consistent output formatting
-- The quality of LLM responses depends on the model and the instructions it receives
+- spec 설정에서 `llm_instruction`을 사용하여 API가 무엇을 하는지 설명하세요
+- 일관된 출력 포맷팅을 위해 [swag2mcp-format 스킬](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md)을 고려하세요
+- LLM 응답의 품질은 모델과 받는 지침에 따라 달라집니다
 
-### How do I report a bug?
+### 버그를 어떻게 신고하나요?
 
-Open an issue on [GitHub](https://github.com/mmadfox/swag2mcp/issues) with:
-- swag2mcp version (`swag2mcp --version`)
-- Your operating system and architecture
-- The exact command you ran
-- The full error message
-- Your config file (with secrets removed)
+[GitHub](https://github.com/mmadfox/swag2mcp/issues)에 이슈를 열고 다음 정보를 포함하세요:
+- swag2mcp 버전 (`swag2mcp --version`)
+- 운영 체제 및 아키텍처
+- 실행한 정확한 명령어
+- 전체 오류 메시지
+- 설정 파일 (시크릿 제거)

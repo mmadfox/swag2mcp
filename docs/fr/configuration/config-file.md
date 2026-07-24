@@ -1,13 +1,13 @@
-# Configuration File
+# Fichier de configuration
 
-swag2mcp uses a YAML configuration file. Created by `swag2mcp init`.
+swag2mcp utilise un fichier de configuration YAML. Créé par `swag2mcp init`.
 
-## Location
+## Emplacement
 
-- **Linux/macOS**: `~/.swag2mcp/swag2mcp.yaml`
-- **Windows**: `%USERPROFILE%\.swag2mcp\swag2mcp.yaml`
+- **Linux/macOS** : `~/.swag2mcp/swag2mcp.yaml`
+- **Windows** : `%USERPROFILE%\.swag2mcp\swag2mcp.yaml`
 
-## Basic Structure
+## Structure de base
 
 ```yaml
 specs:
@@ -19,10 +19,10 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
 ```
 
-## Full Example
+## Exemple complet
 
 ```yaml
-# ── Global HTTP client ──────────────────────────────────
+# ── Client HTTP global ──────────────────────────────────
 http_client:
   timeout: 30s
   max_response_size: 1048576
@@ -41,7 +41,7 @@ http_client:
     - name: "session"
       value: "abc123"
 
-# ── MCP server ──────────────────────────────────────────
+# ── Serveur MCP ──────────────────────────────────────────
 mcp:
   transport: stdio
   addr: ":8080"
@@ -49,22 +49,22 @@ mcp:
   auth:
     token: ""
 
-# ── Mock server ─────────────────────────────────────────
+# ── Serveur de simulation ───────────────────────────────
 mock_enabled: false
 mock_auth:
   oauth2_port: 9090
   digest_port: 9091
   hmac_port: 9092
 
-# ── Rate limiter ────────────────────────────────────────
+# ── Limiteur de débit ────────────────────────────────────
 disable_ratelimiter: false
 rate_limit_interval: 10s
 
-# ── Specs ───────────────────────────────────────────────
+# ── Spécifications ──────────────────────────────────────
 specs:
   - domain: meteo
     llm_title: Open-Meteo Weather APIs
-    llm_instruction: "Use this API for weather forecasts and climate data"
+    llm_instruction: "Utilisez cette API pour les prévisions météorologiques et les données climatiques"
     base_url: https://api.open-meteo.com
     disable: false
     tags: ["weather", "climate"]
@@ -92,9 +92,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## Environment Variables
+## Variables d'environnement
 
-Use `$(VAR_NAME)` syntax to reference environment variables. swag2mcp resolves them at startup.
+Utilisez la syntaxe `$(NOM_VAR)` pour référencer des variables d'environnement. swag2mcp les résout au démarrage.
 
 ```yaml
 specs:
@@ -109,21 +109,21 @@ mcp:
     token: "$(MCP_TOKEN)"
 ```
 
-`$(VAR)` is resolved in:
-- Auth config fields: `token`, `username`, `password`, `client_id`, `client_secret`, `api_key`, `secret_key`, `domain`
-- MCP server auth token: `mcp.auth.token`
-- HTTP client headers and cookie values
+`$(VAR)` est résolu dans :
+- Les champs de configuration d'authentification : `token`, `username`, `password`, `client_id`, `client_secret`, `api_key`, `secret_key`, `domain`
+- Le jeton d'authentification du serveur MCP : `mcp.auth.token`
+- Les en-têtes et valeurs de cookies du client HTTP
 
-`$(VAR)` is **not** resolved in base URLs or collection locations.
+`$(VAR)` n'est **pas** résolu dans les URL de base ou les emplacements des collections.
 
 ## Validation
 
 ```bash
-# Validate default workspace (~/.swag2mcp)
+# Valider l'espace de travail par défaut (~/.swag2mcp)
 swag2mcp validate
 
-# Validate a custom project workspace
-swag2mcp validate ./my-project
+# Valider un espace de travail de projet personnalisé
+swag2mcp validate ./mon-projet
 ```
 
-If the workspace is not in the home directory (e.g., inside a project repository), always specify the path when running `validate`, `update`, `mcp`, or any other command. Otherwise swag2mcp will use the default `~/.swag2mcp` workspace.
+Si l'espace de travail ne se trouve pas dans le répertoire personnel (par exemple, dans un dépôt de projet), spécifiez toujours le chemin lors de l'exécution de `validate`, `update`, `mcp` ou toute autre commande. Sinon, swag2mcp utilisera l'espace de travail par défaut `~/.swag2mcp`.

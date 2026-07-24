@@ -1,14 +1,14 @@
-# Installation
+# インストール
 
-## Requirements
+## システム要件
 
-- **macOS, Linux, or Windows** (amd64 / arm64)
-- **Go 1.26+** (only for `go install` or building from source)
+- **macOS、Linux、Windows**（amd64 / arm64）
+- **Go 1.26+**（`go install` またはソースからのビルドの場合のみ）
 
-## Compatibility
+## 互換性
 
-| Method | macOS | Linux | Windows |
-|--------|-------|-------|---------|
+| 方法 | macOS | Linux | Windows |
+|------|-------|-------|---------|
 | One-liner (curl) | ✅ | ✅ | ❌ |
 | Homebrew | ✅ | ✅ | ❌ |
 | Scoop | ❌ | ❌ | ✅ |
@@ -17,19 +17,19 @@
 | Docker | ❌ | ✅ | ❌ |
 | GitHub Release | ✅ | ✅ | ✅ |
 | go install | ✅ | ✅ | ✅ |
-| Build from source | ✅ | ✅ | ✅ |
+| ソースからビルド | ✅ | ✅ | ✅ |
 
 ---
 
 ## macOS
 
-### One-liner (recommended)
+### One-liner（推奨）
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
 ```
 
-Installs to `/usr/local/bin/swag2mcp` (or `~/.local/bin/swag2mcp` if `/usr/local/bin` is not writable).
+`/usr/local/bin/swag2mcp` にインストールされます（`/usr/local/bin` が書き込み不可の場合は `~/.local/bin/swag2mcp`）。
 
 ### Homebrew
 
@@ -61,13 +61,13 @@ sudo mv swag2mcp /usr/local/bin/
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 ```
 
-Ensure `$GOPATH/bin` is in your `$PATH`:
+`$GOPATH/bin` が `$PATH` に含まれていることを確認してください：
 
 ```bash
 export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
-### Build from source
+### ソースからビルド
 
 ```bash
 git clone https://github.com/mmadfox/swag2mcp.git
@@ -80,13 +80,13 @@ sudo mv swag2mcp /usr/local/bin/
 
 ## Linux
 
-### One-liner (recommended)
+### One-liner（推奨）
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
 ```
 
-Installs to `/usr/local/bin/swag2mcp` (or `~/.local/bin/swag2mcp` if `/usr/local/bin` is not writable).
+`/usr/local/bin/swag2mcp` にインストールされます（`/usr/local/bin` が書き込み不可の場合は `~/.local/bin/swag2mcp`）。
 
 ### Homebrew
 
@@ -94,18 +94,18 @@ Installs to `/usr/local/bin/swag2mcp` (or `~/.local/bin/swag2mcp` if `/usr/local
 brew install mmadfox/tap/swag2mcp
 ```
 
-### APT (Debian / Ubuntu)
+### APT（Debian / Ubuntu）
 
 ```bash
-# Download the .deb from the latest release
+# 最新リリースから .deb をダウンロード
 curl -LO https://github.com/mmadfox/swag2mcp/releases/latest/download/swag2mcp_linux_amd64.deb
 sudo dpkg -i swag2mcp_linux_amd64.deb
 ```
 
-### RPM (Fedora / RHEL)
+### RPM（Fedora / RHEL）
 
 ```bash
-# Download the .rpm from the latest release
+# 最新リリースから .rpm をダウンロード
 curl -LO https://github.com/mmadfox/swag2mcp/releases/latest/download/swag2mcp_linux_amd64.rpm
 sudo rpm -i swag2mcp_linux_amd64.rpm
 ```
@@ -116,13 +116,13 @@ sudo rpm -i swag2mcp_linux_amd64.rpm
 docker pull ghcr.io/mmadfox/swag2mcp:latest
 ```
 
-Run with stdio transport:
+stdio トランスポートで実行：
 
 ```bash
 docker run --rm -i ghcr.io/mmadfox/swag2mcp:latest swag2mcp mcp
 ```
 
-Run with HTTP transport:
+HTTP トランスポートで実行：
 
 ```bash
 docker run --rm -p 8080:8080 ghcr.io/mmadfox/swag2mcp:latest swag2mcp mcp --transport sse --http-addr :8080
@@ -152,13 +152,13 @@ sudo mv swag2mcp /usr/local/bin/
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 ```
 
-Ensure `$GOPATH/bin` is in your `$PATH`:
+`$GOPATH/bin` が `$PATH` に含まれていることを確認してください：
 
 ```bash
 export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
-### Build from source
+### ソースからビルド
 
 ```bash
 git clone https://github.com/mmadfox/swag2mcp.git
@@ -181,7 +181,7 @@ scoop install mmadfox/swag2mcp
 ### GitHub Release
 
 ```powershell
-# Download the latest release
+# 最新リリースをダウンロード
 curl -LO https://github.com/mmadfox/swag2mcp/releases/latest/download/swag2mcp_windows_amd64.zip
 Expand-Archive swag2mcp_windows_amd64.zip -DestinationPath .
 move swag2mcp.exe C:\Windows\System32\
@@ -193,7 +193,7 @@ move swag2mcp.exe C:\Windows\System32\
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 ```
 
-### Build from source
+### ソースからビルド
 
 ```powershell
 git clone https://github.com/mmadfox/swag2mcp.git
@@ -203,9 +203,9 @@ go build -o swag2mcp.exe ./cmd/swag2mcp
 
 ---
 
-## Mock Server
+## モックサーバー
 
-The `swag2mcp-mock` binary is available as a separate download. Install it using the same method as the main binary:
+`swag2mcp-mock` バイナリは別途ダウンロード可能です。メインのバイナリと同じ方法でインストールしてください：
 
 ::: code-group
 
@@ -219,40 +219,40 @@ go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 
 :::
 
-Or download from [GitHub Releases](https://github.com/mmadfox/swag2mcp/releases) — look for `swag2mcp-mock_<version>_<os>_<arch>.tar.gz`.
+または [GitHub Releases](https://github.com/mmadfox/swag2mcp/releases) からダウンロード — `swag2mcp-mock_<version>_<os>_<arch>.tar.gz` を探してください。
 
 ---
 
-## Install via LLM Agent
+## LLM エージェント経由のインストール
 
-If you use an AI-powered IDE (OpenCode, Cursor, Claude Desktop, VS Code, etc.), you can install swag2mcp through your agent:
+AI 搭載 IDE（OpenCode、Cursor、Claude Desktop、VS Code など）を使用している場合、エージェントを通じて swag2mcp をインストールできます：
 
-1. Ask your agent to add the swag2mcp skills:
-
-   ```
-   "Create the .agents/skills/swag2mcp-cli directory and add the skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md to .agents/skills/swag2mcp-cli/SKILL.md"
-   "Create the .agents/skills/swag2mcp-format directory and add the skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md to .agents/skills/swag2mcp-format/SKILL.md"
-   ```
-
-2. Then tell your agent:
+1. エージェントに swag2mcp スキルを追加するよう依頼します：
 
    ```
-   "Set up swag2mcp"
+   ".agents/skills/swag2mcp-cli ディレクトリを作成し、https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md のスキルを .agents/skills/swag2mcp-cli/SKILL.md に追加してください"
+   ".agents/skills/swag2mcp-format ディレクトリを作成し、https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md のスキルを .agents/skills/swag2mcp-format/SKILL.md に追加してください"
    ```
 
-   The agent will download and install swag2mcp, then create a workspace with ready-to-use specs.
+2. 次にエージェントに指示します：
 
-> Some IDEs require a restart after adding skills.
+   ```
+   "swag2mcp をセットアップしてください"
+   ```
+
+   エージェントが swag2mcp をダウンロードしてインストールし、使用可能なスペックを含むワークスペースを作成します。
+
+> 一部の IDE ではスキル追加後に再起動が必要です。
 
 ---
 
-## Verify
+## 確認
 
 ```bash
 swag2mcp --version
 ```
 
-Expected output (version may vary):
+期待される出力（バージョンは異なる場合があります）：
 
 ```
 swag2mcp v*.*.*
@@ -260,6 +260,6 @@ swag2mcp v*.*.*
 
 ---
 
-## Next Steps
+## 次のステップ
 
-- [Quick Start](quickstart.md) — get running in 2 minutes
+- [クイックスタート](quickstart.md) — 2分で使い始める

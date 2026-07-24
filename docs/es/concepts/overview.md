@@ -1,26 +1,26 @@
-# Concepts
+# Conceptos
 
-## Architecture
+## Arquitectura
 
-swag2mcp acts as a bridge between API specifications and LLM agents:
+swag2mcp actúa como un puente entre las especificaciones de API y los agentes LLM:
 
-<img src="/architecture.svg" width="800" alt="swag2mcp architecture">
+<img src="/architecture.svg" width="800" alt="Arquitectura de swag2mcp">
 
-## Core Concepts
+## Conceptos Clave
 
-**Spec** — a logical container representing an API domain or service (e.g., YouTube, Binance, Open-Meteo). Each spec has a unique `domain`, a `base_url`, optional `auth`, and contains one or more collections. You can also set `llm_instruction` — a short hint injected into the swag2mcp system prompt that tells the LLM what this spec is for and when to use it. Learn more: [Specs](./specs).
+**Especificación** — un contenedor lógico que representa un dominio o servicio de API (por ejemplo, YouTube, Binance, Open-Meteo). Cada especificación tiene un `domain` único, una `base_url`, `auth` opcional y contiene una o más colecciones. También puede establecer `llm_instruction` — una sugerencia corta inyectada en el prompt del sistema de swag2mcp que le dice al LLM para qué sirve esta especificación y cuándo usarla. Más información: [Especificaciones](./specs).
 
-**Collection** — a single OpenAPI/Swagger/Postman file describing a specific API. It points to a `location` (URL or local file path). One spec can have multiple collections — for example, the "meteo" spec might have "Forecast", "Air Quality", and "Marine" collections, each pointing to a different spec file. Learn more: [Collections](./collections).
+**Colección** — un único archivo OpenAPI/Swagger/Postman que describe una API específica. Apunta a una `location` (URL o ruta de archivo local). Una especificación puede tener múltiples colecciones — por ejemplo, la especificación "meteo" podría tener colecciones "Pronóstico", "Calidad del Aire" y "Marino", cada una apuntando a un archivo de especificación diferente. Más información: [Colecciones](./collections).
 
-**Tag** — a category of endpoints inside a collection. Helps the LLM find the right operations more precisely. Learn more: [Tags](./tags).
+**Etiqueta** — una categoría de endpoints dentro de una colección. Ayuda al LLM a encontrar las operaciones correctas con más precisión. Más información: [Etiquetas](./tags).
 
-**Endpoint** — a specific HTTP method + path (e.g., `GET /api/users`). The LLM can find an endpoint by description, inspect its parameters and schemas, and then invoke it. Learn more: [Endpoints](./endpoints).
+**Endpoint** — un método HTTP + ruta específico (por ejemplo, `GET /api/users`). El LLM puede encontrar un endpoint por descripción, inspeccionar sus parámetros y esquemas, y luego invocarlo. Más información: [Endpoints](./endpoints).
 
-**Workspace** — the directory where swag2mcp stores config, spec cache, saved responses, and auth scripts. Learn more: [Workspace](./workspace).
+**Espacio de trabajo** — el directorio donde swag2mcp almacena la configuración, la caché de especificaciones, las respuestas guardadas y los scripts de autenticación. Más información: [Espacio de Trabajo](./workspace).
 
-## How It Works
+## Cómo funciona
 
-1. **Add a spec or collection** — define it in the YAML config (`~/.swag2mcp/swag2mcp.yaml`). For example:
+1. **Agregue una especificación o colección** — defínala en la configuración YAML (`~/.swag2mcp/swag2mcp.yaml`). Por ejemplo:
 
    ```yaml
    specs:
@@ -31,26 +31,26 @@ swag2mcp acts as a bridge between API specifications and LLM agents:
          - llm_title: Jokes
            location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
    ```
-2. **swag2mcp parses each collection** — creates Tags and Endpoints, indexes them for search.
-3. **LLM finds the right endpoint** — through MCP tools (`search`, `endpoint_by_tag`, `inspect`) the LLM searches for a matching endpoint by description, reviews its parameters and request schema.
-4. **LLM invokes the endpoint** — via the MCP tool `invoke`, the LLM sends the request. swag2mcp validates every input parameter against the endpoint's OpenAPI schema (path params, query params, headers, request body) before making the call. If something doesn't match the schema, the LLM gets a clear error explaining what's wrong. Once validated, swag2mcp executes the real HTTP call and returns the result.
-5. **Result goes back to the LLM** — the API response is passed back to the agent. Large responses are saved to the workspace and can be explored with three dedicated MCP tools: `response_outline` (see the structure), `response_compress` (shrink to a representative sample), and `response_slice` (extract specific fragments).
+2. **swag2mcp analiza cada colección** — crea Etiquetas y Endpoints, los indexa para búsqueda.
+3. **El LLM encuentra el endpoint correcto** — a través de herramientas MCP (`search`, `endpoint_by_tag`, `inspect`), el LLM busca un endpoint que coincida por descripción, revisa sus parámetros y esquema de solicitud.
+4. **El LLM invoca el endpoint** — a través de la herramienta MCP `invoke`, el LLM envía la solicitud. swag2mcp valida cada parámetro de entrada contra el esquema OpenAPI del endpoint (parámetros de ruta, parámetros de consulta, encabezados, cuerpo de solicitud) antes de realizar la llamada. Si algo no coincide con el esquema, el LLM recibe un error claro explicando qué está mal. Una vez validado, swag2mcp ejecuta la llamada HTTP real y devuelve el resultado.
+5. **El resultado vuelve al LLM** — la respuesta de la API se pasa de vuelta al agente. Las respuestas grandes se guardan en el espacio de trabajo y pueden explorarse con tres herramientas MCP dedicadas: `response_outline` (ver la estructura), `response_compress` (reducir a una muestra representativa) y `response_slice` (extraer fragmentos específicos).
 
-swag2mcp is a bridge between LLMs and the world of APIs. You add API specifications, and the LLM — through the MCP protocol — finds the right endpoints, inspects their documentation, and calls them. All you need to do is add a spec and start the MCP server.
+swag2mcp es un puente entre los LLM y el mundo de las APIs. Usted agrega especificaciones de API, y el LLM — a través del protocolo MCP — encuentra los endpoints correctos, inspecciona su documentación y los llama. Todo lo que necesita hacer es agregar una especificación e iniciar el servidor MCP.
 
-> **Config is editable at any time.** The YAML config file (`~/.swag2mcp/swag2mcp.yaml`) can be edited by hand — add specs, change auth, tweak settings. After every edit, restart the MCP server (`swag2mcp mcp`) for changes to take effect.
+> **La configuración se puede editar en cualquier momento.** El archivo de configuración YAML (`~/.swag2mcp/swag2mcp.yaml`) se puede editar a mano — agregue especificaciones, cambie la autenticación, ajuste la configuración. Después de cada edición, reinicie el servidor MCP (`swag2mcp mcp`) para que los cambios surtan efecto.
 
-## Hierarchy
+## Jerarquía
 
 ```
-Spec (domain, e.g. "meteo")
-  └── Collection 1 (spec file, e.g. forecast.yml)
-        └── Tag 1 (category)
+Especificación (dominio, por ejemplo "meteo")
+  └── Colección 1 (archivo de especificación, por ejemplo forecast.yml)
+        └── Etiqueta 1 (categoría)
               └── Endpoint (GET /api/forecast)
               └── Endpoint (POST /api/forecast)
-        └── Tag 2
+        └── Etiqueta 2
               └── Endpoint (GET /api/forecast/{id})
-  └── Collection 2 (spec file, e.g. air-quality.yml)
-        └── Tag 3
+  └── Colección 2 (archivo de especificación, por ejemplo air-quality.yml)
+        └── Etiqueta 3
               └── Endpoint (GET /api/air-quality)
 ```

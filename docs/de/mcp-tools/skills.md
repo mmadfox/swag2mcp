@@ -1,58 +1,58 @@
 # Skills
 
-## Customizing Output Format
+## Ausgabeformat anpassen
 
-Every swag2mcp MCP tool returns structured JSON data. How this data is **presented** to the user depends on the LLM's formatting skill — and you can control it completely.
+Jedes swag2mcp-MCP-Tool gibt strukturierte JSON-Daten zurück. Wie diese Daten dem **Benutzer präsentiert** werden, hängt vom Formatierungs-Skill des LLM ab — und Sie können es vollständig steuern.
 
-### The default format skill
+### Der Standard-Formatierungs-Skill
 
-swag2mcp ships with a built-in formatting skill that defines compact, human-readable markdown for every tool response:
+swag2mcp enthält einen integrierten Formatierungs-Skill, der kompaktes, menschenlesbares Markdown für jede Tool-Antwort definiert:
 
 [swag2mcp-format SKILL.md](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md)
 
-This skill covers all 19 MCP tools with:
-- Tight tables for lists (specs, collections, tags, endpoints)
-- Inline headers for detail views
-- Compact schema representation for `inspect`
-- Consistent styling across all responses
+Dieser Skill deckt alle 19 MCP-Tools ab mit:
+- Kompakten Tabellen für Listen (Specs, Collections, Tags, Endpunkte)
+- Inline-Headern für Detailansichten
+- Kompakter Schema-Darstellung für `inspect`
+- Konsistentem Stil über alle Antworten hinweg
 
-### Why skills matter
+### Warum Skills wichtig sind
 
-The same data can be presented in radically different ways depending on the skill:
+Dieselben Daten können je nach Skill radikal unterschiedlich dargestellt werden:
 
-| Style | Example output |
-|-------|---------------|
-| **Compact tables** (default) | `GET /pet/{petId}` — Find pet by ID |
-| **Verbose** | `Method: GET, Path: /pet/{petId}, Summary: Find pet by ID, Deprecated: false` |
+| Stil | Beispielausgabe |
+|------|----------------|
+| **Kompakte Tabellen** (Standard) | `GET /pet/{petId}` — Haustier nach ID finden |
+| **Ausführlich** | `Methode: GET, Pfad: /pet/{petId}, Zusammenfassung: Haustier nach ID finden, Veraltet: false` |
 | **Minimal** | `GET /pet/{petId}` |
-| **Technical** | `GET /pet/{petId} → 200: Pet object, 404: Not found` |
-| **Custom** | Any format you can describe |
+| **Technisch** | `GET /pet/{petId} → 200: Pet-Objekt, 404: Nicht gefunden` |
+| **Benutzerdefiniert** | Jedes Format, das Sie beschreiben können |
 
-### Creating your own skill
+### Ihren eigenen Skill erstellen
 
-You can write your own formatting skill by describing the exact output format you want. The skill is a markdown file with formatting rules for each tool. Here are some ideas:
+Sie können Ihren eigenen Formatierungs-Skill schreiben, indem Sie das genaue Ausgabeformat beschreiben, das Sie wünschen. Der Skill ist eine Markdown-Datei mit Formatierungsregeln für jedes Tool. Hier sind einige Ideen:
 
-- **JSON output** — return raw JSON for machine consumption
-- **CSV-style** — tabular data for spreadsheet import
-- **Diagram-friendly** — Mermaid or ASCII diagrams of API structure
-- **Minimal** — just method and path, nothing else
-- **Documentation-style** — full descriptions, examples, and notes
+- **JSON-Ausgabe** — rohes JSON für maschinelle Verarbeitung zurückgeben
+- **CSV-ähnlich** — tabellarische Daten für den Tabellenkalkulationsimport
+- **Diagrammfreundlich** — Mermaid- oder ASCII-Diagramme der API-Struktur
+- **Minimal** — nur Methode und Pfad, nichts weiter
+- **Dokumentationsstil** — vollständige Beschreibungen, Beispiele und Hinweise
 
-### The only limit is the model
+### Die einzige Grenze ist das Modell
 
-The quality of the formatted output depends entirely on the LLM's ability to follow your formatting rules. A well-written skill with clear examples produces consistent, reliable output. A vague skill produces inconsistent results.
+Die Qualität der formatierten Ausgabe hängt vollständig von der Fähigkeit des LLM ab, Ihren Formatierungsregeln zu folgen. Ein gut geschriebener Skill mit klaren Beispielen erzeugt konsistente, zuverlässige Ausgaben. Ein vager Skill erzeugt inkonsistente Ergebnisse.
 
-You can:
-- Use the default skill as-is
-- Fork it and tweak the formatting to your taste
-- Write your own from scratch
-- Switch between skills depending on the task
+Sie können:
+- Den Standard-Skill unverändert verwenden
+- Ihn forken und die Formatierung nach Ihrem Geschmack anpassen
+- Ihren eigenen von Grund auf neu schreiben
+- Je nach Aufgabe zwischen Skills wechseln
 
-### How to use a skill
+### Wie man einen Skill verwendet
 
-Skills are loaded by the LLM client (OpenCode, Cursor, Claude Desktop, etc.) as part of its system prompt or agent configuration. Refer to your client's documentation for how to attach a skill file.
+Skills werden vom LLM-Client (OpenCode, Cursor, Claude Desktop usw.) als Teil seines System-Prompts oder seiner Agentenkonfiguration geladen. Lesen Sie in der Dokumentation Ihres Clients nach, wie eine Skill-Datei angehängt wird.
 
-For OpenCode, skills are configured in `opencode.json`:
+Für OpenCode werden Skills in `opencode.json` konfiguriert:
 
 ```json
 {

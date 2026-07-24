@@ -1,4 +1,4 @@
-# Crush Integration
+# Интеграция с Crush
 
 ## stdio
 
@@ -26,11 +26,11 @@
 }
 ```
 
-## Others
+## Другие клиенты
 
-Don't see your client? All MCP integrations follow the same pattern:
-- Set the command to `swag2mcp` with argument `mcp`
-- Optionally add a workspace path: `mcp /path/to/workspace`
-- Check your client's documentation for the exact config file location and format
+Не нашли свой клиент? Все MCP-интеграции следуют одному шаблону:
+- Укажите команду `swag2mcp` с аргументом `mcp`
+- При необходимости добавьте путь к рабочей области: `mcp /path/to/workspace`
+- Проверьте документацию вашего клиента для точного расположения и формата файла конфигурации
 
-Most MCP clients support stdio transport, and some support HTTP (SSE / Streamable HTTP).
+Большинство MCP-клиентов поддерживают stdio-транспорт, а некоторые — HTTP (SSE / Streamable HTTP).

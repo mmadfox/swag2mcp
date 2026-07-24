@@ -1,12 +1,12 @@
-# Authentication
+# Authentifizierung
 
-## Overview
+## Übersicht
 
-swag2mcp supports **9 authentication methods** for working with APIs that require authorization. You configure it once in the config file — after that, every API call through `invoke` automatically includes the right tokens and headers.
+swag2mcp unterstützt **9 Authentifizierungsmethoden** für die Arbeit mit APIs, die eine Autorisierung erfordern. Sie konfigurieren es einmal in der Konfigurationsdatei — danach fügt jeder API-Aufruf über `invoke` automatisch die richtigen Tokens und Header hinzu.
 
-### Where to configure
+### Wo konfigurieren
 
-Authentication is set at the **spec** level in `swag2mcp.yaml`:
+Die Authentifizierung wird auf **Spec**-Ebene in `swag2mcp.yaml` festgelegt:
 
 ```yaml
 specs:
@@ -22,16 +22,16 @@ specs:
         token: "my-token"
 ```
 
-### How it works
+### Wie es funktioniert
 
-- You specify the auth type and parameters in the config
-- swag2mcp automatically applies them to every request when you call `invoke`
-- You **don't need** to request a token before calling an API — it happens automatically
-- If a token expires (OAuth2, Script), swag2mcp refreshes it on its own
+- Sie geben den Authentifizierungstyp und die Parameter in der Konfiguration an
+- swag2mcp wendet sie automatisch auf jede Anfrage an, wenn Sie `invoke` aufrufen
+- Sie **müssen kein Token anfordern**, bevor Sie eine API aufrufen — es passiert automatisch
+- Wenn ein Token abläuft (OAuth2, Script), erneuert swag2mcp es selbstständig
 
-### Environment variables
+### Umgebungsvariablen
 
-Sensitive data (tokens, passwords, keys) can be stored in environment variables using `$(VAR_NAME)` syntax:
+Vertrauliche Daten (Tokens, Passwörter, Schlüssel) können mit der Syntax `$(VAR_NAME)` in Umgebungsvariablen gespeichert werden:
 
 ```yaml
 auth:
@@ -40,24 +40,24 @@ auth:
     token: "$(MY_API_TOKEN)"
 ```
 
-swag2mcp substitutes the value of `MY_API_TOKEN` at startup.
+swag2mcp setzt den Wert von `MY_API_TOKEN` beim Start ein.
 
-### MCP auth tool
+### MCP-Auth-Tool
 
-The LLM agent can retrieve a token or headers through the `auth` MCP tool — for example, to build a curl command or show the user.
+Der LLM-Agent kann ein Token oder Header über das `auth`-MCP-Tool abrufen — zum Beispiel, um einen curl-Befehl zu erstellen oder dem Benutzer anzuzeigen.
 
-In **production**, this tool should be disabled with `--disable-llm-auth` (enabled by default) so the LLM never has access to tokens.
+In der **Produktion** sollte dieses Tool mit `--disable-llm-auth` deaktiviert werden (standardmäßig aktiviert), damit der LLM niemals Zugriff auf Tokens hat.
 
-### Methods
+### Methoden
 
-| Method | Description | Best for |
-|--------|-------------|----------|
-| [`none`](/auth/none) | No authentication | Public APIs |
-| [`basic`](/auth/basic) | HTTP Basic (username + password) | Legacy APIs, simple auth |
-| [`bearer`](/auth/bearer) | Bearer Token (JWT, token) | Modern REST APIs |
-| [`api-key`](/auth/api-key) | API key in header or query parameter | Services with API keys |
-| [`digest`](/auth/digest) | HTTP Digest (username + password) | Legacy APIs, more secure than Basic |
-| [`hmac`](/auth/hmac) | HMAC-SHA256 signature (Binance-style) | Cryptocurrency exchanges |
-| [`oauth2-cc`](/auth/oauth2-cc) | OAuth2 Client Credentials | Server-to-server, microservices |
-| [`oauth2-pwd`](/auth/oauth2-pwd) | OAuth2 Password Grant | Apps with user login |
-| [`script`](/auth/script) | External script to obtain a token | Any custom auth scheme |
+| Methode | Beschreibung | Am besten für |
+|---------|--------------|---------------|
+| [`none`](/auth/none) | Keine Authentifizierung | Öffentliche APIs |
+| [`basic`](/auth/basic) | HTTP Basic (Benutzername + Passwort) | Legacy-APIs, einfache Authentifizierung |
+| [`bearer`](/auth/bearer) | Bearer-Token (JWT, Token) | Moderne REST-APIs |
+| [`api-key`](/auth/api-key) | API-Schlüssel in Header oder Abfrageparameter | Dienste mit API-Schlüsseln |
+| [`digest`](/auth/digest) | HTTP Digest (Benutzername + Passwort) | Legacy-APIs, sicherer als Basic |
+| [`hmac`](/auth/hmac) | HMAC-SHA256-Signatur (Binance-Stil) | Kryptowährungsbörsen |
+| [`oauth2-cc`](/auth/oauth2-cc) | OAuth2 Client Credentials | Server-zu-Server, Microservices |
+| [`oauth2-pwd`](/auth/oauth2-pwd) | OAuth2 Password Grant | Apps mit Benutzeranmeldung |
+| [`script`](/auth/script) | Externes Skript zum Abrufen eines Tokens | Jedes benutzerdefinierte Auth-Schema |

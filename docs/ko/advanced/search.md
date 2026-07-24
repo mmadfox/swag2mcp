@@ -1,43 +1,43 @@
-# Full-Text Search
+# 전문 검색
 
-## Overview
+## 개요
 
-swag2mcp includes a built-in full-text search engine (bluge) that indexes all endpoints across all specs. The LLM can search for endpoints by method, path, summary, or tag — even without knowing the endpoint ID.
+swag2mcp에는 모든 spec의 모든 엔드포인트를 인덱싱하는 내장 전문 검색 엔진(bluge)이 포함되어 있습니다. LLM은 엔드포인트 ID를 몰라도 메서드, 경로, 요약 또는 태그로 엔드포인트를 검색할 수 있습니다.
 
-## How indexing works
+## 인덱싱 작동 방식
 
-When a spec is added or updated, every endpoint is indexed. The following fields are searchable:
+spec이 추가되거나 업데이트되면 모든 엔드포인트가 인덱싱됩니다. 다음 필드를 검색할 수 있습니다:
 
-| Field | Description | Example |
-|-------|-------------|---------|
-| `method` | HTTP method | `GET`, `POST`, `PUT` |
-| `path` | API endpoint path | `/api/v1/users/{id}` |
-| `summary` | OpenAPI summary | "Find pet by ID" |
-| `tag` | Endpoint category | "pets", "users" |
-| `_all` | All fields combined | method + path + tag + summary |
+| 필드 | 설명 | 예시 |
+|------|------|------|
+| `method` | HTTP 메서드 | `GET`, `POST`, `PUT` |
+| `path` | API 엔드포인트 경로 | `/api/v1/users/{id}` |
+| `summary` | OpenAPI 요약 | "Find pet by ID" |
+| `tag` | 엔드포인트 카테고리 | "pets", "users" |
+| `_all` | 모든 필드 결합 | method + path + tag + summary |
 
-The index is rebuilt on every MCP server start. It is stored in memory for fast searches.
+인덱스는 MCP 서버가 시작될 때마다 재구축됩니다. 빠른 검색을 위해 메모리에 저장됩니다.
 
-## Query syntax
+## 쿼리 구문
 
-The search supports a rich query syntax for precise filtering:
+검색은 정밀한 필터링을 위한 풍부한 쿼리 구문을 지원합니다:
 
-| Example | Description |
-|---------|-------------|
-| `pet` | Simple text search across all fields |
-| `method:GET` | Find all GET endpoints |
-| `tag:pets` | Find endpoints in the "pets" tag |
-| `path:"/api/v1/users"` | Exact path match |
-| `+method:POST +tag:pet` | Must match both conditions |
-| `-method:DELETE` | Exclude DELETE methods |
-| `create~` | Fuzzy search (typo-tolerant) |
-| `cr*` | Wildcard search |
-| `"find pet"` | Phrase search |
-| `+summary:pet -method:DELETE` | Include "pet" in summary, exclude DELETE |
+| 예시 | 설명 |
+|------|------|
+| `pet` | 모든 필드에 대한 단순 텍스트 검색 |
+| `method:GET` | 모든 GET 엔드포인트 찾기 |
+| `tag:pets` | "pets" 태그의 엔드포인트 찾기 |
+| `path:"/api/v1/users"` | 정확한 경로 일치 |
+| `+method:POST +tag:pet` | 두 조건 모두 일치해야 함 |
+| `-method:DELETE` | DELETE 메서드 제외 |
+| `create~` | 퍼지 검색 (오타 허용) |
+| `cr*` | 와일드카드 검색 |
+| `"find pet"` | 구문 검색 |
+| `+summary:pet -method:DELETE` | 요약에 "pet" 포함, DELETE 제외 |
 
-### Field-specific search
+### 필드별 검색
 
-You can search within specific fields using the `field:value` syntax:
+`field:value` 구문을 사용하여 특정 필드 내에서 검색할 수 있습니다:
 
 ```
 method:GET
@@ -46,61 +46,61 @@ path:"/pet/findByStatus"
 summary:"find pet by status"
 ```
 
-### Boolean operators
+### 부울 연산자
 
-- `+` — the term must match (AND)
-- `-` — the term must not match (NOT)
-- Space between terms — OR (any term can match)
+- `+` — 용어가 반드시 일치해야 함 (AND)
+- `-` — 용어가 일치하지 않아야 함 (NOT)
+- 용어 사이의 공백 — OR (모든 용어가 일치 가능)
 
-### Fuzzy and wildcard
+### 퍼지 및 와일드카드
 
-- `term~` — fuzzy search (matches similar words, handles typos)
-- `te*` — wildcard (matches any characters)
-- `te?t` — single character wildcard
+- `term~` — 퍼지 검색 (유사한 단어 일치, 오타 처리)
+- `te*` — 와일드카드 (모든 문자 일치)
+- `te?t` — 단일 문자 와일드카드
 
-## Examples
+## 예시
 
 ```
-# Find all GET requests
+# 모든 GET 요청 찾기
 method:GET
 
-# Find POST requests in the pet tag
+# pet 태그의 POST 요청 찾기
 +method:POST +tag:pet
 
-# Find endpoints by exact path
+# 정확한 경로로 엔드포인트 찾기
 path:"/pet/findByStatus"
 
-# Find by description
+# 설명으로 찾기
 "find pet by status"
 
-# Find everything except DELETE
+# DELETE를 제외한 모든 항목 찾기
 +summary:pet -method:DELETE
 
-# Fuzzy search for "create" (handles typos)
+# "create" 퍼지 검색 (오타 처리)
 create~
 ```
 
-## MCP tool
+## MCP 도구
 
-The `search` MCP tool exposes the search engine to the LLM:
+`search` MCP 도구는 LLM에 검색 엔진을 노출합니다:
 
 ```
 → search(query: "find pet by status", limit: 5)
-← GET /pet/findByStatus — Finds Pets by status
-   GET /pet/{petId} — Find pet by ID
+← GET /pet/findByStatus — 상태별 애완동물 찾기
+   GET /pet/{petId} — ID로 애완동물 찾기
 ```
 
-### Parameters
+### 매개변수
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `query` | Yes | Search query (supports structured syntax) |
-| `limit` | Yes | Maximum results (1-50) |
+| 매개변수 | 필수 | 설명 |
+|---------|------|------|
+| `query` | 예 | 검색 쿼리 (구조화된 구문 지원) |
+| `limit` | 예 | 최대 결과 수 (1-50) |
 
-## Important notes
+## 중요 참고 사항
 
-- **The index is in-memory** — it is rebuilt every time the MCP server starts. There is no persistent index file.
-- **All fields are lowercased** — searches are case-insensitive
-- **Limit is capped at 50** — you cannot request more than 50 results
-- **Invalid query syntax** returns a helpful error message with examples
-- **The `_all` field** combines method, path, tag, and summary for simple text searches
+- **인덱스는 메모리 내** — MCP 서버가 시작될 때마다 재구축됩니다. 영구 인덱스 파일이 없습니다.
+- **모든 필드는 소문자로 변환됨** — 검색은 대소문자를 구분하지 않습니다
+- **제한은 최대 50개** — 50개 이상의 결과를 요청할 수 없습니다
+- **잘못된 쿼리 구문**은 예제와 함께 도움이 되는 오류 메시지를 반환합니다
+- **`_all` 필드**는 method, path, tag, summary를 결합하여 단순 텍스트 검색에 사용됩니다

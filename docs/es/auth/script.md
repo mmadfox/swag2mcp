@@ -1,16 +1,16 @@
-# Script Auth
+# Autenticación mediante Script
 
-## Purpose
+## Propósito
 
-Authentication via an external script — the most flexible method. You can write a script in any language (bash, Python, etc.) that obtains a token however you like and returns it to swag2mcp.
+Autenticación a través de un script externo — el método más flexible. Puede escribir un script en cualquier lenguaje (bash, Python, etc.) que obtenga un token como desee y lo devuelva a swag2mcp.
 
-## When to use
+## Cuándo usarlo
 
-- Custom or non-standard authentication schemes
-- Complex token acquisition logic (multi-step, with additional checks)
-- When none of the standard methods fit your needs
+- Esquemas de autenticación personalizados o no estándar
+- Lógica compleja de obtención de tokens (multipaso, con verificaciones adicionales)
+- Cuando ninguno de los métodos estándar se ajusta a sus necesidades
 
-## Configuration
+## Configuración
 
 ```yaml
 specs:
@@ -26,22 +26,22 @@ specs:
         domain: "my-auth"
 ```
 
-## Parameters
+## Parámetros
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `domain` | Yes | Script file name (without extension) |
+| Parámetro | Requerido | Descripción |
+|-----------|-----------|-------------|
+| `domain` | Sí | Nombre del archivo de script (sin extensión) |
 
-## Script location
+## Ubicación del script
 
-The script must be placed in the `auth_scripts` directory of your workspace:
+El script debe colocarse en el directorio `auth_scripts` de su espacio de trabajo:
 
 - **Linux / macOS:** `{workspace}/auth_scripts/{domain}.sh`
 - **Windows:** `{workspace}/auth_scripts/{domain}.bat`
 
-## Script output format
+## Formato de salida del script
 
-The script must output JSON to stdout with the token and its expiry time:
+El script debe generar JSON en stdout con el token y su tiempo de expiración:
 
 ```bash
 #!/bin/bash
@@ -55,17 +55,17 @@ TOKEN=$(curl -s -X POST https://auth.example.com/token \
 echo "{\"token\": \"$TOKEN\", \"expires_in\": 3600}"
 ```
 
-### JSON fields
+### Campos JSON
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `token` | Yes | Authentication token |
-| `expires_in` | No | Token lifetime in seconds (default: 3600) |
+| Campo | Requerido | Descripción |
+|-------|-----------|-------------|
+| `token` | Sí | Token de autenticación |
+| `expires_in` | No | Vida útil del token en segundos (predeterminado: 3600) |
 
-## Notes
+## Notas
 
-- swag2mcp runs the script on every request if the cached token has expired
-- The script must complete within 30 seconds
-- The token is cached until its expiry time
-- Script filename = `{domain}.sh` (Unix) or `{domain}.bat` (Windows)
-- `domain` must not contain `/` or `\`
+- swag2mcp ejecuta el script en cada solicitud si el token en caché ha expirado
+- El script debe completarse dentro de 30 segundos
+- El token se almacena en caché hasta su tiempo de expiración
+- Nombre del script = `{domain}.sh` (Unix) o `{domain}.bat` (Windows)
+- `domain` no debe contener `/` ni `\`

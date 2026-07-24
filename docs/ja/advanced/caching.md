@@ -1,68 +1,68 @@
-# Caching
+# キャッシュ
 
-## Overview
+## 概要
 
-swag2mcp caches downloaded spec files so the MCP server starts faster on subsequent runs. Instead of downloading the same spec file every time, it reuses the cached copy.
+swag2mcp はダウンロードした spec ファイルをキャッシュするため、MCP サーバーが次回以降より速く起動します。毎回同じ spec ファイルをダウンロードする代わりに、キャッシュされたコピーを再利用します。
 
-## How caching works
+## キャッシュの仕組み
 
-When you add a spec with a remote URL, swag2mcp downloads it and saves it to the `cache/` directory. On the next startup, it checks if the cached copy is still fresh. If it is, the download is skipped.
+リモート URL で spec を追加すると、swag2mcp はそれをダウンロードして `cache/` ディレクトリに保存します。次回の起動時に、キャッシュされたコピーがまだ有効かどうかを確認します。有効な場合、ダウンロードはスキップされます。
 
-### What gets cached
+### キャッシュされるもの
 
-| Source | Behavior |
-|--------|----------|
-| **Remote URL** (http/https) | Always cached. Downloaded once, reused until the cache expires. |
-| **Local file in `specs/`** | Used directly from the `specs/` directory. Never cached — changes are immediately visible. |
-| **Local file outside `specs/`** | Copied to the cache. If the source file changes (modification time), the cache is invalidated. |
+| ソース | 動作 |
+|--------|------|
+| **リモート URL** (http/https) | 常にキャッシュ。一度ダウンロードされ、キャッシュが期限切れになるまで再利用。 |
+| **`specs/` 内のローカルファイル** | `specs/` ディレクトリから直接使用。キャッシュされない — 変更は即座に反映。 |
+| **`specs/` 外のローカルファイル** | キャッシュにコピー。ソースファイルが変更されると（更新日時）、キャッシュは無効化。 |
 
-### Cache expiration (TTL)
+### キャッシュの有効期限（TTL）
 
-Each cached file gets a random expiration time between **1 hour and 48 hours**. The randomness prevents all cached files from expiring at the same time (which would cause a thundering herd of downloads).
+各キャッシュファイルには **1 時間から 48 時間** の間でランダムな有効期限が設定されます。ランダム性により、すべてのキャッシュファイルが同時に期限切れになるのを防ぎます（ダウンロードの雪崩を防止）。
 
-- The TTL is reset every time the MCP server starts
-- If a cached file is still within its TTL, it is reused
-- If the TTL has expired, the file is downloaded again
+- TTL は MCP サーバーが起動するたびにリセットされます
+- キャッシュファイルが TTL 内にある場合、再利用されます
+- TTL が期限切れの場合、ファイルは再ダウンロードされます
 
-### Cache structure
+### キャッシュ構造
 
 ```
 ~/.swag2mcp/cache/
-├── a1b2c3d4e5f6a7b8.spec    # Cached spec file
-├── a1b2c3d4e5f6a7b8.meta    # Metadata (source, TTL, cached at)
+├── a1b2c3d4e5f6a7b8.spec    # キャッシュされた spec ファイル
+├── a1b2c3d4e5f6a7b8.meta    # メタデータ（ソース、TTL、キャッシュ日時）
 ├── b2c3d4e5f6a7b8c9.spec
 ├── b2c3d4e5f6a7b8c9.meta
 └── ...
 ```
 
-The cache key is derived from the spec file URL or path. Each cached file has a companion `.meta` file that stores when it was cached and when it expires.
+キャッシュキーは spec ファイルの URL またはパスから導出されます。各キャッシュファイルには、キャッシュ日時と有効期限を保存する `.meta` ファイルが付属します。
 
-## Managing the cache
+## キャッシュの管理
 
-### Force a refresh
+### 強制リフレッシュ
 
-Run `swag2mcp update` to clear the entire cache and re-download all spec files:
+`swag2mcp update` を実行してキャッシュ全体をクリアし、すべての spec ファイルを再ダウンロードします：
 
 ```bash
 swag2mcp update
 ```
 
-This validates the config, clears the cache, and downloads everything fresh.
+設定を検証し、キャッシュをクリアし、すべてを新しくダウンロードします。
 
-### Clear the cache manually
+### 手動でキャッシュをクリア
 
 ```bash
 swag2mcp clean
 ```
 
-This removes all cached spec files and saved API responses. The next time you start the MCP server, all specs will be downloaded again.
+キャッシュされたすべての spec ファイルと保存された API レスポンスを削除します。次回 MCP サーバーを起動すると、すべての spec が再ダウンロードされます。
 
-### Automatic cleanup
+### 自動クリーンアップ
 
-When the MCP server starts (`swag2mcp mcp`), saved API responses older than 48 hours are automatically removed. This prevents the `responses/` directory from growing indefinitely.
+MCP サーバーが起動するとき（`swag2mcp mcp`）、48 時間以上経過した保存済み API レスポンスが自動的に削除されます。これにより `responses/` ディレクトリが無制限に増大するのを防ぎます。
 
-## Important notes
+## 重要な注意点
 
-- **Local files in `specs/` are never cached** — if you edit a spec file directly in the `specs/` directory, the changes are immediately visible without clearing the cache
-- **Remote URLs are always cached** — there is no way to bypass the cache for remote URLs except by running `swag2mcp update` or `swag2mcp clean`
-- **The cache is local** — it is stored on disk and does not sync between machines. Use `swag2mcp export` and `swag2mcp import` to transfer specs between machines
+- **`specs/` 内のローカルファイルはキャッシュされません** — `specs/` ディレクトリ内の spec ファイルを直接編集した場合、キャッシュをクリアしなくても変更は即座に反映されます
+- **リモート URL は常にキャッシュされます** — `swag2mcp update` または `swag2mcp clean` を実行する以外に、リモート URL のキャッシュをバイパスする方法はありません
+- **キャッシュはローカルです** — ディスクに保存され、マシン間で同期されません。マシン間で spec を転送するには `swag2mcp export` と `swag2mcp import` を使用してください

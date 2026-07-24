@@ -1,59 +1,59 @@
 # add
 
-## Purpose
+## 用途
 
-Add a new **spec** (API service) or **collection** (OpenAPI/Swagger/Postman file) to an existing configuration. This is the primary way to grow your workspace with new APIs.
+向现有配置添加新的 **spec**（API 服务）或 **collection**（OpenAPI/Swagger/Postman 文件）。这是扩展工作区以包含新 API 的主要方式。
 
-## When to use
+## 何时使用
 
-- You have a new API to connect to your LLM agent
-- You found an OpenAPI spec URL and want to add it
-- You want to add an additional spec file (collection) to an existing spec
-- You prefer writing YAML directly instead of using the interactive wizard
+- 你有新的 API 要连接到 LLM 智能体
+- 你找到了 OpenAPI 规范 URL 并想添加它
+- 你想向现有 spec 添加额外的规范文件（collection）
+- 你更倾向于直接编写 YAML 而不是使用交互式向导
 
-## Syntax
+## 语法
 
 ```bash
 swag2mcp add spec [path] [flags]
 swag2mcp add collection [path] [flags]
 ```
 
-## Arguments
+## 参数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 参数 | 位置 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | 1 | 否 | 工作区目录。如果省略，通过路径解析规则解析。 |
 
-## Flags
+## 标志
 
 ### `add spec`
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--yaml` | `-y` | `string` | `""` | YAML input inline or `-` for stdin |
-| `--example` | `-e` | `bool` | `false` | Print a YAML template and exit |
+| 标志 | 简写 | 类型 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| `--yaml` | `-y` | `string` | `""` | YAML 输入内联或 `-` 表示 stdin |
+| `--example` | `-e` | `bool` | `false` | 打印 YAML 模板并退出 |
 
 ### `add collection`
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--yaml` | `-y` | `string` | `""` | YAML input inline or `-` for stdin |
-| `--example` | `-e` | `bool` | `false` | Print a YAML template and exit |
+| 标志 | 简写 | 类型 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| `--yaml` | `-y` | `string` | `""` | YAML 输入内联或 `-` 表示 stdin |
+| `--example` | `-e` | `bool` | `false` | 打印 YAML 模板并退出 |
 
-## How it works
+## 工作原理
 
-### Interactive mode (default)
+### 交互模式（默认）
 
-Launches a TUI wizard that lets you fill in the spec or collection fields step by step.
+启动 TUI 向导，让你逐步填写 spec 或 collection 字段。
 
 ```bash
 swag2mcp add spec
 swag2mcp add collection
 ```
 
-### YAML inline mode
+### YAML 内联模式
 
-Pass the YAML directly as a string. **Be careful with shell quoting** — special characters like `:`, `#`, `&`, `{` can break the command.
+直接将 YAML 作为字符串传递。**注意 shell 引号** — 特殊字符如 `:`、`#`、`&`、`{` 可能会破坏命令。
 
 ```bash
 swag2mcp add spec --yaml 'domain: meteo
@@ -64,12 +64,12 @@ collections:
     location: https://example.com/spec.json'
 ```
 
-### YAML from stdin (recommended for complex YAML)
+### 从 stdin 输入 YAML（推荐用于复杂 YAML）
 
-Pipe from a file or use a heredoc to avoid shell quoting issues entirely:
+从文件管道输入或使用 heredoc 以完全避免 shell 引号问题：
 
 ```bash
-# Pipe from file
+# 从文件管道输入
 cat spec.yaml | swag2mcp add spec --yaml -
 
 # Heredoc
@@ -84,16 +84,16 @@ collections:
 EOF
 ```
 
-### YAML template
+### YAML 模板
 
-Print the expected YAML structure and exit:
+打印预期的 YAML 结构并退出：
 
 ```bash
 swag2mcp add spec --example
 swag2mcp add collection --example
 ```
 
-## YAML format
+## YAML 格式
 
 ### Spec
 
@@ -120,16 +120,16 @@ llm_title: Orders Collection
 location: https://example.com/orders.json
 ```
 
-## Post-command verification
+## 命令后验证
 
 ```bash
 swag2mcp ls [path]
-# The new spec or collection should appear in the list
+# 新的 spec 或 collection 应出现在列表中
 ```
 
-## Nuances
+## 细节
 
-- **Auto-init:** If no config file exists, `add` automatically runs the init wizard first. You don't need to run `init` separately.
-- **Shell quoting:** Inline YAML (`--yaml '...'`) is fragile with special characters. Prefer `--yaml -` with a heredoc or pipe for anything beyond simple values.
-- **`--example` exits immediately** without checking for an existing config or modifying anything.
-- **`add spec` vs `add collection`:** Use `add spec` for a new API service (new domain). Use `add collection` to add another spec file to an existing spec.
+- **自动初始化：** 如果不存在配置文件，`add` 会自动先运行初始化向导。你不需要单独运行 `init`。
+- **Shell 引号：** 内联 YAML（`--yaml '...'`）对于特殊字符很脆弱。对于超出简单值的任何内容，优先使用 `--yaml -` 配合 heredoc 或管道。
+- **`--example` 立即退出**，不检查现有配置或修改任何内容。
+- **`add spec` vs `add collection`：** 对于新的 API 服务（新域）使用 `add spec`。要向现有 spec 添加另一个规范文件，使用 `add collection`。

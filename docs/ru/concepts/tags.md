@@ -1,68 +1,68 @@
-# Tags
+# Теги
 
-A tag is a category that groups related endpoints within a collection. Tags may or may not exist — not all collections have them, and a collection can have any number of tags.
+Тег — это категория, которая группирует связанные эндпоинты внутри коллекции. Теги могут присутствовать или отсутствовать — не все коллекции их имеют, и коллекция может содержать любое количество тегов.
 
-Tags come from the OpenAPI/Swagger/Postman file itself. There are **no YAML config settings** for tags — you cannot create, rename, or delete tags in `swag2mcp.yaml`. The only way to change tags is to edit the original spec file.
+Теги берутся из самого файла OpenAPI/Swagger/Postman. **В YAML-конфиге нет настроек для тегов** — вы не можете создавать, переименовывать или удалять теги в `swag2mcp.yaml`. Единственный способ изменить теги — отредактировать исходный файл спецификации.
 
-## Hierarchy
+## Иерархия
 
 ```
-Spec (domain, e.g. "meteo")
-  └── Collection (spec file, e.g. forecast.yml)
-        └── Tag "weather"
+Спецификация (domain, например "meteo")
+  └── Коллекция (файл спецификации, например forecast.yml)
+        └── Тег "weather"
               └── GET /forecast
               └── GET /forecast/hourly
-        └── Tag "alerts"
+        └── Тег "alerts"
               └── GET /alerts
 ```
 
-## How Tags Are Created
+## Как создаются теги
 
-Tags are extracted from the spec document during parsing:
+Теги извлекаются из документа спецификации во время разбора:
 
-**OpenAPI 3.x / Swagger 2.0** — each operation's `tags` list becomes tags:
+**OpenAPI 3.x / Swagger 2.0** — список `tags` каждой операции становится тегами:
 
 ```yaml
 paths:
   /pet:
     get:
       tags: ["pets"]
-      summary: "Find pet by ID"
+      summary: "Найти питомца по ID"
     post:
       tags: ["pets"]
-      summary: "Add a new pet"
+      summary: "Добавить нового питомца"
   /pet/{petId}/uploadImage:
     post:
       tags: ["pet_images"]
-      summary: "Uploads an image"
+      summary: "Загрузить изображение"
 ```
 
-**Postman** — each top-level folder becomes a tag. Nested folders use the last folder name.
+**Postman** — каждая папка верхнего уровня становится тегом. Вложенные папки используют имя последней папки.
 
-If an endpoint has no tags, it is placed under a `"default"` tag.
+Если у эндпоинта нет тегов, он помещается в тег `"default"`.
 
-## Purpose
+## Назначение
 
-Tags help the LLM find groups of related endpoints. Instead of searching through every endpoint in a collection, the LLM can first find the right tag, then list only the endpoints within it.
+Теги помогают LLM находить группы связанных эндпоинтов. Вместо поиска по всем эндпоинтам коллекции LLM может сначала найти нужный тег, а затем вывести только эндпоинты внутри него.
 
-## MCP Tools for Tags
+## MCP-инструменты для тегов
 
-| Tool | Description |
+| Инструмент | Описание |
 |------|-------------|
-| `tag_by_spec` | All tags across an entire spec |
-| `tag_by_collection` | Tags within a specific collection |
-| `tag_by_id` | Tag details (title, method count) |
-| `endpoint_by_tag` | Endpoints grouped under a tag |
+| `tag_by_spec` | Все теги во всей спецификации |
+| `tag_by_collection` | Теги в конкретной коллекции |
+| `tag_by_id` | Детали тега (название, количество методов) |
+| `endpoint_by_tag` | Эндпоинты, сгруппированные под тегом |
 
-## Example
+## Пример
 
 ```
-Query: "Show all tags in the pet collection"
+Запрос: "Покажи все теги в коллекции pet"
 → tag_by_collection(collectionId: "...")
-→ Result: pets (5 methods), pet_images (1 method)
+→ Результат: pets (5 методов), pet_images (1 метод)
 ```
 
-## Limitations
+## Ограничения
 
-- Tags are read-only from the config perspective. To add, rename, or remove tags, edit the original OpenAPI/Swagger/Postman file and run `swag2mcp update`.
-- Tags cannot be filtered or disabled per-collection in the YAML config.
+- Теги доступны только для чтения с точки зрения конфига. Чтобы добавить, переименовать или удалить теги, отредактируйте исходный файл OpenAPI/Swagger/Postman и выполните `swag2mcp update`.
+- Теги нельзя фильтровать или отключать для отдельных коллекций в YAML-конфиге.

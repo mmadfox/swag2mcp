@@ -1,30 +1,30 @@
-# Quick Start
+# クイックスタート
 
-Get swag2mcp running in 2 minutes.
+swag2mcp を 2 分で起動する。
 
-## 1. Initialize
+## 1. 初期化
 
-### Home directory (recommended)
+### ホームディレクトリ（推奨）
 
-One-time setup for your entire system. Config is stored in your home folder.
+システム全体で一度だけセットアップします。設定はホームフォルダに保存されます。
 
 ::: code-group
 
 ```bash [macOS / Linux]
 swag2mcp init
-# Creates ~/.swag2mcp/swag2mcp.yaml
+# ~/.swag2mcp/swag2mcp.yaml が作成される
 ```
 
 ```powershell [Windows]
 swag2mcp.exe init
-# Creates %USERPROFILE%\.swag2mcp\swag2mcp.yaml
+# %USERPROFILE%\.swag2mcp\swag2mcp.yaml が作成される
 ```
 
 :::
 
-### Project directory
+### プロジェクトディレクトリ
 
-For an isolated workspace inside your project.
+プロジェクト内で独立したワークスペースを使用する場合。
 
 ::: code-group
 
@@ -38,30 +38,30 @@ mkdir ./swag2mcp; swag2mcp.exe init ./swag2mcp
 
 :::
 
-### From ZIP
+### ZIP から
 
-If you have a ready-made workspace (e.g., from a colleague):
+既製のワークスペースがある場合（例：同僚から受け取った場合）：
 
 ```bash
 swag2mcp import --from-zip workspace.zip
 ```
 
-## 2. Install Agent Skills (recommended)
+## 2. エージェントスキルのインストール（推奨）
 
-Install the swag2mcp skills to teach your AI agent all commands, flags, config format, and real-world examples.
+swag2mcp のスキルをインストールして、AI エージェントにすべてのコマンド、フラグ、設定形式、実際の使用例を教えます。
 
-Ask your agent:
+エージェントに以下のように依頼してください：
 
 ```bash
-"Add the swag2mcp-cli skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
-"Add the swag2mcp-format skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md"
+"swag2mcp-cli スキルを https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md から追加して"
+"swag2mcp-format スキルを https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md から追加して"
 ```
 
-> Some IDEs require a restart after adding skills.
+> 一部の IDE ではスキル追加後に再起動が必要です。
 
-## 3. LLM Client / IDE Configuration
+## 3. LLM クライアント / IDE の設定
 
-Configure your IDE to connect to swag2mcp. The IDE will start the MCP server automatically when needed.
+IDE を swag2mcp に接続するように設定します。IDE は必要に応じて MCP サーバーを自動的に起動します。
 
 ::: code-group
 
@@ -102,30 +102,30 @@ Configure your IDE to connect to swag2mcp. The IDE will start the MCP server aut
 
 :::
 
-For other IDEs (Cursor, VS Code, JetBrains) see the [Integration guide](../integration/opencode.md).
+他の IDE（Cursor、VS Code、JetBrains）については[統合ガイド](../integration/opencode.md)を参照してください。
 
-> If you initialized the workspace at a custom path (e.g. `./swag2mcp`), use the full path in the command:
+> カスタムパス（例：`./swag2mcp`）でワークスペースを初期化した場合は、コマンドにフルパスを指定してください：
 > `"command": ["swag2mcp", "mcp", "/absolute/path/to/swag2mcp"]`
 
-> **After any config change, restart the MCP server** for the changes to take effect.
+> **設定変更後は MCP サーバーを再起動**してください。変更が反映されます。
 
-## 4. Start MCP Server
+## 4. MCP サーバーの起動
 
-### stdio (default) — for local IDE
+### stdio（デフォルト）— ローカル IDE 用
 
-Nothing to configure. Your IDE starts swag2mcp automatically via the config above.
+設定は不要です。上記の設定により、IDE が自動的に swag2mcp を起動します。
 
 ```bash
 swag2mcp mcp
 ```
 
-### SSE / Streamable HTTP — for remote access
+### SSE / Streamable HTTP — リモートアクセス用
 
 ```bash
 swag2mcp mcp --transport sse --http-addr :8080
 ```
 
-Or configure in `swag2mcp.yaml`:
+または `swag2mcp.yaml` で設定：
 
 ```yaml
 mcp:
@@ -134,43 +134,43 @@ mcp:
   path: "/mcp"
 ```
 
-See [MCP Server reference](../configuration/mcp-server.md) for all flags.
+すべてのフラグについては [MCP サーバーリファレンス](../configuration/mcp-server.md) を参照してください。
 
-### Filter specs by tags
+### タグでスペックをフィルタリング
 
 ```bash
 swag2mcp mcp --tags weather,public
 ```
 
-Only specs with matching tags will be available to the LLM.
+一致するタグを持つスペックのみが LLM から利用可能になります。
 
-### Verify it's working
+### 動作確認
 
-After connecting, ask your LLM agent:
+接続後、LLM エージェントに以下のように尋ねてください：
 
 ```bash
-"What MCP tools do you support?"
+"どの MCP ツールをサポートしていますか？"
 ```
 
-If the agent lists swag2mcp tools (`spec_list`, `search`, `invoke`, etc.) — everything is working.
+エージェントが swag2mcp のツール（`spec_list`、`search`、`invoke` など）をリスト表示すれば、正常に動作しています。
 
-### Example queries to try
+### 試せるクエリ例
 
-| Ask your agent | What happens |
+| エージェントへの依頼 | 動作 |
 |-------|-------------|
-| "What's the weather in New York?" | `invoke` — calls Open-Meteo forecast API |
-| "What's the current BTC price?" | `invoke` — calls Binance ticker API |
-| "Tell me a dad joke" | `invoke` — calls icanhazdadjoke API |
-| "Show me Pikachu" | `invoke` — calls PokéAPI by name |
-| "Who is Rick Sanchez?" | `invoke` — calls Rick and Morty character API |
-| "What's the air quality in Beijing?" | `invoke` — calls Open-Meteo air quality API |
-| "How high are the waves near Portugal?" | `invoke` — calls Open-Meteo marine API |
-| "Search for jokes about dogs" | `invoke` — calls dadjoke search endpoint |
-| "List all Pokémon" | `invoke` — calls PokéAPI list endpoint |
-| "What's the elevation of Mount Everest?" | `invoke` — calls Open-Meteo elevation API |
+| "ニューヨークの天気は？" | `invoke` — Open-Meteo 予報 API を呼び出し |
+| "現在の BTC 価格は？" | `invoke` — Binance ティッカー API を呼び出し |
+| "ダジャレを教えて" | `invoke` — icanhazdadjoke API を呼び出し |
+| "ピカチュウを見せて" | `invoke` — PokéAPI を名前で呼び出し |
+| "Rick Sanchez は誰？" | `invoke` — Rick and Morty キャラクター API を呼び出し |
+| "北京の大気質は？" | `invoke` — Open-Meteo 大気質 API を呼び出し |
+| "ポルトガル近くの波の高さは？" | `invoke` — Open-Meteo 海洋 API を呼び出し |
+| "犬に関するジョークを検索" | `invoke` — dadjoke 検索エンドポイントを呼び出し |
+| "すべてのポケモンをリスト表示" | `invoke` — PokéAPI リストエンドポイントを呼び出し |
+| "エベレストの標高は？" | `invoke` — Open-Meteo 標高 API を呼び出し |
 
-## 5. What's Next?
+## 5. 次のステップ
 
-- [Concepts](../concepts/overview.md) — understand the architecture
-- [Configuration](../configuration/config-file.md) — customize settings
-- [CLI Commands](../cli/overview.md) — full command reference
+- [コンセプト](../concepts/overview.md) — アーキテクチャを理解する
+- [設定](../configuration/config-file.md) — 設定をカスタマイズする
+- [CLI コマンド](../cli/overview.md) — 全コマンドリファレンス

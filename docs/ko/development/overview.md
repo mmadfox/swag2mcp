@@ -1,40 +1,40 @@
-# Development Overview
+# 개발 개요
 
-## About this project
+## 이 프로젝트에 대해
 
-swag2mcp is a Go project that bridges OpenAPI/Swagger/Postman specifications with LLM agents via the Model Context Protocol (MCP). It is built with Go 1.23+ and follows strict coding conventions enforced by 80+ linters.
+swag2mcp는 OpenAPI/Swagger/Postman 명세를 Model Context Protocol(MCP)을 통해 LLM 에이전트와 연결하는 Go 프로젝트입니다. Go 1.23+로 빌드되었으며 80개 이상의 린터가 적용된 엄격한 코딩 규칙을 따릅니다.
 
-This section is written for **engineers** who want to understand the codebase, contribute, or extend swag2mcp with new auth methods, MCP tools, or integrations.
+이 섹션은 코드베이스를 이해하고, 기여하거나, 새 인증 방법, MCP 도구 또는 통합으로 swag2mcp를 확장하려는 **엔지니어**를 위해 작성되었습니다.
 
-## Development skills
+## 개발 스킬
 
-The project ships with two development skills that encode the project's conventions and patterns. You can use them or ignore them — they are tools, not rules.
+프로젝트에는 프로젝트의 규칙과 패턴을 인코딩하는 두 가지 개발 스킬이 포함되어 있습니다. 사용하거나 무시할 수 있습니다 — 도구일 뿐 규칙이 아닙니다.
 
 ### godeveloper
 
-The [godeveloper skill](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/godeveloper/SKILL.md) defines every code convention in the project:
+[godeveloper 스킬](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/godeveloper/SKILL.md)은 프로젝트의 모든 코드 규칙을 정의합니다:
 
-- **Naming** — packages, files, types, interfaces, receivers, constants
-- **Formatting** — gofmt/gofumpt/goimports/gci, 120-line limit, import ordering
-- **Error handling** — `LLMError` with 8 error codes, sentinel errors, error wrapping
-- **Interfaces** — small interfaces, composition, consumer-side definitions
-- **Concurrency** — mutex granularity, goroutine lifetimes, context passing
-- **Testing** — table-driven tests, `newTestService()`/`seedTestData()` helpers, mock generation
-- **Project patterns** — service layer, request/response structs, functional options, MCP handler pattern
+- **이름** — 패키지, 파일, 타입, 인터페이스, 리시버, 상수
+- **포맷팅** — gofmt/gofumpt/goimports/gci, 120줄 제한, 임포트 순서
+- **오류 처리** — 8개 오류 코드가 있는 `LLMError`, 센티넬 오류, 오류 래핑
+- **인터페이스** — 작은 인터페이스, 구성, 소비자 측 정의
+- **동시성** — 뮤텍스 세분성, 고루틴 수명, 컨텍스트 전달
+- **테스트** — 테이블 기반 테스트, `newTestService()`/`seedTestData()` 헬퍼, 모의 생성
+- **프로젝트 패턴** — 서비스 레이어, 요청/응답 구조체, 함수형 옵션, MCP 핸들러 패턴
 
 ### swag2mcp-cli
 
-The [swag2mcp-cli skill](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md) documents every CLI command with syntax, flags, arguments, and examples. Useful when working on CLI commands or writing documentation.
+[swag2mcp-cli 스킬](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md)은 구문, 플래그, 인수, 예시와 함께 모든 CLI 명령어를 문서화합니다. CLI 명령어 작업이나 문서 작성 시 유용합니다.
 
-## Key architectural decisions
+## 주요 아키텍처 결정
 
-### Service layer pattern
+### 서비스 레이어 패턴
 
-Every feature follows the same three-step pattern:
+모든 기능은 동일한 3단계 패턴을 따릅니다:
 
-1. **Validate** the request with `s.validateRequest(req)` (uses `go-playground/validator`)
-2. **Look up** entities from the in-memory index (returns `LLMError` with `not_found` code)
-3. **Execute** business logic and return a typed response or `LLMError`
+1. **요청 검증** `s.validateRequest(req)` 사용 (`go-playground/validator` 사용)
+2. **엔티티 조회** 메모리 내 인덱스에서 (`not_found` 코드로 `LLMError` 반환)
+3. **비즈니스 로직 실행** 및 타입화된 응답 또는 `LLMError` 반환
 
 ```go
 func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse, error) {
@@ -49,14 +49,14 @@ func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse
 }
 ```
 
-### Request/Response structs
+### 요청/응답 구조체
 
-Each method has a dedicated `{Method}Request` and `{Method}Response` struct. Request structs use `validate` tags for validation and `jsonschema` tags for documentation:
+각 메서드에는 전용 `{Method}Request` 및 `{Method}Response` 구조체가 있습니다. 요청 구조체는 검증을 위해 `validate` 태그를, 문서화를 위해 `jsonschema` 태그를 사용합니다:
 
 ```go
 type SearchRequest struct {
-    Query string `json:"query" validate:"required,min=1" jsonschema:"description=Search query supporting field filters"`
-    Limit int    `json:"limit" validate:"required,min=1,max=50" jsonschema:"description=Maximum results"`
+    Query string `json:"query" validate:"required,min=1" jsonschema:"description=필드 필터를 지원하는 검색 쿼리"`
+    Limit int    `json:"limit" validate:"required,min=1,max=50" jsonschema:"description=최대 결과 수"`
 }
 
 type SearchResponse struct {
@@ -64,9 +64,9 @@ type SearchResponse struct {
 }
 ```
 
-### Functional options
+### 함수형 옵션
 
-Configuration uses the functional options pattern:
+설정은 함수형 옵션 패턴을 사용합니다:
 
 ```go
 type Option func(*Service)
@@ -80,9 +80,9 @@ func WithDisableLLMAuth(disable bool) Option {
 }
 ```
 
-### MCP handler pattern
+### MCP 핸들러 패턴
 
-The MCP server uses a composed interface pattern. The `Svc` interface in `internal/server/mcp/handler.go` is composed from smaller interfaces (`CatalogReader`, `EndpointExplorer`, `EndpointExecutor`, `SystemInfo`, `ResponseManager`). Each handler method delegates to the service layer:
+MCP 서버는 구성된 인터페이스 패턴을 사용합니다. `internal/server/mcp/handler.go`의 `Svc` 인터페이스는 더 작은 인터페이스(`CatalogReader`, `EndpointExplorer`, `EndpointExecutor`, `SystemInfo`, `ResponseManager`)로 구성됩니다. 각 핸들러 메서드는 서비스 레이어에 위임합니다:
 
 ```go
 type handler struct {
@@ -100,54 +100,54 @@ func (h *handler) handleSearch(ctx context.Context, _ *sdkmcp.CallToolRequest, r
 
 ### LLMError
 
-All errors returned to the LLM use the `LLMError` type with one of 8 codes:
+LLM에 반환되는 모든 오류는 8개 코드 중 하나와 함께 `LLMError` 타입을 사용합니다:
 
-| Code | When |
-|------|------|
-| `validation_failed` | Invalid input (wrong ID format, missing required fields) |
-| `not_found` | Entity not found in index |
-| `rate_limit` | Per-endpoint 10s cooldown exceeded |
-| `invoke_error` | HTTP request/response failures |
-| `config_error` | Configuration loading or validation failure |
-| `workspace_error` | Workspace directory or file operation failure |
-| `parse_error` | Spec file parsing failure |
-| `auth_error` | Authentication token retrieval failure |
+| 코드 | 발생 시기 |
+|------|----------|
+| `validation_failed` | 잘못된 입력 (잘못된 ID 형식, 필수 필드 누락) |
+| `not_found` | 인덱스에서 엔티티를 찾을 수 없음 |
+| `rate_limit` | 엔드포인트별 10초 쿨다운 초과 |
+| `invoke_error` | HTTP 요청/응답 실패 |
+| `config_error` | 설정 로드 또는 검증 실패 |
+| `workspace_error` | 워크스페이스 디렉토리 또는 파일 작업 실패 |
+| `parse_error` | 명세 파일 파싱 실패 |
+| `auth_error` | 인증 토큰 검색 실패 |
 
-Messages must explain what went wrong AND what to do next, in plain language suitable for an LLM consumer.
+메시지는 무엇이 잘못되었는지와 **다음에 무엇을 해야 하는지**를 LLM 소비자에게 적합한 평이한 언어로 설명해야 합니다.
 
-### ID generation
+### ID 생성
 
-All IDs are deterministic MD5 hashes:
+모든 ID는 결정론적 MD5 해시입니다:
 
 ```go
-id.Domain("meteo")                          // 32-char hex
-id.Collection("meteo", "Forecast")          // 32-char hex
-id.Tag("meteo", "Forecast", "pets")         // 32-char hex
+id.Domain("meteo")                          // 32자 16진수
+id.Collection("meteo", "Forecast")          // 32자 16진수
+id.Tag("meteo", "Forecast", "pets")         // 32자 16진수
 id.Method("meteo", "Forecast", "pets", "GET", "/v2/pet/{petId}")
 ```
 
-### Config cascade
+### 설정 계단식
 
-Configuration cascades through three levels: **global → spec → collection**. Each level overrides the previous. All `http_client` settings can be overridden at every level. Headers and cookies are merged; simple values are replaced.
+설정은 **전역 → spec → collection**의 세 수준으로 계단식으로 적용됩니다. 각 수준이 이전 수준을 재정의합니다. 모든 `http_client` 설정은 모든 수준에서 재정의할 수 있습니다. 헤더와 쿠키는 병합되고, 단순 값은 대체됩니다.
 
-## Quick reference
+## 빠른 참조
 
-| Area | Convention |
-|------|------------|
-| **Go version** | 1.23+ |
-| **Formatters** | gofmt, gofumpt, goimports, gci |
-| **Line length** | 120 characters |
-| **Linters** | 80+ in `.golangci.yml` |
-| **Error type** | `LLMError` with 8 codes |
-| **Mock framework** | `go.uber.org/mock` |
-| **Test helpers** | `newTestService()`, `seedTestData()` |
-| **Config format** | YAML with cascade |
-| **Auth dispatch** | `UnmarshalYAML` reads `type` field |
-| **ID generation** | MD5-based (`id.Domain()`, `id.Collection()`, etc.) |
-| **Rate limit** | 10s per endpoint for `invoke` |
-| **Response size** | 1 MB default, saved to file when exceeded |
-| **Coverage target** | 80%+ for core packages |
-| **Build** | `make build` |
-| **Lint** | `make lint` |
-| **Test** | `go test ./...` |
-| **Generate** | `go generate ./...` |
+| 영역 | 규칙 |
+|------|------|
+| **Go 버전** | 1.23+ |
+| **포맷터** | gofmt, gofumpt, goimports, gci |
+| **줄 길이** | 120자 |
+| **린터** | `.golangci.yml`에 80개 이상 |
+| **오류 타입** | 8개 코드의 `LLMError` |
+| **모의 프레임워크** | `go.uber.org/mock` |
+| **테스트 헬퍼** | `newTestService()`, `seedTestData()` |
+| **설정 형식** | 계단식 YAML |
+| **인증 디스패치** | `UnmarshalYAML`이 `type` 필드 읽기 |
+| **ID 생성** | MD5 기반 (`id.Domain()`, `id.Collection()` 등) |
+| **속도 제한** | `invoke`용 엔드포인트당 10초 |
+| **응답 크기** | 기본 1MB, 초과 시 파일에 저장 |
+| **커버리지 목표** | 핵심 패키지 80%+ |
+| **빌드** | `make build` |
+| **린트** | `make lint` |
+| **테스트** | `go test ./...` |
+| **생성** | `go generate ./...` |

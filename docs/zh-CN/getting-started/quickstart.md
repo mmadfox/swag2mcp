@@ -1,30 +1,30 @@
-# Quick Start
+# 快速开始
 
-Get swag2mcp running in 2 minutes.
+2 分钟内让 swag2mcp 运行起来。
 
-## 1. Initialize
+## 1. 初始化
 
-### Home directory (recommended)
+### 主目录（推荐）
 
-One-time setup for your entire system. Config is stored in your home folder.
+一次性设置，适用于整个系统。配置存储在你的主文件夹中。
 
 ::: code-group
 
 ```bash [macOS / Linux]
 swag2mcp init
-# Creates ~/.swag2mcp/swag2mcp.yaml
+# 创建 ~/.swag2mcp/swag2mcp.yaml
 ```
 
 ```powershell [Windows]
 swag2mcp.exe init
-# Creates %USERPROFILE%\.swag2mcp\swag2mcp.yaml
+# 创建 %USERPROFILE%\.swag2mcp\swag2mcp.yaml
 ```
 
 :::
 
-### Project directory
+### 项目目录
 
-For an isolated workspace inside your project.
+用于项目内的隔离工作区。
 
 ::: code-group
 
@@ -38,30 +38,30 @@ mkdir ./swag2mcp; swag2mcp.exe init ./swag2mcp
 
 :::
 
-### From ZIP
+### 从 ZIP
 
-If you have a ready-made workspace (e.g., from a colleague):
+如果你有现成的工作区（例如来自同事）：
 
 ```bash
 swag2mcp import --from-zip workspace.zip
 ```
 
-## 2. Install Agent Skills (recommended)
+## 2. 安装智能体技能（推荐）
 
-Install the swag2mcp skills to teach your AI agent all commands, flags, config format, and real-world examples.
+安装 swag2mcp 技能，教会你的 AI 智能体所有命令、标志、配置格式和真实示例。
 
-Ask your agent:
+询问你的智能体：
 
 ```bash
 "Add the swag2mcp-cli skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md"
 "Add the swag2mcp-format skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md"
 ```
 
-> Some IDEs require a restart after adding skills.
+> 某些 IDE 在添加技能后需要重启。
 
-## 3. LLM Client / IDE Configuration
+## 3. LLM 客户端 / IDE 配置
 
-Configure your IDE to connect to swag2mcp. The IDE will start the MCP server automatically when needed.
+配置你的 IDE 以连接到 swag2mcp。IDE 会在需要时自动启动 MCP 服务器。
 
 ::: code-group
 
@@ -102,30 +102,30 @@ Configure your IDE to connect to swag2mcp. The IDE will start the MCP server aut
 
 :::
 
-For other IDEs (Cursor, VS Code, JetBrains) see the [Integration guide](../integration/opencode.md).
+对于其他 IDE（Cursor、VS Code、JetBrains），请参见[集成指南](../integration/opencode.md)。
 
-> If you initialized the workspace at a custom path (e.g. `./swag2mcp`), use the full path in the command:
+> 如果你在自定义路径（例如 `./swag2mcp`）初始化了工作区，请在命令中使用完整路径：
 > `"command": ["swag2mcp", "mcp", "/absolute/path/to/swag2mcp"]`
 
-> **After any config change, restart the MCP server** for the changes to take effect.
+> **任何配置更改后，重启 MCP 服务器** 以使更改生效。
 
-## 4. Start MCP Server
+## 4. 启动 MCP 服务器
 
-### stdio (default) — for local IDE
+### stdio（默认）— 用于本地 IDE
 
-Nothing to configure. Your IDE starts swag2mcp automatically via the config above.
+无需配置。你的 IDE 通过上述配置自动启动 swag2mcp。
 
 ```bash
 swag2mcp mcp
 ```
 
-### SSE / Streamable HTTP — for remote access
+### SSE / Streamable HTTP — 用于远程访问
 
 ```bash
 swag2mcp mcp --transport sse --http-addr :8080
 ```
 
-Or configure in `swag2mcp.yaml`:
+或在 `swag2mcp.yaml` 中配置：
 
 ```yaml
 mcp:
@@ -134,43 +134,43 @@ mcp:
   path: "/mcp"
 ```
 
-See [MCP Server reference](../configuration/mcp-server.md) for all flags.
+所有标志请参见[MCP 服务器参考](../configuration/mcp-server.md)。
 
-### Filter specs by tags
+### 按标签过滤 spec
 
 ```bash
 swag2mcp mcp --tags weather,public
 ```
 
-Only specs with matching tags will be available to the LLM.
+只有具有匹配标签的 spec 才会对 LLM 可用。
 
-### Verify it's working
+### 验证是否正常工作
 
-After connecting, ask your LLM agent:
+连接后，询问你的 LLM 智能体：
 
 ```bash
 "What MCP tools do you support?"
 ```
 
-If the agent lists swag2mcp tools (`spec_list`, `search`, `invoke`, etc.) — everything is working.
+如果智能体列出了 swag2mcp 工具（`spec_list`、`search`、`invoke` 等）— 一切正常。
 
-### Example queries to try
+### 可以尝试的示例查询
 
-| Ask your agent | What happens |
+| 询问你的智能体 | 发生了什么 |
 |-------|-------------|
-| "What's the weather in New York?" | `invoke` — calls Open-Meteo forecast API |
-| "What's the current BTC price?" | `invoke` — calls Binance ticker API |
-| "Tell me a dad joke" | `invoke` — calls icanhazdadjoke API |
-| "Show me Pikachu" | `invoke` — calls PokéAPI by name |
-| "Who is Rick Sanchez?" | `invoke` — calls Rick and Morty character API |
-| "What's the air quality in Beijing?" | `invoke` — calls Open-Meteo air quality API |
-| "How high are the waves near Portugal?" | `invoke` — calls Open-Meteo marine API |
-| "Search for jokes about dogs" | `invoke` — calls dadjoke search endpoint |
-| "List all Pokémon" | `invoke` — calls PokéAPI list endpoint |
-| "What's the elevation of Mount Everest?" | `invoke` — calls Open-Meteo elevation API |
+| "纽约的天气怎么样？" | `invoke` — 调用 Open-Meteo 预报 API |
+| "当前 BTC 价格是多少？" | `invoke` — 调用 Binance 行情 API |
+| "给我讲个冷笑话" | `invoke` — 调用 icanhazdadjoke API |
+| "给我看看皮卡丘" | `invoke` — 按名称调用 PokéAPI |
+| "谁是 Rick Sanchez？" | `invoke` — 调用 Rick and Morty 角色 API |
+| "北京的空气质量如何？" | `invoke` — 调用 Open-Meteo 空气质量 API |
+| "葡萄牙附近的海浪有多高？" | `invoke` — 调用 Open-Meteo 海洋 API |
+| "搜索关于狗的笑话" | `invoke` — 调用 dadjoke 搜索端点 |
+| "列出所有宝可梦" | `invoke` — 调用 PokéAPI 列表端点 |
+| "珠穆朗玛峰的海拔是多少？" | `invoke` — 调用 Open-Meteo 海拔 API |
 
-## 5. What's Next?
+## 5. 下一步是什么？
 
-- [Concepts](../concepts/overview.md) — understand the architecture
-- [Configuration](../configuration/config-file.md) — customize settings
-- [CLI Commands](../cli/overview.md) — full command reference
+- [概念](../concepts/overview.md) — 了解架构
+- [配置](../configuration/config-file.md) — 自定义设置
+- [CLI 命令](../cli/overview.md) — 完整命令参考

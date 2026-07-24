@@ -1,12 +1,12 @@
-# Environment Variables
+# Переменные окружения
 
-## Overview
+## Обзор
 
-swag2mcp supports environment variable substitution in the configuration file using `$(VAR_NAME)` syntax. This lets you keep sensitive data (tokens, passwords, keys) out of the YAML file.
+swag2mcp поддерживает подстановку переменных окружения в конфигурационном файле с использованием синтаксиса `$(VAR_NAME)`. Это позволяет хранить чувствительные данные (токены, пароли, ключи) вне YAML-файла.
 
-## How it works
+## Как это работает
 
-When swag2mcp starts, it scans the configuration for `$(VAR_NAME)` patterns and replaces them with the value of the corresponding environment variable.
+При запуске swag2mcp сканирует конфигурацию на предмет шаблонов `$(VAR_NAME)` и заменяет их значением соответствующей переменной окружения.
 
 ```yaml
 specs:
@@ -17,12 +17,12 @@ specs:
         token: "$(API_TOKEN)"
 ```
 
-If the environment variable `API_TOKEN` is set, it will be substituted. If it is not set, the value becomes empty.
+Если переменная окружения `API_TOKEN` установлена, она будет подставлена. Если не установлена, значение становится пустым.
 
-## Where `$(VAR)` is resolved
+## Где `$(VAR)` разрешается
 
-| Field | Example |
-|-------|---------|
+| Поле | Пример |
+|------|--------|
 | Auth `token` (bearer) | `token: "$(API_TOKEN)"` |
 | Auth `username` / `password` (basic, digest) | `password: "$(API_PASSWORD)"` |
 | Auth `client_id` / `client_secret` (oauth2-cc, oauth2-pwd) | `client_secret: "$(OAUTH_SECRET)"` |
@@ -32,13 +32,13 @@ If the environment variable `API_TOKEN` is set, it will be substituted. If it is
 | HTTP client headers | `"X-API-Key": "$(API_KEY)"` |
 | HTTP client cookie values | `value: "$(SESSION_TOKEN)"` |
 
-## Where `$(VAR)` is NOT resolved
+## Где `$(VAR)` НЕ разрешается
 
-- Base URLs (`base_url`)
-- Collection locations (`location`)
-- Spec domain names (`domain`)
+- Базовые URL (`base_url`)
+- Расположения коллекций (`location`)
+- Доменные имена спецификаций (`domain`)
 
-## Example
+## Пример
 
 ```bash
 export API_TOKEN="eyJhbGciOiJIUzI1NiIs..."
@@ -47,16 +47,16 @@ export MCP_TOKEN="my-secret-token"
 swag2mcp mcp
 ```
 
-## Security best practices
+## Лучшие практики безопасности
 
-- **Never** store secrets directly in the YAML file
-- Use environment variables or an external secret manager
-- Add the YAML file to `.gitignore` if it contains any hardcoded secrets
-- Set environment variables in your shell profile, IDE configuration, or deployment pipeline
+- **Никогда** не храните секреты напрямую в YAML-файле
+- Используйте переменные окружения или внешний менеджер секретов
+- Добавьте YAML-файл в `.gitignore`, если он содержит любые жёстко закодированные секреты
+- Устанавливайте переменные окружения в профиле оболочки, конфигурации IDE или пайплайне развёртывания
 
-## Syntax details
+## Детали синтаксиса
 
-- `$(VAR_NAME)` — standard syntax
-- `$( VAR_NAME )` — whitespace inside parentheses is allowed and trimmed
-- `$()` — empty variable name returns the original string unchanged
-- Nested `$(...)` patterns are not resolved
+- `$(VAR_NAME)` — стандартный синтаксис
+- `$( VAR_NAME )` — пробелы внутри скобок разрешены и обрезаются
+- `$()` — пустое имя переменной возвращает исходную строку без изменений
+- Вложенные шаблоны `$(...)` не разрешаются

@@ -1,12 +1,12 @@
-# Environment Variables
+# Umgebungsvariablen
 
-## Overview
+## Übersicht
 
-swag2mcp supports environment variable substitution in the configuration file using `$(VAR_NAME)` syntax. This lets you keep sensitive data (tokens, passwords, keys) out of the YAML file.
+swag2mcp unterstützt die Substitution von Umgebungsvariablen in der Konfigurationsdatei mit der Syntax `$(VAR_NAME)`. Dadurch können Sie vertrauliche Daten (Tokens, Passwörter, Schlüssel) aus der YAML-Datei heraushalten.
 
-## How it works
+## Wie es funktioniert
 
-When swag2mcp starts, it scans the configuration for `$(VAR_NAME)` patterns and replaces them with the value of the corresponding environment variable.
+Beim Start durchsucht swag2mcp die Konfiguration nach `$(VAR_NAME)`-Mustern und ersetzt sie durch den Wert der entsprechenden Umgebungsvariable.
 
 ```yaml
 specs:
@@ -17,28 +17,28 @@ specs:
         token: "$(API_TOKEN)"
 ```
 
-If the environment variable `API_TOKEN` is set, it will be substituted. If it is not set, the value becomes empty.
+Wenn die Umgebungsvariable `API_TOKEN` gesetzt ist, wird sie ersetzt. Wenn sie nicht gesetzt ist, wird der Wert leer.
 
-## Where `$(VAR)` is resolved
+## Wo `$(VAR)` aufgelöst wird
 
-| Field | Example |
-|-------|---------|
+| Feld | Beispiel |
+|------|----------|
 | Auth `token` (bearer) | `token: "$(API_TOKEN)"` |
 | Auth `username` / `password` (basic, digest) | `password: "$(API_PASSWORD)"` |
 | Auth `client_id` / `client_secret` (oauth2-cc, oauth2-pwd) | `client_secret: "$(OAUTH_SECRET)"` |
 | Auth `api_key` / `secret_key` (hmac) | `api_key: "$(BINANCE_API_KEY)"` |
 | Auth `domain` (script) | `domain: "$(AUTH_DOMAIN)"` |
-| MCP server token | `token: "$(MCP_TOKEN)"` |
-| HTTP client headers | `"X-API-Key": "$(API_KEY)"` |
-| HTTP client cookie values | `value: "$(SESSION_TOKEN)"` |
+| MCP-Server-Token | `token: "$(MCP_TOKEN)"` |
+| HTTP-Client-Header | `"X-API-Key": "$(API_KEY)"` |
+| HTTP-Client-Cookie-Werte | `value: "$(SESSION_TOKEN)"` |
 
-## Where `$(VAR)` is NOT resolved
+## Wo `$(VAR)` NICHT aufgelöst wird
 
-- Base URLs (`base_url`)
-- Collection locations (`location`)
-- Spec domain names (`domain`)
+- Basis-URLs (`base_url`)
+- Collection-Speicherorte (`location`)
+- Spec-Domain-Namen (`domain`)
 
-## Example
+## Beispiel
 
 ```bash
 export API_TOKEN="eyJhbGciOiJIUzI1NiIs..."
@@ -47,16 +47,16 @@ export MCP_TOKEN="my-secret-token"
 swag2mcp mcp
 ```
 
-## Security best practices
+## Sicherheitshinweise
 
-- **Never** store secrets directly in the YAML file
-- Use environment variables or an external secret manager
-- Add the YAML file to `.gitignore` if it contains any hardcoded secrets
-- Set environment variables in your shell profile, IDE configuration, or deployment pipeline
+- **Speichern Sie Geheimnisse niemals direkt** in der YAML-Datei
+- Verwenden Sie Umgebungsvariablen oder einen externen Geheimnisverwalter
+- Fügen Sie die YAML-Datei zu `.gitignore` hinzu, wenn sie hartcodierte Geheimnisse enthält
+- Setzen Sie Umgebungsvariablen in Ihrem Shell-Profil, Ihrer IDE-Konfiguration oder Ihrer Bereitstellungspipeline
 
-## Syntax details
+## Syntax-Details
 
-- `$(VAR_NAME)` — standard syntax
-- `$( VAR_NAME )` — whitespace inside parentheses is allowed and trimmed
-- `$()` — empty variable name returns the original string unchanged
-- Nested `$(...)` patterns are not resolved
+- `$(VAR_NAME)` — Standardsyntax
+- `$( VAR_NAME )` — Leerzeichen innerhalb der Klammern sind erlaubt und werden entfernt
+- `$()` — leerer Variablenname gibt die ursprüngliche Zeichenfolge unverändert zurück
+- Verschachtelte `$(...)`-Muster werden nicht aufgelöst

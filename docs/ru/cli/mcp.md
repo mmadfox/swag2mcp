@@ -1,121 +1,121 @@
 # mcp
 
-## Purpose
+## Назначение
 
-Start the **MCP (Model Context Protocol) server** — the primary mode for LLM integration. This is what you run to give an AI agent (Claude, Cursor, OpenCode, etc.) access to your APIs through 16 MCP tools.
+Запустить **MCP-сервер (Model Context Protocol)** — основной режим для интеграции с LLM. Это то, что вы запускаете, чтобы дать AI-агенту (Claude, Cursor, OpenCode и др.) доступ к вашим API через 16 MCP-инструментов.
 
-## When to use
+## Когда использовать
 
-- You want to connect an LLM agent to your APIs
-- You are configuring an IDE (VS Code, Cursor, JetBrains) or desktop app (Claude Desktop)
-- You need to expose your APIs via the MCP protocol
-- You are testing the MCP server before integration
+- Вы хотите подключить LLM-агента к вашим API
+- Вы настраиваете IDE (VS Code, Cursor, JetBrains) или десктопное приложение (Claude Desktop)
+- Вам нужно предоставить доступ к вашим API через протокол MCP
+- Вы тестируете MCP-сервер перед интеграцией
 
-## Syntax
+## Синтаксис
 
 ```bash
 swag2mcp mcp [path] [flags]
 ```
 
-## Arguments
+## Аргументы
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Аргумент | Позиция | Обязательно | Описание |
+|----------|----------|-------------|----------|
+| `path` | 1 | Нет | Директория рабочей области. Если не указан, разрешается по правилам разрешения пути. |
 
-## Flags
+## Флаги
 
-| Flag | Shorthand | Type | Default | Description |
+| Флаг | Сокращение | Тип | По умолчанию | Описание |
 |------|-----------|------|---------|-------------|
-| `--transport` | | `string` | `"stdio"` | MCP transport: `stdio`, `sse`, `streamable-http` |
-| `--http-addr` | | `string` | `":8080"` | HTTP server address (for `sse` and `streamable-http`) |
-| `--http-path` | | `string` | `"/mcp"` | HTTP path for the MCP handler |
-| `--auth-token` | | `string` | `""` | Bearer token for HTTP transport authentication |
-| `--logfile` | `-f` | `string` | `""` | Log file path. If unset, logs to stderr. |
-| `--disable-llm-auth` | | `bool` | `true` | Remove the `auth` tool from the MCP tool list |
-| `--dump-dir` | | `string` | `""` | Directory to dump HTTP requests for debugging |
-| `--tags` | `-t` | `string` | `""` | Filter specs by tags (comma-separated) |
+| `--transport` | | `string` | `"stdio"` | MCP-транспорт: `stdio`, `sse`, `streamable-http` |
+| `--http-addr` | | `string` | `":8080"` | Адрес HTTP-сервера (для `sse` и `streamable-http`) |
+| `--http-path` | | `string` | `"/mcp"` | HTTP-путь для MCP-обработчика |
+| `--auth-token` | | `string` | `""` | Bearer-токен для аутентификации HTTP-транспорта |
+| `--logfile` | `-f` | `string` | `""` | Путь к файлу лога. Если не указан, логи пишутся в stderr. |
+| `--disable-llm-auth` | | `bool` | `true` | Удалить инструмент `auth` из списка MCP-инструментов |
+| `--dump-dir` | | `string` | `""` | Директория для сохранения HTTP-запросов (отладка) |
+| `--tags` | `-t` | `string` | `""` | Фильтр спецификаций по тегам (через запятую) |
 
-## How it works
+## Как это работает
 
-### stdio transport (default)
+### stdio транспорт (по умолчанию)
 
-Used when the MCP server is launched as a subprocess by the LLM client (IDE, Claude Desktop, etc.). The server communicates over standard input/output.
+Используется, когда MCP-сервер запускается как подпроцесс LLM-клиентом (IDE, Claude Desktop и т.д.). Сервер общается через стандартный ввод/вывод.
 
 ```bash
 swag2mcp mcp
 ```
 
-### SSE transport
+### SSE транспорт
 
-Server-Sent Events transport for HTTP-based communication. Requires the MCP handshake sequence.
+Server-Sent Events транспорт для HTTP-взаимодействия. Требует последовательности рукопожатия MCP.
 
 ```bash
 swag2mcp mcp --transport sse --http-addr :8080
 ```
 
-### Streamable HTTP transport
+### Streamable HTTP транспорт
 
-Modern HTTP transport that supports streaming responses.
+Современный HTTP-транспорт с поддержкой потоковых ответов.
 
 ```bash
 swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 ```
 
-### With authentication
+### С аутентификацией
 
-Protect the HTTP endpoint with a bearer token:
+Защитите HTTP-эндпоинт с помощью bearer-токена:
 
 ```bash
 swag2mcp mcp --transport sse --http-addr :8080 --auth-token "my-secret"
 ```
 
-### With tag filtering
+### С фильтрацией по тегам
 
-Only load specs with specific tags:
+Загружать только спецификации с определёнными тегами:
 
 ```bash
 swag2mcp mcp --tags=public
 ```
 
-### With auth tool enabled (debug mode)
+### С включённым инструментом auth (режим отладки)
 
-Allow the LLM to request fresh tokens via the `auth` tool:
+Разрешить LLM запрашивать свежие токены через инструмент `auth`:
 
 ```bash
 swag2mcp mcp --disable-llm-auth=false
 ```
 
-### With request dump directory
+### С директорией для дампов запросов
 
-Save all HTTP requests for debugging:
+Сохранять все HTTP-запросы для отладки:
 
 ```bash
 swag2mcp mcp --dump-dir ./dumps
 ```
 
-## MCP HTTP Transport — Handshake Protocol
+## MCP HTTP-транспорт — протокол рукопожатия
 
-When using `sse` or `streamable-http`, the MCP protocol requires a specific handshake. Tool calls will fail before initialization:
+При использовании `sse` или `streamable-http` протокол MCP требует определённого рукопожатия. Вызовы инструментов будут завершаться ошибкой до инициализации:
 
 ```
-Step 1: POST /mcp → {"method":"initialize", ...}
-Step 2: POST /mcp → {"method":"notifications/initialized"}
-Step 3: POST /mcp → {"method":"tools/list", ...}   ← now works
+Шаг 1: POST /mcp → {"method":"initialize", ...}
+Шаг 2: POST /mcp → {"method":"notifications/initialized"}
+Шаг 3: POST /mcp → {"method":"tools/list", ...}   ← теперь работает
 ```
 
 ### Health check
 
-Works without initialization:
+Работает без инициализации:
 
 ```bash
 curl http://localhost:8080/health
 # → {"status":"ok","version":"v1.2.0"}
 ```
 
-## IDE Configuration Examples
+## Примеры конфигурации IDE
 
-### VS Code (`.vscode/settings.json` or global settings)
+### VS Code (`.vscode/settings.json` или глобальные настройки)
 
 ```json
 {
@@ -123,59 +123,59 @@ curl http://localhost:8080/health
     "servers": {
       "swag2mcp": {
         "command": "swag2mcp",
-        "args": ["mcp", "/absolute/path/to/.swag2mcp"]
+        "args": ["mcp", "/абсолютный/путь/до/.swag2mcp"]
       }
     }
   }
 }
 ```
 
-### Cursor / Windsurf (`~/.cursor/mcp.json` or project `.cursor/mcp.json`)
+### Cursor / Windsurf (`~/.cursor/mcp.json` или проект `.cursor/mcp.json`)
 
 ```json
 {
   "mcpServers": {
     "swag2mcp": {
       "command": "swag2mcp",
-      "args": ["mcp", "/absolute/path/to/.swag2mcp"]
+      "args": ["mcp", "/абсолютный/путь/до/.swag2mcp"]
     }
   }
 }
 ```
 
-### Claude Desktop (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS)
+### Claude Desktop (`~/Library/Application Support/Claude/claude_desktop_config.json` на macOS)
 
 ```json
 {
   "mcpServers": {
     "swag2mcp": {
       "command": "swag2mcp",
-      "args": ["mcp", "/absolute/path/to/.swag2mcp"]
+      "args": ["mcp", "/абсолютный/путь/до/.swag2mcp"]
     }
   }
 }
 ```
 
-### JetBrains IDEs (Settings → Tools → MCP)
+### JetBrains IDE (Настройки → Инструменты → MCP)
 
-- Name: `swag2mcp`
-- Command: `swag2mcp`
-- Arguments: `mcp /absolute/path/to/.swag2mcp`
+- Имя: `swag2mcp`
+- Команда: `swag2mcp`
+- Аргументы: `mcp /абсолютный/путь/до/.swag2mcp`
 
-> **Always use an absolute path** to the workspace directory in IDE config. Relative paths may fail depending on the IDE's working directory.
+> **Всегда используйте абсолютный путь** к директории рабочей области в конфиге IDE. Относительные пути могут не работать в зависимости от рабочей директории IDE.
 
-## Output
+## Вывод
 
-On success, the server prints:
+При успешном запуске сервер выводит:
 
 ```
 MCP server listening on http://127.0.0.1:8080/mcp
 ```
 
-## Nuances
+## Нюансы
 
-- **No auto-init:** If the config file does not exist, `mcp` returns an error: `"configuration not found at <path>"`. Run `init` first.
-- **`--disable-llm-auth` (default: `true`):** When enabled, the `auth` tool is removed from the MCP tool list entirely. The LLM cannot see or request tokens. Auth still works — tokens are obtained through the standard config mechanism, not via the LLM. This mode is recommended for **production**. For **debugging** or when using short-lived tokens, set `--disable-llm-auth=false` to let the LLM request fresh tokens via the `auth` tool.
-- **YAML config fallback:** If a CLI flag is not explicitly set, the value is taken from the `mcp` section in `swag2mcp.yaml` (if present). This allows you to configure the server in the config file instead of passing flags every time.
-- **Response cleanup:** On startup, responses older than 48 hours are automatically removed from the `responses/` directory.
-- **Path resolution warning:** When `[path]` is omitted, `mcp` searches for `swag2mcp.yaml` in the current directory first, then falls back to `~/.swag2mcp/`. If you run the command from the wrong directory, it may load a different workspace than intended. **Always specify `[path]` explicitly when running as a service or in IDE config.**
+- **Нет автоинициализации:** Если файл конфигурации не существует, `mcp` возвращает ошибку: `"configuration not found at <path>"`. Сначала выполните `init`.
+- **`--disable-llm-auth` (по умолчанию: `true`):** Когда включён, инструмент `auth` полностью удаляется из списка MCP-инструментов. LLM не может видеть или запрашивать токены. Аутентификация всё равно работает — токены получаются через стандартный механизм конфига, а не через LLM. Этот режим рекомендуется для **продакшена**. Для **отладки** или при использовании короткоживущих токенов установите `--disable-llm-auth=false`, чтобы LLM могла запрашивать свежие токены через инструмент `auth`.
+- **Резервный YAML-конфиг:** Если флаг CLI не установлен явно, значение берётся из раздела `mcp` в `swag2mcp.yaml` (если он присутствует). Это позволяет настроить сервер в файле конфигурации вместо передачи флагов каждый раз.
+- **Очистка ответов:** При запуске ответы старше 48 часов автоматически удаляются из директории `responses/`.
+- **Предупреждение о разрешении пути:** Когда `[path]` не указан, `mcp` сначала ищет `swag2mcp.yaml` в текущей директории, затем переключается на `~/.swag2mcp/`. Если вы запускаете команду из неправильной директории, может загрузиться не та рабочая область. **Всегда указывайте `[path]` явно при запуске в качестве сервиса или в конфиге IDE.**

@@ -1,49 +1,49 @@
-# Project Structure
+# プロジェクト構造
 
 ```
 swag2mcp/
 ├── cmd/
-│   ├── swag2mcp/          # Main binary
+│   ├── swag2mcp/          # メインバイナリ
 │   │   └── main.go
-│   └── swag2mcp-mock/     # Mock server
+│   └── swag2mcp-mock/     # モックサーバー
 │       └── main.go
 ├── internal/
-│   ├── auth/              # 9 auth methods
-│   ├── cache/             # Spec caching
-│   ├── commands/          # 13 CLI commands (cobra)
-│   ├── config/            # YAML configuration
-│   ├── env/               # Environment variables
-│   ├── httpclient/        # HTTP client
-│   ├── id/                # MD5 ID generation
-│   ├── index/             # Full-text search (bluge)
-│   ├── model/             # Data models
-│   ├── reader/            # Large response reading
+│   ├── auth/              # 9 つの認証方法
+│   ├── cache/             # スペックキャッシュ
+│   ├── commands/          # 13 の CLI コマンド（cobra）
+│   ├── config/            # YAML 設定
+│   ├── env/               # 環境変数
+│   ├── httpclient/        # HTTP クライアント
+│   ├── id/                # MD5 ID 生成
+│   ├── index/             # 全文検索（bluge）
+│   ├── model/             # データモデル
+│   ├── reader/            # 大規模レスポンス読み取り
 │   ├── server/
-│   │   ├── mcp/           # MCP server (19 tools)
-│   │   └── mockserver/    # Mock server
-│   ├── service/           # Business logic
-│   ├── spec/              # Spec parsers
-│   ├── tui/               # TUI interface
-│   └── workspace/         # Workspace management
-├── specs/                 # Sample specs
-├── tests/                 # Integration tests
-├── docs/                  # Documentation
-├── examples/              # Config examples
-└── playground/            # Development sandbox
+│   │   ├── mcp/           # MCP サーバー（19 ツール）
+│   │   └── mockserver/    # モックサーバー
+│   ├── service/           # ビジネスロジック
+│   ├── spec/              # スペックパーサー
+│   ├── tui/               # TUI インターフェース
+│   └── workspace/         # ワークスペース管理
+├── specs/                 # サンプルスペック
+├── tests/                 # 統合テスト
+├── docs/                  # ドキュメント
+├── examples/              # 設定例
+└── playground/            # 開発サンドボックス
 ```
 
-## Key Packages
+## 主要パッケージ
 
-| Package | Description |
+| パッケージ | 説明 |
 |---------|-------------|
-| `auth` | 9 authentication methods |
-| `cache` | Disk-based caching with TTL |
-| `commands` | Cobra CLI commands |
-| `config` | YAML config with cascade |
-| `httpclient` | Configurable HTTP client |
-| `index` | Full-text search (bluge) |
-| `server/mcp` | MCP server (3 transports) |
-| `service` | Business logic (core) |
-| `spec` | OpenAPI/Swagger/Postman parsers |
+| `auth` | 9 つの認証方法 |
+| `cache` | TTL 付きディスクベースのキャッシュ |
+| `commands` | Cobra CLI コマンド |
+| `config` | カスケード付き YAML 設定 |
+| `httpclient` | 設定可能な HTTP クライアント |
+| `index` | 全文検索（bluge） |
+| `server/mcp` | MCP サーバー（3 つのトランスポート） |
+| `service` | ビジネスロジック（コア） |
+| `spec` | OpenAPI/Swagger/Postman パーサー |
 | `tui` | Bubbletea TUI |
-| `workspace` | File management |
+| `workspace` | ファイル管理 |

@@ -1,49 +1,49 @@
-# Project Structure
+# Структура проекта
 
 ```
 swag2mcp/
 ├── cmd/
-│   ├── swag2mcp/          # Main binary
+│   ├── swag2mcp/          # Основной бинарник
 │   │   └── main.go
-│   └── swag2mcp-mock/     # Mock server
+│   └── swag2mcp-mock/     # Мок-сервер
 │       └── main.go
 ├── internal/
-│   ├── auth/              # 9 auth methods
-│   ├── cache/             # Spec caching
-│   ├── commands/          # 13 CLI commands (cobra)
-│   ├── config/            # YAML configuration
-│   ├── env/               # Environment variables
-│   ├── httpclient/        # HTTP client
-│   ├── id/                # MD5 ID generation
-│   ├── index/             # Full-text search (bluge)
-│   ├── model/             # Data models
-│   ├── reader/            # Large response reading
+│   ├── auth/              # 9 методов аутентификации
+│   ├── cache/             # Кэширование спецификаций
+│   ├── commands/          # 13 CLI-команд (cobra)
+│   ├── config/            # YAML-конфигурация
+│   ├── env/               # Переменные окружения
+│   ├── httpclient/        # HTTP-клиент
+│   ├── id/                # Генерация MD5 ID
+│   ├── index/             # Полнотекстовый поиск (bluge)
+│   ├── model/             # Модели данных
+│   ├── reader/            # Чтение больших ответов
 │   ├── server/
-│   │   ├── mcp/           # MCP server (19 tools)
-│   │   └── mockserver/    # Mock server
-│   ├── service/           # Business logic
-│   ├── spec/              # Spec parsers
-│   ├── tui/               # TUI interface
-│   └── workspace/         # Workspace management
-├── specs/                 # Sample specs
-├── tests/                 # Integration tests
-├── docs/                  # Documentation
-├── examples/              # Config examples
-└── playground/            # Development sandbox
+│   │   ├── mcp/           # MCP-сервер (19 инструментов)
+│   │   └── mockserver/    # Мок-сервер
+│   ├── service/           # Бизнес-логика
+│   ├── spec/              # Парсеры спецификаций
+│   ├── tui/               # TUI-интерфейс
+│   └── workspace/         # Управление рабочей областью
+├── specs/                 # Примеры спецификаций
+├── tests/                 # Интеграционные тесты
+├── docs/                  # Документация
+├── examples/              # Примеры конфигов
+└── playground/            # Песочница для разработки
 ```
 
-## Key Packages
+## Ключевые пакеты
 
-| Package | Description |
-|---------|-------------|
-| `auth` | 9 authentication methods |
-| `cache` | Disk-based caching with TTL |
-| `commands` | Cobra CLI commands |
-| `config` | YAML config with cascade |
-| `httpclient` | Configurable HTTP client |
-| `index` | Full-text search (bluge) |
-| `server/mcp` | MCP server (3 transports) |
-| `service` | Business logic (core) |
-| `spec` | OpenAPI/Swagger/Postman parsers |
+| Пакет | Описание |
+|-------|----------|
+| `auth` | 9 методов аутентификации |
+| `cache` | Дисковое кэширование с TTL |
+| `commands` | Cobra CLI-команды |
+| `config` | YAML-конфиг с каскадом |
+| `httpclient` | Настраиваемый HTTP-клиент |
+| `index` | Полнотекстовый поиск (bluge) |
+| `server/mcp` | MCP-сервер (3 транспорта) |
+| `service` | Бизнес-логика (ядро) |
+| `spec` | Парсеры OpenAPI/Swagger/Postman |
 | `tui` | Bubbletea TUI |
-| `workspace` | File management |
+| `workspace` | Управление файлами |

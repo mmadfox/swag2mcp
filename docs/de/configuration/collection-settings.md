@@ -1,8 +1,8 @@
-# Collection Settings
+# Collection-Einstellungen
 
-Collection settings define a single OpenAPI/Swagger/Postman spec file and override spec settings for that specific file. Each collection belongs to a spec and represents one API specification document.
+Collection-Einstellungen definieren eine einzelne OpenAPI/Swagger/Postman-Spezifikationsdatei und überschreiben Spec-Einstellungen für diese bestimmte Datei. Jede Collection gehört zu einer Spec und repräsentiert ein API-Spezifikationsdokument.
 
-## Collection Section
+## Collection-Abschnitt
 
 ```yaml
 specs:
@@ -12,7 +12,7 @@ specs:
     collections:
       - llm_title: Forecast
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
-        llm_instruction: "Use for current and forecast weather data"
+        llm_instruction: "Für aktuelle und Vorhersage-Wetterdaten verwenden"
         disable: false
         base_url: https://forecast-api.open-meteo.com
         base_mock_url: localhost:8081
@@ -20,54 +20,54 @@ specs:
           timeout: 5s
 ```
 
-## Parameters
+## Parameter
 
 ### llm_title
 
-- **Type:** `string`
-- **Required:** No
-- **Description:** Human-readable name for this collection. Shown in MCP tool responses.
-- **Rules:** Max 120 characters. Letters, digits, spaces, and basic punctuation only.
-- **Example:** `Forecast`, `Air Quality`, `Market Data`
+- **Typ:** `string`
+- **Erforderlich:** Nein
+- **Beschreibung:** Menschenlesbarer Name für diese Collection. Wird in MCP-Tool-Antworten angezeigt.
+- **Regeln:** Max. 120 Zeichen. Nur Buchstaben, Ziffern, Leerzeichen und einfache Satzzeichen.
+- **Beispiel:** `Forecast`, `Air Quality`, `Market Data`
 
 ### llm_instruction
 
-- **Type:** `string`
-- **Default:** `""`
-- **Description:** Instructions for the LLM about this specific collection. Describes what endpoints this collection provides.
-- **Rules:** Max 360 characters. Letters, digits, spaces, and basic punctuation only.
-- **Example:** `"Use for current and forecast weather data."`
+- **Typ:** `string`
+- **Standard:** `""`
+- **Beschreibung:** Anweisungen für den LLM zu dieser spezifischen Collection. Beschreibt, welche Endpunkte diese Collection bereitstellt.
+- **Regeln:** Max. 360 Zeichen. Nur Buchstaben, Ziffern, Leerzeichen und einfache Satzzeichen.
+- **Beispiel:** `"Für aktuelle und Vorhersage-Wetterdaten verwenden."`
 
 ### title
 
-- **Type:** `string`
-- **Default:** `""`
-- **Description:** Raw title from the spec file. Populated automatically at runtime. You typically don't need to set this in YAML.
+- **Typ:** `string`
+- **Standard:** `""`
+- **Beschreibung:** Rohtitel aus der Spezifikationsdatei. Wird zur Laufzeit automatisch befüllt. Normalerweise müssen Sie dies nicht in YAML setzen.
 
 ### location
 
-- **Type:** `string`
-- **Required:** Yes
-- **Description:** URL or local file path to the OpenAPI 3.x, Swagger 2.0, or Postman collection spec file.
-- **Rules:** 5-250 characters.
-- **Examples:**
+- **Typ:** `string`
+- **Erforderlich:** Ja
+- **Beschreibung:** URL oder lokaler Dateipfad zur OpenAPI 3.x-, Swagger 2.0- oder Postman-Collection-Spezifikationsdatei.
+- **Regeln:** 5-250 Zeichen.
+- **Beispiele:**
   - URL: `https://raw.githubusercontent.com/org/repo/main/spec.yaml`
-  - Local: `./specs/my-api.json`
-  - Local (absolute): `/home/user/.swag2mcp/specs/my-api.yaml`
+  - Lokal: `./specs/my-api.json`
+  - Lokal (absolut): `/home/user/.swag2mcp/specs/my-api.yaml`
 
 ### disable
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Description:** When `true`, this collection is excluded from MCP tools. It is not loaded or indexed.
-- **When to use:** Temporarily disable a collection without removing it from the config. Useful when a spec file is being updated or an API version is deprecated.
+- **Typ:** `bool`
+- **Standard:** `false`
+- **Beschreibung:** Wenn `true`, wird diese Collection von MCP-Tools ausgeschlossen. Sie wird nicht geladen oder indiziert.
+- **Wann verwenden:** Eine Collection vorübergehend deaktivieren, ohne sie aus der Konfiguration zu entfernen. Nützlich, wenn eine Spezifikationsdatei aktualisiert wird oder eine API-Version veraltet ist.
 
 ### http_client
 
-- **Type:** `object`
-- **Default:** inherits from spec (or global)
-- **Description:** Override HTTP client settings for this collection. All settings from the global `http_client` can be overridden: `timeout`, `max_response_size`, `user_agent`, `follow_redirects`, `max_redirects`, `random`, `proxy`, `headers`, `cookies`.
-- **Example:**
+- **Typ:** `object`
+- **Standard:** erbt von Spec (oder Global)
+- **Beschreibung:** HTTP-Client-Einstellungen für diese Collection überschreiben. Alle Einstellungen aus dem globalen `http_client` können überschrieben werden: `timeout`, `max_response_size`, `user_agent`, `follow_redirects`, `max_redirects`, `random`, `proxy`, `headers`, `cookies`.
+- **Beispiel:**
   ```yaml
   http_client:
     timeout: 120s
@@ -80,23 +80,23 @@ specs:
 
 ### base_url
 
-- **Type:** `string`
-- **Default:** `""` (inherits from spec)
-- **Description:** Override the spec-level `base_url` for this collection. Use when different collections within the same spec use different base URLs.
-- **Example:** If the spec has `base_url: https://api.open-meteo.com` but one collection uses `https://air-quality-api.open-meteo.com`, set `base_url` at the collection level.
+- **Typ:** `string`
+- **Standard:** `""` (erbt von Spec)
+- **Beschreibung:** Die `base_url` der Spec-Ebene für diese Collection überschreiben. Verwenden, wenn verschiedene Collections innerhalb derselben Spec unterschiedliche Basis-URLs verwenden.
+- **Beispiel:** Wenn die Spec `base_url: https://api.open-meteo.com` hat, aber eine Collection `https://air-quality-api.open-meteo.com` verwendet, setzen Sie `base_url` auf Collection-Ebene.
 
 ### base_mock_url
 
-- **Type:** `string`
-- **Default:** `""`
-- **Description:** Mock server address in `host:port` format. Required when `mock_enabled: true` in the global config.
-- **Rules:** Host must be `localhost`, `127.0.0.1`, or `0.0.0.0`. Port must be a valid port number.
-- **Example:** `localhost:8081`, `127.0.0.1:9000`
-- **When to use:** You have `mock_enabled: true` and want to test this collection with fake responses.
+- **Typ:** `string`
+- **Standard:** `""`
+- **Beschreibung:** Mock-Server-Adresse im Format `host:port`. Erforderlich, wenn `mock_enabled: true` in der globalen Konfiguration.
+- **Regeln:** Host muss `localhost`, `127.0.0.1` oder `0.0.0.0` sein. Port muss eine gültige Portnummer sein.
+- **Beispiel:** `localhost:8081`, `127.0.0.1:9000`
+- **Wann verwenden:** Sie haben `mock_enabled: true` und möchten diese Collection mit gefälschten Antworten testen.
 
-## Multiple Collections from One Spec
+## Mehrere Collections aus einer Spec
 
-A spec can have multiple collections — for example, when an API has separate spec files for different services:
+Eine Spec kann mehrere Collections haben — zum Beispiel, wenn eine API separate Spezifikationsdateien für verschiedene Dienste hat:
 
 ```yaml
 specs:
@@ -114,7 +114,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
-## Disabling a Collection
+## Deaktivieren einer Collection
 
 ```yaml
 specs:
@@ -130,9 +130,9 @@ specs:
         disable: true
 ```
 
-## HTTP Client Override
+## HTTP-Client-Überschreibung
 
-All `http_client` settings can be overridden at the collection level. Collection values take precedence over spec and global values for this collection only.
+Alle `http_client`-Einstellungen können auf Collection-Ebene überschrieben werden. Collection-Werte haben Vorrang vor Spec- und Global-Werten nur für diese Collection.
 
 ```yaml
 specs:

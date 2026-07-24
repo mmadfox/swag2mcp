@@ -1,16 +1,16 @@
 # OAuth2 Password Grant
 
-## Purpose
+## Назначение
 
-OAuth2 Resource Owner Password Grant — authentication using a user's username and password. Suitable for first-party applications where the user trusts the app with their credentials.
+OAuth2 Resource Owner Password Grant — аутентификация с использованием имени пользователя и пароля. Подходит для собственных приложений, где пользователь доверяет приложению свои учётные данные.
 
-## When to use
+## Когда использовать
 
-- First-party applications (mobile, web)
-- Integration with Keycloak and similar Identity Providers
-- When the API supports OAuth2 Password Grant
+- Собственные приложения (мобильные, веб)
+- Интеграция с Keycloak и аналогичными Identity Provider
+- Когда API поддерживает OAuth2 Password Grant
 
-## Configuration
+## Конфигурация
 
 ```yaml
 specs:
@@ -33,20 +33,20 @@ specs:
           - profile
 ```
 
-## Parameters
+## Параметры
 
-| Parameter | Required | Description |
+| Параметр | Обязательно | Описание |
 |-----------|----------|-------------|
-| `client_id` | Yes | Client identifier |
-| `username` | Yes | Username |
-| `password` | Yes | Password |
-| `token_url` | Yes | Token endpoint URL |
-| `client_secret` | No | Client secret (optional, for public clients) |
-| `scopes` | No | List of permissions (optional) |
+| `client_id` | Да | Идентификатор клиента |
+| `username` | Да | Имя пользователя |
+| `password` | Да | Пароль |
+| `token_url` | Да | URL эндпоинта токена |
+| `client_secret` | Нет | Секрет клиента (опционально, для публичных клиентов) |
+| `scopes` | Нет | Список разрешений (опционально) |
 
-## Notes
+## Примечания
 
-- `client_secret` is optional — **public clients** are supported (e.g., Keycloak)
-- swag2mcp automatically refreshes the token when it expires
-- The token is cached until expiry
-- All parameters can be stored in environment variables
+- `client_secret` опционален — поддерживаются **публичные клиенты** (например, Keycloak)
+- swag2mcp автоматически обновляет токен при истечении срока действия
+- Токен кэшируется до истечения срока действия
+- Все параметры можно хранить в переменных окружения

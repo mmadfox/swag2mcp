@@ -1,56 +1,56 @@
-# Endpoints
+# Points d'accès
 
-An endpoint is a specific HTTP method + path that can be invoked (e.g., `GET /api/users/{id}`). Endpoints are the actual API operations that the LLM discovers, inspects, and calls.
+Un point d'accès est une méthode HTTP + chemin spécifique qui peut être invoquée (par exemple, `GET /api/users/{id}`). Les points d'accès sont les opérations API réelles que le LLM découvre, inspecte et appelle.
 
 ## Structure
 
-Each endpoint contains:
+Chaque point d'accès contient :
 
-- **HTTP method**: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS
-- **Path**: `/api/v1/users/{id}`
-- **Summary**: a short description of what the endpoint does — very useful for the LLM to understand its purpose at a glance
-- **Description**: a detailed explanation of the endpoint's behavior, parameters, and use cases
-- **Parameters**: path, query, header, cookie
-- **Request body**: for POST/PUT/PATCH
-- **Responses**: status codes and response schemas
+- **Méthode HTTP** : GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS
+- **Chemin** : `/api/v1/users/{id}`
+- **Résumé** : une courte description de ce que fait le point d'accès — très utile pour que le LLM comprenne son objectif en un coup d'œil
+- **Description** : une explication détaillée du comportement, des paramètres et des cas d'utilisation du point d'accès
+- **Paramètres** : chemin, requête, en-tête, cookie
+- **Corps de la requête** : pour POST/PUT/PATCH
+- **Réponses** : codes d'état et schémas de réponse
 
-The `summary` and `description` fields come from the OpenAPI/Swagger/Postman file. They are the primary way the LLM understands what an endpoint does. Well-written summaries make endpoint discovery much more effective.
+Les champs `summary` et `description` proviennent du fichier OpenAPI/Swagger/Postman. Ils sont le principal moyen pour le LLM de comprendre ce que fait un point d'accès. Des résumés bien rédigés rendent la découverte des points d'accès beaucoup plus efficace.
 
-## MCP Tools for Endpoints
+## Outils MCP pour les points d'accès
 
-| Tool | Description |
-|------|-------------|
-| `endpoint_by_spec` | All endpoints in a spec |
-| `endpoint_by_collection` | Endpoints in a collection |
-| `endpoint_by_tag` | Endpoints in a tag |
-| `endpoint_by_id` | Quick endpoint summary |
-| `inspect` | Full endpoint details (schemas, params) |
-| `invoke` | Call the endpoint |
-| `search` | Search endpoints by text |
+| Outil | Description |
+|-------|-------------|
+| `endpoint_by_spec` | Tous les points d'accès dans une spec |
+| `endpoint_by_collection` | Points d'accès dans une collection |
+| `endpoint_by_tag` | Points d'accès dans une étiquette |
+| `endpoint_by_id` | Résumé rapide d'un point d'accès |
+| `inspect` | Détails complets du point d'accès (schémas, paramètres) |
+| `invoke` | Appeler le point d'accès |
+| `search` | Rechercher des points d'accès par texte |
 
-## Deprecated Endpoints
+## Points d'accès dépréciés
 
-Endpoints marked as `deprecated` in the spec are shown with a notice when inspected.
+Les points d'accès marqués comme `deprecated` dans la spec sont affichés avec un avis lors de l'inspection.
 
 ## Configuration
 
-Endpoints are **read-only** from swag2mcp's perspective. There are no YAML config settings for endpoints — you cannot add, remove, rename, or modify them in `swag2mcp.yaml`.
+Les points d'accès sont **en lecture seule** du point de vue de swag2mcp. Il n'y a pas de paramètres de configuration YAML pour les points d'accès — vous ne pouvez pas ajouter, supprimer, renommer ou modifier des points d'accès dans `swag2mcp.yaml`.
 
-To change endpoints (add new ones, update summaries, modify parameters, mark as deprecated), edit the original OpenAPI/Swagger/Postman file and run `swag2mcp update` to re-parse and re-index.
+Pour modifier les points d'accès (en ajouter de nouveaux, mettre à jour les résumés, modifier les paramètres, marquer comme dépréciés), modifiez le fichier OpenAPI/Swagger/Postman original et exécutez `swag2mcp update` pour ré-analyser et ré-indexer.
 
-## Example
+## Exemple
 
 ```
-Query: "Show details for GET /pet/{petId}"
+Requête : "Afficher les détails pour GET /animal/{animalId}"
 → inspect(endpointId: "abc123...")
-→ Result:
-  GET /pet/{petId}
-  Summary: Find pet by ID
-  Description: Returns a single pet by its ID
-  Parameters:
-    - petId (path, integer, required)
-  Responses:
-    - 200: Pet object
-    - 400: Error
-    - 404: Not found
+→ Résultat :
+  GET /animal/{animalId}
+  Résumé : Trouver un animal par ID
+  Description : Retourne un seul animal par son ID
+  Paramètres :
+    - animalId (chemin, entier, requis)
+  Réponses :
+    - 200 : Objet Animal
+    - 400 : Erreur
+    - 404 : Non trouvé
 ```

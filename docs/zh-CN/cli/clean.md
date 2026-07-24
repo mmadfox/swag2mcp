@@ -1,70 +1,70 @@
 # clean
 
-## Purpose
+## 用途
 
-Remove cached remote specs and saved API invocation responses. This frees up disk space and forces a fresh download of spec files on the next `update` or `mcp` start.
+删除缓存的远程规范和保存的 API 调用响应。这可以释放磁盘空间，并在下次 `update` 或 `mcp` 启动时强制重新下载规范文件。
 
-## When to use
+## 何时使用
 
-- Spec files have changed on the remote server and you want to force a refresh
-- You want to free up disk space
-- You are troubleshooting stale cache issues
-- Before running `update` to ensure a clean re-cache
+- 远程服务器上的规范文件已更改，你想强制刷新
+- 你想释放磁盘空间
+- 你正在排查缓存过时的问题
+- 在运行 `update` 之前确保干净的重新缓存
 
-## Syntax
+## 语法
 
 ```bash
 swag2mcp clean [path]
 ```
 
-## Arguments
+## 参数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 参数 | 位置 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | 1 | 否 | 工作区目录。如果省略，通过路径解析规则解析。 |
 
-## Flags
+## 标志
 
-None.
+无。
 
-## How it works
+## 工作原理
 
 ```bash
 swag2mcp clean
 swag2mcp clean ./my-workspace
 ```
 
-## What is cleaned
+## 清理的内容
 
-| Directory | Contents | Why |
-|-----------|----------|-----|
-| `cache/` | Downloaded remote spec files | Forces re-download on next access |
-| `responses/` | Saved API invocation responses | Frees disk space |
+| 目录 | 内容 | 原因 |
+|------|------|------|
+| `cache/` | 下载的远程规范文件 | 强制下次访问时重新下载 |
+| `responses/` | 保存的 API 调用响应 | 释放磁盘空间 |
 
-## What is preserved
+## 保留的内容
 
-| Directory | Contents | Why |
-|-----------|----------|-----|
-| `specs/` | Local spec files | These are your source files, not cache |
-| `auth_scripts/` | Authentication scripts | These are user-created, not cache |
+| 目录 | 内容 | 原因 |
+|------|------|------|
+| `specs/` | 本地规范文件 | 这些是你的源文件，不是缓存 |
+| `auth_scripts/` | 认证脚本 | 这些是用户创建的，不是缓存 |
 
-## Orphan auth script cleanup
+## 孤立认证脚本清理
 
-After cleaning, `clean` also removes auth scripts for specs that no longer exist in the configuration. This prevents stale scripts from accumulating.
+清理后，`clean` 还会删除配置中不再存在的 spec 的认证脚本。这防止了过时脚本的积累。
 
-## Automatic cleanup
+## 自动清理
 
-When the MCP server starts (`swag2mcp mcp`), responses older than 48 hours are removed automatically. You typically don't need to run `clean` manually for routine maintenance.
+当 MCP 服务器启动（`swag2mcp mcp`）时，超过 48 小时的响应会自动删除。你通常不需要为日常维护手动运行 `clean`。
 
-## Post-command verification
+## 命令后验证
 
 ```bash
 ls ~/.swag2mcp/cache
-# Should be empty (directory exists but has no files)
+# 应为空（目录存在但没有文件）
 ```
 
-## Nuances
+## 细节
 
-- **No config required:** `clean` works even without a valid config file. It simply removes the cache and responses directories.
-- **Orphan cleanup is best-effort:** If the config file is corrupted or unreadable, orphan auth script cleanup is skipped (not fatal).
-- **Directories are preserved:** The `cache/` and `responses/` directories themselves are kept — only their contents are removed.
+- **无需配置：** `clean` 即使没有有效的配置文件也能工作。它只是删除缓存和响应目录。
+- **孤立清理尽力而为：** 如果配置文件损坏或无法读取，孤立认证脚本清理会被跳过（不会致命）。
+- **目录被保留：** `cache/` 和 `responses/` 目录本身被保留 — 只删除其内容。

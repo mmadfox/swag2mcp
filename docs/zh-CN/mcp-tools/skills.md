@@ -1,58 +1,58 @@
-# Skills
+# 技能
 
-## Customizing Output Format
+## 自定义输出格式
 
-Every swag2mcp MCP tool returns structured JSON data. How this data is **presented** to the user depends on the LLM's formatting skill — and you can control it completely.
+每个 swag2mcp MCP 工具返回结构化的 JSON 数据。这些数据如何**呈现**给用户取决于 LLM 的格式化技能 — 而你可以完全控制它。
 
-### The default format skill
+### 默认格式技能
 
-swag2mcp ships with a built-in formatting skill that defines compact, human-readable markdown for every tool response:
+swag2mcp 附带一个内置的格式化技能，为每个工具响应定义了紧凑、人类可读的 markdown：
 
 [swag2mcp-format SKILL.md](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md)
 
-This skill covers all 19 MCP tools with:
-- Tight tables for lists (specs, collections, tags, endpoints)
-- Inline headers for detail views
-- Compact schema representation for `inspect`
-- Consistent styling across all responses
+此技能涵盖所有 19 个 MCP 工具，具有：
+- 列表的紧凑表格（spec、collection、标签、端点）
+- 详情视图的内联头
+- `inspect` 的紧凑模式表示
+- 所有响应的一致样式
 
-### Why skills matter
+### 为什么技能很重要
 
-The same data can be presented in radically different ways depending on the skill:
+相同的数据可以根据技能以截然不同的方式呈现：
 
-| Style | Example output |
-|-------|---------------|
-| **Compact tables** (default) | `GET /pet/{petId}` — Find pet by ID |
-| **Verbose** | `Method: GET, Path: /pet/{petId}, Summary: Find pet by ID, Deprecated: false` |
-| **Minimal** | `GET /pet/{petId}` |
-| **Technical** | `GET /pet/{petId} → 200: Pet object, 404: Not found` |
-| **Custom** | Any format you can describe |
+| 样式 | 示例输出 |
+|------|----------|
+| **紧凑表格**（默认） | `GET /pet/{petId}` — Find pet by ID |
+| **详细** | `Method: GET, Path: /pet/{petId}, Summary: Find pet by ID, Deprecated: false` |
+| **极简** | `GET /pet/{petId}` |
+| **技术** | `GET /pet/{petId} → 200: Pet object, 404: Not found` |
+| **自定义** | 你能描述的任何格式 |
 
-### Creating your own skill
+### 创建你自己的技能
 
-You can write your own formatting skill by describing the exact output format you want. The skill is a markdown file with formatting rules for each tool. Here are some ideas:
+你可以通过描述你想要的精确输出格式来编写自己的格式化技能。该技能是一个 markdown 文件，包含每个工具的格式化规则。以下是一些想法：
 
-- **JSON output** — return raw JSON for machine consumption
-- **CSV-style** — tabular data for spreadsheet import
-- **Diagram-friendly** — Mermaid or ASCII diagrams of API structure
-- **Minimal** — just method and path, nothing else
-- **Documentation-style** — full descriptions, examples, and notes
+- **JSON 输出** — 返回原始 JSON 供机器使用
+- **CSV 风格** — 用于电子表格导入的表格数据
+- **图表友好** — API 结构的 Mermaid 或 ASCII 图表
+- **极简** — 只有方法和路径，没有其他内容
+- **文档风格** — 完整的描述、示例和注释
 
-### The only limit is the model
+### 唯一的限制是模型
 
-The quality of the formatted output depends entirely on the LLM's ability to follow your formatting rules. A well-written skill with clear examples produces consistent, reliable output. A vague skill produces inconsistent results.
+格式化输出的质量完全取决于 LLM 遵循你的格式化规则的能力。编写良好的技能，带有清晰的示例，会产生一致、可靠的输出。模糊的技能会产生不一致的结果。
 
-You can:
-- Use the default skill as-is
-- Fork it and tweak the formatting to your taste
-- Write your own from scratch
-- Switch between skills depending on the task
+你可以：
+- 按原样使用默认技能
+- 分叉并根据自己的喜好调整格式
+- 从头开始编写自己的技能
+- 根据任务在技能之间切换
 
-### How to use a skill
+### 如何使用技能
 
-Skills are loaded by the LLM client (OpenCode, Cursor, Claude Desktop, etc.) as part of its system prompt or agent configuration. Refer to your client's documentation for how to attach a skill file.
+技能由 LLM 客户端（OpenCode、Cursor、Claude Desktop 等）作为其系统提示或智能体配置的一部分加载。请参阅客户端的文档以了解如何附加技能文件。
 
-For OpenCode, skills are configured in `opencode.json`:
+对于 OpenCode，技能在 `opencode.json` 中配置：
 
 ```json
 {

@@ -1,42 +1,42 @@
 # info
 
-## Purpose
+## 목적
 
-Show a comprehensive summary of the swag2mcp runtime as **JSON**. This includes version, workspace path, specs summary, HTTP client settings, MCP transport configuration, auth methods, and mock mode status.
+swag2mcp 런타임의 포괄적인 요약을 **JSON**으로 표시합니다. 버전, 워크스페이스 경로, spec 요약, HTTP 클라이언트 설정, MCP 전송 설정, 인증 방법, 모의 모드 상태가 포함됩니다.
 
-## When to use
+## 사용 시기
 
-- You want a machine-readable overview of the workspace
-- You need to check the runtime configuration for debugging
-- You want to see how many specs and endpoints are active
-- You need to verify HTTP client or MCP transport settings
+- 워크스페이스의 머신 판독 가능 개요를 원할 때
+- 디버깅을 위해 런타임 설정을 확인해야 할 때
+- 활성화된 spec과 엔드포인트 수를 확인하려고 할 때
+- HTTP 클라이언트 또는 MCP 전송 설정을 확인해야 할 때
 
-## Syntax
+## 구문
 
 ```bash
 swag2mcp info [path]
 ```
 
-## Arguments
+## 인수
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 인수 | 위치 | 필수 | 설명 |
+|------|------|------|------|
+| `path` | 1 | 아니요 | 워크스페이스 디렉토리. 생략 시 경로 해결 규칙에 따라 결정됩니다. |
 
-## Flags
+## 플래그
 
-None.
+없음.
 
-## How it works
+## 작동 방식
 
 ```bash
 swag2mcp info
 swag2mcp info ./my-workspace
 ```
 
-## Output
+## 출력
 
-The output is a JSON object with the following structure:
+출력은 다음 구조의 JSON 객체입니다:
 
 ```json
 {
@@ -68,13 +68,13 @@ The output is a JSON object with the following structure:
 }
 ```
 
-## Post-command verification
+## 명령 후 검증
 
-Use `info` to confirm that the workspace loaded correctly and all specs are active before starting the MCP server.
+MCP 서버를 시작하기 전에 `info`를 사용하여 워크스페이스가 올바르게 로드되었고 모든 spec이 활성화되었는지 확인하세요.
 
-## Nuances
+## 세부 사항
 
-- **Auto-init:** If no config file exists, `info` automatically runs the init wizard first.
-- **JSON only:** The output is always JSON. For human-readable output, use `ls`.
-- **`max_response_size`:** Shown in human-readable format (e.g., `"1 KB"`, `"2 MB"`).
-- **No full-text index:** `info` disables full-text indexing since it only needs config and spec metadata.
+- **자동 초기화:** 설정 파일이 없으면 `info`가 자동으로 init 마법사를 먼저 실행합니다.
+- **JSON 전용:** 출력은 항상 JSON입니다. 사람이 읽을 수 있는 출력은 `ls`를 사용하세요.
+- **`max_response_size`:** 사람이 읽을 수 있는 형식으로 표시됩니다 (예: `"1 KB"`, `"2 MB"`).
+- **전문 검색 인덱스 없음:** `info`는 설정과 spec 메타데이터만 필요하므로 전문 검색 인덱싱을 비활성화합니다.

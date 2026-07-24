@@ -1,68 +1,68 @@
-# Caching
+# Mise en cache
 
-## Overview
+## Aperçu
 
-swag2mcp caches downloaded spec files so the MCP server starts faster on subsequent runs. Instead of downloading the same spec file every time, it reuses the cached copy.
+swag2mcp met en cache les fichiers de spécification téléchargés afin que le serveur MCP démarre plus rapidement lors des exécutions suivantes. Au lieu de télécharger le même fichier de spécification à chaque fois, il réutilise la copie en cache.
 
-## How caching works
+## Comment fonctionne la mise en cache
 
-When you add a spec with a remote URL, swag2mcp downloads it and saves it to the `cache/` directory. On the next startup, it checks if the cached copy is still fresh. If it is, the download is skipped.
+Lorsque vous ajoutez une spec avec une URL distante, swag2mcp la télécharge et la sauvegarde dans le répertoire `cache/`. Au prochain démarrage, il vérifie si la copie en cache est encore fraîche. Si c'est le cas, le téléchargement est ignoré.
 
-### What gets cached
+### Ce qui est mis en cache
 
-| Source | Behavior |
-|--------|----------|
-| **Remote URL** (http/https) | Always cached. Downloaded once, reused until the cache expires. |
-| **Local file in `specs/`** | Used directly from the `specs/` directory. Never cached — changes are immediately visible. |
-| **Local file outside `specs/`** | Copied to the cache. If the source file changes (modification time), the cache is invalidated. |
+| Source | Comportement |
+|--------|--------------|
+| **URL distante** (http/https) | Toujours mise en cache. Téléchargée une fois, réutilisée jusqu'à l'expiration du cache. |
+| **Fichier local dans `specs/`** | Utilisé directement depuis le répertoire `specs/`. Jamais mis en cache — les modifications sont immédiatement visibles. |
+| **Fichier local hors de `specs/`** | Copié dans le cache. Si le fichier source change (heure de modification), le cache est invalidé. |
 
-### Cache expiration (TTL)
+### Expiration du cache (TTL)
 
-Each cached file gets a random expiration time between **1 hour and 48 hours**. The randomness prevents all cached files from expiring at the same time (which would cause a thundering herd of downloads).
+Chaque fichier en cache reçoit un temps d'expiration aléatoire entre **1 heure et 48 heures**. Le caractère aléatoire empêche tous les fichiers en cache d'expirer en même temps (ce qui provoquerait une ruée de téléchargements).
 
-- The TTL is reset every time the MCP server starts
-- If a cached file is still within its TTL, it is reused
-- If the TTL has expired, the file is downloaded again
+- Le TTL est réinitialisé à chaque démarrage du serveur MCP
+- Si un fichier en cache est encore dans son TTL, il est réutilisé
+- Si le TTL a expiré, le fichier est téléchargé à nouveau
 
-### Cache structure
+### Structure du cache
 
 ```
 ~/.swag2mcp/cache/
-├── a1b2c3d4e5f6a7b8.spec    # Cached spec file
-├── a1b2c3d4e5f6a7b8.meta    # Metadata (source, TTL, cached at)
+├── a1b2c3d4e5f6a7b8.spec    # Fichier de spécification en cache
+├── a1b2c3d4e5f6a7b8.meta    # Métadonnées (source, TTL, date de mise en cache)
 ├── b2c3d4e5f6a7b8c9.spec
 ├── b2c3d4e5f6a7b8c9.meta
 └── ...
 ```
 
-The cache key is derived from the spec file URL or path. Each cached file has a companion `.meta` file that stores when it was cached and when it expires.
+La clé de cache est dérivée de l'URL ou du chemin du fichier de spécification. Chaque fichier en cache a un fichier `.meta` compagnon qui stocke quand il a été mis en cache et quand il expire.
 
-## Managing the cache
+## Gestion du cache
 
-### Force a refresh
+### Forcer un rafraîchissement
 
-Run `swag2mcp update` to clear the entire cache and re-download all spec files:
+Exécutez `swag2mcp update` pour vider tout le cache et retélécharger tous les fichiers de spécification :
 
 ```bash
 swag2mcp update
 ```
 
-This validates the config, clears the cache, and downloads everything fresh.
+Cela valide la configuration, vide le cache et télécharge tout à nouveau.
 
-### Clear the cache manually
+### Vider le cache manuellement
 
 ```bash
 swag2mcp clean
 ```
 
-This removes all cached spec files and saved API responses. The next time you start the MCP server, all specs will be downloaded again.
+Cela supprime tous les fichiers de spécification en cache et les réponses d'API sauvegardées. La prochaine fois que vous démarrerez le serveur MCP, toutes les specs seront téléchargées à nouveau.
 
-### Automatic cleanup
+### Nettoyage automatique
 
-When the MCP server starts (`swag2mcp mcp`), saved API responses older than 48 hours are automatically removed. This prevents the `responses/` directory from growing indefinitely.
+Lorsque le serveur MCP démarre (`swag2mcp mcp`), les réponses d'API sauvegardées de plus de 48 heures sont automatiquement supprimées. Cela empêche le répertoire `responses/` de croître indéfiniment.
 
-## Important notes
+## Notes importantes
 
-- **Local files in `specs/` are never cached** — if you edit a spec file directly in the `specs/` directory, the changes are immediately visible without clearing the cache
-- **Remote URLs are always cached** — there is no way to bypass the cache for remote URLs except by running `swag2mcp update` or `swag2mcp clean`
-- **The cache is local** — it is stored on disk and does not sync between machines. Use `swag2mcp export` and `swag2mcp import` to transfer specs between machines
+- **Les fichiers locaux dans `specs/` ne sont jamais mis en cache** — si vous modifiez un fichier de spécification directement dans le répertoire `specs/`, les modifications sont immédiatement visibles sans vider le cache
+- **Les URL distantes sont toujours mises en cache** — il n'y a aucun moyen de contourner le cache pour les URL distantes, sauf en exécutant `swag2mcp update` ou `swag2mcp clean`
+- **Le cache est local** — il est stocké sur le disque et ne se synchronise pas entre les machines. Utilisez `swag2mcp export` et `swag2mcp import` pour transférer les specs entre machines

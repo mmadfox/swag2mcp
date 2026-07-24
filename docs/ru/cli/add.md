@@ -1,59 +1,59 @@
 # add
 
-## Purpose
+## Назначение
 
-Add a new **spec** (API service) or **collection** (OpenAPI/Swagger/Postman file) to an existing configuration. This is the primary way to grow your workspace with new APIs.
+Добавить новую **спецификацию** (API-сервис) или **коллекцию** (файл OpenAPI/Swagger/Postman) в существующую конфигурацию. Это основной способ расширения рабочей области новыми API.
 
-## When to use
+## Когда использовать
 
-- You have a new API to connect to your LLM agent
-- You found an OpenAPI spec URL and want to add it
-- You want to add an additional spec file (collection) to an existing spec
-- You prefer writing YAML directly instead of using the interactive wizard
+- У вас есть новый API для подключения к вашему LLM-агенту
+- Вы нашли URL OpenAPI-спецификации и хотите её добавить
+- Вы хотите добавить дополнительный файл спецификации (коллекцию) к существующей спецификации
+- Вы предпочитаете писать YAML напрямую вместо использования интерактивного мастера
 
-## Syntax
+## Синтаксис
 
 ```bash
 swag2mcp add spec [path] [flags]
 swag2mcp add collection [path] [flags]
 ```
 
-## Arguments
+## Аргументы
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Аргумент | Позиция | Обязательно | Описание |
+|----------|----------|-------------|----------|
+| `path` | 1 | Нет | Директория рабочей области. Если не указан, разрешается по правилам разрешения пути. |
 
-## Flags
+## Флаги
 
 ### `add spec`
 
-| Flag | Shorthand | Type | Default | Description |
+| Флаг | Сокращение | Тип | По умолчанию | Описание |
 |------|-----------|------|---------|-------------|
-| `--yaml` | `-y` | `string` | `""` | YAML input inline or `-` for stdin |
-| `--example` | `-e` | `bool` | `false` | Print a YAML template and exit |
+| `--yaml` | `-y` | `string` | `""` | YAML-ввод (строка или `-` для stdin) |
+| `--example` | `-e` | `bool` | `false` | Вывести YAML-шаблон и выйти |
 
 ### `add collection`
 
-| Flag | Shorthand | Type | Default | Description |
+| Флаг | Сокращение | Тип | По умолчанию | Описание |
 |------|-----------|------|---------|-------------|
-| `--yaml` | `-y` | `string` | `""` | YAML input inline or `-` for stdin |
-| `--example` | `-e` | `bool` | `false` | Print a YAML template and exit |
+| `--yaml` | `-y` | `string` | `""` | YAML-ввод (строка или `-` для stdin) |
+| `--example` | `-e` | `bool` | `false` | Вывести YAML-шаблон и выйти |
 
-## How it works
+## Как это работает
 
-### Interactive mode (default)
+### Интерактивный режим (по умолчанию)
 
-Launches a TUI wizard that lets you fill in the spec or collection fields step by step.
+Запускает TUI-мастер, который позволяет заполнить поля спецификации или коллекции шаг за шагом.
 
 ```bash
 swag2mcp add spec
 swag2mcp add collection
 ```
 
-### YAML inline mode
+### YAML inline-режим
 
-Pass the YAML directly as a string. **Be careful with shell quoting** — special characters like `:`, `#`, `&`, `{` can break the command.
+Передайте YAML напрямую строкой. **Будьте осторожны с экранированием в оболочке** — специальные символы вроде `:`, `#`, `&`, `{` могут сломать команду.
 
 ```bash
 swag2mcp add spec --yaml 'domain: meteo
@@ -64,12 +64,12 @@ collections:
     location: https://example.com/spec.json'
 ```
 
-### YAML from stdin (recommended for complex YAML)
+### YAML из stdin (рекомендуется для сложного YAML)
 
-Pipe from a file or use a heredoc to avoid shell quoting issues entirely:
+Передайте через файл или используйте heredoc, чтобы полностью избежать проблем с экранированием:
 
 ```bash
-# Pipe from file
+# Через файл
 cat spec.yaml | swag2mcp add spec --yaml -
 
 # Heredoc
@@ -84,18 +84,18 @@ collections:
 EOF
 ```
 
-### YAML template
+### YAML-шаблон
 
-Print the expected YAML structure and exit:
+Вывести ожидаемую YAML-структуру и выйти:
 
 ```bash
 swag2mcp add spec --example
 swag2mcp add collection --example
 ```
 
-## YAML format
+## Формат YAML
 
-### Spec
+### Спецификация
 
 ```yaml
 domain: meteo
@@ -112,7 +112,7 @@ collections:
     location: https://example.com/spec.json
 ```
 
-### Collection
+### Коллекция
 
 ```yaml
 spec_domain: meteo
@@ -120,16 +120,16 @@ llm_title: Orders Collection
 location: https://example.com/orders.json
 ```
 
-## Post-command verification
+## Проверка после команды
 
 ```bash
 swag2mcp ls [path]
-# The new spec or collection should appear in the list
+# Новая спецификация или коллекция должна появиться в списке
 ```
 
-## Nuances
+## Нюансы
 
-- **Auto-init:** If no config file exists, `add` automatically runs the init wizard first. You don't need to run `init` separately.
-- **Shell quoting:** Inline YAML (`--yaml '...'`) is fragile with special characters. Prefer `--yaml -` with a heredoc or pipe for anything beyond simple values.
-- **`--example` exits immediately** without checking for an existing config or modifying anything.
-- **`add spec` vs `add collection`:** Use `add spec` for a new API service (new domain). Use `add collection` to add another spec file to an existing spec.
+- **Автоинициализация:** Если файл конфигурации не существует, `add` автоматически запускает мастер инициализации. Вам не нужно запускать `init` отдельно.
+- **Экранирование в оболочке:** Inline YAML (`--yaml '...'`) ненадёжен со специальными символами. Предпочитайте `--yaml -` с heredoc или pipe для всего, кроме простых значений.
+- **`--example` завершается сразу** без проверки существующего конфига или внесения изменений.
+- **`add spec` vs `add collection`:** Используйте `add spec` для нового API-сервиса (новый domain). Используйте `add collection` для добавления ещё одного файла спецификации к существующей спецификации.

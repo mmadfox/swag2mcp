@@ -1,57 +1,57 @@
-# LLM Session Examples
+# LLM セッション例
 
-This page shows real dialogues between a user and an LLM agent powered by swag2mcp. Each example includes the user's request, the MCP tool call, and the response.
+このページでは、swag2mcp を利用した LLM エージェントとユーザーの実際の対話を示します。各例には、ユーザーのリクエスト、MCP ツール呼び出し、およびレスポンスが含まれています。
 
-## Setup
+## セットアップ
 
-The workspace has two APIs configured:
+ワークスペースには 2 つの API が設定されています：
 
-- **icanhazdadjoke** — public dad jokes API
-- **Open-Meteo** — weather forecast API
+- **icanhazdadjoke** — 公開ダジャレ API
+- **Open-Meteo** — 天気予報 API
 
 ---
 
-## Discovering available APIs
+## 利用可能な API の発見
 
-**User:** What APIs do you have access to?
+**ユーザー：** どの API にアクセスできますか？
 
-**LLM → MCP:** `spec_list()`
+**LLM → MCP：** `spec_list()`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```
 Specifications:
   dadjoke (icanhazdadjoke)
   meteo (Open-Meteo Weather API)
 ```
 
-**LLM:** I have access to two APIs: icanhazdadjoke for dad jokes and Open-Meteo for weather data.
+**LLM：** 2 つの API にアクセスできます：ダジャレ用の icanhazdadjoke と天気データ用の Open-Meteo です。
 
 ---
 
-## Getting spec details
+## スペック詳細の取得
 
-**User:** Tell me more about the dadjoke API.
+**ユーザー：** dadjoke API について詳しく教えてください。
 
-**LLM → MCP:** `spec_by_id(id: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")`
+**LLM → MCP：** `spec_by_id(id: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```
 Spec: dadjoke (icanhazdadjoke)
 Collections:
   - Jokes (3 endpoints, 1 tag)
 ```
 
-**LLM:** The dadjoke API has one collection called "Jokes" with 3 endpoints under a single tag.
+**LLM：** dadjoke API には「Jokes」という 1 つのコレクションがあり、1 つのタグの下に 3 つのエンドポイントがあります。
 
 ---
 
-## Searching for endpoints
+## エンドポイントの検索
 
-**User:** Find me an endpoint to get a random dad joke.
+**ユーザー：** ランダムなダジャレを取得するエンドポイントを探してください。
 
-**LLM → MCP:** `search(query: "random joke", limit: 5)`
+**LLM → MCP：** `search(query: "random joke", limit: 5)`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```
 Endpoints:
   GET /  — Return a random dad joke
@@ -59,17 +59,17 @@ Endpoints:
   GET /search — Search for dad jokes
 ```
 
-**LLM:** I found three endpoints. The main one is `GET /` which returns a random dad joke.
+**LLM：** 3 つのエンドポイントが見つかりました。メインは `GET /` で、ランダムなダジャレを返します。
 
 ---
 
-## Inspecting an endpoint
+## エンドポイントの検査
 
-**User:** What parameters does the random joke endpoint need?
+**ユーザー：** ランダムジョークエンドポイントにはどのようなパラメータが必要ですか？
 
-**LLM → MCP:** `inspect(endpointId: "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6")`
+**LLM → MCP：** `inspect(endpointId: "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6")`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```
 GET /
 Base URL: https://icanhazdadjoke.com
@@ -82,17 +82,17 @@ Responses:
     Headers: Accept: text/plain
 ```
 
-**LLM:** The endpoint takes no parameters. Just call it and you'll get a random joke.
+**LLM：** このエンドポイントはパラメータを必要としません。呼び出すだけでランダムなジョークが得られます。
 
 ---
 
-## Invoking an API
+## API の呼び出し
 
-**User:** Give me a random dad joke!
+**ユーザー：** ランダムなダジャレを教えて！
 
-**LLM → MCP:** `invoke(endpointId: "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6")`
+**LLM → MCP：** `invoke(endpointId: "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6")`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```json
 {
   "statusCode": 200,
@@ -100,25 +100,25 @@ Responses:
 }
 ```
 
-**LLM:** Here's your dad joke: "Why don't scientists trust atoms? Because they make up everything!"
+**LLM：** こちらがダジャレです：「Why don't scientists trust atoms? Because they make up everything!」
 
 ---
 
-## Working with large responses
+## 大規模レスポンスの操作
 
-**User:** Get me the weather forecast for Berlin.
+**ユーザー：** ベルリンの天気予報を取得してください。
 
-**LLM → MCP:** `search(query: "weather forecast", limit: 5)`
+**LLM → MCP：** `search(query: "weather forecast", limit: 5)`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```
 Endpoints:
   GET /v1/forecast — Weather forecast
 ```
 
-**LLM → MCP:** `inspect(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7")`
+**LLM → MCP：** `inspect(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7")`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```
 GET /v1/forecast
 Parameters:
@@ -130,9 +130,9 @@ Responses:
   200: Forecast data
 ```
 
-**LLM → MCP:** `invoke(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7", parameters: {"latitude": 52.52, "longitude": 13.41, "hourly": "temperature_2m"})`
+**LLM → MCP：** `invoke(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7", parameters: {"latitude": 52.52, "longitude": 13.41, "hourly": "temperature_2m"})`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```json
 {
   "statusCode": 200,
@@ -146,11 +146,11 @@ Responses:
 }
 ```
 
-**LLM:** The response is large (1.5 MB). Let me explore its structure.
+**LLM：** レスポンスが大きいです（1.5 MB）。構造を調べてみましょう。
 
-**LLM → MCP:** `response_outline(path: "/home/user/.swag2mcp/responses/response_x7k9m2.json")`
+**LLM → MCP：** `response_outline(path: "/home/user/.swag2mcp/responses/response_x7k9m2.json")`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```
 Type: object
 Size: 1.5 MB
@@ -160,9 +160,9 @@ Arrays:
   hourly.temperature_2m (168 items)
 ```
 
-**LLM → MCP:** `response_compress(path: "/home/user/.swag2mcp/responses/response_x7k9m2.json", mode: "sample_array", jsonPath: "hourly", arrayHead: 3, arrayTail: 2)`
+**LLM → MCP：** `response_compress(path: "/home/user/.swag2mcp/responses/response_x7k9m2.json", mode: "sample_array", jsonPath: "hourly", arrayHead: 3, arrayTail: 2)`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```json
 {
   "compressed": {
@@ -181,22 +181,22 @@ Arrays:
 }
 ```
 
-**LLM:** Here's the Berlin weather forecast. Temperatures range from 16.9°C at night to around 20°C in the evening.
+**LLM：** こちらがベルリンの天気予報です。気温は夜の 16.9°C から夕方の約 20°C の範囲です。
 
 ---
 
-## Auth token retrieval
+## 認証トークンの取得
 
-**User:** Show me the auth token for my API so I can test it with curl.
+**ユーザー：** curl でテストできるように、API の認証トークンを表示してください。
 
-**LLM → MCP:** `auth(specId: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")`
+**LLM → MCP：** `auth(specId: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 ```
 
-**LLM:** Here's the token. You can use it in curl:
+**LLM：** こちらがトークンです。curl で使用できます：
 
 ```bash
 curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/v1/users
@@ -204,13 +204,13 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/
 
 ---
 
-## Runtime info
+## ランタイム情報
 
-**User:** What's the current system status?
+**ユーザー：** 現在のシステムステータスは？
 
-**LLM → MCP:** `info()`
+**LLM → MCP：** `info()`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```json
 {
   "version": "v1.2.0",
@@ -231,25 +231,25 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/
 }
 ```
 
-**LLM:** The system has been running for 2 hours and 15 minutes. Two specs are active with 20 endpoints total. The HTTP client has a 30-second timeout and a 2 KB response size limit.
+**LLM：** システムは 2 時間 15 分間稼働しています。2 つのスペックがアクティブで、合計 20 のエンドポイントがあります。HTTP クライアントのタイムアウトは 30 秒、レスポンスサイズ制限は 2 KB です。
 
 ---
 
-## Full conversation: planning a trip
+## 完全な会話：旅行の計画
 
-**User:** I'm planning a trip to Tokyo next week. Can you help me prepare?
+**ユーザー：** 来週東京に旅行に行く予定です。準備を手伝ってくれますか？
 
-**LLM → MCP:** `search(query: "weather forecast", limit: 5)`
+**LLM → MCP：** `search(query: "weather forecast", limit: 5)`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```
 Endpoints:
   GET /v1/forecast — Weather forecast
 ```
 
-**LLM → MCP:** `inspect(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7")`
+**LLM → MCP：** `inspect(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7")`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```
 GET /v1/forecast
 Parameters:
@@ -258,9 +258,9 @@ Parameters:
   daily (query, string, optional)
 ```
 
-**LLM → MCP:** `invoke(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7", parameters: {"latitude": 35.68, "longitude": 139.69, "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum"})`
+**LLM → MCP：** `invoke(endpointId: "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7", parameters: {"latitude": 35.68, "longitude": 139.69, "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum"})`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```json
 {
   "statusCode": 200,
@@ -277,44 +277,44 @@ Parameters:
 }
 ```
 
-**LLM:** Here's the Tokyo weather forecast for next week:
+**LLM：** こちらが来週の東京の天気予報です：
 
-| Date | Max | Min | Rain |
+| 日付 | 最高 | 最低 | 雨 |
 |------|-----|-----|------|
-| Jul 28 | 32°C | 25°C | 0 mm |
-| Jul 29 | 33°C | 26°C | 0.5 mm |
-| Jul 30 | 31°C | 24°C | 2.1 mm |
-| Jul 31 | 30°C | 23°C | 0 mm |
-| Aug 1 | 29°C | 22°C | 0 mm |
+| 7/28 | 32°C | 25°C | 0 mm |
+| 7/29 | 33°C | 26°C | 0.5 mm |
+| 7/30 | 31°C | 24°C | 2.1 mm |
+| 7/31 | 30°C | 23°C | 0 mm |
+| 8/1 | 29°C | 22°C | 0 mm |
 
-Looks like hot and mostly dry weather. Pack light clothes and an umbrella just in case for July 30!
+暑くてほぼ乾燥した天気のようです。軽装で、7月30日に備えて傘も持っていきましょう！
 
 ---
 
-## Full conversation: finding a joke
+## 完全な会話：ジョークを探す
 
-**User:** Tell me something funny!
+**ユーザー：** 何か面白いことを教えて！
 
-**LLM → MCP:** `spec_list()`
+**LLM → MCP：** `spec_list()`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```
 Specifications:
   dadjoke (icanhazdadjoke)
   meteo (Open-Meteo Weather API)
 ```
 
-**LLM → MCP:** `search(query: "random joke", limit: 5)`
+**LLM → MCP：** `search(query: "random joke", limit: 5)`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```
 Endpoints:
   GET /  — Return a random dad joke
 ```
 
-**LLM → MCP:** `invoke(endpointId: "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6")`
+**LLM → MCP：** `invoke(endpointId: "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6")`
 
-**MCP → LLM:**
+**MCP → LLM：**
 ```json
 {
   "statusCode": 200,
@@ -322,4 +322,4 @@ Endpoints:
 }
 ```
 
-**LLM:** Here you go: "I told my wife she was drawing her eyebrows too high. She looked surprised."
+**LLM：** どうぞ：「I told my wife she was drawing her eyebrows too high. She looked surprised.」

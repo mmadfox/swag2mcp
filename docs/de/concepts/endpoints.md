@@ -1,56 +1,56 @@
-# Endpoints
+# Endpunkte
 
-An endpoint is a specific HTTP method + path that can be invoked (e.g., `GET /api/users/{id}`). Endpoints are the actual API operations that the LLM discovers, inspects, and calls.
+Ein Endpunkt ist eine bestimmte HTTP-Methode + Pfad, der aufgerufen werden kann (z. B. `GET /api/users/{id}`). Endpunkte sind die eigentlichen API-Operationen, die der LLM entdeckt, inspiziert und aufruft.
 
-## Structure
+## Struktur
 
-Each endpoint contains:
+Jeder Endpunkt enthält:
 
-- **HTTP method**: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS
-- **Path**: `/api/v1/users/{id}`
-- **Summary**: a short description of what the endpoint does — very useful for the LLM to understand its purpose at a glance
-- **Description**: a detailed explanation of the endpoint's behavior, parameters, and use cases
-- **Parameters**: path, query, header, cookie
-- **Request body**: for POST/PUT/PATCH
-- **Responses**: status codes and response schemas
+- **HTTP-Methode**: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS
+- **Pfad**: `/api/v1/users/{id}`
+- **Zusammenfassung**: eine kurze Beschreibung dessen, was der Endpunkt tut — sehr nützlich für den LLM, um seinen Zweck auf einen Blick zu verstehen
+- **Beschreibung**: eine detaillierte Erklärung des Verhaltens, der Parameter und der Anwendungsfälle des Endpunkts
+- **Parameter**: Pfad, Abfrage, Header, Cookie
+- **Anforderungstext**: für POST/PUT/PATCH
+- **Antworten**: Statuscodes und Antwortschemata
 
-The `summary` and `description` fields come from the OpenAPI/Swagger/Postman file. They are the primary way the LLM understands what an endpoint does. Well-written summaries make endpoint discovery much more effective.
+Die Felder `summary` und `description` stammen aus der OpenAPI/Swagger/Postman-Datei. Sie sind der primäre Weg, wie der LLM versteht, was ein Endpunkt tut. Gut geschriebene Zusammenfassungen machen die Endpunkterkennung viel effektiver.
 
-## MCP Tools for Endpoints
+## MCP-Tools für Endpunkte
 
-| Tool | Description |
-|------|-------------|
-| `endpoint_by_spec` | All endpoints in a spec |
-| `endpoint_by_collection` | Endpoints in a collection |
-| `endpoint_by_tag` | Endpoints in a tag |
-| `endpoint_by_id` | Quick endpoint summary |
-| `inspect` | Full endpoint details (schemas, params) |
-| `invoke` | Call the endpoint |
-| `search` | Search endpoints by text |
+| Tool | Beschreibung |
+|------|--------------|
+| `endpoint_by_spec` | Alle Endpunkte in einer Spec |
+| `endpoint_by_collection` | Endpunkte in einer Collection |
+| `endpoint_by_tag` | Endpunkte in einem Tag |
+| `endpoint_by_id` | Kurze Endpunktzusammenfassung |
+| `inspect` | Vollständige Endpunktdetails (Schemata, Parameter) |
+| `invoke` | Endpunkt aufrufen |
+| `search` | Endpunkte nach Text durchsuchen |
 
-## Deprecated Endpoints
+## Veraltete Endpunkte
 
-Endpoints marked as `deprecated` in the spec are shown with a notice when inspected.
+Endpunkte, die in der Spezifikation als `deprecated` markiert sind, werden bei der Inspektion mit einem Hinweis angezeigt.
 
-## Configuration
+## Konfiguration
 
-Endpoints are **read-only** from swag2mcp's perspective. There are no YAML config settings for endpoints — you cannot add, remove, rename, or modify them in `swag2mcp.yaml`.
+Endpunkte sind aus der Perspektive von swag2mcp **schreibgeschützt**. Es gibt keine YAML-Konfigurationseinstellungen für Endpunkte — Sie können sie in `swag2mcp.yaml` nicht hinzufügen, entfernen, umbenennen oder ändern.
 
-To change endpoints (add new ones, update summaries, modify parameters, mark as deprecated), edit the original OpenAPI/Swagger/Postman file and run `swag2mcp update` to re-parse and re-index.
+Um Endpunkte zu ändern (neue hinzufügen, Zusammenfassungen aktualisieren, Parameter ändern, als veraltet markieren), bearbeiten Sie die ursprüngliche OpenAPI/Swagger/Postman-Datei und führen Sie `swag2mcp update` aus, um neu zu parsen und neu zu indizieren.
 
-## Example
+## Beispiel
 
 ```
-Query: "Show details for GET /pet/{petId}"
+Abfrage: "Zeige Details für GET /pet/{petId}"
 → inspect(endpointId: "abc123...")
-→ Result:
+→ Ergebnis:
   GET /pet/{petId}
-  Summary: Find pet by ID
-  Description: Returns a single pet by its ID
-  Parameters:
-    - petId (path, integer, required)
-  Responses:
-    - 200: Pet object
-    - 400: Error
-    - 404: Not found
+  Zusammenfassung: Haustier nach ID finden
+  Beschreibung: Gibt ein einzelnes Haustier anhand seiner ID zurück
+  Parameter:
+    - petId (path, integer, erforderlich)
+  Antworten:
+    - 200: Pet-Objekt
+    - 400: Fehler
+    - 404: Nicht gefunden
 ```

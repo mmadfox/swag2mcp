@@ -1,59 +1,59 @@
 # add
 
-## Purpose
+## 目的
 
-Add a new **spec** (API service) or **collection** (OpenAPI/Swagger/Postman file) to an existing configuration. This is the primary way to grow your workspace with new APIs.
+新しい **spec**（API サービス）または **collection**（OpenAPI/Swagger/Postman ファイル）を既存の設定に追加します。新しい API でワークスペースを拡張するための主要な方法です。
 
-## When to use
+## 使用するタイミング
 
-- You have a new API to connect to your LLM agent
-- You found an OpenAPI spec URL and want to add it
-- You want to add an additional spec file (collection) to an existing spec
-- You prefer writing YAML directly instead of using the interactive wizard
+- LLM エージェントに接続する新しい API がある場合
+- OpenAPI spec の URL を見つけて追加したい場合
+- 既存の spec に追加の spec ファイル（collection）を追加したい場合
+- 対話型ウィザードの代わりに YAML を直接記述したい場合
 
-## Syntax
+## 構文
 
 ```bash
 swag2mcp add spec [path] [flags]
 swag2mcp add collection [path] [flags]
 ```
 
-## Arguments
+## 引数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 引数 | 位置 | 必須 | 説明 |
+|------|------|------|------|
+| `path` | 1 | いいえ | ワークスペースディレクトリ。省略時はパス解決ルールに従います。 |
 
-## Flags
+## フラグ
 
 ### `add spec`
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--yaml` | `-y` | `string` | `""` | YAML input inline or `-` for stdin |
-| `--example` | `-e` | `bool` | `false` | Print a YAML template and exit |
+| フラグ | 省略形 | 型 | デフォルト | 説明 |
+|-------|--------|-----|-----------|------|
+| `--yaml` | `-y` | `string` | `""` | インライン YAML 入力、または `-` で標準入力 |
+| `--example` | `-e` | `bool` | `false` | YAML テンプレートを表示して終了 |
 
 ### `add collection`
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--yaml` | `-y` | `string` | `""` | YAML input inline or `-` for stdin |
-| `--example` | `-e` | `bool` | `false` | Print a YAML template and exit |
+| フラグ | 省略形 | 型 | デフォルト | 説明 |
+|-------|--------|-----|-----------|------|
+| `--yaml` | `-y` | `string` | `""` | インライン YAML 入力、または `-` で標準入力 |
+| `--example` | `-e` | `bool` | `false` | YAML テンプレートを表示して終了 |
 
-## How it works
+## 仕組み
 
-### Interactive mode (default)
+### 対話モード（デフォルト）
 
-Launches a TUI wizard that lets you fill in the spec or collection fields step by step.
+spec または collection のフィールドをステップごとに入力できる TUI ウィザードを起動します。
 
 ```bash
 swag2mcp add spec
 swag2mcp add collection
 ```
 
-### YAML inline mode
+### YAML インラインモード
 
-Pass the YAML directly as a string. **Be careful with shell quoting** — special characters like `:`, `#`, `&`, `{` can break the command.
+YAML を直接文字列として渡します。**シェルの引用符に注意** — `:`、`#`、`&`、`{` などの特殊文字はコマンドを壊す可能性があります。
 
 ```bash
 swag2mcp add spec --yaml 'domain: meteo
@@ -64,15 +64,15 @@ collections:
     location: https://example.com/spec.json'
 ```
 
-### YAML from stdin (recommended for complex YAML)
+### 標準入力からの YAML（複雑な YAML に推奨）
 
-Pipe from a file or use a heredoc to avoid shell quoting issues entirely:
+ファイルからパイプするか、ヒアドキュメントを使用してシェルの引用符問題を完全に回避します：
 
 ```bash
-# Pipe from file
+# ファイルからパイプ
 cat spec.yaml | swag2mcp add spec --yaml -
 
-# Heredoc
+# ヒアドキュメント
 swag2mcp add spec --yaml - <<EOF
 domain: my-api
 llm_title: My API
@@ -84,16 +84,16 @@ collections:
 EOF
 ```
 
-### YAML template
+### YAML テンプレート
 
-Print the expected YAML structure and exit:
+期待される YAML 構造を表示して終了します：
 
 ```bash
 swag2mcp add spec --example
 swag2mcp add collection --example
 ```
 
-## YAML format
+## YAML 形式
 
 ### Spec
 
@@ -120,16 +120,16 @@ llm_title: Orders Collection
 location: https://example.com/orders.json
 ```
 
-## Post-command verification
+## コマンド実行後の確認
 
 ```bash
 swag2mcp ls [path]
-# The new spec or collection should appear in the list
+# 新しい spec または collection がリストに表示されるはずです
 ```
 
-## Nuances
+## ニュアンス
 
-- **Auto-init:** If no config file exists, `add` automatically runs the init wizard first. You don't need to run `init` separately.
-- **Shell quoting:** Inline YAML (`--yaml '...'`) is fragile with special characters. Prefer `--yaml -` with a heredoc or pipe for anything beyond simple values.
-- **`--example` exits immediately** without checking for an existing config or modifying anything.
-- **`add spec` vs `add collection`:** Use `add spec` for a new API service (new domain). Use `add collection` to add another spec file to an existing spec.
+- **自動初期化:** 設定ファイルが存在しない場合、`add` は自動的に init ウィザードを実行します。`init` を別途実行する必要はありません。
+- **シェルの引用符:** インライン YAML（`--yaml '...'`）は特殊文字で問題が発生しやすいです。単純な値を超える場合は、ヒアドキュメントまたはパイプで `--yaml -` を使用することを推奨します。
+- **`--example` は即座に終了** し、既存の設定を確認したり何も変更したりしません。
+- **`add spec` と `add collection` の違い:** 新しい API サービス（新しいドメイン）には `add spec` を使用します。既存の spec に別の spec ファイルを追加するには `add collection` を使用します。

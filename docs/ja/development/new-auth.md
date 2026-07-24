@@ -1,17 +1,17 @@
-# Adding a New Auth Method
+# 新しい認証方法の追加
 
-## Steps
+## 手順
 
-1. **Create the auth client** in `internal/auth/<name>.go`
-2. **Implement the `Authenticator` interface**
-3. **Add type constant** to `internal/auth/auth.go`
-4. **Add YAML decoder** to `internal/config/auth.go`
-5. **Register decoder** in the `authDecoders` map
-6. **Write tests**
+1. **認証クライアントを作成** `internal/auth/<name>.go` に
+2. **`Authenticator` インターフェースを実装**
+3. **型定数を追加** `internal/auth/auth.go` に
+4. **YAML デコーダーを追加** `internal/config/auth.go` に
+5. **デコーダーを登録** `authDecoders` マップに
+6. **テストを書く**
 
-## 1. Auth client
+## 1. 認証クライアント
 
-Create `internal/auth/my_auth.go`:
+`internal/auth/my_auth.go` を作成：
 
 ```go
 package auth
@@ -44,30 +44,30 @@ func (c *MyAuthClient) Validate() error {
 }
 ```
 
-## 2. Authenticator interface
+## 2. Authenticator インターフェース
 
-Every auth client must implement:
+すべての認証クライアントは以下を実装する必要があります：
 
 ```go
 type Authenticator interface {
-    New() error                    // Initialize, resolve env vars
-    Type() Type                    // Return the auth type identifier
-    Apply(req *http.Request, out *Info) error  // Apply auth to request
-    Validate() error               // Validate required fields
+    New() error                    // 初期化、環境変数の解決
+    Type() Type                    // 認証型識別子を返す
+    Apply(req *http.Request, out *Info) error  // リクエストに認証を適用
+    Validate() error               // 必須フィールドを検証
 }
 ```
 
-## 3. Type constant
+## 3. 型定数
 
-Add to `internal/auth/auth.go`:
+`internal/auth/auth.go` に追加：
 
 ```go
 const MyAuth Type = "my-auth"
 ```
 
-## 4. YAML decoder
+## 4. YAML デコーダー
 
-Add a decoder function in `internal/config/auth.go`. The decoder receives a `*yaml.Node` and must decode it into your auth client struct:
+`internal/config/auth.go` にデコーダー関数を追加します。デコーダーは `*yaml.Node` を受け取り、認証クライアント構造体にデコードする必要があります：
 
 ```go
 func decodeMyAuth(node *yaml.Node) (auth.Authenticator, error) {
@@ -79,28 +79,28 @@ func decodeMyAuth(node *yaml.Node) (auth.Authenticator, error) {
 }
 ```
 
-The `decodeConfig` helper handles the common pattern: it checks that the node is not empty, decodes YAML into the struct, and returns a descriptive error on failure.
+`decodeConfig` ヘルパーは共通パターンを処理します：ノードが空でないことを確認し、YAML を構造体にデコードし、失敗時に説明的なエラーを返します。
 
-## 5. Register decoder
+## 5. デコーダーの登録
 
-Add your decoder to the `authDecoders` map in `internal/config/auth.go`:
+`internal/config/auth.go` の `authDecoders` マップにデコーダーを追加：
 
 ```go
 var authDecoders = map[string]authDecoder{
-    // ... existing decoders
+    // ... 既存のデコーダー
     auth.MyAuth.String(): decodeMyAuth,
 }
 ```
 
-The `UnmarshalYAML` method on `Auth` reads the `type` field from the YAML, normalises underscores to hyphens, looks up the decoder in `authDecoders`, and calls it with the `config` node. This is how swag2mcp knows which auth client to instantiate for each spec.
+`Auth` の `UnmarshalYAML` メソッドは YAML から `type` フィールドを読み取り、アンダースコアをハイフンに正規化し、`authDecoders` でデコーダーを検索し、`config` ノードで呼び出します。これが swag2mcp が各スペックに対してどの認証クライアントをインスタンス化するかを認識する方法です。
 
-## 6. Tests
+## 6. テスト
 
-Create `internal/auth/my_auth_test.go` with table-driven tests covering:
+`internal/auth/my_auth_test.go` を作成し、以下をカバーするテーブル駆動テストを記述：
 
-- `New()` resolves env vars correctly
-- `Type()` returns the correct type
-- `Apply()` sets the right headers/query params
-- `Apply()` handles empty values gracefully
-- `Validate()` passes for valid config
-- `Validate()` fails for missing required fields
+- `New()` が環境変数を正しく解決する
+- `Type()` が正しい型を返す
+- `Apply()` が正しいヘッダー/クエリパラメータを設定する
+- `Apply()` が空の値を適切に処理する
+- `Validate()` が有効な設定で成功する
+- `Validate()` が必須フィールド欠落で失敗する

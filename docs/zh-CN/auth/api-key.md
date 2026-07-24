@@ -1,18 +1,18 @@
 # API Key
 
-## Purpose
+## 用途
 
-Authentication via an API key. The key can be sent as an HTTP header or as a URL query parameter.
+通过 API 密钥进行认证。密钥可以作为 HTTP 头或 URL 查询参数发送。
 
-## When to use
+## 何时使用
 
-- Services that use API keys
-- Weather services, geodata, translation APIs
-- When the API expects a key in a header (`X-API-Key`) or query parameter (`?api_key=...`)
+- 使用 API 密钥的服务
+- 天气服务、地理数据、翻译 API
+- 当 API 期望在头（`X-API-Key`）或查询参数（`?api_key=...`）中提供密钥时
 
-## Configuration
+## 配置
 
-### Key in header
+### 密钥在头中
 
 ```yaml
 specs:
@@ -30,7 +30,7 @@ specs:
         value: "$(API_KEY)"
 ```
 
-### Key in query parameter
+### 密钥在查询参数中
 
 ```yaml
 specs:
@@ -48,16 +48,16 @@ specs:
         value: "$(API_KEY)"
 ```
 
-## Parameters
+## 参数
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `key` | Yes | Name of the header or query parameter |
-| `in` | Yes | Where to place the key: `header` or `query` |
-| `value` | Yes | The key value |
+| 参数 | 必需 | 描述 |
+|------|------|------|
+| `key` | 是 | 头或查询参数的名称 |
+| `in` | 是 | 密钥放置位置：`header` 或 `query` |
+| `value` | 是 | 密钥值 |
 
-## Notes
+## 说明
 
-- In `header` mode, the key is added as an HTTP header
-- In `query` mode, the key is added as a URL parameter
-- Store the value in an environment variable: `value: "$(MY_API_KEY)"`
+- 在 `header` 模式下，密钥作为 HTTP 头添加
+- 在 `query` 模式下，密钥作为 URL 参数添加
+- 将值存储在环境变量中：`value: "$(MY_API_KEY)"`

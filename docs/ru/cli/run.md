@@ -1,72 +1,72 @@
 # run
 
-## Purpose
+## Назначение
 
-Launch the interactive **TUI (Terminal User Interface)** API explorer. This is a full-screen application for searching, browsing, inspecting, and invoking API endpoints without leaving the terminal.
+Запустить интерактивный **TUI (Terminal User Interface)** — обозреватель API. Это полноэкранное приложение для поиска, просмотра, изучения и вызова эндпоинтов API, не выходя из терминала.
 
-## When to use
+## Когда использовать
 
-- You want to explore your APIs interactively
-- You need to search for a specific endpoint across all specs
-- You want to browse the spec → collection → tag → endpoint hierarchy
-- You want to test an API call before configuring the MCP server
+- Вы хотите интерактивно исследовать свои API
+- Вам нужно найти конкретный эндпоинт по всем спецификациям
+- Вы хотите просмотреть иерархию спецификация → коллекция → тег → эндпоинт
+- Вы хотите протестировать вызов API перед настройкой MCP-сервера
 
-## Syntax
+## Синтаксис
 
 ```bash
 swag2mcp run [path]
 ```
 
-## Arguments
+## Аргументы
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Аргумент | Позиция | Обязательно | Описание |
+|----------|----------|-------------|----------|
+| `path` | 1 | Нет | Директория рабочей области. Если не указан, разрешается по правилам разрешения пути. |
 
-## Flags
+## Флаги
 
-None.
+Нет.
 
-## Modes
+## Режимы
 
-### Search mode
+### Режим поиска
 
-Full-text search across all endpoints in all specs. Supports filtering by HTTP method, tag, and path.
+Полнотекстовый поиск по всем эндпоинтам во всех спецификациях. Поддерживает фильтрацию по HTTP-методу, тегу и пути.
 
-- Type a query to search endpoint names, paths, and descriptions
-- Filter results by method (GET, POST, PUT, DELETE, etc.)
-- View endpoint details with a single keystroke
+- Введите запрос для поиска по именам эндпоинтов, путям и описаниям
+- Фильтруйте результаты по методу (GET, POST, PUT, DELETE и т.д.)
+- Просматривайте детали эндпоинта одним нажатием клавиши
 
-### Browse mode
+### Режим обзора
 
-Tree navigation through the spec hierarchy:
+Древовидная навигация по иерархии спецификаций:
 
 ```
-Spec → Collection → Tag → Endpoint
+Спецификация → Коллекция → Тег → Эндпоинт
 ```
 
-- Navigate down the tree to find specific endpoints
-- View endpoint details (parameters, request body, responses)
-- Invoke the API directly from the TUI
+- Перемещайтесь по дереву для поиска конкретных эндпоинтов
+- Просматривайте детали эндпоинта (параметры, тело запроса, ответы)
+- Вызывайте API напрямую из TUI
 
-## Navigation
+## Навигация
 
-| Key | Action |
+| Клавиша | Действие |
 |-----|--------|
-| `↑` / `↓` | Navigate up/down |
-| `Enter` | Select or open |
-| `Esc` | Go back |
-| `Tab` | Switch between Search and Browse modes |
-| `/` | Focus search input |
-| `q` | Quit |
+| `↑` / `↓` | Перемещение вверх/вниз |
+| `Enter` | Выбор или открытие |
+| `Esc` | Назад |
+| `Tab` | Переключение между режимами поиска и обзора |
+| `/` | Фокус на поле поиска |
+| `q` | Выход |
 
-## Post-command verification
+## Проверка после команды
 
-The TUI loads all specs from the workspace. If a spec fails to load, an error message is shown in the interface.
+TUI загружает все спецификации из рабочей области. Если спецификация не загружается, в интерфейсе отображается сообщение об ошибке.
 
-## Nuances
+## Нюансы
 
-- **Auto-init:** If no config file exists, `run` automatically runs the init wizard first.
-- **No flags:** The `run` command has no flags — all configuration comes from the workspace.
-- **Terminal size:** The TUI requires a terminal with at least 80×24 characters. It may not render correctly in very small terminals.
-- **Dependencies:** The TUI uses Bubbletea. It works over SSH and in most terminal emulators.
+- **Автоинициализация:** Если файл конфигурации не существует, `run` автоматически запускает мастер инициализации.
+- **Нет флагов:** Команда `run` не имеет флагов — вся конфигурация берётся из рабочей области.
+- **Размер терминала:** TUI требует терминал размером не менее 80×24 символов. Он может некорректно отображаться в очень маленьких терминалах.
+- **Зависимости:** TUI использует Bubbletea. Он работает через SSH и в большинстве эмуляторов терминала.

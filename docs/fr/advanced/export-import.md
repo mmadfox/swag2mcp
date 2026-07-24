@@ -1,113 +1,113 @@
-# Export and Import
+# Exportation et Importation
 
-## Overview
+## Aperçu
 
-swag2mcp supports full workspace round-trip via ZIP archives. You can export your entire workspace (config, spec files, auth scripts) to a ZIP file and restore it on another machine.
+swag2mcp prend en charge le transfert complet d'espace de travail via des archives ZIP. Vous pouvez exporter la totalité de votre espace de travail (configuration, fichiers de spécification, scripts d'authentification) vers un fichier ZIP et le restaurer sur une autre machine.
 
-## Export
+## Exportation
 
-Creates a portable ZIP backup of your workspace.
+Crée une sauvegarde ZIP portable de votre espace de travail.
 
 ```bash
-# Export to default file (swag2mcp-backup-<timestamp>.zip)
+# Exportation vers le fichier par défaut (swag2mcp-backup-<horodatage>.zip)
 swag2mcp export
 
-# Export with custom path
-swag2mcp export --output ~/backups/swag2mcp-backup.zip
+# Exportation avec un chemin personnalisé
+swag2mcp export --output ~/sauvegardes/swag2mcp-sauvegarde.zip
 
-# Export only specific specs
+# Exportation de specs spécifiques uniquement
 swag2mcp export --spec meteo
 swag2mcp export --spec meteo,store
 ```
 
-### What's included in the export
+### Ce qui est inclus dans l'exportation
 
-| Item | Description |
-|------|-------------|
-| `swag2mcp.yaml` | Configuration file |
-| `specs/` | All spec files (OpenAPI/Swagger/Postman) |
-| `auth_scripts/` | Authentication scripts |
-| `swag2mcp.meta` | Metadata (version info for compatibility) |
+| Élément | Description |
+|---------|-------------|
+| `swag2mcp.yaml` | Fichier de configuration |
+| `specs/` | Tous les fichiers de spécification (OpenAPI/Swagger/Postman) |
+| `auth_scripts/` | Scripts d'authentification |
+| `swag2mcp.meta` | Métadonnées (informations de version pour la compatibilité) |
 
-Cache and responses are **not** exported — they are transient and would be stale on restore.
+Le cache et les réponses ne sont **pas** exportés — ils sont transitoires et seraient obsolètes lors de la restauration.
 
-### Default filename
+### Nom de fichier par défaut
 
-If you don't specify an output path, the file is saved as `swag2mcp-backup-<YYYY-MM-DD-HHMMSS>.zip` in the current directory (UTC timestamp).
+Si vous ne spécifiez pas de chemin de sortie, le fichier est sauvegardé sous `swag2mcp-backup-<AAAA-MM-JJ-HHMMSS>.zip` dans le répertoire courant (horodatage UTC).
 
-## Import
+## Importation
 
-Restore a workspace from a ZIP backup or import spec files.
+Restaurez un espace de travail à partir d'une sauvegarde ZIP ou importez des fichiers de spécification.
 
-### Restore from ZIP
-
-```bash
-# Restore full workspace
-swag2mcp import --from-zip /path/to/backup.zip
-
-# Restore with overwrite
-swag2mcp import --from-zip /path/to/backup.zip -f
-```
-
-The ZIP must be created by `swag2mcp export` — arbitrary ZIP files will not work.
-
-### Import a single spec file
-
-Download a spec file and add it to the workspace:
+### Restauration depuis un ZIP
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
+# Restauration complète de l'espace de travail
+swag2mcp import --from-zip /chemin/vers/sauvegarde.zip
+
+# Restauration avec écrasement
+swag2mcp import --from-zip /chemin/vers/sauvegarde.zip -f
 ```
 
-### Bulk import from existing config
+Le ZIP doit être créé par `swag2mcp export` — les fichiers ZIP arbitraires ne fonctionneront pas.
 
-Download all collection spec files for the specified specs (domains):
+### Importation d'un seul fichier de spécification
+
+Téléchargez un fichier de spécification et ajoutez-le à l'espace de travail :
+
+```bash
+swag2mcp import https://example.com/spec.yaml maspec
+swag2mcp import /chemin/vers/espace-travail https://example.com/spec.yaml maspec
+```
+
+### Importation en masse depuis une configuration existante
+
+Téléchargez tous les fichiers de spécification de collection pour les specs spécifiées (domaines) :
 
 ```bash
 swag2mcp import --spec meteo
-swag2mcp import /path/to/workspace --spec meteo,store
+swag2mcp import /chemin/vers/espace-travail --spec meteo,store
 ```
 
-This downloads each collection's spec file, saves it to `specs/`, and updates the config to point to the local copy.
+Cela télécharge le fichier de spécification de chaque collection, le sauvegarde dans `specs/` et met à jour la configuration pour pointer vers la copie locale.
 
-## Use cases
+## Cas d'utilisation
 
-### Backup
+### Sauvegarde
 
 ```bash
 swag2mcp export --output swag2mcp-$(date +%Y-%m-%d).zip
 ```
 
-### Transfer to another machine
+### Transfert vers une autre machine
 
 ```bash
-# On old machine
+# Sur l'ancienne machine
 swag2mcp export --output swag2mcp.zip
 
-# Copy the ZIP to the new machine, then:
+# Copiez le ZIP sur la nouvelle machine, puis :
 swag2mcp import --from-zip swag2mcp.zip
 ```
 
-### Share configuration
+### Partage de configuration
 
 ```bash
 swag2mcp init
 swag2mcp export --output template.zip
-# Share template.zip with a colleague
+# Partagez template.zip avec un collègue
 ```
 
-## Post-export verification
+## Vérification post-exportation
 
-Always verify the ZIP file was created:
+Vérifiez toujours que le fichier ZIP a été créé :
 
 ```bash
 ls -la swag2mcp-backup-*.zip
 ```
 
-## Important notes
+## Notes importantes
 
-- **The output must be a file path ending in `.zip`** — do not pass a directory
-- **Cache and responses are excluded** — only the config, specs, and auth scripts are preserved
-- **The ZIP is self-contained** — it can be restored on any machine with swag2mcp installed
-- **Spec filter** — use `--spec` to export or import only specific specs
+- **La sortie doit être un chemin de fichier se terminant par `.zip`** — ne passez pas un répertoire
+- **Le cache et les réponses sont exclus** — seuls la configuration, les specs et les scripts d'authentification sont conservés
+- **Le ZIP est autonome** — il peut être restauré sur n'importe quelle machine avec swag2mcp installé
+- **Filtre de spec** — utilisez `--spec` pour exporter ou importer uniquement des specs spécifiques

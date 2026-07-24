@@ -1,16 +1,16 @@
-# Basic Auth
+# Basic 認証
 
-## Purpose
+## 目的
 
-HTTP Basic Authentication — the simplest way to authenticate with a username and password.
+HTTP Basic 認証 — ユーザー名とパスワードで認証する最もシンプルな方法。
 
-## When to use
+## 使用するタイミング
 
-- Legacy APIs that only support Basic Auth
-- Simple authentication without complex tokens
-- Internal services
+- Basic 認証のみをサポートするレガシー API
+- 複雑なトークン不要のシンプルな認証
+- 内部サービス
 
-## Configuration
+## 設定
 
 ```yaml
 specs:
@@ -27,14 +27,14 @@ specs:
         password: "$(PASSWORD)"
 ```
 
-## Parameters
+## パラメーター
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `username` | Yes | Username |
-| `password` | Yes | Password |
+| パラメーター | 必須 | 説明 |
+|-----------|------|------|
+| `username` | はい | ユーザー名 |
+| `password` | はい | パスワード |
 
-## Notes
+## 注意点
 
-- The password is sent in the `Authorization: Basic ...` header encoded in Base64 — this is **not encryption**. Always use HTTPS.
-- Store the password in an environment variable: `password: "$(MY_PASSWORD)"`
+- パスワードは `Authorization: Basic ...` ヘッダーで Base64 エンコードされて送信されます — これは**暗号化ではありません**。常に HTTPS を使用してください。
+- パスワードは環境変数に保存：`password: "$(MY_PASSWORD)"`

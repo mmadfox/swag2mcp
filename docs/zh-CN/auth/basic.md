@@ -1,16 +1,16 @@
 # Basic Auth
 
-## Purpose
+## 用途
 
-HTTP Basic Authentication — the simplest way to authenticate with a username and password.
+HTTP Basic 认证 — 使用用户名和密码进行认证的最简单方式。
 
-## When to use
+## 何时使用
 
-- Legacy APIs that only support Basic Auth
-- Simple authentication without complex tokens
-- Internal services
+- 仅支持 Basic Auth 的旧版 API
+- 无需复杂令牌的简单认证
+- 内部服务
 
-## Configuration
+## 配置
 
 ```yaml
 specs:
@@ -27,14 +27,14 @@ specs:
         password: "$(PASSWORD)"
 ```
 
-## Parameters
+## 参数
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `username` | Yes | Username |
-| `password` | Yes | Password |
+| 参数 | 必需 | 描述 |
+|------|------|------|
+| `username` | 是 | 用户名 |
+| `password` | 是 | 密码 |
 
-## Notes
+## 说明
 
-- The password is sent in the `Authorization: Basic ...` header encoded in Base64 — this is **not encryption**. Always use HTTPS.
-- Store the password in an environment variable: `password: "$(MY_PASSWORD)"`
+- 密码以 Base64 编码通过 `Authorization: Basic ...` 头发送 — 这**不是加密**。始终使用 HTTPS。
+- 将密码存储在环境变量中：`password: "$(MY_PASSWORD)"`

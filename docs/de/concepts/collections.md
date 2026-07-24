@@ -1,82 +1,82 @@
 # Collections
 
-A collection is a single OpenAPI/Swagger/Postman file that describes a specific API. It points to a `location` (URL or local file path) and belongs to a spec (domain).
+Eine Collection ist eine einzelne OpenAPI/Swagger/Postman-Datei, die eine bestimmte API beschreibt. Sie verweist auf einen `location` (URL oder lokalen Dateipfad) und gehört zu einer Spec (Domain).
 
-One spec can have multiple collections — for example, the "meteo" spec might have "Forecast", "Air Quality", and "Marine" collections, each pointing to a different spec file.
+Eine Spec kann mehrere Collections haben — zum Beispiel könnte die "meteo"-Spec die Collections "Forecast", "Air Quality" und "Marine" haben, die jeweils auf eine andere Spezifikationsdatei verweisen.
 
-## Collection Fields
+## Collection-Felder
 
-| Field | YAML key | Required | Description |
-|-------|----------|----------|-------------|
-| [LLM Title](#llm-instruction) | `llm_title` | ❌ | Collection display name for the LLM (max 120 chars). Auto-populated from spec document if not set |
-| [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | Short hint for the LLM (max 360 chars). Auto-populated from spec document if not set |
-| Title | `title` | ❌ | Original spec title override (auto-populated from parsed document) |
-| [Location](#location--how-spec-files-are-resolved) | `location` | ✅ | URL or path to the spec file (5–250 chars) |
-| [Disable](#disable) | `disable` | ❌ | Skip this collection during loading |
-| [HTTP Client](#http-client-override) | `http_client` | ❌ | Per-collection HTTP settings (headers, cookies) |
-| [Base URL](#base-url-override) | `base_url` | ❌ | Override the spec's base URL for this collection |
-| [Mock Server](#mock-server) | `base_mock_url` | ❌ | Mock server address in `host:port` format. Required when `mock_enabled: true` |
+| Feld | YAML-Schlüssel | Erforderlich | Beschreibung |
+|------|---------------|-------------|--------------|
+| [LLM-Titel](#llm-instruction) | `llm_title` | ❌ | Collection-Anzeigename für den LLM (max. 120 Zeichen). Wird automatisch aus dem Spec-Dokument befüllt, wenn nicht gesetzt |
+| [LLM-Instruktion](#llm-instruction) | `llm_instruction` | ❌ | Kurzer Hinweis für den LLM (max. 360 Zeichen). Wird automatisch aus dem Spec-Dokument befüllt, wenn nicht gesetzt |
+| Titel | `title` | ❌ | Überschreibung des ursprünglichen Spec-Titels (wird automatisch aus dem geparsten Dokument befüllt) |
+| [Speicherort](#location--wie-spezifikationsdateien-aufgelöst-werden) | `location` | ✅ | URL oder Pfad zur Spezifikationsdatei (5–250 Zeichen) |
+| [Deaktivieren](#disable) | `disable` | ❌ | Diese Collection beim Laden überspringen |
+| [HTTP-Client](#http-client-überschreibung) | `http_client` | ❌ | Pro-Collection-HTTP-Einstellungen (Header, Cookies) |
+| [Basis-URL](#basis-url-überschreibung) | `base_url` | ❌ | Die Basis-URL der Spec für diese Collection überschreiben |
+| [Mock-Server](#mock-server) | `base_mock_url` | ❌ | Mock-Server-Adresse im Format `host:port`. Erforderlich, wenn `mock_enabled: true` |
 
-## Location — How Spec Files Are Resolved
+## Speicherort — Wie Spezifikationsdateien aufgelöst werden
 
-The `location` field tells swag2mcp where to find the OpenAPI/Swagger/Postman file. It supports several source types:
+Das Feld `location` teilt swag2mcp mit, wo die OpenAPI/Swagger/Postman-Datei zu finden ist. Es unterstützt mehrere Quelltypen:
 
-| Source | Example | Description |
-|--------|---------|-------------|
-| **Remote URL** | `https://raw.githubusercontent.com/.../spec.yaml` | Downloaded and cached |
-| **Local file (absolute)** | `/home/user/my-api.yaml` | Read from filesystem, cached |
-| **Local file (relative)** | `./my-api.yaml` | Resolved to absolute path, cached |
-| **Workspace local file** | `specs/my-api.yaml` | Stored in `~/.swag2mcp/specs/`, used directly (not cached) |
-| **file:// URI** | `file:///home/user/spec.yaml` | Converted to local path, cached |
+| Quelle | Beispiel | Beschreibung |
+|--------|---------|--------------|
+| **Entfernte URL** | `https://raw.githubusercontent.com/.../spec.yaml` | Heruntergeladen und zwischengespeichert |
+| **Lokale Datei (absolut)** | `/home/user/my-api.yaml` | Vom Dateisystem gelesen, zwischengespeichert |
+| **Lokale Datei (relativ)** | `./my-api.yaml` | Zu absolutem Pfad aufgelöst, zwischengespeichert |
+| **Lokale Datei im Arbeitsbereich** | `specs/my-api.yaml` | In `~/.swag2mcp/specs/` gespeichert, direkt verwendet (nicht zwischengespeichert) |
+| **file://-URI** | `file:///home/user/spec.yaml` | In lokalen Pfad umgewandelt, zwischengespeichert |
 
-swag2mcp automatically detects the source type:
+swag2mcp erkennt den Quelltyp automatisch:
 
-- `https://` or `http://` → remote URL (cached)
-- `file://` → local file (converted to filesystem path)
-- Everything else → local file (with `~` expansion for home directory)
+- `https://` oder `http://` → entfernte URL (zwischengespeichert)
+- `file://` → lokale Datei (in Dateisystempfad umgewandelt)
+- Alles andere → lokale Datei (mit `~`-Erweiterung für das Home-Verzeichnis)
 
-### Remote URLs
+### Entfernte URLs
 
-When you use a remote URL, swag2mcp downloads the file and caches it locally. The cache is reused on subsequent starts to avoid repeated downloads.
+Wenn Sie eine entfernte URL verwenden, lädt swag2mcp die Datei herunter und speichert sie lokal zwischen. Der Cache wird bei nachfolgenden Starts wiederverwendet, um wiederholte Downloads zu vermeiden.
 
-### Local Files
+### Lokale Dateien
 
-Local files are read directly from the filesystem. If the file is outside the workspace `specs/` directory, it is copied to the cache for consistency.
+Lokale Dateien werden direkt vom Dateisystem gelesen. Wenn die Datei außerhalb des Arbeitsbereichsverzeichnisses `specs/` liegt, wird sie zur Konsistenz in den Cache kopiert.
 
-### Workspace Local Files
+### Lokale Dateien im Arbeitsbereich
 
-The `specs/` directory inside the workspace (`~/.swag2mcp/specs/`) is the recommended place for local spec files. Files stored here are used directly without caching. Use a relative path starting with `specs/` to reference them.
+Das Verzeichnis `specs/` innerhalb des Arbeitsbereichs (`~/.swag2mcp/specs/`) ist der empfohlene Ort für lokale Spezifikationsdateien. Hier gespeicherte Dateien werden direkt ohne Zwischenspeicherung verwendet. Verwenden Sie einen relativen Pfad, der mit `specs/` beginnt, um darauf zu verweisen.
 
-> **Note:** `specs/` is just a directory name (like `cache/` or `responses/`), not the concept of "spec". It stores the actual OpenAPI/Swagger/Postman files that collections point to.
+> **Hinweis:** `specs/` ist nur ein Verzeichnisname (wie `cache/` oder `responses/`), nicht das Konzept "Spec". Es speichert die eigentlichen OpenAPI/Swagger/Postman-Dateien, auf die Collections verweisen.
 
 ```bash
-# Import a spec file into the workspace
+# Eine Spezifikationsdatei in den Arbeitsbereich importieren
 swag2mcp import https://example.com/api.yaml myspec
 
-# After import, the location becomes:
+# Nach dem Import wird der Speicherort:
 # specs/myspec.yaml
 ```
 
-## Cache System
+## Cache-System
 
-swag2mcp caches remote spec files to avoid downloading them on every startup.
+swag2mcp speichert entfernte Spezifikationsdateien zwischen, um sie nicht bei jedem Start herunterladen zu müssen.
 
-### How It Works
+### Wie es funktioniert
 
-1. When a collection with a remote URL is loaded, swag2mcp checks the cache
-2. If a valid (non-expired) cache entry exists, it is used directly
-3. If not, the file is downloaded, parsed, and stored in the cache
+1. Wenn eine Collection mit einer entfernten URL geladen wird, überprüft swag2mcp den Cache
+2. Wenn ein gültiger (nicht abgelaufener) Cache-Eintrag existiert, wird er direkt verwendet
+3. Wenn nicht, wird die Datei heruntergeladen, geparst und im Cache gespeichert
 
-### Cache Structure
+### Cache-Struktur
 
 ```
 ~/.swag2mcp/
   cache/
-    {sha256_hash}.spec    # Cached spec file content
-    {sha256_hash}.meta    # Cache metadata (JSON)
+    {sha256_hash}.spec    # Zwischengespeicherter Spezifikationsdateiinhalt
+    {sha256_hash}.meta    # Cache-Metadaten (JSON)
 ```
 
-Each cached file has a metadata file containing:
+Jede zwischengespeicherte Datei hat eine Metadatendatei mit:
 
 ```json
 {
@@ -88,59 +88,59 @@ Each cached file has a metadata file containing:
 }
 ```
 
-### Cache TTL
+### Cache-TTL
 
-Each cached file gets a **random TTL** between 1 hour and 48 hours. This prevents all cached files from expiring at the same time (thundering herd problem).
+Jede zwischengespeicherte Datei erhält eine **zufällige TTL** zwischen 1 Stunde und 48 Stunden. Dies verhindert, dass alle zwischengespeicherten Dateien gleichzeitig ablaufen (Thundering-Herd-Problem).
 
-### Cache Key
+### Cache-Schlüssel
 
-The cache key is a SHA-256 hash of the raw location string (first 16 bytes = 32 hex chars).
+Der Cache-Schlüssel ist ein SHA-256-Hash der rohen Speicherort-Zeichenfolge (erste 16 Bytes = 32 Hex-Zeichen).
 
-### Managing the Cache
+### Cache verwalten
 
 ```bash
-# Clear cache and responses, re-download all spec files
+# Cache und Antworten leeren, alle Spezifikationsdateien neu herunterladen
 swag2mcp update
 
-# Clear cache and responses only
+# Nur Cache und Antworten leeren
 swag2mcp clean
 ```
 
-- `swag2mcp update` — validates config, clears `cache/` and `responses/`, then re-caches all collection locations
-- `swag2mcp clean` — removes all contents of `cache/` and `responses/`, plus orphan auth scripts
-- Old responses are cleaned automatically after 48 hours on MCP server start
+- `swag2mcp update` — validiert Konfiguration, leert `cache/` und `responses/`, dann werden alle Collection-Speicherorte neu zwischengespeichert
+- `swag2mcp clean` — entfernt alle Inhalte von `cache/` und `responses/`, plus verwaiste Auth-Skripte
+- Alte Antworten werden automatisch nach 48 Stunden beim MCP-Server-Start bereinigt
 
-## Validation
+## Validierung
 
-Every collection is validated when the config is loaded. Validation runs on every `swag2mcp mcp` startup. If it fails, the MCP server will not start — in some IDEs this means the server simply won't connect, and the LLM receives a clear error message explaining what to fix.
+Jede Collection wird beim Laden der Konfiguration validiert. Die Validierung läuft bei jedem `swag2mcp mcp`-Start. Wenn sie fehlschlägt, startet der MCP-Server nicht — in manchen IDEs bedeutet dies, dass der Server einfach keine Verbindung herstellt, und der LLM erhält eine klare Fehlermeldung, die erklärt, was zu beheben ist.
 
-| Check | Rule |
-|-------|------|
-| **Location** | Required, 5–250 characters |
-| **Location accessibility** | Must be a reachable URL or existing file |
-| **Location validity** | Must be a valid OpenAPI 3.x, Swagger 2.0, or Postman file |
-| **LLM Title** | Max 120 characters, letters/digits/basic punctuation |
-| **LLM Instruction** | Max 360 characters, same character set as title |
-| **Base URL** | Must be a valid URL if set |
-| **Base Mock URL** | Must be `host:port` or `host:port/path` where host is `localhost`, `127.0.0.1`, or `0.0.0.0` |
-| **Mock required** | If `mock_enabled: true`, every collection must have `base_mock_url` |
-| **Duplicate mock ports** | No two collections may share the same mock port |
+| Prüfung | Regel |
+|---------|-------|
+| **Speicherort** | Erforderlich, 5–250 Zeichen |
+| **Speicherort-Erreichbarkeit** | Muss eine erreichbare URL oder vorhandene Datei sein |
+| **Speicherort-Gültigkeit** | Muss eine gültige OpenAPI 3.x-, Swagger 2.0- oder Postman-Datei sein |
+| **LLM-Titel** | Max. 120 Zeichen, Buchstaben/Ziffern/einfache Satzzeichen |
+| **LLM-Instruktion** | Max. 360 Zeichen, gleicher Zeichensatz wie Titel |
+| **Basis-URL** | Muss eine gültige URL sein, wenn gesetzt |
+| **Basis-Mock-URL** | Muss `host:port` oder `host:port/pfad` sein, wobei host `localhost`, `127.0.0.1` oder `0.0.0.0` ist |
+| **Mock erforderlich** | Wenn `mock_enabled: true`, muss jede Collection `base_mock_url` haben |
+| **Doppelte Mock-Ports** | Keine zwei Collections dürfen denselben Mock-Port teilen |
 
-To diagnose issues before starting the server, use the [`validate`](../cli/validate.md) command:
+Verwenden Sie den Befehl [`validate`](../cli/validate.md), um Probleme vor dem Start des Servers zu diagnostizieren:
 
 ```bash
-# Validate default workspace (~/.swag2mcp)
+# Standard-Arbeitsbereich validieren (~/.swag2mcp)
 swag2mcp validate
 
-# Validate a custom project workspace
+# Benutzerdefinierten Projektarbeitsbereich validieren
 swag2mcp validate ./my-project
 ```
 
-## Adding Collections
+## Collections hinzufügen
 
-### Via YAML Config
+### Über YAML-Konfiguration
 
-Edit `~/.swag2mcp/swag2mcp.yaml` directly:
+Bearbeiten Sie `~/.swag2mcp/swag2mcp.yaml` direkt:
 
 ```yaml
 specs:
@@ -152,36 +152,36 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
 ```
 
-After editing, restart the MCP server (`swag2mcp mcp`) for changes to take effect.
+Nach der Bearbeitung starten Sie den MCP-Server (`swag2mcp mcp`) neu, damit die Änderungen wirksam werden.
 
-### Via CLI
+### Über CLI
 
 ```bash
-# Interactive mode
+# Interaktiver Modus
 swag2mcp add collection
 
-# Non-interactive with YAML
+# Nicht-interaktiv mit YAML
 swag2mcp add collection --yaml 'spec_domain: meteo
 llm_title: Forecast
 location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml'
 
-# Pipe from stdin
+# Von stdin weiterleiten
 cat collection.yaml | swag2mcp add collection --yaml -
 
-# Show YAML example
+# YAML-Beispiel anzeigen
 swag2mcp add collection --example
 ```
 
-### Via Import
+### Über Import
 
 ```bash
-# Import a spec file into the workspace
+# Eine Spezifikationsdatei in den Arbeitsbereich importieren
 swag2mcp import https://example.com/api.yaml
 ```
 
-## LLM Instruction
+## LLM-Instruktion
 
-Collections can have their own `llm_instruction` (up to 360 chars) for more specific guidance. This is injected into the swag2mcp system prompt alongside the spec-level instruction.
+Collections können eine eigene `llm_instruction` (bis zu 360 Zeichen) für spezifischere Anleitungen haben. Diese wird zusammen mit der Spec-Ebene-Instruktion in den swag2mcp-System-Prompt eingefügt.
 
 ```yaml
 specs:
@@ -190,18 +190,18 @@ specs:
     base_url: https://api.open-meteo.com
     collections:
       - llm_title: Forecast
-        llm_instruction: "Use this collection for current weather and daily forecasts."
+        llm_instruction: "Verwenden Sie diese Collection für aktuelles Wetter und tägliche Vorhersagen."
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
       - llm_title: Air Quality
-        llm_instruction: "Use this collection for air quality index and pollution data."
+        llm_instruction: "Verwenden Sie diese Collection für Luftqualitätsindex und Verschmutzungsdaten."
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/air-quality.yml
 ```
 
-If `llm_title` is not set, it is automatically populated from the spec document's `title` field. If `llm_instruction` is not set, it is populated from the spec document's `description` field.
+Wenn `llm_title` nicht gesetzt ist, wird es automatisch aus dem `title`-Feld des Spec-Dokuments befüllt. Wenn `llm_instruction` nicht gesetzt ist, wird es aus dem `description`-Feld des Spec-Dokuments befüllt.
 
-## Disable
+## Deaktivieren
 
-Set `disable: true` to skip a collection. It won't be loaded, indexed, or available to the LLM.
+Setzen Sie `disable: true`, um eine Collection zu überspringen. Sie wird nicht geladen, indiziert oder dem LLM zur Verfügung gestellt.
 
 ```yaml
 specs:
@@ -216,9 +216,9 @@ specs:
         disable: true
 ```
 
-## Base URL Override
+## Basis-URL-Überschreibung
 
-Each collection can override the spec's `base_url`. This is useful when different collections within the same spec use different API endpoints.
+Jede Collection kann die `base_url` der Spec überschreiben. Dies ist nützlich, wenn verschiedene Collections innerhalb derselben Spec unterschiedliche API-Endpunkte verwenden.
 
 ```yaml
 specs:
@@ -236,9 +236,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
-## HTTP Client Override
+## HTTP-Client-Überschreibung
 
-Collections can override HTTP settings (headers, cookies) from the spec and global levels.
+Collections können HTTP-Einstellungen (Header, Cookies) von der Spec- und globalen Ebene überschreiben.
 
 ```yaml
 specs:
@@ -256,11 +256,11 @@ specs:
               value: abc123
 ```
 
-Settings cascade: global → spec → collection. See [Configuration Cascade](../configuration/cascade.md) for details.
+Einstellungen kaskadieren: global → spec → collection. Siehe [Konfigurationskaskade](../configuration/cascade.md) für Details.
 
-## Mock Server
+## Mock-Server
 
-When `mock_enabled: true` is set at the config level, every collection must have `base_mock_url` set. This tells swag2mcp where the mock server is running for this collection.
+Wenn `mock_enabled: true` auf Konfigurationsebene gesetzt ist, muss jede Collection `base_mock_url` gesetzt haben. Dies teilt swag2mcp mit, wo der Mock-Server für diese Collection läuft.
 
 ```yaml
 mock_enabled: true
@@ -274,11 +274,11 @@ specs:
         base_mock_url: localhost:8080
 ```
 
-See [Mock Server](../advanced/mock-server.md) for full details.
+Siehe [Mock-Server](../advanced/mock-server.md) für vollständige Details.
 
-## Examples
+## Beispiele
 
-### Minimal Collection
+### Minimale Collection
 
 ```yaml
 specs:
@@ -290,7 +290,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-### Full Collection with All Fields
+### Vollständige Collection mit allen Feldern
 
 ```yaml
 specs:
@@ -299,8 +299,8 @@ specs:
     base_url: https://api.open-meteo.com
     collections:
       - llm_title: Forecast
-        llm_instruction: "Use for current weather and daily forecasts."
-        title: "Custom Title"
+        llm_instruction: "Für aktuelles Wetter und tägliche Vorhersagen verwenden."
+        title: "Benutzerdefinierter Titel"
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
         disable: false
         base_url: https://forecast-api.open-meteo.com
@@ -310,7 +310,7 @@ specs:
             X-Custom: value
 ```
 
-### Multiple Collections per Spec
+### Mehrere Collections pro Spec
 
 ```yaml
 specs:
@@ -328,7 +328,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
-### Local File in Workspace (specs/ Directory)
+### Lokale Datei im Arbeitsbereich (Verzeichnis specs/)
 
 ```yaml
 specs:
@@ -342,7 +342,7 @@ specs:
         location: specs/orders.openapi.json
 ```
 
-### Disabled Collection
+### Deaktivierte Collection
 
 ```yaml
 specs:
@@ -357,13 +357,13 @@ specs:
         disable: true
 ```
 
-## Related
+## Verwandte Themen
 
-- [Collection Settings (config)](../configuration/collection-settings.md) — full YAML reference
-- [Configuration Cascade](../configuration/cascade.md) — how settings override each other
-- [Specs](./specs) — logical containers for collections
-- [HTTP Client](../configuration/http-client.md) — HTTP client configuration
-- [Mock Server](../advanced/mock-server.md) — mock server setup
-- [CLI: validate](../cli/validate.md) — validate command reference
-- [CLI: update](../cli/update.md) — update command reference
-- [CLI: clean](../cli/clean.md) — clean command reference
+- [Collection-Einstellungen (Konfiguration)](../configuration/collection-settings.md) — vollständige YAML-Referenz
+- [Konfigurationskaskade](../configuration/cascade.md) — wie Einstellungen einander überschreiben
+- [Specs](./specs) — logische Container für Collections
+- [HTTP-Client](../configuration/http-client.md) — HTTP-Client-Konfiguration
+- [Mock-Server](../advanced/mock-server.md) — Mock-Server-Einrichtung
+- [CLI: validate](../cli/validate.md) — validate-Befehlsreferenz
+- [CLI: update](../cli/update.md) — update-Befehlsreferenz
+- [CLI: clean](../cli/clean.md) — clean-Befehlsreferenz

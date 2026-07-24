@@ -1,15 +1,15 @@
-# Global Settings
+# グローバル設定
 
-Global settings are the top-level configuration blocks in `swag2mcp.yaml`. They apply to all specs unless overridden at the spec or collection level.
+グローバル設定は `swag2mcp.yaml` のトップレベルの設定ブロックです。spec または collection レベルで上書きされない限り、すべての spec に適用されます。
 
-## Structure
+## 構造
 
 ```yaml
 http_client:
-  # HTTP client settings for all API calls
+  # すべての API 呼び出しの HTTP クライアント設定
 
 mcp:
-  # MCP server settings
+  # MCP サーバー設定
 
 mock_enabled: false
 mock_auth:
@@ -21,21 +21,21 @@ disable_ratelimiter: false
 rate_limit_interval: 10s
 ```
 
-## HTTP Client
+## HTTP クライアント
 
-Controls how swag2mcp makes HTTP requests to APIs: timeout, response size limit, proxy, headers, cookies, redirects, and user-agent. These settings cascade down to specs and collections.
+swag2mcp が API に HTTP リクエストを行う方法を制御します：タイムアウト、レスポンスサイズ制限、プロキシ、ヘッダー、Cookie、リダイレクト、ユーザーエージェント。これらの設定は spec と collection にカスケードされます。
 
-See [HTTP Client](./http-client) for all parameters and examples.
+すべてのパラメーターと例については [HTTP Client](./http-client) を参照してください。
 
-## MCP Server
+## MCP サーバー
 
-Controls how the MCP server communicates with LLM agents: transport type (stdio, SSE, Streamable HTTP), address, path, and optional bearer token auth.
+MCP サーバーが LLM エージェントと通信する方法を制御します：トランスポートタイプ（stdio、SSE、Streamable HTTP）、アドレス、パス、オプションの Bearer トークン認証。
 
-See [MCP Server](./mcp-server) for all parameters, transports, and startup flags.
+すべてのパラメーター、トランスポート、起動フラグについては [MCP Server](./mcp-server) を参照してください。
 
-## Mock Server
+## モックサーバー
 
-The mock server generates fake API responses based on OpenAPI schemas. Useful for testing without hitting real APIs.
+モックサーバーは OpenAPI スキーマに基づいて偽の API レスポンスを生成します。実際の API にアクセスせずにテストするのに便利です。
 
 ```yaml
 mock_enabled: true
@@ -47,24 +47,24 @@ mock_auth:
 
 ### mock_enabled
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Effect:** When `true`, swag2mcp starts mock servers for all specs that have `base_mock_url` configured. Each collection must have `base_mock_url` set.
-- **When to enable:** You want to test your API integration without making real HTTP calls. Mock servers return fake data based on the OpenAPI schema.
+- **型:** `bool`
+- **デフォルト:** `false`
+- **効果:** `true` の場合、swag2mcp は `base_mock_url` が設定されているすべての spec のモックサーバーを起動します。各 collection に `base_mock_url` が設定されている必要があります。
+- **有効にするタイミング:** 実際の HTTP 呼び出しを行わずに API 統合をテストしたい場合。モックサーバーは OpenAPI スキーマに基づいて偽のデータを返します。
 
 ### mock_auth
 
-Port configuration for mock authentication servers. These are used when testing auth methods (OAuth2, Digest, HMAC) with the mock server.
+モック認証サーバーのポート設定。これらはモックサーバーで認証方式（OAuth2、Digest、HMAC）をテストする際に使用されます。
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `oauth2_port` | int | `9090` | Port for the mock OAuth2 token server (1024-65535) |
-| `digest_port` | int | `9091` | Port for the mock Digest auth server (1024-65535) |
-| `hmac_port` | int | `9092` | Port for the mock HMAC auth server (1024-65535) |
+| フィールド | 型 | デフォルト | 説明 |
+|-----------|------|---------|------|
+| `oauth2_port` | int | `9090` | モック OAuth2 トークンサーバーのポート（1024〜65535） |
+| `digest_port` | int | `9091` | モック Digest 認証サーバーのポート（1024〜65535） |
+| `hmac_port` | int | `9092` | モック HMAC 認証サーバーのポート（1024〜65535） |
 
-## Rate Limiter
+## レートリミッター
 
-The rate limiter prevents the LLM from calling the same API endpoint too frequently. By default, each endpoint can be called once every 10 seconds.
+レートリミッターは LLM が同じ API エンドポイントを頻繁に呼び出すのを防ぎます。デフォルトでは、各エンドポイントは 10 秒に 1 回呼び出せます。
 
 ```yaml
 disable_ratelimiter: false
@@ -73,30 +73,30 @@ rate_limit_interval: 10s
 
 ### disable_ratelimiter
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Effect:** When `true`, the per-endpoint rate limiter is disabled entirely. The LLM can call the same endpoint repeatedly without waiting.
-- **When to enable:** Testing, debugging, or when you need to call the same endpoint multiple times in quick succession.
-- **When to keep disabled (recommended):** Production. The rate limiter prevents accidental abuse and respects API rate limits.
+- **型:** `bool`
+- **デフォルト:** `false`
+- **効果:** `true` の場合、エンドポイントごとのレートリミッターが完全に無効になります。LLM は待機なしで同じエンドポイントを繰り返し呼び出せます。
+- **有効にするタイミング:** テスト、デバッグ、または同じエンドポイントを短時間に複数回呼び出す必要がある場合。
+- **無効のままにするタイミング（推奨）:** 本番環境。レートリミッターは偶発的な悪用を防ぎ、API のレート制限を尊重します。
 
 ### rate_limit_interval
 
-- **Type:** duration (Go format: `10s`, `30s`, `1m`)
-- **Default:** `10s`
-- **Effect:** Sets how long the LLM must wait between calls to the same endpoint.
-- **When to change:** Increase for APIs with strict rate limits. Decrease for internal APIs where you control the load.
-- **Range:** Any valid duration (e.g., `5s`, `30s`, `1m`, `2m`).
+- **型:** 期間（Go 形式：`10s`、`30s`、`1m`）
+- **デフォルト:** `10s`
+- **効果:** LLM が同じエンドポイントへの呼び出しの間に待機する必要がある時間を設定します。
+- **変更するタイミング:** 厳格なレート制限がある API では増やします。負荷を制御できる内部 API では減らします。
+- **範囲:** 任意の有効な期間（例：`5s`、`30s`、`1m`、`2m`）。
 
-## Cascade
+## カスケード
 
-Global settings can be overridden at the spec and collection levels. All `http_client` settings (timeout, proxy, user-agent, redirects, response size, randomizer, headers, cookies) can be overridden at both spec and collection levels.
+グローバル設定は spec および collection レベルで上書きできます。すべての `http_client` 設定（タイムアウト、プロキシ、ユーザーエージェント、リダイレクト、レスポンスサイズ、ランダマイザー、ヘッダー、Cookie）は spec と collection の両方のレベルで上書きできます。
 
 ```
 Global (http_client, mock_enabled, disable_ratelimiter, rate_limit_interval)
-    ↓ overrides (http_client only)
+    ↓ 上書き（http_client のみ）
 Spec (specs[].http_client)
-    ↓ overrides (http_client only)
+    ↓ 上書き（http_client のみ）
 Collection (specs[].collections[].http_client)
 ```
 
-See [Configuration Cascade](./cascade) for details.
+詳細は [Configuration Cascade](./cascade) を参照してください。

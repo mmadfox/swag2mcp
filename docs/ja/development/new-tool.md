@@ -1,28 +1,28 @@
-# Adding a New MCP Tool
+# 新しい MCP ツールの追加
 
-## Steps
+## 手順
 
-1. **Add a tool name constant** in `internal/service/service.go`
-2. **Create request/response types** in `internal/service/types.go`
-3. **Implement the service** in `internal/service/` (new file or add to existing)
-4. **Create a markdown definition** in `internal/service/definitions/` — this is what `MakeToolDefinitions` reads
-5. **Add method to `Svc` interface** in `internal/server/mcp/handler.go`
-6. **Add handler** in `handler.go`
-7. **Register tool** in `registerTools` in `mcp.go`
-8. **Generate mocks**: `go generate ./...`
-9. **Write tests**
+1. **ツール名定数を追加** `internal/service/service.go` に
+2. **リクエスト/レスポンス型を作成** `internal/service/types.go` に
+3. **サービスを実装** `internal/service/` に（新規ファイルまたは既存ファイルに追加）
+4. **マークダウン定義を作成** `internal/service/definitions/` に — これは `MakeToolDefinitions` が読み取るものです
+5. **`Svc` インターフェースにメソッドを追加** `internal/server/mcp/handler.go` に
+6. **ハンドラーを追加** `handler.go` に
+7. **ツールを登録** `mcp.go` の `registerTools` で
+8. **モックを生成**：`go generate ./...`
+9. **テストを書く**
 
-## 1. Tool name constant
+## 1. ツール名定数
 
-Add a constant in `internal/service/service.go`:
+`internal/service/service.go` に定数を追加：
 
 ```go
 const MyNewTool = "my_new_tool"
 ```
 
-## 2. Request/Response types
+## 2. リクエスト/レスポンス型
 
-Define in `internal/service/types.go`:
+`internal/service/types.go` で定義：
 
 ```go
 type MyNewToolRequest struct {
@@ -34,23 +34,23 @@ type MyNewToolResponse struct {
 }
 ```
 
-## 3. Service implementation
+## 3. サービスの実装
 
-Create `internal/service/my_new_tool.go` or add to an existing service file. Follow the standard service pattern: validate → lookup → execute → return:
+`internal/service/my_new_tool.go` を作成するか、既存のサービスファイルに追加します。標準のサービスパターンに従います：検証 → 検索 → 実行 → 返却：
 
 ```go
 func (s *Service) MyNewTool(ctx context.Context, req MyNewToolRequest) (MyNewToolResponse, error) {
     if err := s.validateRequest(req); err != nil {
         return MyNewToolResponse{}, NewLLMError(validationFailedErrCode, err.Error())
     }
-    // business logic
+    // ビジネスロジック
     return MyNewToolResponse{Result: "ok"}, nil
 }
 ```
 
-## 4. Markdown definition
+## 4. マークダウン定義
 
-Create `internal/service/definitions/my_new_tool.md`. This file is read by `MakeToolDefinitions()` and embedded into the binary. The frontmatter `name:` field must match the constant:
+`internal/service/definitions/my_new_tool.md` を作成します。このファイルは `MakeToolDefinitions()` によって読み取られ、バイナリに埋め込まれます。フロントマターの `name:` フィールドは定数と一致する必要があります：
 
 ```markdown
 ---
@@ -59,31 +59,31 @@ name: my_new_tool
 
 # my_new_tool
 
-Description of the tool.
+ツールの説明。
 
-## Parameters
+## パラメータ
 
-| Parameter | Type | Description |
+| パラメータ | 型 | 説明 |
 |-----------|------|-------------|
-| `param1` | string | Description |
+| `param1` | string | 説明 |
 ```
 
-The `MakeToolDefinitions()` function in `tools.go` reads all `.md` files from the embedded `definitions/` directory, parses the YAML frontmatter for the `name` field, and uses the body as the tool description. The `instruction.md` file is treated specially — it becomes the system instruction for the LLM.
+`tools.go` の `MakeToolDefinitions()` 関数は、埋め込まれた `definitions/` ディレクトリからすべての `.md` ファイルを読み取り、`name` フィールドの YAML フロントマターを解析し、本文をツールの説明として使用します。`instruction.md` ファイルは特別に扱われ、LLM のシステム指示になります。
 
-## 5. Svc Interface
+## 5. Svc インターフェース
 
-Add a method to the composed `Svc` interface in `handler.go`:
+`handler.go` の合成 `Svc` インターフェースにメソッドを追加：
 
 ```go
 type Svc interface {
-    // ... existing methods
+    // ... 既存のメソッド
     MyNewTool(ctx context.Context, req service.MyNewToolRequest) (service.MyNewToolResponse, error)
 }
 ```
 
-## 6. Handler
+## 6. ハンドラー
 
-Add a handler method on `handler` in `handler.go`. The handler delegates to the service and wraps the result in `StructuredContent`:
+`handler.go` の `handler` にハンドラーメソッドを追加します。ハンドラーはサービスに委譲し、結果を `StructuredContent` でラップします：
 
 ```go
 func (h *handler) handleMyNewTool(
@@ -101,21 +101,21 @@ func (h *handler) handleMyNewTool(
 }
 ```
 
-## 7. Registration
+## 7. 登録
 
-Register the tool in the `registerTools` function in `mcp.go`. Add an entry to the `toolRegistrations` map:
+`mcp.go` の `registerTools` 関数でツールを登録します。`toolRegistrations` マップにエントリを追加：
 
 ```go
 service.MyNewTool: {
     addTool[service.MyNewToolRequest](mcpServer, h.handleMyNewTool),
-    true, // false if the tool is mutable (like invoke or auth)
+    true, // ツールが可変の場合は false（invoke や auth など）
 },
 ```
 
-The `registerTools` function signature is:
+`registerTools` 関数のシグネチャは次のとおりです：
 
 ```go
 func registerTools(mcpServer *sdkmcp.Server, tools []service.Tool, h handler) {
 ```
 
-It iterates over the tool definitions returned by `MakeToolDefinitions()` and registers each one with its typed handler. The `toolRegistrations` map connects tool name constants to their handlers.
+`MakeToolDefinitions()` が返すツール定義を反復処理し、それぞれを型付きハンドラーに登録します。`toolRegistrations` マップはツール名定数をハンドラーに接続します。

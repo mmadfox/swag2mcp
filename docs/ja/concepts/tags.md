@@ -1,10 +1,10 @@
 # Tags
 
-A tag is a category that groups related endpoints within a collection. Tags may or may not exist — not all collections have them, and a collection can have any number of tags.
+タグは、collection 内の関連するエンドポイントをグループ化するカテゴリです。タグは存在する場合も存在しない場合もあります — すべての collection にタグがあるわけではなく、collection は任意の数のタグを持つことができます。
 
-Tags come from the OpenAPI/Swagger/Postman file itself. There are **no YAML config settings** for tags — you cannot create, rename, or delete tags in `swag2mcp.yaml`. The only way to change tags is to edit the original spec file.
+タグは OpenAPI/Swagger/Postman ファイル自体から取得されます。タグ用の **YAML 設定はありません** — `swag2mcp.yaml` でタグを作成、名前変更、削除することはできません。タグを変更する唯一の方法は、元の spec ファイルを編集することです。
 
-## Hierarchy
+## 階層
 
 ```
 Spec (domain, e.g. "meteo")
@@ -16,11 +16,11 @@ Spec (domain, e.g. "meteo")
               └── GET /alerts
 ```
 
-## How Tags Are Created
+## タグの作成方法
 
-Tags are extracted from the spec document during parsing:
+タグは解析中に spec ドキュメントから抽出されます：
 
-**OpenAPI 3.x / Swagger 2.0** — each operation's `tags` list becomes tags:
+**OpenAPI 3.x / Swagger 2.0** — 各操作の `tags` リストがタグになります：
 
 ```yaml
 paths:
@@ -37,24 +37,24 @@ paths:
       summary: "Uploads an image"
 ```
 
-**Postman** — each top-level folder becomes a tag. Nested folders use the last folder name.
+**Postman** — 各トップレベルフォルダーがタグになります。ネストされたフォルダーは最後のフォルダー名を使用します。
 
-If an endpoint has no tags, it is placed under a `"default"` tag.
+エンドポイントにタグがない場合、`"default"` タグの下に配置されます。
 
-## Purpose
+## 目的
 
-Tags help the LLM find groups of related endpoints. Instead of searching through every endpoint in a collection, the LLM can first find the right tag, then list only the endpoints within it.
+タグは LLM が関連するエンドポイントのグループを見つけるのに役立ちます。LLM は collection 内のすべてのエンドポイントを検索する代わりに、最初に適切なタグを見つけ、その中のエンドポイントのみを一覧表示できます。
 
-## MCP Tools for Tags
+## Tag 用 MCP ツール
 
-| Tool | Description |
-|------|-------------|
-| `tag_by_spec` | All tags across an entire spec |
-| `tag_by_collection` | Tags within a specific collection |
-| `tag_by_id` | Tag details (title, method count) |
-| `endpoint_by_tag` | Endpoints grouped under a tag |
+| ツール | 説明 |
+|-------|------|
+| `tag_by_spec` | spec 全体のすべてのタグ |
+| `tag_by_collection` | 特定の collection 内のタグ |
+| `tag_by_id` | タグの詳細（タイトル、メソッド数） |
+| `endpoint_by_tag` | タグの下にグループ化されたエンドポイント |
 
-## Example
+## 例
 
 ```
 Query: "Show all tags in the pet collection"
@@ -62,7 +62,7 @@ Query: "Show all tags in the pet collection"
 → Result: pets (5 methods), pet_images (1 method)
 ```
 
-## Limitations
+## 制限事項
 
-- Tags are read-only from the config perspective. To add, rename, or remove tags, edit the original OpenAPI/Swagger/Postman file and run `swag2mcp update`.
-- Tags cannot be filtered or disabled per-collection in the YAML config.
+- タグは設定の観点からは読み取り専用です。タグを追加、名前変更、削除するには、元の OpenAPI/Swagger/Postman ファイルを編集し、`swag2mcp update` を実行します。
+- YAML 設定で collection ごとにタグをフィルタリングしたり無効にしたりすることはできません。

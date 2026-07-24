@@ -1,102 +1,102 @@
 # Specs
 
-A spec is a logical container representing an API domain or service (e.g., YouTube, Binance, Open-Meteo). Each spec has a unique `domain`, a `base_url`, optional `auth`, and contains one or more collections.
+Eine Spec ist ein logischer Container, der eine API-Domain oder einen API-Dienst repräsentiert (z. B. YouTube, Binance, Open-Meteo). Jede Spec hat eine eindeutige `domain`, eine `base_url`, optional `auth` und enthält eine oder mehrere Collections.
 
-[Collections](./collections) point to OpenAPI/Swagger/Postman files — the spec itself is not a file, it's the grouping around them.
+[Collections](./collections) verweisen auf OpenAPI/Swagger/Postman-Dateien — die Spec selbst ist keine Datei, sondern die Gruppierung um sie herum.
 
-## Domain — Naming Rules
+## Domain — Namensregeln
 
-The `domain` is the unique identifier of a spec. It is used as the primary key throughout the system.
+Die `domain` ist der eindeutige Identifikator einer Spec. Sie wird als Primärschlüssel im gesamten System verwendet.
 
-| Rule | Constraint |
-|------|------------|
-| Characters | `a-z`, `0-9`, `_`, `-` only |
-| Length | 1–60 characters |
-| Uniqueness | **No duplicates allowed** — two active specs cannot share the same domain |
+| Regel | Einschränkung |
+|-------|---------------|
+| Zeichen | Nur `a-z`, `0-9`, `_`, `-` |
+| Länge | 1–60 Zeichen |
+| Eindeutigkeit | **Keine Duplikate erlaubt** — zwei aktive Specs können nicht dieselbe Domain teilen |
 
-**Valid examples:** `meteo`, `binance`, `github-api`, `my_service`, `openai-v1`
+**Gültige Beispiele:** `meteo`, `binance`, `github-api`, `my_service`, `openai-v1`
 
-**Invalid examples:** `Meteo` (uppercase), `my api` (space), `my.api` (dot), `a-very-long-domain-name-that-exceeds-sixty-characters` (too long)
+**Ungültige Beispiele:** `Meteo` (Großbuchstaben), `my api` (Leerzeichen), `my.api` (Punkt), `a-very-long-domain-name-that-exceeds-sixty-characters` (zu lang)
 
-## Spec Fields
+## Spec-Felder
 
-| Field | YAML key | Required | Description |
-|-------|----------|----------|-------------|
-| [Domain](#domain--naming-rules) | `domain` | ✅ | Unique API identifier (1–60 chars, `a-z0-9_-`) |
-| LLM Title | `llm_title` | ✅ | Human-readable name the LLM uses to reference this API (5–120 chars) |
-| [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | Short hint injected into the swag2mcp system prompt (max 500 chars) |
-| Base URL | `base_url` | ✅ | Base URL for all API requests (valid URL) |
-| [Disable](#disable) | `disable` | ❌ | Skip this spec during loading and indexing |
-| [Tags](#tags) | `tags` | ❌ | Tags for filtering (e.g., `["public", "demo"]`) |
-| [Auth](#auth) | `auth` | ❌ | Authentication configuration |
-| [HTTP Client](#http-client) | `http_client` | ❌ | Per-spec HTTP settings (headers, cookies) |
-| [Collections](./collections) | `collections` | ✅ | List of 1–30 collections |
+| Feld | YAML-Schlüssel | Erforderlich | Beschreibung |
+|------|---------------|-------------|--------------|
+| [Domain](#domain--namensregeln) | `domain` | ✅ | Eindeutiger API-Identifikator (1–60 Zeichen, `a-z0-9_-`) |
+| LLM-Titel | `llm_title` | ✅ | Menschenlesbarer Name, den der LLM zur Referenzierung dieser API verwendet (5–120 Zeichen) |
+| [LLM-Instruktion](#llm-instruction) | `llm_instruction` | ❌ | Kurzer Hinweis, der in den swag2mcp-System-Prompt eingefügt wird (max. 500 Zeichen) |
+| Basis-URL | `base_url` | ✅ | Basis-URL für alle API-Anfragen (gültige URL) |
+| [Deaktivieren](#disable) | `disable` | ❌ | Diese Spec beim Laden und Indizieren überspringen |
+| [Tags](#tags) | `tags` | ❌ | Tags zum Filtern (z. B. `["public", "demo"]`) |
+| [Auth](#auth) | `auth` | ❌ | Authentifizierungskonfiguration |
+| [HTTP-Client](#http-client) | `http_client` | ❌ | Pro-Spec-HTTP-Einstellungen (Header, Cookies) |
+| [Collections](./collections) | `collections` | ✅ | Liste von 1–30 Collections |
 
-## Validation
+## Validierung
 
-When swag2mcp validates the config, these rules are checked for every spec:
+Wenn swag2mcp die Konfiguration validiert, werden diese Regeln für jede Spec geprüft:
 
-| Check | Rule |
-|-------|------|
-| **Duplicate domains** | No two active specs may share the same `domain` |
-| **Domain format** | Must match `^[a-z0-9_-]{1,60}$` |
-| **LLM Title** | Required, 5–120 characters, letters/digits/spaces/basic punctuation |
-| **LLM Instruction** | Max 500 characters, same character set as title |
-| **Base URL** | Required, must be a valid URL |
-| **Collections** | Required, 1–30 items |
-| **Auth** | Validated per auth type (e.g., bearer requires `token`, basic requires `username` + `password`) |
-| **Location** | Each collection's `location` must be a valid URL or file path (5–250 chars) |
+| Prüfung | Regel |
+|---------|-------|
+| **Doppelte Domains** | Keine zwei aktiven Specs dürfen dieselbe `domain` teilen |
+| **Domain-Format** | Muss `^[a-z0-9_-]{1,60}$` entsprechen |
+| **LLM-Titel** | Erforderlich, 5–120 Zeichen, Buchstaben/Ziffern/Leerzeichen/einfache Satzzeichen |
+| **LLM-Instruktion** | Max. 500 Zeichen, gleicher Zeichensatz wie Titel |
+| **Basis-URL** | Erforderlich, muss eine gültige URL sein |
+| **Collections** | Erforderlich, 1–30 Elemente |
+| **Auth** | Pro Auth-Typ validiert (z. B. bearer erfordert `token`, basic erfordert `username` + `password`) |
+| **Speicherort** | Jede Collection muss eine gültige URL oder einen gültigen Dateipfad haben (5–250 Zeichen) |
 
-Validation runs on every `swag2mcp mcp` startup. If it fails, the MCP server will not start — in some IDEs this means the server simply won't connect, and the LLM receives a clear error message explaining what to fix.
+Die Validierung läuft bei jedem `swag2mcp mcp`-Start. Wenn sie fehlschlägt, startet der MCP-Server nicht — in manchen IDEs bedeutet dies, dass der Server einfach keine Verbindung herstellt, und der LLM erhält eine klare Fehlermeldung, die erklärt, was zu beheben ist.
 
-To diagnose issues before starting the server, use the [`validate`](../cli/validate.md) command:
+Verwenden Sie den Befehl [`validate`](../cli/validate.md), um Probleme vor dem Start des Servers zu diagnostizieren:
 
 ```bash
-# Validate default workspace (~/.swag2mcp)
+# Standard-Arbeitsbereich validieren (~/.swag2mcp)
 swag2mcp validate
 
-# Validate a custom project workspace
+# Benutzerdefinierten Projektarbeitsbereich validieren
 swag2mcp validate ./my-project
 ```
 
-## LLM Instruction
+## LLM-Instruktion
 
-It is recommended to set `llm_instruction` on each spec — a short hint (up to 500 chars) that tells the LLM what this API is for and when to use it. This instruction is injected into the swag2mcp system prompt, helping the LLM understand the spec's purpose without extra context.
+Es wird empfohlen, für jede Spec `llm_instruction` zu setzen — einen kurzen Hinweis (bis zu 500 Zeichen), der dem LLM sagt, wofür diese API ist und wann sie verwendet werden soll. Diese Instruktion wird in den swag2mcp-System-Prompt eingefügt und hilft dem LLM, den Zweck der Spec ohne zusätzlichen Kontext zu verstehen.
 
 ```yaml
 specs:
   - domain: jokes
     llm_title: Dad Joke API
-    llm_instruction: "Use this API to get random dad jokes or search for specific jokes by keyword."
+    llm_instruction: "Verwenden Sie diese API, um zufällige Dad Jokes zu erhalten oder nach bestimmten Witzen zu suchen."
     base_url: https://icanhazdadjoke.com
     collections:
       - llm_title: Jokes
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-Collections can also have their own `llm_instruction` (up to 360 chars) for more specific guidance.
+Collections können auch eine eigene `llm_instruction` (bis zu 360 Zeichen) für spezifischere Anleitungen haben.
 
 ## Auth
 
-Authentication is configured at the spec level and applies to all its collections. swag2mcp supports 9 auth methods:
+Die Authentifizierung wird auf Spec-Ebene konfiguriert und gilt für alle ihre Collections. swag2mcp unterstützt 9 Authentifizierungsmethoden:
 
-| Method | YAML type | Key fields |
-|--------|-----------|------------|
-| [None](../auth/none.md) | `none` | — |
+| Methode | YAML-Typ | Schlüsselfelder |
+|---------|-----------|-----------------|
+| [Keine](../auth/none.md) | `none` | — |
 | [Basic](../auth/basic.md) | `basic` | `username`, `password` |
 | [Bearer](../auth/bearer.md) | `bearer` | `token` |
 | [Digest](../auth/digest.md) | `digest` | `username`, `password` |
 | [OAuth2 Client Credentials](../auth/oauth2-cc.md) | `oauth2-cc` | `client_id`, `client_secret`, `token_url` |
 | [OAuth2 Password](../auth/oauth2-pwd.md) | `oauth2-pwd` | `username`, `password`, `client_id`, `token_url` |
-| [API Key](../auth/api-key.md) | `api-key` | `key`, `value`, `in` (`header` or `query`) |
+| [API-Schlüssel](../auth/api-key.md) | `api-key` | `key`, `value`, `in` (`header` oder `query`) |
 | [HMAC](../auth/hmac.md) | `hmac` | `api_key`, `secret_key` |
-| [Script](../auth/script.md) | `script` | `domain` |
+| [Skript](../auth/script.md) | `script` | `domain` |
 
-See [Auth Overview](../auth/overview.md) for full details on each method.
+Siehe [Auth-Übersicht](../auth/overview.md) für vollständige Details zu jeder Methode.
 
-## HTTP Client
+## HTTP-Client
 
-You can override HTTP settings at the spec level. These apply to all requests made by this spec's collections.
+Sie können HTTP-Einstellungen auf Spec-Ebene überschreiben. Diese gelten für alle Anfragen, die von den Collections dieser Spec gestellt werden.
 
 ```yaml
 specs:
@@ -114,11 +114,11 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-Settings cascade: global → spec → collection. See [Configuration Cascade](../configuration/cascade.md) for details.
+Einstellungen kaskadieren: global → spec → collection. Siehe [Konfigurationskaskade](../configuration/cascade.md) für Details.
 
 ## Tags
 
-Tags let you filter specs by category. Use them with the `--tags` flag on `swag2mcp ls` or during bootstrap.
+Tags ermöglichen es Ihnen, Specs nach Kategorie zu filtern. Verwenden Sie sie mit dem Flag `--tags` bei `swag2mcp ls` oder während des Bootstraps.
 
 ```yaml
 specs:
@@ -132,13 +132,13 @@ specs:
 ```
 
 ```bash
-# List only specs tagged "weather"
+# Nur Specs mit Tag "weather" auflisten
 swag2mcp ls --tags weather
 ```
 
-## Disable
+## Deaktivieren
 
-Set `disable: true` to skip a spec entirely. It won't be loaded, indexed, or available to the LLM.
+Setzen Sie `disable: true`, um eine Spec vollständig zu überspringen. Sie wird nicht geladen, indiziert oder dem LLM zur Verfügung gestellt.
 
 ```yaml
 specs:
@@ -151,9 +151,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## Examples
+## Beispiele
 
-### Minimal Spec
+### Minimale Spec
 
 ```yaml
 specs:
@@ -165,7 +165,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-### Spec with Auth
+### Spec mit Auth
 
 ```yaml
 specs:
@@ -182,7 +182,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
 ```
 
-### Spec with Multiple Collections
+### Spec mit mehreren Collections
 
 ```yaml
 specs:
@@ -198,13 +198,13 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
-### Spec with LLM Instruction and Tags
+### Spec mit LLM-Instruktion und Tags
 
 ```yaml
 specs:
   - domain: rickandmorty
     llm_title: Rick and Morty API
-    llm_instruction: "Use this API to get information about characters, episodes, and locations from the Rick and Morty show."
+    llm_instruction: "Verwenden Sie diese API, um Informationen über Charaktere, Episoden und Orte aus der Rick and Morty-Show zu erhalten."
     base_url: https://rickandmortyapi.com/api
     tags: ["entertainment", "public"]
     collections:
@@ -212,10 +212,10 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/rick-and-morty.json
 ```
 
-## Related
+## Verwandte Themen
 
-- [Spec Settings (config)](../configuration/spec-settings.md) — full YAML reference
-- [Configuration Cascade](../configuration/cascade.md) — how settings override each other
-- [Auth Overview](../auth/overview.md) — all 9 auth methods
-- [HTTP Client](../configuration/http-client.md) — HTTP client configuration
-- [Collections](./collections) — spec files within a spec
+- [Spec-Einstellungen (Konfiguration)](../configuration/spec-settings.md) — vollständige YAML-Referenz
+- [Konfigurationskaskade](../configuration/cascade.md) — wie Einstellungen einander überschreiben
+- [Auth-Übersicht](../auth/overview.md) — alle 9 Authentifizierungsmethoden
+- [HTTP-Client](../configuration/http-client.md) — HTTP-Client-Konfiguration
+- [Collections](./collections) — Spezifikationsdateien innerhalb einer Spec

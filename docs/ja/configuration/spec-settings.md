@@ -1,8 +1,8 @@
-# Spec Settings
+# Spec 設定
 
-Spec settings define an API service and override global settings for that specific API. Each spec represents one logical API (e.g., "Open-Meteo Weather APIs") and can contain multiple collections (spec files).
+Spec 設定は API サービスを定義し、その特定の API のグローバル設定を上書きします。各 spec は 1 つの論理 API（例：「Open-Meteo Weather APIs」）を表し、複数の collection（spec ファイル）を含むことができます。
 
-## Spec Section
+## Spec セクション
 
 ```yaml
 specs:
@@ -24,61 +24,61 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
 ```
 
-## Parameters
+## パラメーター
 
 ### domain
 
-- **Type:** `string`
-- **Required:** Yes
-- **Description:** Unique identifier for this API spec. Used internally to reference the spec.
-- **Rules:** 1-60 characters. Only lowercase letters (`a-z`), digits (`0-9`), hyphens (`-`), and underscores (`_`).
-- **Example:** `meteo`, `binance`, `my-api`
+- **型:** `string`
+- **必須:** はい
+- **説明:** この API spec の一意識別子。内部で spec を参照するために使用されます。
+- **ルール:** 1〜60 文字。小文字（`a-z`）、数字（`0-9`）、ハイフン（`-`）、アンダースコア（`_`）のみ。
+- **例:** `meteo`、`binance`、`my-api`
 
 ### llm_title
 
-- **Type:** `string`
-- **Required:** Yes
-- **Description:** Human-readable name that the LLM uses to reference this API. Shown in MCP tool responses.
-- **Rules:** 5-120 characters. Letters, digits, spaces, and basic punctuation only.
-- **Example:** `Open-Meteo Weather APIs`, `Binance Market Data`
+- **型:** `string`
+- **必須:** はい
+- **説明:** LLM がこの API を参照するための人間可読名。MCP ツールのレスポンスに表示されます。
+- **ルール:** 5〜120 文字。英字、数字、スペース、基本句読点のみ。
+- **例:** `Open-Meteo Weather APIs`、`Binance Market Data`
 
 ### llm_instruction
 
-- **Type:** `string`
-- **Default:** `""`
-- **Description:** Instructions for the LLM on how to use this API. Describes what the API does and when to use it.
-- **Rules:** Max 500 characters. Letters, digits, spaces, and basic punctuation only.
-- **Example:** `"Use this API for weather forecasts, current conditions, and climate data."`
+- **型:** `string`
+- **デフォルト:** `""`
+- **説明:** この API の使用方法に関する LLM への指示。API の機能と使用タイミングを説明します。
+- **ルール:** 最大 500 文字。英字、数字、スペース、基本句読点のみ。
+- **例:** `"Use this API for weather forecasts, current conditions, and climate data."`
 
 ### base_url
 
-- **Type:** `string`
-- **Required:** Yes
-- **Description:** Base URL for all API requests in this spec. The endpoint paths from the OpenAPI spec are appended to this URL.
-- **Example:** `https://api.open-meteo.com`, `https://api.binance.com`
-- **Note:** Can be overridden at the collection level if different collections use different base URLs.
+- **型:** `string`
+- **必須:** はい
+- **説明:** この spec のすべての API リクエストのベース URL。OpenAPI spec のエンドポイントパスがこの URL に追加されます。
+- **例:** `https://api.open-meteo.com`、`https://api.binance.com`
+- **注:** 異なる collection が異なるベース URL を使用する場合、collection レベルで上書きできます。
 
 ### disable
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Description:** When `true`, this spec is excluded from MCP tools. It is not loaded, indexed, or available to the LLM.
-- **When to use:** Temporarily disable an API without removing it from the config. Useful for APIs that are down, deprecated, or under maintenance.
+- **型:** `bool`
+- **デフォルト:** `false`
+- **説明:** `true` の場合、この spec は MCP ツールから除外されます。読み込まれず、インデックス化もされず、LLM が利用できなくなります。
+- **使用するタイミング:** 設定から削除せずに API を一時的に無効化。ダウンしている、非推奨の、またはメンテナンス中の API に便利です。
 
 ### tags
 
-- **Type:** `[]string` (array of strings)
-- **Default:** `[]`
-- **Description:** Tags for filtering specs. Used with the `--tags` flag in CLI commands (`ls`, `validate`, `mcp`, `update`).
-- **Example:** `["public", "weather"]`, `["internal", "production"]`
-- **Effect:** When you run `swag2mcp mcp --tags=public`, only specs with the `public` tag are loaded.
+- **型:** `[]string`（文字列の配列）
+- **デフォルト:** `[]`
+- **説明:** spec をフィルタリングするためのタグ。CLI コマンド（`ls`、`validate`、`mcp`、`update`）の `--tags` フラグとともに使用します。
+- **例:** `["public", "weather"]`、`["internal", "production"]`
+- **効果:** `swag2mcp mcp --tags=public` を実行すると、`public` タグを持つ spec のみが読み込まれます。
 
 ### http_client
 
-- **Type:** `object`
-- **Default:** inherits from global
-- **Description:** Override global HTTP client settings for this spec. All settings from the global `http_client` can be overridden: `timeout`, `max_response_size`, `user_agent`, `follow_redirects`, `max_redirects`, `random`, `proxy`, `headers`, `cookies`.
-- **Example:**
+- **型:** `object`
+- **デフォルト:** グローバルから継承
+- **説明:** この spec のグローバル HTTP クライアント設定を上書き。グローバル `http_client` のすべての設定を上書き可能：`timeout`、`max_response_size`、`user_agent`、`follow_redirects`、`max_redirects`、`random`、`proxy`、`headers`、`cookies`。
+- **例:**
   ```yaml
   http_client:
     timeout: 60s
@@ -89,10 +89,10 @@ specs:
 
 ### auth
 
-- **Type:** `object`
-- **Default:** `none` (no authentication)
-- **Description:** Authentication configuration for this spec. See the [Authentication](/auth/overview) section for all 9 methods and their parameters.
-- **Example:**
+- **型:** `object`
+- **デフォルト:** `none`（認証なし）
+- **説明:** この spec の認証設定。全 9 方式とそのパラメーターについては [Authentication](/auth/overview) セクションを参照してください。
+- **例:**
   ```yaml
   auth:
     type: bearer
@@ -102,15 +102,15 @@ specs:
 
 ### collections
 
-- **Type:** `[]object` (array of collections)
-- **Required:** Yes (at least 1)
-- **Description:** List of OpenAPI/Swagger/Postman spec files that belong to this spec. Each collection is one spec file.
-- **Rules:** 1-30 collections per spec.
-- **See:** [Collection Settings](./collection-settings) for all collection parameters.
+- **型:** `[]object`（collection の配列）
+- **必須:** はい（最低 1 つ）
+- **説明:** この spec に属する OpenAPI/Swagger/Postman spec ファイルのリスト。各 collection は 1 つの spec ファイルです。
+- **ルール:** spec あたり 1〜30 の collection。
+- **参照:** すべての collection パラメーターについては [Collection Settings](./collection-settings) を参照してください。
 
-## Disabling a Spec
+## Spec の無効化
 
-Disabled specs are not loaded or indexed. The LLM cannot see or use them.
+無効化された spec は読み込まれず、インデックス化もされません。LLM はそれらを表示したり使用したりできません。
 
 ```yaml
 specs:
@@ -123,9 +123,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## HTTP Client Override
+## HTTP Client の上書き
 
-All `http_client` settings from the global level can be overridden at the spec level. The spec values take precedence over global values for this spec only.
+グローバルレベルのすべての `http_client` 設定は spec レベルで上書き可能です。spec の値は、この spec に限り、グローバルの値より優先されます。
 
 ```yaml
 specs:
@@ -142,9 +142,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## Proxy Override
+## Proxy の上書き
 
-If this spec requires a different proxy than the global one, configure it at the spec level:
+この spec がグローバルとは異なるプロキシを必要とする場合、spec レベルで設定します：
 
 ```yaml
 specs:

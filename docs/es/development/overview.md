@@ -1,40 +1,40 @@
-# Development Overview
+# Resumen de Desarrollo
 
-## About this project
+## Acerca de este proyecto
 
-swag2mcp is a Go project that bridges OpenAPI/Swagger/Postman specifications with LLM agents via the Model Context Protocol (MCP). It is built with Go 1.23+ and follows strict coding conventions enforced by 80+ linters.
+swag2mcp es un proyecto Go que conecta especificaciones OpenAPI/Swagger/Postman con agentes LLM mediante el Protocolo de Contexto de Modelo (MCP). Está construido con Go 1.23+ y sigue estrictas convenciones de codificación aplicadas por más de 80 linters.
 
-This section is written for **engineers** who want to understand the codebase, contribute, or extend swag2mcp with new auth methods, MCP tools, or integrations.
+Esta sección está escrita para **ingenieros** que quieran entender el código base, contribuir o ampliar swag2mcp con nuevos métodos de autenticación, herramientas MCP o integraciones.
 
-## Development skills
+## Habilidades de desarrollo
 
-The project ships with two development skills that encode the project's conventions and patterns. You can use them or ignore them — they are tools, not rules.
+El proyecto incluye dos habilidades de desarrollo que codifican las convenciones y patrones del proyecto. Puede usarlas o ignorarlas — son herramientas, no reglas.
 
 ### godeveloper
 
-The [godeveloper skill](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/godeveloper/SKILL.md) defines every code convention in the project:
+La [habilidad godeveloper](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/godeveloper/SKILL.md) define cada convención de código en el proyecto:
 
-- **Naming** — packages, files, types, interfaces, receivers, constants
-- **Formatting** — gofmt/gofumpt/goimports/gci, 120-line limit, import ordering
-- **Error handling** — `LLMError` with 8 error codes, sentinel errors, error wrapping
-- **Interfaces** — small interfaces, composition, consumer-side definitions
-- **Concurrency** — mutex granularity, goroutine lifetimes, context passing
-- **Testing** — table-driven tests, `newTestService()`/`seedTestData()` helpers, mock generation
-- **Project patterns** — service layer, request/response structs, functional options, MCP handler pattern
+- **Nomenclatura** — paquetes, archivos, tipos, interfaces, receptores, constantes
+- **Formato** — gofmt/gofumpt/goimports/gci, límite de 120 líneas, orden de importaciones
+- **Manejo de errores** — `LLMError` con 8 códigos de error, errores centinela, envoltura de errores
+- **Interfaces** — interfaces pequeñas, composición, definiciones del lado del consumidor
+- **Concurrencia** — granularidad de mutex, ciclos de vida de gorutinas, paso de contexto
+- **Pruebas** — pruebas basadas en tablas, ayudantes `newTestService()`/`seedTestData()`, generación de mocks
+- **Patrones del proyecto** — capa de servicio, estructuras de solicitud/respuesta, opciones funcionales, patrón de controlador MCP
 
 ### swag2mcp-cli
 
-The [swag2mcp-cli skill](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md) documents every CLI command with syntax, flags, arguments, and examples. Useful when working on CLI commands or writing documentation.
+La [habilidad swag2mcp-cli](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md) documenta cada comando CLI con sintaxis, banderas, argumentos y ejemplos. Útil cuando se trabaja en comandos CLI o se escribe documentación.
 
-## Key architectural decisions
+## Decisiones arquitectónicas clave
 
-### Service layer pattern
+### Patrón de capa de servicio
 
-Every feature follows the same three-step pattern:
+Cada característica sigue el mismo patrón de tres pasos:
 
-1. **Validate** the request with `s.validateRequest(req)` (uses `go-playground/validator`)
-2. **Look up** entities from the in-memory index (returns `LLMError` with `not_found` code)
-3. **Execute** business logic and return a typed response or `LLMError`
+1. **Validar** la solicitud con `s.validateRequest(req)` (usa `go-playground/validator`)
+2. **Buscar** entidades en el índice en memoria (devuelve `LLMError` con código `not_found`)
+3. **Ejecutar** la lógica de negocio y devolver una respuesta tipada o `LLMError`
 
 ```go
 func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse, error) {
@@ -49,9 +49,9 @@ func (s *Service) Search(ctx context.Context, req SearchRequest) (SearchResponse
 }
 ```
 
-### Request/Response structs
+### Estructuras de solicitud/respuesta
 
-Each method has a dedicated `{Method}Request` and `{Method}Response` struct. Request structs use `validate` tags for validation and `jsonschema` tags for documentation:
+Cada método tiene una estructura `{Method}Request` y `{Method}Response` dedicada. Las estructuras de solicitud usan etiquetas `validate` para validación y etiquetas `jsonschema` para documentación:
 
 ```go
 type SearchRequest struct {
@@ -64,9 +64,9 @@ type SearchResponse struct {
 }
 ```
 
-### Functional options
+### Opciones funcionales
 
-Configuration uses the functional options pattern:
+La configuración usa el patrón de opciones funcionales:
 
 ```go
 type Option func(*Service)
@@ -80,9 +80,9 @@ func WithDisableLLMAuth(disable bool) Option {
 }
 ```
 
-### MCP handler pattern
+### Patrón de controlador MCP
 
-The MCP server uses a composed interface pattern. The `Svc` interface in `internal/server/mcp/handler.go` is composed from smaller interfaces (`CatalogReader`, `EndpointExplorer`, `EndpointExecutor`, `SystemInfo`, `ResponseManager`). Each handler method delegates to the service layer:
+El servidor MCP usa un patrón de interfaz compuesta. La interfaz `Svc` en `internal/server/mcp/handler.go` se compone de interfaces más pequeñas (`CatalogReader`, `EndpointExplorer`, `EndpointExecutor`, `SystemInfo`, `ResponseManager`). Cada método de controlador delega en la capa de servicio:
 
 ```go
 type handler struct {
@@ -100,54 +100,54 @@ func (h *handler) handleSearch(ctx context.Context, _ *sdkmcp.CallToolRequest, r
 
 ### LLMError
 
-All errors returned to the LLM use the `LLMError` type with one of 8 codes:
+Todos los errores devueltos al LLM usan el tipo `LLMError` con uno de 8 códigos:
 
-| Code | When |
-|------|------|
-| `validation_failed` | Invalid input (wrong ID format, missing required fields) |
-| `not_found` | Entity not found in index |
-| `rate_limit` | Per-endpoint 10s cooldown exceeded |
-| `invoke_error` | HTTP request/response failures |
-| `config_error` | Configuration loading or validation failure |
-| `workspace_error` | Workspace directory or file operation failure |
-| `parse_error` | Spec file parsing failure |
-| `auth_error` | Authentication token retrieval failure |
+| Código | Cuándo |
+|-------|--------|
+| `validation_failed` | Entrada inválida (formato de ID incorrecto, campos requeridos faltantes) |
+| `not_found` | Entidad no encontrada en el índice |
+| `rate_limit` | Enfriamiento de 10s por endpoint excedido |
+| `invoke_error` | Fallos de solicitud/respuesta HTTP |
+| `config_error` | Fallo de carga o validación de configuración |
+| `workspace_error` | Fallo de operación de directorio o archivo del espacio de trabajo |
+| `parse_error` | Fallo de análisis de archivo de especificación |
+| `auth_error` | Fallo de recuperación de token de autenticación |
 
-Messages must explain what went wrong AND what to do next, in plain language suitable for an LLM consumer.
+Los mensajes deben explicar qué salió mal Y qué hacer a continuación, en lenguaje sencillo adecuado para un consumidor LLM.
 
-### ID generation
+### Generación de IDs
 
-All IDs are deterministic MD5 hashes:
+Todos los IDs son hashes MD5 deterministas:
 
 ```go
-id.Domain("meteo")                          // 32-char hex
-id.Collection("meteo", "Forecast")          // 32-char hex
-id.Tag("meteo", "Forecast", "pets")         // 32-char hex
+id.Domain("meteo")                          // 32 caracteres hexadecimales
+id.Collection("meteo", "Forecast")          // 32 caracteres hexadecimales
+id.Tag("meteo", "Forecast", "pets")         // 32 caracteres hexadecimales
 id.Method("meteo", "Forecast", "pets", "GET", "/v2/pet/{petId}")
 ```
 
-### Config cascade
+### Cascada de configuración
 
-Configuration cascades through three levels: **global → spec → collection**. Each level overrides the previous. All `http_client` settings can be overridden at every level. Headers and cookies are merged; simple values are replaced.
+La configuración se transmite en cascada a través de tres niveles: **global → especificación → colección**. Cada nivel anula el anterior. Todas las configuraciones de `http_client` pueden anularse en cada nivel. Los encabezados y cookies se fusionan; los valores simples se reemplazan.
 
-## Quick reference
+## Referencia rápida
 
-| Area | Convention |
+| Área | Convención |
 |------|------------|
-| **Go version** | 1.23+ |
-| **Formatters** | gofmt, gofumpt, goimports, gci |
-| **Line length** | 120 characters |
-| **Linters** | 80+ in `.golangci.yml` |
-| **Error type** | `LLMError` with 8 codes |
-| **Mock framework** | `go.uber.org/mock` |
-| **Test helpers** | `newTestService()`, `seedTestData()` |
-| **Config format** | YAML with cascade |
-| **Auth dispatch** | `UnmarshalYAML` reads `type` field |
-| **ID generation** | MD5-based (`id.Domain()`, `id.Collection()`, etc.) |
-| **Rate limit** | 10s per endpoint for `invoke` |
-| **Response size** | 1 MB default, saved to file when exceeded |
-| **Coverage target** | 80%+ for core packages |
-| **Build** | `make build` |
+| **Versión de Go** | 1.23+ |
+| **Formateadores** | gofmt, gofumpt, goimports, gci |
+| **Longitud de línea** | 120 caracteres |
+| **Linters** | 80+ en `.golangci.yml` |
+| **Tipo de error** | `LLMError` con 8 códigos |
+| **Framework de mocks** | `go.uber.org/mock` |
+| **Ayudantes de prueba** | `newTestService()`, `seedTestData()` |
+| **Formato de configuración** | YAML con cascada |
+| **Despacho de autenticación** | `UnmarshalYAML` lee el campo `type` |
+| **Generación de IDs** | Basado en MD5 (`id.Domain()`, `id.Collection()`, etc.) |
+| **Límite de velocidad** | 10s por endpoint para `invoke` |
+| **Tamaño de respuesta** | 1 MB predeterminado, guardado en archivo cuando se excede |
+| **Objetivo de cobertura** | 80%+ para paquetes principales |
+| **Compilación** | `make build` |
 | **Lint** | `make lint` |
-| **Test** | `go test ./...` |
-| **Generate** | `go generate ./...` |
+| **Prueba** | `go test ./...` |
+| **Generar** | `go generate ./...` |

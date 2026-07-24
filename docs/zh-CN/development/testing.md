@@ -1,49 +1,49 @@
-# Testing
+# 测试
 
-## Commands
+## 命令
 
 ```bash
-# Unit tests
+# 单元测试
 go test ./...
 
-# Specific package
+# 特定包
 go test ./internal/service/...
 
-# Integration tests
+# 集成测试
 make integration-tests
 
-# Coverage
+# 覆盖率
 make cover
 
-# All tests
+# 所有测试
 make testall
 ```
 
-## Test Structure
+## 测试结构
 
 ```
 tests/
-├── main_test.go              # Entry point
-├── suite_test.go             # Suite setup
-├── suite_auth_test.go        # Auth tests
-├── suite_config_test.go      # Config tests
-├── suite_mcp_tools_test.go   # MCP tools tests
-├── suite_search_test.go      # Search tests
-├── suite_ratelimit_test.go   # Rate limit tests
-├── suite_response_test.go    # Response tests
-├── suite_export_test.go      # Export tests
-├── suite_import_test.go      # Import tests
-├── suite_parsing_test.go     # Parsing tests
-├── suite_transport_test.go   # Transport tests
-├── suite_mock_test.go        # Mock server tests
-├── suite_workspace_test.go   # Workspace tests
-├── suite_errors_test.go      # Error tests
-└── suite_version_test.go     # Version tests
+├── main_test.go              # 入口点
+├── suite_test.go             # 套件设置
+├── suite_auth_test.go        # 认证测试
+├── suite_config_test.go      # 配置测试
+├── suite_mcp_tools_test.go   # MCP 工具测试
+├── suite_search_test.go      # 搜索测试
+├── suite_ratelimit_test.go   # 速率限制测试
+├── suite_response_test.go    # 响应测试
+├── suite_export_test.go      # 导出测试
+├── suite_import_test.go      # 导入测试
+├── suite_parsing_test.go     # 解析测试
+├── suite_transport_test.go   # 传输测试
+├── suite_mock_test.go        # 模拟服务器测试
+├── suite_workspace_test.go   # 工作区测试
+├── suite_errors_test.go      # 错误测试
+└── suite_version_test.go     # 版本测试
 ```
 
-## Coverage
+## 覆盖率
 
-Target: 80%+ for core packages:
+目标：核心包 80%+：
 
 - `auth`
 - `cache`
@@ -57,17 +57,17 @@ Target: 80%+ for core packages:
 - `spec`
 - `workspace`
 
-## Mocks
+## 模拟
 
-Uses `go.uber.org/mock` for MCP server tests:
+使用 `go.uber.org/mock` 进行 MCP 服务器测试：
 
 ```bash
 go generate ./...
 ```
 
-Generates `internal/server/mcp/mock_svc_test.go` from `handler.go`.
+从 `handler.go` 生成 `internal/server/mcp/mock_svc_test.go`。
 
-## Table-Driven Tests
+## 表格驱动测试
 
 ```go
 func TestSomething(t *testing.T) {

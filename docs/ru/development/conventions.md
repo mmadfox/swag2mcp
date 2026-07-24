@@ -1,16 +1,16 @@
-# Code Conventions
+# Соглашения по коду
 
 ## Go
 
 - **Go 1.26+**
 - **gofmt** / **gofumpt** / **goimports** / **gci**
-- **120 characters** per line
-- **Guard clauses** instead of nested ifs
-- **Naming**: `camelCase` for private, `PascalCase` for exported
+- **120 символов** на строку
+- **Guard-условия** вместо вложенных if
+- **Именование**: `camelCase` для приватного, `PascalCase` для экспортируемого
 
-## Errors
+## Ошибки
 
-Use `LLMError` for LLM-visible errors:
+Используйте `LLMError` для ошибок, видимых LLM:
 
 ```go
 type LLMError struct {
@@ -19,28 +19,28 @@ type LLMError struct {
 }
 ```
 
-Error codes:
-- `validation_failed` — invalid parameters
-- `not_found` — resource not found
-- `rate_limit` — rate limit exceeded
-- `invoke_error` — API call error
+Коды ошибок:
+- `validation_failed` — неверные параметры
+- `not_found` — ресурс не найден
+- `rate_limit` — превышен лимит частоты
+- `invoke_error` — ошибка API-вызова
 
-## Interfaces
+## Интерфейсы
 
-- Small interfaces (1-3 methods)
-- Interface composition
-- Functional options for configuration
+- Маленькие интерфейсы (1-3 метода)
+- Композиция интерфейсов
+- Функциональные опции для конфигурации
 
-## Testing
+## Тестирование
 
-- Table-driven tests
-- Test helpers (`newTestService()`, `seedTestData()`)
-- Mocks via `go.uber.org/mock`
-- 80%+ coverage for core packages
+- Table-driven тесты
+- Хелперы тестов (`newTestService()`, `seedTestData()`)
+- Моки через `go.uber.org/mock`
+- 80%+ покрытие для основных пакетов
 
-## Configuration
+## Конфигурация
 
-- YAML format
-- Cascade: global → spec → collection
-- Validation via `go-playground/validator`
-- Environment variables via `$(VAR)`
+- YAML-формат
+- Каскад: глобальный → спецификация → коллекция
+- Валидация через `go-playground/validator`
+- Переменные окружения через `$(VAR)`

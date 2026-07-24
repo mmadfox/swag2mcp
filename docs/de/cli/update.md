@@ -1,15 +1,15 @@
 # update
 
-## Purpose
+## Zweck
 
-Re-validate the configuration, clear the cache, and re-download all spec files. This is a **full refresh** of the workspace — it ensures all cached specs are up to date and the index is rebuilt.
+Validiert die Konfiguration erneut, leert den Cache und lädt alle Spezifikationsdateien neu herunter. Dies ist eine **vollständige Aktualisierung** des Arbeitsbereichs — sie stellt sicher, dass alle zwischengespeicherten Spezifikationen auf dem neuesten Stand sind und der Index neu aufgebaut wird.
 
-## When to use
+## Wann verwenden
 
-- Remote spec files have changed and you want the latest version
-- After editing `swag2mcp.yaml` to add or change spec locations
-- When troubleshooting stale or corrupted cache
-- Before running `mcp` to ensure everything is fresh
+- Entfernte Spezifikationsdateien haben sich geändert und Sie möchten die neueste Version
+- Nach dem Bearbeiten von `swag2mcp.yaml`, um Spezifikationsspeicherorte hinzuzufügen oder zu ändern
+- Bei der Fehlerbehebung von veraltetem oder beschädigtem Cache
+- Vor dem Ausführen von `mcp`, um sicherzustellen, dass alles aktuell ist
 
 ## Syntax
 
@@ -17,47 +17,47 @@ Re-validate the configuration, clear the cache, and re-download all spec files. 
 swag2mcp update [path]
 ```
 
-## Arguments
+## Argumente
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Argument | Position | Erforderlich | Beschreibung |
+|----------|----------|-------------|--------------|
+| `path` | 1 | Nein | Arbeitsbereichsverzeichnis. Wenn nicht angegeben, wird über die Pfadauflösungsregeln ermittelt. |
 
 ## Flags
 
-None.
+Keine.
 
-## How it works
+## Wie es funktioniert
 
-The `update` command runs a pipeline of operations:
+Der Befehl `update` führt eine Pipeline von Operationen aus:
 
-1. **Load config** — reads `swag2mcp.yaml` from the workspace
-2. **Validate** — runs the same checks as `validate` (YAML syntax, structure, spec file reachability, format, auth, HTTP client)
-3. **Clean** — removes all contents of `cache/` and `responses/`
-4. **Re-cache** — downloads all remote spec files and copies local spec files into the cache
-5. **Re-index** — rebuilds the full-text search index for all endpoints
-6. **Auth scripts** — creates stub auth scripts for specs using `ScriptAuth`
-7. **Orphan cleanup** — removes auth scripts for specs that no longer exist
+1. **Konfiguration laden** — liest `swag2mcp.yaml` aus dem Arbeitsbereich
+2. **Validieren** — führt dieselben Prüfungen wie `validate` durch (YAML-Syntax, Struktur, Spezifikationsdatei-Erreichbarkeit, Format, Auth, HTTP-Client)
+3. **Bereinigen** — entfernt alle Inhalte von `cache/` und `responses/`
+4. **Neu cachen** — lädt alle entfernten Spezifikationsdateien herunter und kopiert lokale Spezifikationsdateien in den Cache
+5. **Neu indizieren** — baut den Volltext-Suchindex für alle Endpunkte neu auf
+6. **Auth-Skripte** — erstellt Stub-Auth-Skripte für Specs, die `ScriptAuth` verwenden
+7. **Bereinigung verwaister Einträge** — entfernt Auth-Skripte für Specs, die nicht mehr existieren
 
 ```bash
 swag2mcp update
 swag2mcp update ./my-workspace
 ```
 
-## What happens to disabled collections
+## Was mit deaktivierten Collections passiert
 
-Collections with `disable: true` are skipped entirely — they are not cached or indexed.
+Collections mit `disable: true` werden vollständig übersprungen — sie werden nicht zwischengespeichert oder indiziert.
 
-## Post-command verification
+## Überprüfung nach dem Befehl
 
 ```bash
 swag2mcp ls [path]
-# All specs should still be listed and reachable
+# Alle Specs sollten weiterhin aufgelistet und erreichbar sein
 ```
 
-## Nuances
+## Nuancen
 
-- **No auto-init:** If the config file does not exist, `update` returns an error: `"configuration not found at <path>"`. Run `init` first.
-- **Network dependency:** All remote spec URLs must be reachable. If any download fails, the entire update fails with a clear error message.
-- **Auth script creation:** If a spec uses `ScriptAuth` and the stub script doesn't exist, `update` creates it. If creation fails, the update fails.
-- **`update` vs `clean`:** `clean` only removes cache. `update` removes cache **and** re-downloads everything. Use `clean` when you just want to free space; use `update` when you want to refresh.
+- **Kein Auto-Init:** Wenn die Konfigurationsdatei nicht existiert, gibt `update` einen Fehler zurück: `"Konfiguration nicht gefunden unter <path>"`. Führen Sie zuerst `init` aus.
+- **Netzwerkabhängigkeit:** Alle entfernten Spec-URLs müssen erreichbar sein. Wenn ein Download fehlschlägt, schlägt das gesamte Update mit einer klaren Fehlermeldung fehl.
+- **Auth-Skript-Erstellung:** Wenn eine Spec `ScriptAuth` verwendet und das Stub-Skript nicht existiert, erstellt `update` es. Wenn die Erstellung fehlschlägt, schlägt das Update fehl.
+- **`update` vs `clean`:** `clean` entfernt nur den Cache. `update` entfernt den Cache **und** lädt alles neu herunter. Verwenden Sie `clean`, wenn Sie nur Speicherplatz freigeben möchten; verwenden Sie `update`, wenn Sie eine Aktualisierung wünschen.

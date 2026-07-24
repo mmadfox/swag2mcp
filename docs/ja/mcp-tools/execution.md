@@ -1,52 +1,52 @@
-# Execution Tools
+# 実行ツール
 
-Execution tools are the core of swag2mcp: **search** finds endpoints when you don't have an ID, **inspect** reveals the full OpenAPI contract, and **invoke** makes the actual API call. Always use them in this order: search → inspect → invoke.
+実行ツールは swag2mcp の中核です。**search** は ID がない場合にエンドポイントを検索し、**inspect** は完全な OpenAPI 契約を明らかにし、**invoke** は実際の API 呼び出しを行います。常に search → inspect → invoke の順序で使用してください。
 
 ---
 
 ## search
 
-### Purpose
+### 目的
 
-The only tool for finding endpoints when you don't have an endpoint ID. Performs full-text search across all endpoints in all specs using the bluge search engine.
+エンドポイント ID がない場合にエンドポイントを検索する唯一のツールです。bluge 検索エンジンを使用して、すべてのスペックのすべてのエンドポイントを全文検索します。
 
-### When to use
+### 使用するタイミング
 
-- When you don't know the endpoint ID
-- When you want to find endpoints by keywords, method, tag, or path
-- When you need to discover what endpoints exist for a specific feature
+- エンドポイント ID がわからない場合
+- キーワード、メソッド、タグ、パスでエンドポイントを検索したい場合
+- 特定の機能にどのエンドポイントが存在するかを発見する必要がある場合
 
-### How it works
+### 動作方法
 
-Searches the full-text index across all specs. Supports structured queries with field filters, boolean operators, fuzzy matching, wildcards, and more.
+すべてのスペックにわたって全文インデックスを検索します。フィールドフィルター、ブール演算子、あいまい検索、ワイルドカードなどを使用した構造化クエリをサポートします。
 
-### Parameters
+### パラメータ
 
-| Parameter | Type | Required | Description |
+| パラメータ | 型 | 必須 | 説明 |
 |-----------|------|----------|-------------|
-| `query` | string | Yes | Search query (supports structured syntax) |
-| `limit` | int | Yes | Maximum results to return (1-50) |
+| `query` | string | はい | 検索クエリ（構造化構文をサポート） |
+| `limit` | int | はい | 返す最大結果数（1〜50） |
 
-### Query syntax
+### クエリ構文
 
-| Example | Description |
+| 例 | 説明 |
 |---------|-------------|
-| `pet` | Simple text search across all fields |
-| `method:GET` | Filter by HTTP method |
-| `tag:pet` | Filter by tag name |
-| `path:"/api/v1/users"` | Exact path search |
-| `+method:POST +tag:pet` | Must match both conditions |
-| `-method:DELETE` | Exclude DELETE methods |
-| `create~` | Fuzzy search (typo-tolerant) |
-| `path:/api/v1/*` | Wildcard path search |
-| `/pattern/` | Regex search |
-| `term^3` | Boost a term's relevance |
+| `pet` | すべてのフィールドに対するシンプルなテキスト検索 |
+| `method:GET` | HTTP メソッドでフィルタリング |
+| `tag:pet` | タグ名でフィルタリング |
+| `path:"/api/v1/users"` | 完全一致パス検索 |
+| `+method:POST +tag:pet` | 両方の条件に一致する必要あり |
+| `-method:DELETE` | DELETE メソッドを除外 |
+| `create~` | あいまい検索（タイポ許容） |
+| `path:/api/v1/*` | ワイルドカードパス検索 |
+| `/pattern/` | 正規表現検索 |
+| `term^3` | 用語の関連性をブースト |
 
-**Searchable fields:** `method` (keyword), `tag` (keyword), `path` (text), `summary` (text), `_all` (default text field).
+**検索可能なフィールド：** `method`（キーワード）、`tag`（キーワード）、`path`（テキスト）、`summary`（テキスト）、`_all`（デフォルトのテキストフィールド）。
 
-**Not supported:** parentheses for grouping, explicit `AND`/`OR` operators, field grouping.
+**サポート外：** 括弧によるグループ化、明示的な `AND`/`OR` 演算子、フィールドグループ化。
 
-### Response
+### レスポンス
 
 ```json
 {
@@ -67,41 +67,41 @@ Searches the full-text index across all specs. Supports structured queries with 
 }
 ```
 
-Each result includes the full ancestry (spec → collection → tag) so the LLM can navigate to related endpoints.
+各結果には完全な祖先（スペック → コレクション → タグ）が含まれるため、LLM は関連するエンドポイントにナビゲートできます。
 
-### Nuances
+### 補足
 
-- `limit` must be between 1 and 50 (returns `validation_failed` otherwise)
-- `query` is required (returns `validation_failed` if empty)
-- Results are returned in relevance order (best match first)
-- Use field filters (`method:GET`, `tag:pet`) to narrow results
-- For exact path matching, use quotes: `path:"/v1/forecast"`
+- `limit` は 1 〜 50 の間である必要があります（それ以外の場合は `validation_failed` を返します）
+- `query` は必須です（空の場合は `validation_failed` を返します）
+- 結果は関連性順（最も一致するものが最初）で返されます
+- フィールドフィルター（`method:GET`、`tag:pet`）を使用して結果を絞り込みます
+- 完全一致パス検索には引用符を使用します：`path:"/v1/forecast"`
 
 ---
 
 ## inspect
 
-### Purpose
+### 目的
 
-Retrieve the full OpenAPI operation object for an endpoint: all parameters, request body schema, response schemas, base URL, and full URL. This is the tool to call **before** `invoke` to understand the endpoint's contract.
+エンドポイントの完全な OpenAPI 操作オブジェクト（すべてのパラメータ、リクエストボディスキーマ、レスポンススキーマ、ベース URL、完全な URL）を取得します。これは `invoke` の**前に**呼び出してエンドポイントの契約を理解するためのツールです。
 
-### When to use
+### 使用するタイミング
 
-- Always before `invoke` — you need the full contract to make a correct call
-- When you need to explain an API's technical details to the user
-- When you need to know required parameters, request body structure, or response format
+- 常に `invoke` の前 — 正しい呼び出しを行うには完全な契約が必要です
+- API の技術的詳細をユーザーに説明する必要がある場合
+- 必須パラメータ、リクエストボディ構造、またはレスポンス形式を知る必要がある場合
 
-### How it works
+### 動作方法
 
-Looks up the endpoint in the index and returns the complete OpenAPI operation object with all schemas resolved.
+インデックス内のエンドポイントを検索し、解決されたすべてのスキーマを含む完全な OpenAPI 操作オブジェクトを返します。
 
-### Parameters
+### パラメータ
 
-| Parameter | Type | Required | Description |
+| パラメータ | 型 | 必須 | 説明 |
 |-----------|------|----------|-------------|
-| `endpointId` | string | Yes | 32-character MD5 hash of the endpoint |
+| `endpointId` | string | はい | エンドポイントの 32 文字 MD5 ハッシュ |
 
-### Response
+### レスポンス
 
 ```json
 {
@@ -167,58 +167,58 @@ Looks up the endpoint in the index and returns the complete OpenAPI operation ob
 }
 ```
 
-| Field | Type | Description |
+| フィールド | 型 | 説明 |
 |-------|------|-------------|
-| `baseUrl` | string | Base URL of the API (from config) |
-| `fullUrl` | string | Full URL of the endpoint (base + path) |
-| `operation.parameters[]` | array | Parameters with name, location (path/query/header/cookie), description, required flag, and schema |
-| `operation.requestBody` | object | Request body with content type and schema |
-| `operation.responses` | map | Response codes with descriptions and schemas |
-| `operation.deprecated` | bool | Whether the endpoint is deprecated |
+| `baseUrl` | string | API のベース URL（設定から） |
+| `fullUrl` | string | エンドポイントの完全な URL（ベース + パス） |
+| `operation.parameters[]` | array | 名前、位置（path/query/header/cookie）、説明、必須フラグ、スキーマを持つパラメータ |
+| `operation.requestBody` | object | コンテンツタイプとスキーマを持つリクエストボディ |
+| `operation.responses` | map | 説明とスキーマを持つレスポンスコード |
+| `operation.deprecated` | bool | エンドポイントが非推奨かどうか |
 
-### Nuances
+### 補足
 
-- Returns `not_found` if the endpoint does not exist
-- This is the **only** tool that returns the full OpenAPI operation — `endpoint_by_id` returns only a summary
-- Always call `inspect` before `invoke` to understand required parameters and body structure
-- The `operation` object includes `$ref` references that are resolved to their full schema definitions
+- エンドポイントが存在しない場合は `not_found` を返します
+- これは完全な OpenAPI 操作を返す**唯一の**ツールです。`endpoint_by_id` は概要のみを返します
+- 必須パラメータとボディ構造を理解するために、`invoke` の前に常に `inspect` を呼び出してください
+- `operation` オブジェクトには、完全なスキーマ定義に解決された `$ref` 参照が含まれます
 
 ---
 
 ## invoke
 
-### Purpose
+### 目的
 
-Execute a real API call to an endpoint. This is the only tool that makes actual HTTP requests. Auth is applied automatically — you do not need to call `auth` first.
+エンドポイントに対して実際の API 呼び出しを実行します。これは実際の HTTP リクエストを行う唯一のツールです。認証は自動的に適用されるため、事前に `auth` を呼び出す必要はありません。
 
-### When to use
+### 使用するタイミング
 
-- Only after calling `inspect` to understand the endpoint's contract
-- Only with explicit user confirmation for destructive operations (POST, PUT, PATCH, DELETE)
-- When the user asks to call an API and you have all required parameters
+- `inspect` を呼び出してエンドポイントの契約を理解した後でのみ
+- 破壊的操作（POST、PUT、PATCH、DELETE）の場合は明示的なユーザー確認がある場合のみ
+- ユーザーが API の呼び出しを要求し、必要なパラメータがすべて揃っている場合
 
-### How it works
+### 動作方法
 
-1. Looks up the endpoint in the index
-2. Substitutes path parameters into the URL
-3. Appends query parameters
-4. Adds headers and cookies
-5. Serializes the request body as JSON
-6. Automatically obtains and applies auth (token, headers, query params)
-7. Makes the HTTP request
-8. Returns the response or saves it to a file if too large
+1. インデックス内のエンドポイントを検索
+2. パスパラメータを URL に代入
+3. クエリパラメータを追加
+4. ヘッダーとクッキーを追加
+5. リクエストボディを JSON としてシリアライズ
+6. 認証（トークン、ヘッダー、クエリパラメータ）を自動的に取得して適用
+7. HTTP リクエストを実行
+8. レスポンスを返すか、大きすぎる場合はファイルに保存
 
-### Parameters
+### パラメータ
 
-| Parameter | Type | Required | Description |
+| パラメータ | 型 | 必須 | 説明 |
 |-----------|------|----------|-------------|
-| `endpointId` | string | Yes | 32-character MD5 hash of the endpoint |
-| `parameters` | object | No | Path, query, and header parameters as key-value pairs |
-| `requestBody` | object | No | Request body for POST/PUT/PATCH requests |
-| `headers` | object | No | Additional HTTP headers to send |
-| `cookies` | object | No | Additional HTTP cookies to send |
+| `endpointId` | string | はい | エンドポイントの 32 文字 MD5 ハッシュ |
+| `parameters` | object | いいえ | パス、クエリ、ヘッダーパラメータのキーと値のペア |
+| `requestBody` | object | いいえ | POST/PUT/PATCH リクエストのリクエストボディ |
+| `headers` | object | いいえ | 送信する追加の HTTP ヘッダー |
+| `cookies` | object | いいえ | 送信する追加の HTTP クッキー |
 
-### Response (inline)
+### レスポンス（インライン）
 
 ```json
 {
@@ -234,7 +234,7 @@ Execute a real API call to an endpoint. This is the only tool that makes actual 
 }
 ```
 
-### Response (file reference — when body exceeds size limit)
+### レスポンス（ファイル参照 — ボディがサイズ制限を超えた場合）
 
 ```json
 {
@@ -253,27 +253,27 @@ Execute a real API call to an endpoint. This is the only tool that makes actual 
 }
 ```
 
-| Field | Type | Description |
+| フィールド | 型 | 説明 |
 |-------|------|-------------|
-| `statusCode` | int | HTTP response status code |
-| `headers` | object | HTTP response headers |
-| `body` | any | Response body (present when within size limit) |
-| `fileRef` | object | File reference (present when body exceeds size limit) |
+| `statusCode` | int | HTTP レスポンスステータスコード |
+| `headers` | object | HTTP レスポンスヘッダー |
+| `body` | any | レスポンスボディ（サイズ制限内の場合に存在） |
+| `fileRef` | object | ファイル参照（ボディがサイズ制限を超えた場合に存在） |
 
-### Working with large responses
+### 大規模レスポンスの操作
 
-When `invoke` returns a `fileRef`, use the response tools to explore the data:
+`invoke` が `fileRef` を返した場合、レスポンスツールを使用してデータを探索します：
 
-1. **`response_outline(path)`** — get the structural summary (keys, types, array lengths)
-2. **`response_compress(path, mode)`** — compress the data to fit inline
-3. **`response_slice(path, jsonPath)`** — extract a specific fragment
+1. **`response_outline(path)`** — 構造概要（キー、型、配列長）を取得
+2. **`response_compress(path, mode)`** — データをインラインに収まるよう圧縮
+3. **`response_slice(path, jsonPath)`** — 特定の断片を抽出
 
-### Nuances
+### 補足
 
-- **Auth is automatic:** The `invoke` tool automatically obtains and applies authentication from the spec's auth configuration. You do **not** need to call `auth` first.
-- **Rate limiting:** Each endpoint has a 10-second cooldown. A second call to the same endpoint within 10 seconds is silently blocked (returns `rate_limit` error).
-- **Response size limit:** Default is 2 KB (configurable via `max_response_size`). If the response exceeds this limit, it is saved to `{workspace}/responses/` and a `FileReference` is returned instead of inline `body`.
-- **Parameter handling:** Path parameters are substituted into the URL. Query parameters are appended. Parameters from the request override operation spec defaults.
-- **Request body:** For POST/PUT/PATCH, the body is serialized as JSON. `Content-Type` is set to `application/json` automatically.
-- **Error handling:** HTTP errors (non-2xx) are returned as `invoke_error` with the status code and response body in the hint.
-- **Destructive operations:** Never invoke POST/PUT/PATCH/DELETE without explicit user confirmation.
+- **認証は自動：** `invoke` ツールはスペックの認証設定から自動的に認証を取得して適用します。事前に `auth` を呼び出す必要は**ありません**。
+- **レート制限：** 各エンドポイントには 10 秒のクールダウンがあります。同じエンドポイントへの 10 秒以内の 2 回目の呼び出しは静かにブロックされます（`rate_limit` エラーを返します）。
+- **レスポンスサイズ制限：** デフォルトは 2 KB（`max_response_size` で設定可能）。レスポンスがこの制限を超えると、`{workspace}/responses/` に保存され、インラインの `body` の代わりに `FileReference` が返されます。
+- **パラメータ処理：** パスパラメータは URL に代入されます。クエリパラメータは追加されます。リクエストからのパラメータは操作スペックのデフォルトを上書きします。
+- **リクエストボディ：** POST/PUT/PATCH の場合、ボディは JSON としてシリアライズされます。`Content-Type` は自動的に `application/json` に設定されます。
+- **エラーハンドリング：** HTTP エラー（2xx 以外）は、ステータスコードとレスポンスボディを含む `invoke_error` として返されます。
+- **破壊的操作：** 明示的なユーザー確認なしに POST/PUT/PATCH/DELETE を呼び出さないでください。

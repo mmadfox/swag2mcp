@@ -1,52 +1,52 @@
-# Execution Tools
+# Outils d'exécution
 
-Execution tools are the core of swag2mcp: **search** finds endpoints when you don't have an ID, **inspect** reveals the full OpenAPI contract, and **invoke** makes the actual API call. Always use them in this order: search → inspect → invoke.
+Les outils d'exécution sont le cœur de swag2mcp : **search** trouve les points de terminaison lorsque vous n'avez pas d'ID, **inspect** révèle le contrat OpenAPI complet et **invoke** effectue l'appel API réel. Utilisez-les toujours dans cet ordre : search → inspect → invoke.
 
 ---
 
 ## search
 
-### Purpose
+### Objectif
 
-The only tool for finding endpoints when you don't have an endpoint ID. Performs full-text search across all endpoints in all specs using the bluge search engine.
+Le seul outil pour trouver des points de terminaison lorsque vous n'avez pas d'ID de point de terminaison. Effectue une recherche en texte intégral dans tous les points de terminaison de toutes les spécifications en utilisant le moteur de recherche bluge.
 
-### When to use
+### Quand l'utiliser
 
-- When you don't know the endpoint ID
-- When you want to find endpoints by keywords, method, tag, or path
-- When you need to discover what endpoints exist for a specific feature
+- Lorsque vous ne connaissez pas l'ID du point de terminaison
+- Lorsque vous souhaitez trouver des points de terminaison par mots-clés, méthode, balise ou chemin
+- Lorsque vous devez découvrir quels points de terminaison existent pour une fonctionnalité spécifique
 
-### How it works
+### Fonctionnement
 
-Searches the full-text index across all specs. Supports structured queries with field filters, boolean operators, fuzzy matching, wildcards, and more.
+Recherche dans l'index en texte intégral de toutes les spécifications. Prend en charge les requêtes structurées avec des filtres de champ, des opérateurs booléens, la recherche floue, les caractères génériques, etc.
 
-### Parameters
+### Paramètres
 
-| Parameter | Type | Required | Description |
+| Paramètre | Type | Obligatoire | Description |
 |-----------|------|----------|-------------|
-| `query` | string | Yes | Search query (supports structured syntax) |
-| `limit` | int | Yes | Maximum results to return (1-50) |
+| `query` | string | Oui | Requête de recherche (prend en charge la syntaxe structurée) |
+| `limit` | int | Oui | Nombre maximal de résultats à renvoyer (1-50) |
 
-### Query syntax
+### Syntaxe de requête
 
-| Example | Description |
+| Exemple | Description |
 |---------|-------------|
-| `pet` | Simple text search across all fields |
-| `method:GET` | Filter by HTTP method |
-| `tag:pet` | Filter by tag name |
-| `path:"/api/v1/users"` | Exact path search |
-| `+method:POST +tag:pet` | Must match both conditions |
-| `-method:DELETE` | Exclude DELETE methods |
-| `create~` | Fuzzy search (typo-tolerant) |
-| `path:/api/v1/*` | Wildcard path search |
-| `/pattern/` | Regex search |
-| `term^3` | Boost a term's relevance |
+| `pet` | Recherche textuelle simple dans tous les champs |
+| `method:GET` | Filtrer par méthode HTTP |
+| `tag:pet` | Filtrer par nom de balise |
+| `path:"/api/v1/users"` | Recherche de chemin exact |
+| `+method:POST +tag:pet` | Doit correspondre aux deux conditions |
+| `-method:DELETE` | Exclure les méthodes DELETE |
+| `create~` | Recherche floue (tolérante aux fautes de frappe) |
+| `path:/api/v1/*` | Recherche par chemin avec caractère générique |
+| `/pattern/` | Recherche par expression régulière |
+| `term^3` | Augmenter la pertinence d'un terme |
 
-**Searchable fields:** `method` (keyword), `tag` (keyword), `path` (text), `summary` (text), `_all` (default text field).
+**Champs consultables :** `method` (mot-clé), `tag` (mot-clé), `path` (texte), `summary` (texte), `_all` (champ de texte par défaut).
 
-**Not supported:** parentheses for grouping, explicit `AND`/`OR` operators, field grouping.
+**Non pris en charge :** parenthèses pour le regroupement, opérateurs explicites `AND`/`OR`, regroupement de champs.
 
-### Response
+### Réponse
 
 ```json
 {
@@ -61,47 +61,47 @@ Searches the full-text index across all specs. Supports structured queries with 
       "specDomain": "meteo",
       "method": "GET",
       "path": "/v1/forecast",
-      "summary": "Get weather forecast for a location"
+      "summary": "Obtenir les prévisions météorologiques pour un lieu"
     }
   ]
 }
 ```
 
-Each result includes the full ancestry (spec → collection → tag) so the LLM can navigate to related endpoints.
+Chaque résultat inclut la filiation complète (spécification → collection → balise) afin que le LLM puisse naviguer vers les points de terminaison connexes.
 
 ### Nuances
 
-- `limit` must be between 1 and 50 (returns `validation_failed` otherwise)
-- `query` is required (returns `validation_failed` if empty)
-- Results are returned in relevance order (best match first)
-- Use field filters (`method:GET`, `tag:pet`) to narrow results
-- For exact path matching, use quotes: `path:"/v1/forecast"`
+- `limit` doit être compris entre 1 et 50 (renvoie `validation_failed` sinon)
+- `query` est obligatoire (renvoie `validation_failed` si vide)
+- Les résultats sont renvoyés par ordre de pertinence (meilleure correspondance en premier)
+- Utilisez des filtres de champ (`method:GET`, `tag:pet`) pour affiner les résultats
+- Pour une correspondance exacte de chemin, utilisez des guillemets : `path:"/v1/forecast"`
 
 ---
 
 ## inspect
 
-### Purpose
+### Objectif
 
-Retrieve the full OpenAPI operation object for an endpoint: all parameters, request body schema, response schemas, base URL, and full URL. This is the tool to call **before** `invoke` to understand the endpoint's contract.
+Récupérer l'objet complet de l'opération OpenAPI pour un point de terminaison : tous les paramètres, le schéma du corps de la requête, les schémas de réponse, l'URL de base et l'URL complète. C'est l'outil à appeler **avant** `invoke` pour comprendre le contrat du point de terminaison.
 
-### When to use
+### Quand l'utiliser
 
-- Always before `invoke` — you need the full contract to make a correct call
-- When you need to explain an API's technical details to the user
-- When you need to know required parameters, request body structure, or response format
+- Toujours avant `invoke` — vous avez besoin du contrat complet pour effectuer un appel correct
+- Lorsque vous devez expliquer les détails techniques d'une API à l'utilisateur
+- Lorsque vous devez connaître les paramètres obligatoires, la structure du corps de la requête ou le format de réponse
 
-### How it works
+### Fonctionnement
 
-Looks up the endpoint in the index and returns the complete OpenAPI operation object with all schemas resolved.
+Recherche le point de terminaison dans l'index et renvoie l'objet complet de l'opération OpenAPI avec tous les schémas résolus.
 
-### Parameters
+### Paramètres
 
-| Parameter | Type | Required | Description |
+| Paramètre | Type | Obligatoire | Description |
 |-----------|------|----------|-------------|
-| `endpointId` | string | Yes | 32-character MD5 hash of the endpoint |
+| `endpointId` | string | Oui | Hachage MD5 de 32 caractères du point de terminaison |
 
-### Response
+### Réponse
 
 ```json
 {
@@ -117,14 +117,14 @@ Looks up the endpoint in the index and returns the complete OpenAPI operation ob
   "operation": {
     "id": "addPet",
     "tags": ["pet"],
-    "summary": "Add a new pet",
-    "description": "Add a new pet to the store",
+    "summary": "Ajouter un nouvel animal",
+    "description": "Ajouter un nouvel animal à la boutique",
     "deprecated": false,
     "parameters": [
       {
         "name": "petId",
         "in": "path",
-        "description": "ID of the pet",
+        "description": "ID de l'animal",
         "required": true,
         "schema": {
           "type": "integer",
@@ -133,7 +133,7 @@ Looks up the endpoint in the index and returns the complete OpenAPI operation ob
       }
     ],
     "requestBody": {
-      "description": "Pet object to add",
+      "description": "Objet animal à ajouter",
       "required": true,
       "content": {
         "application/json": {
@@ -150,7 +150,7 @@ Looks up the endpoint in the index and returns the complete OpenAPI operation ob
     },
     "responses": {
       "200": {
-        "description": "Successful operation",
+        "description": "Opération réussie",
         "content": {
           "application/json": {
             "schema": {
@@ -160,65 +160,65 @@ Looks up the endpoint in the index and returns the complete OpenAPI operation ob
         }
       },
       "405": {
-        "description": "Invalid input"
+        "description": "Entrée invalide"
       }
     }
   }
 }
 ```
 
-| Field | Type | Description |
+| Champ | Type | Description |
 |-------|------|-------------|
-| `baseUrl` | string | Base URL of the API (from config) |
-| `fullUrl` | string | Full URL of the endpoint (base + path) |
-| `operation.parameters[]` | array | Parameters with name, location (path/query/header/cookie), description, required flag, and schema |
-| `operation.requestBody` | object | Request body with content type and schema |
-| `operation.responses` | map | Response codes with descriptions and schemas |
-| `operation.deprecated` | bool | Whether the endpoint is deprecated |
+| `baseUrl` | string | URL de base de l'API (depuis la configuration) |
+| `fullUrl` | string | URL complète du point de terminaison (base + chemin) |
+| `operation.parameters[]` | array | Paramètres avec nom, emplacement (path/query/header/cookie), description, indicateur obligatoire et schéma |
+| `operation.requestBody` | object | Corps de la requête avec type de contenu et schéma |
+| `operation.responses` | map | Codes de réponse avec descriptions et schémas |
+| `operation.deprecated` | bool | Indique si le point de terminaison est obsolète |
 
 ### Nuances
 
-- Returns `not_found` if the endpoint does not exist
-- This is the **only** tool that returns the full OpenAPI operation — `endpoint_by_id` returns only a summary
-- Always call `inspect` before `invoke` to understand required parameters and body structure
-- The `operation` object includes `$ref` references that are resolved to their full schema definitions
+- Renvoie `not_found` si le point de terminaison n'existe pas
+- C'est le **seul** outil qui renvoie l'opération OpenAPI complète — `endpoint_by_id` renvoie uniquement un résumé
+- Appelez toujours `inspect` avant `invoke` pour comprendre les paramètres obligatoires et la structure du corps
+- L'objet `operation` inclut les références `$ref` qui sont résolues en leurs définitions de schéma complètes
 
 ---
 
 ## invoke
 
-### Purpose
+### Objectif
 
-Execute a real API call to an endpoint. This is the only tool that makes actual HTTP requests. Auth is applied automatically — you do not need to call `auth` first.
+Exécuter un véritable appel API vers un point de terminaison. C'est le seul outil qui effectue de véritables requêtes HTTP. L'authentification est appliquée automatiquement — vous n'avez pas besoin d'appeler `auth` d'abord.
 
-### When to use
+### Quand l'utiliser
 
-- Only after calling `inspect` to understand the endpoint's contract
-- Only with explicit user confirmation for destructive operations (POST, PUT, PATCH, DELETE)
-- When the user asks to call an API and you have all required parameters
+- Uniquement après avoir appelé `inspect` pour comprendre le contrat du point de terminaison
+- Uniquement avec confirmation explicite de l'utilisateur pour les opérations destructrices (POST, PUT, PATCH, DELETE)
+- Lorsque l'utilisateur demande d'appeler une API et que vous avez tous les paramètres obligatoires
 
-### How it works
+### Fonctionnement
 
-1. Looks up the endpoint in the index
-2. Substitutes path parameters into the URL
-3. Appends query parameters
-4. Adds headers and cookies
-5. Serializes the request body as JSON
-6. Automatically obtains and applies auth (token, headers, query params)
-7. Makes the HTTP request
-8. Returns the response or saves it to a file if too large
+1. Recherche le point de terminaison dans l'index
+2. Substitue les paramètres de chemin dans l'URL
+3. Ajoute les paramètres de requête
+4. Ajoute les en-têtes et cookies
+5. Sérialise le corps de la requête en JSON
+6. Obtient et applique automatiquement l'authentification (jeton, en-têtes, paramètres de requête)
+7. Effectue la requête HTTP
+8. Renvoie la réponse ou l'enregistre dans un fichier si elle est trop volumineuse
 
-### Parameters
+### Paramètres
 
-| Parameter | Type | Required | Description |
+| Paramètre | Type | Obligatoire | Description |
 |-----------|------|----------|-------------|
-| `endpointId` | string | Yes | 32-character MD5 hash of the endpoint |
-| `parameters` | object | No | Path, query, and header parameters as key-value pairs |
-| `requestBody` | object | No | Request body for POST/PUT/PATCH requests |
-| `headers` | object | No | Additional HTTP headers to send |
-| `cookies` | object | No | Additional HTTP cookies to send |
+| `endpointId` | string | Oui | Hachage MD5 de 32 caractères du point de terminaison |
+| `parameters` | object | Non | Paramètres de chemin, de requête et d'en-tête sous forme de paires clé-valeur |
+| `requestBody` | object | Non | Corps de la requête pour les requêtes POST/PUT/PATCH |
+| `headers` | object | Non | En-têtes HTTP supplémentaires à envoyer |
+| `cookies` | object | Non | Cookies HTTP supplémentaires à envoyer |
 
-### Response (inline)
+### Réponse (en ligne)
 
 ```json
 {
@@ -234,7 +234,7 @@ Execute a real API call to an endpoint. This is the only tool that makes actual 
 }
 ```
 
-### Response (file reference — when body exceeds size limit)
+### Réponse (référence de fichier — lorsque le corps dépasse la limite de taille)
 
 ```json
 {
@@ -243,37 +243,37 @@ Execute a real API call to an endpoint. This is the only tool that makes actual 
     "content-type": "application/json"
   },
   "fileRef": {
-    "path": "/Users/user/.swag2mcp/responses/response_a1b2c3d4.json",
+    "path": "/Users/utilisateur/.swag2mcp/responses/response_a1b2c3d4.json",
     "size": 1572864,
-    "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "Response exceeds the 2 KB limit and has been saved to disk.",
-    "openCmd": "open /Users/user/.swag2mcp/responses/response_a1b2c3d4.json"
+    "sizeHint": "1.5 Mo",
+    "maxSizeHint": "2 Ko",
+    "message": "La réponse dépasse la limite de 2 Ko et a été enregistrée sur le disque.",
+    "openCmd": "open /Users/utilisateur/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }
 ```
 
-| Field | Type | Description |
+| Champ | Type | Description |
 |-------|------|-------------|
-| `statusCode` | int | HTTP response status code |
-| `headers` | object | HTTP response headers |
-| `body` | any | Response body (present when within size limit) |
-| `fileRef` | object | File reference (present when body exceeds size limit) |
+| `statusCode` | int | Code d'état de la réponse HTTP |
+| `headers` | object | En-têtes de la réponse HTTP |
+| `body` | any | Corps de la réponse (présent lorsqu'il est dans la limite de taille) |
+| `fileRef` | object | Référence de fichier (présente lorsque le corps dépasse la limite de taille) |
 
-### Working with large responses
+### Travailler avec de grandes réponses
 
-When `invoke` returns a `fileRef`, use the response tools to explore the data:
+Lorsque `invoke` renvoie une `fileRef`, utilisez les outils de réponse pour explorer les données :
 
-1. **`response_outline(path)`** — get the structural summary (keys, types, array lengths)
-2. **`response_compress(path, mode)`** — compress the data to fit inline
-3. **`response_slice(path, jsonPath)`** — extract a specific fragment
+1. **`response_outline(path)`** — obtenir le résumé structurel (clés, types, longueurs de tableaux)
+2. **`response_compress(path, mode)`** — compresser les données pour les adapter en ligne
+3. **`response_slice(path, jsonPath)`** — extraire un fragment spécifique
 
 ### Nuances
 
-- **Auth is automatic:** The `invoke` tool automatically obtains and applies authentication from the spec's auth configuration. You do **not** need to call `auth` first.
-- **Rate limiting:** Each endpoint has a 10-second cooldown. A second call to the same endpoint within 10 seconds is silently blocked (returns `rate_limit` error).
-- **Response size limit:** Default is 2 KB (configurable via `max_response_size`). If the response exceeds this limit, it is saved to `{workspace}/responses/` and a `FileReference` is returned instead of inline `body`.
-- **Parameter handling:** Path parameters are substituted into the URL. Query parameters are appended. Parameters from the request override operation spec defaults.
-- **Request body:** For POST/PUT/PATCH, the body is serialized as JSON. `Content-Type` is set to `application/json` automatically.
-- **Error handling:** HTTP errors (non-2xx) are returned as `invoke_error` with the status code and response body in the hint.
-- **Destructive operations:** Never invoke POST/PUT/PATCH/DELETE without explicit user confirmation.
+- **L'authentification est automatique :** L'outil `invoke` obtient et applique automatiquement l'authentification à partir de la configuration d'authentification de la spécification. Vous n'avez **pas** besoin d'appeler `auth` d'abord.
+- **Limitation de débit :** Chaque point de terminaison a un délai de refroidissement de 10 secondes. Un deuxième appel au même point de terminaison dans les 10 secondes est silencieusement bloqué (renvoie une erreur `rate_limit`).
+- **Limite de taille de réponse :** La valeur par défaut est de 2 Ko (configurable via `max_response_size`). Si la réponse dépasse cette limite, elle est enregistrée dans `{workspace}/responses/` et une `FileReference` est renvoyée au lieu du `body` en ligne.
+- **Gestion des paramètres :** Les paramètres de chemin sont substitués dans l'URL. Les paramètres de requête sont ajoutés. Les paramètres de la requête remplacent les valeurs par défaut de la spécification de l'opération.
+- **Corps de la requête :** Pour POST/PUT/PATCH, le corps est sérialisé en JSON. `Content-Type` est automatiquement défini sur `application/json`.
+- **Gestion des erreurs :** Les erreurs HTTP (non-2xx) sont renvoyées sous forme d'`invoke_error` avec le code d'état et le corps de la réponse dans l'indice.
+- **Opérations destructrices :** N'invoquez jamais POST/PUT/PATCH/DELETE sans confirmation explicite de l'utilisateur.

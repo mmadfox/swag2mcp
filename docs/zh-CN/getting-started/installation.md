@@ -1,35 +1,35 @@
-# Installation
+# 安装
 
-## Requirements
+## 要求
 
-- **macOS, Linux, or Windows** (amd64 / arm64)
-- **Go 1.26+** (only for `go install` or building from source)
+- **macOS、Linux 或 Windows**（amd64 / arm64）
+- **Go 1.26+**（仅用于 `go install` 或从源码构建）
 
-## Compatibility
+## 兼容性
 
-| Method | macOS | Linux | Windows |
-|--------|-------|-------|---------|
-| One-liner (curl) | ✅ | ✅ | ❌ |
+| 方法 | macOS | Linux | Windows |
+|------|-------|-------|---------|
+| 一行命令（curl） | ✅ | ✅ | ❌ |
 | Homebrew | ✅ | ✅ | ❌ |
 | Scoop | ❌ | ❌ | ✅ |
-| APT (deb) | ❌ | ✅ | ❌ |
+| APT（deb） | ❌ | ✅ | ❌ |
 | RPM | ❌ | ✅ | ❌ |
 | Docker | ❌ | ✅ | ❌ |
 | GitHub Release | ✅ | ✅ | ✅ |
 | go install | ✅ | ✅ | ✅ |
-| Build from source | ✅ | ✅ | ✅ |
+| 从源码构建 | ✅ | ✅ | ✅ |
 
 ---
 
 ## macOS
 
-### One-liner (recommended)
+### 一行命令（推荐）
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
 ```
 
-Installs to `/usr/local/bin/swag2mcp` (or `~/.local/bin/swag2mcp` if `/usr/local/bin` is not writable).
+安装到 `/usr/local/bin/swag2mcp`（如果 `/usr/local/bin` 不可写，则安装到 `~/.local/bin/swag2mcp`）。
 
 ### Homebrew
 
@@ -61,13 +61,13 @@ sudo mv swag2mcp /usr/local/bin/
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 ```
 
-Ensure `$GOPATH/bin` is in your `$PATH`:
+确保 `$GOPATH/bin` 在你的 `$PATH` 中：
 
 ```bash
 export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
-### Build from source
+### 从源码构建
 
 ```bash
 git clone https://github.com/mmadfox/swag2mcp.git
@@ -80,13 +80,13 @@ sudo mv swag2mcp /usr/local/bin/
 
 ## Linux
 
-### One-liner (recommended)
+### 一行命令（推荐）
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
 ```
 
-Installs to `/usr/local/bin/swag2mcp` (or `~/.local/bin/swag2mcp` if `/usr/local/bin` is not writable).
+安装到 `/usr/local/bin/swag2mcp`（如果 `/usr/local/bin` 不可写，则安装到 `~/.local/bin/swag2mcp`）。
 
 ### Homebrew
 
@@ -94,18 +94,18 @@ Installs to `/usr/local/bin/swag2mcp` (or `~/.local/bin/swag2mcp` if `/usr/local
 brew install mmadfox/tap/swag2mcp
 ```
 
-### APT (Debian / Ubuntu)
+### APT（Debian / Ubuntu）
 
 ```bash
-# Download the .deb from the latest release
+# 从最新版本下载 .deb
 curl -LO https://github.com/mmadfox/swag2mcp/releases/latest/download/swag2mcp_linux_amd64.deb
 sudo dpkg -i swag2mcp_linux_amd64.deb
 ```
 
-### RPM (Fedora / RHEL)
+### RPM（Fedora / RHEL）
 
 ```bash
-# Download the .rpm from the latest release
+# 从最新版本下载 .rpm
 curl -LO https://github.com/mmadfox/swag2mcp/releases/latest/download/swag2mcp_linux_amd64.rpm
 sudo rpm -i swag2mcp_linux_amd64.rpm
 ```
@@ -116,13 +116,13 @@ sudo rpm -i swag2mcp_linux_amd64.rpm
 docker pull ghcr.io/mmadfox/swag2mcp:latest
 ```
 
-Run with stdio transport:
+使用 stdio 传输运行：
 
 ```bash
 docker run --rm -i ghcr.io/mmadfox/swag2mcp:latest swag2mcp mcp
 ```
 
-Run with HTTP transport:
+使用 HTTP 传输运行：
 
 ```bash
 docker run --rm -p 8080:8080 ghcr.io/mmadfox/swag2mcp:latest swag2mcp mcp --transport sse --http-addr :8080
@@ -152,13 +152,13 @@ sudo mv swag2mcp /usr/local/bin/
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 ```
 
-Ensure `$GOPATH/bin` is in your `$PATH`:
+确保 `$GOPATH/bin` 在你的 `$PATH` 中：
 
 ```bash
 export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
-### Build from source
+### 从源码构建
 
 ```bash
 git clone https://github.com/mmadfox/swag2mcp.git
@@ -181,7 +181,7 @@ scoop install mmadfox/swag2mcp
 ### GitHub Release
 
 ```powershell
-# Download the latest release
+# 下载最新版本
 curl -LO https://github.com/mmadfox/swag2mcp/releases/latest/download/swag2mcp_windows_amd64.zip
 Expand-Archive swag2mcp_windows_amd64.zip -DestinationPath .
 move swag2mcp.exe C:\Windows\System32\
@@ -193,7 +193,7 @@ move swag2mcp.exe C:\Windows\System32\
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 ```
 
-### Build from source
+### 从源码构建
 
 ```powershell
 git clone https://github.com/mmadfox/swag2mcp.git
@@ -203,9 +203,9 @@ go build -o swag2mcp.exe ./cmd/swag2mcp
 
 ---
 
-## Mock Server
+## 模拟服务器
 
-The `swag2mcp-mock` binary is available as a separate download. Install it using the same method as the main binary:
+`swag2mcp-mock` 二进制文件作为单独的下载提供。使用与主二进制文件相同的方法安装：
 
 ::: code-group
 
@@ -219,40 +219,40 @@ go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 
 :::
 
-Or download from [GitHub Releases](https://github.com/mmadfox/swag2mcp/releases) — look for `swag2mcp-mock_<version>_<os>_<arch>.tar.gz`.
+或从 [GitHub Releases](https://github.com/mmadfox/swag2mcp/releases) 下载 — 查找 `swag2mcp-mock_<version>_<os>_<arch>.tar.gz`。
 
 ---
 
-## Install via LLM Agent
+## 通过 LLM 智能体安装
 
-If you use an AI-powered IDE (OpenCode, Cursor, Claude Desktop, VS Code, etc.), you can install swag2mcp through your agent:
+如果你使用 AI 驱动的 IDE（OpenCode、Cursor、Claude Desktop、VS Code 等），你可以通过智能体安装 swag2mcp：
 
-1. Ask your agent to add the swag2mcp skills:
+1. 让智能体添加 swag2mcp 技能：
 
    ```
    "Create the .agents/skills/swag2mcp-cli directory and add the skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md to .agents/skills/swag2mcp-cli/SKILL.md"
    "Create the .agents/skills/swag2mcp-format directory and add the skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md to .agents/skills/swag2mcp-format/SKILL.md"
    ```
 
-2. Then tell your agent:
+2. 然后告诉你的智能体：
 
    ```
    "Set up swag2mcp"
    ```
 
-   The agent will download and install swag2mcp, then create a workspace with ready-to-use specs.
+   智能体将下载并安装 swag2mcp，然后创建带有即用型 spec 的工作区。
 
-> Some IDEs require a restart after adding skills.
+> 某些 IDE 在添加技能后需要重启。
 
 ---
 
-## Verify
+## 验证
 
 ```bash
 swag2mcp --version
 ```
 
-Expected output (version may vary):
+预期输出（版本可能不同）：
 
 ```
 swag2mcp v*.*.*
@@ -260,6 +260,6 @@ swag2mcp v*.*.*
 
 ---
 
-## Next Steps
+## 下一步
 
-- [Quick Start](quickstart.md) — get running in 2 minutes
+- [快速开始](quickstart.md) — 2 分钟内运行起来

@@ -1,30 +1,30 @@
-# Discovery Tools
+# Erkennungstools
 
-Discovery tools let the LLM navigate the spec hierarchy: find all specs, drill into a spec to see its collections, and explore tags within a collection. Start with `spec_list` to see what APIs are available, then use IDs to drill deeper.
+Erkennungstools ermöglichen es dem LLM, die Spec-Hierarchie zu navigieren: alle Specs finden, in eine Spec hineinzoomen, um ihre Collections zu sehen, und Tags innerhalb einer Collection erkunden. Beginnen Sie mit `spec_list`, um zu sehen, welche APIs verfügbar sind, und verwenden Sie dann IDs, um tiefer zu gehen.
 
 ---
 
 ## spec_list
 
-### Purpose
+### Zweck
 
-List all API specifications registered in the workspace. This is the starting point for any session — the LLM calls it first to discover what APIs are available.
+Listet alle im Arbeitsbereich registrierten API-Spezifikationen auf. Dies ist der Ausgangspunkt für jede Sitzung — der LLM ruft es zuerst auf, um zu entdecken, welche APIs verfügbar sind.
 
-### When to use
+### Wann verwenden
 
-- At the start of a session to see what APIs are configured
-- After adding or removing specs to refresh the list
-- When you need a spec ID for other tools
+- Zu Beginn einer Sitzung, um zu sehen, welche APIs konfiguriert sind
+- Nach dem Hinzufügen oder Entfernen von Specs, um die Liste zu aktualisieren
+- Wenn Sie eine Spec-ID für andere Tools benötigen
 
-### How it works
+### Wie es funktioniert
 
-Returns a list of all specs with their unique ID and domain name. No parameters needed.
+Gibt eine Liste aller Specs mit ihrer eindeutigen ID und ihrem Domain-Namen zurück. Keine Parameter erforderlich.
 
-### Parameters
+### Parameter
 
-None.
+Keine.
 
-### Response
+### Antwort
 
 ```json
 {
@@ -41,41 +41,41 @@ None.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | 32-character MD5 hash, unique identifier for the spec |
-| `domain` | string | Domain name of the spec (e.g. "meteo", "dadjoke") |
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| `id` | string | 32-stelliger MD5-Hash, eindeutiger Identifikator für die Spec |
+| `domain` | string | Domain-Name der Spec (z. B. "meteo", "dadjoke") |
 
-### Nuances
+### Nuancen
 
-- Returns only `id` and `domain` — for full details (collections, tags), use `spec_by_id`
-- All IDs are 32-character MD5 hex strings (`^[0-9a-f]{32}$`)
-- If no specs are configured, returns an empty array
+- Gibt nur `id` und `domain` zurück — für vollständige Details (Collections, Tags) verwenden Sie `spec_by_id`
+- Alle IDs sind 32-stellige MD5-Hex-Zeichenfolgen (`^[0-9a-f]{32}$`)
+- Wenn keine Specs konfiguriert sind, wird ein leeres Array zurückgegeben
 
 ---
 
 ## spec_by_id
 
-### Purpose
+### Zweck
 
-Get detailed information about a specific spec: its domain, all collections, and their statistics (tag count, method count).
+Ruft detaillierte Informationen über eine bestimmte Spec ab: ihre Domain, alle Collections und deren Statistiken (Tag-Anzahl, Methoden-Anzahl).
 
-### When to use
+### Wann verwenden
 
-- After `spec_list` to see the collections inside a spec
-- When you need collection IDs for further navigation
+- Nach `spec_list`, um die Collections innerhalb einer Spec zu sehen
+- Wenn Sie Collection-IDs für die weitere Navigation benötigen
 
-### How it works
+### Wie es funktioniert
 
-Takes a spec ID and returns the spec metadata plus all its collections with counts.
+Nimmt eine Spec-ID entgegen und gibt die Spec-Metadaten plus alle ihre Collections mit Zählwerten zurück.
 
-### Parameters
+### Parameter
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the spec |
+| Parameter | Typ | Erforderlich | Beschreibung |
+|-----------|-----|-------------|--------------|
+| `id` | string | Ja | 32-stelliger MD5-Hash der Spec |
 
-### Response
+### Antwort
 
 ```json
 {
@@ -95,41 +95,41 @@ Takes a spec ID and returns the spec metadata plus all its collections with coun
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `spec.id` | string | Spec identifier |
-| `spec.domain` | string | Spec domain name |
-| `collections[].id` | string | Collection identifier |
-| `collections[].title` | string | Human-readable title |
-| `collections[].llmTitle` | string | LLM-friendly title (optional) |
-| `collections[].countTags` | int | Number of tags in the collection |
-| `collections[].countMethods` | int | Number of HTTP methods in the collection |
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| `spec.id` | string | Spec-Identifikator |
+| `spec.domain` | string | Spec-Domain-Name |
+| `collections[].id` | string | Collection-Identifikator |
+| `collections[].title` | string | Menschenlesbarer Titel |
+| `collections[].llmTitle` | string | LLM-freundlicher Titel (optional) |
+| `collections[].countTags` | int | Anzahl der Tags in der Collection |
+| `collections[].countMethods` | int | Anzahl der HTTP-Methoden in der Collection |
 
-### Nuances
+### Nuancen
 
-- Returns `not_found` error if the spec ID does not exist
-- The `id` must be a valid 32-character MD5 hex string
+- Gibt einen `not_found`-Fehler zurück, wenn die Spec-ID nicht existiert
+- Die `id` muss eine gültige 32-stellige MD5-Hex-Zeichenfolge sein
 
 ---
 
 ## collection_by_spec
 
-### Purpose
+### Zweck
 
-List all collections within a specific spec. Similar to `spec_by_id` but returns only the collection list without extra spec metadata.
+Listet alle Collections innerhalb einer bestimmten Spec auf. Ähnlich wie `spec_by_id`, gibt aber nur die Collection-Liste ohne zusätzliche Spec-Metadaten zurück.
 
-### When to use
+### Wann verwenden
 
-- When you already have the spec ID and just need the collection list
-- As a lighter alternative to `spec_by_id`
+- Wenn Sie bereits die Spec-ID haben und nur die Collection-Liste benötigen
+- Als leichtere Alternative zu `spec_by_id`
 
-### Parameters
+### Parameter
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `specId` | string | Yes | 32-character MD5 hash of the spec |
+| Parameter | Typ | Erforderlich | Beschreibung |
+|-----------|-----|-------------|--------------|
+| `specId` | string | Ja | 32-stelliger MD5-Hash der Spec |
 
-### Response
+### Antwort
 
 ```json
 {
@@ -149,31 +149,31 @@ List all collections within a specific spec. Similar to `spec_by_id` but returns
 }
 ```
 
-### Nuances
+### Nuancen
 
-- Returns `not_found` if the spec does not exist
-- Same data as `spec_by_id` but without the extra spec wrapper
+- Gibt `not_found` zurück, wenn die Spec nicht existiert
+- Gleiche Daten wie `spec_by_id`, aber ohne den zusätzlichen Spec-Wrapper
 
 ---
 
 ## collection_by_id
 
-### Purpose
+### Zweck
 
-Get detailed information about a specific collection: its metadata, the parent spec, and all tags within the collection.
+Ruft detaillierte Informationen über eine bestimmte Collection ab: ihre Metadaten, die übergeordnete Spec und alle Tags innerhalb der Collection.
 
-### When to use
+### Wann verwenden
 
-- After `collection_by_spec` to see the tags inside a collection
-- When you need tag IDs for `tag_by_id` or `endpoint_by_tag`
+- Nach `collection_by_spec`, um die Tags innerhalb einer Collection zu sehen
+- Wenn Sie Tag-IDs für `tag_by_id` oder `endpoint_by_tag` benötigen
 
-### Parameters
+### Parameter
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the collection |
+| Parameter | Typ | Erforderlich | Beschreibung |
+|-----------|-----|-------------|--------------|
+| `id` | string | Ja | 32-stelliger MD5-Hash der Collection |
 
-### Response
+### Antwort
 
 ```json
 {
@@ -201,37 +201,37 @@ Get detailed information about a specific collection: its metadata, the parent s
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `spec` | object | Parent spec (id, domain) |
-| `collection` | object | Collection metadata (id, title, countMethods) |
-| `tags[]` | array | List of tags with id, title, countMethods |
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| `spec` | object | Übergeordnete Spec (id, domain) |
+| `collection` | object | Collection-Metadaten (id, title, countMethods) |
+| `tags[]` | array | Liste der Tags mit id, title, countMethods |
 
-### Nuances
+### Nuancen
 
-- Returns `not_found` if the collection ID does not exist
-- Tags are returned with their IDs — use `endpoint_by_tag(tagId)` to see the actual endpoints
+- Gibt `not_found` zurück, wenn die Collection-ID nicht existiert
+- Tags werden mit ihren IDs zurückgegeben — verwenden Sie `endpoint_by_tag(tagId)`, um die tatsächlichen Endpunkte zu sehen
 
 ---
 
 ## tag_by_spec
 
-### Purpose
+### Zweck
 
-List all tags across an entire spec, spanning all collections. Useful for getting a bird's-eye view of all available tags.
+Listet alle Tags über eine gesamte Spec hinweg auf, über alle Collections hinweg. Nützlich für eine Vogelperspektive aller verfügbaren Tags.
 
-### When to use
+### Wann verwenden
 
-- When you want to see all tags in a spec without drilling into each collection
-- When you don't know which collection contains the tag you need
+- Wenn Sie alle Tags in einer Spec sehen möchten, ohne in jede Collection hineinzuzoomen
+- Wenn Sie nicht wissen, welche Collection den benötigten Tag enthält
 
-### Parameters
+### Parameter
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `specId` | string | Yes | 32-character MD5 hash of the spec |
+| Parameter | Typ | Erforderlich | Beschreibung |
+|-----------|-----|-------------|--------------|
+| `specId` | string | Ja | 32-stelliger MD5-Hash der Spec |
 
-### Response
+### Antwort
 
 ```json
 {
@@ -250,31 +250,31 @@ List all tags across an entire spec, spanning all collections. Useful for gettin
 }
 ```
 
-### Nuances
+### Nuancen
 
-- Returns `not_found` if the spec does not exist
-- Tags are aggregated from all collections in the spec
+- Gibt `not_found` zurück, wenn die Spec nicht existiert
+- Tags werden aus allen Collections in der Spec aggregiert
 
 ---
 
 ## tag_by_collection
 
-### Purpose
+### Zweck
 
-List all tags within a specific collection. Unlike `tag_by_spec`, this also returns the parent spec and collection metadata.
+Listet alle Tags innerhalb einer bestimmten Collection auf. Im Gegensatz zu `tag_by_spec` gibt dies auch die übergeordnete Spec und Collection-Metadaten zurück.
 
-### When to use
+### Wann verwenden
 
-- After `collection_by_id` to confirm the tag list
-- When you need the full context (spec + collection + tags)
+- Nach `collection_by_id`, um die Tag-Liste zu bestätigen
+- Wenn Sie den vollständigen Kontext benötigen (Spec + Collection + Tags)
 
-### Parameters
+### Parameter
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `collectionId` | string | Yes | 32-character MD5 hash of the collection |
+| Parameter | Typ | Erforderlich | Beschreibung |
+|-----------|-----|-------------|--------------|
+| `collectionId` | string | Ja | 32-stelliger MD5-Hash der Collection |
 
-### Response
+### Antwort
 
 ```json
 {
@@ -297,31 +297,31 @@ List all tags within a specific collection. Unlike `tag_by_spec`, this also retu
 }
 ```
 
-### Nuances
+### Nuancen
 
-- Returns `not_found` if the collection does not exist
-- Same tag data as `tag_by_spec` but scoped to one collection
+- Gibt `not_found` zurück, wenn die Collection nicht existiert
+- Gleiche Tag-Daten wie `tag_by_spec`, aber auf eine Collection beschränkt
 
 ---
 
 ## tag_by_id
 
-### Purpose
+### Zweck
 
-Get information about a single tag: its ID, title, and how many methods it contains. This tells you about the tag itself — to see the actual endpoints, use `endpoint_by_tag`.
+Ruft Informationen über einen einzelnen Tag ab: seine ID, seinen Titel und wie viele Methoden er enthält. Dies gibt Auskunft über den Tag selbst — um die tatsächlichen Endpunkte zu sehen, verwenden Sie `endpoint_by_tag`.
 
-### When to use
+### Wann verwenden
 
-- When you have a tag ID and want to confirm its name and size
-- Before calling `endpoint_by_tag` to understand how many endpoints to expect
+- Wenn Sie eine Tag-ID haben und deren Namen und Größe bestätigen möchten
+- Vor dem Aufruf von `endpoint_by_tag`, um zu verstehen, wie viele Endpunkte zu erwarten sind
 
-### Parameters
+### Parameter
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the tag |
+| Parameter | Typ | Erforderlich | Beschreibung |
+|-----------|-----|-------------|--------------|
+| `id` | string | Ja | 32-stelliger MD5-Hash des Tags |
 
-### Response
+### Antwort
 
 ```json
 {
@@ -333,13 +333,13 @@ Get information about a single tag: its ID, title, and how many methods it conta
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `tag.id` | string | Tag identifier |
-| `tag.title` | string | Human-readable tag name |
-| `tag.countMethods` | int | Number of HTTP methods in this tag |
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| `tag.id` | string | Tag-Identifikator |
+| `tag.title` | string | Menschenlesbarer Tag-Name |
+| `tag.countMethods` | int | Anzahl der HTTP-Methoden in diesem Tag |
 
-### Nuances
+### Nuancen
 
-- Returns `not_found` if the tag does not exist
-- This tool returns tag metadata only — use `endpoint_by_tag` to get the actual list of endpoints
+- Gibt `not_found` zurück, wenn der Tag nicht existiert
+- Dieses Tool gibt nur Tag-Metadaten zurück — verwenden Sie `endpoint_by_tag`, um die tatsächliche Liste der Endpunkte zu erhalten

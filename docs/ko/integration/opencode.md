@@ -1,4 +1,4 @@
-# OpenCode Integration
+# OpenCode 통합
 
 ## stdio
 
@@ -28,20 +28,20 @@
 }
 ```
 
-## Example Queries
+## 예시 쿼리
 
-Once connected, you can ask:
+연결 후 다음을 물어볼 수 있습니다:
 
-- "What APIs do you have?"
-- "Show all endpoints in petstore"
-- "Find an API for creating a user"
-- "Call GET /pet/1 and show the result"
+- "어떤 API가 있나요?"
+- "petstore의 모든 엔드포인트 보여주세요"
+- "사용자 생성 API 찾아주세요"
+- "GET /pet/1을 호출하고 결과를 보여주세요"
 
-## Others
+## 기타
 
-Don't see your client? All MCP integrations follow the same pattern:
-- Set the command to `swag2mcp` with argument `mcp`
-- Optionally add a workspace path: `mcp /path/to/workspace`
-- Check your client's documentation for the exact config file location and format
+클라이언트가 보이지 않나요? 모든 MCP 통합은 동일한 패턴을 따릅니다:
+- 명령어를 `swag2mcp`로, 인수를 `mcp`로 설정
+- 선택적으로 워크스페이스 경로 추가: `mcp /path/to/workspace`
+- 정확한 설정 파일 위치와 형식은 클라이언트 문서를 확인
 
-Most MCP clients support stdio transport, and some support HTTP (SSE / Streamable HTTP).
+대부분의 MCP 클라이언트는 stdio 전송을 지원하며, 일부는 HTTP(SSE / Streamable HTTP)를 지원합니다.

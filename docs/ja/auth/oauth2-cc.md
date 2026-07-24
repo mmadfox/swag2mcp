@@ -1,16 +1,16 @@
 # OAuth2 Client Credentials
 
-## Purpose
+## 目的
 
-OAuth2 Client Credentials Grant — authentication for server-to-server communication. The application obtains a token using its client_id and client_secret, without user involvement.
+OAuth2 Client Credentials Grant — サーバー間通信のための認証。アプリケーションは client_id と client_secret を使用してトークンを取得します。ユーザーの関与は不要です。
 
-## When to use
+## 使用するタイミング
 
-- Microservices and server-to-server integrations
-- Machine-to-machine communication
-- When the API uses OAuth2 and you have a client_id + client_secret
+- マイクロサービスおよびサーバー間統合
+- マシン間通信
+- API が OAuth2 を使用し、client_id + client_secret がある場合
 
-## Configuration
+## 設定
 
 ```yaml
 specs:
@@ -31,18 +31,18 @@ specs:
           - write
 ```
 
-## Parameters
+## パラメーター
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `client_id` | Yes | Client identifier |
-| `client_secret` | Yes | Client secret |
-| `token_url` | Yes | Token endpoint URL |
-| `scopes` | No | List of permissions (optional) |
+| パラメーター | 必須 | 説明 |
+|-----------|------|------|
+| `client_id` | はい | クライアント識別子 |
+| `client_secret` | はい | クライアントシークレット |
+| `token_url` | はい | トークンエンドポイント URL |
+| `scopes` | いいえ | 権限のリスト（オプション） |
 
-## Notes
+## 注意点
 
-- swag2mcp automatically requests a new token when the current one expires
-- The token is cached until its expiry time (`expires_in`)
-- If the server doesn't provide `expires_in`, the token is considered valid for 1 hour
-- All parameters can be stored in environment variables
+- swag2mcp は現在のトークンが期限切れになると自動的に新しいトークンを要求します
+- トークンは有効期限（`expires_in`）までキャッシュされます
+- サーバーが `expires_in` を提供しない場合、トークンは 1 時間有効と見なされます
+- すべてのパラメーターは環境変数に保存できます

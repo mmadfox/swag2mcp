@@ -1,72 +1,72 @@
 # ls
 
-## Purpose
+## Objectif
 
-List all configured **specs** and their **collections** in a human-readable format. This is the primary way to inspect what APIs are available in your workspace.
+Lister toutes les **specs** configurées et leurs **collections** dans un format lisible par l'humain. C'est le moyen principal d'inspecter les API disponibles dans votre espace de travail.
 
-## When to use
+## Quand l'utiliser
 
-- You want to see what APIs are configured
-- You need to find a spec or collection ID
-- You want to check how many endpoints each collection has
-- You want to filter specs by tags
+- Vous voulez voir quelles API sont configurées
+- Vous devez trouver un ID de spec ou de collection
+- Vous voulez vérifier combien de points d'accès chaque collection a
+- Vous voulez filtrer les specs par étiquettes
 
-## Syntax
+## Syntaxe
 
 ```bash
-swag2mcp ls [path] [flags]
+swag2mcp ls [chemin] [drapeaux]
 ```
 
 ## Arguments
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Argument | Position | Requis | Description |
+|----------|----------|--------|-------------|
+| `chemin` | 1 | Non | Répertoire de l'espace de travail. S'il est omis, résolution via les règles de résolution de chemin. |
 
-## Flags
+## Drapeaux
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--tags` | `-t` | `string` | `""` | Filter specs by tags (comma-separated) |
+| Drapeau | Raccourci | Type | Défaut | Description |
+|---------|-----------|------|--------|-------------|
+| `--tags` | `-t` | `string` | `""` | Filtrer les specs par étiquettes (séparées par des virgules) |
 
-## How it works
+## Comment cela fonctionne
 
-### List all specs
+### Lister toutes les specs
 
-Shows every spec with its domain, collections, and endpoint counts:
+Affiche chaque spec avec son domaine, ses collections et le nombre de points d'accès :
 
 ```bash
 swag2mcp ls
 ```
 
-Example output:
+Exemple de sortie :
 
 ```
-Specifications:
+Spécifications :
   dadjoke (https://icanhazdadjoke.com)
-    jokes (3 endpoints)
+    blagues (3 points d'accès)
   meteo (https://meteo.swagger.io/v2)
-    forecast (5 endpoints)
-    current (8 endpoints)
+    previsions (5 points d'accès)
+    actuel (8 points d'accès)
   binance (https://api.binance.com)
-    market-data (12 endpoints)
+    donnees-marche (12 points d'accès)
 ```
 
-### Filter by tags
+### Filtrer par étiquettes
 
-Show only specs that have the specified tags:
+Affiche uniquement les specs qui ont les étiquettes spécifiées :
 
 ```bash
 swag2mcp ls --tags=public
-swag2mcp ls --tags=public,internal
+swag2mcp ls --tags=public,interne
 ```
 
-## Post-command verification
+## Vérification post-commande
 
-Use `ls` after `add`, `delete`, `update`, or `import` to confirm the workspace state matches your expectations.
+Utilisez `ls` après `add`, `delete`, `update` ou `import` pour confirmer que l'état de l'espace de travail correspond à vos attentes.
 
 ## Nuances
 
-- **Auto-init:** If no config file exists, `ls` automatically runs the init wizard first.
-- **Tag filtering:** Tags are comma-separated. Specs matching **any** of the specified tags are shown (OR logic).
-- **Output format:** The output is plain text, not JSON. For machine-readable output, use `info`.
+- **Auto-initialisation :** Si aucun fichier de configuration n'existe, `ls` exécute automatiquement l'assistant d'initialisation d'abord.
+- **Filtrage par étiquettes :** Les étiquettes sont séparées par des virgules. Les specs correspondant à **n'importe laquelle** des étiquettes spécifiées sont affichées (logique OU).
+- **Format de sortie :** La sortie est en texte brut, pas en JSON. Pour une sortie lisible par machine, utilisez `info`.

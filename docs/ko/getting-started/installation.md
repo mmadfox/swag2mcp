@@ -1,15 +1,15 @@
-# Installation
+# 설치
 
-## Requirements
+## 요구 사항
 
-- **macOS, Linux, or Windows** (amd64 / arm64)
-- **Go 1.26+** (only for `go install` or building from source)
+- **macOS, Linux, Windows** (amd64 / arm64)
+- **Go 1.26+** (`go install` 또는 소스에서 빌드하는 경우에만)
 
-## Compatibility
+## 호환성
 
-| Method | macOS | Linux | Windows |
-|--------|-------|-------|---------|
-| One-liner (curl) | ✅ | ✅ | ❌ |
+| 방법 | macOS | Linux | Windows |
+|------|-------|-------|---------|
+| 원라인 (curl) | ✅ | ✅ | ❌ |
 | Homebrew | ✅ | ✅ | ❌ |
 | Scoop | ❌ | ❌ | ✅ |
 | APT (deb) | ❌ | ✅ | ❌ |
@@ -17,19 +17,19 @@
 | Docker | ❌ | ✅ | ❌ |
 | GitHub Release | ✅ | ✅ | ✅ |
 | go install | ✅ | ✅ | ✅ |
-| Build from source | ✅ | ✅ | ✅ |
+| 소스에서 빌드 | ✅ | ✅ | ✅ |
 
 ---
 
 ## macOS
 
-### One-liner (recommended)
+### 원라인 (권장)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
 ```
 
-Installs to `/usr/local/bin/swag2mcp` (or `~/.local/bin/swag2mcp` if `/usr/local/bin` is not writable).
+`/usr/local/bin/swag2mcp`에 설치됩니다(`/usr/local/bin`에 쓸 수 없는 경우 `~/.local/bin/swag2mcp`).
 
 ### Homebrew
 
@@ -61,13 +61,13 @@ sudo mv swag2mcp /usr/local/bin/
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 ```
 
-Ensure `$GOPATH/bin` is in your `$PATH`:
+`$GOPATH/bin`이 `$PATH`에 있는지 확인하세요:
 
 ```bash
 export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
-### Build from source
+### 소스에서 빌드
 
 ```bash
 git clone https://github.com/mmadfox/swag2mcp.git
@@ -80,13 +80,13 @@ sudo mv swag2mcp /usr/local/bin/
 
 ## Linux
 
-### One-liner (recommended)
+### 원라인 (권장)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
 ```
 
-Installs to `/usr/local/bin/swag2mcp` (or `~/.local/bin/swag2mcp` if `/usr/local/bin` is not writable).
+`/usr/local/bin/swag2mcp`에 설치됩니다(`/usr/local/bin`에 쓸 수 없는 경우 `~/.local/bin/swag2mcp`).
 
 ### Homebrew
 
@@ -97,7 +97,7 @@ brew install mmadfox/tap/swag2mcp
 ### APT (Debian / Ubuntu)
 
 ```bash
-# Download the .deb from the latest release
+# 최신 릴리스에서 .deb 다운로드
 curl -LO https://github.com/mmadfox/swag2mcp/releases/latest/download/swag2mcp_linux_amd64.deb
 sudo dpkg -i swag2mcp_linux_amd64.deb
 ```
@@ -105,7 +105,7 @@ sudo dpkg -i swag2mcp_linux_amd64.deb
 ### RPM (Fedora / RHEL)
 
 ```bash
-# Download the .rpm from the latest release
+# 최신 릴리스에서 .rpm 다운로드
 curl -LO https://github.com/mmadfox/swag2mcp/releases/latest/download/swag2mcp_linux_amd64.rpm
 sudo rpm -i swag2mcp_linux_amd64.rpm
 ```
@@ -116,13 +116,13 @@ sudo rpm -i swag2mcp_linux_amd64.rpm
 docker pull ghcr.io/mmadfox/swag2mcp:latest
 ```
 
-Run with stdio transport:
+stdio 전송으로 실행:
 
 ```bash
 docker run --rm -i ghcr.io/mmadfox/swag2mcp:latest swag2mcp mcp
 ```
 
-Run with HTTP transport:
+HTTP 전송으로 실행:
 
 ```bash
 docker run --rm -p 8080:8080 ghcr.io/mmadfox/swag2mcp:latest swag2mcp mcp --transport sse --http-addr :8080
@@ -152,13 +152,13 @@ sudo mv swag2mcp /usr/local/bin/
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 ```
 
-Ensure `$GOPATH/bin` is in your `$PATH`:
+`$GOPATH/bin`이 `$PATH`에 있는지 확인하세요:
 
 ```bash
 export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
-### Build from source
+### 소스에서 빌드
 
 ```bash
 git clone https://github.com/mmadfox/swag2mcp.git
@@ -181,7 +181,7 @@ scoop install mmadfox/swag2mcp
 ### GitHub Release
 
 ```powershell
-# Download the latest release
+# 최신 릴리스 다운로드
 curl -LO https://github.com/mmadfox/swag2mcp/releases/latest/download/swag2mcp_windows_amd64.zip
 Expand-Archive swag2mcp_windows_amd64.zip -DestinationPath .
 move swag2mcp.exe C:\Windows\System32\
@@ -193,7 +193,7 @@ move swag2mcp.exe C:\Windows\System32\
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 ```
 
-### Build from source
+### 소스에서 빌드
 
 ```powershell
 git clone https://github.com/mmadfox/swag2mcp.git
@@ -203,9 +203,9 @@ go build -o swag2mcp.exe ./cmd/swag2mcp
 
 ---
 
-## Mock Server
+## 모의 서버
 
-The `swag2mcp-mock` binary is available as a separate download. Install it using the same method as the main binary:
+`swag2mcp-mock` 바이너리는 별도 다운로드로 제공됩니다. 메인 바이너리와 동일한 방법으로 설치하세요:
 
 ::: code-group
 
@@ -219,40 +219,40 @@ go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 
 :::
 
-Or download from [GitHub Releases](https://github.com/mmadfox/swag2mcp/releases) — look for `swag2mcp-mock_<version>_<os>_<arch>.tar.gz`.
+또는 [GitHub Releases](https://github.com/mmadfox/swag2mcp/releases)에서 다운로드 — `swag2mcp-mock_<version>_<os>_<arch>.tar.gz`를 찾으세요.
 
 ---
 
-## Install via LLM Agent
+## LLM 에이전트를 통한 설치
 
-If you use an AI-powered IDE (OpenCode, Cursor, Claude Desktop, VS Code, etc.), you can install swag2mcp through your agent:
+AI 기반 IDE(OpenCode, Cursor, Claude Desktop, VS Code 등)를 사용하는 경우 에이전트를 통해 swag2mcp를 설치할 수 있습니다:
 
-1. Ask your agent to add the swag2mcp skills:
-
-   ```
-   "Create the .agents/skills/swag2mcp-cli directory and add the skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md to .agents/skills/swag2mcp-cli/SKILL.md"
-   "Create the .agents/skills/swag2mcp-format directory and add the skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md to .agents/skills/swag2mcp-format/SKILL.md"
-   ```
-
-2. Then tell your agent:
+1. 에이전트에게 swag2mcp 스킬을 추가하도록 요청하세요:
 
    ```
-   "Set up swag2mcp"
+   ".agents/skills/swag2mcp-cli 디렉토리를 만들고 https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md의 스킬을 .agents/skills/swag2mcp-cli/SKILL.md에 추가하세요"
+   ".agents/skills/swag2mcp-format 디렉토리를 만들고 https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md의 스킬을 .agents/skills/swag2mcp-format/SKILL.md에 추가하세요"
    ```
 
-   The agent will download and install swag2mcp, then create a workspace with ready-to-use specs.
+2. 그런 다음 에이전트에게 말하세요:
 
-> Some IDEs require a restart after adding skills.
+   ```
+   "swag2mcp 설정"
+   ```
+
+   에이전트가 swag2mcp를 다운로드 및 설치하고 사용 준비가 된 명세가 있는 워크스페이스를 생성합니다.
+
+> 일부 IDE는 스킬 추가 후 재시작이 필요합니다.
 
 ---
 
-## Verify
+## 확인
 
 ```bash
 swag2mcp --version
 ```
 
-Expected output (version may vary):
+예상 출력 (버전은 다를 수 있음):
 
 ```
 swag2mcp v*.*.*
@@ -260,6 +260,6 @@ swag2mcp v*.*.*
 
 ---
 
-## Next Steps
+## 다음 단계
 
-- [Quick Start](quickstart.md) — get running in 2 minutes
+- [빠른 시작](quickstart.md) — 2분 만에 실행

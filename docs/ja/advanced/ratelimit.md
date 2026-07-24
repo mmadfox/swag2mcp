@@ -1,29 +1,29 @@
-# Rate Limiting
+# レート制限
 
-## Overview
+## 概要
 
-swag2mcp has a built-in rate limiter that prevents the LLM from calling the same API endpoint too frequently. This protects against accidental duplicate calls and respects API rate limits.
+swag2mcp には組み込みのレートリミッターがあり、LLM が同じ API エンドポイントを頻繁に呼び出すのを防ぎます。これにより、偶発的な重複呼び出しから保護し、API のレート制限を尊重します。
 
-## How it works
+## 仕組み
 
-Each endpoint has a cooldown period. If the LLM tries to call the same endpoint again within the cooldown, the call is rejected with a structured error.
+各エンドポイントにはクールダウン期間があります。LLM がクールダウン中に同じエンドポイントを再度呼び出そうとすると、構造化エラーで拒否されます。
 
 ```
-t=0s  → invoke(endpoint) → executes
-t=2s  → invoke(endpoint) → rejected with rate_limit error
-t=12s → invoke(endpoint) → executes (cooldown has passed)
+t=0s  → invoke(endpoint) → 実行
+t=2s  → invoke(endpoint) → rate_limit エラーで拒否
+t=12s → invoke(endpoint) → 実行（クールダウン経過）
 ```
 
-### Default behavior
+### デフォルトの動作
 
-- **Cooldown:** 10 seconds per endpoint
-- **Scope:** Per-endpoint — calling endpoint A does not affect endpoint B
-- **Error response:** The LLM receives an `LLMError` with code `rate_limit` and a message indicating how long to wait
-- **Reset:** After 10 seconds of inactivity on that endpoint
+- **クールダウン:** エンドポイントあたり 10 秒
+- **スコープ:** エンドポイントごと — エンドポイント A の呼び出しはエンドポイント B に影響しません
+- **エラーレスポンス:** LLM はコード `rate_limit` と待機時間を示すメッセージを含む `LLMError` を受け取ります
+- **リセット:** そのエンドポイントで 10 秒間アクティビティがない場合
 
-### Error format
+### エラー形式
 
-When rate limited, the LLM receives:
+レート制限時、LLM は以下を受け取ります：
 
 ```json
 {
@@ -33,45 +33,45 @@ When rate limited, the LLM receives:
 }
 ```
 
-The LLM can use this information to wait and retry, or switch to a different endpoint.
+LLM はこの情報を使用して待機して再試行するか、別のエンドポイントに切り替えることができます。
 
-### Why it exists
+### なぜ存在するのか
 
-- **Prevents accidental duplicate calls** — the LLM might call the same endpoint multiple times in quick succession
-- **Protects against API rate limits** — many APIs have their own rate limits, and hitting them would cause errors
-- **Saves resources** — reduces unnecessary network traffic
+- **偶発的な重複呼び出しを防止** — LLM が同じエンドポイントを短時間に複数回呼び出す可能性があります
+- **API のレート制限から保護** — 多くの API には独自のレート制限があり、それに達するとエラーが発生します
+- **リソースを節約** — 不要なネットワークトラフィックを削減します
 
-## Configuration
+## 設定
 
-You can disable the rate limiter or change the cooldown interval:
+レートリミッターを無効にするか、クールダウン間隔を変更できます：
 
 ```yaml
-# Disable the rate limiter entirely
+# レートリミッターを完全に無効化
 disable_ratelimiter: true
 
-# Custom cooldown interval
+# カスタムクールダウン間隔
 rate_limit_interval: 30s
 ```
 
 ### disable_ratelimiter
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Effect:** When `true`, the per-endpoint rate limiter is disabled. The LLM can call the same endpoint repeatedly without waiting.
-- **When to enable:** Testing, debugging, or when you need to call the same endpoint multiple times in quick succession.
-- **When to keep disabled (recommended):** Production. The rate limiter prevents accidental abuse.
+- **型:** `bool`
+- **デフォルト:** `false`
+- **効果:** `true` の場合、エンドポイントごとのレートリミッターが無効になります。LLM は待機なしで同じエンドポイントを繰り返し呼び出せます。
+- **有効にするタイミング:** テスト、デバッグ、または同じエンドポイントを短時間に複数回呼び出す必要がある場合。
+- **無効のままにするタイミング（推奨）:** 本番環境。レートリミッターは偶発的な悪用を防ぎます。
 
 ### rate_limit_interval
 
-- **Type:** duration (Go format: `10s`, `30s`, `1m`)
-- **Default:** `10s`
-- **Effect:** Sets the cooldown period between calls to the same endpoint.
-- **When to increase:** APIs with strict rate limits (e.g., 10 requests per minute).
-- **When to decrease:** Internal APIs where you control the load.
-- **Examples:** `5s`, `30s`, `1m`, `2m`
+- **型:** 期間（Go 形式：`10s`、`30s`、`1m`）
+- **デフォルト:** `10s`
+- **効果:** 同じエンドポイントへの呼び出し間のクールダウン期間を設定します。
+- **増やすタイミング:** 厳格なレート制限がある API（例：1 分あたり 10 リクエスト）。
+- **減らすタイミング:** 負荷を制御できる内部 API。
+- **例:** `5s`、`30s`、`1m`、`2m`
 
-## Important notes
+## 重要な注意点
 
-- **Per-endpoint tracking** — each endpoint is tracked independently. Calling one endpoint does not affect others.
-- **Error returned to LLM** — the second call within the cooldown is rejected with a `rate_limit` error. The LLM receives the cooldown duration and can retry after waiting.
-- **No cleanup needed** — the rate limiter tracks endpoints automatically and does not require maintenance.
+- **エンドポイントごとの追跡** — 各エンドポイントは独立して追跡されます。あるエンドポイントの呼び出しは他に影響しません。
+- **LLM にエラーが返される** — クールダウン中の 2 回目の呼び出しは `rate_limit` エラーで拒否されます。LLM はクールダウン期間を受け取り、待機後に再試行できます。
+- **クリーンアップ不要** — レートリミッターはエンドポイントを自動的に追跡し、メンテナンスは不要です。

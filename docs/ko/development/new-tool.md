@@ -1,32 +1,32 @@
-# Adding a New MCP Tool
+# 새 MCP 도구 추가
 
-## Steps
+## 단계
 
-1. **Add a tool name constant** in `internal/service/service.go`
-2. **Create request/response types** in `internal/service/types.go`
-3. **Implement the service** in `internal/service/` (new file or add to existing)
-4. **Create a markdown definition** in `internal/service/definitions/` — this is what `MakeToolDefinitions` reads
-5. **Add method to `Svc` interface** in `internal/server/mcp/handler.go`
-6. **Add handler** in `handler.go`
-7. **Register tool** in `registerTools` in `mcp.go`
-8. **Generate mocks**: `go generate ./...`
-9. **Write tests**
+1. **도구 이름 상수 추가** `internal/service/service.go`
+2. **요청/응답 타입 생성** `internal/service/types.go`
+3. **서비스 구현** `internal/service/` (새 파일 또는 기존 파일에 추가)
+4. **마크다운 정의 생성** `internal/service/definitions/` — `MakeToolDefinitions`가 읽는 파일
+5. **`Svc` 인터페이스에 메서드 추가** `internal/server/mcp/handler.go`
+6. **핸들러 추가** `handler.go`
+7. **도구 등록** `mcp.go`의 `registerTools`
+8. **모의 생성**: `go generate ./...`
+9. **테스트 작성**
 
-## 1. Tool name constant
+## 1. 도구 이름 상수
 
-Add a constant in `internal/service/service.go`:
+`internal/service/service.go`에 상수 추가:
 
 ```go
 const MyNewTool = "my_new_tool"
 ```
 
-## 2. Request/Response types
+## 2. 요청/응답 타입
 
-Define in `internal/service/types.go`:
+`internal/service/types.go`에 정의:
 
 ```go
 type MyNewToolRequest struct {
-    Param1 string `json:"param1" validate:"required" jsonschema:"required,Description of param1"`
+    Param1 string `json:"param1" validate:"required" jsonschema:"required,param1 설명"`
 }
 
 type MyNewToolResponse struct {
@@ -34,23 +34,23 @@ type MyNewToolResponse struct {
 }
 ```
 
-## 3. Service implementation
+## 3. 서비스 구현
 
-Create `internal/service/my_new_tool.go` or add to an existing service file. Follow the standard service pattern: validate → lookup → execute → return:
+`internal/service/my_new_tool.go`를 생성하거나 기존 서비스 파일에 추가합니다. 표준 서비스 패턴을 따르세요: 검증 → 조회 → 실행 → 반환:
 
 ```go
 func (s *Service) MyNewTool(ctx context.Context, req MyNewToolRequest) (MyNewToolResponse, error) {
     if err := s.validateRequest(req); err != nil {
         return MyNewToolResponse{}, NewLLMError(validationFailedErrCode, err.Error())
     }
-    // business logic
+    // 비즈니스 로직
     return MyNewToolResponse{Result: "ok"}, nil
 }
 ```
 
-## 4. Markdown definition
+## 4. 마크다운 정의
 
-Create `internal/service/definitions/my_new_tool.md`. This file is read by `MakeToolDefinitions()` and embedded into the binary. The frontmatter `name:` field must match the constant:
+`internal/service/definitions/my_new_tool.md`를 생성합니다. 이 파일은 `MakeToolDefinitions()`에서 읽어 바이너리에 포함됩니다. 프론트매터의 `name:` 필드는 상수와 일치해야 합니다:
 
 ```markdown
 ---
@@ -59,31 +59,31 @@ name: my_new_tool
 
 # my_new_tool
 
-Description of the tool.
+도구 설명.
 
-## Parameters
+## 매개변수
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `param1` | string | Description |
+| 매개변수 | 타입 | 설명 |
+|---------|------|------|
+| `param1` | string | 설명 |
 ```
 
-The `MakeToolDefinitions()` function in `tools.go` reads all `.md` files from the embedded `definitions/` directory, parses the YAML frontmatter for the `name` field, and uses the body as the tool description. The `instruction.md` file is treated specially — it becomes the system instruction for the LLM.
+`MakeToolDefinitions()` 함수는 `tools.go`에서 포함된 `definitions/` 디렉토리의 모든 `.md` 파일을 읽고, YAML 프론트매터에서 `name` 필드를 파싱하며, 본문을 도구 설명으로 사용합니다. `instruction.md` 파일은 특별히 처리되어 LLM의 시스템 지침이 됩니다.
 
-## 5. Svc Interface
+## 5. Svc 인터페이스
 
-Add a method to the composed `Svc` interface in `handler.go`:
+`handler.go`의 구성된 `Svc` 인터페이스에 메서드를 추가하세요:
 
 ```go
 type Svc interface {
-    // ... existing methods
+    // ... 기존 메서드
     MyNewTool(ctx context.Context, req service.MyNewToolRequest) (service.MyNewToolResponse, error)
 }
 ```
 
-## 6. Handler
+## 6. 핸들러
 
-Add a handler method on `handler` in `handler.go`. The handler delegates to the service and wraps the result in `StructuredContent`:
+`handler.go`의 `handler`에 핸들러 메서드를 추가하세요. 핸들러는 서비스에 위임하고 결과를 `StructuredContent`로 래핑합니다:
 
 ```go
 func (h *handler) handleMyNewTool(
@@ -101,21 +101,21 @@ func (h *handler) handleMyNewTool(
 }
 ```
 
-## 7. Registration
+## 7. 등록
 
-Register the tool in the `registerTools` function in `mcp.go`. Add an entry to the `toolRegistrations` map:
+`mcp.go`의 `registerTools` 함수에서 도구를 등록합니다. `toolRegistrations` 맵에 항목을 추가하세요:
 
 ```go
 service.MyNewTool: {
     addTool[service.MyNewToolRequest](mcpServer, h.handleMyNewTool),
-    true, // false if the tool is mutable (like invoke or auth)
+    true, // 도구가 변경 가능한 경우 false (invoke 또는 auth와 같은)
 },
 ```
 
-The `registerTools` function signature is:
+`registerTools` 함수 시그니처는:
 
 ```go
 func registerTools(mcpServer *sdkmcp.Server, tools []service.Tool, h handler) {
 ```
 
-It iterates over the tool definitions returned by `MakeToolDefinitions()` and registers each one with its typed handler. The `toolRegistrations` map connects tool name constants to their handlers.
+`MakeToolDefinitions()`가 반환한 도구 정의를 반복하고 각각을 타입화된 핸들러와 함께 등록합니다. `toolRegistrations` 맵은 도구 이름 상수를 해당 핸들러에 연결합니다.

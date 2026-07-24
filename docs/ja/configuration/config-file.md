@@ -1,13 +1,13 @@
-# Configuration File
+# 設定ファイル
 
-swag2mcp uses a YAML configuration file. Created by `swag2mcp init`.
+swag2mcp は YAML 設定ファイルを使用します。`swag2mcp init` で作成されます。
 
-## Location
+## 場所
 
 - **Linux/macOS**: `~/.swag2mcp/swag2mcp.yaml`
 - **Windows**: `%USERPROFILE%\.swag2mcp\swag2mcp.yaml`
 
-## Basic Structure
+## 基本構造
 
 ```yaml
 specs:
@@ -19,10 +19,10 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
 ```
 
-## Full Example
+## 完全な例
 
 ```yaml
-# ── Global HTTP client ──────────────────────────────────
+# ── グローバル HTTP クライアント ──────────────────────────────
 http_client:
   timeout: 30s
   max_response_size: 1048576
@@ -41,7 +41,7 @@ http_client:
     - name: "session"
       value: "abc123"
 
-# ── MCP server ──────────────────────────────────────────
+# ── MCP サーバー ──────────────────────────────────────────
 mcp:
   transport: stdio
   addr: ":8080"
@@ -49,14 +49,14 @@ mcp:
   auth:
     token: ""
 
-# ── Mock server ─────────────────────────────────────────
+# ── モックサーバー ─────────────────────────────────────────
 mock_enabled: false
 mock_auth:
   oauth2_port: 9090
   digest_port: 9091
   hmac_port: 9092
 
-# ── Rate limiter ────────────────────────────────────────
+# ── レートリミッター ────────────────────────────────────────
 disable_ratelimiter: false
 rate_limit_interval: 10s
 
@@ -92,9 +92,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## Environment Variables
+## 環境変数
 
-Use `$(VAR_NAME)` syntax to reference environment variables. swag2mcp resolves them at startup.
+`$(VAR_NAME)` 構文を使用して環境変数を参照します。swag2mcp は起動時に解決します。
 
 ```yaml
 specs:
@@ -109,21 +109,21 @@ mcp:
     token: "$(MCP_TOKEN)"
 ```
 
-`$(VAR)` is resolved in:
-- Auth config fields: `token`, `username`, `password`, `client_id`, `client_secret`, `api_key`, `secret_key`, `domain`
-- MCP server auth token: `mcp.auth.token`
-- HTTP client headers and cookie values
+`$(VAR)` は以下で解決されます：
+- Auth 設定フィールド：`token`、`username`、`password`、`client_id`、`client_secret`、`api_key`、`secret_key`、`domain`
+- MCP サーバー認証トークン：`mcp.auth.token`
+- HTTP クライアントヘッダーと Cookie 値
 
-`$(VAR)` is **not** resolved in base URLs or collection locations.
+`$(VAR)` はベース URL や collection location では**解決されません**。
 
-## Validation
+## 検証
 
 ```bash
-# Validate default workspace (~/.swag2mcp)
+# デフォルトワークスペースを検証（~/.swag2mcp）
 swag2mcp validate
 
-# Validate a custom project workspace
+# カスタムプロジェクトワークスペースを検証
 swag2mcp validate ./my-project
 ```
 
-If the workspace is not in the home directory (e.g., inside a project repository), always specify the path when running `validate`, `update`, `mcp`, or any other command. Otherwise swag2mcp will use the default `~/.swag2mcp` workspace.
+ワークスペースがホームディレクトリにない場合（例：プロジェクトリポジトリ内）、`validate`、`update`、`mcp`、またはその他のコマンドを実行するときは常にパスを指定してください。指定しない場合、swag2mcp はデフォルトの `~/.swag2mcp` ワークスペースを使用します。

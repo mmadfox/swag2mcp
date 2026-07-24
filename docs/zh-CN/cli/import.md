@@ -1,42 +1,42 @@
 # import
 
-## Purpose
+## 用途
 
-Import spec files into the workspace or restore a full workspace from a ZIP backup. Three modes cover different scenarios: adding a single spec, bulk-importing from existing config, or restoring a complete workspace.
+将规范文件导入工作区，或从 ZIP 备份恢复完整工作区。三种模式涵盖不同场景：添加单个规范、从现有配置批量导入，或恢复完整工作区。
 
-## When to use
+## 何时使用
 
-- You have a spec URL or file and want to add it to the workspace
-- You want to download all spec files referenced in the config
-- You need to restore a workspace from a ZIP backup created by `export`
-- You are migrating swag2mcp to another machine
+- 你有规范 URL 或文件，想将其添加到工作区
+- 你想下载配置中引用的所有规范文件
+- 你需要从 `export` 创建的 ZIP 备份恢复工作区
+- 你正在将 swag2mcp 迁移到另一台机器
 
-## Syntax
+## 语法
 
 ```bash
 swag2mcp import [path] [source] [name] [flags]
 ```
 
-## Arguments
+## 参数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
-| `source` | 2 | Varies | URL or local path to a spec file, or path to a ZIP archive |
-| `name` | 3 | Varies | Domain name for the new spec |
+| 参数 | 位置 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | 1 | 否 | 工作区目录。如果省略，通过路径解析规则解析。 |
+| `source` | 2 | 视情况 | 规范文件的 URL 或本地路径，或 ZIP 归档的路径 |
+| `name` | 3 | 视情况 | 新 spec 的域名 |
 
-## Flags
+## 标志
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--spec` | `-s` | `stringSlice` | `nil` | Import collections from specified specs (comma-separated) |
-| `--from-zip` | | `string` | `""` | Restore workspace from a swag2mcp backup ZIP |
+| 标志 | 简写 | 类型 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| `--spec` | `-s` | `stringSlice` | `nil` | 从指定 spec 导入 collection（逗号分隔） |
+| `--from-zip` | | `string` | `""` | 从 swag2mcp 备份 ZIP 恢复工作区 |
 
-## How it works
+## 工作原理
 
-### Mode 1 — Single import from URL or file
+### 模式 1 — 从 URL 或文件单个导入
 
-Download a spec file and add it to the workspace with a domain name:
+下载规范文件并添加域名到工作区：
 
 ```bash
 swag2mcp import https://example.com/spec.yaml myspec
@@ -44,46 +44,46 @@ swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
 swag2mcp import ./local-spec.yaml myspec
 ```
 
-The spec file is saved to `specs/` and the config is updated with the new spec entry.
+规范文件保存到 `specs/`，配置更新为新的 spec 条目。
 
-### Mode 2 — Bulk import from existing config
+### 模式 2 — 从现有配置批量导入
 
-Download all collections for the specified domains from their configured URLs:
+从配置的 URL 下载指定域的所有 collection：
 
 ```bash
 swag2mcp import --spec meteo
 swag2mcp import /path/to/workspace --spec meteo,store
 ```
 
-Each collection's spec file is downloaded and saved to `specs/`. The config is updated to point to the local copies.
+每个 collection 的规范文件被下载并保存到 `specs/`。配置更新为指向本地副本。
 
-### Mode 3 — Restore from ZIP backup
+### 模式 3 — 从 ZIP 备份恢复
 
-Restore a full workspace from a ZIP archive created by `swag2mcp export`:
+从 `swag2mcp export` 创建的 ZIP 归档恢复完整工作区：
 
 ```bash
 swag2mcp import --from-zip /path/to/backup.zip
 swag2mcp import /path/to/workspace /path/to/backup.zip
 ```
 
-> **The ZIP must be created by `swag2mcp export`.** Arbitrary ZIP files will not work — the archive has a specific internal structure (`swag2mcp.yaml`, `specs/`, `auth_scripts/`).
+> **ZIP 必须由 `swag2mcp export` 创建。** 任意 ZIP 文件将无法工作 — 归档具有特定的内部结构（`swag2mcp.yaml`、`specs/`、`auth_scripts/`）。
 
-## Post-command verification
+## 命令后验证
 
 ```bash
-# Single or bulk import
+# 单个或批量导入
 swag2mcp ls [path]
-# The new spec should appear in the list
+# 新的 spec 应出现在列表中
 
-# ZIP restore
+# ZIP 恢复
 swag2mcp ls [path]
-# All specs from the backup should appear
+# 备份中的所有 spec 应出现
 ```
 
-## Nuances
+## 细节
 
-- **Bulk mode requires config:** When using `--spec`, the config file must exist. Run `init` first if needed.
-- **Single import creates workspace:** If the workspace doesn't exist, it is created automatically.
-- **ZIP detection:** A positional argument ending in `.zip` is treated as a ZIP source. The `--from-zip` flag takes priority over positional detection.
-- **`--force`:** Available for ZIP restore to overwrite an existing workspace.
-- **HTTP client:** The global HTTP client settings from the config are applied during import (timeout, proxy, headers, etc.).
+- **批量模式需要配置：** 使用 `--spec` 时，配置文件必须存在。如果需要，先运行 `init`。
+- **单个导入创建工作区：** 如果工作区不存在，会自动创建。
+- **ZIP 检测：** 以 `.zip` 结尾的位置参数被视为 ZIP 源。`--from-zip` 标志优先于位置检测。
+- **`--force`：** 可用于 ZIP 恢复以覆盖现有工作区。
+- **HTTP 客户端：** 导入期间应用配置中的全局 HTTP 客户端设置（超时、代理、头等）。

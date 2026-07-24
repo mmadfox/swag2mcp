@@ -1,15 +1,15 @@
-# Global Settings
+# Globale Einstellungen
 
-Global settings are the top-level configuration blocks in `swag2mcp.yaml`. They apply to all specs unless overridden at the spec or collection level.
+Globale Einstellungen sind die Konfigurationsblöcke der obersten Ebene in `swag2mcp.yaml`. Sie gelten für alle Specs, es sei denn, sie werden auf Spec- oder Collection-Ebene überschrieben.
 
-## Structure
+## Struktur
 
 ```yaml
 http_client:
-  # HTTP client settings for all API calls
+  # HTTP-Client-Einstellungen für alle API-Aufrufe
 
 mcp:
-  # MCP server settings
+  # MCP-Server-Einstellungen
 
 mock_enabled: false
 mock_auth:
@@ -21,21 +21,21 @@ disable_ratelimiter: false
 rate_limit_interval: 10s
 ```
 
-## HTTP Client
+## HTTP-Client
 
-Controls how swag2mcp makes HTTP requests to APIs: timeout, response size limit, proxy, headers, cookies, redirects, and user-agent. These settings cascade down to specs and collections.
+Steuert, wie swag2mcp HTTP-Anfragen an APIs stellt: Timeout, Antwortgrößenlimit, Proxy, Header, Cookies, Weiterleitungen und User-Agent. Diese Einstellungen kaskadieren zu Specs und Collections hinunter.
 
-See [HTTP Client](./http-client) for all parameters and examples.
+Siehe [HTTP-Client](./http-client) für alle Parameter und Beispiele.
 
-## MCP Server
+## MCP-Server
 
-Controls how the MCP server communicates with LLM agents: transport type (stdio, SSE, Streamable HTTP), address, path, and optional bearer token auth.
+Steuert, wie der MCP-Server mit LLM-Agenten kommuniziert: Transporttyp (stdio, SSE, Streamable HTTP), Adresse, Pfad und optionales Bearer-Token-Auth.
 
-See [MCP Server](./mcp-server) for all parameters, transports, and startup flags.
+Siehe [MCP-Server](./mcp-server) für alle Parameter, Transports und Start-Flags.
 
-## Mock Server
+## Mock-Server
 
-The mock server generates fake API responses based on OpenAPI schemas. Useful for testing without hitting real APIs.
+Der Mock-Server generiert gefälschte API-Antworten basierend auf OpenAPI-Schemata. Nützlich zum Testen ohne echte API-Aufrufe.
 
 ```yaml
 mock_enabled: true
@@ -47,24 +47,24 @@ mock_auth:
 
 ### mock_enabled
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Effect:** When `true`, swag2mcp starts mock servers for all specs that have `base_mock_url` configured. Each collection must have `base_mock_url` set.
-- **When to enable:** You want to test your API integration without making real HTTP calls. Mock servers return fake data based on the OpenAPI schema.
+- **Typ:** `bool`
+- **Standard:** `false`
+- **Wirkung:** Wenn `true`, startet swag2mcp Mock-Server für alle Specs, die `base_mock_url` konfiguriert haben. Jede Collection muss `base_mock_url` gesetzt haben.
+- **Wann aktivieren:** Sie möchten Ihre API-Integration testen, ohne echte HTTP-Aufrufe zu tätigen. Mock-Server geben gefälschte Daten basierend auf dem OpenAPI-Schema zurück.
 
 ### mock_auth
 
-Port configuration for mock authentication servers. These are used when testing auth methods (OAuth2, Digest, HMAC) with the mock server.
+Port-Konfiguration für Mock-Authentifizierungsserver. Diese werden beim Testen von Auth-Methoden (OAuth2, Digest, HMAC) mit dem Mock-Server verwendet.
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `oauth2_port` | int | `9090` | Port for the mock OAuth2 token server (1024-65535) |
-| `digest_port` | int | `9091` | Port for the mock Digest auth server (1024-65535) |
-| `hmac_port` | int | `9092` | Port for the mock HMAC auth server (1024-65535) |
+| Feld | Typ | Standard | Beschreibung |
+|------|-----|----------|--------------|
+| `oauth2_port` | int | `9090` | Port für den Mock-OAuth2-Token-Server (1024-65535) |
+| `digest_port` | int | `9091` | Port für den Mock-Digest-Auth-Server (1024-65535) |
+| `hmac_port` | int | `9092` | Port für den Mock-HMAC-Auth-Server (1024-65535) |
 
-## Rate Limiter
+## Ratenbegrenzer
 
-The rate limiter prevents the LLM from calling the same API endpoint too frequently. By default, each endpoint can be called once every 10 seconds.
+Der Ratenbegrenzer verhindert, dass der LLM denselben API-Endpunkt zu häufig aufruft. Standardmäßig kann jeder Endpunkt einmal alle 10 Sekunden aufgerufen werden.
 
 ```yaml
 disable_ratelimiter: false
@@ -73,30 +73,30 @@ rate_limit_interval: 10s
 
 ### disable_ratelimiter
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Effect:** When `true`, the per-endpoint rate limiter is disabled entirely. The LLM can call the same endpoint repeatedly without waiting.
-- **When to enable:** Testing, debugging, or when you need to call the same endpoint multiple times in quick succession.
-- **When to keep disabled (recommended):** Production. The rate limiter prevents accidental abuse and respects API rate limits.
+- **Typ:** `bool`
+- **Standard:** `false`
+- **Wirkung:** Wenn `true`, wird der Pro-Endpunkt-Ratenbegrenzer vollständig deaktiviert. Der LLM kann denselben Endpunkt wiederholt ohne Wartezeit aufrufen.
+- **Wann aktivieren:** Testen, Debuggen oder wenn Sie denselben Endpunkt mehrmals schnell hintereinander aufrufen müssen.
+- **Wann deaktiviert lassen (empfohlen):** Produktion. Der Ratenbegrenzer verhindert versehentlichen Missbrauch und respektiert API-Ratenlimits.
 
 ### rate_limit_interval
 
-- **Type:** duration (Go format: `10s`, `30s`, `1m`)
-- **Default:** `10s`
-- **Effect:** Sets how long the LLM must wait between calls to the same endpoint.
-- **When to change:** Increase for APIs with strict rate limits. Decrease for internal APIs where you control the load.
-- **Range:** Any valid duration (e.g., `5s`, `30s`, `1m`, `2m`).
+- **Typ:** Dauer (Go-Format: `10s`, `30s`, `1m`)
+- **Standard:** `10s`
+- **Wirkung:** Legt fest, wie lange der LLM zwischen Aufrufen desselben Endpunkts warten muss.
+- **Wann ändern:** Erhöhen für APIs mit strengen Ratenlimits. Verringern für interne APIs, bei denen Sie die Last kontrollieren.
+- **Bereich:** Jede gültige Dauer (z. B. `5s`, `30s`, `1m`, `2m`).
 
-## Cascade
+## Kaskade
 
-Global settings can be overridden at the spec and collection levels. All `http_client` settings (timeout, proxy, user-agent, redirects, response size, randomizer, headers, cookies) can be overridden at both spec and collection levels.
+Globale Einstellungen können auf Spec- und Collection-Ebene überschrieben werden. Alle `http_client`-Einstellungen (Timeout, Proxy, User-Agent, Weiterleitungen, Antwortgröße, Randomizer, Header, Cookies) können auf beiden Ebenen überschrieben werden.
 
 ```
 Global (http_client, mock_enabled, disable_ratelimiter, rate_limit_interval)
-    ↓ overrides (http_client only)
+    ↓ überschreibt (nur http_client)
 Spec (specs[].http_client)
-    ↓ overrides (http_client only)
+    ↓ überschreibt (nur http_client)
 Collection (specs[].collections[].http_client)
 ```
 
-See [Configuration Cascade](./cascade) for details.
+Siehe [Konfigurationskaskade](./cascade) für Details.

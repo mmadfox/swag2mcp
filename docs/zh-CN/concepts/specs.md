@@ -1,67 +1,67 @@
 # Specs
 
-A spec is a logical container representing an API domain or service (e.g., YouTube, Binance, Open-Meteo). Each spec has a unique `domain`, a `base_url`, optional `auth`, and contains one or more collections.
+Spec 是代表 API 域或服务的逻辑容器（例如 YouTube、Binance、Open-Meteo）。每个 spec 有唯一的 `domain`、`base_url`、可选的 `auth`，并包含一个或多个 collection。
 
-[Collections](./collections) point to OpenAPI/Swagger/Postman files — the spec itself is not a file, it's the grouping around them.
+[Collections](./collections) 指向 OpenAPI/Swagger/Postman 文件 — spec 本身不是文件，而是围绕它们的分组。
 
-## Domain — Naming Rules
+## 域 — 命名规则
 
-The `domain` is the unique identifier of a spec. It is used as the primary key throughout the system.
+`domain` 是 spec 的唯一标识符。它作为整个系统的主键使用。
 
-| Rule | Constraint |
-|------|------------|
-| Characters | `a-z`, `0-9`, `_`, `-` only |
-| Length | 1–60 characters |
-| Uniqueness | **No duplicates allowed** — two active specs cannot share the same domain |
+| 规则 | 约束 |
+|------|------|
+| 字符 | 仅限 `a-z`、`0-9`、`_`、`-` |
+| 长度 | 1–60 字符 |
+| 唯一性 | **不允许重复** — 两个活动的 spec 不能共享相同的 domain |
 
-**Valid examples:** `meteo`, `binance`, `github-api`, `my_service`, `openai-v1`
+**有效示例：** `meteo`、`binance`、`github-api`、`my_service`、`openai-v1`
 
-**Invalid examples:** `Meteo` (uppercase), `my api` (space), `my.api` (dot), `a-very-long-domain-name-that-exceeds-sixty-characters` (too long)
+**无效示例：** `Meteo`（大写）、`my api`（空格）、`my.api`（点）、`a-very-long-domain-name-that-exceeds-sixty-characters`（太长）
 
-## Spec Fields
+## Spec 字段
 
-| Field | YAML key | Required | Description |
-|-------|----------|----------|-------------|
-| [Domain](#domain--naming-rules) | `domain` | ✅ | Unique API identifier (1–60 chars, `a-z0-9_-`) |
-| LLM Title | `llm_title` | ✅ | Human-readable name the LLM uses to reference this API (5–120 chars) |
-| [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | Short hint injected into the swag2mcp system prompt (max 500 chars) |
-| Base URL | `base_url` | ✅ | Base URL for all API requests (valid URL) |
-| [Disable](#disable) | `disable` | ❌ | Skip this spec during loading and indexing |
-| [Tags](#tags) | `tags` | ❌ | Tags for filtering (e.g., `["public", "demo"]`) |
-| [Auth](#auth) | `auth` | ❌ | Authentication configuration |
-| [HTTP Client](#http-client) | `http_client` | ❌ | Per-spec HTTP settings (headers, cookies) |
-| [Collections](./collections) | `collections` | ✅ | List of 1–30 collections |
+| 字段 | YAML 键 | 必需 | 描述 |
+|------|---------|------|------|
+| [域](#域--命名规则) | `domain` | ✅ | 唯一 API 标识符（1–60 字符，`a-z0-9_-`） |
+| LLM 标题 | `llm_title` | ✅ | LLM 用于引用此 API 的人类可读名称（5–120 字符） |
+| [LLM 指令](#llm-instruction) | `llm_instruction` | ❌ | 注入到 swag2mcp 系统提示中的简短提示（最多 500 字符） |
+| 基础 URL | `base_url` | ✅ | 所有 API 请求的基础 URL（有效 URL） |
+| [禁用](#disable) | `disable` | ❌ | 加载和索引时跳过此 spec |
+| [标签](#tags) | `tags` | ❌ | 用于过滤的标签（例如 `["public", "demo"]`） |
+| [认证](#auth) | `auth` | ❌ | 认证配置 |
+| [HTTP 客户端](#http-client) | `http_client` | ❌ | 每个 spec 的 HTTP 设置（头、cookie） |
+| [Collections](./collections) | `collections` | ✅ | 1–30 个 collection 的列表 |
 
-## Validation
+## 验证
 
-When swag2mcp validates the config, these rules are checked for every spec:
+当 swag2mcp 验证配置时，会为每个 spec 检查以下规则：
 
-| Check | Rule |
-|-------|------|
-| **Duplicate domains** | No two active specs may share the same `domain` |
-| **Domain format** | Must match `^[a-z0-9_-]{1,60}$` |
-| **LLM Title** | Required, 5–120 characters, letters/digits/spaces/basic punctuation |
-| **LLM Instruction** | Max 500 characters, same character set as title |
-| **Base URL** | Required, must be a valid URL |
-| **Collections** | Required, 1–30 items |
-| **Auth** | Validated per auth type (e.g., bearer requires `token`, basic requires `username` + `password`) |
-| **Location** | Each collection's `location` must be a valid URL or file path (5–250 chars) |
+| 检查项 | 规则 |
+|--------|------|
+| **重复域** | 没有两个活动的 spec 可以共享相同的 `domain` |
+| **域格式** | 必须匹配 `^[a-z0-9_-]{1,60}$` |
+| **LLM 标题** | 必需，5–120 字符，字母/数字/空格/基本标点 |
+| **LLM 指令** | 最多 500 字符，与标题相同的字符集 |
+| **基础 URL** | 必需，必须是有效的 URL |
+| **Collections** | 必需，1–30 项 |
+| **认证** | 按认证类型验证（例如 bearer 需要 `token`，basic 需要 `username` + `password`） |
+| **位置** | 每个 collection 的 `location` 必须是有效的 URL 或文件路径（5–250 字符） |
 
-Validation runs on every `swag2mcp mcp` startup. If it fails, the MCP server will not start — in some IDEs this means the server simply won't connect, and the LLM receives a clear error message explaining what to fix.
+验证在每次 `swag2mcp mcp` 启动时运行。如果失败，MCP 服务器将不会启动 — 在某些 IDE 中，这意味着服务器根本无法连接，LLM 会收到清晰的错误消息，说明需要修复什么。
 
-To diagnose issues before starting the server, use the [`validate`](../cli/validate.md) command:
+要在启动服务器之前诊断问题，使用 [`validate`](../cli/validate.md) 命令：
 
 ```bash
-# Validate default workspace (~/.swag2mcp)
+# 验证默认工作区（~/.swag2mcp）
 swag2mcp validate
 
-# Validate a custom project workspace
+# 验证自定义项目工作区
 swag2mcp validate ./my-project
 ```
 
-## LLM Instruction
+## LLM 指令
 
-It is recommended to set `llm_instruction` on each spec — a short hint (up to 500 chars) that tells the LLM what this API is for and when to use it. This instruction is injected into the swag2mcp system prompt, helping the LLM understand the spec's purpose without extra context.
+建议在每个 spec 上设置 `llm_instruction` — 一个简短的提示（最多 500 字符），告诉 LLM 此 API 的用途以及何时使用。此指令被注入到 swag2mcp 系统提示中，帮助 LLM 无需额外上下文即可理解 spec 的用途。
 
 ```yaml
 specs:
@@ -74,29 +74,29 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-Collections can also have their own `llm_instruction` (up to 360 chars) for more specific guidance.
+Collection 也可以有自己的 `llm_instruction`（最多 360 字符）以提供更具体的指导。
 
-## Auth
+## 认证
 
-Authentication is configured at the spec level and applies to all its collections. swag2mcp supports 9 auth methods:
+认证在 spec 级别配置，并应用于其所有 collection。swag2mcp 支持 9 种认证方法：
 
-| Method | YAML type | Key fields |
-|--------|-----------|------------|
+| 方法 | YAML 类型 | 关键字段 |
+|------|-----------|----------|
 | [None](../auth/none.md) | `none` | — |
-| [Basic](../auth/basic.md) | `basic` | `username`, `password` |
+| [Basic](../auth/basic.md) | `basic` | `username`、`password` |
 | [Bearer](../auth/bearer.md) | `bearer` | `token` |
-| [Digest](../auth/digest.md) | `digest` | `username`, `password` |
-| [OAuth2 Client Credentials](../auth/oauth2-cc.md) | `oauth2-cc` | `client_id`, `client_secret`, `token_url` |
-| [OAuth2 Password](../auth/oauth2-pwd.md) | `oauth2-pwd` | `username`, `password`, `client_id`, `token_url` |
-| [API Key](../auth/api-key.md) | `api-key` | `key`, `value`, `in` (`header` or `query`) |
-| [HMAC](../auth/hmac.md) | `hmac` | `api_key`, `secret_key` |
+| [Digest](../auth/digest.md) | `digest` | `username`、`password` |
+| [OAuth2 Client Credentials](../auth/oauth2-cc.md) | `oauth2-cc` | `client_id`、`client_secret`、`token_url` |
+| [OAuth2 Password](../auth/oauth2-pwd.md) | `oauth2-pwd` | `username`、`password`、`client_id`、`token_url` |
+| [API Key](../auth/api-key.md) | `api-key` | `key`、`value`、`in`（`header` 或 `query`） |
+| [HMAC](../auth/hmac.md) | `hmac` | `api_key`、`secret_key` |
 | [Script](../auth/script.md) | `script` | `domain` |
 
-See [Auth Overview](../auth/overview.md) for full details on each method.
+每种方法的完整详情请参见[认证概述](../auth/overview.md)。
 
-## HTTP Client
+## HTTP 客户端
 
-You can override HTTP settings at the spec level. These apply to all requests made by this spec's collections.
+你可以在 spec 级别覆盖 HTTP 设置。这些设置适用于此 spec 的 collection 发出的所有请求。
 
 ```yaml
 specs:
@@ -114,11 +114,11 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-Settings cascade: global → spec → collection. See [Configuration Cascade](../configuration/cascade.md) for details.
+设置级联：全局 → spec → collection。详情请参见[配置级联](../configuration/cascade.md)。
 
-## Tags
+## 标签
 
-Tags let you filter specs by category. Use them with the `--tags` flag on `swag2mcp ls` or during bootstrap.
+标签让你按类别过滤 spec。在 `swag2mcp ls` 或引导过程中使用 `--tags` 标志。
 
 ```yaml
 specs:
@@ -132,13 +132,13 @@ specs:
 ```
 
 ```bash
-# List only specs tagged "weather"
+# 仅列出标记为 "weather" 的 spec
 swag2mcp ls --tags weather
 ```
 
-## Disable
+## 禁用
 
-Set `disable: true` to skip a spec entirely. It won't be loaded, indexed, or available to the LLM.
+设置 `disable: true` 完全跳过 spec。它不会被加载、索引或提供给 LLM。
 
 ```yaml
 specs:
@@ -151,9 +151,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## Examples
+## 示例
 
-### Minimal Spec
+### 最小 Spec
 
 ```yaml
 specs:
@@ -165,7 +165,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-### Spec with Auth
+### 带认证的 Spec
 
 ```yaml
 specs:
@@ -182,7 +182,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
 ```
 
-### Spec with Multiple Collections
+### 带多个 Collection 的 Spec
 
 ```yaml
 specs:
@@ -198,7 +198,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
-### Spec with LLM Instruction and Tags
+### 带 LLM 指令和标签的 Spec
 
 ```yaml
 specs:
@@ -212,10 +212,10 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/rick-and-morty.json
 ```
 
-## Related
+## 相关
 
-- [Spec Settings (config)](../configuration/spec-settings.md) — full YAML reference
-- [Configuration Cascade](../configuration/cascade.md) — how settings override each other
-- [Auth Overview](../auth/overview.md) — all 9 auth methods
-- [HTTP Client](../configuration/http-client.md) — HTTP client configuration
-- [Collections](./collections) — spec files within a spec
+- [Spec 设置（配置）](../configuration/spec-settings.md) — 完整 YAML 参考
+- [配置级联](../configuration/cascade.md) — 设置如何相互覆盖
+- [认证概述](../auth/overview.md) — 全部 9 种认证方法
+- [HTTP 客户端](../configuration/http-client.md) — HTTP 客户端配置
+- [Collections](./collections) — spec 内的规范文件

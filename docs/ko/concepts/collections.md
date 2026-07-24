@@ -1,82 +1,82 @@
 # Collections
 
-A collection is a single OpenAPI/Swagger/Postman file that describes a specific API. It points to a `location` (URL or local file path) and belongs to a spec (domain).
+Collection은 특정 API를 설명하는 단일 OpenAPI/Swagger/Postman 파일입니다. `location`(URL 또는 로컬 파일 경로)을 가리키며 spec(도메인)에 속합니다.
 
-One spec can have multiple collections — for example, the "meteo" spec might have "Forecast", "Air Quality", and "Marine" collections, each pointing to a different spec file.
+하나의 spec은 여러 collection을 가질 수 있습니다 — 예를 들어, "meteo" spec에는 각각 다른 명세 파일을 가리키는 "Forecast", "Air Quality", "Marine" collection이 있을 수 있습니다.
 
-## Collection Fields
+## Collection 필드
 
-| Field | YAML key | Required | Description |
-|-------|----------|----------|-------------|
-| [LLM Title](#llm-instruction) | `llm_title` | ❌ | Collection display name for the LLM (max 120 chars). Auto-populated from spec document if not set |
-| [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | Short hint for the LLM (max 360 chars). Auto-populated from spec document if not set |
-| Title | `title` | ❌ | Original spec title override (auto-populated from parsed document) |
-| [Location](#location--how-spec-files-are-resolved) | `location` | ✅ | URL or path to the spec file (5–250 chars) |
-| [Disable](#disable) | `disable` | ❌ | Skip this collection during loading |
-| [HTTP Client](#http-client-override) | `http_client` | ❌ | Per-collection HTTP settings (headers, cookies) |
-| [Base URL](#base-url-override) | `base_url` | ❌ | Override the spec's base URL for this collection |
-| [Mock Server](#mock-server) | `base_mock_url` | ❌ | Mock server address in `host:port` format. Required when `mock_enabled: true` |
+| 필드 | YAML 키 | 필수 | 설명 |
+|------|---------|------|------|
+| [LLM Title](#llm-instruction) | `llm_title` | ❌ | LLM용 collection 표시 이름 (최대 120자). 설정되지 않으면 명세 문서에서 자동 채움 |
+| [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | LLM용 짧은 힌트 (최대 360자). 설정되지 않으면 명세 문서에서 자동 채움 |
+| Title | `title` | ❌ | 원본 명세 제목 재정의 (파싱된 문서에서 자동 채움) |
+| [Location](#location--how-spec-files-are-resolved) | `location` | ✅ | 명세 파일의 URL 또는 경로 (5–250자) |
+| [Disable](#disable) | `disable` | ❌ | 로딩 중 이 collection 건너뛰기 |
+| [HTTP Client](#http-client-override) | `http_client` | ❌ | Collection별 HTTP 설정 (헤더, 쿠키) |
+| [Base URL](#base-url-override) | `base_url` | ❌ | 이 collection의 spec base URL 재정의 |
+| [Mock Server](#mock-server) | `base_mock_url` | ❌ | `host:port` 형식의 모의 서버 주소. `mock_enabled: true`일 때 필수 |
 
-## Location — How Spec Files Are Resolved
+## Location — 명세 파일 해결 방식
 
-The `location` field tells swag2mcp where to find the OpenAPI/Swagger/Postman file. It supports several source types:
+`location` 필드는 swag2mcp에 OpenAPI/Swagger/Postman 파일을 찾을 위치를 알려줍니다. 여러 소스 유형을 지원합니다:
 
-| Source | Example | Description |
-|--------|---------|-------------|
-| **Remote URL** | `https://raw.githubusercontent.com/.../spec.yaml` | Downloaded and cached |
-| **Local file (absolute)** | `/home/user/my-api.yaml` | Read from filesystem, cached |
-| **Local file (relative)** | `./my-api.yaml` | Resolved to absolute path, cached |
-| **Workspace local file** | `specs/my-api.yaml` | Stored in `~/.swag2mcp/specs/`, used directly (not cached) |
-| **file:// URI** | `file:///home/user/spec.yaml` | Converted to local path, cached |
+| 소스 | 예시 | 설명 |
+|------|------|------|
+| **원격 URL** | `https://raw.githubusercontent.com/.../spec.yaml` | 다운로드 및 캐시 |
+| **로컬 파일 (절대 경로)** | `/home/user/my-api.yaml` | 파일 시스템에서 읽기, 캐시 |
+| **로컬 파일 (상대 경로)** | `./my-api.yaml` | 절대 경로로 해결, 캐시 |
+| **워크스페이스 로컬 파일** | `specs/my-api.yaml` | `~/.swag2mcp/specs/`에 저장, 직접 사용 (캐시되지 않음) |
+| **file:// URI** | `file:///home/user/spec.yaml` | 로컬 경로로 변환, 캐시 |
 
-swag2mcp automatically detects the source type:
+swag2mcp가 자동으로 소스 유형을 감지합니다:
 
-- `https://` or `http://` → remote URL (cached)
-- `file://` → local file (converted to filesystem path)
-- Everything else → local file (with `~` expansion for home directory)
+- `https://` 또는 `http://` → 원격 URL (캐시됨)
+- `file://` → 로컬 파일 (파일 시스템 경로로 변환)
+- 그 외 → 로컬 파일 (`~`는 홈 디렉토리로 확장)
 
-### Remote URLs
+### 원격 URL
 
-When you use a remote URL, swag2mcp downloads the file and caches it locally. The cache is reused on subsequent starts to avoid repeated downloads.
+원격 URL을 사용하면 swag2mcp가 파일을 다운로드하여 로컬에 캐시합니다. 이후 시작 시 반복 다운로드를 피하기 위해 캐시가 재사용됩니다.
 
-### Local Files
+### 로컬 파일
 
-Local files are read directly from the filesystem. If the file is outside the workspace `specs/` directory, it is copied to the cache for consistency.
+로컬 파일은 파일 시스템에서 직접 읽습니다. 파일이 워크스페이스 `specs/` 디렉토리 외부에 있으면 일관성을 위해 캐시로 복사됩니다.
 
-### Workspace Local Files
+### 워크스페이스 로컬 파일
 
-The `specs/` directory inside the workspace (`~/.swag2mcp/specs/`) is the recommended place for local spec files. Files stored here are used directly without caching. Use a relative path starting with `specs/` to reference them.
+워크스페이스 내부의 `specs/` 디렉토리(`~/.swag2mcp/specs/`)는 로컬 명세 파일을 위한 권장 위치입니다. 여기에 저장된 파일은 캐싱 없이 직접 사용됩니다. 참조하려면 `specs/`로 시작하는 상대 경로를 사용하세요.
 
-> **Note:** `specs/` is just a directory name (like `cache/` or `responses/`), not the concept of "spec". It stores the actual OpenAPI/Swagger/Postman files that collections point to.
+> **참고:** `specs/`는 디렉토리 이름(예: `cache/` 또는 `responses/`)일 뿐, "spec" 개념이 아닙니다. collection이 가리키는 실제 OpenAPI/Swagger/Postman 파일을 저장합니다.
 
 ```bash
-# Import a spec file into the workspace
+# 명세 파일을 워크스페이스로 가져오기
 swag2mcp import https://example.com/api.yaml myspec
 
-# After import, the location becomes:
+# 가져오기 후 location이 다음과 같이 변경됨:
 # specs/myspec.yaml
 ```
 
-## Cache System
+## 캐시 시스템
 
-swag2mcp caches remote spec files to avoid downloading them on every startup.
+swag2mcp는 매번 시작할 때마다 다운로드하지 않도록 원격 명세 파일을 캐시합니다.
 
-### How It Works
+### 작동 방식
 
-1. When a collection with a remote URL is loaded, swag2mcp checks the cache
-2. If a valid (non-expired) cache entry exists, it is used directly
-3. If not, the file is downloaded, parsed, and stored in the cache
+1. 원격 URL이 있는 collection이 로드되면 swag2mcp가 캐시를 확인합니다
+2. 유효한(만료되지 않은) 캐시 항목이 있으면 직접 사용됩니다
+3. 없으면 파일이 다운로드, 파싱되어 캐시에 저장됩니다
 
-### Cache Structure
+### 캐시 구조
 
 ```
 ~/.swag2mcp/
   cache/
-    {sha256_hash}.spec    # Cached spec file content
-    {sha256_hash}.meta    # Cache metadata (JSON)
+    {sha256_hash}.spec    # 캐시된 명세 파일 내용
+    {sha256_hash}.meta    # 캐시 메타데이터 (JSON)
 ```
 
-Each cached file has a metadata file containing:
+각 캐시 파일에는 다음을 포함하는 메타데이터 파일이 있습니다:
 
 ```json
 {
@@ -88,59 +88,59 @@ Each cached file has a metadata file containing:
 }
 ```
 
-### Cache TTL
+### 캐시 TTL
 
-Each cached file gets a **random TTL** between 1 hour and 48 hours. This prevents all cached files from expiring at the same time (thundering herd problem).
+각 캐시 파일은 **1시간에서 48시간** 사이의 **무작위 TTL**을 받습니다. 이는 모든 캐시 파일이 동시에 만료되는 것을 방지합니다(폭주 문제 방지).
 
-### Cache Key
+### 캐시 키
 
-The cache key is a SHA-256 hash of the raw location string (first 16 bytes = 32 hex chars).
+캐시 키는 원시 location 문자열의 SHA-256 해시입니다(처음 16바이트 = 32자 16진수).
 
-### Managing the Cache
+### 캐시 관리
 
 ```bash
-# Clear cache and responses, re-download all spec files
+# 캐시와 응답 지우기, 모든 명세 파일 다시 다운로드
 swag2mcp update
 
-# Clear cache and responses only
+# 캐시와 응답만 지우기
 swag2mcp clean
 ```
 
-- `swag2mcp update` — validates config, clears `cache/` and `responses/`, then re-caches all collection locations
-- `swag2mcp clean` — removes all contents of `cache/` and `responses/`, plus orphan auth scripts
-- Old responses are cleaned automatically after 48 hours on MCP server start
+- `swag2mcp update` — 설정 검증, `cache/`와 `responses/` 지우기, 모든 collection location 재캐싱
+- `swag2mcp clean` — `cache/`와 `responses/`의 모든 내용 제거, 고아 인증 스크립트도 제거
+- 오래된 응답은 MCP 서버 시작 후 48시간이 지나면 자동으로 정리됨
 
-## Validation
+## 검증
 
-Every collection is validated when the config is loaded. Validation runs on every `swag2mcp mcp` startup. If it fails, the MCP server will not start — in some IDEs this means the server simply won't connect, and the LLM receives a clear error message explaining what to fix.
+모든 collection은 설정이 로드될 때 검증됩니다. 검증은 모든 `swag2mcp mcp` 시작 시 실행됩니다. 실패하면 MCP 서버가 시작되지 않습니다 — 일부 IDE에서는 서버가 연결되지 않고 LLM이 수정해야 할 사항을 설명하는 명확한 오류 메시지를 받게 됩니다.
 
-| Check | Rule |
-|-------|------|
-| **Location** | Required, 5–250 characters |
-| **Location accessibility** | Must be a reachable URL or existing file |
-| **Location validity** | Must be a valid OpenAPI 3.x, Swagger 2.0, or Postman file |
-| **LLM Title** | Max 120 characters, letters/digits/basic punctuation |
-| **LLM Instruction** | Max 360 characters, same character set as title |
-| **Base URL** | Must be a valid URL if set |
-| **Base Mock URL** | Must be `host:port` or `host:port/path` where host is `localhost`, `127.0.0.1`, or `0.0.0.0` |
-| **Mock required** | If `mock_enabled: true`, every collection must have `base_mock_url` |
-| **Duplicate mock ports** | No two collections may share the same mock port |
+| 확인 | 규칙 |
+|------|------|
+| **Location** | 필수, 5–250자 |
+| **Location 접근성** | 접근 가능한 URL 또는 존재하는 파일이어야 함 |
+| **Location 유효성** | 유효한 OpenAPI 3.x, Swagger 2.0 또는 Postman 파일이어야 함 |
+| **LLM Title** | 최대 120자, 문자/숫자/기본 구두점 |
+| **LLM Instruction** | 최대 360자, title과 동일한 문자 세트 |
+| **Base URL** | 설정된 경우 유효한 URL이어야 함 |
+| **Base Mock URL** | `host:port` 또는 `host:port/path` 형식이어야 하며 host는 `localhost`, `127.0.0.1`, 또는 `0.0.0.0` |
+| **Mock 필수** | `mock_enabled: true`이면 모든 collection에 `base_mock_url`이 있어야 함 |
+| **중복 모의 포트** | 두 collection이 동일한 모의 포트를 공유할 수 없음 |
 
-To diagnose issues before starting the server, use the [`validate`](../cli/validate.md) command:
+서버를 시작하기 전에 문제를 진단하려면 [`validate`](../cli/validate.md) 명령어를 사용하세요:
 
 ```bash
-# Validate default workspace (~/.swag2mcp)
+# 기본 워크스페이스 검증 (~/.swag2mcp)
 swag2mcp validate
 
-# Validate a custom project workspace
+# 커스텀 프로젝트 워크스페이스 검증
 swag2mcp validate ./my-project
 ```
 
-## Adding Collections
+## Collection 추가
 
-### Via YAML Config
+### YAML 설정을 통해
 
-Edit `~/.swag2mcp/swag2mcp.yaml` directly:
+`~/.swag2mcp/swag2mcp.yaml`을 직접 편집:
 
 ```yaml
 specs:
@@ -152,36 +152,36 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
 ```
 
-After editing, restart the MCP server (`swag2mcp mcp`) for changes to take effect.
+편집 후 변경 사항을 적용하려면 MCP 서버를 다시 시작하세요(`swag2mcp mcp`).
 
-### Via CLI
+### CLI를 통해
 
 ```bash
-# Interactive mode
+# 대화형 모드
 swag2mcp add collection
 
-# Non-interactive with YAML
+# YAML로 비대화형
 swag2mcp add collection --yaml 'spec_domain: meteo
 llm_title: Forecast
 location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml'
 
-# Pipe from stdin
+# stdin에서 파이프
 cat collection.yaml | swag2mcp add collection --yaml -
 
-# Show YAML example
+# YAML 예시 보기
 swag2mcp add collection --example
 ```
 
-### Via Import
+### 가져오기를 통해
 
 ```bash
-# Import a spec file into the workspace
+# 명세 파일을 워크스페이스로 가져오기
 swag2mcp import https://example.com/api.yaml
 ```
 
 ## LLM Instruction
 
-Collections can have their own `llm_instruction` (up to 360 chars) for more specific guidance. This is injected into the swag2mcp system prompt alongside the spec-level instruction.
+Collection은 더 구체적인 지침을 위해 자체 `llm_instruction`(최대 360자)를 가질 수 있습니다. 이는 spec 수준 지침과 함께 swag2mcp 시스템 프롬프트에 주입됩니다.
 
 ```yaml
 specs:
@@ -190,18 +190,18 @@ specs:
     base_url: https://api.open-meteo.com
     collections:
       - llm_title: Forecast
-        llm_instruction: "Use this collection for current weather and daily forecasts."
+        llm_instruction: "현재 날씨 및 일일 예보에 이 collection을 사용하세요."
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
       - llm_title: Air Quality
-        llm_instruction: "Use this collection for air quality index and pollution data."
+        llm_instruction: "대기질 지수 및 오염 데이터에 이 collection을 사용하세요."
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/air-quality.yml
 ```
 
-If `llm_title` is not set, it is automatically populated from the spec document's `title` field. If `llm_instruction` is not set, it is populated from the spec document's `description` field.
+`llm_title`이 설정되지 않으면 명세 문서의 `title` 필드에서 자동으로 채워집니다. `llm_instruction`이 설정되지 않으면 명세 문서의 `description` 필드에서 채워집니다.
 
 ## Disable
 
-Set `disable: true` to skip a collection. It won't be loaded, indexed, or available to the LLM.
+`disable: true`로 설정하면 collection을 건너뜁니다. 로드, 인덱싱되지 않으며 LLM이 사용할 수 없습니다.
 
 ```yaml
 specs:
@@ -216,9 +216,9 @@ specs:
         disable: true
 ```
 
-## Base URL Override
+## Base URL 재정의
 
-Each collection can override the spec's `base_url`. This is useful when different collections within the same spec use different API endpoints.
+각 collection은 spec의 `base_url`을 재정의할 수 있습니다. 동일한 spec 내의 다른 collection이 다른 API 엔드포인트를 사용할 때 유용합니다.
 
 ```yaml
 specs:
@@ -236,9 +236,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
-## HTTP Client Override
+## HTTP Client 재정의
 
-Collections can override HTTP settings (headers, cookies) from the spec and global levels.
+Collection은 spec 및 전역 수준의 HTTP 설정(헤더, 쿠키)을 재정의할 수 있습니다.
 
 ```yaml
 specs:
@@ -256,11 +256,11 @@ specs:
               value: abc123
 ```
 
-Settings cascade: global → spec → collection. See [Configuration Cascade](../configuration/cascade.md) for details.
+설정은 전역 → spec → collection 순으로 계단식으로 적용됩니다. 자세한 내용은 [설정 계단식](../configuration/cascade.md)을 참조하세요.
 
-## Mock Server
+## 모의 서버
 
-When `mock_enabled: true` is set at the config level, every collection must have `base_mock_url` set. This tells swag2mcp where the mock server is running for this collection.
+설정 수준에서 `mock_enabled: true`가 설정되면 모든 collection에 `base_mock_url`이 설정되어야 합니다. 이는 swag2mcp에 이 collection에 대해 모의 서버가 실행 중인 위치를 알려줍니다.
 
 ```yaml
 mock_enabled: true
@@ -274,11 +274,11 @@ specs:
         base_mock_url: localhost:8080
 ```
 
-See [Mock Server](../advanced/mock-server.md) for full details.
+자세한 내용은 [모의 서버](../advanced/mock-server.md)를 참조하세요.
 
-## Examples
+## 예시
 
-### Minimal Collection
+### 최소 Collection
 
 ```yaml
 specs:
@@ -290,7 +290,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-### Full Collection with All Fields
+### 모든 필드가 있는 전체 Collection
 
 ```yaml
 specs:
@@ -299,7 +299,7 @@ specs:
     base_url: https://api.open-meteo.com
     collections:
       - llm_title: Forecast
-        llm_instruction: "Use for current weather and daily forecasts."
+        llm_instruction: "현재 날씨 및 일일 예보에 사용하세요."
         title: "Custom Title"
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
         disable: false
@@ -310,7 +310,7 @@ specs:
             X-Custom: value
 ```
 
-### Multiple Collections per Spec
+### Spec당 여러 Collection
 
 ```yaml
 specs:
@@ -328,7 +328,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
-### Local File in Workspace (specs/ Directory)
+### 워크스페이스의 로컬 파일 (specs/ 디렉토리)
 
 ```yaml
 specs:
@@ -342,7 +342,7 @@ specs:
         location: specs/orders.openapi.json
 ```
 
-### Disabled Collection
+### 비활성화된 Collection
 
 ```yaml
 specs:
@@ -357,13 +357,13 @@ specs:
         disable: true
 ```
 
-## Related
+## 관련 항목
 
-- [Collection Settings (config)](../configuration/collection-settings.md) — full YAML reference
-- [Configuration Cascade](../configuration/cascade.md) — how settings override each other
-- [Specs](./specs) — logical containers for collections
-- [HTTP Client](../configuration/http-client.md) — HTTP client configuration
-- [Mock Server](../advanced/mock-server.md) — mock server setup
-- [CLI: validate](../cli/validate.md) — validate command reference
-- [CLI: update](../cli/update.md) — update command reference
-- [CLI: clean](../cli/clean.md) — clean command reference
+- [Collection 설정 (config)](../configuration/collection-settings.md) — 전체 YAML 참조
+- [설정 계단식](../configuration/cascade.md) — 설정이 서로를 재정의하는 방식
+- [Specs](./specs) — collection의 논리적 컨테이너
+- [HTTP Client](../configuration/http-client.md) — HTTP 클라이언트 설정
+- [모의 서버](../advanced/mock-server.md) — 모의 서버 설정
+- [CLI: validate](../cli/validate.md) — validate 명령어 참조
+- [CLI: update](../cli/update.md) — update 명령어 참조
+- [CLI: clean](../cli/clean.md) — clean 명령어 참조

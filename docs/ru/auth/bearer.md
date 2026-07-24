@@ -1,17 +1,17 @@
 # Bearer Auth
 
-## Purpose
+## Назначение
 
-Bearer Token authentication — the most common method for modern REST APIs. The token is sent in the `Authorization: Bearer <token>` header.
+Bearer Token аутентификация — самый распространённый метод для современных REST API. Токен отправляется в заголовке `Authorization: Bearer <token>`.
 
-## When to use
+## Когда использовать
 
-- Modern REST APIs
+- Современные REST API
 - JWT (JSON Web Tokens)
-- OAuth2 access tokens (when the token is already obtained)
-- Any API that accepts a Bearer Token
+- Токены доступа OAuth2 (когда токен уже получен)
+- Любой API, принимающий Bearer Token
 
-## Configuration
+## Конфигурация
 
 ```yaml
 specs:
@@ -27,14 +27,14 @@ specs:
         token: "eyJhbGciOiJIUzI1NiIs..."
 ```
 
-## Parameters
+## Параметры
 
-| Parameter | Required | Description |
+| Параметр | Обязательно | Описание |
 |-----------|----------|-------------|
-| `token` | Yes | Bearer token (JWT, OAuth2 token, etc.) |
+| `token` | Да | Bearer-токен (JWT, OAuth2-токен и т.д.) |
 
-## Notes
+## Примечания
 
-- The token is static — if it expires, you need to update it in the config manually
-- For automatic token refresh, use `oauth2-cc` or `oauth2-pwd`
-- Store the token in an environment variable: `token: "$(API_TOKEN)"`
+- Токен статичен — если он истекает, вам нужно обновить его в конфиге вручную
+- Для автоматического обновления токена используйте `oauth2-cc` или `oauth2-pwd`
+- Храните токен в переменной окружения: `token: "$(API_TOKEN)"`

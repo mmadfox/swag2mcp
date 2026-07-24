@@ -1,68 +1,68 @@
-# Caching
+# 캐싱
 
-## Overview
+## 개요
 
-swag2mcp caches downloaded spec files so the MCP server starts faster on subsequent runs. Instead of downloading the same spec file every time, it reuses the cached copy.
+swag2mcp는 다운로드한 명세 파일을 캐시하여 이후 실행 시 MCP 서버가 더 빠르게 시작됩니다. 매번 동일한 명세 파일을 다운로드하는 대신 캐시된 복사본을 재사용합니다.
 
-## How caching works
+## 캐싱 작동 방식
 
-When you add a spec with a remote URL, swag2mcp downloads it and saves it to the `cache/` directory. On the next startup, it checks if the cached copy is still fresh. If it is, the download is skipped.
+원격 URL로 spec을 추가하면 swag2mcp가 다운로드하여 `cache/` 디렉토리에 저장합니다. 다음 시작 시 캐시된 복사본이 여전히 유효한지 확인합니다. 유효하면 다운로드를 건너뜁니다.
 
-### What gets cached
+### 캐시되는 항목
 
-| Source | Behavior |
-|--------|----------|
-| **Remote URL** (http/https) | Always cached. Downloaded once, reused until the cache expires. |
-| **Local file in `specs/`** | Used directly from the `specs/` directory. Never cached — changes are immediately visible. |
-| **Local file outside `specs/`** | Copied to the cache. If the source file changes (modification time), the cache is invalidated. |
+| 소스 | 동작 |
+|------|------|
+| **원격 URL** (http/https) | 항상 캐시됨. 한 번 다운로드 후 캐시가 만료될 때까지 재사용 |
+| **로컬 파일 (`specs/` 내)** | `specs/` 디렉토리에서 직접 사용. 캐시되지 않음 — 변경 사항이 즉시 반영됨 |
+| **로컬 파일 (`specs/` 외)** | 캐시로 복사됨. 소스 파일이 변경되면(수정 시간) 캐시가 무효화됨 |
 
-### Cache expiration (TTL)
+### 캐시 만료 (TTL)
 
-Each cached file gets a random expiration time between **1 hour and 48 hours**. The randomness prevents all cached files from expiring at the same time (which would cause a thundering herd of downloads).
+각 캐시 파일은 **1시간에서 48시간** 사이의 무작위 만료 시간을 받습니다. 무작위성은 모든 캐시 파일이 동시에 만료되는 것을 방지합니다(다운로드 폭주 현상 방지).
 
-- The TTL is reset every time the MCP server starts
-- If a cached file is still within its TTL, it is reused
-- If the TTL has expired, the file is downloaded again
+- TTL은 MCP 서버가 시작될 때마다 재설정됩니다
+- 캐시 파일이 TTL 내에 있으면 재사용됩니다
+- TTL이 만료되면 파일이 다시 다운로드됩니다
 
-### Cache structure
+### 캐시 구조
 
 ```
 ~/.swag2mcp/cache/
-├── a1b2c3d4e5f6a7b8.spec    # Cached spec file
-├── a1b2c3d4e5f6a7b8.meta    # Metadata (source, TTL, cached at)
+├── a1b2c3d4e5f6a7b8.spec    # 캐시된 명세 파일
+├── a1b2c3d4e5f6a7b8.meta    # 메타데이터 (소스, TTL, 캐시 시간)
 ├── b2c3d4e5f6a7b8c9.spec
 ├── b2c3d4e5f6a7b8c9.meta
 └── ...
 ```
 
-The cache key is derived from the spec file URL or path. Each cached file has a companion `.meta` file that stores when it was cached and when it expires.
+캐시 키는 명세 파일 URL 또는 경로에서 파생됩니다. 각 캐시 파일에는 캐시된 시간과 만료 시간을 저장하는 `.meta` 파일이 함께 있습니다.
 
-## Managing the cache
+## 캐시 관리
 
-### Force a refresh
+### 강제 새로고침
 
-Run `swag2mcp update` to clear the entire cache and re-download all spec files:
+`swag2mcp update`를 실행하여 전체 캐시를 지우고 모든 명세 파일을 다시 다운로드하세요:
 
 ```bash
 swag2mcp update
 ```
 
-This validates the config, clears the cache, and downloads everything fresh.
+설정을 검증하고, 캐시를 지우고, 모든 것을 새로 다운로드합니다.
 
-### Clear the cache manually
+### 수동으로 캐시 지우기
 
 ```bash
 swag2mcp clean
 ```
 
-This removes all cached spec files and saved API responses. The next time you start the MCP server, all specs will be downloaded again.
+모든 캐시된 명세 파일과 저장된 API 응답을 제거합니다. 다음에 MCP 서버를 시작할 때 모든 명세가 다시 다운로드됩니다.
 
-### Automatic cleanup
+### 자동 정리
 
-When the MCP server starts (`swag2mcp mcp`), saved API responses older than 48 hours are automatically removed. This prevents the `responses/` directory from growing indefinitely.
+MCP 서버가 시작될 때(`swag2mcp mcp`) 48시간보다 오래된 저장된 API 응답이 자동으로 제거됩니다. 이는 `responses/` 디렉토리가 무한정 커지는 것을 방지합니다.
 
-## Important notes
+## 중요 참고 사항
 
-- **Local files in `specs/` are never cached** — if you edit a spec file directly in the `specs/` directory, the changes are immediately visible without clearing the cache
-- **Remote URLs are always cached** — there is no way to bypass the cache for remote URLs except by running `swag2mcp update` or `swag2mcp clean`
-- **The cache is local** — it is stored on disk and does not sync between machines. Use `swag2mcp export` and `swag2mcp import` to transfer specs between machines
+- **`specs/`의 로컬 파일은 캐시되지 않음** — `specs/` 디렉토리에서 명세 파일을 직접 편집하면 캐시를 지우지 않고도 변경 사항이 즉시 반영됩니다
+- **원격 URL은 항상 캐시됨** — `swag2mcp update` 또는 `swag2mcp clean`을 실행하는 것 외에는 원격 URL의 캐시를 우회할 방법이 없습니다
+- **캐시는 로컬** — 디스크에 저장되며 머신 간에 동기화되지 않습니다. 머신 간에 명세를 전송하려면 `swag2mcp export`와 `swag2mcp import`를 사용하세요

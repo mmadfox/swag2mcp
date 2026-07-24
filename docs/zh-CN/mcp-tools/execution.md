@@ -1,52 +1,52 @@
-# Execution Tools
+# 执行工具
 
-Execution tools are the core of swag2mcp: **search** finds endpoints when you don't have an ID, **inspect** reveals the full OpenAPI contract, and **invoke** makes the actual API call. Always use them in this order: search → inspect → invoke.
+执行工具是 swag2mcp 的核心：**search** 在你没有 ID 时查找端点，**inspect** 揭示完整的 OpenAPI 契约，**invoke** 执行实际的 API 调用。始终按此顺序使用它们：search → inspect → invoke。
 
 ---
 
 ## search
 
-### Purpose
+### 用途
 
-The only tool for finding endpoints when you don't have an endpoint ID. Performs full-text search across all endpoints in all specs using the bluge search engine.
+唯一一个在你没有端点 ID 时查找端点的工具。使用 bluge 搜索引擎在所有 spec 的所有端点中执行全文搜索。
 
-### When to use
+### 何时使用
 
-- When you don't know the endpoint ID
-- When you want to find endpoints by keywords, method, tag, or path
-- When you need to discover what endpoints exist for a specific feature
+- 当你不知道端点 ID 时
+- 当你想按关键字、方法、标签或路径查找端点时
+- 当你需要发现特定功能存在哪些端点时
 
-### How it works
+### 工作原理
 
-Searches the full-text index across all specs. Supports structured queries with field filters, boolean operators, fuzzy matching, wildcards, and more.
+搜索所有 spec 的全文索引。支持带有字段过滤器、布尔运算符、模糊匹配、通配符等的结构化查询。
 
-### Parameters
+### 参数
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `query` | string | Yes | Search query (supports structured syntax) |
-| `limit` | int | Yes | Maximum results to return (1-50) |
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `query` | string | 是 | 搜索查询（支持结构化语法） |
+| `limit` | int | 是 | 最大返回结果数（1-50） |
 
-### Query syntax
+### 查询语法
 
-| Example | Description |
-|---------|-------------|
-| `pet` | Simple text search across all fields |
-| `method:GET` | Filter by HTTP method |
-| `tag:pet` | Filter by tag name |
-| `path:"/api/v1/users"` | Exact path search |
-| `+method:POST +tag:pet` | Must match both conditions |
-| `-method:DELETE` | Exclude DELETE methods |
-| `create~` | Fuzzy search (typo-tolerant) |
-| `path:/api/v1/*` | Wildcard path search |
-| `/pattern/` | Regex search |
-| `term^3` | Boost a term's relevance |
+| 示例 | 描述 |
+|------|------|
+| `pet` | 跨所有字段的简单文本搜索 |
+| `method:GET` | 按 HTTP 方法过滤 |
+| `tag:pet` | 按标签名称过滤 |
+| `path:"/api/v1/users"` | 精确路径搜索 |
+| `+method:POST +tag:pet` | 必须匹配两个条件 |
+| `-method:DELETE` | 排除 DELETE 方法 |
+| `create~` | 模糊搜索（容错） |
+| `path:/api/v1/*` | 通配符路径搜索 |
+| `/pattern/` | 正则表达式搜索 |
+| `term^3` | 提升术语的相关性 |
 
-**Searchable fields:** `method` (keyword), `tag` (keyword), `path` (text), `summary` (text), `_all` (default text field).
+**可搜索字段：** `method`（关键字）、`tag`（关键字）、`path`（文本）、`summary`（文本）、`_all`（默认文本字段）。
 
-**Not supported:** parentheses for grouping, explicit `AND`/`OR` operators, field grouping.
+**不支持：** 括号分组、显式 `AND`/`OR` 运算符、字段分组。
 
-### Response
+### 响应
 
 ```json
 {
@@ -67,41 +67,41 @@ Searches the full-text index across all specs. Supports structured queries with 
 }
 ```
 
-Each result includes the full ancestry (spec → collection → tag) so the LLM can navigate to related endpoints.
+每个结果包含完整谱系（spec → collection → tag），以便 LLM 可以导航到相关端点。
 
-### Nuances
+### 细节
 
-- `limit` must be between 1 and 50 (returns `validation_failed` otherwise)
-- `query` is required (returns `validation_failed` if empty)
-- Results are returned in relevance order (best match first)
-- Use field filters (`method:GET`, `tag:pet`) to narrow results
-- For exact path matching, use quotes: `path:"/v1/forecast"`
+- `limit` 必须在 1 到 50 之间（否则返回 `validation_failed`）
+- `query` 是必需的（如果为空，返回 `validation_failed`）
+- 结果按相关性顺序返回（最佳匹配优先）
+- 使用字段过滤器（`method:GET`、`tag:pet`）缩小结果范围
+- 对于精确路径匹配，使用引号：`path:"/v1/forecast"`
 
 ---
 
 ## inspect
 
-### Purpose
+### 用途
 
-Retrieve the full OpenAPI operation object for an endpoint: all parameters, request body schema, response schemas, base URL, and full URL. This is the tool to call **before** `invoke` to understand the endpoint's contract.
+检索端点的完整 OpenAPI 操作对象：所有参数、请求体模式、响应模式、基础 URL 和完整 URL。这是在 `invoke` **之前**调用的工具，用于了解端点的契约。
 
-### When to use
+### 何时使用
 
-- Always before `invoke` — you need the full contract to make a correct call
-- When you need to explain an API's technical details to the user
-- When you need to know required parameters, request body structure, or response format
+- 始终在 `invoke` 之前 — 你需要完整的契约才能正确调用
+- 当你需要向用户解释 API 的技术细节时
+- 当你需要了解必需参数、请求体结构或响应格式时
 
-### How it works
+### 工作原理
 
-Looks up the endpoint in the index and returns the complete OpenAPI operation object with all schemas resolved.
+在索引中查找端点并返回完整的 OpenAPI 操作对象，所有模式已解析。
 
-### Parameters
+### 参数
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `endpointId` | string | Yes | 32-character MD5 hash of the endpoint |
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `endpointId` | string | 是 | 端点的 32 字符 MD5 哈希 |
 
-### Response
+### 响应
 
 ```json
 {
@@ -167,58 +167,58 @@ Looks up the endpoint in the index and returns the complete OpenAPI operation ob
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `baseUrl` | string | Base URL of the API (from config) |
-| `fullUrl` | string | Full URL of the endpoint (base + path) |
-| `operation.parameters[]` | array | Parameters with name, location (path/query/header/cookie), description, required flag, and schema |
-| `operation.requestBody` | object | Request body with content type and schema |
-| `operation.responses` | map | Response codes with descriptions and schemas |
-| `operation.deprecated` | bool | Whether the endpoint is deprecated |
+| 字段 | 类型 | 描述 |
+|------|------|------|
+| `baseUrl` | string | API 的基础 URL（来自配置） |
+| `fullUrl` | string | 端点的完整 URL（base + path） |
+| `operation.parameters[]` | array | 参数，包含名称、位置（path/query/header/cookie）、描述、必需标志和模式 |
+| `operation.requestBody` | object | 请求体，包含内容类型和模式 |
+| `operation.responses` | map | 响应码，包含描述和模式 |
+| `operation.deprecated` | bool | 端点是否已弃用 |
 
-### Nuances
+### 细节
 
-- Returns `not_found` if the endpoint does not exist
-- This is the **only** tool that returns the full OpenAPI operation — `endpoint_by_id` returns only a summary
-- Always call `inspect` before `invoke` to understand required parameters and body structure
-- The `operation` object includes `$ref` references that are resolved to their full schema definitions
+- 如果端点不存在，返回 `not_found`
+- 这是**唯一**返回完整 OpenAPI 操作的工具 — `endpoint_by_id` 只返回摘要
+- 始终在 `invoke` 之前调用 `inspect` 以了解必需参数和主体结构
+- `operation` 对象包含已解析为其完整模式定义的 `$ref` 引用
 
 ---
 
 ## invoke
 
-### Purpose
+### 用途
 
-Execute a real API call to an endpoint. This is the only tool that makes actual HTTP requests. Auth is applied automatically — you do not need to call `auth` first.
+对端点执行真实的 API 调用。这是唯一发出实际 HTTP 请求的工具。认证自动应用 — 你不需要先调用 `auth`。
 
-### When to use
+### 何时使用
 
-- Only after calling `inspect` to understand the endpoint's contract
-- Only with explicit user confirmation for destructive operations (POST, PUT, PATCH, DELETE)
-- When the user asks to call an API and you have all required parameters
+- 仅在调用 `inspect` 了解端点的契约之后
+- 仅在对破坏性操作（POST、PUT、PATCH、DELETE）有明确的用户确认时
+- 当用户要求调用 API 并且你有所有必需参数时
 
-### How it works
+### 工作原理
 
-1. Looks up the endpoint in the index
-2. Substitutes path parameters into the URL
-3. Appends query parameters
-4. Adds headers and cookies
-5. Serializes the request body as JSON
-6. Automatically obtains and applies auth (token, headers, query params)
-7. Makes the HTTP request
-8. Returns the response or saves it to a file if too large
+1. 在索引中查找端点
+2. 将路径参数替换到 URL 中
+3. 追加查询参数
+4. 添加头和 cookie
+5. 将请求体序列化为 JSON
+6. 自动获取并应用认证（令牌、头、查询参数）
+7. 发起 HTTP 请求
+8. 返回响应，如果太大则保存到文件
 
-### Parameters
+### 参数
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `endpointId` | string | Yes | 32-character MD5 hash of the endpoint |
-| `parameters` | object | No | Path, query, and header parameters as key-value pairs |
-| `requestBody` | object | No | Request body for POST/PUT/PATCH requests |
-| `headers` | object | No | Additional HTTP headers to send |
-| `cookies` | object | No | Additional HTTP cookies to send |
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `endpointId` | string | 是 | 端点的 32 字符 MD5 哈希 |
+| `parameters` | object | 否 | 路径、查询和头参数，键值对 |
+| `requestBody` | object | 否 | POST/PUT/PATCH 请求的请求体 |
+| `headers` | object | 否 | 要发送的额外 HTTP 头 |
+| `cookies` | object | 否 | 要发送的额外 HTTP cookie |
 
-### Response (inline)
+### 响应（内联）
 
 ```json
 {
@@ -234,7 +234,7 @@ Execute a real API call to an endpoint. This is the only tool that makes actual 
 }
 ```
 
-### Response (file reference — when body exceeds size limit)
+### 响应（文件引用 — 当主体超过大小限制时）
 
 ```json
 {
@@ -253,27 +253,27 @@ Execute a real API call to an endpoint. This is the only tool that makes actual 
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `statusCode` | int | HTTP response status code |
-| `headers` | object | HTTP response headers |
-| `body` | any | Response body (present when within size limit) |
-| `fileRef` | object | File reference (present when body exceeds size limit) |
+| 字段 | 类型 | 描述 |
+|------|------|------|
+| `statusCode` | int | HTTP 响应状态码 |
+| `headers` | object | HTTP 响应头 |
+| `body` | any | 响应体（在大小限制内时存在） |
+| `fileRef` | object | 文件引用（当主体超过大小限制时存在） |
 
-### Working with large responses
+### 处理大响应
 
-When `invoke` returns a `fileRef`, use the response tools to explore the data:
+当 `invoke` 返回 `fileRef` 时，使用响应工具探索数据：
 
-1. **`response_outline(path)`** — get the structural summary (keys, types, array lengths)
-2. **`response_compress(path, mode)`** — compress the data to fit inline
-3. **`response_slice(path, jsonPath)`** — extract a specific fragment
+1. **`response_outline(path)`** — 获取结构摘要（键、类型、数组长度）
+2. **`response_compress(path, mode)`** — 压缩数据以适应内联
+3. **`response_slice(path, jsonPath)`** — 提取特定片段
 
-### Nuances
+### 细节
 
-- **Auth is automatic:** The `invoke` tool automatically obtains and applies authentication from the spec's auth configuration. You do **not** need to call `auth` first.
-- **Rate limiting:** Each endpoint has a 10-second cooldown. A second call to the same endpoint within 10 seconds is silently blocked (returns `rate_limit` error).
-- **Response size limit:** Default is 2 KB (configurable via `max_response_size`). If the response exceeds this limit, it is saved to `{workspace}/responses/` and a `FileReference` is returned instead of inline `body`.
-- **Parameter handling:** Path parameters are substituted into the URL. Query parameters are appended. Parameters from the request override operation spec defaults.
-- **Request body:** For POST/PUT/PATCH, the body is serialized as JSON. `Content-Type` is set to `application/json` automatically.
-- **Error handling:** HTTP errors (non-2xx) are returned as `invoke_error` with the status code and response body in the hint.
-- **Destructive operations:** Never invoke POST/PUT/PATCH/DELETE without explicit user confirmation.
+- **认证是自动的：** `invoke` 工具自动从 spec 的认证配置中获取并应用认证。你**不需要**先调用 `auth`。
+- **速率限制：** 每个端点有 10 秒冷却时间。10 秒内对同一端点的第二次调用被静默阻止（返回 `rate_limit` 错误）。
+- **响应大小限制：** 默认 2 KB（可通过 `max_response_size` 配置）。如果响应超过此限制，保存到 `{workspace}/responses/` 并返回 `FileReference` 而不是内联 `body`。
+- **参数处理：** 路径参数替换到 URL 中。查询参数被追加。请求中的参数覆盖操作规范的默认值。
+- **请求体：** 对于 POST/PUT/PATCH，主体序列化为 JSON。`Content-Type` 自动设置为 `application/json`。
+- **错误处理：** HTTP 错误（非 2xx）作为 `invoke_error` 返回，状态码和响应体在提示中。
+- **破坏性操作：** 在没有明确用户确认的情况下，永远不要调用 POST/PUT/PATCH/DELETE。

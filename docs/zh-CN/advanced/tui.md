@@ -1,98 +1,98 @@
-# TUI Explorer
+# TUI 浏览器
 
-## Overview
+## 概述
 
-swag2mcp includes a built-in TUI (Terminal User Interface) for interactive API exploration. It is a full-screen terminal application that lets you search, browse, inspect, and invoke API endpoints without leaving the terminal.
+swag2mcp 包含一个内置的 TUI（终端用户界面），用于交互式 API 探索。它是一个全屏终端应用程序，让你无需离开终端即可搜索、浏览、检查和调用 API 端点。
 
-## Launch
+## 启动
 
 ```bash
 swag2mcp run
 ```
 
-If no config file exists, the TUI will automatically start the initialization wizard first.
+如果不存在配置文件，TUI 将自动首先启动初始化向导。
 
-## Modes
+## 模式
 
-The TUI has three modes, switchable with the `Tab` key:
+TUI 有三种模式，可使用 `Tab` 键切换：
 
-### Search mode
+### 搜索模式
 
-Full-text search across all endpoints in all specs. Supports the same query syntax as the `search` MCP tool.
+跨所有 spec 中所有端点的全文搜索。支持与 `search` MCP 工具相同的查询语法。
 
-- Type a query to search endpoint names, paths, and descriptions
-- Filter results by method, tag, or path
-- View endpoint details with a single keystroke
-- Navigate through results with pagination (10 items per page)
+- 输入查询以搜索端点名称、路径和描述
+- 按方法、标签或路径过滤结果
+- 一键查看端点详情
+- 分页浏览结果（每页 10 项）
 
-### Browse mode
+### 浏览模式
 
-Tree navigation through the spec hierarchy:
+通过 spec 层次结构进行树形导航：
 
 ```
 Spec → Collection → Tag → Endpoint
 ```
 
-- Navigate down the tree to find specific endpoints
-- View endpoint details (parameters, request body, responses)
-- Invoke the API directly from the TUI
-- Save endpoint details as a JSON file
+- 向下导航树以查找特定端点
+- 查看端点详情（参数、请求体、响应）
+- 直接从 TUI 调用 API
+- 将端点详情保存为 JSON 文件
 
-### Auth mode
+### 认证模式
 
-View authentication tokens and headers for any spec. Useful for debugging or generating curl commands.
+查看任何 spec 的认证令牌和头。用于调试或生成 curl 命令。
 
-## Controls
+## 控制
 
-| Key | Action |
-|-----|--------|
-| `↑` / `↓` | Navigate up/down |
-| `Enter` | Select or open |
-| `Esc` | Go back one level |
-| `Tab` | Switch between Search, Browse, and Auth modes |
-| `/` | Focus search input |
-| `N` / `P` | Next / previous page |
-| `B` | Back to previous screen |
-| `M` | Return to main menu |
-| `S` | Save endpoint detail as JSON file |
-| `q` / `Ctrl+C` | Quit |
+| 按键 | 操作 |
+|------|------|
+| `↑` / `↓` | 向上/向下导航 |
+| `Enter` | 选择或打开 |
+| `Esc` | 返回上一级 |
+| `Tab` | 在搜索、浏览和认证模式之间切换 |
+| `/` | 聚焦搜索输入 |
+| `N` / `P` | 下一页 / 上一页 |
+| `B` | 返回上一屏幕 |
+| `M` | 返回主菜单 |
+| `S` | 将端点详情保存为 JSON 文件 |
+| `q` / `Ctrl+C` | 退出 |
 
-## States
+## 状态
 
-The TUI goes through these states as you navigate:
+TUI 在导航过程中经历以下状态：
 
-1. **Loading** — loading data from the workspace
-2. **Search** — search mode with query input
-3. **Browse** — browse mode with spec list
-4. **Spec List** — list of all specs
-5. **Collection List** — collections within a spec
-6. **Tag List** — tags within a collection
-7. **Endpoint List** — endpoints within a tag
-8. **Endpoint Detail** — full endpoint information
-9. **Invoke Result** — API call result
-10. **Error** — error state with message
+1. **加载中** — 从工作区加载数据
+2. **搜索** — 带查询输入的搜索模式
+3. **浏览** — 带 spec 列表的浏览模式
+4. **Spec 列表** — 所有 spec 的列表
+5. **Collection 列表** — spec 内的 collection
+6. **Tag 列表** — collection 内的标签
+7. **端点列表** — 标签内的端点
+8. **端点详情** — 完整的端点信息
+9. **调用结果** — API 调用结果
+10. **错误** — 带消息的错误状态
 
-## Endpoint detail view
+## 端点详情视图
 
-When you select an endpoint, the TUI shows:
+当你选择一个端点时，TUI 显示：
 
-- HTTP method and path
-- Base URL and full URL
-- Summary and description
-- All parameters (name, location, type, required)
-- Request body schema (if applicable)
-- Response codes and schemas
-- Deprecation status
+- HTTP 方法和路径
+- 基础 URL 和完整 URL
+- 摘要和描述
+- 所有参数（名称、位置、类型、必需）
+- 请求体模式（如果适用）
+- 响应码和模式
+- 弃用状态
 
-## Requirements
+## 要求
 
-- **Terminal size:** At least 80×24 characters
-- **Terminal emulator:** Works in most modern terminals (iTerm2, Terminal.app, GNOME Terminal, Windows Terminal, etc.)
-- **SSH:** Works over SSH connections
+- **终端大小：** 至少 80×24 字符
+- **终端模拟器：** 适用于大多数现代终端（iTerm2、Terminal.app、GNOME Terminal、Windows Terminal 等）
+- **SSH：** 可通过 SSH 连接工作
 
-## Important notes
+## 重要说明
 
-- **Auto-init** — if no config file exists, the TUI automatically starts the initialization wizard
-- **Pagination** — lists are paginated at 10 items per page. Use `N` and `P` to navigate
-- **Save endpoint details** — press `S` in the endpoint detail view to save the full detail as a JSON file in the current directory
-- **Auth mode** — shows tokens and headers for debugging. In production, the auth tool can be disabled with `--disable-llm-auth`
+- **自动初始化** — 如果不存在配置文件，TUI 自动启动初始化向导
+- **分页** — 列表每页 10 项。使用 `N` 和 `P` 导航
+- **保存端点详情** — 在端点详情视图中按 `S` 将完整详情保存为当前目录中的 JSON 文件
+- **认证模式** — 显示用于调试的令牌和头。在生产环境中，可以使用 `--disable-llm-auth` 禁用 auth 工具

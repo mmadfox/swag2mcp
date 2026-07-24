@@ -1,98 +1,98 @@
-# TUI Explorer
+# TUI-обозреватель
 
-## Overview
+## Обзор
 
-swag2mcp includes a built-in TUI (Terminal User Interface) for interactive API exploration. It is a full-screen terminal application that lets you search, browse, inspect, and invoke API endpoints without leaving the terminal.
+swag2mcp включает встроенный TUI (Terminal User Interface) для интерактивного исследования API. Это полноэкранное терминальное приложение, позволяющее искать, просматривать, проверять и вызывать API-эндпоинты без выхода из терминала.
 
-## Launch
+## Запуск
 
 ```bash
 swag2mcp run
 ```
 
-If no config file exists, the TUI will automatically start the initialization wizard first.
+Если конфигурационный файл не существует, TUI автоматически запустит мастер инициализации.
 
-## Modes
+## Режимы
 
-The TUI has three modes, switchable with the `Tab` key:
+TUI имеет три режима, переключаемых клавишей `Tab`:
 
-### Search mode
+### Режим поиска
 
-Full-text search across all endpoints in all specs. Supports the same query syntax as the `search` MCP tool.
+Полнотекстовый поиск по всем эндпоинтам во всех спецификациях. Поддерживает тот же синтаксис запросов, что и MCP-инструмент `search`.
 
-- Type a query to search endpoint names, paths, and descriptions
-- Filter results by method, tag, or path
-- View endpoint details with a single keystroke
-- Navigate through results with pagination (10 items per page)
+- Введите запрос для поиска по именам эндпоинтов, путям и описаниям
+- Фильтруйте результаты по методу, тегу или пути
+- Просматривайте детали эндпоинта одним нажатием клавиши
+- Навигируйте по результатам с пагинацией (10 элементов на страницу)
 
-### Browse mode
+### Режим просмотра
 
-Tree navigation through the spec hierarchy:
+Древовидная навигация по иерархии спецификаций:
 
 ```
-Spec → Collection → Tag → Endpoint
+Спецификация → Коллекция → Тег → Эндпоинт
 ```
 
-- Navigate down the tree to find specific endpoints
-- View endpoint details (parameters, request body, responses)
-- Invoke the API directly from the TUI
-- Save endpoint details as a JSON file
+- Спускайтесь по дереву для поиска конкретных эндпоинтов
+- Просматривайте детали эндпоинта (параметры, тело запроса, ответы)
+- Вызывайте API напрямую из TUI
+- Сохраняйте детали эндпоинта в JSON-файл
 
-### Auth mode
+### Режим аутентификации
 
-View authentication tokens and headers for any spec. Useful for debugging or generating curl commands.
+Просмотр токенов аутентификации и заголовков для любой спецификации. Полезно для отладки или генерации curl-команд.
 
-## Controls
+## Управление
 
-| Key | Action |
-|-----|--------|
-| `↑` / `↓` | Navigate up/down |
-| `Enter` | Select or open |
-| `Esc` | Go back one level |
-| `Tab` | Switch between Search, Browse, and Auth modes |
-| `/` | Focus search input |
-| `N` / `P` | Next / previous page |
-| `B` | Back to previous screen |
-| `M` | Return to main menu |
-| `S` | Save endpoint detail as JSON file |
-| `q` / `Ctrl+C` | Quit |
+| Клавиша | Действие |
+|---------|----------|
+| `↑` / `↓` | Навигация вверх/вниз |
+| `Enter` | Выбрать или открыть |
+| `Esc` | На один уровень назад |
+| `Tab` | Переключение между режимами поиска, просмотра и аутентификации |
+| `/` | Фокус на поле поиска |
+| `N` / `P` | Следующая / предыдущая страница |
+| `B` | Назад к предыдущему экрану |
+| `M` | Возврат в главное меню |
+| `S` | Сохранить детали эндпоинта в JSON-файл |
+| `q` / `Ctrl+C` | Выход |
 
-## States
+## Состояния
 
-The TUI goes through these states as you navigate:
+TUI проходит через следующие состояния по мере навигации:
 
-1. **Loading** — loading data from the workspace
-2. **Search** — search mode with query input
-3. **Browse** — browse mode with spec list
-4. **Spec List** — list of all specs
-5. **Collection List** — collections within a spec
-6. **Tag List** — tags within a collection
-7. **Endpoint List** — endpoints within a tag
-8. **Endpoint Detail** — full endpoint information
-9. **Invoke Result** — API call result
-10. **Error** — error state with message
+1. **Загрузка** — загрузка данных из рабочей области
+2. **Поиск** — режим поиска с полем ввода запроса
+3. **Просмотр** — режим просмотра со списком спецификаций
+4. **Список спецификаций** — список всех спецификаций
+5. **Список коллекций** — коллекции в спецификации
+6. **Список тегов** — теги в коллекции
+7. **Список эндпоинтов** — эндпоинты в теге
+8. **Детали эндпоинта** — полная информация об эндпоинте
+9. **Результат вызова** — результат API-вызова
+10. **Ошибка** — состояние ошибки с сообщением
 
-## Endpoint detail view
+## Просмотр деталей эндпоинта
 
-When you select an endpoint, the TUI shows:
+При выборе эндпоинта TUI показывает:
 
-- HTTP method and path
-- Base URL and full URL
-- Summary and description
-- All parameters (name, location, type, required)
-- Request body schema (if applicable)
-- Response codes and schemas
-- Deprecation status
+- HTTP-метод и путь
+- Базовый URL и полный URL
+- Описание и сводку
+- Все параметры (имя, расположение, тип, обязательность)
+- Схему тела запроса (если применимо)
+- Коды ответов и схемы
+- Статус устаревания
 
-## Requirements
+## Требования
 
-- **Terminal size:** At least 80×24 characters
-- **Terminal emulator:** Works in most modern terminals (iTerm2, Terminal.app, GNOME Terminal, Windows Terminal, etc.)
-- **SSH:** Works over SSH connections
+- **Размер терминала:** Не менее 80×24 символов
+- **Эмулятор терминала:** Работает в большинстве современных терминалов (iTerm2, Terminal.app, GNOME Terminal, Windows Terminal и т.д.)
+- **SSH:** Работает через SSH-соединения
 
-## Important notes
+## Важные замечания
 
-- **Auto-init** — if no config file exists, the TUI automatically starts the initialization wizard
-- **Pagination** — lists are paginated at 10 items per page. Use `N` and `P` to navigate
-- **Save endpoint details** — press `S` in the endpoint detail view to save the full detail as a JSON file in the current directory
-- **Auth mode** — shows tokens and headers for debugging. In production, the auth tool can be disabled with `--disable-llm-auth`
+- **Автоинициализация** — если конфигурационный файл не существует, TUI автоматически запускает мастер инициализации
+- **Пагинация** — списки разбиты на страницы по 10 элементов. Используйте `N` и `P` для навигации
+- **Сохранение деталей эндпоинта** — нажмите `S` в режиме просмотра деталей эндпоинта, чтобы сохранить полную информацию в JSON-файл в текущей директории
+- **Режим аутентификации** — показывает токены и заголовки для отладки. В продакшене инструмент аутентификации может быть отключён с помощью `--disable-llm-auth`

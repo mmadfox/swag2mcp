@@ -1,17 +1,17 @@
 # Bearer Auth
 
-## Purpose
+## 用途
 
-Bearer Token authentication — the most common method for modern REST APIs. The token is sent in the `Authorization: Bearer <token>` header.
+Bearer 令牌认证 — 现代 REST API 最常用的方法。令牌通过 `Authorization: Bearer <token>` 头发送。
 
-## When to use
+## 何时使用
 
-- Modern REST APIs
-- JWT (JSON Web Tokens)
-- OAuth2 access tokens (when the token is already obtained)
-- Any API that accepts a Bearer Token
+- 现代 REST API
+- JWT（JSON Web Tokens）
+- OAuth2 访问令牌（当令牌已获取时）
+- 任何接受 Bearer Token 的 API
 
-## Configuration
+## 配置
 
 ```yaml
 specs:
@@ -27,14 +27,14 @@ specs:
         token: "eyJhbGciOiJIUzI1NiIs..."
 ```
 
-## Parameters
+## 参数
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `token` | Yes | Bearer token (JWT, OAuth2 token, etc.) |
+| 参数 | 必需 | 描述 |
+|------|------|------|
+| `token` | 是 | Bearer 令牌（JWT、OAuth2 令牌等） |
 
-## Notes
+## 说明
 
-- The token is static — if it expires, you need to update it in the config manually
-- For automatic token refresh, use `oauth2-cc` or `oauth2-pwd`
-- Store the token in an environment variable: `token: "$(API_TOKEN)"`
+- 令牌是静态的 — 如果过期，你需要在配置中手动更新
+- 对于自动令牌刷新，使用 `oauth2-cc` 或 `oauth2-pwd`
+- 将令牌存储在环境变量中：`token: "$(API_TOKEN)"`

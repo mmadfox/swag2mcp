@@ -1,15 +1,15 @@
 # export
 
-## Purpose
+## Zweck
 
-Create a portable ZIP backup of the workspace. The archive contains the configuration file, all spec files, and auth scripts — everything needed to restore the workspace on another machine.
+Erstellt ein portables ZIP-Backup des Arbeitsbereichs. Das Archiv enthält die Konfigurationsdatei, alle Spezifikationsdateien und Auth-Skripte — alles, was zur Wiederherstellung des Arbeitsbereichs auf einem anderen Rechner benötigt wird.
 
-## When to use
+## Wann verwenden
 
-- You want to back up your workspace before making changes
-- You are migrating swag2mcp to another machine
-- You want to share your API configuration with a colleague
-- You are preparing a reproducible environment
+- Sie möchten Ihren Arbeitsbereich vor Änderungen sichern
+- Sie migrieren swag2mcp auf einen anderen Rechner
+- Sie möchten Ihre API-Konfiguration mit einem Kollegen teilen
+- Sie bereiten eine reproduzierbare Umgebung vor
 
 ## Syntax
 
@@ -17,76 +17,76 @@ Create a portable ZIP backup of the workspace. The archive contains the configur
 swag2mcp export [path] [output] [flags]
 ```
 
-## Arguments
+## Argumente
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
-| `output` | 2 | No | Full path for the output ZIP file. If omitted, defaults to `./swag2mcp-backup-<timestamp>.zip`. |
+| Argument | Position | Erforderlich | Beschreibung |
+|----------|----------|-------------|--------------|
+| `path` | 1 | Nein | Arbeitsbereichsverzeichnis. Wenn nicht angegeben, wird über die Pfadauflösungsregeln ermittelt. |
+| `output` | 2 | Nein | Vollständiger Pfad für die Ausgabe-ZIP-Datei. Wenn nicht angegeben, Standard: `./swag2mcp-backup-<timestamp>.zip`. |
 
 ## Flags
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--spec` | `-s` | `stringSlice` | `nil` | Export only specified specs (comma-separated) |
+| Flag | Kurzform | Typ | Standard | Beschreibung |
+|------|----------|-----|----------|--------------|
+| `--spec` | `-s` | `stringSlice` | `nil` | Nur angegebene Specs exportieren (kommagetrennt) |
 
-## How it works
+## Wie es funktioniert
 
-### Default export
+### Standard-Export
 
-Creates a ZIP in the current directory with a timestamped name:
+Erstellt eine ZIP im aktuellen Verzeichnis mit einem Zeitstempelnamen:
 
 ```bash
 swag2mcp export
-# Creates ./swag2mcp-backup-2026-07-22-143022.zip
+# Erstellt ./swag2mcp-backup-2026-07-22-143022.zip
 ```
 
-### Custom output path
+### Benutzerdefinierter Ausgabepfad
 
 ```bash
-swag2mcp export /path/to/workspace /path/to/backup.zip
+swag2mcp export /pfad/zu/arbeitsbereich /pfad/zu/sicherung.zip
 ```
 
-### Export specific specs
+### Bestimmte Specs exportieren
 
 ```bash
 swag2mcp export --spec meteo
 swag2mcp export --spec meteo,store
 ```
 
-## What's in the ZIP
+## Was in der ZIP ist
 
-| Entry | Description |
-|-------|-------------|
-| `swag2mcp.meta` | Metadata about the export |
-| `swag2mcp.yaml` | Configuration file |
-| `specs/` | All spec files (OpenAPI/Swagger/Postman) |
-| `auth_scripts/` | Authentication scripts |
-| `cache/` | Empty (cache is not exported) |
-| `responses/` | Empty (responses are not exported) |
+| Eintrag | Beschreibung |
+|---------|--------------|
+| `swag2mcp.meta` | Metadaten über den Export |
+| `swag2mcp.yaml` | Konfigurationsdatei |
+| `specs/` | Alle Spezifikationsdateien (OpenAPI/Swagger/Postman) |
+| `auth_scripts/` | Authentifizierungsskripte |
+| `cache/` | Leer (Cache wird nicht exportiert) |
+| `responses/` | Leer (Antworten werden nicht exportiert) |
 
-## Restore
+## Wiederherstellung
 
-Use `import` to restore from a backup:
+Verwenden Sie `import`, um aus einem Backup wiederherzustellen:
 
 ```bash
-swag2mcp import --from-zip /path/to/backup.zip
+swag2mcp import --from-zip /pfad/zu/sicherung.zip
 ```
 
-## Post-command verification
+## Überprüfung nach dem Befehl
 
-Always verify the ZIP file was created:
+Überprüfen Sie immer, ob die ZIP-Datei erstellt wurde:
 
 ```bash
 ls -la swag2mcp-backup-*.zip
-# or for a custom output path:
-ls -la /path/to/backup.zip
+# oder für einen benutzerdefinierten Ausgabepfad:
+ls -la /pfad/zu/sicherung.zip
 ```
 
-## Nuances
+## Nuancen
 
-- **Output must be a file path:** The `[output]` argument must be a full file path ending in `.zip`. Do **not** pass a directory — the command will not create a ZIP if given a directory path.
-- **Default filename:** `swag2mcp-backup-<YYYY-MM-DD-HHMMSS>.zip` using UTC timestamp.
-- **`--spec` filter:** When set, only the specified specs are included. Other specs are excluded from the archive.
-- **No config required:** `export` works even without a valid config file. It exports whatever exists in the workspace.
-- **Cache and responses are excluded:** These are transient data that would be stale on restore. Only the config, specs, and auth scripts are preserved.
+- **Ausgabe muss ein Dateipfad sein:** Das Argument `[output]` muss ein vollständiger Dateipfad sein, der auf `.zip` endet. Übergeben Sie **kein** Verzeichnis — der Befehl erstellt keine ZIP, wenn ein Verzeichnispfad angegeben wird.
+- **Standard-Dateiname:** `swag2mcp-backup-<YYYY-MM-DD-HHMMSS>.zip` mit UTC-Zeitstempel.
+- **`--spec`-Filter:** Wenn gesetzt, werden nur die angegebenen Specs eingeschlossen. Andere Specs werden vom Archiv ausgeschlossen.
+- **Keine Konfiguration erforderlich:** `export` funktioniert auch ohne gültige Konfigurationsdatei. Es exportiert, was im Arbeitsbereich existiert.
+- **Cache und Antworten sind ausgeschlossen:** Dies sind flüchtige Daten, die bei der Wiederherstellung veraltet wären. Nur die Konfiguration, Spezifikationen und Auth-Skripte werden gespeichert.

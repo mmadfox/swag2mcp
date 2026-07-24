@@ -1,16 +1,16 @@
 # OAuth2 Password Grant
 
-## Purpose
+## 目的
 
-OAuth2 Resource Owner Password Grant — authentication using a user's username and password. Suitable for first-party applications where the user trusts the app with their credentials.
+OAuth2 Resource Owner Password Grant — ユーザーのユーザー名とパスワードを使用した認証。ユーザーがアプリを信頼して認証情報を預けるファーストパーティアプリケーションに適しています。
 
-## When to use
+## 使用するタイミング
 
-- First-party applications (mobile, web)
-- Integration with Keycloak and similar Identity Providers
-- When the API supports OAuth2 Password Grant
+- ファーストパーティアプリケーション（モバイル、Web）
+- Keycloak および類似の Identity Provider との統合
+- API が OAuth2 Password Grant をサポートしている場合
 
-## Configuration
+## 設定
 
 ```yaml
 specs:
@@ -33,20 +33,20 @@ specs:
           - profile
 ```
 
-## Parameters
+## パラメーター
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `client_id` | Yes | Client identifier |
-| `username` | Yes | Username |
-| `password` | Yes | Password |
-| `token_url` | Yes | Token endpoint URL |
-| `client_secret` | No | Client secret (optional, for public clients) |
-| `scopes` | No | List of permissions (optional) |
+| パラメーター | 必須 | 説明 |
+|-----------|------|------|
+| `client_id` | はい | クライアント識別子 |
+| `username` | はい | ユーザー名 |
+| `password` | はい | パスワード |
+| `token_url` | はい | トークンエンドポイント URL |
+| `client_secret` | いいえ | クライアントシークレット（オプション、パブリッククライアント用） |
+| `scopes` | いいえ | 権限のリスト（オプション） |
 
-## Notes
+## 注意点
 
-- `client_secret` is optional — **public clients** are supported (e.g., Keycloak)
-- swag2mcp automatically refreshes the token when it expires
-- The token is cached until expiry
-- All parameters can be stored in environment variables
+- `client_secret` はオプション — **パブリッククライアント** がサポートされています（例：Keycloak）
+- swag2mcp はトークンが期限切れになると自動的に更新します
+- トークンは期限までキャッシュされます
+- すべてのパラメーターは環境変数に保存できます

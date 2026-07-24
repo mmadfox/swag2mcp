@@ -1,552 +1,552 @@
-# Troubleshooting
+# Решение проблем
 
-## Installation Problems
+## Проблемы установки
 
 ### swag2mcp: command not found
 
-The binary is not in your PATH.
+Бинарный файл не находится в PATH.
 
 ```bash
-# Check if Go is installed
+# Проверьте, установлен ли Go
 go version
 
-# Find where Go installs binaries
+# Узнайте, куда Go устанавливает бинарные файлы
 go env GOPATH
-# Usually ~/go or ~/go/bin
+# Обычно ~/go или ~/go/bin
 
-# Add to PATH (add this to ~/.zshrc or ~/.bashrc)
+# Добавьте в PATH (добавьте это в ~/.zshrc или ~/.bashrc)
 export PATH=$PATH:$(go env GOPATH)/bin
 
-# Or use the full path
+# Или используйте полный путь
 ~/go/bin/swag2mcp --version
 ```
 
-If you downloaded a binary from GitHub Releases, make sure it's in a directory that's in your PATH:
+Если вы скачали бинарный файл с GitHub Releases, убедитесь, что он находится в директории, которая есть в PATH:
 
 ```bash
-# Move to /usr/local/bin (macOS/Linux)
+# Переместите в /usr/local/bin (macOS/Linux)
 sudo mv swag2mcp /usr/local/bin/
 ```
 
-### permission denied
+### Permission denied
 
-The binary does not have execute permissions.
+У бинарного файла нет прав на выполнение.
 
 ```bash
-# For go install (fix ownership)
+# Для go install (исправить владельца)
 sudo chown -R $(whoami) $(go env GOPATH)
 
-# For downloaded binary
-chmod +x /path/to/swag2mcp
+# Для скачанного бинарного файла
+chmod +x /путь/до/swag2mcp
 ```
 
-### Go version too old
+### Слишком старая версия Go
 
-swag2mcp requires Go 1.23+.
+swag2mcp требует Go 1.23+.
 
 ```bash
 go version
-# If version < 1.23, update Go:
+# Если версия < 1.23, обновите Go:
 # https://go.dev/dl/
 ```
 
-### Mock server not found
+### Mock-сервер не найден
 
-The mock server is a separate binary. Install it explicitly:
+Mock-сервер — это отдельный бинарный файл. Установите его явно:
 
 ```bash
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 ```
 
-## Configuration Problems
+## Проблемы конфигурации
 
-### Configuration file not found
+### Файл конфигурации не найден
 
-swag2mcp cannot find `swag2mcp.yaml`.
+swag2mcp не может найти `swag2mcp.yaml`.
 
 ```bash
-# Create a new config
+# Создайте новый конфиг
 swag2mcp init
 
-# Or specify the path explicitly
-swag2mcp mcp /path/to/workspace
-swag2mcp ls /path/to/workspace
+# Или укажите путь явно
+swag2mcp mcp /путь/до/workspace
+swag2mcp ls /путь/до/workspace
 ```
 
-**Common cause:** You ran `swag2mcp mcp` from a random directory and it looked for `~/.swag2mcp/` instead of your project's workspace. Always pass the path explicitly.
+**Частая причина:** Вы запустили `swag2mcp mcp` из случайной директории, и он искал `~/.swag2mcp/` вместо рабочей области вашего проекта. Всегда передавайте путь явно.
 
-### Wrong workspace loaded
+### Загружена не та рабочая область
 
-swag2mcp loaded a different workspace than expected.
+swag2mcp загрузил другую рабочую область, чем ожидалось.
 
-**Resolution order:** Explicit `[path]` → current directory (`./`) → `~/.swag2mcp/`. If you run `swag2mcp mcp` without a path from a directory that doesn't have `swag2mcp.yaml`, it falls back to `~/.swag2mcp/`.
+**Порядок разрешения:** Явный `[path]` → текущая директория (`./`) → `~/.swag2mcp/`. Если вы запускаете `swag2mcp mcp` без пути из директории, в которой нет `swag2mcp.yaml`, он переключается на `~/.swag2mcp/`.
 
-**Fix:** Always pass the workspace path: `swag2mcp mcp /path/to/your/workspace`
+**Решение:** Всегда передавайте путь к рабочей области: `swag2mcp mcp /путь/до/вашей/workspace`
 
-### YAML parsing error
+### Ошибка парсинга YAML
 
-The config file has invalid YAML syntax.
+Файл конфигурации содержит неверный синтаксис YAML.
 
 ```bash
-# Validate the config
+# Проверьте конфиг
 swag2mcp validate
 
-# Common mistakes:
-# - Tabs instead of spaces (YAML requires spaces)
-# - Missing indentation for nested fields
-# - Unquoted strings with special characters (: # & {)
+# Частые ошибки:
+# - Табуляция вместо пробелов (YAML требует пробелы)
+# - Отсутствие отступов для вложенных полей
+# - Неэкранированные строки со спецсимволами (: # & {)
 ```
 
-**Tip:** Use a YAML linter or editor with YAML support to catch syntax errors.
+**Совет:** Используйте YAML-линтер или редактор с поддержкой YAML для выявления синтаксических ошибок.
 
-### Validation fails: "no specifications defined"
+### Ошибка валидации: "no specifications defined"
 
-The config file exists but has no specs.
+Файл конфигурации существует, но в нём нет спецификаций.
 
 ```bash
-# Add a spec
+# Добавьте спецификацию
 swag2mcp add spec
 
-# Or edit swag2mcp.yaml and add at least one spec
+# Или отредактируйте swag2mcp.yaml и добавьте хотя бы одну спецификацию
 ```
 
-### Validation fails: "duplicate domain"
+### Ошибка валидации: "duplicate domain"
 
-Two specs have the same `domain` value. Domains must be unique.
+Две спецификации имеют одинаковое значение `domain`. Домены должны быть уникальными.
 
 ```bash
-# List current specs
+# Список текущих спецификаций
 swag2mcp ls
 
-# Check for duplicate domains in swag2mcp.yaml
+# Проверьте наличие дублирующихся доменов в swag2mcp.yaml
 ```
 
-### Validation fails: "invalid spec location"
+### Ошибка валидации: "invalid spec location"
 
-The `location` URL or file path is not accessible or not a valid spec file.
+URL или путь к файлу `location` недоступен или не является файлом спецификации.
 
 ```bash
-# Check if the URL is reachable
+# Проверьте, доступен ли URL
 curl -I https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 
-# Check if the local file exists
+# Проверьте, существует ли локальный файл
 ls -la ./specs/my-api.yaml
 
-# Verify the file is valid OpenAPI/Swagger/Postman
-# (not just any JSON or HTML page)
+# Убедитесь, что файл является валидным OpenAPI/Swagger/Postman
+# (а не просто JSON или HTML-страницей)
 ```
 
-**Common cause:** The `location` field points to the API endpoint itself (e.g., `https://api.example.com/v1/users`) instead of the spec file URL. The location must point to an OpenAPI/Swagger/Postman file.
+**Частая причина:** Поле `location` указывает на сам API-эндпоинт (например, `https://api.example.com/v1/users`), а не на URL файла спецификации. В location должен быть указан путь к файлу OpenAPI/Swagger/Postman.
 
-## MCP Server Problems
+## Проблемы MCP-сервера
 
-### Port already in use
+### Порт уже занят
 
-Another process is using the port.
+Другой процесс использует порт.
 
 ```bash
-# Find the process
+# Найдите процесс
 lsof -i :8080
 
-# Kill it
+# Завершите его
 kill <PID>
 
-# Or use a different port
+# Или используйте другой порт
 swag2mcp mcp --transport sse --http-addr :9090
 ```
 
 ### Connection refused
 
-The MCP server is not running or not reachable.
+MCP-сервер не запущен или недоступен.
 
 ```bash
-# Make sure the server is running
+# Убедитесь, что сервер запущен
 swag2mcp mcp --transport sse --http-addr 127.0.0.1:8080
 
-# In another terminal, check the health endpoint
+# В другом терминале проверьте health-эндпоинт
 curl http://127.0.0.1:8080/health
 
-# If using a custom path
+# Если используется нестандартный путь
 curl http://127.0.0.1:8080/custom-path/health
 ```
 
-### MCP tools not showing up in the LLM client
+### MCP-инструменты не отображаются в LLM-клиенте
 
-The LLM client cannot see any tools.
+LLM-клиент не видит никаких инструментов.
 
 ```bash
-# Check that specs are loaded
+# Проверьте, загружены ли спецификации
 swag2mcp ls
 
-# Check that specs are not disabled
+# Проверьте, что спецификации не отключены
 swag2mcp validate
 
-# Check the server logs
+# Проверьте логи сервера
 swag2mcp mcp --logfile /tmp/swag2mcp.log
 cat /tmp/swag2mcp.log
 
-# Verify the workspace path in your IDE config is correct
-# (must be an absolute path)
+# Убедитесь, что путь к рабочей области в конфиге IDE правильный
+# (должен быть абсолютным)
 ```
 
-**Common causes:**
-- Wrong workspace path in IDE config
-- All specs have `disable: true`
-- Specs are filtered out by `--tags`
-- Config file doesn't exist at the specified path
+**Частые причины:**
+- Неправильный путь к рабочей области в конфиге IDE
+- У всех спецификаций стоит `disable: true`
+- Спецификации отфильтрованы через `--tags`
+- Файл конфигурации не существует по указанному пути
 
-### MCP handshake fails (HTTP transport)
+### Ошибка рукопожатия MCP (HTTP-транспорт)
 
-For SSE and Streamable HTTP transports, the MCP protocol requires initialization before tool calls work.
+Для SSE и Streamable HTTP транспортов протокол MCP требует инициализации перед вызовом инструментов.
 
 ```
-Step 1: POST /mcp → {"method":"initialize", ...}
-Step 2: POST /mcp → {"method":"notifications/initialized"}
-Step 3: POST /mcp → {"method":"tools/list", ...}  ← now works
+Шаг 1: POST /mcp → {"method":"initialize", ...}
+Шаг 2: POST /mcp → {"method":"notifications/initialized"}
+Шаг 3: POST /mcp → {"method":"tools/list", ...}  ← теперь работает
 ```
 
-Make sure your LLM client completes the handshake before calling tools.
+Убедитесь, что ваш LLM-клиент выполняет рукопожатие перед вызовом инструментов.
 
-### Health check returns 404
+### Health check возвращает 404
 
-The health endpoint path may differ from the MCP path.
+Путь к health-эндпоинту может отличаться от пути MCP.
 
 ```bash
-# Default health endpoint
+# Health-эндпоинт по умолчанию
 curl http://127.0.0.1:8080/health
 
-# If you changed the MCP path, health is still at /health
-# (not affected by --http-path)
+# Если вы изменили путь MCP, health всё равно находится по адресу /health
+# (не зависит от --http-path)
 ```
 
-### Auth tool not available
+### Инструмент auth недоступен
 
-The `auth` MCP tool is not showing up.
+MCP-инструмент `auth` не отображается.
 
-The `auth` tool is **disabled by default** (`--disable-llm-auth=true`). This is intentional for production security.
+Инструмент `auth` **отключён по умолчанию** (`--disable-llm-auth=true`). Это сделано намеренно для безопасности в продакшене.
 
 ```bash
-# Enable the auth tool
+# Включите инструмент auth
 swag2mcp mcp --disable-llm-auth=false
 ```
 
-## Authentication Problems
+## Проблемы аутентификации
 
 ### 401 Unauthorized
 
-The API rejected the request due to missing or invalid credentials.
+API отклонил запрос из-за отсутствия или неверных учётных данных.
 
 ```bash
-# Check that auth is configured
+# Проверьте, настроена ли аутентификация
 swag2mcp info
 
-# Validate the config
+# Проверьте конфиг
 swag2mcp validate
 
-# Check that environment variables are set
+# Проверьте, установлены ли переменные окружения
 echo $MY_TOKEN
 
-# Verify the token is not expired (bearer tokens are static)
+# Убедитесь, что токен не истёк (bearer-токены статичны)
 ```
 
-**Common causes:**
-- Token is missing or empty
-- Environment variable not set
-- Token has expired (bearer tokens don't auto-refresh)
-- Wrong auth type configured
+**Частые причины:**
+- Токен отсутствует или пуст
+- Переменная окружения не установлена
+- Срок действия токена истёк (bearer-токены не обновляются автоматически)
+- Выбран неверный тип аутентификации
 
 ### 403 Forbidden
 
-The API rejected the request due to insufficient permissions.
+API отклонил запрос из-за недостаточных прав.
 
-- The token may not have the required scopes
-- The API key may not have access to this resource
-- Check the API documentation for required permissions
+- У токена может не быть необходимых разрешений
+- API-ключ может не иметь доступа к этому ресурсу
+- Проверьте документацию API для получения информации о необходимых правах
 
-### OAuth2 token endpoint unreachable
+### OAuth2 token endpoint недоступен
 
-swag2mcp cannot reach the OAuth2 token URL.
+swag2mcp не может подключиться к URL получения токена OAuth2.
 
 ```bash
-# Check the token_url in your config
-# Verify the URL is correct and reachable
+# Проверьте token_url в вашем конфиге
+# Убедитесь, что URL правильный и доступен
 curl -X POST https://auth.example.com/oauth/token \
   -d "grant_type=client_credentials" \
   -d "client_id=test" \
   -d "client_secret=test"
 
-# Check network connectivity
-# Check proxy settings if behind a corporate proxy
+# Проверьте сетевое подключение
+# Проверьте настройки прокси, если вы за корпоративным прокси
 ```
 
-### Digest auth fails
+### Digest-аутентификация не работает
 
-swag2mcp cannot complete the Digest authentication handshake.
+swag2mcp не может выполнить рукопожатие Digest-аутентификации.
 
-- The server must return a `WWW-Authenticate: Digest ...` header with a 401 response
-- The challenge is cached for 5 minutes — if the server changes its nonce, wait for the cache to expire
-- Check that username and password are correct
+- Сервер должен вернуть заголовок `WWW-Authenticate: Digest ...` с ответом 401
+- Запрос кэшируется на 5 минут — если сервер меняет nonce, дождитесь истечения кэша
+- Проверьте правильность имени пользователя и пароля
 
-### HMAC signature mismatch
+### Несовпадение HMAC-подписи
 
-The API rejected the HMAC-signed request.
+API отклонил запрос с HMAC-подписью.
 
-- Verify that `api_key` and `secret_key` are correct
-- Check that the API uses Binance-style HMAC-SHA256 signing
-- Some exchanges use different signing methods — HMAC auth is specifically for Binance-compatible APIs
+- Убедитесь, что `api_key` и `secret_key` правильные
+- Проверьте, что API использует подпись HMAC-SHA256 в стиле Binance
+- Некоторые биржи используют другие методы подписи — HMAC-аутентификация предназначена специально для API, совместимых с Binance
 
-### Script auth fails
+### Ошибка скриптовой аутентификации
 
-The external auth script failed.
+Внешний скрипт аутентификации не сработал.
 
 ```bash
-# Check that the script exists
+# Проверьте, существует ли скрипт
 ls -la ~/.swag2mcp/auth_scripts/my-domain.sh
 
-# Run the script manually to test
+# Запустите скрипт вручную для проверки
 sh ~/.swag2mcp/auth_scripts/my-domain.sh
 
-# Check the script output format (must be JSON: {"token": "...", "expires_in": 3600})
-# Check that the script completes within 30 seconds
-# Check that the script has execute permissions
+# Проверьте формат вывода скрипта (должен быть JSON: {"token": "...", "expires_in": 3600})
+# Проверьте, что скрипт выполняется в течение 30 секунд
+# Проверьте, что у скрипта есть права на выполнение
 chmod +x ~/.swag2mcp/auth_scripts/my-domain.sh
 ```
 
-## Search Problems
+## Проблемы поиска
 
-### No search results
+### Нет результатов поиска
 
-The search returned no endpoints.
+Поиск не вернул ни одного эндпоинта.
 
 ```bash
-# Check that specs are loaded
+# Проверьте, загружены ли спецификации
 swag2mcp ls
 
-# Check that specs are not disabled
+# Проверьте, что спецификации не отключены
 swag2mcp validate
 
-# Try a simpler query
-# Try searching by method: method:GET
-# Try searching by tag: tag:pets
+# Попробуйте более простой запрос
+# Попробуйте поиск по методу: method:GET
+# Попробуйте поиск по тегу: tag:pets
 
-# The index is rebuilt on every MCP server start
-# If you just added a spec, restart the server
+# Индекс перестраивается при каждом запуске MCP-сервера
+# Если вы только что добавили спецификацию, перезапустите сервер
 ```
 
-### Search returns irrelevant results
+### Поиск возвращает нерелевантные результаты
 
-The query is too broad or ambiguous.
+Запрос слишком широкий или неоднозначный.
 
-- Use field filters to narrow: `method:GET +tag:pets`
-- Use exact phrases: `"find pet by status"`
-- Use the `limit` parameter to get more focused results
+- Используйте фильтры по полям для сужения: `method:GET +tag:pets`
+- Используйте точные фразы: `"найти питомца по статусу"`
+- Используйте параметр `limit` для получения более точных результатов
 
-## API Call Problems
+## Проблемы вызова API
 
-### invoke returns an error
+### invoke возвращает ошибку
 
-The API call failed.
+Вызов API не удался.
 
 ```bash
-# Check the error message — it includes the HTTP status code
-# 4xx errors: check parameters, auth, or permissions
-# 5xx errors: the API server has a problem
+# Проверьте сообщение об ошибке — оно содержит HTTP-статус код
+# Ошибки 4xx: проверьте параметры, аутентификацию или права доступа
+# Ошибки 5xx: проблема на стороне API-сервера
 
-# Always inspect the endpoint before invoking
+# Всегда изучайте эндпоинт перед вызовом
 inspect(endpointId: "...")
 
-# Check that all required parameters are provided
-# Check parameter types (string, number, boolean)
+# Проверьте, что все обязательные параметры предоставлены
+# Проверьте типы параметров (строка, число, boolean)
 ```
 
-### Rate limit error
+### Ошибка ограничения запросов
 
-The LLM called the same endpoint too quickly.
+LLM вызвал один и тот же эндпоинт слишком быстро.
 
-Each endpoint has a 10-second cooldown. Wait before calling again, or disable the rate limiter:
+У каждого эндпоинта есть период охлаждения 10 секунд. Подождите перед повторным вызовом или отключите ограничитель:
 
 ```yaml
 disable_ratelimiter: true
 ```
 
-### Response too large (fileRef returned)
+### Слишком большой ответ (возвращён fileRef)
 
-The response exceeded `max_response_size`.
+Ответ превысил `max_response_size`.
 
-This is normal. Use the response tools to explore the data:
+Это нормально. Используйте инструменты для работы с ответами:
 
 ```
-1. response_outline(path) → understand the structure
-2. response_compress(path, mode: "first_of_array") → get a sample
-3. response_slice(path, jsonPath: "data.0") → get specific data
+1. response_outline(path) → понять структуру
+2. response_compress(path, mode: "first_of_array") → получить образец
+3. response_slice(path, jsonPath: "data.0") → получить конкретные данные
 ```
 
-Or increase the limit:
+Или увеличьте лимит:
 
 ```yaml
 http_client:
-  max_response_size: 4194304  # 4 MB
+  max_response_size: 4194304  # 4 МБ
 ```
 
-### Slow API responses
+### Медленные ответы API
 
-The API is taking too long to respond.
+API отвечает слишком долго.
 
 ```yaml
 http_client:
-  timeout: 120s  # Increase from default 30s
+  timeout: 120s  # Увеличьте с 30s по умолчанию
 ```
 
-## Workspace Problems
+## Проблемы рабочей области
 
-### swag2mcp init fails: "directory is not empty"
+### swag2mcp init не работает: "directory is not empty"
 
-The target directory already has files.
+Целевая директория уже содержит файлы.
 
 ```bash
-# Use --force to overwrite
+# Используйте --force для перезаписи
 swag2mcp init --force
 
-# Or use a different directory
+# Или используйте другую директорию
 swag2mcp init ./new-workspace
 ```
 
-### swag2mcp update fails
+### swag2mcp update не работает
 
-One or more spec files could not be downloaded.
+Один или несколько файлов спецификаций не удалось загрузить.
 
 ```bash
-# Check the error message for which URL failed
-# Verify the URL is accessible
-curl -I <failed-url>
+# Проверьте сообщение об ошибке — какой URL не сработал
+# Убедитесь, что URL доступен
+curl -I <неудачный-url>
 
-# Check network connectivity
-# Check proxy settings
+# Проверьте сетевое подключение
+# Проверьте настройки прокси
 ```
 
-### Export creates no ZIP
+### Экспорт не создаёт ZIP
 
-The `[output]` argument must be a file path ending in `.zip`, not a directory.
+Аргумент `[output]` должен быть путём к файлу, заканчивающимся на `.zip`, а не директорией.
 
 ```bash
-# Correct
-swag2mcp export /path/to/workspace /path/to/backup.zip
+# Правильно
+swag2mcp export /путь/до/workspace /путь/до/backup.zip
 
-# Wrong (no ZIP will be created)
-swag2mcp export /path/to/workspace /some/directory
+# Неправильно (ZIP не будет создан)
+swag2mcp export /путь/до/workspace /какая-то/директория
 ```
 
-### Import fails: "not a valid swag2mcp backup"
+### Ошибка импорта: "not a valid swag2mcp backup"
 
-The ZIP file was not created by `swag2mcp export`.
+ZIP-файл не был создан командой `swag2mcp export`.
 
-Only ZIP archives created by `swag2mcp export` can be imported. The archive has a specific internal structure (`swag2mcp.yaml`, `specs/`, `auth_scripts/`).
+Импортировать можно только ZIP-архивы, созданные `swag2mcp export`. Архив имеет определённую внутреннюю структуру (`swag2mcp.yaml`, `specs/`, `auth_scripts/`).
 
-## TUI Problems
+## Проблемы TUI
 
-### TUI doesn't render correctly
+### TUI отображается некорректно
 
-The terminal is too small or doesn't support the required features.
+Терминал слишком мал или не поддерживает требуемые функции.
 
-- Minimum terminal size: 80×24 characters
-- The TUI uses Bubbletea and works in most modern terminals
-- Try resizing your terminal window
-- Try a different terminal emulator
+- Минимальный размер терминала: 80×24 символа
+- TUI использует Bubbletea и работает в большинстве современных терминалов
+- Попробуйте изменить размер окна терминала
+- Попробуйте другой эмулятор терминала
 
-### TUI shows "no specs found"
+### TUI показывает "no specs found"
 
-The workspace has no configured specs.
+В рабочей области нет настроенных спецификаций.
 
 ```bash
-# Check specs
+# Проверьте спецификации
 swag2mcp ls
 
-# Add a spec
+# Добавьте спецификацию
 swag2mcp add spec
 ```
 
-## Mock Server Problems
+## Проблемы Mock-сервера
 
-### Mock server doesn't start
+### Mock-сервер не запускается
 
 ```bash
-# Check that mock_enabled: true in config
-# Check that every collection has base_mock_url set
-# Check that ports are not in use
+# Проверьте, что в конфиге указано mock_enabled: true
+# Проверьте, что для каждой коллекции установлен base_mock_url
+# Проверьте, что порты не заняты
 lsof -i :9090
 
-# Check the mock server logs
+# Проверьте логи mock-сервера
 swag2mcp-mock mockserver
 ```
 
-### Mock server returns empty responses
+### Mock-сервер возвращает пустые ответы
 
-The spec file may not have response schemas defined.
+В файле спецификации могут отсутствовать схемы ответов.
 
-- Mock server generates data from response schemas
-- If no schema is found, it returns `{}`
-- Check that your OpenAPI spec has `responses` with `schema` defined
+- Mock-сервер генерирует данные на основе схем ответов
+- Если схема не найдена, возвращается `{}`
+- Проверьте, что ваша OpenAPI-спецификация содержит `responses` с определённой `schema`
 
-## Network Problems
+## Сетевые проблемы
 
-### Proxy connection failed
+### Ошибка подключения через прокси
 
-swag2mcp cannot connect through the configured proxy.
+swag2mcp не может подключиться через настроенный прокси.
 
 ```bash
-# Check proxy URL format (must include scheme: http://, https://, socks5://)
-# Check proxy credentials
-# Check bypass list — the target may be in the bypass list
-# Test the proxy with curl
+# Проверьте формат URL прокси (должен содержать схему: http://, https://, socks5://)
+# Проверьте учётные данные прокси
+# Проверьте список bypass — целевой адрес может быть в списке исключений
+# Протестируйте прокси с помощью curl
 curl -x http://proxy.company.com:8080 https://api.example.com
 ```
 
-### TLS/SSL errors
+### Ошибки TLS/SSL
 
-Certificate verification failed.
+Не удалось проверить сертификат.
 
-- If using a self-signed certificate for the MCP server, the client must trust it
-- For the mock server with `--tls`, a self-signed certificate is generated automatically
-- For API calls, swag2mcp uses the system's certificate store
+- Если вы используете самоподписанный сертификат для MCP-сервера, клиент должен ему доверять
+- Для mock-сервера с `--tls` самоподписанный сертификат генерируется автоматически
+- Для вызовов API swag2mcp использует системное хранилище сертификатов
 
-## Other Problems
+## Другие проблемы
 
-### High disk usage
+### Высокое использование диска
 
-The cache and responses directories can grow over time.
+Директории кэша и ответов могут со временем разрастаться.
 
 ```bash
-# Clean everything
+# Очистите всё
 swag2mcp clean
 
-# Old responses (>48h) are cleaned automatically on MCP server start
-# Cache files expire randomly between 1-48 hours
+# Старые ответы (>48 ч) автоматически очищаются при запуске MCP-сервера
+# Файлы кэша истекают случайным образом в течение 1-48 часов
 ```
 
-### "command not found" after go install
+### "command not found" после go install
 
-The `go install` directory is not in your PATH.
+Директория установки Go не находится в PATH.
 
 ```bash
-# Find where Go installs binaries
+# Узнайте, куда Go устанавливает бинарные файлы
 go env GOPATH
-# Add to PATH
+# Добавьте в PATH
 export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
-### LLM doesn't use the tools correctly
+### LLM неправильно использует инструменты
 
-The LLM may need better instructions or a formatting skill.
+LLM может потребоваться более точная инструкция или навык форматирования.
 
-- Use `llm_instruction` in your spec config to describe what the API does
-- Consider using the [swag2mcp-format skill](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md) for consistent output formatting
-- The quality of LLM responses depends on the model and the instructions it receives
+- Используйте `llm_instruction` в конфиге спецификации, чтобы описать, что делает API
+- Рассмотрите возможность использования [навыка swag2mcp-format](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md) для единообразного форматирования вывода
+- Качество ответов LLM зависит от модели и полученных инструкций
 
-### How do I report a bug?
+### Как сообщить об ошибке?
 
-Open an issue on [GitHub](https://github.com/mmadfox/swag2mcp/issues) with:
-- swag2mcp version (`swag2mcp --version`)
-- Your operating system and architecture
-- The exact command you ran
-- The full error message
-- Your config file (with secrets removed)
+Откройте issue на [GitHub](https://github.com/mmadfox/swag2mcp/issues) с указанием:
+- Версии swag2mcp (`swag2mcp --version`)
+- Вашей операционной системы и архитектуры
+- Точной команды, которую вы выполнили
+- Полного сообщения об ошибке
+- Вашего файла конфигурации (без секретов)

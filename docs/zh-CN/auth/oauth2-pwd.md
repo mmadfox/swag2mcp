@@ -1,16 +1,16 @@
 # OAuth2 Password Grant
 
-## Purpose
+## 用途
 
-OAuth2 Resource Owner Password Grant — authentication using a user's username and password. Suitable for first-party applications where the user trusts the app with their credentials.
+OAuth2 资源所有者密码授权 — 使用用户的用户名和密码进行认证。适用于用户信任应用程序使用其凭据的第一方应用程序。
 
-## When to use
+## 何时使用
 
-- First-party applications (mobile, web)
-- Integration with Keycloak and similar Identity Providers
-- When the API supports OAuth2 Password Grant
+- 第一方应用程序（移动端、Web）
+- 与 Keycloak 和类似身份提供商的集成
+- 当 API 支持 OAuth2 Password Grant 时
 
-## Configuration
+## 配置
 
 ```yaml
 specs:
@@ -33,20 +33,20 @@ specs:
           - profile
 ```
 
-## Parameters
+## 参数
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `client_id` | Yes | Client identifier |
-| `username` | Yes | Username |
-| `password` | Yes | Password |
-| `token_url` | Yes | Token endpoint URL |
-| `client_secret` | No | Client secret (optional, for public clients) |
-| `scopes` | No | List of permissions (optional) |
+| 参数 | 必需 | 描述 |
+|------|------|------|
+| `client_id` | 是 | 客户端标识符 |
+| `username` | 是 | 用户名 |
+| `password` | 是 | 密码 |
+| `token_url` | 是 | 令牌端点 URL |
+| `client_secret` | 否 | 客户端密钥（可选，用于公共客户端） |
+| `scopes` | 否 | 权限列表（可选） |
 
-## Notes
+## 说明
 
-- `client_secret` is optional — **public clients** are supported (e.g., Keycloak)
-- swag2mcp automatically refreshes the token when it expires
-- The token is cached until expiry
-- All parameters can be stored in environment variables
+- `client_secret` 是可选的 — 支持**公共客户端**（例如 Keycloak）
+- swag2mcp 在令牌过期时自动刷新
+- 令牌被缓存直到过期
+- 所有参数可以存储在环境变量中

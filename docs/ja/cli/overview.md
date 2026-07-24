@@ -1,50 +1,50 @@
-# CLI Commands
+# CLI コマンド
 
-## Overview
+## 概要
 
-The `swag2mcp` CLI is the single entry point for all operations — from initializing a workspace and managing API specifications to starting an MCP server for LLM integration. It provides **13 commands** that cover the full lifecycle of working with OpenAPI/Swagger/Postman specs.
+`swag2mcp` CLI は、すべての操作の単一エントリポイントです — ワークスペースの初期化や API 仕様の管理から、LLM 統合のための MCP サーバーの起動まで。OpenAPI/Swagger/Postman の spec を扱う完全なライフサイクルをカバーする **13 のコマンド** を提供します。
 
-### What the CLI solves
+### CLI が解決するもの
 
-- **Workspace lifecycle** — create (`init`), inspect (`info`, `ls`), clean (`clean`), update (`update`), and remove (`delete`) workspaces and their contents
-- **Spec & collection management** — add (`add`), list (`ls`), and delete (`delete`) API specifications and their collections
-- **Running modes** — start the MCP server for LLM tool access (`mcp`) or launch the interactive TUI explorer (`run`)
-- **Diagnostics** — validate configuration (`validate`), show version (`version`), display runtime info (`info`)
-- **Backup & restore** — full workspace round-trip via ZIP (`export`, `import`)
+- **ワークスペースライフサイクル** — 作成（`init`）、検査（`info`、`ls`）、クリーンアップ（`clean`）、更新（`update`）、削除（`delete`）
+- **Spec と Collection の管理** — API 仕様とその collection の追加（`add`）、一覧表示（`ls`）、削除（`delete`）
+- **実行モード** — LLM ツールアクセス用の MCP サーバー起動（`mcp`）、または対話型 TUI エクスプローラー起動（`run`）
+- **診断** — 設定の検証（`validate`）、バージョン表示（`version`）、ランタイム情報表示（`info`）
+- **バックアップと復元** — ZIP による完全なワークスペースラウンドトリップ（`export`、`import`）
 
-### Key nuances
+### 主要なニュアンス
 
-- **Path resolution** — commands that accept `[path]` expect a **workspace directory** (not a file path). Resolution order: explicit `[path]` → current directory (`./`) → `~/.swag2mcp/`. The CLI appends `swag2mcp.yaml` automatically. Always pass an explicit path when running as a service or in IDE config to avoid loading the wrong workspace.
-- **Spec vs Collection** — a **spec** represents a logical API service (e.g. "Open-Meteo API"), while a **collection** is one OpenAPI/Swagger/Postman file. A spec can have multiple collections.
-- **`--version`** is supported both as a flag (`swag2mcp --version`) and as a subcommand (`swag2mcp version`).
-- **`add spec` / `add collection`** accept YAML input via `--yaml` (inline string or `-` for stdin). Piping from a file or heredoc avoids shell quoting issues with special characters.
-- **`delete`** requires a TTY (interactive terminal). There is no `--force` or `--yes` flag — it always prompts for selection and confirmation.
-- **`mcp`** is the primary command for LLM integration. It supports three transports: `stdio` (default), `sse`, and `streamable-http`. The `--disable-llm-auth` flag (default: `true`) removes the `auth` tool from the MCP tool list, preventing the LLM from seeing or requesting tokens. Auth still works — tokens are obtained through the standard config mechanism, not via the LLM. This mode is recommended for **production** (LLM never has access to credentials). For **debugging** or when using short-lived tokens, set `--disable-llm-auth=false` to let the LLM request fresh tokens via the `auth` tool.
-- **`validate`** checks YAML syntax, config structure, spec file existence, URL reachability, spec format (OpenAPI/Swagger/Postman), auth settings, and HTTP client correctness. It does **not** test authentication endpoints or API endpoint availability.
-- **`export` / `import`** provide a full workspace round-trip — config file, spec files, cache, and auth scripts are all included in the ZIP archive.
-- **`clean`** removes `cache/` and `responses/` directories but preserves `specs/` and `auth_scripts/`. Old responses (>48h) are also cleaned automatically on `mcp` startup.
+- **パス解決** — `[path]` を受け付けるコマンドは**ワークスペースディレクトリ**（ファイルパスではない）を期待します。解決順序：明示的な `[path]` → カレントディレクトリ（`./`）→ `~/.swag2mcp/`。CLI は自動的に `swag2mcp.yaml` を追加します。サービスとして実行する場合や IDE 設定では、間違ったワークスペースを読み込まないよう常に明示的なパスを渡してください。
+- **Spec と Collection の違い** — **spec** は論理的な API サービス（例：「Open-Meteo API」）を表し、**collection** は 1 つの OpenAPI/Swagger/Postman ファイルです。1 つの spec は複数の collection を持つことができます。
+- **`--version`** はフラグ（`swag2mcp --version`）とサブコマンド（`swag2mcp version`）の両方としてサポートされています。
+- **`add spec` / `add collection`** は `--yaml`（インライン文字列または標準入力の `-`）を介して YAML 入力を受け付けます。ファイルまたはヒアドキュメントからのパイプは、特殊文字によるシェルの引用符問題を回避します。
+- **`delete`** は TTY（対話型ターミナル）が必要です。`--force` や `--yes` フラグはありません — 常に選択と確認を促します。
+- **`mcp`** は LLM 統合の主要コマンドです。3 つのトランスポートをサポート：`stdio`（デフォルト）、`sse`、`streamable-http`。`--disable-llm-auth` フラグ（デフォルト：`true`）は MCP ツールリストから `auth` ツールを削除し、LLM がトークンを表示したり要求したりするのを防ぎます。認証は引き続き機能します — トークンは LLM 経由ではなく、標準の設定メカニズムを通じて取得されます。このモードは**本番環境**に推奨されます（LLM は認証情報にアクセスできません）。**デバッグ**や短命トークンを使用する場合は、`--disable-llm-auth=false` を設定して LLM が `auth` ツールを介して新しいトークンを要求できるようにします。
+- **`validate`** は YAML 構文、設定構造、spec ファイルの存在、URL の到達可能性、spec 形式（OpenAPI/Swagger/Postman）、認証設定、HTTP クライアントの正確性をチェックします。認証エンドポイントや API エンドポイントの可用性は**テストしません**。
+- **`export` / `import`** は完全なワークスペースラウンドトリップを提供します — 設定ファイル、spec ファイル、キャッシュ、認証スクリプトがすべて ZIP アーカイブに含まれます。
+- **`clean`** は `cache/` と `responses/` ディレクトリを削除しますが、`specs/` と `auth_scripts/` は保持します。古いレスポンス（48 時間以上）は `mcp` 起動時に自動的にクリーンアップされます。
 
-## Commands
+## コマンド一覧
 
-| Command | Description |
-|---------|-------------|
-| [`init`](/cli/init) | Initialize a workspace directory with default config |
-| [`add`](/cli/add) | Add a spec or collection to the configuration |
-| [`delete`](/cli/delete) | Delete a spec or collection interactively |
-| [`ls`](/cli/ls) | List all specs and their collections |
-| [`run`](/cli/run) | Launch the interactive TUI API explorer |
-| [`validate`](/cli/validate) | Validate configuration and spec files |
-| [`clean`](/cli/clean) | Clear cached specs and invocation responses |
-| [`update`](/cli/update) | Re-validate, re-cache, and re-index all specs |
-| [`mcp`](/cli/mcp) | Start the MCP server for LLM tool access |
-| [`version`](/cli/version) | Print the swag2mcp version |
-| [`info`](/cli/info) | Show detailed configuration and runtime information |
-| [`import`](/cli/import) | Import spec files or restore workspace from ZIP |
-| [`export`](/cli/export) | Export workspace as a portable ZIP backup |
+| コマンド | 説明 |
+|---------|------|
+| [`init`](/cli/init) | デフォルト設定でワークスペースディレクトリを初期化 |
+| [`add`](/cli/add) | 設定に spec または collection を追加 |
+| [`delete`](/cli/delete) | 対話的に spec または collection を削除 |
+| [`ls`](/cli/ls) | すべての spec とその collection を一覧表示 |
+| [`run`](/cli/run) | 対話型 TUI API エクスプローラーを起動 |
+| [`validate`](/cli/validate) | 設定と spec ファイルを検証 |
+| [`clean`](/cli/clean) | キャッシュされた spec と呼び出しレスポンスをクリア |
+| [`update`](/cli/update) | すべての spec を再検証、再キャッシュ、再インデックス化 |
+| [`mcp`](/cli/mcp) | LLM ツールアクセス用の MCP サーバーを起動 |
+| [`version`](/cli/version) | swag2mcp バージョンを表示 |
+| [`info`](/cli/info) | 詳細な設定とランタイム情報を表示 |
+| [`import`](/cli/import) | spec ファイルをインポート、または ZIP からワークスペースを復元 |
+| [`export`](/cli/export) | ワークスペースをポータブルな ZIP バックアップとしてエクスポート |
 
-## Global Flags
+## グローバルフラグ
 
-| Flag | Description |
-|------|-------------|
-| `--version` | Show version (same as `version` subcommand) |
-| `--help` | Show help for any command |
+| フラグ | 説明 |
+|-------|------|
+| `--version` | バージョンを表示（`version` サブコマンドと同じ） |
+| `--help` | 任意のコマンドのヘルプを表示 |

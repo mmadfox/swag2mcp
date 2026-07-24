@@ -1,42 +1,42 @@
-# HMAC Auth
+# Authentification HMAC
 
-## Purpose
+## Objectif
 
-HMAC-SHA256 request signing — the authentication method used by cryptocurrency exchanges (Binance, Bybit, and others). Each request is signed with a secret key.
+Signature de requête HMAC-SHA256 — la méthode d'authentification utilisée par les échanges de cryptomonnaies (Binance, Bybit et autres). Chaque requête est signée avec une clé secrète.
 
-## When to use
+## Quand l'utiliser
 
-- Binance API and Binance-compatible exchanges
-- Cryptocurrency trading platforms
-- APIs that require request signing
+- API Binance et échanges compatibles Binance
+- Plateformes de trading de cryptomonnaies
+- API qui nécessitent une signature de requête
 
 ## Configuration
 
 ```yaml
 specs:
   - domain: binance
-    llm_title: Binance Market Data
+    llm_title: Données de marché Binance
     base_url: https://api.binance.com
     collections:
-      - llm_title: Market Data
+      - llm_title: Données de marché
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
     auth:
       type: hmac
       config:
-        api_key: "$(BINANCE_API_KEY)"
-        secret_key: "$(BINANCE_SECRET_KEY)"
+        api_key: "$(CLE_API_BINANCE)"
+        secret_key: "$(CLE_SECRETE_BINANCE)"
 ```
 
-## Parameters
+## Paramètres
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `api_key` | Yes | Public API key |
-| `secret_key` | Yes | Secret key for signing |
+| Paramètre | Requis | Description |
+|-----------|--------|-------------|
+| `api_key` | Oui | Clé API publique |
+| `secret_key` | Oui | Clé secrète pour la signature |
 
 ## Notes
 
-- swag2mcp automatically adds a timestamp (Unix in milliseconds) to every request
-- The signature is computed from all request parameters
-- Store keys in environment variables: `api_key: "$(BINANCE_API_KEY)"`
-- This method is compatible with Binance API and similar exchanges
+- swag2mcp ajoute automatiquement un horodatage (Unix en millisecondes) à chaque requête
+- La signature est calculée à partir de tous les paramètres de la requête
+- Stockez les clés dans des variables d'environnement : `api_key: "$(CLE_API_BINANCE)"`
+- Cette méthode est compatible avec l'API Binance et les échanges similaires

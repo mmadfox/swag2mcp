@@ -1,78 +1,78 @@
 # FAQ
 
-## General
+## Общие вопросы
 
-### What is swag2mcp and what problem does it solve?
+### Что такое swag2mcp и какую проблему он решает?
 
-swag2mcp bridges OpenAPI/Swagger/Postman API specifications with LLM agents via the Model Context Protocol (MCP). Instead of writing custom code to connect each API to an AI agent, you configure it once in a YAML file and the LLM gets 19 tools to discover, inspect, and call your APIs.
+swag2mcp объединяет спецификации OpenAPI/Swagger/Postman с LLM-агентами через протокол MCP. Вместо того чтобы писать собственный код для подключения каждого API к AI-агенту, вы настраиваете его один раз в YAML-файле, и LLM получает 19 инструментов для обнаружения, изучения и вызова ваших API.
 
-### How is it different from other API-to-LLM tools?
+### Чем он отличается от других инструментов для связи API с LLM?
 
-- **No coding required** — configure APIs in YAML, no integration code needed
-- **19 MCP tools** — complete toolkit from discovery to invocation to large response handling
-- **9 auth methods** — works with any API authentication scheme
-- **Full-text search** — bluge-powered search across all endpoints
-- **TUI explorer** — interactive terminal interface for browsing and testing
-- **Mock server** — test without real API calls
+- **Не требует программирования** — настройте API в YAML, код интеграции не нужен
+- **19 MCP-инструментов** — полный набор от обнаружения до вызова и обработки больших ответов
+- **9 методов аутентификации** — работает с любой схемой авторизации API
+- **Полнотекстовый поиск** — поиск на движке bluge по всем эндпоинтам
+- **TUI-обозреватель** — интерактивный терминальный интерфейс для просмотра и тестирования
+- **Mock-сервер** — тестирование без реальных вызовов API
 
-### What API specification formats are supported?
+### Какие форматы спецификаций поддерживаются?
 
-OpenAPI 3.x, Swagger 2.0, and Postman Collections v2.1.
+OpenAPI 3.x, Swagger 2.0 и Postman Collections v2.1.
 
-### What is the difference between a spec and a collection?
+### В чём разница между спецификацией и коллекцией?
 
-A **spec** represents a logical API service (e.g., "Open-Meteo Weather APIs"). A **collection** is one OpenAPI/Swagger/Postman file. A spec can have multiple collections — for example, when an API has separate spec files for different services (forecast, air quality, marine).
+**Спецификация** представляет логический API-сервис (например, "Open-Meteo Weather APIs"). **Коллекция** — это один файл OpenAPI/Swagger/Postman. Спецификация может содержать несколько коллекций — например, когда у API есть отдельные файлы спецификаций для разных сервисов (прогноз погоды, качество воздуха, морские данные).
 
-### What MCP transports are supported?
+### Какие MCP-транспорты поддерживаются?
 
-Three transports: `stdio` (default, for local LLM clients), `sse` (Server-Sent Events for remote clients), and `streamable-http` (modern HTTP streaming).
+Три транспорта: `stdio` (по умолчанию, для локальных LLM-клиентов), `sse` (Server-Sent Events для удалённых клиентов) и `streamable-http` (современная HTTP-трансляция).
 
-### Can I use swag2mcp with any LLM?
+### Могу ли я использовать swag2mcp с любой LLM?
 
-Yes, any LLM client that supports the MCP protocol: Claude Desktop, VS Code, Cursor, Windsurf, JetBrains IDEs, OpenCode, and others.
+Да, с любым LLM-клиентом, поддерживающим протокол MCP: Claude Desktop, VS Code, Cursor, Windsurf, JetBrains IDE, OpenCode и другие.
 
-## Installation
+## Установка
 
-### How do I install swag2mcp?
+### Как установить swag2mcp?
 
 ```bash
-# Option 1: Download from GitHub Releases
-# Go to https://github.com/mmadfox/swag2mcp/releases/latest
-# Download the archive for your OS and architecture
+# Вариант 1: Скачать с GitHub Releases
+# Перейдите на https://github.com/mmadfox/swag2mcp/releases/latest
+# Скачайте архив для вашей ОС и архитектуры
 
-# Option 2: Install with Go
+# Вариант 2: Установить через Go
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 ```
 
-### Do I need Go installed?
+### Нужен ли мне установленный Go?
 
-No. Pre-built binaries are available for Linux (amd64, arm64), macOS (amd64, arm64), and Windows (amd64) on the [GitHub Releases page](https://github.com/mmadfox/swag2mcp/releases).
+Нет. Готовые бинарные файлы доступны для Linux (amd64, arm64), macOS (amd64, arm64) и Windows (amd64) на [странице GitHub Releases](https://github.com/mmadfox/swag2mcp/releases).
 
-### How do I install the mock server?
+### Как установить mock-сервер?
 
-The mock server is a separate binary:
+Mock-сервер — это отдельный бинарный файл:
 
 ```bash
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 ```
 
-Or download `swag2mcp-mock_<version>_<os>_<arch>.tar.gz` from GitHub Releases.
+Или скачайте `swag2mcp-mock_<version>_<os>_<arch>.tar.gz` с GitHub Releases.
 
-## Getting Started
+## Начало работы
 
-### How do I quickly get started?
+### Как быстро начать?
 
 ```bash
-# 1. Initialize a workspace
+# 1. Инициализируйте рабочую область
 mkdir -p .swag2mcp && swag2mcp init ./.swag2mcp
 
-# 2. Start the MCP server (public example specs are included after init)
+# 2. Запустите MCP-сервер (после init уже включены публичные примеры спецификаций)
 swag2mcp mcp
 ```
 
-After `init`, the workspace already includes several public example specs (icanhazdadjoke, Open-Meteo, Binance, PokéAPI). You can start the MCP server immediately — no need to add specs manually.
+После `init` рабочая область уже содержит несколько публичных примеров спецификаций (icanhazdadjoke, Open-Meteo, Binance, PokéAPI). Вы можете сразу запустить MCP-сервер — добавлять спецификации вручную не нужно.
 
-If you want to add your own API instead:
+Если вы хотите добавить свой API:
 
 ```bash
 swag2mcp add spec --yaml - <<EOF
@@ -85,7 +85,7 @@ collections:
 EOF
 ```
 
-### How do I connect swag2mcp to my IDE?
+### Как подключить swag2mcp к моей IDE?
 
 **VS Code** (`.vscode/settings.json`):
 ```json
@@ -94,7 +94,7 @@ EOF
     "servers": {
       "swag2mcp": {
         "command": "swag2mcp",
-        "args": ["mcp", "/absolute/path/to/.swag2mcp"]
+        "args": ["mcp", "/абсолютный/путь/до/.swag2mcp"]
       }
     }
   }
@@ -107,7 +107,7 @@ EOF
   "mcpServers": {
     "swag2mcp": {
       "command": "swag2mcp",
-      "args": ["mcp", "/absolute/path/to/.swag2mcp"]
+      "args": ["mcp", "/абсолютный/путь/до/.swag2mcp"]
     }
   }
 }
@@ -119,27 +119,27 @@ EOF
   "mcpServers": {
     "swag2mcp": {
       "command": "swag2mcp",
-      "args": ["mcp", "/absolute/path/to/.swag2mcp"]
+      "args": ["mcp", "/абсолютный/путь/до/.swag2mcp"]
     }
   }
 }
 ```
 
-Always use an absolute path to the workspace directory.
+Всегда используйте абсолютный путь к директории рабочей области.
 
-## Configuration
+## Конфигурация
 
-### Where is the config file located?
+### Где находится файл конфигурации?
 
-Default: `~/.swag2mcp/swag2mcp.yaml`. You can also create it in any directory and pass the path to commands.
+По умолчанию: `~/.swag2mcp/swag2mcp.yaml`. Вы также можете создать его в любой директории и передавать путь в команды.
 
-### How do I add an API?
+### Как добавить API?
 
 ```bash
-# Interactive mode
+# Интерактивный режим
 swag2mcp add spec
 
-# With YAML (recommended for scripting)
+# С YAML (рекомендуется для скриптов)
 swag2mcp add spec --yaml - <<EOF
 domain: my-api
 llm_title: My API
@@ -150,7 +150,7 @@ collections:
 EOF
 ```
 
-### How do I add a collection to an existing spec?
+### Как добавить коллекцию к существующей спецификации?
 
 ```bash
 swag2mcp add collection --yaml - <<EOF
@@ -160,17 +160,17 @@ location: https://example.com/air-quality.yaml
 EOF
 ```
 
-### How do I disable a spec temporarily?
+### Как временно отключить спецификацию?
 
-Set `disable: true` in the spec config. The spec will not be loaded or indexed.
+Установите `disable: true` в конфиге спецификации. Спецификация не будет загружена или проиндексирована.
 
-### Can I filter which specs are loaded?
+### Можно ли фильтровать, какие спецификации загружаются?
 
-Yes, use the `--tags` flag: `swag2mcp mcp --tags=public`. Only specs with matching tags will be loaded.
+Да, используйте флаг `--tags`: `swag2mcp mcp --tags=public`. Будут загружены только спецификации с соответствующими тегами.
 
-### How do I use environment variables for secrets?
+### Как использовать переменные окружения для секретов?
 
-Use `$(VAR_NAME)` syntax in auth fields:
+Используйте синтаксис `$(VAR_NAME)` в полях аутентификации:
 
 ```yaml
 auth:
@@ -179,17 +179,17 @@ auth:
     token: "$(MY_API_TOKEN)"
 ```
 
-Set the variable before starting: `export MY_API_TOKEN="eyJhbGci..."`
+Установите переменную перед запуском: `export MY_API_TOKEN="eyJhbGci..."`
 
-## Authentication
+## Аутентификация
 
-### What auth methods are supported?
+### Какие методы аутентификации поддерживаются?
 
-Nine methods: `none`, `basic`, `bearer`, `digest`, `hmac`, `oauth2-cc` (client credentials), `oauth2-pwd` (password grant), `api-key`, and `script`.
+Девять методов: `none`, `basic`, `bearer`, `digest`, `hmac`, `oauth2-cc` (client credentials), `oauth2-pwd` (password grant), `api-key` и `script`.
 
-### How do I pass a token?
+### Как передать токен?
 
-Via the config file or environment variables:
+Через файл конфигурации или переменные окружения:
 
 ```yaml
 auth:
@@ -198,148 +198,148 @@ auth:
     token: "$(MY_TOKEN)"
 ```
 
-### Do I need to call auth before invoke?
+### Нужно ли вызывать auth перед invoke?
 
-No. The `invoke` tool automatically applies authentication from the spec's config. You only need the `auth` MCP tool if you want to show the token to the user (e.g., for a curl command).
+Нет. Инструмент `invoke` автоматически применяет аутентификацию из конфига спецификации. MCP-инструмент `auth` нужен только если вы хотите показать токен пользователю (например, для команды curl).
 
-### Why is the auth tool not showing up?
+### Почему инструмент auth не отображается?
 
-The `auth` tool is disabled by default (`--disable-llm-auth=true`). This is a security measure for production. To enable it: `swag2mcp mcp --disable-llm-auth=false`.
+Инструмент `auth` отключён по умолчанию (`--disable-llm-auth=true`). Это мера безопасности для продакшена. Чтобы включить: `swag2mcp mcp --disable-llm-auth=false`.
 
-### How do OAuth2 tokens refresh?
+### Как обновляются токены OAuth2?
 
-OAuth2 Client Credentials and Password Grant tokens are automatically refreshed when they expire. Bearer tokens are static and must be updated manually.
+Токены OAuth2 Client Credentials и Password Grant автоматически обновляются при истечении срока действия. Bearer-токены статичны и должны обновляться вручную.
 
-## MCP Server
+## MCP-сервер
 
-### How do I start the MCP server?
+### Как запустить MCP-сервер?
 
 ```bash
-# Default (stdio transport)
+# По умолчанию (stdio транспорт)
 swag2mcp mcp
 
-# With HTTP transport
+# С HTTP-транспортом
 swag2mcp mcp --transport sse --http-addr :8080
 ```
 
-### How do I change the port?
+### Как изменить порт?
 
 ```bash
 swag2mcp mcp --transport sse --http-addr 0.0.0.0:9090
 ```
 
-### How do I secure the MCP HTTP endpoint?
+### Как защитить MCP HTTP-эндпоинт?
 
-Set a bearer token:
+Установите bearer-токен:
 
 ```bash
 swag2mcp mcp --transport sse --http-addr :8080 --auth-token "my-secret"
 ```
 
-The LLM client must include `Authorization: Bearer my-secret` in every request.
+LLM-клиент должен включать `Authorization: Bearer my-secret` в каждый запрос.
 
-### What is the MCP handshake for HTTP transport?
+### Что такое MCP-рукопожатие для HTTP-транспорта?
 
-For SSE and Streamable HTTP transports, the MCP protocol requires a three-step handshake:
-
-```
-Step 1: POST /mcp → {"method":"initialize", ...}
-Step 2: POST /mcp → {"method":"notifications/initialized"}
-Step 3: POST /mcp → {"method":"tools/list", ...}  ← now works
-```
-
-Tool calls will fail before initialization.
-
-## Usage
-
-### How do I search for endpoints?
-
-Use the `search` MCP tool or the TUI (`swag2mcp run`). The search supports field filters (`method:GET`, `tag:pets`), fuzzy search, wildcards, and boolean operators.
-
-### How do I call an API?
-
-The LLM uses the `invoke` MCP tool. Always inspect the endpoint first to understand required parameters:
+Для SSE и Streamable HTTP транспортов протокол MCP требует трёхшаговое рукопожатие:
 
 ```
-inspect(endpointId: "...")  → understand the contract
-invoke(endpointId: "...", parameters: {...})  → make the call
+Шаг 1: POST /mcp → {"method":"initialize", ...}
+Шаг 2: POST /mcp → {"method":"notifications/initialized"}
+Шаг 3: POST /mcp → {"method":"tools/list", ...}  ← теперь работает
 ```
 
-### What happens if a response is too large?
+Вызовы инструментов будут завершаться ошибкой до инициализации.
 
-Responses exceeding `max_response_size` (default 1 MB) are saved to disk. The LLM receives a file reference and can explore it with `response_outline`, `response_compress`, and `response_slice` tools.
+## Использование
 
-### How does the rate limiter work?
+### Как искать эндпоинты?
 
-Each endpoint has a 10-second cooldown. If the LLM calls the same endpoint twice within 10 seconds, the second call is silently blocked. You can disable or adjust this in the config.
+Используйте MCP-инструмент `search` или TUI (`swag2mcp run`). Поиск поддерживает фильтры по полям (`method:GET`, `tag:pets`), нечёткий поиск, подстановочные знаки и логические операторы.
 
-### Can I test without making real API calls?
+### Как вызвать API?
 
-Yes, use the mock server:
+LLM использует MCP-инструмент `invoke`. Всегда сначала изучайте эндпоинт, чтобы понять требуемые параметры:
+
+```
+inspect(endpointId: "...")  → понять контракт
+invoke(endpointId: "...", parameters: {...})  → выполнить вызов
+```
+
+### Что происходит, если ответ слишком большой?
+
+Ответы, превышающие `max_response_size` (по умолчанию 1 МБ), сохраняются на диск. LLM получает ссылку на файл и может исследовать его с помощью инструментов `response_outline`, `response_compress` и `response_slice`.
+
+### Как работает ограничитель запросов?
+
+У каждого эндпоинта есть период охлаждения 10 секунд. Если LLM вызывает один и тот же эндпоинт дважды в течение 10 секунд, второй вызов отклоняется с ошибкой `rate_limit`. Вы можете отключить или настроить это в конфиге.
+
+### Могу ли я тестировать без реальных вызовов API?
+
+Да, используйте mock-сервер:
 
 ```bash
 swag2mcp-mock mockserver
 ```
 
-It generates fake responses based on OpenAPI schemas.
+Он генерирует фиктивные ответы на основе OpenAPI-схем.
 
-## Workspace Management
+## Управление рабочей областью
 
-### How do I backup my configuration?
+### Как сделать резервную копию конфигурации?
 
 ```bash
 swag2mcp export --output ~/backups/swag2mcp-2026-07-24.zip
 ```
 
-### How do I transfer to another machine?
+### Как перенести на другую машину?
 
 ```bash
-# On the old machine
+# На старой машине
 swag2mcp export --output swag2mcp.zip
 
-# Copy the ZIP, then on the new machine
+# Скопируйте ZIP, затем на новой машине
 swag2mcp import --from-zip swag2mcp.zip
 ```
 
-### How do I update spec files?
+### Как обновить файлы спецификаций?
 
 ```bash
 swag2mcp update
 ```
 
-This re-validates the config, clears the cache, and re-downloads all spec files.
+Это повторно проверяет конфиг, очищает кэш и заново скачивает все файлы спецификаций.
 
-### How do I clean up disk space?
+### Как очистить дисковое пространство?
 
 ```bash
 swag2mcp clean
 ```
 
-Removes cached spec files and saved API responses. Old responses (>48h) are also cleaned automatically on MCP server start.
+Удаляет кэшированные файлы спецификаций и сохранённые ответы API. Старые ответы (>48 ч) также автоматически очищаются при запуске MCP-сервера.
 
 ## TUI
 
-### What is the TUI and how do I use it?
+### Что такое TUI и как им пользоваться?
 
-The TUI (Terminal User Interface) is an interactive API explorer. Launch it with `swag2mcp run`. It has three modes: Search (full-text search), Browse (tree navigation: Spec → Collection → Tag → Endpoint), and Auth (view tokens).
+TUI (Terminal User Interface) — это интерактивный обозреватель API. Запустите его командой `swag2mcp run`. У него три режима: Поиск (полнотекстовый), Обзор (древовидная навигация: Спецификация → Коллекция → Тег → Эндпоинт) и Auth (просмотр токенов).
 
-### What are the keyboard shortcuts?
+### Какие есть горячие клавиши?
 
-| Key | Action |
+| Клавиша | Действие |
 |-----|--------|
-| `↑/↓` | Navigate |
-| `Enter` | Select |
-| `Esc` | Back |
-| `Tab` | Switch modes |
-| `/` | Search |
-| `N/P` | Next/previous page |
-| `q` | Quit |
+| `↑/↓` | Навигация |
+| `Enter` | Выбор |
+| `Esc` | Назад |
+| `Tab` | Переключение режимов |
+| `/` | Поиск |
+| `N/P` | Следующая/предыдущая страница |
+| `q` | Выход |
 
-## Advanced
+## Продвинутое
 
-### Can I use a proxy?
+### Могу ли я использовать прокси?
 
-Yes, configure it in `http_client.proxy`:
+Да, настройте его в `http_client.proxy`:
 
 ```yaml
 http_client:
@@ -352,14 +352,14 @@ http_client:
       - "*.internal.com"
 ```
 
-### Can I add a custom auth method?
+### Могу ли я добавить свой метод аутентификации?
 
-Yes, implement the `Authenticator` interface in `internal/auth/` and register it in the config parser. See the Development section for details.
+Да, реализуйте интерфейс `Authenticator` в `internal/auth/` и зарегистрируйте его в парсере конфига. Подробнее в разделе Разработка.
 
-### Can I add a custom MCP tool?
+### Могу ли я добавить свой MCP-инструмент?
 
-Yes, add a method to the `Svc` interface, implement it in the service layer, add a handler, and register it. See the Development section for details.
+Да, добавьте метод в интерфейс `Svc`, реализуйте его в сервисном слое, добавьте обработчик и зарегистрируйте его. Подробнее в разделе Разработка.
 
-### What is the difference between `swag2mcp` and `swag2mcp-mock`?
+### В чём разница между `swag2mcp` и `swag2mcp-mock`?
 
-`swag2mcp` is the main binary with CLI commands and the MCP server. `swag2mcp-mock` is a separate binary that starts mock servers for testing without real API calls.
+`swag2mcp` — основной бинарный файл с командами CLI и MCP-сервером. `swag2mcp-mock` — отдельный бинарный файл, который запускает mock-серверы для тестирования без реальных вызовов API.

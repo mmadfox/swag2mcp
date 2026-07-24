@@ -1,16 +1,16 @@
 # Digest Auth
 
-## Purpose
+## 목적
 
-HTTP Digest Access Authentication — a more secure alternative to Basic Auth. The password is not sent in plain text; instead, MD5 hashes are used.
+HTTP Digest Access Authentication — Basic Auth보다 더 안전한 대안입니다. 비밀번호가 평문으로 전송되지 않고 MD5 해시가 사용됩니다.
 
-## When to use
+## 사용 시기
 
-- Legacy APIs that only support Digest
-- When you need authentication without sending the password in plain text
-- Internal enterprise systems
+- Digest만 지원하는 레거시 API
+- 비밀번호를 평문으로 전송하지 않고 인증이 필요할 때
+- 내부 엔터프라이즈 시스템
 
-## Configuration
+## 설정
 
 ```yaml
 specs:
@@ -27,15 +27,15 @@ specs:
         password: "$(PASSWORD)"
 ```
 
-## Parameters
+## 매개변수
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `username` | Yes | Username |
-| `password` | Yes | Password |
+| 매개변수 | 필수 | 설명 |
+|---------|------|------|
+| `username` | 예 | 사용자 이름 |
+| `password` | 예 | 비밀번호 |
 
-## Notes
+## 참고 사항
 
-- swag2mcp first sends a request without authentication, receives a challenge from the server (HTTP 401), computes the response, and retries with the `Authorization: Digest ...` header
-- The challenge is cached for 5 minutes — subsequent requests don't need an extra round-trip
-- Store the password in an environment variable: `password: "$(API_PASSWORD)"`
+- swag2mcp는 먼저 인증 없이 요청을 보내고, 서버로부터 챌린지(HTTP 401)를 받은 후 응답을 계산하고 `Authorization: Digest ...` 헤더로 재시도합니다
+- 챌린지는 5분 동안 캐시됩니다 — 이후 요청은 추가 왕복이 필요하지 않습니다
+- 비밀번호를 환경 변수에 저장하세요: `password: "$(API_PASSWORD)"`

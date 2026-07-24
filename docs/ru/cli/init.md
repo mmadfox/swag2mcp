@@ -1,95 +1,95 @@
 # init
 
-## Purpose
+## Назначение
 
-The `init` command creates a **workspace** — a directory with a `swag2mcp.yaml` config file and subdirectories for cache, specs, responses, and auth scripts. This is the first command to run when setting up swag2mcp.
+Команда `init` создаёт **рабочую область** — директорию с файлом конфигурации `swag2mcp.yaml` и поддиректориями для кэша, спецификаций, ответов и скриптов аутентификации. Это первая команда, которую нужно выполнить при настройке swag2mcp.
 
-## When to use
+## Когда использовать
 
-- You are setting up swag2mcp for the first time
-- You want to create a new workspace in a specific directory
-- You need to re-initialize a corrupted or missing workspace
+- Вы настраиваете swag2mcp впервые
+- Вы хотите создать новую рабочую область в определённой директории
+- Вам нужно пересоздать повреждённую или отсутствующую рабочую область
 
-## Syntax
+## Синтаксис
 
 ```bash
 swag2mcp init [path] [flags]
 ```
 
-## Arguments
+## Аргументы
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, defaults to `~/.swag2mcp`. |
+| Аргумент | Позиция | Обязательно | Описание |
+|----------|----------|-------------|----------|
+| `path` | 1 | Нет | Директория рабочей области. Если не указан, по умолчанию `~/.swag2mcp`. |
 
-## Flags
+## Флаги
 
-| Flag | Shorthand | Type | Default | Description |
+| Флаг | Сокращение | Тип | По умолчанию | Описание |
 |------|-----------|------|---------|-------------|
-| `--interactive` | `-i` | `bool` | `false` | Run the interactive TUI wizard |
-| `--force` | `-f` | `bool` | `false` | Overwrite existing configuration in a non-empty directory |
+| `--interactive` | `-i` | `bool` | `false` | Запустить интерактивный TUI-мастер |
+| `--force` | `-f` | `bool` | `false` | Перезаписать существующую конфигурацию в непустой директории |
 
-## How it works
+## Как это работает
 
-### Non-interactive mode (default)
+### Неинтерактивный режим (по умолчанию)
 
-Creates a minimal `swag2mcp.yaml` with no specs. You edit the file manually afterwards.
+Создаёт минимальный `swag2mcp.yaml` без спецификаций. Вы редактируете файл вручную после.
 
 ```bash
 swag2mcp init
-# Creates ~/.swag2mcp/swag2mcp.yaml
+# Создаёт ~/.swag2mcp/swag2mcp.yaml
 
 swag2mcp init ./my-project
-# Creates ./my-project/swag2mcp.yaml
+# Создаёт ./my-project/swag2mcp.yaml
 
 swag2mcp init /absolute/path
-# Creates /absolute/path/swag2mcp.yaml
+# Создаёт /absolute/path/swag2mcp.yaml
 ```
 
-### Interactive mode (`-i`)
+### Интерактивный режим (`-i`)
 
-Launches an 18-step TUI wizard that guides you through:
+Запускает 18-шаговый TUI-мастер, который проведёт вас через:
 
-1. Choosing the workspace directory
-2. Adding specs with domain, title, base URL
-3. Configuring collections with location URLs
-4. Setting up authentication (all 9 methods)
-5. Configuring HTTP client settings (timeout, proxy, headers, etc.)
+1. Выбор директории рабочей области
+2. Добавление спецификаций с доменом, названием, базовым URL
+3. Настройку коллекций с URL location
+4. Настройку аутентификации (все 9 методов)
+5. Настройку HTTP-клиента (таймаут, прокси, заголовки и т.д.)
 
 ```bash
 swag2mcp init -i
 ```
 
-### Force mode (`--force`)
+### Принудительный режим (`--force`)
 
-By default, `init` refuses to run in a non-empty directory. Use `--force` to overwrite:
+По умолчанию `init` отказывается работать в непустой директории. Используйте `--force` для перезаписи:
 
 ```bash
 swag2mcp init -f
 swag2mcp init ./existing-dir -f
 ```
 
-## What gets created
+## Что создаётся
 
 ```
 ~/.swag2mcp/
-├── swag2mcp.yaml       # Configuration file
-├── cache/               # Downloaded remote spec files
-├── specs/               # Local spec files
-├── responses/           # Saved API invocation responses
-└── auth_scripts/        # Authentication scripts (for ScriptAuth type)
+├── swag2mcp.yaml       # Файл конфигурации
+├── cache/               # Скачанные удалённые файлы спецификаций
+├── specs/               # Локальные файлы спецификаций
+├── responses/           # Сохранённые ответы на вызовы API
+└── auth_scripts/        # Скрипты аутентификации (для типа ScriptAuth)
 ```
 
-## Post-command verification
+## Проверка после команды
 
 ```bash
 ls ~/.swag2mcp/swag2mcp.yaml
-# If the file exists, init succeeded
+# Если файл существует, init выполнен успешно
 ```
 
-## Nuances
+## Нюансы
 
-- **Path resolution:** `[path]` is a **workspace directory**, not a file path. The CLI appends `swag2mcp.yaml` automatically. Resolution order: explicit `[path]` → current directory (`./`) → `~/.swag2mcp/`.
-- **Non-empty directory check:** Without `--force`, `init` returns an error if the target directory exists and is not empty. This prevents accidental overwrites.
-- **Auth script stubs:** If any spec uses `ScriptAuth`, `init` creates stub script files (`.sh` on Unix, `.bat` on Windows) in `auth_scripts/`.
-- **Output:** On success, prints the config path and a hint: `"Next step: edit swag2mcp.yaml or run 'swag2mcp ls' to list configured specs"`.
+- **Разрешение пути:** `[path]` — это **директория рабочей области**, а не путь к файлу. CLI автоматически добавляет `swag2mcp.yaml`. Порядок разрешения: явный `[path]` → текущая директория (`./`) → `~/.swag2mcp/`.
+- **Проверка на непустую директорию:** Без `--force` `init` возвращает ошибку, если целевая директория существует и не пуста. Это предотвращает случайную перезапись.
+- **Заглушки скриптов аутентификации:** Если какая-либо спецификация использует `ScriptAuth`, `init` создаёт файлы-заглушки скриптов (`.sh` на Unix, `.bat` на Windows) в `auth_scripts/`.
+- **Вывод:** При успехе выводит путь к конфигу и подсказку: `"Next step: edit swag2mcp.yaml or run 'swag2mcp ls' to list configured specs"`.

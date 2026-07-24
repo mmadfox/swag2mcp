@@ -1,49 +1,49 @@
-# Building
+# 빌드
 
-## Requirements
+## 요구 사항
 
 - Go 1.26+
 - Make
 
-## Commands
+## 명령어
 
 ```bash
-# Build
+# 빌드
 make build
 
-# Build with version
+# 버전과 함께 빌드
 make build VERSION=1.0.0
 
-# Lint
+# 린트
 make lint
 
-# Tests
+# 테스트
 go test ./...
 
-# All tests
+# 모든 테스트
 make testall
 ```
 
 ## GoReleaser
 
-For releases:
+릴리스용:
 
 ```bash
 goreleaser release --snapshot --clean
 ```
 
-## Platforms
+## 플랫폼
 
-| Platform | Architecture |
-|----------|-------------|
+| 플랫폼 | 아키텍처 |
+|--------|---------|
 | Linux | amd64, arm64 |
 | macOS | amd64, arm64 |
 | Windows | amd64 |
 
-## Lint
+## 린트
 
 ```bash
 make lint
 ```
 
-Uses `golangci-lint` with 80+ linters. Config in `.golangci.yml`.
+80개 이상의 린터와 함께 `golangci-lint`를 사용합니다. 설정은 `.golangci.yml`에 있습니다.

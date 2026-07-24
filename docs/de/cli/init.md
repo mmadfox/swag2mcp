@@ -1,14 +1,14 @@
 # init
 
-## Purpose
+## Zweck
 
-The `init` command creates a **workspace** — a directory with a `swag2mcp.yaml` config file and subdirectories for cache, specs, responses, and auth scripts. This is the first command to run when setting up swag2mcp.
+Der Befehl `init` erstellt einen **Arbeitsbereich** — ein Verzeichnis mit einer `swag2mcp.yaml`-Konfigurationsdatei und Unterverzeichnissen für Cache, Spezifikationen, Antworten und Auth-Skripte. Dies ist der erste Befehl, der bei der Einrichtung von swag2mcp ausgeführt wird.
 
-## When to use
+## Wann verwenden
 
-- You are setting up swag2mcp for the first time
-- You want to create a new workspace in a specific directory
-- You need to re-initialize a corrupted or missing workspace
+- Sie richten swag2mcp zum ersten Mal ein
+- Sie möchten einen neuen Arbeitsbereich in einem bestimmten Verzeichnis erstellen
+- Sie müssen einen beschädigten oder fehlenden Arbeitsbereich neu initialisieren
 
 ## Syntax
 
@@ -16,80 +16,80 @@ The `init` command creates a **workspace** — a directory with a `swag2mcp.yaml
 swag2mcp init [path] [flags]
 ```
 
-## Arguments
+## Argumente
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, defaults to `~/.swag2mcp`. |
+| Argument | Position | Erforderlich | Beschreibung |
+|----------|----------|-------------|--------------|
+| `path` | 1 | Nein | Arbeitsbereichsverzeichnis. Wenn nicht angegeben, Standard: `~/.swag2mcp`. |
 
 ## Flags
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--interactive` | `-i` | `bool` | `false` | Run the interactive TUI wizard |
-| `--force` | `-f` | `bool` | `false` | Overwrite existing configuration in a non-empty directory |
+| Flag | Kurzform | Typ | Standard | Beschreibung |
+|------|----------|-----|----------|--------------|
+| `--interactive` | `-i` | `bool` | `false` | Interaktiven TUI-Assistenten ausführen |
+| `--force` | `-f` | `bool` | `false` | Bestehende Konfiguration in einem nicht-leeren Verzeichnis überschreiben |
 
-## How it works
+## Wie es funktioniert
 
-### Non-interactive mode (default)
+### Nicht-interaktiver Modus (Standard)
 
-Creates a minimal `swag2mcp.yaml` with no specs. You edit the file manually afterwards.
+Erstellt eine minimale `swag2mcp.yaml` ohne Specs. Sie bearbeiten die Datei anschließend manuell.
 
 ```bash
 swag2mcp init
-# Creates ~/.swag2mcp/swag2mcp.yaml
+# Erstellt ~/.swag2mcp/swag2mcp.yaml
 
 swag2mcp init ./my-project
-# Creates ./my-project/swag2mcp.yaml
+# Erstellt ./my-project/swag2mcp.yaml
 
-swag2mcp init /absolute/path
-# Creates /absolute/path/swag2mcp.yaml
+swag2mcp init /absoluter/pfad
+# Erstellt /absoluter/pfad/swag2mcp.yaml
 ```
 
-### Interactive mode (`-i`)
+### Interaktiver Modus (`-i`)
 
-Launches an 18-step TUI wizard that guides you through:
+Startet einen 18-schrittigen TUI-Assistenten, der Sie durch Folgendes führt:
 
-1. Choosing the workspace directory
-2. Adding specs with domain, title, base URL
-3. Configuring collections with location URLs
-4. Setting up authentication (all 9 methods)
-5. Configuring HTTP client settings (timeout, proxy, headers, etc.)
+1. Auswahl des Arbeitsbereichsverzeichnisses
+2. Hinzufügen von Specs mit Domain, Titel, Basis-URL
+3. Konfigurieren von Collections mit Speicherort-URLs
+4. Einrichten der Authentifizierung (alle 9 Methoden)
+5. Konfigurieren von HTTP-Client-Einstellungen (Timeout, Proxy, Header usw.)
 
 ```bash
 swag2mcp init -i
 ```
 
-### Force mode (`--force`)
+### Force-Modus (`--force`)
 
-By default, `init` refuses to run in a non-empty directory. Use `--force` to overwrite:
+Standardmäßig weigert sich `init`, in einem nicht-leeren Verzeichnis ausgeführt zu werden. Verwenden Sie `--force` zum Überschreiben:
 
 ```bash
 swag2mcp init -f
 swag2mcp init ./existing-dir -f
 ```
 
-## What gets created
+## Was erstellt wird
 
 ```
 ~/.swag2mcp/
-├── swag2mcp.yaml       # Configuration file
-├── cache/               # Downloaded remote spec files
-├── specs/               # Local spec files
-├── responses/           # Saved API invocation responses
-└── auth_scripts/        # Authentication scripts (for ScriptAuth type)
+├── swag2mcp.yaml       # Konfigurationsdatei
+├── cache/               # Heruntergeladene entfernte Spezifikationsdateien
+├── specs/               # Lokale Spezifikationsdateien
+├── responses/           # Gespeicherte API-Aufrufantworten
+└── auth_scripts/        # Authentifizierungsskripte (für ScriptAuth-Typ)
 ```
 
-## Post-command verification
+## Überprüfung nach dem Befehl
 
 ```bash
 ls ~/.swag2mcp/swag2mcp.yaml
-# If the file exists, init succeeded
+# Wenn die Datei existiert, war init erfolgreich
 ```
 
-## Nuances
+## Nuancen
 
-- **Path resolution:** `[path]` is a **workspace directory**, not a file path. The CLI appends `swag2mcp.yaml` automatically. Resolution order: explicit `[path]` → current directory (`./`) → `~/.swag2mcp/`.
-- **Non-empty directory check:** Without `--force`, `init` returns an error if the target directory exists and is not empty. This prevents accidental overwrites.
-- **Auth script stubs:** If any spec uses `ScriptAuth`, `init` creates stub script files (`.sh` on Unix, `.bat` on Windows) in `auth_scripts/`.
-- **Output:** On success, prints the config path and a hint: `"Next step: edit swag2mcp.yaml or run 'swag2mcp ls' to list configured specs"`.
+- **Pfadauflösung:** `[path]` ist ein **Arbeitsbereichsverzeichnis**, kein Dateipfad. Die CLI hängt `swag2mcp.yaml` automatisch an. Auflösungsreihenfolge: expliziter `[path]` → aktuelles Verzeichnis (`./`) → `~/.swag2mcp/`.
+- **Prüfung auf nicht-leeres Verzeichnis:** Ohne `--force` gibt `init` einen Fehler zurück, wenn das Zielverzeichnis existiert und nicht leer ist. Dies verhindert versehentliches Überschreiben.
+- **Auth-Skript-Stubs:** Wenn eine Spec `ScriptAuth` verwendet, erstellt `init` Stub-Skriptdateien (`.sh` unter Unix, `.bat` unter Windows) in `auth_scripts/`.
+- **Ausgabe:** Bei Erfolg wird der Konfigurationspfad und ein Hinweis ausgegeben: `"Nächster Schritt: swag2mcp.yaml bearbeiten oder 'swag2mcp ls' ausführen, um konfigurierte Specs aufzulisten"`.

@@ -1,16 +1,16 @@
-# Code Conventions
+# 코드 규칙
 
 ## Go
 
 - **Go 1.26+**
 - **gofmt** / **gofumpt** / **goimports** / **gci**
-- **120 characters** per line
-- **Guard clauses** instead of nested ifs
-- **Naming**: `camelCase` for private, `PascalCase` for exported
+- 줄당 **120자**
+- 중첩 if 대신 **Guard clauses**
+- **이름**: 비공개는 `camelCase`, 내보내기는 `PascalCase`
 
-## Errors
+## 오류
 
-Use `LLMError` for LLM-visible errors:
+LLM에 표시되는 오류에는 `LLMError`를 사용하세요:
 
 ```go
 type LLMError struct {
@@ -19,28 +19,28 @@ type LLMError struct {
 }
 ```
 
-Error codes:
-- `validation_failed` — invalid parameters
-- `not_found` — resource not found
-- `rate_limit` — rate limit exceeded
-- `invoke_error` — API call error
+오류 코드:
+- `validation_failed` — 잘못된 매개변수
+- `not_found` — 리소스를 찾을 수 없음
+- `rate_limit` — 속도 제한 초과
+- `invoke_error` — API 호출 오류
 
-## Interfaces
+## 인터페이스
 
-- Small interfaces (1-3 methods)
-- Interface composition
-- Functional options for configuration
+- 작은 인터페이스 (1-3개 메서드)
+- 인터페이스 구성
+- 설정을 위한 함수형 옵션
 
-## Testing
+## 테스트
 
-- Table-driven tests
-- Test helpers (`newTestService()`, `seedTestData()`)
-- Mocks via `go.uber.org/mock`
-- 80%+ coverage for core packages
+- 테이블 기반 테스트
+- 테스트 헬퍼 (`newTestService()`, `seedTestData()`)
+- `go.uber.org/mock`을 통한 모의
+- 핵심 패키지 80%+ 커버리지
 
-## Configuration
+## 설정
 
-- YAML format
-- Cascade: global → spec → collection
-- Validation via `go-playground/validator`
-- Environment variables via `$(VAR)`
+- YAML 형식
+- 계단식: 전역 → spec → collection
+- `go-playground/validator`를 통한 검증
+- `$(VAR)`을 통한 환경 변수

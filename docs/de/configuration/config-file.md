@@ -1,13 +1,13 @@
-# Configuration File
+# Konfigurationsdatei
 
-swag2mcp uses a YAML configuration file. Created by `swag2mcp init`.
+swag2mcp verwendet eine YAML-Konfigurationsdatei. Erstellt von `swag2mcp init`.
 
-## Location
+## Speicherort
 
 - **Linux/macOS**: `~/.swag2mcp/swag2mcp.yaml`
 - **Windows**: `%USERPROFILE%\.swag2mcp\swag2mcp.yaml`
 
-## Basic Structure
+## Grundstruktur
 
 ```yaml
 specs:
@@ -19,10 +19,10 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
 ```
 
-## Full Example
+## Vollständiges Beispiel
 
 ```yaml
-# ── Global HTTP client ──────────────────────────────────
+# ── Globaler HTTP-Client ──────────────────────────────────
 http_client:
   timeout: 30s
   max_response_size: 1048576
@@ -41,7 +41,7 @@ http_client:
     - name: "session"
       value: "abc123"
 
-# ── MCP server ──────────────────────────────────────────
+# ── MCP-Server ──────────────────────────────────────────
 mcp:
   transport: stdio
   addr: ":8080"
@@ -49,14 +49,14 @@ mcp:
   auth:
     token: ""
 
-# ── Mock server ─────────────────────────────────────────
+# ── Mock-Server ─────────────────────────────────────────
 mock_enabled: false
 mock_auth:
   oauth2_port: 9090
   digest_port: 9091
   hmac_port: 9092
 
-# ── Rate limiter ────────────────────────────────────────
+# ── Ratenbegrenzer ────────────────────────────────────────
 disable_ratelimiter: false
 rate_limit_interval: 10s
 
@@ -64,7 +64,7 @@ rate_limit_interval: 10s
 specs:
   - domain: meteo
     llm_title: Open-Meteo Weather APIs
-    llm_instruction: "Use this API for weather forecasts and climate data"
+    llm_instruction: "Verwenden Sie diese API für Wettervorhersagen und Klimadaten"
     base_url: https://api.open-meteo.com
     disable: false
     tags: ["weather", "climate"]
@@ -92,9 +92,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## Environment Variables
+## Umgebungsvariablen
 
-Use `$(VAR_NAME)` syntax to reference environment variables. swag2mcp resolves them at startup.
+Verwenden Sie die Syntax `$(VAR_NAME)`, um auf Umgebungsvariablen zu verweisen. swag2mcp löst sie beim Start auf.
 
 ```yaml
 specs:
@@ -109,21 +109,21 @@ mcp:
     token: "$(MCP_TOKEN)"
 ```
 
-`$(VAR)` is resolved in:
-- Auth config fields: `token`, `username`, `password`, `client_id`, `client_secret`, `api_key`, `secret_key`, `domain`
-- MCP server auth token: `mcp.auth.token`
-- HTTP client headers and cookie values
+`$(VAR)` wird aufgelöst in:
+- Auth-Konfigurationsfeldern: `token`, `username`, `password`, `client_id`, `client_secret`, `api_key`, `secret_key`, `domain`
+- MCP-Server-Auth-Token: `mcp.auth.token`
+- HTTP-Client-Headern und Cookie-Werten
 
-`$(VAR)` is **not** resolved in base URLs or collection locations.
+`$(VAR)` wird **nicht** in Basis-URLs oder Collection-Speicherorten aufgelöst.
 
-## Validation
+## Validierung
 
 ```bash
-# Validate default workspace (~/.swag2mcp)
+# Standard-Arbeitsbereich validieren (~/.swag2mcp)
 swag2mcp validate
 
-# Validate a custom project workspace
+# Benutzerdefinierten Projektarbeitsbereich validieren
 swag2mcp validate ./my-project
 ```
 
-If the workspace is not in the home directory (e.g., inside a project repository), always specify the path when running `validate`, `update`, `mcp`, or any other command. Otherwise swag2mcp will use the default `~/.swag2mcp` workspace.
+Wenn sich der Arbeitsbereich nicht im Home-Verzeichnis befindet (z. B. innerhalb eines Projekt-Repositorys), geben Sie den Pfad immer an, wenn Sie `validate`, `update`, `mcp` oder einen anderen Befehl ausführen. Andernfalls verwendet swag2mcp den Standard-Arbeitsbereich `~/.swag2mcp`.

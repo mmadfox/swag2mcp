@@ -1,40 +1,40 @@
-# Basic Auth
+# Authentification Basic
 
-## Purpose
+## Objectif
 
-HTTP Basic Authentication — the simplest way to authenticate with a username and password.
+Authentification HTTP Basic — la façon la plus simple de s'authentifier avec un nom d'utilisateur et un mot de passe.
 
-## When to use
+## Quand l'utiliser
 
-- Legacy APIs that only support Basic Auth
-- Simple authentication without complex tokens
-- Internal services
+- API legacy qui ne prennent en charge que Basic Auth
+- Authentification simple sans jetons complexes
+- Services internes
 
 ## Configuration
 
 ```yaml
 specs:
   - domain: jokes
-    llm_title: Dad Joke API
+    llm_title: API Dad Joke
     base_url: https://icanhazdadjoke.com
     collections:
-      - llm_title: Jokes
+      - llm_title: Blagues
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: basic
       config:
         username: "admin"
-        password: "$(PASSWORD)"
+        password: "$(MOT_DE_PASSE)"
 ```
 
-## Parameters
+## Paramètres
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `username` | Yes | Username |
-| `password` | Yes | Password |
+| Paramètre | Requis | Description |
+|-----------|--------|-------------|
+| `username` | Oui | Nom d'utilisateur |
+| `password` | Oui | Mot de passe |
 
 ## Notes
 
-- The password is sent in the `Authorization: Basic ...` header encoded in Base64 — this is **not encryption**. Always use HTTPS.
-- Store the password in an environment variable: `password: "$(MY_PASSWORD)"`
+- Le mot de passe est envoyé dans l'en-tête `Authorization: Basic ...` encodé en Base64 — ce n'est **pas du chiffrement**. Utilisez toujours HTTPS.
+- Stockez le mot de passe dans une variable d'environnement : `password: "$(MON_MOT_DE_PASSE)"`

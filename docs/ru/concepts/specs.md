@@ -1,86 +1,86 @@
-# Specs
+# Спецификации
 
-A spec is a logical container representing an API domain or service (e.g., YouTube, Binance, Open-Meteo). Each spec has a unique `domain`, a `base_url`, optional `auth`, and contains one or more collections.
+Спецификация — это логический контейнер, представляющий домен или сервис API (например, YouTube, Binance, Open-Meteo). Каждая спецификация имеет уникальный `domain`, `base_url`, опциональную `auth` и содержит одну или несколько коллекций.
 
-[Collections](./collections) point to OpenAPI/Swagger/Postman files — the spec itself is not a file, it's the grouping around them.
+[Коллекции](./collections) указывают на файлы OpenAPI/Swagger/Postman — сама спецификация — это не файл, а группировка вокруг них.
 
-## Domain — Naming Rules
+## Domain — правила именования
 
-The `domain` is the unique identifier of a spec. It is used as the primary key throughout the system.
+`domain` — это уникальный идентификатор спецификации. Он используется в качестве первичного ключа во всей системе.
 
-| Rule | Constraint |
+| Правило | Ограничение |
 |------|------------|
-| Characters | `a-z`, `0-9`, `_`, `-` only |
-| Length | 1–60 characters |
-| Uniqueness | **No duplicates allowed** — two active specs cannot share the same domain |
+| Символы | Только `a-z`, `0-9`, `_`, `-` |
+| Длина | 1–60 символов |
+| Уникальность | **Дубликаты запрещены** — две активные спецификации не могут иметь одинаковый domain |
 
-**Valid examples:** `meteo`, `binance`, `github-api`, `my_service`, `openai-v1`
+**Примеры:** `meteo`, `binance`, `github-api`, `my_service`, `openai-v1`
 
-**Invalid examples:** `Meteo` (uppercase), `my api` (space), `my.api` (dot), `a-very-long-domain-name-that-exceeds-sixty-characters` (too long)
+**Неправильные примеры:** `Meteo` (заглавные), `my api` (пробел), `my.api` (точка), `a-very-long-domain-name-that-exceeds-sixty-characters` (слишком длинный)
 
-## Spec Fields
+## Поля спецификации
 
-| Field | YAML key | Required | Description |
-|-------|----------|----------|-------------|
-| [Domain](#domain--naming-rules) | `domain` | ✅ | Unique API identifier (1–60 chars, `a-z0-9_-`) |
-| LLM Title | `llm_title` | ✅ | Human-readable name the LLM uses to reference this API (5–120 chars) |
-| [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | Short hint injected into the swag2mcp system prompt (max 500 chars) |
-| Base URL | `base_url` | ✅ | Base URL for all API requests (valid URL) |
-| [Disable](#disable) | `disable` | ❌ | Skip this spec during loading and indexing |
-| [Tags](#tags) | `tags` | ❌ | Tags for filtering (e.g., `["public", "demo"]`) |
-| [Auth](#auth) | `auth` | ❌ | Authentication configuration |
-| [HTTP Client](#http-client) | `http_client` | ❌ | Per-spec HTTP settings (headers, cookies) |
-| [Collections](./collections) | `collections` | ✅ | List of 1–30 collections |
+| Поле | YAML-ключ | Обязательно | Описание |
+|-------|----------|-------------|----------|
+| [Domain](#domain--правила-именования) | `domain` | ✅ | Уникальный идентификатор API (1–60 символов, `a-z0-9_-`) |
+| LLM Title | `llm_title` | ✅ | Человекочитаемое имя, которое LLM использует для обращения к этому API (5–120 символов) |
+| [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | Короткая подсказка, внедряемая в системный промпт swag2mcp (макс. 500 символов) |
+| Base URL | `base_url` | ✅ | Базовый URL для всех запросов к API (валидный URL) |
+| [Disable](#disable) | `disable` | ❌ | Пропустить эту спецификацию при загрузке и индексации |
+| [Tags](#теги) | `tags` | ❌ | Теги для фильтрации (например, `["public", "demo"]`) |
+| [Auth](#auth) | `auth` | ❌ | Конфигурация аутентификации |
+| [HTTP Client](#http-клиент) | `http_client` | ❌ | HTTP-настройки для спецификации (заголовки, куки) |
+| [Коллекции](./collections) | `collections` | ✅ | Список из 1–30 коллекций |
 
-## Validation
+## Валидация
 
-When swag2mcp validates the config, these rules are checked for every spec:
+При проверке конфига swag2mcp проверяет следующие правила для каждой спецификации:
 
-| Check | Rule |
+| Проверка | Правило |
 |-------|------|
-| **Duplicate domains** | No two active specs may share the same `domain` |
-| **Domain format** | Must match `^[a-z0-9_-]{1,60}$` |
-| **LLM Title** | Required, 5–120 characters, letters/digits/spaces/basic punctuation |
-| **LLM Instruction** | Max 500 characters, same character set as title |
-| **Base URL** | Required, must be a valid URL |
-| **Collections** | Required, 1–30 items |
-| **Auth** | Validated per auth type (e.g., bearer requires `token`, basic requires `username` + `password`) |
-| **Location** | Each collection's `location` must be a valid URL or file path (5–250 chars) |
+| **Дублирующиеся домены** | Никакие две активные спецификации не могут иметь одинаковый `domain` |
+| **Формат domain** | Должен соответствовать `^[a-z0-9_-]{1,60}$` |
+| **LLM Title** | Обязательно, 5–120 символов, буквы/цифры/пробелы/базовая пунктуация |
+| **LLM Instruction** | Макс. 500 символов, тот же набор символов, что и title |
+| **Base URL** | Обязательно, должен быть валидным URL |
+| **Коллекции** | Обязательно, от 1 до 30 элементов |
+| **Auth** | Проверяется для каждого типа (например, bearer требует `token`, basic требует `username` + `password`) |
+| **Location** | Каждая коллекция должна иметь валидный URL или путь к файлу (5–250 символов) |
 
-Validation runs on every `swag2mcp mcp` startup. If it fails, the MCP server will not start — in some IDEs this means the server simply won't connect, and the LLM receives a clear error message explaining what to fix.
+Валидация запускается при каждом старте `swag2mcp mcp`. Если она не пройдена, MCP-сервер не запустится — в некоторых IDE это означает, что сервер просто не подключится, и LLM получит понятное сообщение об ошибке с объяснением, что исправить.
 
-To diagnose issues before starting the server, use the [`validate`](../cli/validate.md) command:
+Для диагностики проблем перед запуском сервера используйте команду [`validate`](../cli/validate.md):
 
 ```bash
-# Validate default workspace (~/.swag2mcp)
+# Проверка рабочей области по умолчанию (~/.swag2mcp)
 swag2mcp validate
 
-# Validate a custom project workspace
+# Проверка пользовательской рабочей области проекта
 swag2mcp validate ./my-project
 ```
 
 ## LLM Instruction
 
-It is recommended to set `llm_instruction` on each spec — a short hint (up to 500 chars) that tells the LLM what this API is for and when to use it. This instruction is injected into the swag2mcp system prompt, helping the LLM understand the spec's purpose without extra context.
+Рекомендуется задавать `llm_instruction` для каждой спецификации — короткую подсказку (до 500 символов), которая сообщает LLM, для чего предназначен этот API и когда его использовать. Эта инструкция внедряется в системный промпт swag2mcp, помогая LLM понять назначение спецификации без дополнительного контекста.
 
 ```yaml
 specs:
   - domain: jokes
     llm_title: Dad Joke API
-    llm_instruction: "Use this API to get random dad jokes or search for specific jokes by keyword."
+    llm_instruction: "Используй этот API для получения случайных шуток про пап или поиска конкретных шуток по ключевому слову."
     base_url: https://icanhazdadjoke.com
     collections:
       - llm_title: Jokes
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-Collections can also have their own `llm_instruction` (up to 360 chars) for more specific guidance.
+Коллекции также могут иметь собственный `llm_instruction` (до 360 символов) для более точных указаний.
 
 ## Auth
 
-Authentication is configured at the spec level and applies to all its collections. swag2mcp supports 9 auth methods:
+Аутентификация настраивается на уровне спецификации и применяется ко всем её коллекциям. swag2mcp поддерживает 9 методов аутентификации:
 
-| Method | YAML type | Key fields |
+| Метод | YAML-тип | Ключевые поля |
 |--------|-----------|------------|
 | [None](../auth/none.md) | `none` | — |
 | [Basic](../auth/basic.md) | `basic` | `username`, `password` |
@@ -88,15 +88,15 @@ Authentication is configured at the spec level and applies to all its collection
 | [Digest](../auth/digest.md) | `digest` | `username`, `password` |
 | [OAuth2 Client Credentials](../auth/oauth2-cc.md) | `oauth2-cc` | `client_id`, `client_secret`, `token_url` |
 | [OAuth2 Password](../auth/oauth2-pwd.md) | `oauth2-pwd` | `username`, `password`, `client_id`, `token_url` |
-| [API Key](../auth/api-key.md) | `api-key` | `key`, `value`, `in` (`header` or `query`) |
+| [API Key](../auth/api-key.md) | `api-key` | `key`, `value`, `in` (`header` или `query`) |
 | [HMAC](../auth/hmac.md) | `hmac` | `api_key`, `secret_key` |
 | [Script](../auth/script.md) | `script` | `domain` |
 
-See [Auth Overview](../auth/overview.md) for full details on each method.
+Подробнее о каждом методе: [Обзор аутентификации](../auth/overview.md).
 
-## HTTP Client
+## HTTP-клиент
 
-You can override HTTP settings at the spec level. These apply to all requests made by this spec's collections.
+Вы можете переопределить HTTP-настройки на уровне спецификации. Они применяются ко всем запросам, выполняемым коллекциями этой спецификации.
 
 ```yaml
 specs:
@@ -114,11 +114,11 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-Settings cascade: global → spec → collection. See [Configuration Cascade](../configuration/cascade.md) for details.
+Настройки каскадируются: глобальные → спецификация → коллекция. Подробнее: [Каскад конфигурации](../configuration/cascade.md).
 
-## Tags
+## Теги
 
-Tags let you filter specs by category. Use them with the `--tags` flag on `swag2mcp ls` or during bootstrap.
+Теги позволяют фильтровать спецификации по категориям. Используйте их с флагом `--tags` в `swag2mcp ls` или при загрузке.
 
 ```yaml
 specs:
@@ -132,13 +132,13 @@ specs:
 ```
 
 ```bash
-# List only specs tagged "weather"
+# Показать только спецификации с тегом "weather"
 swag2mcp ls --tags weather
 ```
 
 ## Disable
 
-Set `disable: true` to skip a spec entirely. It won't be loaded, indexed, or available to the LLM.
+Установите `disable: true`, чтобы полностью пропустить спецификацию. Она не будет загружена, проиндексирована или доступна LLM.
 
 ```yaml
 specs:
@@ -151,9 +151,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## Examples
+## Примеры
 
-### Minimal Spec
+### Минимальная спецификация
 
 ```yaml
 specs:
@@ -165,7 +165,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-### Spec with Auth
+### Спецификация с аутентификацией
 
 ```yaml
 specs:
@@ -182,7 +182,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
 ```
 
-### Spec with Multiple Collections
+### Спецификация с несколькими коллекциями
 
 ```yaml
 specs:
@@ -198,13 +198,13 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
-### Spec with LLM Instruction and Tags
+### Спецификация с LLM Instruction и тегами
 
 ```yaml
 specs:
   - domain: rickandmorty
     llm_title: Rick and Morty API
-    llm_instruction: "Use this API to get information about characters, episodes, and locations from the Rick and Morty show."
+    llm_instruction: "Используй этот API для получения информации о персонажах, эпизодах и локациях из мультсериала Рик и Морти."
     base_url: https://rickandmortyapi.com/api
     tags: ["entertainment", "public"]
     collections:
@@ -212,10 +212,10 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/rick-and-morty.json
 ```
 
-## Related
+## Связанные разделы
 
-- [Spec Settings (config)](../configuration/spec-settings.md) — full YAML reference
-- [Configuration Cascade](../configuration/cascade.md) — how settings override each other
-- [Auth Overview](../auth/overview.md) — all 9 auth methods
-- [HTTP Client](../configuration/http-client.md) — HTTP client configuration
-- [Collections](./collections) — spec files within a spec
+- [Настройки спецификации (конфиг)](../configuration/spec-settings.md) — полный YAML-справочник
+- [Каскад конфигурации](../configuration/cascade.md) — как настройки переопределяют друг друга
+- [Обзор аутентификации](../auth/overview.md) — все 9 методов
+- [HTTP-клиент](../configuration/http-client.md) — настройка HTTP-клиента
+- [Коллекции](./collections) — файлы спецификаций внутри спецификации

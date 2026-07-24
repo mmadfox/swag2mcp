@@ -1,20 +1,20 @@
-# CLI Workflow
+# CLI-рабочий процесс
 
-This page shows real examples of using swag2mcp from the terminal — from initialization to daily operations.
+На этой странице показаны реальные примеры использования swag2mcp из терминала — от инициализации до повседневных операций.
 
-## Quick start
+## Быстрый старт
 
 ```bash
-# 1. Initialize a workspace
+# 1. Инициализация рабочей области
 mkdir -p .swag2mcp && swag2mcp init ./.swag2mcp
 
-# 2. List your specs
+# 2. Список спецификаций
 swag2mcp ls
 ```
 
-## Adding a spec with YAML
+## Добавление спецификации через YAML
 
-### Simple spec (public API)
+### Простая спецификация (публичное API)
 
 ```bash
 swag2mcp add spec --yaml - <<EOF
@@ -27,7 +27,7 @@ collections:
 EOF
 ```
 
-### Spec with auth (bearer token from env)
+### Спецификация с аутентификацией (bearer-токен из env)
 
 ```bash
 swag2mcp add spec --yaml - <<EOF
@@ -44,7 +44,7 @@ collections:
 EOF
 ```
 
-### Spec with multiple collections
+### Спецификация с несколькими коллекциями
 
 ```bash
 swag2mcp add spec --yaml - <<EOF
@@ -60,7 +60,7 @@ collections:
 EOF
 ```
 
-## Adding a collection to an existing spec
+## Добавление коллекции к существующей спецификации
 
 ```bash
 swag2mcp add collection --yaml - <<EOF
@@ -70,7 +70,7 @@ location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/ma
 EOF
 ```
 
-## Listing specs
+## Список спецификаций
 
 ```bash
 $ swag2mcp ls
@@ -83,13 +83,13 @@ Specifications:
     marine (4 endpoints)
 ```
 
-### Filter by tags
+### Фильтр по тегам
 
 ```bash
 swag2mcp ls --tags=public
 ```
 
-## Viewing runtime info
+## Просмотр информации о рантайме
 
 ```bash
 $ swag2mcp info
@@ -117,7 +117,7 @@ $ swag2mcp info
 }
 ```
 
-## Validating configuration
+## Валидация конфигурации
 
 ```bash
 $ swag2mcp validate
@@ -126,69 +126,69 @@ $ swag2mcp validate
 ✓ Spec meteo: OK
 ```
 
-## Starting the MCP server
+## Запуск MCP-сервера
 
-### stdio (for IDE integration)
+### stdio (для интеграции с IDE)
 
 ```bash
 swag2mcp mcp
 ```
 
-### HTTP (for remote access)
+### HTTP (для удалённого доступа)
 
 ```bash
 swag2mcp mcp --transport sse --http-addr :8080
 ```
 
-### With tag filter
+### С фильтром по тегам
 
 ```bash
 swag2mcp mcp --tags=public
 ```
 
-## Updating specs
+## Обновление спецификаций
 
-Refresh all cached spec files:
+Обновление всех кэшированных файлов спецификаций:
 
 ```bash
 swag2mcp update
 ```
 
-## Cleaning cache
+## Очистка кэша
 
 ```bash
 swag2mcp clean
 ```
 
-## Export and import
+## Экспорт и импорт
 
-### Backup your workspace
+### Резервное копирование рабочей области
 
 ```bash
 swag2mcp export --output ~/backups/swag2mcp-2026-07-24.zip
 ```
 
-### Restore on another machine
+### Восстановление на другой машине
 
 ```bash
-# On the new machine
+# На новой машине
 swag2mcp import --from-zip swag2mcp-2026-07-24.zip
 ```
 
-## Interactive TUI explorer
+## Интерактивный TUI-обозреватель
 
 ```bash
 swag2mcp run
 ```
 
-Opens a full-screen terminal UI for searching, browsing, and invoking APIs.
+Открывает полноэкранный терминальный интерфейс для поиска, просмотра и вызова API.
 
-## Mock server
+## Мок-сервер
 
 ```bash
-# Install the mock binary
+# Установка мок-бинарника
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 
-# Start mock servers
+# Запуск мок-серверов
 swag2mcp-mock mockserver
 ```

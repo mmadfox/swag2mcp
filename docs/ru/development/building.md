@@ -1,49 +1,49 @@
-# Building
+# Сборка
 
-## Requirements
+## Требования
 
 - Go 1.26+
 - Make
 
-## Commands
+## Команды
 
 ```bash
-# Build
+# Сборка
 make build
 
-# Build with version
+# Сборка с версией
 make build VERSION=1.0.0
 
-# Lint
+# Линтинг
 make lint
 
-# Tests
+# Тесты
 go test ./...
 
-# All tests
+# Все тесты
 make testall
 ```
 
 ## GoReleaser
 
-For releases:
+Для релизов:
 
 ```bash
 goreleaser release --snapshot --clean
 ```
 
-## Platforms
+## Платформы
 
-| Platform | Architecture |
-|----------|-------------|
+| Платформа | Архитектура |
+|-----------|-------------|
 | Linux | amd64, arm64 |
 | macOS | amd64, arm64 |
 | Windows | amd64 |
 
-## Lint
+## Линтинг
 
 ```bash
 make lint
 ```
 
-Uses `golangci-lint` with 80+ linters. Config in `.golangci.yml`.
+Использует `golangci-lint` с 80+ линтерами. Конфиг в `.golangci.yml`.

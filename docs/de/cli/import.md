@@ -1,15 +1,15 @@
 # import
 
-## Purpose
+## Zweck
 
-Import spec files into the workspace or restore a full workspace from a ZIP backup. Three modes cover different scenarios: adding a single spec, bulk-importing from existing config, or restoring a complete workspace.
+Importiert Spezifikationsdateien in den Arbeitsbereich oder stellt einen vollständigen Arbeitsbereich aus einem ZIP-Backup wieder her. Drei Modi decken verschiedene Szenarien ab: Hinzufügen einer einzelnen Spec, Massenimport aus bestehender Konfiguration oder Wiederherstellen eines vollständigen Arbeitsbereichs.
 
-## When to use
+## Wann verwenden
 
-- You have a spec URL or file and want to add it to the workspace
-- You want to download all spec files referenced in the config
-- You need to restore a workspace from a ZIP backup created by `export`
-- You are migrating swag2mcp to another machine
+- Sie haben eine Spec-URL oder -Datei und möchten sie zum Arbeitsbereich hinzufügen
+- Sie möchten alle in der Konfiguration referenzierten Spezifikationsdateien herunterladen
+- Sie müssen einen Arbeitsbereich aus einem von `export` erstellten ZIP-Backup wiederherstellen
+- Sie migrieren swag2mcp auf einen anderen Rechner
 
 ## Syntax
 
@@ -17,73 +17,73 @@ Import spec files into the workspace or restore a full workspace from a ZIP back
 swag2mcp import [path] [source] [name] [flags]
 ```
 
-## Arguments
+## Argumente
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
-| `source` | 2 | Varies | URL or local path to a spec file, or path to a ZIP archive |
-| `name` | 3 | Varies | Domain name for the new spec |
+| Argument | Position | Erforderlich | Beschreibung |
+|----------|----------|-------------|--------------|
+| `path` | 1 | Nein | Arbeitsbereichsverzeichnis. Wenn nicht angegeben, wird über die Pfadauflösungsregeln ermittelt. |
+| `source` | 2 | Variiert | URL oder lokaler Pfad zu einer Spezifikationsdatei oder Pfad zu einem ZIP-Archiv |
+| `name` | 3 | Variiert | Domain-Name für die neue Spec |
 
 ## Flags
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--spec` | `-s` | `stringSlice` | `nil` | Import collections from specified specs (comma-separated) |
-| `--from-zip` | | `string` | `""` | Restore workspace from a swag2mcp backup ZIP |
+| Flag | Kurzform | Typ | Standard | Beschreibung |
+|------|----------|-----|----------|--------------|
+| `--spec` | `-s` | `stringSlice` | `nil` | Collections aus angegebenen Specs importieren (kommagetrennt) |
+| `--from-zip` | | `string` | `""` | Arbeitsbereich aus einem swag2mcp-Backup-ZIP wiederherstellen |
 
-## How it works
+## Wie es funktioniert
 
-### Mode 1 — Single import from URL or file
+### Modus 1 — Einzelimport von URL oder Datei
 
-Download a spec file and add it to the workspace with a domain name:
+Laden Sie eine Spezifikationsdatei herunter und fügen Sie sie mit einem Domain-Namen zum Arbeitsbereich hinzu:
 
 ```bash
 swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
+swag2mcp import /pfad/zu/arbeitsbereich https://example.com/spec.yaml myspec
 swag2mcp import ./local-spec.yaml myspec
 ```
 
-The spec file is saved to `specs/` and the config is updated with the new spec entry.
+Die Spezifikationsdatei wird in `specs/` gespeichert und die Konfiguration wird mit dem neuen Spec-Eintrag aktualisiert.
 
-### Mode 2 — Bulk import from existing config
+### Modus 2 — Massenimport aus bestehender Konfiguration
 
-Download all collections for the specified domains from their configured URLs:
+Laden Sie alle Collections für die angegebenen Domains von ihren konfigurierten URLs herunter:
 
 ```bash
 swag2mcp import --spec meteo
-swag2mcp import /path/to/workspace --spec meteo,store
+swag2mcp import /pfad/zu/arbeitsbereich --spec meteo,store
 ```
 
-Each collection's spec file is downloaded and saved to `specs/`. The config is updated to point to the local copies.
+Die Spezifikationsdatei jeder Collection wird heruntergeladen und in `specs/` gespeichert. Die Konfiguration wird aktualisiert, um auf die lokalen Kopien zu verweisen.
 
-### Mode 3 — Restore from ZIP backup
+### Modus 3 — Aus ZIP-Backup wiederherstellen
 
-Restore a full workspace from a ZIP archive created by `swag2mcp export`:
+Stellen Sie einen vollständigen Arbeitsbereich aus einem von `swag2mcp export` erstellten ZIP-Archiv wieder her:
 
 ```bash
-swag2mcp import --from-zip /path/to/backup.zip
-swag2mcp import /path/to/workspace /path/to/backup.zip
+swag2mcp import --from-zip /pfad/zu/sicherung.zip
+swag2mcp import /pfad/zu/arbeitsbereich /pfad/zu/sicherung.zip
 ```
 
-> **The ZIP must be created by `swag2mcp export`.** Arbitrary ZIP files will not work — the archive has a specific internal structure (`swag2mcp.yaml`, `specs/`, `auth_scripts/`).
+> **Das ZIP muss von `swag2mcp export` erstellt worden sein.** Beliebige ZIP-Dateien funktionieren nicht — das Archiv hat eine spezifische interne Struktur (`swag2mcp.yaml`, `specs/`, `auth_scripts/`).
 
-## Post-command verification
+## Überprüfung nach dem Befehl
 
 ```bash
-# Single or bulk import
+# Einzel- oder Massenimport
 swag2mcp ls [path]
-# The new spec should appear in the list
+# Die neue Spec sollte in der Liste erscheinen
 
-# ZIP restore
+# ZIP-Wiederherstellung
 swag2mcp ls [path]
-# All specs from the backup should appear
+# Alle Specs aus dem Backup sollten erscheinen
 ```
 
-## Nuances
+## Nuancen
 
-- **Bulk mode requires config:** When using `--spec`, the config file must exist. Run `init` first if needed.
-- **Single import creates workspace:** If the workspace doesn't exist, it is created automatically.
-- **ZIP detection:** A positional argument ending in `.zip` is treated as a ZIP source. The `--from-zip` flag takes priority over positional detection.
-- **`--force`:** Available for ZIP restore to overwrite an existing workspace.
-- **HTTP client:** The global HTTP client settings from the config are applied during import (timeout, proxy, headers, etc.).
+- **Massenmodus erfordert Konfiguration:** Bei Verwendung von `--spec` muss die Konfigurationsdatei existieren. Führen Sie bei Bedarf zuerst `init` aus.
+- **Einzelimport erstellt Arbeitsbereich:** Wenn der Arbeitsbereich nicht existiert, wird er automatisch erstellt.
+- **ZIP-Erkennung:** Ein Positionsargument, das auf `.zip` endet, wird als ZIP-Quelle behandelt. Das Flag `--from-zip` hat Vorrang vor der Positionserkennung.
+- **`--force`:** Für die ZIP-Wiederherstellung verfügbar, um einen bestehenden Arbeitsbereich zu überschreiben.
+- **HTTP-Client:** Die globalen HTTP-Client-Einstellungen aus der Konfiguration werden während des Imports angewendet (Timeout, Proxy, Header usw.).

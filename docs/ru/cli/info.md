@@ -1,42 +1,42 @@
 # info
 
-## Purpose
+## Назначение
 
-Show a comprehensive summary of the swag2mcp runtime as **JSON**. This includes version, workspace path, specs summary, HTTP client settings, MCP transport configuration, auth methods, and mock mode status.
+Показать подробную сводку о runtime swag2mcp в формате **JSON**. Включает версию, путь к рабочей области, сводку по спецификациям, настройки HTTP-клиента, конфигурацию MCP-транспорта, методы аутентификации и статус mock-режима.
 
-## When to use
+## Когда использовать
 
-- You want a machine-readable overview of the workspace
-- You need to check the runtime configuration for debugging
-- You want to see how many specs and endpoints are active
-- You need to verify HTTP client or MCP transport settings
+- Вы хотите получить машиночитаемый обзор рабочей области
+- Вам нужно проверить конфигурацию runtime для отладки
+- Вы хотите увидеть, сколько спецификаций и эндпоинтов активно
+- Вам нужно проверить настройки HTTP-клиента или MCP-транспорта
 
-## Syntax
+## Синтаксис
 
 ```bash
 swag2mcp info [path]
 ```
 
-## Arguments
+## Аргументы
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Аргумент | Позиция | Обязательно | Описание |
+|----------|----------|-------------|----------|
+| `path` | 1 | Нет | Директория рабочей области. Если не указан, разрешается по правилам разрешения пути. |
 
-## Flags
+## Флаги
 
-None.
+Нет.
 
-## How it works
+## Как это работает
 
 ```bash
 swag2mcp info
 swag2mcp info ./my-workspace
 ```
 
-## Output
+## Вывод
 
-The output is a JSON object with the following structure:
+Вывод представляет собой JSON-объект следующей структуры:
 
 ```json
 {
@@ -68,13 +68,13 @@ The output is a JSON object with the following structure:
 }
 ```
 
-## Post-command verification
+## Проверка после команды
 
-Use `info` to confirm that the workspace loaded correctly and all specs are active before starting the MCP server.
+Используйте `info`, чтобы убедиться, что рабочая область загружена правильно и все спецификации активны перед запуском MCP-сервера.
 
-## Nuances
+## Нюансы
 
-- **Auto-init:** If no config file exists, `info` automatically runs the init wizard first.
-- **JSON only:** The output is always JSON. For human-readable output, use `ls`.
-- **`max_response_size`:** Shown in human-readable format (e.g., `"1 KB"`, `"2 MB"`).
-- **No full-text index:** `info` disables full-text indexing since it only needs config and spec metadata.
+- **Автоинициализация:** Если файл конфигурации не существует, `info` автоматически запускает мастер инициализации.
+- **Только JSON:** Вывод всегда в формате JSON. Для человекочитаемого вывода используйте `ls`.
+- **`max_response_size`:** Отображается в человекочитаемом формате (например, `"1 KB"`, `"2 MB"`).
+- **Нет полнотекстового индекса:** `info` отключает полнотекстовую индексацию, так как ему нужны только конфиг и метаданные спецификаций.

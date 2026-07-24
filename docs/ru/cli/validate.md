@@ -1,35 +1,35 @@
 # validate
 
-## Purpose
+## Назначение
 
-Check the configuration file and all referenced spec files for errors. This is a **read-only** diagnostic command — it never modifies anything.
+Проверить файл конфигурации и все указанные в нём файлы спецификаций на наличие ошибок. Это **диагностическая команда только для чтения** — она никогда ничего не изменяет.
 
-## When to use
+## Когда использовать
 
-- After editing `swag2mcp.yaml` manually
-- Before running `mcp` or `update` to catch issues early
-- When troubleshooting why a spec isn't loading
-- In CI/CD pipelines to validate configuration changes
+- После ручного редактирования `swag2mcp.yaml`
+- Перед запуском `mcp` или `update` для раннего выявления проблем
+- При диагностике, почему спецификация не загружается
+- В CI/CD пайплайнах для проверки изменений конфигурации
 
-## Syntax
+## Синтаксис
 
 ```bash
 swag2mcp validate [path] [flags]
 ```
 
-## Arguments
+## Аргументы
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Аргумент | Позиция | Обязательно | Описание |
+|----------|----------|-------------|----------|
+| `path` | 1 | Нет | Директория рабочей области. Если не указан, разрешается по правилам разрешения пути. |
 
-## Flags
+## Флаги
 
-| Flag | Shorthand | Type | Default | Description |
+| Флаг | Сокращение | Тип | По умолчанию | Описание |
 |------|-----------|------|---------|-------------|
-| `--tags` | `-t` | `string` | `""` | Validate only specs with matching tags (comma-separated) |
+| `--tags` | `-t` | `string` | `""` | Проверять только спецификации с указанными тегами (через запятую) |
 
-## How it works
+## Как это работает
 
 ```bash
 swag2mcp validate
@@ -37,29 +37,29 @@ swag2mcp validate ./my-workspace
 swag2mcp validate --tags=public
 ```
 
-## What is checked
+## Что проверяется
 
-| Check | Description |
+| Проверка | Описание |
 |-------|-------------|
-| YAML syntax | The config file must be valid YAML |
-| Config structure | All required fields present, types are correct |
-| Domain uniqueness | No duplicate domains |
-| Domain format | Lowercase, digits, hyphens only |
-| Spec file existence | The `location` file or URL must be reachable |
-| Spec format | The file must be valid OpenAPI 3.x, Swagger 2.0, or Postman collection |
-| Auth settings | Auth type and config are valid for the selected method |
-| HTTP client | HTTP client settings are valid |
+| Синтаксис YAML | Файл конфигурации должен быть валидным YAML |
+| Структура конфига | Все обязательные поля присутствуют, типы корректны |
+| Уникальность доменов | Нет дублирующихся доменов |
+| Формат домена | Только строчные буквы, цифры, дефисы |
+| Существование файла спецификации | Файл или URL `location` должен быть доступен |
+| Формат спецификации | Файл должен быть валидным OpenAPI 3.x, Swagger 2.0 или Postman |
+| Настройки аутентификации | Тип и конфиг auth корректны для выбранного метода |
+| HTTP-клиент | Настройки HTTP-клиента валидны |
 
-## What is NOT checked
+## Что НЕ проверяется
 
-| Not checked | Reason |
+| Не проверяется | Причина |
 |-------------|--------|
-| Authentication endpoints | `validate` checks auth config syntax but does not test login/token exchange |
-| API endpoint availability | Only the spec file URL is checked, not the `base_url` |
-| `base_url` correctness | Format is validated, but no test request is made |
-| Mock server configuration | `base_mock_url` is not verified for connectivity |
+| Эндпоинты аутентификации | `validate` проверяет синтаксис конфига auth, но не тестирует вход/обмен токенов |
+| Доступность API-эндпоинтов | Проверяется только URL файла спецификации, а не `base_url` |
+| Корректность `base_url` | Формат проверяется, но тестовый запрос не выполняется |
+| Конфигурация mock-сервера | `base_mock_url` не проверяется на доступность |
 
-## Example output
+## Пример вывода
 
 ```
 ✅ Configuration is valid.
@@ -68,12 +68,12 @@ swag2mcp validate --tags=public
 ✗ Spec old-api: file not found
 ```
 
-## Post-command verification
+## Проверка после команды
 
-If validation passes, the configuration is ready for `mcp`, `update`, or `run`.
+Если проверка пройдена, конфигурация готова для `mcp`, `update` или `run`.
 
-## Nuances
+## Нюансы
 
-- **No auto-init:** Unlike `add`, `ls`, or `run`, `validate` does **not** auto-initialize if the config is missing. It returns an error: `"configuration not found at <path>"`.
-- **Network access:** Remote spec URLs are fetched during validation. The command may take longer if specs are hosted on slow servers.
-- **Tag filtering:** When `--tags` is set, only specs matching the specified tags are validated. Other specs are skipped.
+- **Нет автоинициализации:** В отличие от `add`, `ls` или `run`, `validate` **не** выполняет автоинициализацию, если конфиг отсутствует. Он возвращает ошибку: `"configuration not found at <path>"`.
+- **Сетевой доступ:** Удалённые URL спецификаций загружаются во время проверки. Команда может выполняться дольше, если спецификации размещены на медленных серверах.
+- **Фильтрация по тегам:** Когда указан `--tags`, проверяются только спецификации, соответствующие указанным тегам. Остальные пропускаются.

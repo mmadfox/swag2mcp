@@ -1,63 +1,63 @@
 # update
 
-## Purpose
+## Назначение
 
-Re-validate the configuration, clear the cache, and re-download all spec files. This is a **full refresh** of the workspace — it ensures all cached specs are up to date and the index is rebuilt.
+Повторно проверить конфигурацию, очистить кэш и перезагрузить все файлы спецификаций. Это **полное обновление** рабочей области — оно гарантирует, что все кэшированные спецификации актуальны, а индекс перестроен.
 
-## When to use
+## Когда использовать
 
-- Remote spec files have changed and you want the latest version
-- After editing `swag2mcp.yaml` to add or change spec locations
-- When troubleshooting stale or corrupted cache
-- Before running `mcp` to ensure everything is fresh
+- Удалённые файлы спецификаций изменились, и вы хотите получить последнюю версию
+- После редактирования `swag2mcp.yaml` для добавления или изменения location спецификаций
+- При диагностике проблем с устаревшим или повреждённым кэшем
+- Перед запуском `mcp` для обеспечения свежести всех данных
 
-## Syntax
+## Синтаксис
 
 ```bash
 swag2mcp update [path]
 ```
 
-## Arguments
+## Аргументы
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Аргумент | Позиция | Обязательно | Описание |
+|----------|----------|-------------|----------|
+| `path` | 1 | Нет | Директория рабочей области. Если не указан, разрешается по правилам разрешения пути. |
 
-## Flags
+## Флаги
 
-None.
+Нет.
 
-## How it works
+## Как это работает
 
-The `update` command runs a pipeline of operations:
+Команда `update` выполняет конвейер операций:
 
-1. **Load config** — reads `swag2mcp.yaml` from the workspace
-2. **Validate** — runs the same checks as `validate` (YAML syntax, structure, spec file reachability, format, auth, HTTP client)
-3. **Clean** — removes all contents of `cache/` and `responses/`
-4. **Re-cache** — downloads all remote spec files and copies local spec files into the cache
-5. **Re-index** — rebuilds the full-text search index for all endpoints
-6. **Auth scripts** — creates stub auth scripts for specs using `ScriptAuth`
-7. **Orphan cleanup** — removes auth scripts for specs that no longer exist
+1. **Загрузка конфига** — читает `swag2mcp.yaml` из рабочей области
+2. **Проверка** — выполняет те же проверки, что и `validate` (синтаксис YAML, структура, доступность файлов спецификаций, формат, auth, HTTP-клиент)
+3. **Очистка** — удаляет всё содержимое `cache/` и `responses/`
+4. **Перекэширование** — загружает все удалённые файлы спецификаций и копирует локальные файлы в кэш
+5. **Переиндексация** — перестраивает индекс полнотекстового поиска для всех эндпоинтов
+6. **Скрипты аутентификации** — создаёт скрипты-заглушки для спецификаций, использующих `ScriptAuth`
+7. **Очистка осиротевших скриптов** — удаляет скрипты аутентификации для спецификаций, которые больше не существуют
 
 ```bash
 swag2mcp update
 swag2mcp update ./my-workspace
 ```
 
-## What happens to disabled collections
+## Что происходит с отключёнными коллекциями
 
-Collections with `disable: true` are skipped entirely — they are not cached or indexed.
+Коллекции с `disable: true` полностью пропускаются — они не кэшируются и не индексируются.
 
-## Post-command verification
+## Проверка после команды
 
 ```bash
 swag2mcp ls [path]
-# All specs should still be listed and reachable
+# Все спецификации должны по-прежнему отображаться и быть доступными
 ```
 
-## Nuances
+## Нюансы
 
-- **No auto-init:** If the config file does not exist, `update` returns an error: `"configuration not found at <path>"`. Run `init` first.
-- **Network dependency:** All remote spec URLs must be reachable. If any download fails, the entire update fails with a clear error message.
-- **Auth script creation:** If a spec uses `ScriptAuth` and the stub script doesn't exist, `update` creates it. If creation fails, the update fails.
-- **`update` vs `clean`:** `clean` only removes cache. `update` removes cache **and** re-downloads everything. Use `clean` when you just want to free space; use `update` when you want to refresh.
+- **Нет автоинициализации:** Если файл конфигурации не существует, `update` возвращает ошибку: `"configuration not found at <path>"`. Сначала выполните `init`.
+- **Сетевая зависимость:** Все удалённые URL спецификаций должны быть доступны. Если какая-либо загрузка не удалась, весь update завершается ошибкой с понятным сообщением.
+- **Создание скриптов аутентификации:** Если спецификация использует `ScriptAuth` и скрипт-заглушка не существует, `update` создаёт его. Если создание не удалось, update завершается ошибкой.
+- **`update` vs `clean`:** `clean` только удаляет кэш. `update` удаляет кэш **и** перезагружает всё. Используйте `clean`, когда нужно просто освободить место; используйте `update`, когда нужно обновить данные.

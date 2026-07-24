@@ -1,44 +1,44 @@
 # Endpoints
 
-An endpoint is a specific HTTP method + path that can be invoked (e.g., `GET /api/users/{id}`). Endpoints are the actual API operations that the LLM discovers, inspects, and calls.
+エンドポイントは、呼び出し可能な特定の HTTP メソッド + パスです（例：`GET /api/users/{id}`）。エンドポイントは、LLM が発見、調査、呼び出しする実際の API 操作です。
 
-## Structure
+## 構造
 
-Each endpoint contains:
+各エンドポイントには以下が含まれます：
 
-- **HTTP method**: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS
-- **Path**: `/api/v1/users/{id}`
-- **Summary**: a short description of what the endpoint does — very useful for the LLM to understand its purpose at a glance
-- **Description**: a detailed explanation of the endpoint's behavior, parameters, and use cases
-- **Parameters**: path, query, header, cookie
-- **Request body**: for POST/PUT/PATCH
-- **Responses**: status codes and response schemas
+- **HTTP メソッド**: GET、POST、PUT、PATCH、DELETE、HEAD、OPTIONS
+- **パス**: `/api/v1/users/{id}`
+- **サマリー**: エンドポイントの機能の短い説明 — LLM が一目で目的を理解するのに非常に便利
+- **説明**: エンドポイントの動作、パラメーター、ユースケースの詳細な説明
+- **パラメーター**: パス、クエリ、ヘッダー、Cookie
+- **リクエストボディ**: POST/PUT/PATCH 用
+- **レスポンス**: ステータスコードとレスポンススキーマ
 
-The `summary` and `description` fields come from the OpenAPI/Swagger/Postman file. They are the primary way the LLM understands what an endpoint does. Well-written summaries make endpoint discovery much more effective.
+`summary` と `description` フィールドは OpenAPI/Swagger/Postman ファイルから取得されます。これらは LLM がエンドポイントの機能を理解する主要な手段です。適切に書かれたサマリーは、エンドポイントの発見をより効果的にします。
 
-## MCP Tools for Endpoints
+## Endpoint 用 MCP ツール
 
-| Tool | Description |
-|------|-------------|
-| `endpoint_by_spec` | All endpoints in a spec |
-| `endpoint_by_collection` | Endpoints in a collection |
-| `endpoint_by_tag` | Endpoints in a tag |
-| `endpoint_by_id` | Quick endpoint summary |
-| `inspect` | Full endpoint details (schemas, params) |
-| `invoke` | Call the endpoint |
-| `search` | Search endpoints by text |
+| ツール | 説明 |
+|-------|------|
+| `endpoint_by_spec` | spec 内のすべてのエンドポイント |
+| `endpoint_by_collection` | collection 内のエンドポイント |
+| `endpoint_by_tag` | タグ内のエンドポイント |
+| `endpoint_by_id` | クイックエンドポイントサマリー |
+| `inspect` | 完全なエンドポイント詳細（スキーマ、パラメーター） |
+| `invoke` | エンドポイントの呼び出し |
+| `search` | テキストでエンドポイントを検索 |
 
-## Deprecated Endpoints
+## 非推奨のエンドポイント
 
-Endpoints marked as `deprecated` in the spec are shown with a notice when inspected.
+spec で `deprecated` とマークされたエンドポイントは、調査時に通知とともに表示されます。
 
-## Configuration
+## 設定
 
-Endpoints are **read-only** from swag2mcp's perspective. There are no YAML config settings for endpoints — you cannot add, remove, rename, or modify them in `swag2mcp.yaml`.
+エンドポイントは swag2mcp の観点からは**読み取り専用**です。エンドポイント用の YAML 設定はありません — `swag2mcp.yaml` でエンドポイントを追加、削除、名前変更、変更することはできません。
 
-To change endpoints (add new ones, update summaries, modify parameters, mark as deprecated), edit the original OpenAPI/Swagger/Postman file and run `swag2mcp update` to re-parse and re-index.
+エンドポイントを変更するには（新しいものの追加、サマリーの更新、パラメーターの変更、非推奨のマーク）、元の OpenAPI/Swagger/Postman ファイルを編集し、`swag2mcp update` を実行して再解析と再インデックス化を行います。
 
-## Example
+## 例
 
 ```
 Query: "Show details for GET /pet/{petId}"

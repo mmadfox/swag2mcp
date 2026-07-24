@@ -1,18 +1,18 @@
-# None
+# なし
 
-## Purpose
+## 目的
 
-No authentication required. The API is accessible without tokens or keys.
+認証不要。API はトークンやキーなしでアクセス可能。
 
-## When to use
+## 使用するタイミング
 
-- Public APIs (Open-Meteo, icanhazdadjoke, PokéAPI)
-- Test and demo environments
-- When the API does not require authorization
+- 公開 API（Open-Meteo、icanhazdadjoke、PokéAPI）
+- テストおよびデモ環境
+- API が認証を必要としない場合
 
-## Configuration
+## 設定
 
-Set `type: none` or simply omit the `auth` section:
+`type: none` を設定するか、単に `auth` セクションを省略します：
 
 ```yaml
 specs:
@@ -26,11 +26,11 @@ specs:
       type: none
 ```
 
-## Parameters
+## パラメーター
 
-None.
+なし。
 
-## Notes
+## 注意点
 
-- If the `auth` section is completely absent from the config, it is equivalent to `type: none`
-- No authorization headers are added to requests
+- 設定から `auth` セクションが完全に存在しない場合、`type: none` と同等です
+- リクエストに認証ヘッダーは追加されません

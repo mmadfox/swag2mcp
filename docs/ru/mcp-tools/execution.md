@@ -1,52 +1,52 @@
-# Execution Tools
+# Инструменты выполнения
 
-Execution tools are the core of swag2mcp: **search** finds endpoints when you don't have an ID, **inspect** reveals the full OpenAPI contract, and **invoke** makes the actual API call. Always use them in this order: search → inspect → invoke.
+Инструменты выполнения — ядро swag2mcp: **search** находит эндпоинты, когда нет ID, **inspect** раскрывает полный контракт OpenAPI, а **invoke** выполняет фактический API-вызов. Всегда используйте их в этом порядке: search → inspect → invoke.
 
 ---
 
 ## search
 
-### Purpose
+### Назначение
 
-The only tool for finding endpoints when you don't have an endpoint ID. Performs full-text search across all endpoints in all specs using the bluge search engine.
+Единственный инструмент для поиска эндпоинтов, когда нет ID эндпоинта. Выполняет полнотекстовый поиск по всем эндпоинтам во всех спецификациях с использованием поискового движка bluge.
 
-### When to use
+### Когда использовать
 
-- When you don't know the endpoint ID
-- When you want to find endpoints by keywords, method, tag, or path
-- When you need to discover what endpoints exist for a specific feature
+- Когда неизвестен ID эндпоинта
+- Когда нужно найти эндпоинты по ключевым словам, методу, тегу или пути
+- Когда нужно обнаружить, какие эндпоинты существуют для конкретной функции
 
-### How it works
+### Как работает
 
-Searches the full-text index across all specs. Supports structured queries with field filters, boolean operators, fuzzy matching, wildcards, and more.
+Поиск по полнотекстовому индексу всех спецификаций. Поддерживает структурированные запросы с фильтрами полей, булевыми операторами, нечётким поиском, подстановочными знаками и многим другим.
 
-### Parameters
+### Параметры
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `query` | string | Yes | Search query (supports structured syntax) |
-| `limit` | int | Yes | Maximum results to return (1-50) |
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `query` | string | Да | Поисковый запрос (поддерживает структурированный синтаксис) |
+| `limit` | int | Да | Максимальное количество результатов (1-50) |
 
-### Query syntax
+### Синтаксис запросов
 
-| Example | Description |
-|---------|-------------|
-| `pet` | Simple text search across all fields |
-| `method:GET` | Filter by HTTP method |
-| `tag:pet` | Filter by tag name |
-| `path:"/api/v1/users"` | Exact path search |
-| `+method:POST +tag:pet` | Must match both conditions |
-| `-method:DELETE` | Exclude DELETE methods |
-| `create~` | Fuzzy search (typo-tolerant) |
-| `path:/api/v1/*` | Wildcard path search |
-| `/pattern/` | Regex search |
-| `term^3` | Boost a term's relevance |
+| Пример | Описание |
+|--------|----------|
+| `pet` | Простой текстовый поиск по всем полям |
+| `method:GET` | Фильтр по HTTP-методу |
+| `tag:pet` | Фильтр по имени тега |
+| `path:"/api/v1/users"` | Точный поиск по пути |
+| `+method:POST +tag:pet` | Должны совпадать оба условия |
+| `-method:DELETE` | Исключить DELETE-методы |
+| `create~` | Нечёткий поиск (устойчив к опечаткам) |
+| `path:/api/v1/*` | Поиск по пути с подстановочным знаком |
+| `/pattern/` | Регулярное выражение |
+| `term^3` | Повышение релевантности термина |
 
-**Searchable fields:** `method` (keyword), `tag` (keyword), `path` (text), `summary` (text), `_all` (default text field).
+**Поисковые поля:** `method` (ключевое слово), `tag` (ключевое слово), `path` (текст), `summary` (текст), `_all` (поле текста по умолчанию).
 
-**Not supported:** parentheses for grouping, explicit `AND`/`OR` operators, field grouping.
+**Не поддерживается:** круглые скобки для группировки, явные операторы `AND`/`OR`, группировка полей.
 
-### Response
+### Ответ
 
 ```json
 {
@@ -67,41 +67,41 @@ Searches the full-text index across all specs. Supports structured queries with 
 }
 ```
 
-Each result includes the full ancestry (spec → collection → tag) so the LLM can navigate to related endpoints.
+Каждый результат включает полную родословную (спецификация → коллекция → тег), чтобы LLM мог навигировать к связанным эндпоинтам.
 
-### Nuances
+### Нюансы
 
-- `limit` must be between 1 and 50 (returns `validation_failed` otherwise)
-- `query` is required (returns `validation_failed` if empty)
-- Results are returned in relevance order (best match first)
-- Use field filters (`method:GET`, `tag:pet`) to narrow results
-- For exact path matching, use quotes: `path:"/v1/forecast"`
+- `limit` должен быть от 1 до 50 (иначе возвращает `validation_failed`)
+- `query` обязателен (возвращает `validation_failed`, если пустой)
+- Результаты возвращаются в порядке релевантности (лучшее совпадение первым)
+- Используйте фильтры полей (`method:GET`, `tag:pet`) для сужения результатов
+- Для точного совпадения пути используйте кавычки: `path:"/v1/forecast"`
 
 ---
 
 ## inspect
 
-### Purpose
+### Назначение
 
-Retrieve the full OpenAPI operation object for an endpoint: all parameters, request body schema, response schemas, base URL, and full URL. This is the tool to call **before** `invoke` to understand the endpoint's contract.
+Получение полного объекта OpenAPI-операции для эндпоинта: все параметры, схема тела запроса, схемы ответов, базовый URL и полный URL. Этот инструмент нужно вызывать **перед** `invoke` для понимания контракта эндпоинта.
 
-### When to use
+### Когда использовать
 
-- Always before `invoke` — you need the full contract to make a correct call
-- When you need to explain an API's technical details to the user
-- When you need to know required parameters, request body structure, or response format
+- Всегда перед `invoke` — нужен полный контракт для корректного вызова
+- Когда нужно объяснить пользователю технические детали API
+- Когда нужно узнать обязательные параметры, структуру тела запроса или формат ответа
 
-### How it works
+### Как работает
 
-Looks up the endpoint in the index and returns the complete OpenAPI operation object with all schemas resolved.
+Ищет эндпоинт в индексе и возвращает полный объект OpenAPI-операции со всеми разрешёнными схемами.
 
-### Parameters
+### Параметры
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `endpointId` | string | Yes | 32-character MD5 hash of the endpoint |
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `endpointId` | string | Да | 32-символьный MD5-хеш эндпоинта |
 
-### Response
+### Ответ
 
 ```json
 {
@@ -167,58 +167,58 @@ Looks up the endpoint in the index and returns the complete OpenAPI operation ob
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `baseUrl` | string | Base URL of the API (from config) |
-| `fullUrl` | string | Full URL of the endpoint (base + path) |
-| `operation.parameters[]` | array | Parameters with name, location (path/query/header/cookie), description, required flag, and schema |
-| `operation.requestBody` | object | Request body with content type and schema |
-| `operation.responses` | map | Response codes with descriptions and schemas |
-| `operation.deprecated` | bool | Whether the endpoint is deprecated |
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `baseUrl` | string | Базовый URL API (из конфига) |
+| `fullUrl` | string | Полный URL эндпоинта (base + path) |
+| `operation.parameters[]` | array | Параметры с именем, расположением (path/query/header/cookie), описанием, флагом обязательности и схемой |
+| `operation.requestBody` | object | Тело запроса с типом контента и схемой |
+| `operation.responses` | map | Коды ответов с описаниями и схемами |
+| `operation.deprecated` | bool | Является ли эндпоинт устаревшим |
 
-### Nuances
+### Нюансы
 
-- Returns `not_found` if the endpoint does not exist
-- This is the **only** tool that returns the full OpenAPI operation — `endpoint_by_id` returns only a summary
-- Always call `inspect` before `invoke` to understand required parameters and body structure
-- The `operation` object includes `$ref` references that are resolved to their full schema definitions
+- Возвращает `not_found`, если эндпоинт не существует
+- Это **единственный** инструмент, возвращающий полную OpenAPI-операцию — `endpoint_by_id` возвращает только сводку
+- Всегда вызывайте `inspect` перед `invoke` для понимания обязательных параметров и структуры тела
+- Объект `operation` включает ссылки `$ref`, которые разрешаются в полные определения схем
 
 ---
 
 ## invoke
 
-### Purpose
+### Назначение
 
-Execute a real API call to an endpoint. This is the only tool that makes actual HTTP requests. Auth is applied automatically — you do not need to call `auth` first.
+Выполнение реального API-вызова к эндпоинту. Это единственный инструмент, который выполняет фактические HTTP-запросы. Аутентификация применяется автоматически — не нужно вызывать `auth` заранее.
 
-### When to use
+### Когда использовать
 
-- Only after calling `inspect` to understand the endpoint's contract
-- Only with explicit user confirmation for destructive operations (POST, PUT, PATCH, DELETE)
-- When the user asks to call an API and you have all required parameters
+- Только после вызова `inspect` для понимания контракта эндпоинта
+- Только с явным подтверждением пользователя для деструктивных операций (POST, PUT, PATCH, DELETE)
+- Когда пользователь просит вызвать API и у вас есть все обязательные параметры
 
-### How it works
+### Как работает
 
-1. Looks up the endpoint in the index
-2. Substitutes path parameters into the URL
-3. Appends query parameters
-4. Adds headers and cookies
-5. Serializes the request body as JSON
-6. Automatically obtains and applies auth (token, headers, query params)
-7. Makes the HTTP request
-8. Returns the response or saves it to a file if too large
+1. Ищет эндпоинт в индексе
+2. Подставляет path-параметры в URL
+3. Добавляет query-параметры
+4. Добавляет заголовки и cookies
+5. Сериализует тело запроса в JSON
+6. Автоматически получает и применяет аутентификацию (токен, заголовки, query-параметры)
+7. Выполняет HTTP-запрос
+8. Возвращает ответ или сохраняет его в файл, если слишком большой
 
-### Parameters
+### Параметры
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `endpointId` | string | Yes | 32-character MD5 hash of the endpoint |
-| `parameters` | object | No | Path, query, and header parameters as key-value pairs |
-| `requestBody` | object | No | Request body for POST/PUT/PATCH requests |
-| `headers` | object | No | Additional HTTP headers to send |
-| `cookies` | object | No | Additional HTTP cookies to send |
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `endpointId` | string | Да | 32-символьный MD5-хеш эндпоинта |
+| `parameters` | object | Нет | Path-, query- и header-параметры в виде пар ключ-значение |
+| `requestBody` | object | Нет | Тело запроса для POST/PUT/PATCH-запросов |
+| `headers` | object | Нет | Дополнительные HTTP-заголовки |
+| `cookies` | object | Нет | Дополнительные HTTP-cookies |
 
-### Response (inline)
+### Ответ (встроенный)
 
 ```json
 {
@@ -234,7 +234,7 @@ Execute a real API call to an endpoint. This is the only tool that makes actual 
 }
 ```
 
-### Response (file reference — when body exceeds size limit)
+### Ответ (ссылка на файл — когда тело превышает лимит размера)
 
 ```json
 {
@@ -253,27 +253,27 @@ Execute a real API call to an endpoint. This is the only tool that makes actual 
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `statusCode` | int | HTTP response status code |
-| `headers` | object | HTTP response headers |
-| `body` | any | Response body (present when within size limit) |
-| `fileRef` | object | File reference (present when body exceeds size limit) |
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `statusCode` | int | HTTP-код статуса ответа |
+| `headers` | object | HTTP-заголовки ответа |
+| `body` | any | Тело ответа (присутствует, когда в пределах лимита размера) |
+| `fileRef` | object | Ссылка на файл (присутствует, когда тело превышает лимит размера) |
 
-### Working with large responses
+### Работа с большими ответами
 
-When `invoke` returns a `fileRef`, use the response tools to explore the data:
+Когда `invoke` возвращает `fileRef`, используйте инструменты для работы с ответами:
 
-1. **`response_outline(path)`** — get the structural summary (keys, types, array lengths)
-2. **`response_compress(path, mode)`** — compress the data to fit inline
-3. **`response_slice(path, jsonPath)`** — extract a specific fragment
+1. **`response_outline(path)`** — получение структурной сводки (ключи, типы, длины массивов)
+2. **`response_compress(path, mode)`** — сжатие данных для встраивания в строку
+3. **`response_slice(path, jsonPath)`** — извлечение конкретного фрагмента
 
-### Nuances
+### Нюансы
 
-- **Auth is automatic:** The `invoke` tool automatically obtains and applies authentication from the spec's auth configuration. You do **not** need to call `auth` first.
-- **Rate limiting:** Each endpoint has a 10-second cooldown. A second call to the same endpoint within 10 seconds is silently blocked (returns `rate_limit` error).
-- **Response size limit:** Default is 2 KB (configurable via `max_response_size`). If the response exceeds this limit, it is saved to `{workspace}/responses/` and a `FileReference` is returned instead of inline `body`.
-- **Parameter handling:** Path parameters are substituted into the URL. Query parameters are appended. Parameters from the request override operation spec defaults.
-- **Request body:** For POST/PUT/PATCH, the body is serialized as JSON. `Content-Type` is set to `application/json` automatically.
-- **Error handling:** HTTP errors (non-2xx) are returned as `invoke_error` with the status code and response body in the hint.
-- **Destructive operations:** Never invoke POST/PUT/PATCH/DELETE without explicit user confirmation.
+- **Аутентификация автоматическая:** Инструмент `invoke` автоматически получает и применяет аутентификацию из конфигурации спецификации. Не нужно вызывать `auth` заранее.
+- **Ограничение частоты:** Каждый эндпоинт имеет 10-секундную задержку. Второй вызов того же эндпоинта в течение 10 секунд молча блокируется (возвращает ошибку `rate_limit`).
+- **Лимит размера ответа:** По умолчанию 2 КБ (настраивается через `max_response_size`). Если ответ превышает этот лимит, он сохраняется в `{workspace}/responses/` и возвращается `FileReference` вместо встроенного `body`.
+- **Обработка параметров:** Path-параметры подставляются в URL. Query-параметры добавляются. Параметры из запроса переопределяют значения по умолчанию из спецификации операции.
+- **Тело запроса:** Для POST/PUT/PATCH тело сериализуется в JSON. `Content-Type` устанавливается в `application/json` автоматически.
+- **Обработка ошибок:** HTTP-ошибки (не 2xx) возвращаются как `invoke_error` с кодом статуса и телом ответа в подсказке.
+- **Деструктивные операции:** Никогда не вызывайте POST/PUT/PATCH/DELETE без явного подтверждения пользователя.

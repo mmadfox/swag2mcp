@@ -1,17 +1,17 @@
-# Bearer Auth
+# Bearer 認証
 
-## Purpose
+## 目的
 
-Bearer Token authentication — the most common method for modern REST APIs. The token is sent in the `Authorization: Bearer <token>` header.
+Bearer トークン認証 — 最新の REST API で最も一般的な方法。トークンは `Authorization: Bearer <token>` ヘッダーで送信されます。
 
-## When to use
+## 使用するタイミング
 
-- Modern REST APIs
-- JWT (JSON Web Tokens)
-- OAuth2 access tokens (when the token is already obtained)
-- Any API that accepts a Bearer Token
+- 最新の REST API
+- JWT（JSON Web Token）
+- OAuth2 アクセストークン（トークンが既に取得されている場合）
+- Bearer トークンを受け付ける任意の API
 
-## Configuration
+## 設定
 
 ```yaml
 specs:
@@ -27,14 +27,14 @@ specs:
         token: "eyJhbGciOiJIUzI1NiIs..."
 ```
 
-## Parameters
+## パラメーター
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `token` | Yes | Bearer token (JWT, OAuth2 token, etc.) |
+| パラメーター | 必須 | 説明 |
+|-----------|------|------|
+| `token` | はい | Bearer トークン（JWT、OAuth2 トークンなど） |
 
-## Notes
+## 注意点
 
-- The token is static — if it expires, you need to update it in the config manually
-- For automatic token refresh, use `oauth2-cc` or `oauth2-pwd`
-- Store the token in an environment variable: `token: "$(API_TOKEN)"`
+- トークンは静的です — 期限切れになった場合、設定で手動で更新する必要があります
+- 自動トークン更新には `oauth2-cc` または `oauth2-pwd` を使用してください
+- トークンは環境変数に保存：`token: "$(API_TOKEN)"`

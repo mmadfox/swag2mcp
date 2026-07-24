@@ -1,49 +1,49 @@
-# Building
+# 构建
 
-## Requirements
+## 要求
 
 - Go 1.26+
 - Make
 
-## Commands
+## 命令
 
 ```bash
-# Build
+# 构建
 make build
 
-# Build with version
+# 带版本构建
 make build VERSION=1.0.0
 
-# Lint
+# 代码检查
 make lint
 
-# Tests
+# 测试
 go test ./...
 
-# All tests
+# 所有测试
 make testall
 ```
 
 ## GoReleaser
 
-For releases:
+用于发布：
 
 ```bash
 goreleaser release --snapshot --clean
 ```
 
-## Platforms
+## 平台
 
-| Platform | Architecture |
-|----------|-------------|
+| 平台 | 架构 |
+|------|------|
 | Linux | amd64, arm64 |
 | macOS | amd64, arm64 |
 | Windows | amd64 |
 
-## Lint
+## 代码检查
 
 ```bash
 make lint
 ```
 
-Uses `golangci-lint` with 80+ linters. Config in `.golangci.yml`.
+使用 `golangci-lint`，启用 80+ 个检查器。配置在 `.golangci.yml` 中。

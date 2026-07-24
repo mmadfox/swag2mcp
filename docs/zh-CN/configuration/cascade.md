@@ -1,21 +1,21 @@
-# Configuration Cascade
+# 配置级联
 
-swag2mcp uses a three-level configuration cascade. Each level overrides the previous. This lets you set sensible defaults globally and fine-tune settings for specific specs or collections.
+swag2mcp 使用三级配置级联。每个级别覆盖前一个级别。这让你可以在全局设置合理的默认值，并为特定 spec 或 collection 微调设置。
 
-## Levels
+## 级别
 
 ```
-Global (http_client, mcp, mock_enabled, disable_ratelimiter, rate_limit_interval)
-    ↓ overrides
+全局 (http_client, mcp, mock_enabled, disable_ratelimiter, rate_limit_interval)
+    ↓ 覆盖
 Spec (specs[].http_client, specs[].auth, specs[].base_url, specs[].disable, specs[].tags)
-    ↓ overrides
+    ↓ 覆盖
 Collection (specs[].collections[].http_client, specs[].collections[].base_url, specs[].collections[].disable)
 ```
 
-## What Overrides What
+## 覆盖关系
 
-| Parameter | Global | Spec | Collection |
-|-----------|--------|------|------------|
+| 参数 | 全局 | Spec | Collection |
+|------|------|------|------------|
 | `http_client.timeout` | ✅ | ✅ | ✅ |
 | `http_client.max_response_size` | ✅ | ✅ | ✅ |
 | `http_client.user_agent` | ✅ | ✅ | ✅ |
@@ -33,9 +33,9 @@ Collection (specs[].collections[].http_client, specs[].collections[].base_url, s
 | `disable_ratelimiter` | ✅ | ❌ | ❌ |
 | `rate_limit_interval` | ✅ | ❌ | ❌ |
 
-All `http_client` settings can be overridden at every level. Collection-level settings take full precedence over spec and global.
+所有 `http_client` 设置可以在每个级别覆盖。Collection 级别的设置完全优先于 spec 和全局。
 
-## Cascade Example
+## 级联示例
 
 ```yaml
 http_client:
@@ -49,43 +49,43 @@ specs:
     llm_title: Open-Meteo Weather APIs
     base_url: https://api.open-meteo.com
     http_client:
-      timeout: 60s  # overrides global timeout
+      timeout: 60s  # 覆盖全局超时
       headers:
-        "X-API-Version": "2"  # added to global headers
+        "X-API-Version": "2"  # 添加到全局头
     collections:
       - llm_title: Forecast
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
         http_client:
-          timeout: 120s  # overrides spec timeout
+          timeout: 120s  # 覆盖 spec 超时
           headers:
-            "X-Custom": "value"  # added to spec + global headers
+            "X-Custom": "value"  # 添加到 spec + 全局头
 ```
 
-## Effective Settings for "Forecast" Collection
+## "Forecast" Collection 的有效设置
 
 ```
-timeout: 120s (from collection, overrides spec 60s and global 30s)
-max_response_size: 1048576 (from global)
+timeout: 120s（来自 collection，覆盖 spec 的 60s 和全局的 30s）
+max_response_size: 1048576（来自全局）
 headers:
-  - User-Agent: swag2mcp/1.0 (from global)
-  - X-API-Version: 2 (from spec)
-  - X-Custom: value (from collection)
+  - User-Agent: swag2mcp/1.0（来自全局）
+  - X-API-Version: 2（来自 spec）
+  - X-Custom: value（来自 collection）
 ```
 
-## How Merging Works
+## 合并方式
 
-### HTTP Client Settings
+### HTTP 客户端设置
 
-Simple values (`timeout`, `max_response_size`, `user_agent`, `follow_redirects`, `max_redirects`, `random`) are **replaced** at each level. If a spec sets `timeout: 60s`, it completely replaces the global `30s`.
+简单值（`timeout`、`max_response_size`、`user_agent`、`follow_redirects`、`max_redirects`、`random`）在每个级别**替换**。如果 spec 设置 `timeout: 60s`，它完全替换全局的 `30s`。
 
-### Headers
+### 头
 
-Headers are **merged** across levels. All three levels' headers are combined. If the same header key appears at multiple levels, the lowest level wins.
+头在级别之间**合并**。所有三个级别的头被组合。如果相同的头键出现在多个级别，最低级别获胜。
 
-### Cookies
+### Cookie
 
-Cookies are **merged** across levels. If the same cookie name appears at multiple levels, the lowest level wins.
+Cookie 在级别之间**合并**。如果相同的 cookie 名称出现在多个级别，最低级别获胜。
 
-### Proxy
+### 代理
 
-Proxy is **replaced** at each level. If a spec sets a proxy, it completely replaces the global proxy for that spec.
+代理在每个级别**替换**。如果 spec 设置了代理，它完全替换该 spec 的全局代理。

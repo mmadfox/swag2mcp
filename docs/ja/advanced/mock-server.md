@@ -1,24 +1,24 @@
-# Mock Server
+# モックサーバー
 
-## Overview
+## 概要
 
-The mock server generates fake API responses based on your OpenAPI schemas. It lets you test your API integration without making real HTTP calls. This is useful for development, testing LLM agents, and demonstrations.
+モックサーバーは OpenAPI スキーマに基づいて偽の API レスポンスを生成します。実際の HTTP 呼び出しを行わずに API 統合をテストできます。開発、LLM エージェントのテスト、デモンストレーションに便利です。
 
-The mock server is a **separate binary** — `swag2mcp-mock`. It is not included in the main `swag2mcp` binary and must be installed separately.
+モックサーバーは**別のバイナリ** — `swag2mcp-mock` です。メインの `swag2mcp` バイナリには含まれておらず、別途インストールする必要があります。
 
-## Installation
+## インストール
 
 ```bash
-# Option 1: Download from GitHub Releases
-# Look for swag2mcp-mock_<version>_<os>_<arch>.tar.gz
+# オプション 1: GitHub Releases からダウンロード
+# swag2mcp-mock_<version>_<os>_<arch>.tar.gz を探す
 
-# Option 2: Install with Go
+# オプション 2: Go でインストール
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 ```
 
-## Configuration
+## 設定
 
-Enable the mock server in your config:
+設定でモックサーバーを有効にします：
 
 ```yaml
 mock_enabled: true
@@ -37,97 +37,97 @@ specs:
         base_mock_url: "127.0.0.1:9090"
 ```
 
-## Parameters
+## パラメーター
 
 ### mock_enabled
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Effect:** When `true`, every active collection must have `base_mock_url` set. The mock server starts HTTP servers for each collection.
+- **型:** `bool`
+- **デフォルト:** `false`
+- **効果:** `true` の場合、すべてのアクティブな collection に `base_mock_url` が設定されている必要があります。モックサーバーは各 collection の HTTP サーバーを起動します。
 
 ### mock_auth
 
-Ports for mock authentication servers. These simulate OAuth2, Digest, and HMAC auth endpoints so you can test authenticated APIs without real credentials.
+モック認証サーバーのポート。これらは OAuth2、Digest、HMAC 認証エンドポイントをシミュレートし、実際の認証情報なしで認証付き API をテストできます。
 
-| Field | Default | Description |
-|-------|---------|-------------|
-| `oauth2_port` | `9090` | Port for the mock OAuth2 token server |
-| `digest_port` | `9091` | Port for the mock Digest auth server |
-| `hmac_port` | `9092` | Port for the mock HMAC auth server |
+| フィールド | デフォルト | 説明 |
+|-----------|-----------|------|
+| `oauth2_port` | `9090` | モック OAuth2 トークンサーバーのポート |
+| `digest_port` | `9091` | モック Digest 認証サーバーのポート |
+| `hmac_port` | `9092` | モック HMAC 認証サーバーのポート |
 
-### base_mock_url (per collection)
+### base_mock_url（collection ごと）
 
-- **Type:** `string`
-- **Required:** Yes (when `mock_enabled: true`)
-- **Format:** `host:port` (e.g., `localhost:8080`, `127.0.0.1:9000`)
-- **Effect:** Each collection gets its own HTTP server on this address. The server responds to all endpoints defined in the spec with randomly generated data.
+- **型:** `string`
+- **必須:** はい（`mock_enabled: true` の場合）
+- **形式:** `host:port`（例：`localhost:8080`、`127.0.0.1:9000`）
+- **効果:** 各 collection はこのアドレスで独自の HTTP サーバーを取得します。サーバーは spec で定義されたすべてのエンドポイントにランダムに生成されたデータで応答します。
 
-## Starting the mock server
+## モックサーバーの起動
 
 ```bash
-# Start with default config
+# デフォルト設定で起動
 swag2mcp-mock mockserver
 
-# Start with TLS
+# TLS で起動
 swag2mcp-mock mockserver --tls
 
-# Start with custom TLS certificate
+# カスタム TLS 証明書で起動
 swag2mcp-mock mockserver --tls --tls-cert cert.pem --tls-key key.pem
 ```
 
-### TLS flags
+### TLS フラグ
 
-| Flag | Description |
-|------|-------------|
-| `--tls` | Enable TLS with a self-signed certificate |
-| `--tls-cert` | Path to TLS certificate file |
-| `--tls-key` | Path to TLS key file |
+| フラグ | 説明 |
+|-------|------|
+| `--tls` | 自己署名証明書で TLS を有効化 |
+| `--tls-cert` | TLS 証明書ファイルへのパス |
+| `--tls-key` | TLS キーファイルへのパス |
 
-If `--tls` is set without `--tls-cert` and `--tls-key`, a self-signed certificate is generated automatically for `localhost`.
+`--tls` が `--tls-cert` と `--tls-key` なしで設定された場合、`localhost` 用の自己署名証明書が自動的に生成されます。
 
-## What the mock server does
+## モックサーバーの動作
 
-When you start the mock server, it:
+モックサーバーを起動すると、次の処理が行われます：
 
-1. **Parses all spec files** — reads each collection's OpenAPI/Swagger spec
-2. **Registers handlers** — creates an HTTP handler for every path and method defined in the spec
-3. **Generates fake data** — responds with randomly generated data that matches the response schema (correct types, formats, and structure)
-4. **Starts auth servers** — simulates OAuth2, Digest, and HMAC auth endpoints for testing
+1. **すべての spec ファイルを解析** — 各 collection の OpenAPI/Swagger spec を読み取ります
+2. **ハンドラーを登録** — spec で定義されたすべてのパスとメソッドの HTTP ハンドラーを作成します
+3. **偽のデータを生成** — レスポンススキーマに一致するランダムに生成されたデータ（正しい型、形式、構造）で応答します
+4. **認証サーバーを起動** — テスト用に OAuth2、Digest、HMAC 認証エンドポイントをシミュレートします
 
-### Testing the mock
+### モックのテスト
 
 ```bash
-# In one terminal:
+# 1 つのターミナルで：
 swag2mcp-mock mockserver
 
-# In another terminal:
+# 別のターミナルで：
 curl http://localhost:8080/pets
 # → [{"id":1,"name":"Pet_name","status":"available"}]
 ```
 
-## How fake data is generated
+## 偽のデータの生成方法
 
-The mock server generates realistic fake data based on the OpenAPI schema:
+モックサーバーは OpenAPI スキーマに基づいて現実的な偽のデータを生成します：
 
-- **Strings** — random words, sentences, or format-specific values (email, URL, UUID, date, phone, etc.)
-- **Numbers** — random integers and floats within the specified range
-- **Booleans** — random true/false
-- **Arrays** — 1 to 3 random items
-- **Objects** — all properties filled with random values
-- **Enums** — random value from the enum list
-- **Nullable fields** — sometimes returns `null` (~10% chance)
+- **文字列** — ランダムな単語、文章、または形式固有の値（email、URL、UUID、日付、電話番号など）
+- **数値** — 指定された範囲内のランダムな整数と浮動小数点数
+- **ブール値** — ランダムな true/false
+- **配列** — 1〜3 個のランダムな項目
+- **オブジェクト** — すべてのプロパティがランダムな値で埋められます
+- **Enum** — enum リストからランダムな値
+- **Null 許容フィールド** — 時々 `null` を返します（約 10% の確率）
 
-## Use cases
+## ユースケース
 
-- **Development** — test your integration without real API access
-- **Testing LLM agents** — verify the LLM can discover, inspect, and invoke endpoints
-- **Demonstrations** — show swag2mcp working without configuring real APIs
-- **Load testing** — test the MCP server under load without hitting real APIs
+- **開発** — 実際の API アクセスなしで統合をテスト
+- **LLM エージェントのテスト** — LLM がエンドポイントを発見、調査、呼び出しできることを確認
+- **デモンストレーション** — 実際の API を設定せずに swag2mcp の動作を表示
+- **負荷テスト** — 実際の API にアクセスせずに MCP サーバーを負荷テスト
 
-## Important notes
+## 重要な注意点
 
-- **Separate binary** — `swag2mcp-mock` is not included in the main `swag2mcp` binary. Install it separately.
-- **Each collection gets its own port** — configure `base_mock_url` per collection
-- **Auth mock servers are global** — OAuth2, Digest, and HMAC servers run on the configured ports regardless of how many collections you have
-- **Spec parse failures are non-fatal** — if a collection's spec cannot be parsed, it is skipped with a warning
-- **Self-signed TLS** — when using `--tls` without certificates, a self-signed certificate is generated for localhost only
+- **別のバイナリ** — `swag2mcp-mock` はメインの `swag2mcp` バイナリに含まれていません。別途インストールしてください。
+- **各 collection に独自のポート** — collection ごとに `base_mock_url` を設定します
+- **認証モックサーバーはグローバル** — OAuth2、Digest、HMAC サーバーは collection の数に関係なく設定されたポートで実行されます
+- **Spec 解析の失敗は致命的ではありません** — collection の spec が解析できない場合、警告とともにスキップされます
+- **自己署名 TLS** — `--tls` を証明書なしで使用する場合、localhost のみの自己署名証明書が生成されます

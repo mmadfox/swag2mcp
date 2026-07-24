@@ -1,16 +1,16 @@
-# Response Size Management
+# Управление размером ответов
 
-## Overview
+## Обзор
 
-API responses can be very large — sometimes too large to fit in the LLM's context window. swag2mcp automatically manages response sizes by saving oversized responses to disk and providing tools to explore them.
+Ответы API могут быть очень большими — иногда слишком большими, чтобы поместиться в контекстном окне LLM. swag2mcp автоматически управляет размерами ответов, сохраняя слишком большие ответы на диск и предоставляя инструменты для их исследования.
 
-## How it works
+## Как это работает
 
-1. **You call `invoke`** — swag2mcp makes the API request
-2. **If the response is small** (within the limit) — it is returned inline to the LLM
-3. **If the response is too large** (exceeds the limit) — it is saved to `{workspace}/responses/` as a JSON file. The LLM receives a file reference instead of the full response
+1. **Вы вызываете `invoke`** — swag2mcp выполняет API-запрос
+2. **Если ответ маленький** (в пределах лимита) — он возвращается LLM напрямую
+3. **Если ответ слишком большой** (превышает лимит) — он сохраняется в `{workspace}/responses/` как JSON-файл. LLM получает ссылку на файл вместо полного ответа
 
-### Example: small response (inline)
+### Пример: маленький ответ (напрямую)
 
 ```json
 {
@@ -23,7 +23,7 @@ API responses can be very large — sometimes too large to fit in the LLM's cont
 }
 ```
 
-### Example: large response (file reference)
+### Пример: большой ответ (ссылка на файл)
 
 ```json
 {
@@ -33,35 +33,35 @@ API responses can be very large — sometimes too large to fit in the LLM's cont
     "size": 1572864,
     "sizeHint": "1.5 MB",
     "maxSizeHint": "2 KB",
-    "message": "Response exceeds the 2 KB limit and has been saved to disk.",
+    "message": "Ответ превышает лимит 2 КБ и был сохранён на диск.",
     "openCmd": "open /Users/user/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }
 ```
 
-## Configuration
+## Конфигурация
 
 ```yaml
 http_client:
-  max_response_size: 1048576  # 1 MB in bytes
+  max_response_size: 1048576  # 1 МБ в байтах
 ```
 
 ### max_response_size
 
-- **Type:** `int` (bytes)
-- **Default:** `1048576` (1 MB)
-- **Range:** 256 to 10,485,760 bytes (10 MB)
-- **Effect:** Responses larger than this are saved to disk instead of returned inline
-- **When to increase:** APIs that return large datasets (reports, logs, analytics)
-- **When to decrease:** Limited LLM context window, or when you prefer file-based access
+- **Тип:** `int` (байты)
+- **По умолчанию:** `1048576` (1 МБ)
+- **Диапазон:** от 256 до 10 485 760 байт (10 МБ)
+- **Эффект:** Ответы больше этого размера сохраняются на диск вместо возврата напрямую
+- **Когда увеличивать:** API, возвращающие большие наборы данных (отчёты, логи, аналитика)
+- **Когда уменьшать:** Ограниченный контекст LLM или когда вы предпочитаете файловый доступ
 
-## Working with large responses
+## Работа с большими ответами
 
-When `invoke` returns a `fileRef`, use these three tools to explore the data:
+Когда `invoke` возвращает `fileRef`, используйте эти три инструмента для исследования данных:
 
-### 1. response_outline — understand the structure
+### 1. response_outline — понять структуру
 
-Get a structural summary of the response: keys, types, array lengths, and navigation hints.
+Получить структурную сводку ответа: ключи, типы, длины массивов и подсказки по навигации.
 
 ```json
 → response_outline(path: "/path/to/file.json")
@@ -77,29 +77,29 @@ Get a structural summary of the response: keys, types, array lengths, and naviga
   }
 ```
 
-### 2. response_compress — get a smaller version
+### 2. response_compress — получить уменьшенную версию
 
-Compress the data to fit inline. Multiple compression modes let you choose the right trade-off.
+Сжать данные, чтобы они поместились напрямую. Несколько режимов сжатия позволяют выбрать правильный компромисс.
 
-| Mode | Description | Best for |
+| Режим | Описание | Для чего подходит |
 |------|-------------|----------|
-| `first_of_array` | Keep only the first element of an array | When all elements have the same structure |
-| `sample_array` | Keep head (3) and tail (2) of an array | When you need to see the range of values |
-| `truncate_strings` | Shorten every string to N characters | When strings are very long |
-| `keys_only` | Replace values with their type names | When you only need the structure |
-| `select_keys` | Keep only specified keys | When you need specific fields |
+| `first_of_array` | Оставить только первый элемент массива | Когда все элементы имеют одинаковую структуру |
+| `sample_array` | Оставить начало (3) и конец (2) массива | Когда нужно увидеть диапазон значений |
+| `truncate_strings` | Укоротить каждую строку до N символов | Когда строки очень длинные |
+| `keys_only` | Заменить значения на имена типов | Когда нужна только структура |
+| `select_keys` | Оставить только указанные ключи | Когда нужны конкретные поля |
 
 ```json
 → response_compress(path: "/path/to/file.json", mode: "first_of_array", jsonPath: "data")
 ← {
     "body": [{ "id": 1, "name": "Rex" }],
-    "hint": "Compressed array from 500 to 1 item using first_of_array mode"
+    "hint": "Массив сжат с 500 до 1 элемента с использованием режима first_of_array"
   }
 ```
 
-### 3. response_slice — extract a specific fragment
+### 3. response_slice — извлечь конкретный фрагмент
 
-Get a specific element or value by JSON path or line range.
+Получить конкретный элемент или значение по JSON-пути или диапазону строк.
 
 ```json
 → response_slice(path: "/path/to/file.json", jsonPath: "data.0")
@@ -113,27 +113,27 @@ Get a specific element or value by JSON path or line range.
   }
 ```
 
-## Complete workflow
+## Полный рабочий процесс
 
 ```
-1. invoke(endpoint) → fileRef (response is 1.5 MB)
-2. response_outline(path) → structure: { data: Array(500) }
-3. response_compress(path, mode: "first_of_array", jsonPath: "data") → first item
-4. response_slice(path, jsonPath: "data.0") → full first item details
-5. response_slice(path, jsonPath: "data.1") → second item
+1. invoke(endpoint) → fileRef (ответ 1.5 МБ)
+2. response_outline(path) → структура: { data: Array(500) }
+3. response_compress(path, mode: "first_of_array", jsonPath: "data") → первый элемент
+4. response_slice(path, jsonPath: "data.0") → полные детали первого элемента
+5. response_slice(path, jsonPath: "data.1") → второй элемент
 ```
 
-## Automatic cleanup
+## Автоматическая очистка
 
-When the MCP server starts (`swag2mcp mcp`), response files older than 48 hours are automatically removed. You can also clean them manually:
+При запуске MCP-сервера (`swag2mcp mcp`) файлы ответов старше 48 часов автоматически удаляются. Вы также можете очистить их вручную:
 
 ```bash
 swag2mcp clean
 ```
 
-## Important notes
+## Важные замечания
 
-- **The limit is in bytes** — `1048576` = 1 MB, `2097152` = 2 MB, etc.
-- **File references include an open command** — on macOS it's `open`, on Linux it's `xdg-open`
-- **Response files are named with random suffixes** — no conflicts between concurrent calls
-- **The responses directory is created automatically** — no manual setup needed
+- **Лимит в байтах** — `1048576` = 1 МБ, `2097152` = 2 МБ и т.д.
+- **Ссылки на файлы включают команду открытия** — на macOS это `open`, на Linux — `xdg-open`
+- **Файлы ответов именуются со случайными суффиксами** — нет конфликтов между параллельными вызовами
+- **Директория responses создаётся автоматически** — ручная настройка не требуется

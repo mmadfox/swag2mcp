@@ -1,70 +1,70 @@
 # clean
 
-## Purpose
+## 目的
 
-Remove cached remote specs and saved API invocation responses. This frees up disk space and forces a fresh download of spec files on the next `update` or `mcp` start.
+キャッシュされたリモート spec と保存された API 呼び出しレスポンスを削除します。これによりディスク容量を解放し、次回の `update` または `mcp` 起動時に spec ファイルの新規ダウンロードを強制します。
 
-## When to use
+## 使用するタイミング
 
-- Spec files have changed on the remote server and you want to force a refresh
-- You want to free up disk space
-- You are troubleshooting stale cache issues
-- Before running `update` to ensure a clean re-cache
+- リモートサーバーで spec ファイルが変更され、強制的にリフレッシュしたい場合
+- ディスク容量を解放したい場合
+- 古いキャッシュの問題をトラブルシューティングしている場合
+- `update` を実行する前に、クリーンな再キャッシュを確実にするため
 
-## Syntax
+## 構文
 
 ```bash
 swag2mcp clean [path]
 ```
 
-## Arguments
+## 引数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 引数 | 位置 | 必須 | 説明 |
+|------|------|------|------|
+| `path` | 1 | いいえ | ワークスペースディレクトリ。省略時はパス解決ルールに従います。 |
 
-## Flags
+## フラグ
 
-None.
+なし。
 
-## How it works
+## 仕組み
 
 ```bash
 swag2mcp clean
 swag2mcp clean ./my-workspace
 ```
 
-## What is cleaned
+## クリーンアップされるもの
 
-| Directory | Contents | Why |
-|-----------|----------|-----|
-| `cache/` | Downloaded remote spec files | Forces re-download on next access |
-| `responses/` | Saved API invocation responses | Frees disk space |
+| ディレクトリ | 内容 | 理由 |
+|-----------|------|------|
+| `cache/` | ダウンロードされたリモート spec ファイル | 次回アクセス時に再ダウンロードを強制 |
+| `responses/` | 保存された API 呼び出しレスポンス | ディスク容量を解放 |
 
-## What is preserved
+## 保持されるもの
 
-| Directory | Contents | Why |
-|-----------|----------|-----|
-| `specs/` | Local spec files | These are your source files, not cache |
-| `auth_scripts/` | Authentication scripts | These are user-created, not cache |
+| ディレクトリ | 内容 | 理由 |
+|-----------|------|------|
+| `specs/` | ローカル spec ファイル | これらはソースファイルであり、キャッシュではない |
+| `auth_scripts/` | 認証スクリプト | これらはユーザー作成のものであり、キャッシュではない |
 
-## Orphan auth script cleanup
+## 孤立した認証スクリプトのクリーンアップ
 
-After cleaning, `clean` also removes auth scripts for specs that no longer exist in the configuration. This prevents stale scripts from accumulating.
+クリーンアップ後、`clean` は設定に存在しなくなった spec の認証スクリプトも削除します。これにより、古いスクリプトが蓄積されるのを防ぎます。
 
-## Automatic cleanup
+## 自動クリーンアップ
 
-When the MCP server starts (`swag2mcp mcp`), responses older than 48 hours are removed automatically. You typically don't need to run `clean` manually for routine maintenance.
+MCP サーバーが起動するとき（`swag2mcp mcp`）、48 時間以上経過したレスポンスが自動的に削除されます。通常、定期的なメンテナンスで手動で `clean` を実行する必要はありません。
 
-## Post-command verification
+## コマンド実行後の確認
 
 ```bash
 ls ~/.swag2mcp/cache
-# Should be empty (directory exists but has no files)
+# 空であるべき（ディレクトリは存在するがファイルはない）
 ```
 
-## Nuances
+## ニュアンス
 
-- **No config required:** `clean` works even without a valid config file. It simply removes the cache and responses directories.
-- **Orphan cleanup is best-effort:** If the config file is corrupted or unreadable, orphan auth script cleanup is skipped (not fatal).
-- **Directories are preserved:** The `cache/` and `responses/` directories themselves are kept — only their contents are removed.
+- **設定不要:** `clean` は有効な設定ファイルがなくても動作します。単にキャッシュとレスポンスディレクトリを削除します。
+- **孤立クリーンアップはベストエフォート:** 設定ファイルが破損しているか読み取り不能な場合、孤立した認証スクリプトのクリーンアップはスキップされます（致命的ではありません）。
+- **ディレクトリは保持:** `cache/` と `responses/` ディレクトリ自体は保持され、その内容のみが削除されます。

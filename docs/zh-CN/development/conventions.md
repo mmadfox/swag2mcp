@@ -1,16 +1,16 @@
-# Code Conventions
+# 代码规范
 
 ## Go
 
 - **Go 1.26+**
 - **gofmt** / **gofumpt** / **goimports** / **gci**
-- **120 characters** per line
-- **Guard clauses** instead of nested ifs
-- **Naming**: `camelCase` for private, `PascalCase` for exported
+- **每行 120 字符**
+- **使用守卫子句** 代替嵌套 if
+- **命名**：私有使用 `camelCase`，导出使用 `PascalCase`
 
-## Errors
+## 错误
 
-Use `LLMError` for LLM-visible errors:
+对 LLM 可见的错误使用 `LLMError`：
 
 ```go
 type LLMError struct {
@@ -19,28 +19,28 @@ type LLMError struct {
 }
 ```
 
-Error codes:
-- `validation_failed` — invalid parameters
-- `not_found` — resource not found
-- `rate_limit` — rate limit exceeded
-- `invoke_error` — API call error
+错误代码：
+- `validation_failed` — 无效参数
+- `not_found` — 资源未找到
+- `rate_limit` — 超过速率限制
+- `invoke_error` — API 调用错误
 
-## Interfaces
+## 接口
 
-- Small interfaces (1-3 methods)
-- Interface composition
-- Functional options for configuration
+- 小接口（1-3 个方法）
+- 接口组合
+- 配置使用函数选项模式
 
-## Testing
+## 测试
 
-- Table-driven tests
-- Test helpers (`newTestService()`, `seedTestData()`)
-- Mocks via `go.uber.org/mock`
-- 80%+ coverage for core packages
+- 表格驱动测试
+- 测试辅助函数（`newTestService()`、`seedTestData()`）
+- 通过 `go.uber.org/mock` 生成模拟
+- 核心包覆盖率 80%+
 
-## Configuration
+## 配置
 
-- YAML format
-- Cascade: global → spec → collection
-- Validation via `go-playground/validator`
-- Environment variables via `$(VAR)`
+- YAML 格式
+- 级联：全局 → spec → collection
+- 通过 `go-playground/validator` 验证
+- 通过 `$(VAR)` 使用环境变量

@@ -1,30 +1,30 @@
-# Discovery Tools
+# 发现工具
 
-Discovery tools let the LLM navigate the spec hierarchy: find all specs, drill into a spec to see its collections, and explore tags within a collection. Start with `spec_list` to see what APIs are available, then use IDs to drill deeper.
+发现工具让 LLM 导航 spec 层次结构：查找所有 spec、深入 spec 查看其 collection，以及探索 collection 中的标签。从 `spec_list` 开始查看可用的 API，然后使用 ID 深入探索。
 
 ---
 
 ## spec_list
 
-### Purpose
+### 用途
 
-List all API specifications registered in the workspace. This is the starting point for any session — the LLM calls it first to discover what APIs are available.
+列出工作区中注册的所有 API 规范。这是任何会话的起点 — LLM 首先调用它以发现可用的 API。
 
-### When to use
+### 何时使用
 
-- At the start of a session to see what APIs are configured
-- After adding or removing specs to refresh the list
-- When you need a spec ID for other tools
+- 在会话开始时查看配置了哪些 API
+- 添加或删除 spec 后刷新列表
+- 当你需要其他工具的 spec ID 时
 
-### How it works
+### 工作原理
 
-Returns a list of all specs with their unique ID and domain name. No parameters needed.
+返回所有 spec 的列表，包含其唯一 ID 和域名。无需参数。
 
-### Parameters
+### 参数
 
-None.
+无。
 
-### Response
+### 响应
 
 ```json
 {
@@ -41,41 +41,41 @@ None.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | 32-character MD5 hash, unique identifier for the spec |
-| `domain` | string | Domain name of the spec (e.g. "meteo", "dadjoke") |
+| 字段 | 类型 | 描述 |
+|------|------|------|
+| `id` | string | 32 字符 MD5 哈希，spec 的唯一标识符 |
+| `domain` | string | spec 的域名（例如"meteo"、"dadjoke"） |
 
-### Nuances
+### 细节
 
-- Returns only `id` and `domain` — for full details (collections, tags), use `spec_by_id`
-- All IDs are 32-character MD5 hex strings (`^[0-9a-f]{32}$`)
-- If no specs are configured, returns an empty array
+- 只返回 `id` 和 `domain` — 要获取完整详情（collection、标签），使用 `spec_by_id`
+- 所有 ID 是 32 字符的 MD5 十六进制字符串（`^[0-9a-f]{32}$`）
+- 如果没有配置 spec，返回空数组
 
 ---
 
 ## spec_by_id
 
-### Purpose
+### 用途
 
-Get detailed information about a specific spec: its domain, all collections, and their statistics (tag count, method count).
+获取特定 spec 的详细信息：其域、所有 collection 及其统计信息（标签计数、方法计数）。
 
-### When to use
+### 何时使用
 
-- After `spec_list` to see the collections inside a spec
-- When you need collection IDs for further navigation
+- 在 `spec_list` 之后查看 spec 内的 collection
+- 当你需要 collection ID 以进一步导航时
 
-### How it works
+### 工作原理
 
-Takes a spec ID and returns the spec metadata plus all its collections with counts.
+接受 spec ID 并返回 spec 元数据及其所有 collection 的计数。
 
-### Parameters
+### 参数
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the spec |
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `id` | string | 是 | spec 的 32 字符 MD5 哈希 |
 
-### Response
+### 响应
 
 ```json
 {
@@ -95,41 +95,41 @@ Takes a spec ID and returns the spec metadata plus all its collections with coun
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `spec.id` | string | Spec identifier |
-| `spec.domain` | string | Spec domain name |
-| `collections[].id` | string | Collection identifier |
-| `collections[].title` | string | Human-readable title |
-| `collections[].llmTitle` | string | LLM-friendly title (optional) |
-| `collections[].countTags` | int | Number of tags in the collection |
-| `collections[].countMethods` | int | Number of HTTP methods in the collection |
+| 字段 | 类型 | 描述 |
+|------|------|------|
+| `spec.id` | string | Spec 标识符 |
+| `spec.domain` | string | Spec 域名 |
+| `collections[].id` | string | Collection 标识符 |
+| `collections[].title` | string | 人类可读的标题 |
+| `collections[].llmTitle` | string | 对 LLM 友好的标题（可选） |
+| `collections[].countTags` | int | collection 中的标签数量 |
+| `collections[].countMethods` | int | collection 中的 HTTP 方法数量 |
 
-### Nuances
+### 细节
 
-- Returns `not_found` error if the spec ID does not exist
-- The `id` must be a valid 32-character MD5 hex string
+- 如果 spec ID 不存在，返回 `not_found` 错误
+- `id` 必须是有效的 32 字符 MD5 十六进制字符串
 
 ---
 
 ## collection_by_spec
 
-### Purpose
+### 用途
 
-List all collections within a specific spec. Similar to `spec_by_id` but returns only the collection list without extra spec metadata.
+列出特定 spec 中的所有 collection。类似于 `spec_by_id`，但只返回 collection 列表，不包含额外的 spec 元数据。
 
-### When to use
+### 何时使用
 
-- When you already have the spec ID and just need the collection list
-- As a lighter alternative to `spec_by_id`
+- 当你已有 spec ID，只需要 collection 列表时
+- 作为 `spec_by_id` 的轻量级替代
 
-### Parameters
+### 参数
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `specId` | string | Yes | 32-character MD5 hash of the spec |
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `specId` | string | 是 | spec 的 32 字符 MD5 哈希 |
 
-### Response
+### 响应
 
 ```json
 {
@@ -149,31 +149,31 @@ List all collections within a specific spec. Similar to `spec_by_id` but returns
 }
 ```
 
-### Nuances
+### 细节
 
-- Returns `not_found` if the spec does not exist
-- Same data as `spec_by_id` but without the extra spec wrapper
+- 如果 spec 不存在，返回 `not_found`
+- 与 `spec_by_id` 数据相同，但没有额外的 spec 包装
 
 ---
 
 ## collection_by_id
 
-### Purpose
+### 用途
 
-Get detailed information about a specific collection: its metadata, the parent spec, and all tags within the collection.
+获取特定 collection 的详细信息：其元数据、父 spec 以及 collection 中的所有标签。
 
-### When to use
+### 何时使用
 
-- After `collection_by_spec` to see the tags inside a collection
-- When you need tag IDs for `tag_by_id` or `endpoint_by_tag`
+- 在 `collection_by_spec` 之后查看 collection 内的标签
+- 当你需要 `tag_by_id` 或 `endpoint_by_tag` 的标签 ID 时
 
-### Parameters
+### 参数
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the collection |
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `id` | string | 是 | collection 的 32 字符 MD5 哈希 |
 
-### Response
+### 响应
 
 ```json
 {
@@ -201,37 +201,37 @@ Get detailed information about a specific collection: its metadata, the parent s
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `spec` | object | Parent spec (id, domain) |
-| `collection` | object | Collection metadata (id, title, countMethods) |
-| `tags[]` | array | List of tags with id, title, countMethods |
+| 字段 | 类型 | 描述 |
+|------|------|------|
+| `spec` | object | 父 spec（id、domain） |
+| `collection` | object | Collection 元数据（id、title、countMethods） |
+| `tags[]` | array | 标签列表，包含 id、title、countMethods |
 
-### Nuances
+### 细节
 
-- Returns `not_found` if the collection ID does not exist
-- Tags are returned with their IDs — use `endpoint_by_tag(tagId)` to see the actual endpoints
+- 如果 collection ID 不存在，返回 `not_found`
+- 标签随其 ID 一起返回 — 使用 `endpoint_by_tag(tagId)` 查看实际端点
 
 ---
 
 ## tag_by_spec
 
-### Purpose
+### 用途
 
-List all tags across an entire spec, spanning all collections. Useful for getting a bird's-eye view of all available tags.
+列出整个 spec 中的所有标签，跨越所有 collection。用于鸟瞰所有可用标签。
 
-### When to use
+### 何时使用
 
-- When you want to see all tags in a spec without drilling into each collection
-- When you don't know which collection contains the tag you need
+- 当你想查看 spec 中的所有标签，而无需深入每个 collection 时
+- 当你不知道哪个 collection 包含你需要的标签时
 
-### Parameters
+### 参数
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `specId` | string | Yes | 32-character MD5 hash of the spec |
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `specId` | string | 是 | spec 的 32 字符 MD5 哈希 |
 
-### Response
+### 响应
 
 ```json
 {
@@ -250,31 +250,31 @@ List all tags across an entire spec, spanning all collections. Useful for gettin
 }
 ```
 
-### Nuances
+### 细节
 
-- Returns `not_found` if the spec does not exist
-- Tags are aggregated from all collections in the spec
+- 如果 spec 不存在，返回 `not_found`
+- 标签从 spec 中的所有 collection 聚合
 
 ---
 
 ## tag_by_collection
 
-### Purpose
+### 用途
 
-List all tags within a specific collection. Unlike `tag_by_spec`, this also returns the parent spec and collection metadata.
+列出特定 collection 中的所有标签。与 `tag_by_spec` 不同，此工具还返回父 spec 和 collection 元数据。
 
-### When to use
+### 何时使用
 
-- After `collection_by_id` to confirm the tag list
-- When you need the full context (spec + collection + tags)
+- 在 `collection_by_id` 之后确认标签列表
+- 当你需要完整上下文（spec + collection + tags）时
 
-### Parameters
+### 参数
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `collectionId` | string | Yes | 32-character MD5 hash of the collection |
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `collectionId` | string | 是 | collection 的 32 字符 MD5 哈希 |
 
-### Response
+### 响应
 
 ```json
 {
@@ -297,31 +297,31 @@ List all tags within a specific collection. Unlike `tag_by_spec`, this also retu
 }
 ```
 
-### Nuances
+### 细节
 
-- Returns `not_found` if the collection does not exist
-- Same tag data as `tag_by_spec` but scoped to one collection
+- 如果 collection 不存在，返回 `not_found`
+- 与 `tag_by_spec` 的标签数据相同，但限定在一个 collection 内
 
 ---
 
 ## tag_by_id
 
-### Purpose
+### 用途
 
-Get information about a single tag: its ID, title, and how many methods it contains. This tells you about the tag itself — to see the actual endpoints, use `endpoint_by_tag`.
+获取单个标签的信息：其 ID、标题以及包含的方法数量。这告诉你关于标签本身的信息 — 要查看实际端点，使用 `endpoint_by_tag`。
 
-### When to use
+### 何时使用
 
-- When you have a tag ID and want to confirm its name and size
-- Before calling `endpoint_by_tag` to understand how many endpoints to expect
+- 当你有一个标签 ID 并想确认其名称和大小
+- 在调用 `endpoint_by_tag` 之前了解预期有多少端点
 
-### Parameters
+### 参数
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | 32-character MD5 hash of the tag |
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `id` | string | 是 | 标签的 32 字符 MD5 哈希 |
 
-### Response
+### 响应
 
 ```json
 {
@@ -333,13 +333,13 @@ Get information about a single tag: its ID, title, and how many methods it conta
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `tag.id` | string | Tag identifier |
-| `tag.title` | string | Human-readable tag name |
-| `tag.countMethods` | int | Number of HTTP methods in this tag |
+| 字段 | 类型 | 描述 |
+|------|------|------|
+| `tag.id` | string | 标签标识符 |
+| `tag.title` | string | 人类可读的标签名称 |
+| `tag.countMethods` | int | 此标签中的 HTTP 方法数量 |
 
-### Nuances
+### 细节
 
-- Returns `not_found` if the tag does not exist
-- This tool returns tag metadata only — use `endpoint_by_tag` to get the actual list of endpoints
+- 如果标签不存在，返回 `not_found`
+- 此工具只返回标签元数据 — 使用 `endpoint_by_tag` 获取实际端点列表

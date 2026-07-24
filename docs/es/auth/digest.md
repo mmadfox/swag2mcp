@@ -1,16 +1,16 @@
-# Digest Auth
+# Autenticación Digest
 
-## Purpose
+## Propósito
 
-HTTP Digest Access Authentication — a more secure alternative to Basic Auth. The password is not sent in plain text; instead, MD5 hashes are used.
+Autenticación de Acceso Digest HTTP — una alternativa más segura a la Autenticación Básica. La contraseña no se envía en texto plano; en su lugar, se utilizan hashes MD5.
 
-## When to use
+## Cuándo usarlo
 
-- Legacy APIs that only support Digest
-- When you need authentication without sending the password in plain text
-- Internal enterprise systems
+- APIs heredadas que solo admiten Digest
+- Cuando necesita autenticación sin enviar la contraseña en texto plano
+- Sistemas empresariales internos
 
-## Configuration
+## Configuración
 
 ```yaml
 specs:
@@ -27,15 +27,15 @@ specs:
         password: "$(PASSWORD)"
 ```
 
-## Parameters
+## Parámetros
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `username` | Yes | Username |
-| `password` | Yes | Password |
+| Parámetro | Requerido | Descripción |
+|-----------|-----------|-------------|
+| `username` | Sí | Nombre de usuario |
+| `password` | Sí | Contraseña |
 
-## Notes
+## Notas
 
-- swag2mcp first sends a request without authentication, receives a challenge from the server (HTTP 401), computes the response, and retries with the `Authorization: Digest ...` header
-- The challenge is cached for 5 minutes — subsequent requests don't need an extra round-trip
-- Store the password in an environment variable: `password: "$(API_PASSWORD)"`
+- swag2mcp primero envía una solicitud sin autenticación, recibe un desafío del servidor (HTTP 401), calcula la respuesta y reintenta con el encabezado `Authorization: Digest ...`
+- El desafío se almacena en caché durante 5 minutos — las solicitudes subsiguientes no necesitan un viaje de ida y vuelta adicional
+- Almacene la contraseña en una variable de entorno: `password: "$(API_PASSWORD)"`

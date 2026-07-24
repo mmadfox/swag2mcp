@@ -1,58 +1,58 @@
-# Skills
+# Навыки
 
-## Customizing Output Format
+## Настройка формата вывода
 
-Every swag2mcp MCP tool returns structured JSON data. How this data is **presented** to the user depends on the LLM's formatting skill — and you can control it completely.
+Каждый MCP-инструмент swag2mcp возвращает структурированные JSON-данные. То, как эти данные **представляются** пользователю, зависит от навыка форматирования LLM — и вы можете полностью это контролировать.
 
-### The default format skill
+### Навык форматирования по умолчанию
 
-swag2mcp ships with a built-in formatting skill that defines compact, human-readable markdown for every tool response:
+swag2mcp поставляется со встроенным навыком форматирования, который определяет компактный, человекочитаемый markdown для каждого ответа инструмента:
 
 [swag2mcp-format SKILL.md](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md)
 
-This skill covers all 19 MCP tools with:
-- Tight tables for lists (specs, collections, tags, endpoints)
-- Inline headers for detail views
-- Compact schema representation for `inspect`
-- Consistent styling across all responses
+Этот навык охватывает все 19 MCP-инструментов с:
+- Компактными таблицами для списков (спецификации, коллекции, теги, эндпоинты)
+- Встроенными заголовками для детальных представлений
+- Компактным представлением схем для `inspect`
+- Единым стилем для всех ответов
 
-### Why skills matter
+### Почему навыки важны
 
-The same data can be presented in radically different ways depending on the skill:
+Одни и те же данные могут быть представлены кардинально разными способами в зависимости от навыка:
 
-| Style | Example output |
+| Стиль | Пример вывода |
 |-------|---------------|
-| **Compact tables** (default) | `GET /pet/{petId}` — Find pet by ID |
-| **Verbose** | `Method: GET, Path: /pet/{petId}, Summary: Find pet by ID, Deprecated: false` |
-| **Minimal** | `GET /pet/{petId}` |
-| **Technical** | `GET /pet/{petId} → 200: Pet object, 404: Not found` |
-| **Custom** | Any format you can describe |
+| **Компактные таблицы** (по умолчанию) | `GET /pet/{petId}` — Find pet by ID |
+| **Подробный** | `Method: GET, Path: /pet/{petId}, Summary: Find pet by ID, Deprecated: false` |
+| **Минимальный** | `GET /pet/{petId}` |
+| **Технический** | `GET /pet/{petId} → 200: Pet object, 404: Not found` |
+| **Пользовательский** | Любой формат, который вы можете описать |
 
-### Creating your own skill
+### Создание собственного навыка
 
-You can write your own formatting skill by describing the exact output format you want. The skill is a markdown file with formatting rules for each tool. Here are some ideas:
+Вы можете написать свой собственный навык форматирования, описав точный формат вывода, который хотите. Навык — это markdown-файл с правилами форматирования для каждого инструмента. Вот несколько идей:
 
-- **JSON output** — return raw JSON for machine consumption
-- **CSV-style** — tabular data for spreadsheet import
-- **Diagram-friendly** — Mermaid or ASCII diagrams of API structure
-- **Minimal** — just method and path, nothing else
-- **Documentation-style** — full descriptions, examples, and notes
+- **JSON-вывод** — возврат сырого JSON для машинного потребления
+- **CSV-стиль** — табличные данные для импорта в электронные таблицы
+- **Дружественный к диаграммам** — Mermaid или ASCII-диаграммы структуры API
+- **Минимальный** — только метод и путь, ничего больше
+- **Документационный стиль** — полные описания, примеры и примечания
 
-### The only limit is the model
+### Единственное ограничение — модель
 
-The quality of the formatted output depends entirely on the LLM's ability to follow your formatting rules. A well-written skill with clear examples produces consistent, reliable output. A vague skill produces inconsistent results.
+Качество форматированного вывода полностью зависит от способности LLM следовать вашим правилам форматирования. Хорошо написанный навык с чёткими примерами даёт последовательный, надёжный вывод. Расплывчатый навык даёт непоследовательные результаты.
 
-You can:
-- Use the default skill as-is
-- Fork it and tweak the formatting to your taste
-- Write your own from scratch
-- Switch between skills depending on the task
+Вы можете:
+- Использовать навык по умолчанию как есть
+- Форкнуть его и настроить форматирование под свой вкус
+- Написать свой с нуля
+- Переключаться между навыками в зависимости от задачи
 
-### How to use a skill
+### Как использовать навык
 
-Skills are loaded by the LLM client (OpenCode, Cursor, Claude Desktop, etc.) as part of its system prompt or agent configuration. Refer to your client's documentation for how to attach a skill file.
+Навыки загружаются LLM-клиентом (OpenCode, Cursor, Claude Desktop и т.д.) как часть системного промпта или конфигурации агента. Обратитесь к документации вашего клиента для информации о том, как подключить файл навыка.
 
-For OpenCode, skills are configured in `opencode.json`:
+Для OpenCode навыки настраиваются в `opencode.json`:
 
 ```json
 {

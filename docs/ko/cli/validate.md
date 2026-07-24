@@ -1,35 +1,35 @@
 # validate
 
-## Purpose
+## 목적
 
-Check the configuration file and all referenced spec files for errors. This is a **read-only** diagnostic command — it never modifies anything.
+설정 파일과 참조된 모든 명세 파일의 오류를 확인합니다. **읽기 전용** 진단 명령어입니다 — 아무것도 수정하지 않습니다.
 
-## When to use
+## 사용 시기
 
-- After editing `swag2mcp.yaml` manually
-- Before running `mcp` or `update` to catch issues early
-- When troubleshooting why a spec isn't loading
-- In CI/CD pipelines to validate configuration changes
+- `swag2mcp.yaml`을 수동으로 편집한 후
+- `mcp` 또는 `update`를 실행하기 전에 문제를 조기에 발견하려고 할 때
+- spec이 로드되지 않는 문제를 해결할 때
+- CI/CD 파이프라인에서 설정 변경을 검증할 때
 
-## Syntax
+## 구문
 
 ```bash
 swag2mcp validate [path] [flags]
 ```
 
-## Arguments
+## 인수
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 인수 | 위치 | 필수 | 설명 |
+|------|------|------|------|
+| `path` | 1 | 아니요 | 워크스페이스 디렉토리. 생략 시 경로 해결 규칙에 따라 결정됩니다. |
 
-## Flags
+## 플래그
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--tags` | `-t` | `string` | `""` | Validate only specs with matching tags (comma-separated) |
+| 플래그 | 약어 | 타입 | 기본값 | 설명 |
+|-------|------|------|--------|------|
+| `--tags` | `-t` | `string` | `""` | 일치하는 태그가 있는 spec만 검증 (쉼표로 구분) |
 
-## How it works
+## 작동 방식
 
 ```bash
 swag2mcp validate
@@ -37,29 +37,29 @@ swag2mcp validate ./my-workspace
 swag2mcp validate --tags=public
 ```
 
-## What is checked
+## 확인 항목
 
-| Check | Description |
-|-------|-------------|
-| YAML syntax | The config file must be valid YAML |
-| Config structure | All required fields present, types are correct |
-| Domain uniqueness | No duplicate domains |
-| Domain format | Lowercase, digits, hyphens only |
-| Spec file existence | The `location` file or URL must be reachable |
-| Spec format | The file must be valid OpenAPI 3.x, Swagger 2.0, or Postman collection |
-| Auth settings | Auth type and config are valid for the selected method |
-| HTTP client | HTTP client settings are valid |
+| 확인 | 설명 |
+|------|------|
+| YAML 구문 | 설정 파일이 유효한 YAML이어야 함 |
+| 설정 구조 | 모든 필수 필드 존재, 타입이 올바름 |
+| 도메인 고유성 | 중복 도메인 없음 |
+| 도메인 형식 | 소문자, 숫자, 하이픈만 허용 |
+| 명세 파일 존재 | `location` 파일 또는 URL에 접근 가능해야 함 |
+| 명세 형식 | 유효한 OpenAPI 3.x, Swagger 2.0 또는 Postman collection이어야 함 |
+| 인증 설정 | 인증 유형과 설정이 선택한 방법에 유효함 |
+| HTTP 클라이언트 | HTTP 클라이언트 설정이 유효함 |
 
-## What is NOT checked
+## 확인하지 않는 항목
 
-| Not checked | Reason |
-|-------------|--------|
-| Authentication endpoints | `validate` checks auth config syntax but does not test login/token exchange |
-| API endpoint availability | Only the spec file URL is checked, not the `base_url` |
-| `base_url` correctness | Format is validated, but no test request is made |
-| Mock server configuration | `base_mock_url` is not verified for connectivity |
+| 확인하지 않음 | 이유 |
+|-------------|------|
+| 인증 엔드포인트 | `validate`는 인증 설정 구문을 확인하지만 로그인/토큰 교환을 테스트하지 않음 |
+| API 엔드포인트 가용성 | 명세 파일 URL만 확인되고 `base_url`은 확인되지 않음 |
+| `base_url` 정확성 | 형식은 검증되지만 테스트 요청은 이루어지지 않음 |
+| 모의 서버 설정 | `base_mock_url`의 연결성이 확인되지 않음 |
 
-## Example output
+## 출력 예시
 
 ```
 ✅ Configuration is valid.
@@ -68,12 +68,12 @@ swag2mcp validate --tags=public
 ✗ Spec old-api: file not found
 ```
 
-## Post-command verification
+## 명령 후 검증
 
-If validation passes, the configuration is ready for `mcp`, `update`, or `run`.
+검증이 통과하면 설정이 `mcp`, `update` 또는 `run`에 사용할 준비가 된 것입니다.
 
-## Nuances
+## 세부 사항
 
-- **No auto-init:** Unlike `add`, `ls`, or `run`, `validate` does **not** auto-initialize if the config is missing. It returns an error: `"configuration not found at <path>"`.
-- **Network access:** Remote spec URLs are fetched during validation. The command may take longer if specs are hosted on slow servers.
-- **Tag filtering:** When `--tags` is set, only specs matching the specified tags are validated. Other specs are skipped.
+- **자동 초기화 없음:** `add`, `ls` 또는 `run`과 달리 `validate`는 설정이 없으면 **자동 초기화하지 않습니다**. 오류를 반환합니다: `"configuration not found at <path>"`.
+- **네트워크 접근:** 원격 명세 URL은 검증 중에 가져옵니다. 명세가 느린 서버에 호스팅된 경우 명령어 실행 시간이 더 오래 걸릴 수 있습니다.
+- **태그 필터링:** `--tags`가 설정되면 지정된 태그와 일치하는 spec만 검증됩니다. 다른 spec은 건너뜁니다.

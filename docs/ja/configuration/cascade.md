@@ -1,21 +1,21 @@
-# Configuration Cascade
+# 設定のカスケード
 
-swag2mcp uses a three-level configuration cascade. Each level overrides the previous. This lets you set sensible defaults globally and fine-tune settings for specific specs or collections.
+swag2mcp は 3 レベルの設定カスケードを使用します。各レベルは前のレベルを上書きします。これにより、グローバルに適切なデフォルトを設定し、特定の spec や collection の設定を微調整できます。
 
-## Levels
+## レベル
 
 ```
 Global (http_client, mcp, mock_enabled, disable_ratelimiter, rate_limit_interval)
-    ↓ overrides
+    ↓ 上書き
 Spec (specs[].http_client, specs[].auth, specs[].base_url, specs[].disable, specs[].tags)
-    ↓ overrides
+    ↓ 上書き
 Collection (specs[].collections[].http_client, specs[].collections[].base_url, specs[].collections[].disable)
 ```
 
-## What Overrides What
+## 何が何を上書きするか
 
-| Parameter | Global | Spec | Collection |
-|-----------|--------|------|------------|
+| パラメーター | グローバル | Spec | Collection |
+|-----------|----------|------|------------|
 | `http_client.timeout` | ✅ | ✅ | ✅ |
 | `http_client.max_response_size` | ✅ | ✅ | ✅ |
 | `http_client.user_agent` | ✅ | ✅ | ✅ |
@@ -33,9 +33,9 @@ Collection (specs[].collections[].http_client, specs[].collections[].base_url, s
 | `disable_ratelimiter` | ✅ | ❌ | ❌ |
 | `rate_limit_interval` | ✅ | ❌ | ❌ |
 
-All `http_client` settings can be overridden at every level. Collection-level settings take full precedence over spec and global.
+すべての `http_client` 設定はすべてのレベルで上書き可能です。Collection レベルの設定は spec およびグローバルよりも完全に優先されます。
 
-## Cascade Example
+## カスケードの例
 
 ```yaml
 http_client:
@@ -49,43 +49,43 @@ specs:
     llm_title: Open-Meteo Weather APIs
     base_url: https://api.open-meteo.com
     http_client:
-      timeout: 60s  # overrides global timeout
+      timeout: 60s  # グローバルタイムアウトを上書き
       headers:
-        "X-API-Version": "2"  # added to global headers
+        "X-API-Version": "2"  # グローバルヘッダーに追加
     collections:
       - llm_title: Forecast
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
         http_client:
-          timeout: 120s  # overrides spec timeout
+          timeout: 120s  # spec タイムアウトを上書き
           headers:
-            "X-Custom": "value"  # added to spec + global headers
+            "X-Custom": "value"  # spec + グローバルヘッダーに追加
 ```
 
-## Effective Settings for "Forecast" Collection
+## "Forecast" Collection の有効な設定
 
 ```
-timeout: 120s (from collection, overrides spec 60s and global 30s)
-max_response_size: 1048576 (from global)
+timeout: 120s（collection から、spec の 60s とグローバルの 30s を上書き）
+max_response_size: 1048576（グローバルから）
 headers:
-  - User-Agent: swag2mcp/1.0 (from global)
-  - X-API-Version: 2 (from spec)
-  - X-Custom: value (from collection)
+  - User-Agent: swag2mcp/1.0（グローバルから）
+  - X-API-Version: 2（spec から）
+  - X-Custom: value（collection から）
 ```
 
-## How Merging Works
+## マージの仕組み
 
-### HTTP Client Settings
+### HTTP クライアント設定
 
-Simple values (`timeout`, `max_response_size`, `user_agent`, `follow_redirects`, `max_redirects`, `random`) are **replaced** at each level. If a spec sets `timeout: 60s`, it completely replaces the global `30s`.
+単純な値（`timeout`、`max_response_size`、`user_agent`、`follow_redirects`、`max_redirects`、`random`）は各レベルで**置き換え**られます。spec が `timeout: 60s` を設定した場合、グローバルの `30s` を完全に置き換えます。
 
-### Headers
+### ヘッダー
 
-Headers are **merged** across levels. All three levels' headers are combined. If the same header key appears at multiple levels, the lowest level wins.
+ヘッダーはレベル間で**マージ**されます。3 つのレベルのすべてのヘッダーが結合されます。同じヘッダーキーが複数のレベルに現れる場合、最も低いレベルが優先されます。
 
-### Cookies
+### Cookie
 
-Cookies are **merged** across levels. If the same cookie name appears at multiple levels, the lowest level wins.
+Cookie はレベル間で**マージ**されます。同じ Cookie 名が複数のレベルに現れる場合、最も低いレベルが優先されます。
 
-### Proxy
+### プロキシ
 
-Proxy is **replaced** at each level. If a spec sets a proxy, it completely replaces the global proxy for that spec.
+プロキシは各レベルで**置き換え**られます。spec がプロキシを設定した場合、その spec のグローバルプロキシを完全に置き換えます。

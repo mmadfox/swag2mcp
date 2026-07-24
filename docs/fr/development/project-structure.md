@@ -1,49 +1,49 @@
-# Project Structure
+# Structure du projet
 
 ```
 swag2mcp/
 ├── cmd/
-│   ├── swag2mcp/          # Main binary
+│   ├── swag2mcp/          # Binaire principal
 │   │   └── main.go
-│   └── swag2mcp-mock/     # Mock server
+│   └── swag2mcp-mock/     # Serveur de simulation
 │       └── main.go
 ├── internal/
-│   ├── auth/              # 9 auth methods
-│   ├── cache/             # Spec caching
-│   ├── commands/          # 13 CLI commands (cobra)
-│   ├── config/            # YAML configuration
-│   ├── env/               # Environment variables
-│   ├── httpclient/        # HTTP client
-│   ├── id/                # MD5 ID generation
-│   ├── index/             # Full-text search (bluge)
-│   ├── model/             # Data models
-│   ├── reader/            # Large response reading
+│   ├── auth/              # 9 méthodes d'authentification
+│   ├── cache/             # Mise en cache des spécifications
+│   ├── commands/          # 13 commandes CLI (cobra)
+│   ├── config/            # Configuration YAML
+│   ├── env/               # Variables d'environnement
+│   ├── httpclient/        # Client HTTP
+│   ├── id/                # Génération d'ID MD5
+│   ├── index/             # Recherche en texte intégral (bluge)
+│   ├── model/             # Modèles de données
+│   ├── reader/            # Lecture des grandes réponses
 │   ├── server/
-│   │   ├── mcp/           # MCP server (19 tools)
-│   │   └── mockserver/    # Mock server
-│   ├── service/           # Business logic
-│   ├── spec/              # Spec parsers
-│   ├── tui/               # TUI interface
-│   └── workspace/         # Workspace management
-├── specs/                 # Sample specs
-├── tests/                 # Integration tests
+│   │   ├── mcp/           # Serveur MCP (19 outils)
+│   │   └── mockserver/    # Serveur de simulation
+│   ├── service/           # Logique métier
+│   ├── spec/              # Analyseurs de spécifications
+│   ├── tui/               # Interface TUI
+│   └── workspace/         # Gestion de l'espace de travail
+├── specs/                 # Exemples de spécifications
+├── tests/                 # Tests d'intégration
 ├── docs/                  # Documentation
-├── examples/              # Config examples
-└── playground/            # Development sandbox
+├── examples/              # Exemples de configuration
+└── playground/            # Bac à sable de développement
 ```
 
-## Key Packages
+## Packages clés
 
 | Package | Description |
 |---------|-------------|
-| `auth` | 9 authentication methods |
-| `cache` | Disk-based caching with TTL |
-| `commands` | Cobra CLI commands |
-| `config` | YAML config with cascade |
-| `httpclient` | Configurable HTTP client |
-| `index` | Full-text search (bluge) |
-| `server/mcp` | MCP server (3 transports) |
-| `service` | Business logic (core) |
-| `spec` | OpenAPI/Swagger/Postman parsers |
-| `tui` | Bubbletea TUI |
-| `workspace` | File management |
+| `auth` | 9 méthodes d'authentification |
+| `cache` | Mise en cache sur disque avec TTL |
+| `commands` | Commandes CLI Cobra |
+| `config` | Configuration YAML avec cascade |
+| `httpclient` | Client HTTP configurable |
+| `index` | Recherche en texte intégral (bluge) |
+| `server/mcp` | Serveur MCP (3 transports) |
+| `service` | Logique métier (noyau) |
+| `spec` | Analyseurs OpenAPI/Swagger/Postman |
+| `tui` | TUI Bubbletea |
+| `workspace` | Gestion des fichiers |

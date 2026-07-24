@@ -1,82 +1,82 @@
 # Collections
 
-A collection is a single OpenAPI/Swagger/Postman file that describes a specific API. It points to a `location` (URL or local file path) and belongs to a spec (domain).
+一个 collection 是描述特定 API 的单个 OpenAPI/Swagger/Postman 文件。它指向一个 `location`（URL 或本地文件路径），并属于一个 spec（域）。
 
-One spec can have multiple collections — for example, the "meteo" spec might have "Forecast", "Air Quality", and "Marine" collections, each pointing to a different spec file.
+一个 spec 可以有多个 collection — 例如，"meteo" spec 可能有"Forecast"、"Air Quality"和"Marine" collection，每个指向不同的规范文件。
 
-## Collection Fields
+## Collection 字段
 
-| Field | YAML key | Required | Description |
-|-------|----------|----------|-------------|
-| [LLM Title](#llm-instruction) | `llm_title` | ❌ | Collection display name for the LLM (max 120 chars). Auto-populated from spec document if not set |
-| [LLM Instruction](#llm-instruction) | `llm_instruction` | ❌ | Short hint for the LLM (max 360 chars). Auto-populated from spec document if not set |
-| Title | `title` | ❌ | Original spec title override (auto-populated from parsed document) |
-| [Location](#location--how-spec-files-are-resolved) | `location` | ✅ | URL or path to the spec file (5–250 chars) |
-| [Disable](#disable) | `disable` | ❌ | Skip this collection during loading |
-| [HTTP Client](#http-client-override) | `http_client` | ❌ | Per-collection HTTP settings (headers, cookies) |
-| [Base URL](#base-url-override) | `base_url` | ❌ | Override the spec's base URL for this collection |
-| [Mock Server](#mock-server) | `base_mock_url` | ❌ | Mock server address in `host:port` format. Required when `mock_enabled: true` |
+| 字段 | YAML 键 | 必需 | 描述 |
+|------|---------|------|------|
+| [LLM 标题](#llm-instruction) | `llm_title` | ❌ | 给 LLM 看的 collection 显示名称（最多 120 字符）。如果未设置，从规范文档自动填充 |
+| [LLM 指令](#llm-instruction) | `llm_instruction` | ❌ | 给 LLM 的简短提示（最多 360 字符）。如果未设置，从规范文档自动填充 |
+| 标题 | `title` | ❌ | 原始规范标题覆盖（从解析的文档自动填充） |
+| [位置](#location--规范文件的解析方式) | `location` | ✅ | 规范文件的 URL 或路径（5–250 字符） |
+| [禁用](#disable) | `disable` | ❌ | 加载时跳过此 collection |
+| [HTTP 客户端](#http-client-覆盖) | `http_client` | ❌ | 每个 collection 的 HTTP 设置（头、cookie） |
+| [基础 URL](#base-url-覆盖) | `base_url` | ❌ | 为此 collection 覆盖 spec 的基础 URL |
+| [模拟服务器](#mock-server) | `base_mock_url` | ❌ | 模拟服务器地址，格式为 `host:port`。当 `mock_enabled: true` 时必需 |
 
-## Location — How Spec Files Are Resolved
+## Location — 规范文件的解析方式
 
-The `location` field tells swag2mcp where to find the OpenAPI/Swagger/Postman file. It supports several source types:
+`location` 字段告诉 swag2mcp 在哪里找到 OpenAPI/Swagger/Postman 文件。它支持多种来源类型：
 
-| Source | Example | Description |
-|--------|---------|-------------|
-| **Remote URL** | `https://raw.githubusercontent.com/.../spec.yaml` | Downloaded and cached |
-| **Local file (absolute)** | `/home/user/my-api.yaml` | Read from filesystem, cached |
-| **Local file (relative)** | `./my-api.yaml` | Resolved to absolute path, cached |
-| **Workspace local file** | `specs/my-api.yaml` | Stored in `~/.swag2mcp/specs/`, used directly (not cached) |
-| **file:// URI** | `file:///home/user/spec.yaml` | Converted to local path, cached |
+| 来源 | 示例 | 描述 |
+|------|------|------|
+| **远程 URL** | `https://raw.githubusercontent.com/.../spec.yaml` | 下载并缓存 |
+| **本地文件（绝对路径）** | `/home/user/my-api.yaml` | 从文件系统读取，缓存 |
+| **本地文件（相对路径）** | `./my-api.yaml` | 解析为绝对路径，缓存 |
+| **工作区本地文件** | `specs/my-api.yaml` | 存储在 `~/.swag2mcp/specs/`，直接使用（不缓存） |
+| **file:// URI** | `file:///home/user/spec.yaml` | 转换为本地路径，缓存 |
 
-swag2mcp automatically detects the source type:
+swag2mcp 自动检测来源类型：
 
-- `https://` or `http://` → remote URL (cached)
-- `file://` → local file (converted to filesystem path)
-- Everything else → local file (with `~` expansion for home directory)
+- `https://` 或 `http://` → 远程 URL（缓存）
+- `file://` → 本地文件（转换为文件系统路径）
+- 其他所有内容 → 本地文件（支持 `~` 展开到主目录）
 
-### Remote URLs
+### 远程 URL
 
-When you use a remote URL, swag2mcp downloads the file and caches it locally. The cache is reused on subsequent starts to avoid repeated downloads.
+当你使用远程 URL 时，swag2mcp 下载文件并在本地缓存。缓存会在后续启动时重用，避免重复下载。
 
-### Local Files
+### 本地文件
 
-Local files are read directly from the filesystem. If the file is outside the workspace `specs/` directory, it is copied to the cache for consistency.
+本地文件直接从文件系统读取。如果文件在工作区 `specs/` 目录之外，为了保持一致性，会复制到缓存。
 
-### Workspace Local Files
+### 工作区本地文件
 
-The `specs/` directory inside the workspace (`~/.swag2mcp/specs/`) is the recommended place for local spec files. Files stored here are used directly without caching. Use a relative path starting with `specs/` to reference them.
+工作区内的 `specs/` 目录（`~/.swag2mcp/specs/`）是本地规范文件的推荐位置。存储在此处的文件直接使用，无需缓存。使用以 `specs/` 开头的相对路径来引用它们。
 
-> **Note:** `specs/` is just a directory name (like `cache/` or `responses/`), not the concept of "spec". It stores the actual OpenAPI/Swagger/Postman files that collections point to.
+> **注意：** `specs/` 只是一个目录名称（如 `cache/` 或 `responses/`），不是"spec"的概念。它存储 collection 指向的实际 OpenAPI/Swagger/Postman 文件。
 
 ```bash
-# Import a spec file into the workspace
+# 将规范文件导入工作区
 swag2mcp import https://example.com/api.yaml myspec
 
-# After import, the location becomes:
+# 导入后，location 变为：
 # specs/myspec.yaml
 ```
 
-## Cache System
+## 缓存系统
 
-swag2mcp caches remote spec files to avoid downloading them on every startup.
+swag2mcp 缓存远程规范文件，避免每次启动时下载。
 
-### How It Works
+### 工作原理
 
-1. When a collection with a remote URL is loaded, swag2mcp checks the cache
-2. If a valid (non-expired) cache entry exists, it is used directly
-3. If not, the file is downloaded, parsed, and stored in the cache
+1. 当加载带有远程 URL 的 collection 时，swag2mcp 检查缓存
+2. 如果存在有效（未过期）的缓存条目，直接使用
+3. 如果不存在，则下载、解析文件并存储在缓存中
 
-### Cache Structure
+### 缓存结构
 
 ```
 ~/.swag2mcp/
   cache/
-    {sha256_hash}.spec    # Cached spec file content
-    {sha256_hash}.meta    # Cache metadata (JSON)
+    {sha256_hash}.spec    # 缓存的规范文件内容
+    {sha256_hash}.meta    # 缓存元数据（JSON）
 ```
 
-Each cached file has a metadata file containing:
+每个缓存文件都有一个包含以下内容的元数据文件：
 
 ```json
 {
@@ -88,59 +88,59 @@ Each cached file has a metadata file containing:
 }
 ```
 
-### Cache TTL
+### 缓存 TTL
 
-Each cached file gets a **random TTL** between 1 hour and 48 hours. This prevents all cached files from expiring at the same time (thundering herd problem).
+每个缓存文件获得 **1 小时到 48 小时** 之间的随机 TTL。这防止所有缓存文件同时过期（惊群问题）。
 
-### Cache Key
+### 缓存键
 
-The cache key is a SHA-256 hash of the raw location string (first 16 bytes = 32 hex chars).
+缓存键是原始 location 字符串的 SHA-256 哈希（前 16 字节 = 32 个十六进制字符）。
 
-### Managing the Cache
+### 管理缓存
 
 ```bash
-# Clear cache and responses, re-download all spec files
+# 清除缓存和响应，重新下载所有规范文件
 swag2mcp update
 
-# Clear cache and responses only
+# 仅清除缓存和响应
 swag2mcp clean
 ```
 
-- `swag2mcp update` — validates config, clears `cache/` and `responses/`, then re-caches all collection locations
-- `swag2mcp clean` — removes all contents of `cache/` and `responses/`, plus orphan auth scripts
-- Old responses are cleaned automatically after 48 hours on MCP server start
+- `swag2mcp update` — 验证配置，清除 `cache/` 和 `responses/`，然后重新缓存所有 collection 位置
+- `swag2mcp clean` — 删除 `cache/` 和 `responses/` 的所有内容，以及孤立的认证脚本
+- 旧响应在 MCP 服务器启动后 48 小时自动清理
 
-## Validation
+## 验证
 
-Every collection is validated when the config is loaded. Validation runs on every `swag2mcp mcp` startup. If it fails, the MCP server will not start — in some IDEs this means the server simply won't connect, and the LLM receives a clear error message explaining what to fix.
+每个 collection 在加载配置时都会被验证。验证在每次 `swag2mcp mcp` 启动时运行。如果失败，MCP 服务器将不会启动 — 在某些 IDE 中，这意味着服务器根本无法连接，LLM 会收到清晰的错误消息，说明需要修复什么。
 
-| Check | Rule |
-|-------|------|
-| **Location** | Required, 5–250 characters |
-| **Location accessibility** | Must be a reachable URL or existing file |
-| **Location validity** | Must be a valid OpenAPI 3.x, Swagger 2.0, or Postman file |
-| **LLM Title** | Max 120 characters, letters/digits/basic punctuation |
-| **LLM Instruction** | Max 360 characters, same character set as title |
-| **Base URL** | Must be a valid URL if set |
-| **Base Mock URL** | Must be `host:port` or `host:port/path` where host is `localhost`, `127.0.0.1`, or `0.0.0.0` |
-| **Mock required** | If `mock_enabled: true`, every collection must have `base_mock_url` |
-| **Duplicate mock ports** | No two collections may share the same mock port |
+| 检查项 | 规则 |
+|--------|------|
+| **位置** | 必需，5–250 字符 |
+| **位置可访问性** | 必须是可达的 URL 或存在的文件 |
+| **位置有效性** | 必须是有效的 OpenAPI 3.x、Swagger 2.0 或 Postman 文件 |
+| **LLM 标题** | 最多 120 字符，字母/数字/基本标点 |
+| **LLM 指令** | 最多 360 字符，与标题相同的字符集 |
+| **基础 URL** | 如果设置，必须是有效的 URL |
+| **基础模拟 URL** | 必须是 `host:port` 或 `host:port/path`，其中 host 为 `localhost`、`127.0.0.1` 或 `0.0.0.0` |
+| **模拟必需** | 如果 `mock_enabled: true`，每个 collection 必须有 `base_mock_url` |
+| **重复模拟端口** | 没有两个 collection 可以共享相同的模拟端口 |
 
-To diagnose issues before starting the server, use the [`validate`](../cli/validate.md) command:
+要在启动服务器之前诊断问题，使用 [`validate`](../cli/validate.md) 命令：
 
 ```bash
-# Validate default workspace (~/.swag2mcp)
+# 验证默认工作区（~/.swag2mcp）
 swag2mcp validate
 
-# Validate a custom project workspace
+# 验证自定义项目工作区
 swag2mcp validate ./my-project
 ```
 
-## Adding Collections
+## 添加 Collection
 
-### Via YAML Config
+### 通过 YAML 配置
 
-Edit `~/.swag2mcp/swag2mcp.yaml` directly:
+直接编辑 `~/.swag2mcp/swag2mcp.yaml`：
 
 ```yaml
 specs:
@@ -152,36 +152,36 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
 ```
 
-After editing, restart the MCP server (`swag2mcp mcp`) for changes to take effect.
+编辑后，重启 MCP 服务器（`swag2mcp mcp`）以使更改生效。
 
-### Via CLI
+### 通过 CLI
 
 ```bash
-# Interactive mode
+# 交互模式
 swag2mcp add collection
 
-# Non-interactive with YAML
+# 非交互模式，使用 YAML
 swag2mcp add collection --yaml 'spec_domain: meteo
 llm_title: Forecast
 location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml'
 
-# Pipe from stdin
+# 从 stdin 管道输入
 cat collection.yaml | swag2mcp add collection --yaml -
 
-# Show YAML example
+# 显示 YAML 示例
 swag2mcp add collection --example
 ```
 
-### Via Import
+### 通过导入
 
 ```bash
-# Import a spec file into the workspace
+# 将规范文件导入工作区
 swag2mcp import https://example.com/api.yaml
 ```
 
-## LLM Instruction
+## LLM 指令
 
-Collections can have their own `llm_instruction` (up to 360 chars) for more specific guidance. This is injected into the swag2mcp system prompt alongside the spec-level instruction.
+Collection 可以有自己 `llm_instruction`（最多 360 字符）以提供更具体的指导。这会与 spec 级别的指令一起注入到 swag2mcp 系统提示中。
 
 ```yaml
 specs:
@@ -197,11 +197,11 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/air-quality.yml
 ```
 
-If `llm_title` is not set, it is automatically populated from the spec document's `title` field. If `llm_instruction` is not set, it is populated from the spec document's `description` field.
+如果未设置 `llm_title`，它会从规范文档的 `title` 字段自动填充。如果未设置 `llm_instruction`，它会从规范文档的 `description` 字段填充。
 
-## Disable
+## 禁用
 
-Set `disable: true` to skip a collection. It won't be loaded, indexed, or available to the LLM.
+设置 `disable: true` 跳过 collection。它不会被加载、索引或提供给 LLM。
 
 ```yaml
 specs:
@@ -216,9 +216,9 @@ specs:
         disable: true
 ```
 
-## Base URL Override
+## 基础 URL 覆盖
 
-Each collection can override the spec's `base_url`. This is useful when different collections within the same spec use different API endpoints.
+每个 collection 可以覆盖 spec 的 `base_url`。当同一 spec 中的不同 collection 使用不同的 API 端点时，这很有用。
 
 ```yaml
 specs:
@@ -236,9 +236,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
-## HTTP Client Override
+## HTTP 客户端覆盖
 
-Collections can override HTTP settings (headers, cookies) from the spec and global levels.
+Collection 可以覆盖 spec 和全局级别的 HTTP 设置（头、cookie）。
 
 ```yaml
 specs:
@@ -256,11 +256,11 @@ specs:
               value: abc123
 ```
 
-Settings cascade: global → spec → collection. See [Configuration Cascade](../configuration/cascade.md) for details.
+设置级联：全局 → spec → collection。详情请参见[配置级联](../configuration/cascade.md)。
 
-## Mock Server
+## 模拟服务器
 
-When `mock_enabled: true` is set at the config level, every collection must have `base_mock_url` set. This tells swag2mcp where the mock server is running for this collection.
+当在配置级别设置 `mock_enabled: true` 时，每个 collection 必须设置 `base_mock_url`。这告诉 swag2mcp 模拟服务器正在为此 collection 运行的位置。
 
 ```yaml
 mock_enabled: true
@@ -274,11 +274,11 @@ specs:
         base_mock_url: localhost:8080
 ```
 
-See [Mock Server](../advanced/mock-server.md) for full details.
+完整详情请参见[模拟服务器](../advanced/mock-server.md)。
 
-## Examples
+## 示例
 
-### Minimal Collection
+### 最小 Collection
 
 ```yaml
 specs:
@@ -290,7 +290,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-### Full Collection with All Fields
+### 包含所有字段的完整 Collection
 
 ```yaml
 specs:
@@ -310,7 +310,7 @@ specs:
             X-Custom: value
 ```
 
-### Multiple Collections per Spec
+### 每个 Spec 多个 Collection
 
 ```yaml
 specs:
@@ -328,7 +328,7 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
 ```
 
-### Local File in Workspace (specs/ Directory)
+### 工作区中的本地文件（specs/ 目录）
 
 ```yaml
 specs:
@@ -342,7 +342,7 @@ specs:
         location: specs/orders.openapi.json
 ```
 
-### Disabled Collection
+### 禁用的 Collection
 
 ```yaml
 specs:
@@ -357,13 +357,13 @@ specs:
         disable: true
 ```
 
-## Related
+## 相关
 
-- [Collection Settings (config)](../configuration/collection-settings.md) — full YAML reference
-- [Configuration Cascade](../configuration/cascade.md) — how settings override each other
-- [Specs](./specs) — logical containers for collections
-- [HTTP Client](../configuration/http-client.md) — HTTP client configuration
-- [Mock Server](../advanced/mock-server.md) — mock server setup
-- [CLI: validate](../cli/validate.md) — validate command reference
-- [CLI: update](../cli/update.md) — update command reference
-- [CLI: clean](../cli/clean.md) — clean command reference
+- [Collection 设置（配置）](../configuration/collection-settings.md) — 完整 YAML 参考
+- [配置级联](../configuration/cascade.md) — 设置如何相互覆盖
+- [Specs](./specs) — collection 的逻辑容器
+- [HTTP 客户端](../configuration/http-client.md) — HTTP 客户端配置
+- [模拟服务器](../advanced/mock-server.md) — 模拟服务器设置
+- [CLI: validate](../cli/validate.md) — validate 命令参考
+- [CLI: update](../cli/update.md) — update 命令参考
+- [CLI: clean](../cli/clean.md) — clean 命令参考

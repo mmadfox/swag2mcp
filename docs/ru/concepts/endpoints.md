@@ -1,56 +1,56 @@
-# Endpoints
+# Эндпоинты
 
-An endpoint is a specific HTTP method + path that can be invoked (e.g., `GET /api/users/{id}`). Endpoints are the actual API operations that the LLM discovers, inspects, and calls.
+Эндпоинт — это конкретный HTTP-метод + путь, который можно вызвать (например, `GET /api/users/{id}`). Эндпоинты — это фактические операции API, которые LLM обнаруживает, изучает и вызывает.
 
-## Structure
+## Структура
 
-Each endpoint contains:
+Каждый эндпоинт содержит:
 
-- **HTTP method**: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS
-- **Path**: `/api/v1/users/{id}`
-- **Summary**: a short description of what the endpoint does — very useful for the LLM to understand its purpose at a glance
-- **Description**: a detailed explanation of the endpoint's behavior, parameters, and use cases
-- **Parameters**: path, query, header, cookie
-- **Request body**: for POST/PUT/PATCH
-- **Responses**: status codes and response schemas
+- **HTTP-метод**: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS
+- **Путь**: `/api/v1/users/{id}`
+- **Summary**: краткое описание того, что делает эндпоинт — очень полезно для LLM, чтобы быстро понять его назначение
+- **Description**: подробное объяснение поведения эндпоинта, его параметров и вариантов использования
+- **Параметры**: path, query, header, cookie
+- **Тело запроса**: для POST/PUT/PATCH
+- **Ответы**: коды статуса и схемы ответов
 
-The `summary` and `description` fields come from the OpenAPI/Swagger/Postman file. They are the primary way the LLM understands what an endpoint does. Well-written summaries make endpoint discovery much more effective.
+Поля `summary` и `description` берутся из файла OpenAPI/Swagger/Postman. Это основной способ, с помощью которого LLM понимает, что делает эндпоинт. Хорошо написанные summary делают поиск эндпоинтов гораздо эффективнее.
 
-## MCP Tools for Endpoints
+## MCP-инструменты для эндпоинтов
 
-| Tool | Description |
+| Инструмент | Описание |
 |------|-------------|
-| `endpoint_by_spec` | All endpoints in a spec |
-| `endpoint_by_collection` | Endpoints in a collection |
-| `endpoint_by_tag` | Endpoints in a tag |
-| `endpoint_by_id` | Quick endpoint summary |
-| `inspect` | Full endpoint details (schemas, params) |
-| `invoke` | Call the endpoint |
-| `search` | Search endpoints by text |
+| `endpoint_by_spec` | Все эндпоинты в спецификации |
+| `endpoint_by_collection` | Эндпоинты в коллекции |
+| `endpoint_by_tag` | Эндпоинты в теге |
+| `endpoint_by_id` | Краткая сводка эндпоинта |
+| `inspect` | Полная информация об эндпоинте (схемы, параметры) |
+| `invoke` | Вызов эндпоинта |
+| `search` | Поиск эндпоинтов по тексту |
 
-## Deprecated Endpoints
+## Устаревшие эндпоинты
 
-Endpoints marked as `deprecated` in the spec are shown with a notice when inspected.
+Эндпоинты, помеченные как `deprecated` в спецификации, отображаются с предупреждением при просмотре.
 
-## Configuration
+## Конфигурация
 
-Endpoints are **read-only** from swag2mcp's perspective. There are no YAML config settings for endpoints — you cannot add, remove, rename, or modify them in `swag2mcp.yaml`.
+Эндпоинты **доступны только для чтения** с точки зрения swag2mcp. В YAML-конфиге нет настроек для эндпоинтов — вы не можете добавлять, удалять, переименовывать или изменять их в `swag2mcp.yaml`.
 
-To change endpoints (add new ones, update summaries, modify parameters, mark as deprecated), edit the original OpenAPI/Swagger/Postman file and run `swag2mcp update` to re-parse and re-index.
+Чтобы изменить эндпоинты (добавить новые, обновить summary, изменить параметры, пометить как устаревшие), отредактируйте исходный файл OpenAPI/Swagger/Postman и выполните `swag2mcp update` для повторного разбора и индексации.
 
-## Example
+## Пример
 
 ```
-Query: "Show details for GET /pet/{petId}"
+Запрос: "Покажи детали GET /pet/{petId}"
 → inspect(endpointId: "abc123...")
-→ Result:
+→ Результат:
   GET /pet/{petId}
-  Summary: Find pet by ID
-  Description: Returns a single pet by its ID
-  Parameters:
-    - petId (path, integer, required)
-  Responses:
-    - 200: Pet object
-    - 400: Error
-    - 404: Not found
+  Summary: Найти питомца по ID
+  Description: Возвращает одного питомца по его ID
+  Параметры:
+    - petId (path, integer, обязательно)
+  Ответы:
+    - 200: Объект Pet
+    - 400: Ошибка
+    - 404: Не найдено
 ```

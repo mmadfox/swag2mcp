@@ -1,58 +1,58 @@
-# Skills
+# スキル
 
-## Customizing Output Format
+## 出力形式のカスタマイズ
 
-Every swag2mcp MCP tool returns structured JSON data. How this data is **presented** to the user depends on the LLM's formatting skill — and you can control it completely.
+すべての swag2mcp MCP ツールは構造化された JSON データを返します。このデータがユーザーにどのように**表示**されるかは、LLM のフォーマットスキルに依存します。そして、それを完全に制御できます。
 
-### The default format skill
+### デフォルトのフォーマットスキル
 
-swag2mcp ships with a built-in formatting skill that defines compact, human-readable markdown for every tool response:
+swag2mcp には、すべてのツールレスポンスに対してコンパクトで人間可読なマークダウンを定義する組み込みのフォーマットスキルが付属しています：
 
 [swag2mcp-format SKILL.md](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md)
 
-This skill covers all 19 MCP tools with:
-- Tight tables for lists (specs, collections, tags, endpoints)
-- Inline headers for detail views
-- Compact schema representation for `inspect`
-- Consistent styling across all responses
+このスキルは 19 の MCP ツールすべてをカバーし、以下を提供します：
+- リスト用のタイトなテーブル（スペック、コレクション、タグ、エンドポイント）
+- 詳細ビュー用のインラインヘッダー
+- `inspect` 用のコンパクトなスキーマ表現
+- すべてのレスポンスで一貫したスタイリング
 
-### Why skills matter
+### スキルが重要な理由
 
-The same data can be presented in radically different ways depending on the skill:
+同じデータでも、スキルによってまったく異なる方法で表示できます：
 
-| Style | Example output |
+| スタイル | 出力例 |
 |-------|---------------|
-| **Compact tables** (default) | `GET /pet/{petId}` — Find pet by ID |
-| **Verbose** | `Method: GET, Path: /pet/{petId}, Summary: Find pet by ID, Deprecated: false` |
-| **Minimal** | `GET /pet/{petId}` |
-| **Technical** | `GET /pet/{petId} → 200: Pet object, 404: Not found` |
-| **Custom** | Any format you can describe |
+| **コンパクトテーブル**（デフォルト） | `GET /pet/{petId}` — ID でペットを検索 |
+| **詳細** | `Method: GET, Path: /pet/{petId}, Summary: ID でペットを検索, Deprecated: false` |
+| **最小限** | `GET /pet/{petId}` |
+| **技術的** | `GET /pet/{petId} → 200: Pet オブジェクト, 404: 見つかりません` |
+| **カスタム** | あなたが記述できる任意の形式 |
 
-### Creating your own skill
+### 独自のスキルを作成する
 
-You can write your own formatting skill by describing the exact output format you want. The skill is a markdown file with formatting rules for each tool. Here are some ideas:
+希望する正確な出力形式を記述して、独自のフォーマットスキルを作成できます。スキルは各ツールのフォーマットルールを含むマークダウンファイルです。以下にいくつかのアイデアを示します：
 
-- **JSON output** — return raw JSON for machine consumption
-- **CSV-style** — tabular data for spreadsheet import
-- **Diagram-friendly** — Mermaid or ASCII diagrams of API structure
-- **Minimal** — just method and path, nothing else
-- **Documentation-style** — full descriptions, examples, and notes
+- **JSON 出力** — 機械処理用の生の JSON を返す
+- **CSV 形式** — スプレッドシートインポート用の表形式データ
+- **図対応** — API 構造の Mermaid または ASCII 図
+- **最小限** — メソッドとパスのみ、他はなし
+- **ドキュメント形式** — 完全な説明、例、メモ
 
-### The only limit is the model
+### 唯一の制限はモデルです
 
-The quality of the formatted output depends entirely on the LLM's ability to follow your formatting rules. A well-written skill with clear examples produces consistent, reliable output. A vague skill produces inconsistent results.
+フォーマットされた出力の品質は、LLM がフォーマットルールに従う能力に完全に依存します。明確な例を含む適切に記述されたスキルは、一貫性のある信頼性の高い出力を生成します。曖昧なスキルは一貫性のない結果を生み出します。
 
-You can:
-- Use the default skill as-is
-- Fork it and tweak the formatting to your taste
-- Write your own from scratch
-- Switch between skills depending on the task
+以下のことが可能です：
+- デフォルトのスキルをそのまま使用する
+- フォークして好みに合わせてフォーマットを調整する
+- ゼロから独自のスキルを作成する
+- タスクに応じてスキルを切り替える
 
-### How to use a skill
+### スキルの使用方法
 
-Skills are loaded by the LLM client (OpenCode, Cursor, Claude Desktop, etc.) as part of its system prompt or agent configuration. Refer to your client's documentation for how to attach a skill file.
+スキルは、システムプロンプトまたはエージェント設定の一部として LLM クライアント（OpenCode、Cursor、Claude Desktop など）によって読み込まれます。スキルファイルの添付方法については、クライアントのドキュメントを参照してください。
 
-For OpenCode, skills are configured in `opencode.json`:
+OpenCode の場合、スキルは `opencode.json` で設定します：
 
 ```json
 {

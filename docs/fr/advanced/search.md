@@ -1,106 +1,106 @@
-# Full-Text Search
+# Recherche en texte intégral
 
-## Overview
+## Aperçu
 
-swag2mcp includes a built-in full-text search engine (bluge) that indexes all endpoints across all specs. The LLM can search for endpoints by method, path, summary, or tag — even without knowing the endpoint ID.
+swag2mcp inclut un moteur de recherche en texte intégral intégré (bluge) qui indexe tous les points d'accès de toutes les specs. Le LLM peut rechercher des points d'accès par méthode, chemin, résumé ou étiquette — même sans connaître l'ID du point d'accès.
 
-## How indexing works
+## Comment fonctionne l'indexation
 
-When a spec is added or updated, every endpoint is indexed. The following fields are searchable:
+Lorsqu'une spec est ajoutée ou mise à jour, chaque point d'accès est indexé. Les champs suivants sont consultables :
 
-| Field | Description | Example |
+| Champ | Description | Exemple |
 |-------|-------------|---------|
-| `method` | HTTP method | `GET`, `POST`, `PUT` |
-| `path` | API endpoint path | `/api/v1/users/{id}` |
-| `summary` | OpenAPI summary | "Find pet by ID" |
-| `tag` | Endpoint category | "pets", "users" |
-| `_all` | All fields combined | method + path + tag + summary |
+| `method` | Méthode HTTP | `GET`, `POST`, `PUT` |
+| `path` | Chemin du point d'accès API | `/api/v1/users/{id}` |
+| `summary` | Résumé OpenAPI | « Trouver un animal par ID » |
+| `tag` | Catégorie du point d'accès | « animaux », « utilisateurs » |
+| `_all` | Tous les champs combinés | méthode + chemin + étiquette + résumé |
 
-The index is rebuilt on every MCP server start. It is stored in memory for fast searches.
+L'index est reconstruit à chaque démarrage du serveur MCP. Il est stocké en mémoire pour des recherches rapides.
 
-## Query syntax
+## Syntaxe de requête
 
-The search supports a rich query syntax for precise filtering:
+La recherche prend en charge une syntaxe de requête riche pour un filtrage précis :
 
-| Example | Description |
+| Exemple | Description |
 |---------|-------------|
-| `pet` | Simple text search across all fields |
-| `method:GET` | Find all GET endpoints |
-| `tag:pets` | Find endpoints in the "pets" tag |
-| `path:"/api/v1/users"` | Exact path match |
-| `+method:POST +tag:pet` | Must match both conditions |
-| `-method:DELETE` | Exclude DELETE methods |
-| `create~` | Fuzzy search (typo-tolerant) |
-| `cr*` | Wildcard search |
-| `"find pet"` | Phrase search |
-| `+summary:pet -method:DELETE` | Include "pet" in summary, exclude DELETE |
+| `animal` | Recherche textuelle simple dans tous les champs |
+| `method:GET` | Trouver tous les points d'accès GET |
+| `tag:animaux` | Trouver les points d'accès dans l'étiquette « animaux » |
+| `path:"/api/v1/users"` | Correspondance exacte de chemin |
+| `+method:POST +tag:animal` | Doit correspondre aux deux conditions |
+| `-method:DELETE` | Exclure les méthodes DELETE |
+| `create~` | Recherche floue (tolérante aux fautes de frappe) |
+| `cr*` | Recherche par joker |
+| `"trouver animal"` | Recherche par phrase |
+| `+summary:animal -method:DELETE` | Inclure « animal » dans le résumé, exclure DELETE |
 
-### Field-specific search
+### Recherche par champ spécifique
 
-You can search within specific fields using the `field:value` syntax:
+Vous pouvez rechercher dans des champs spécifiques en utilisant la syntaxe `champ:valeur` :
 
 ```
 method:GET
-tag:pets
-path:"/pet/findByStatus"
-summary:"find pet by status"
+tag:animaux
+path:"/animal/findByStatus"
+summary:"trouver animal par statut"
 ```
 
-### Boolean operators
+### Opérateurs booléens
 
-- `+` — the term must match (AND)
-- `-` — the term must not match (NOT)
-- Space between terms — OR (any term can match)
+- `+` — le terme doit correspondre (ET)
+- `-` — le terme ne doit pas correspondre (NON)
+- Espace entre les termes — OU (n'importe quel terme peut correspondre)
 
-### Fuzzy and wildcard
+### Recherche floue et par joker
 
-- `term~` — fuzzy search (matches similar words, handles typos)
-- `te*` — wildcard (matches any characters)
-- `te?t` — single character wildcard
+- `terme~` — recherche floue (correspond à des mots similaires, gère les fautes de frappe)
+- `te*` — joker (correspond à n'importe quels caractères)
+- `te?t` — joker pour un seul caractère
 
-## Examples
+## Exemples
 
 ```
-# Find all GET requests
+# Trouver toutes les requêtes GET
 method:GET
 
-# Find POST requests in the pet tag
-+method:POST +tag:pet
+# Trouver les requêtes POST dans l'étiquette animal
++method:POST +tag:animal
 
-# Find endpoints by exact path
-path:"/pet/findByStatus"
+# Trouver des points d'accès par chemin exact
+path:"/animal/findByStatus"
 
-# Find by description
-"find pet by status"
+# Trouver par description
+"trouver animal par statut"
 
-# Find everything except DELETE
-+summary:pet -method:DELETE
+# Trouver tout sauf DELETE
++summary:animal -method:DELETE
 
-# Fuzzy search for "create" (handles typos)
+# Recherche floue pour « create » (gère les fautes de frappe)
 create~
 ```
 
-## MCP tool
+## Outil MCP
 
-The `search` MCP tool exposes the search engine to the LLM:
+L'outil MCP `search` expose le moteur de recherche au LLM :
 
 ```
-→ search(query: "find pet by status", limit: 5)
-← GET /pet/findByStatus — Finds Pets by status
-   GET /pet/{petId} — Find pet by ID
+→ search(query: "trouver animal par statut", limit: 5)
+← GET /animal/findByStatus — Trouve les animaux par statut
+   GET /animal/{animalId} — Trouver un animal par ID
 ```
 
-### Parameters
+### Paramètres
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `query` | Yes | Search query (supports structured syntax) |
-| `limit` | Yes | Maximum results (1-50) |
+| Paramètre | Requis | Description |
+|-----------|--------|-------------|
+| `query` | Oui | Requête de recherche (prend en charge la syntaxe structurée) |
+| `limit` | Oui | Nombre maximum de résultats (1-50) |
 
-## Important notes
+## Notes importantes
 
-- **The index is in-memory** — it is rebuilt every time the MCP server starts. There is no persistent index file.
-- **All fields are lowercased** — searches are case-insensitive
-- **Limit is capped at 50** — you cannot request more than 50 results
-- **Invalid query syntax** returns a helpful error message with examples
-- **The `_all` field** combines method, path, tag, and summary for simple text searches
+- **L'index est en mémoire** — il est reconstruit à chaque démarrage du serveur MCP. Il n'y a pas de fichier d'index persistant.
+- **Tous les champs sont en minuscules** — les recherches sont insensibles à la casse
+- **La limite est plafonnée à 50** — vous ne pouvez pas demander plus de 50 résultats
+- **Une syntaxe de requête invalide** retourne un message d'erreur utile avec des exemples
+- **Le champ `_all`** combine méthode, chemin, étiquette et résumé pour les recherches textuelles simples

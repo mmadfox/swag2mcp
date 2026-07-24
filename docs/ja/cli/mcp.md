@@ -1,121 +1,121 @@
 # mcp
 
-## Purpose
+## 目的
 
-Start the **MCP (Model Context Protocol) server** — the primary mode for LLM integration. This is what you run to give an AI agent (Claude, Cursor, OpenCode, etc.) access to your APIs through 16 MCP tools.
+**MCP（Model Context Protocol）サーバー** を起動します — LLM 統合の主要モードです。これを実行すると、AI エージェント（Claude、Cursor、OpenCode など）が 16 の MCP ツールを通じて API にアクセスできるようになります。
 
-## When to use
+## 使用するタイミング
 
-- You want to connect an LLM agent to your APIs
-- You are configuring an IDE (VS Code, Cursor, JetBrains) or desktop app (Claude Desktop)
-- You need to expose your APIs via the MCP protocol
-- You are testing the MCP server before integration
+- LLM エージェントを API に接続したい場合
+- IDE（VS Code、Cursor、JetBrains）またはデスクトップアプリ（Claude Desktop）を設定している場合
+- MCP プロトコルを介して API を公開する必要がある場合
+- 統合前に MCP サーバーをテストしている場合
 
-## Syntax
+## 構文
 
 ```bash
 swag2mcp mcp [path] [flags]
 ```
 
-## Arguments
+## 引数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 引数 | 位置 | 必須 | 説明 |
+|------|------|------|------|
+| `path` | 1 | いいえ | ワークスペースディレクトリ。省略時はパス解決ルールに従います。 |
 
-## Flags
+## フラグ
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--transport` | | `string` | `"stdio"` | MCP transport: `stdio`, `sse`, `streamable-http` |
-| `--http-addr` | | `string` | `":8080"` | HTTP server address (for `sse` and `streamable-http`) |
-| `--http-path` | | `string` | `"/mcp"` | HTTP path for the MCP handler |
-| `--auth-token` | | `string` | `""` | Bearer token for HTTP transport authentication |
-| `--logfile` | `-f` | `string` | `""` | Log file path. If unset, logs to stderr. |
-| `--disable-llm-auth` | | `bool` | `true` | Remove the `auth` tool from the MCP tool list |
-| `--dump-dir` | | `string` | `""` | Directory to dump HTTP requests for debugging |
-| `--tags` | `-t` | `string` | `""` | Filter specs by tags (comma-separated) |
+| フラグ | 省略形 | 型 | デフォルト | 説明 |
+|-------|--------|-----|-----------|------|
+| `--transport` | | `string` | `"stdio"` | MCP トランスポート：`stdio`、`sse`、`streamable-http` |
+| `--http-addr` | | `string` | `":8080"` | HTTP サーバーアドレス（`sse` および `streamable-http` 用） |
+| `--http-path` | | `string` | `"/mcp"` | MCP ハンドラーの HTTP パス |
+| `--auth-token` | | `string` | `""` | HTTP トランスポート認証用の Bearer トークン |
+| `--logfile` | `-f` | `string` | `""` | ログファイルパス。未設定の場合は stderr に出力。 |
+| `--disable-llm-auth` | | `bool` | `true` | MCP ツールリストから `auth` ツールを削除 |
+| `--dump-dir` | | `string` | `""` | デバッグ用に HTTP リクエストをダンプするディレクトリ |
+| `--tags` | `-t` | `string` | `""` | タグで spec をフィルタリング（カンマ区切り） |
 
-## How it works
+## 仕組み
 
-### stdio transport (default)
+### stdio トランスポート（デフォルト）
 
-Used when the MCP server is launched as a subprocess by the LLM client (IDE, Claude Desktop, etc.). The server communicates over standard input/output.
+MCP サーバーが LLM クライアント（IDE、Claude Desktop など）によってサブプロセスとして起動される場合に使用されます。サーバーは標準入出力を介して通信します。
 
 ```bash
 swag2mcp mcp
 ```
 
-### SSE transport
+### SSE トランスポート
 
-Server-Sent Events transport for HTTP-based communication. Requires the MCP handshake sequence.
+HTTP ベースの通信のための Server-Sent Events トランスポート。MCP ハンドシェイクシーケンスが必要です。
 
 ```bash
 swag2mcp mcp --transport sse --http-addr :8080
 ```
 
-### Streamable HTTP transport
+### Streamable HTTP トランスポート
 
-Modern HTTP transport that supports streaming responses.
+ストリーミングレスポンスをサポートする最新の HTTP トランスポート。
 
 ```bash
 swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 ```
 
-### With authentication
+### 認証付き
 
-Protect the HTTP endpoint with a bearer token:
+HTTP エンドポイントを Bearer トークンで保護します：
 
 ```bash
 swag2mcp mcp --transport sse --http-addr :8080 --auth-token "my-secret"
 ```
 
-### With tag filtering
+### タグフィルタリング付き
 
-Only load specs with specific tags:
+特定のタグを持つ spec のみを読み込みます：
 
 ```bash
 swag2mcp mcp --tags=public
 ```
 
-### With auth tool enabled (debug mode)
+### auth ツール有効（デバッグモード）
 
-Allow the LLM to request fresh tokens via the `auth` tool:
+LLM が `auth` ツールを介して新しいトークンを要求できるようにします：
 
 ```bash
 swag2mcp mcp --disable-llm-auth=false
 ```
 
-### With request dump directory
+### リクエストダンプディレクトリ付き
 
-Save all HTTP requests for debugging:
+デバッグ用にすべての HTTP リクエストを保存します：
 
 ```bash
 swag2mcp mcp --dump-dir ./dumps
 ```
 
-## MCP HTTP Transport — Handshake Protocol
+## MCP HTTP トランスポート — ハンドシェイクプロトコル
 
-When using `sse` or `streamable-http`, the MCP protocol requires a specific handshake. Tool calls will fail before initialization:
+`sse` または `streamable-http` を使用する場合、MCP プロトコルは特定のハンドシェイクを必要とします。初期化前のツール呼び出しは失敗します：
 
 ```
 Step 1: POST /mcp → {"method":"initialize", ...}
 Step 2: POST /mcp → {"method":"notifications/initialized"}
-Step 3: POST /mcp → {"method":"tools/list", ...}   ← now works
+Step 3: POST /mcp → {"method":"tools/list", ...}   ← これで動作
 ```
 
-### Health check
+### ヘルスチェック
 
-Works without initialization:
+初期化なしで動作します：
 
 ```bash
 curl http://localhost:8080/health
 # → {"status":"ok","version":"v1.2.0"}
 ```
 
-## IDE Configuration Examples
+## IDE 設定例
 
-### VS Code (`.vscode/settings.json` or global settings)
+### VS Code（`.vscode/settings.json` またはグローバル設定）
 
 ```json
 {
@@ -130,7 +130,7 @@ curl http://localhost:8080/health
 }
 ```
 
-### Cursor / Windsurf (`~/.cursor/mcp.json` or project `.cursor/mcp.json`)
+### Cursor / Windsurf（`~/.cursor/mcp.json` またはプロジェクト `.cursor/mcp.json`）
 
 ```json
 {
@@ -143,7 +143,7 @@ curl http://localhost:8080/health
 }
 ```
 
-### Claude Desktop (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS)
+### Claude Desktop（macOS では `~/Library/Application Support/Claude/claude_desktop_config.json`）
 
 ```json
 {
@@ -156,26 +156,26 @@ curl http://localhost:8080/health
 }
 ```
 
-### JetBrains IDEs (Settings → Tools → MCP)
+### JetBrains IDE（設定 → ツール → MCP）
 
-- Name: `swag2mcp`
-- Command: `swag2mcp`
-- Arguments: `mcp /absolute/path/to/.swag2mcp`
+- 名前：`swag2mcp`
+- コマンド：`swag2mcp`
+- 引数：`mcp /absolute/path/to/.swag2mcp`
 
-> **Always use an absolute path** to the workspace directory in IDE config. Relative paths may fail depending on the IDE's working directory.
+> **IDE 設定では常に絶対パス** をワークスペースディレクトリに使用してください。相対パスは IDE の作業ディレクトリによっては失敗する可能性があります。
 
-## Output
+## 出力
 
-On success, the server prints:
+成功時に、サーバーは以下を出力します：
 
 ```
 MCP server listening on http://127.0.0.1:8080/mcp
 ```
 
-## Nuances
+## ニュアンス
 
-- **No auto-init:** If the config file does not exist, `mcp` returns an error: `"configuration not found at <path>"`. Run `init` first.
-- **`--disable-llm-auth` (default: `true`):** When enabled, the `auth` tool is removed from the MCP tool list entirely. The LLM cannot see or request tokens. Auth still works — tokens are obtained through the standard config mechanism, not via the LLM. This mode is recommended for **production**. For **debugging** or when using short-lived tokens, set `--disable-llm-auth=false` to let the LLM request fresh tokens via the `auth` tool.
-- **YAML config fallback:** If a CLI flag is not explicitly set, the value is taken from the `mcp` section in `swag2mcp.yaml` (if present). This allows you to configure the server in the config file instead of passing flags every time.
-- **Response cleanup:** On startup, responses older than 48 hours are automatically removed from the `responses/` directory.
-- **Path resolution warning:** When `[path]` is omitted, `mcp` searches for `swag2mcp.yaml` in the current directory first, then falls back to `~/.swag2mcp/`. If you run the command from the wrong directory, it may load a different workspace than intended. **Always specify `[path]` explicitly when running as a service or in IDE config.**
+- **自動初期化なし:** 設定ファイルが存在しない場合、`mcp` はエラーを返します：`"configuration not found at <path>"`。最初に `init` を実行してください。
+- **`--disable-llm-auth`（デフォルト：`true`）:** 有効な場合、`auth` ツールは MCP ツールリストから完全に削除されます。LLM はトークンを表示したり要求したりできません。認証は引き続き機能します — トークンは LLM 経由ではなく、標準の設定メカニズムを通じて取得されます。このモードは**本番環境**に推奨されます。**デバッグ**や短命トークンを使用する場合は、`--disable-llm-auth=false` を設定して LLM が `auth` ツールを介して新しいトークンを要求できるようにします。
+- **YAML 設定のフォールバック:** CLI フラグが明示的に設定されていない場合、値は `swag2mcp.yaml` の `mcp` セクションから取得されます（存在する場合）。これにより、毎回フラグを渡す代わりに設定ファイルでサーバーを設定できます。
+- **レスポンスクリーンアップ:** 起動時に、48 時間以上経過したレスポンスが `responses/` ディレクトリから自動的に削除されます。
+- **パス解決の警告:** `[path]` が省略された場合、`mcp` は最初にカレントディレクトリで `swag2mcp.yaml` を検索し、次に `~/.swag2mcp/` にフォールバックします。間違ったディレクトリからコマンドを実行すると、意図したものとは異なるワークスペースが読み込まれる可能性があります。**サービスとして実行する場合や IDE 設定では、常に `[path]` を明示的に指定してください。**

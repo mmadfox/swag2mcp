@@ -1,45 +1,45 @@
 # ls
 
-## Purpose
+## Propósito
 
-List all configured **specs** and their **collections** in a human-readable format. This is the primary way to inspect what APIs are available in your workspace.
+Listar todas las **especificaciones** configuradas y sus **colecciones** en un formato legible por humanos. Esta es la forma principal de inspeccionar qué APIs están disponibles en su espacio de trabajo.
 
-## When to use
+## Cuándo usarlo
 
-- You want to see what APIs are configured
-- You need to find a spec or collection ID
-- You want to check how many endpoints each collection has
-- You want to filter specs by tags
+- Desea ver qué APIs están configuradas
+- Necesita encontrar un ID de especificación o colección
+- Desea verificar cuántos endpoints tiene cada colección
+- Desea filtrar especificaciones por etiquetas
 
-## Syntax
+## Sintaxis
 
 ```bash
 swag2mcp ls [path] [flags]
 ```
 
-## Arguments
+## Argumentos
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| Argumento | Posición | Requerido | Descripción |
+|-----------|----------|-----------|-------------|
+| `path` | 1 | No | Directorio del espacio de trabajo. Si se omite, se resuelve mediante reglas de resolución de ruta. |
 
-## Flags
+## Banderas
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--tags` | `-t` | `string` | `""` | Filter specs by tags (comma-separated) |
+| Bandera | Abreviatura | Tipo | Valor predeterminado | Descripción |
+|---------|-------------|------|---------------------|-------------|
+| `--tags` | `-t` | `string` | `""` | Filtrar especificaciones por etiquetas (separadas por comas) |
 
-## How it works
+## Cómo funciona
 
-### List all specs
+### Listar todas las especificaciones
 
-Shows every spec with its domain, collections, and endpoint counts:
+Muestra cada especificación con su dominio, colecciones y recuentos de endpoints:
 
 ```bash
 swag2mcp ls
 ```
 
-Example output:
+Ejemplo de salida:
 
 ```
 Specifications:
@@ -52,21 +52,21 @@ Specifications:
     market-data (12 endpoints)
 ```
 
-### Filter by tags
+### Filtrar por etiquetas
 
-Show only specs that have the specified tags:
+Mostrar solo las especificaciones que tienen las etiquetas especificadas:
 
 ```bash
 swag2mcp ls --tags=public
 swag2mcp ls --tags=public,internal
 ```
 
-## Post-command verification
+## Verificación posterior al comando
 
-Use `ls` after `add`, `delete`, `update`, or `import` to confirm the workspace state matches your expectations.
+Use `ls` después de `add`, `delete`, `update` o `import` para confirmar que el estado del espacio de trabajo coincida con sus expectativas.
 
-## Nuances
+## Matices
 
-- **Auto-init:** If no config file exists, `ls` automatically runs the init wizard first.
-- **Tag filtering:** Tags are comma-separated. Specs matching **any** of the specified tags are shown (OR logic).
-- **Output format:** The output is plain text, not JSON. For machine-readable output, use `info`.
+- **Auto-inicio:** Si no existe un archivo de configuración, `ls` ejecuta automáticamente el asistente de inicio primero.
+- **Filtrado por etiquetas:** Las etiquetas están separadas por comas. Se muestran las especificaciones que coinciden con **cualquiera** de las etiquetas especificadas (lógica OR).
+- **Formato de salida:** La salida es texto plano, no JSON. Para una salida legible por máquina, use `info`.

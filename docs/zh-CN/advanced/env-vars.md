@@ -1,12 +1,12 @@
-# Environment Variables
+# 环境变量
 
-## Overview
+## 概述
 
-swag2mcp supports environment variable substitution in the configuration file using `$(VAR_NAME)` syntax. This lets you keep sensitive data (tokens, passwords, keys) out of the YAML file.
+swag2mcp 支持在配置文件中使用 `$(VAR_NAME)` 语法进行环境变量替换。这让你可以将敏感数据（令牌、密码、密钥）保留在 YAML 文件之外。
 
-## How it works
+## 工作原理
 
-When swag2mcp starts, it scans the configuration for `$(VAR_NAME)` patterns and replaces them with the value of the corresponding environment variable.
+当 swag2mcp 启动时，它会扫描配置中的 `$(VAR_NAME)` 模式，并将其替换为相应环境变量的值。
 
 ```yaml
 specs:
@@ -17,28 +17,28 @@ specs:
         token: "$(API_TOKEN)"
 ```
 
-If the environment variable `API_TOKEN` is set, it will be substituted. If it is not set, the value becomes empty.
+如果设置了环境变量 `API_TOKEN`，它将被替换。如果未设置，该值将变为空。
 
-## Where `$(VAR)` is resolved
+## `$(VAR)` 的解析位置
 
-| Field | Example |
-|-------|---------|
-| Auth `token` (bearer) | `token: "$(API_TOKEN)"` |
-| Auth `username` / `password` (basic, digest) | `password: "$(API_PASSWORD)"` |
-| Auth `client_id` / `client_secret` (oauth2-cc, oauth2-pwd) | `client_secret: "$(OAUTH_SECRET)"` |
-| Auth `api_key` / `secret_key` (hmac) | `api_key: "$(BINANCE_API_KEY)"` |
-| Auth `domain` (script) | `domain: "$(AUTH_DOMAIN)"` |
-| MCP server token | `token: "$(MCP_TOKEN)"` |
-| HTTP client headers | `"X-API-Key": "$(API_KEY)"` |
-| HTTP client cookie values | `value: "$(SESSION_TOKEN)"` |
+| 字段 | 示例 |
+|------|------|
+| Auth `token`（bearer） | `token: "$(API_TOKEN)"` |
+| Auth `username` / `password`（basic、digest） | `password: "$(API_PASSWORD)"` |
+| Auth `client_id` / `client_secret`（oauth2-cc、oauth2-pwd） | `client_secret: "$(OAUTH_SECRET)"` |
+| Auth `api_key` / `secret_key`（hmac） | `api_key: "$(BINANCE_API_KEY)"` |
+| Auth `domain`（script） | `domain: "$(AUTH_DOMAIN)"` |
+| MCP 服务器令牌 | `token: "$(MCP_TOKEN)"` |
+| HTTP 客户端头 | `"X-API-Key": "$(API_KEY)"` |
+| HTTP 客户端 cookie 值 | `value: "$(SESSION_TOKEN)"` |
 
-## Where `$(VAR)` is NOT resolved
+## `$(VAR)` 不会被解析的位置
 
-- Base URLs (`base_url`)
-- Collection locations (`location`)
-- Spec domain names (`domain`)
+- 基础 URL（`base_url`）
+- Collection 位置（`location`）
+- Spec 域名（`domain`）
 
-## Example
+## 示例
 
 ```bash
 export API_TOKEN="eyJhbGciOiJIUzI1NiIs..."
@@ -47,16 +47,16 @@ export MCP_TOKEN="my-secret-token"
 swag2mcp mcp
 ```
 
-## Security best practices
+## 安全最佳实践
 
-- **Never** store secrets directly in the YAML file
-- Use environment variables or an external secret manager
-- Add the YAML file to `.gitignore` if it contains any hardcoded secrets
-- Set environment variables in your shell profile, IDE configuration, or deployment pipeline
+- **永远不要**将密钥直接存储在 YAML 文件中
+- 使用环境变量或外部密钥管理器
+- 如果 YAML 文件包含任何硬编码的密钥，将其添加到 `.gitignore`
+- 在 shell 配置文件、IDE 配置或部署管道中设置环境变量
 
-## Syntax details
+## 语法细节
 
-- `$(VAR_NAME)` — standard syntax
-- `$( VAR_NAME )` — whitespace inside parentheses is allowed and trimmed
-- `$()` — empty variable name returns the original string unchanged
-- Nested `$(...)` patterns are not resolved
+- `$(VAR_NAME)` — 标准语法
+- `$( VAR_NAME )` — 括号内的空格允许且会被修剪
+- `$()` — 空变量名返回原始字符串不变
+- 嵌套的 `$(...)` 模式不会被解析

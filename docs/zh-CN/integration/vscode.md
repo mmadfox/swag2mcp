@@ -1,8 +1,8 @@
-# VS Code Integration
+# VS Code 集成
 
-## Via VS Code Settings
+## 通过 VS Code 设置
 
-In `.vscode/settings.json`:
+在 `.vscode/settings.json` 中：
 
 ```json
 {
@@ -15,9 +15,9 @@ In `.vscode/settings.json`:
 }
 ```
 
-## Via Extension
+## 通过扩展
 
-Install the MCP extension for VS Code and add:
+安装 VS Code 的 MCP 扩展并添加：
 
 ```json
 {
@@ -30,15 +30,15 @@ Install the MCP extension for VS Code and add:
 }
 ```
 
-## Usage
+## 使用
 
-After setup, VS Code AI Assistant can work with your APIs through swag2mcp.
+设置完成后，VS Code AI 助手可以通过 swag2mcp 与你的 API 一起工作。
 
-## Others
+## 其他
 
-Don't see your client? All MCP integrations follow the same pattern:
-- Set the command to `swag2mcp` with argument `mcp`
-- Optionally add a workspace path: `mcp /path/to/workspace`
-- Check your client's documentation for the exact config file location and format
+没有看到你的客户端？所有 MCP 集成遵循相同的模式：
+- 将命令设置为 `swag2mcp`，参数为 `mcp`
+- 可选地添加工作区路径：`mcp /path/to/workspace`
+- 查看客户端的文档以了解确切的配置文件位置和格式
 
-Most MCP clients support stdio transport, and some support HTTP (SSE / Streamable HTTP).
+大多数 MCP 客户端支持 stdio 传输，部分支持 HTTP（SSE / Streamable HTTP）。

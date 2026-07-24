@@ -1,77 +1,77 @@
-# Export and Import
+# Export und Import
 
-## Overview
+## Übersicht
 
-swag2mcp supports full workspace round-trip via ZIP archives. You can export your entire workspace (config, spec files, auth scripts) to a ZIP file and restore it on another machine.
+swag2mcp unterstützt die vollständige Arbeitsbereichs-Roundtrip-Funktionalität über ZIP-Archive. Sie können Ihren gesamten Arbeitsbereich (Konfiguration, Spezifikationsdateien, Authentifizierungsskripte) in eine ZIP-Datei exportieren und auf einem anderen Rechner wiederherstellen.
 
 ## Export
 
-Creates a portable ZIP backup of your workspace.
+Erstellt ein portables ZIP-Backup Ihres Arbeitsbereichs.
 
 ```bash
-# Export to default file (swag2mcp-backup-<timestamp>.zip)
+# In Standarddatei exportieren (swag2mcp-backup-<timestamp>.zip)
 swag2mcp export
 
-# Export with custom path
+# Mit benutzerdefiniertem Pfad exportieren
 swag2mcp export --output ~/backups/swag2mcp-backup.zip
 
-# Export only specific specs
+# Nur bestimmte Specs exportieren
 swag2mcp export --spec meteo
 swag2mcp export --spec meteo,store
 ```
 
-### What's included in the export
+### Was im Export enthalten ist
 
-| Item | Description |
-|------|-------------|
-| `swag2mcp.yaml` | Configuration file |
-| `specs/` | All spec files (OpenAPI/Swagger/Postman) |
-| `auth_scripts/` | Authentication scripts |
-| `swag2mcp.meta` | Metadata (version info for compatibility) |
+| Element | Beschreibung |
+|---------|--------------|
+| `swag2mcp.yaml` | Konfigurationsdatei |
+| `specs/` | Alle Spezifikationsdateien (OpenAPI/Swagger/Postman) |
+| `auth_scripts/` | Authentifizierungsskripte |
+| `swag2mcp.meta` | Metadaten (Versionsinfo für Kompatibilität) |
 
-Cache and responses are **not** exported — they are transient and would be stale on restore.
+Cache und Antworten werden **nicht** exportiert — sie sind flüchtig und wären bei der Wiederherstellung veraltet.
 
-### Default filename
+### Standard-Dateiname
 
-If you don't specify an output path, the file is saved as `swag2mcp-backup-<YYYY-MM-DD-HHMMSS>.zip` in the current directory (UTC timestamp).
+Wenn Sie keinen Ausgabepfad angeben, wird die Datei als `swag2mcp-backup-<YYYY-MM-DD-HHMMSS>.zip` im aktuellen Verzeichnis gespeichert (UTC-Zeitstempel).
 
 ## Import
 
-Restore a workspace from a ZIP backup or import spec files.
+Stellen Sie einen Arbeitsbereich aus einem ZIP-Backup wieder her oder importieren Sie Spezifikationsdateien.
 
-### Restore from ZIP
+### Aus ZIP wiederherstellen
 
 ```bash
-# Restore full workspace
-swag2mcp import --from-zip /path/to/backup.zip
+# Vollständigen Arbeitsbereich wiederherstellen
+swag2mcp import --from-zip /pfad/zu/sicherung.zip
 
-# Restore with overwrite
-swag2mcp import --from-zip /path/to/backup.zip -f
+# Mit Überschreiben wiederherstellen
+swag2mcp import --from-zip /pfad/zu/sicherung.zip -f
 ```
 
-The ZIP must be created by `swag2mcp export` — arbitrary ZIP files will not work.
+Das ZIP muss von `swag2mcp export` erstellt worden sein — beliebige ZIP-Dateien funktionieren nicht.
 
-### Import a single spec file
+### Einzelne Spezifikationsdatei importieren
 
-Download a spec file and add it to the workspace:
+Laden Sie eine Spezifikationsdatei herunter und fügen Sie sie zum Arbeitsbereich hinzu:
 
 ```bash
 swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
+swag2mcp import /pfad/zu/arbeitsbereich https://example.com/spec.yaml myspec
 ```
 
-### Bulk import from existing config
+### Massenimport aus bestehender Konfiguration
 
-Download all collection spec files for the specified specs (domains):
+Laden Sie alle Collection-Spezifikationsdateien für die angegebenen Specs (Domains) herunter:
 
 ```bash
 swag2mcp import --spec meteo
-swag2mcp import /path/to/workspace --spec meteo,store
+swag2mcp import /pfad/zu/arbeitsbereich --spec meteo,store
 ```
 
-This downloads each collection's spec file, saves it to `specs/`, and updates the config to point to the local copy.
+Dies lädt die Spezifikationsdatei jeder Collection herunter, speichert sie in `specs/` und aktualisiert die Konfiguration, um auf die lokale Kopie zu verweisen.
 
-## Use cases
+## Anwendungsfälle
 
 ### Backup
 
@@ -79,35 +79,35 @@ This downloads each collection's spec file, saves it to `specs/`, and updates th
 swag2mcp export --output swag2mcp-$(date +%Y-%m-%d).zip
 ```
 
-### Transfer to another machine
+### Auf einen anderen Rechner übertragen
 
 ```bash
-# On old machine
+# Auf altem Rechner
 swag2mcp export --output swag2mcp.zip
 
-# Copy the ZIP to the new machine, then:
+# ZIP auf den neuen Rechner kopieren, dann:
 swag2mcp import --from-zip swag2mcp.zip
 ```
 
-### Share configuration
+### Konfiguration teilen
 
 ```bash
 swag2mcp init
 swag2mcp export --output template.zip
-# Share template.zip with a colleague
+# template.zip mit einem Kollegen teilen
 ```
 
-## Post-export verification
+## Überprüfung nach dem Export
 
-Always verify the ZIP file was created:
+Überprüfen Sie immer, ob die ZIP-Datei erstellt wurde:
 
 ```bash
 ls -la swag2mcp-backup-*.zip
 ```
 
-## Important notes
+## Wichtige Hinweise
 
-- **The output must be a file path ending in `.zip`** — do not pass a directory
-- **Cache and responses are excluded** — only the config, specs, and auth scripts are preserved
-- **The ZIP is self-contained** — it can be restored on any machine with swag2mcp installed
-- **Spec filter** — use `--spec` to export or import only specific specs
+- **Die Ausgabe muss ein Dateipfad sein, der auf `.zip` endet** — übergeben Sie kein Verzeichnis
+- **Cache und Antworten sind ausgeschlossen** — nur die Konfiguration, Spezifikationen und Authentifizierungsskripte werden gespeichert
+- **Das ZIP ist in sich geschlossen** — es kann auf jedem Rechner mit installiertem swag2mcp wiederhergestellt werden
+- **Spec-Filter** — verwenden Sie `--spec`, um nur bestimmte Specs zu exportieren oder zu importieren

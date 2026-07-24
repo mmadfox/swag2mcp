@@ -1,31 +1,31 @@
 # version
 
-## Purpose
+## 用途
 
-Print the swag2mcp version. Useful for verifying the installed version, reporting bugs, or checking compatibility.
+打印 swag2mcp 版本。用于验证安装的版本、报告错误或检查兼容性。
 
-## When to use
+## 何时使用
 
-- You want to check which version of swag2mcp is installed
-- You are reporting a bug and need to include the version
-- You want to verify a successful installation
+- 你想检查安装的 swag2mcp 版本
+- 你正在报告错误，需要包含版本信息
+- 你想验证安装是否成功
 
-## Syntax
+## 语法
 
 ```bash
 swag2mcp version
 swag2mcp --version
 ```
 
-## Arguments
+## 参数
 
-None.
+无。
 
-## Flags
+## 标志
 
-None.
+无。
 
-## How it works
+## 工作原理
 
 ```bash
 swag2mcp version
@@ -35,15 +35,15 @@ swag2mcp --version
 # swag2mcp v1.2.0
 ```
 
-## Output format
+## 输出格式
 
 ```
 swag2mcp <version>
 ```
 
-The version is set at build time via `ldflags`. If not set, it defaults to `"dev"`.
+版本在构建时通过 `ldflags` 设置。如果未设置，默认为 `"dev"`。
 
-## Nuances
+## 细节
 
-- **Two forms:** Both `swag2mcp version` (subcommand) and `swag2mcp --version` (global flag) produce the same output.
-- **No config required:** This command works without a workspace or config file.
+- **两种形式：** `swag2mcp version`（子命令）和 `swag2mcp --version`（全局标志）产生相同的输出。
+- **无需配置：** 此命令无需工作区或配置文件即可工作。

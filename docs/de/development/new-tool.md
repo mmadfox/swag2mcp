@@ -1,32 +1,32 @@
-# Adding a New MCP Tool
+# Hinzufügen eines neuen MCP-Tools
 
-## Steps
+## Schritte
 
-1. **Add a tool name constant** in `internal/service/service.go`
-2. **Create request/response types** in `internal/service/types.go`
-3. **Implement the service** in `internal/service/` (new file or add to existing)
-4. **Create a markdown definition** in `internal/service/definitions/` — this is what `MakeToolDefinitions` reads
-5. **Add method to `Svc` interface** in `internal/server/mcp/handler.go`
-6. **Add handler** in `handler.go`
-7. **Register tool** in `registerTools` in `mcp.go`
-8. **Generate mocks**: `go generate ./...`
-9. **Write tests**
+1. **Tool-Namenskonstante hinzufügen** in `internal/service/service.go`
+2. **Anfrage-/Antworttypen erstellen** in `internal/service/types.go`
+3. **Service implementieren** in `internal/service/` (neue Datei oder zu bestehender hinzufügen)
+4. **Markdown-Definition erstellen** in `internal/service/definitions/` — dies liest `MakeToolDefinitions`
+5. **Methode zum `Svc`-Interface hinzufügen** in `internal/server/mcp/handler.go`
+6. **Handler hinzufügen** in `handler.go`
+7. **Tool registrieren** in `registerTools` in `mcp.go`
+8. **Mocks generieren**: `go generate ./...`
+9. **Tests schreiben**
 
-## 1. Tool name constant
+## 1. Tool-Namenskonstante
 
-Add a constant in `internal/service/service.go`:
+Fügen Sie eine Konstante in `internal/service/service.go` hinzu:
 
 ```go
 const MyNewTool = "my_new_tool"
 ```
 
-## 2. Request/Response types
+## 2. Anfrage-/Antworttypen
 
-Define in `internal/service/types.go`:
+Definieren Sie in `internal/service/types.go`:
 
 ```go
 type MyNewToolRequest struct {
-    Param1 string `json:"param1" validate:"required" jsonschema:"required,Description of param1"`
+    Param1 string `json:"param1" validate:"required" jsonschema:"required,Beschreibung von param1"`
 }
 
 type MyNewToolResponse struct {
@@ -34,23 +34,23 @@ type MyNewToolResponse struct {
 }
 ```
 
-## 3. Service implementation
+## 3. Service-Implementierung
 
-Create `internal/service/my_new_tool.go` or add to an existing service file. Follow the standard service pattern: validate → lookup → execute → return:
+Erstellen Sie `internal/service/my_new_tool.go` oder fügen Sie zu einer bestehenden Service-Datei hinzu. Folgen Sie dem Standard-Service-Muster: validieren → nachschlagen → ausführen → zurückgeben:
 
 ```go
 func (s *Service) MyNewTool(ctx context.Context, req MyNewToolRequest) (MyNewToolResponse, error) {
     if err := s.validateRequest(req); err != nil {
         return MyNewToolResponse{}, NewLLMError(validationFailedErrCode, err.Error())
     }
-    // business logic
+    // Geschäftslogik
     return MyNewToolResponse{Result: "ok"}, nil
 }
 ```
 
-## 4. Markdown definition
+## 4. Markdown-Definition
 
-Create `internal/service/definitions/my_new_tool.md`. This file is read by `MakeToolDefinitions()` and embedded into the binary. The frontmatter `name:` field must match the constant:
+Erstellen Sie `internal/service/definitions/my_new_tool.md`. Diese Datei wird von `MakeToolDefinitions()` gelesen und in die Binärdatei eingebettet. Das `name:`-Feld im Frontmatter muss mit der Konstante übereinstimmen:
 
 ```markdown
 ---
@@ -59,31 +59,31 @@ name: my_new_tool
 
 # my_new_tool
 
-Description of the tool.
+Beschreibung des Tools.
 
-## Parameters
+## Parameter
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `param1` | string | Description |
+| Parameter | Typ | Beschreibung |
+|-----------|-----|--------------|
+| `param1` | string | Beschreibung |
 ```
 
-The `MakeToolDefinitions()` function in `tools.go` reads all `.md` files from the embedded `definitions/` directory, parses the YAML frontmatter for the `name` field, and uses the body as the tool description. The `instruction.md` file is treated specially — it becomes the system instruction for the LLM.
+Die Funktion `MakeToolDefinitions()` in `tools.go` liest alle `.md`-Dateien aus dem eingebetteten `definitions/`-Verzeichnis, parst das YAML-Frontmatter für das `name`-Feld und verwendet den Body als Tool-Beschreibung. Die Datei `instruction.md` wird speziell behandelt — sie wird zur Systemanweisung für den LLM.
 
-## 5. Svc Interface
+## 5. Svc-Interface
 
-Add a method to the composed `Svc` interface in `handler.go`:
+Fügen Sie eine Methode zum zusammengesetzten `Svc`-Interface in `handler.go` hinzu:
 
 ```go
 type Svc interface {
-    // ... existing methods
+    // ... bestehende Methoden
     MyNewTool(ctx context.Context, req service.MyNewToolRequest) (service.MyNewToolResponse, error)
 }
 ```
 
 ## 6. Handler
 
-Add a handler method on `handler` in `handler.go`. The handler delegates to the service and wraps the result in `StructuredContent`:
+Fügen Sie eine Handler-Methode auf `handler` in `handler.go` hinzu. Der Handler delegiert an den Service und verpackt das Ergebnis in `StructuredContent`:
 
 ```go
 func (h *handler) handleMyNewTool(
@@ -101,21 +101,21 @@ func (h *handler) handleMyNewTool(
 }
 ```
 
-## 7. Registration
+## 7. Registrierung
 
-Register the tool in the `registerTools` function in `mcp.go`. Add an entry to the `toolRegistrations` map:
+Registrieren Sie das Tool in der `registerTools`-Funktion in `mcp.go`. Fügen Sie einen Eintrag zur `toolRegistrations`-Map hinzu:
 
 ```go
 service.MyNewTool: {
     addTool[service.MyNewToolRequest](mcpServer, h.handleMyNewTool),
-    true, // false if the tool is mutable (like invoke or auth)
+    true, // false, wenn das Tool veränderlich ist (wie invoke oder auth)
 },
 ```
 
-The `registerTools` function signature is:
+Die Signatur der `registerTools`-Funktion ist:
 
 ```go
 func registerTools(mcpServer *sdkmcp.Server, tools []service.Tool, h handler) {
 ```
 
-It iterates over the tool definitions returned by `MakeToolDefinitions()` and registers each one with its typed handler. The `toolRegistrations` map connects tool name constants to their handlers.
+Sie iteriert über die von `MakeToolDefinitions()` zurückgegebenen Tool-Definitionen und registriert jede mit ihrem typisierten Handler. Die `toolRegistrations`-Map verbindet Tool-Namenskonstanten mit ihren Handlern.

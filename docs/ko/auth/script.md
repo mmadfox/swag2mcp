@@ -1,16 +1,16 @@
 # Script Auth
 
-## Purpose
+## 목적
 
-Authentication via an external script — the most flexible method. You can write a script in any language (bash, Python, etc.) that obtains a token however you like and returns it to swag2mcp.
+외부 스크립트를 통한 인증 — 가장 유연한 방법입니다. 원하는 방식으로 토큰을 획득하여 swag2mcp에 반환하는 스크립트를 모든 언어(bash, Python 등)로 작성할 수 있습니다.
 
-## When to use
+## 사용 시기
 
-- Custom or non-standard authentication schemes
-- Complex token acquisition logic (multi-step, with additional checks)
-- When none of the standard methods fit your needs
+- 커스텀 또는 비표준 인증 체계
+- 복잡한 토큰 획득 로직 (다단계, 추가 검사 포함)
+- 표준 방법이 요구 사항에 맞지 않을 때
 
-## Configuration
+## 설정
 
 ```yaml
 specs:
@@ -26,22 +26,22 @@ specs:
         domain: "my-auth"
 ```
 
-## Parameters
+## 매개변수
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `domain` | Yes | Script file name (without extension) |
+| 매개변수 | 필수 | 설명 |
+|---------|------|------|
+| `domain` | 예 | 스크립트 파일 이름 (확장자 제외) |
 
-## Script location
+## 스크립트 위치
 
-The script must be placed in the `auth_scripts` directory of your workspace:
+스크립트는 워크스페이스의 `auth_scripts` 디렉토리에 있어야 합니다:
 
 - **Linux / macOS:** `{workspace}/auth_scripts/{domain}.sh`
 - **Windows:** `{workspace}/auth_scripts/{domain}.bat`
 
-## Script output format
+## 스크립트 출력 형식
 
-The script must output JSON to stdout with the token and its expiry time:
+스크립트는 stdout에 토큰과 만료 시간이 포함된 JSON을 출력해야 합니다:
 
 ```bash
 #!/bin/bash
@@ -55,17 +55,17 @@ TOKEN=$(curl -s -X POST https://auth.example.com/token \
 echo "{\"token\": \"$TOKEN\", \"expires_in\": 3600}"
 ```
 
-### JSON fields
+### JSON 필드
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `token` | Yes | Authentication token |
-| `expires_in` | No | Token lifetime in seconds (default: 3600) |
+| 필드 | 필수 | 설명 |
+|------|------|------|
+| `token` | 예 | 인증 토큰 |
+| `expires_in` | 아니요 | 토큰 수명(초) (기본값: 3600) |
 
-## Notes
+## 참고 사항
 
-- swag2mcp runs the script on every request if the cached token has expired
-- The script must complete within 30 seconds
-- The token is cached until its expiry time
-- Script filename = `{domain}.sh` (Unix) or `{domain}.bat` (Windows)
-- `domain` must not contain `/` or `\`
+- swag2mcp는 캐시된 토큰이 만료된 경우 모든 요청에서 스크립트를 실행합니다
+- 스크립트는 30초 이내에 완료되어야 합니다
+- 토큰은 만료 시간까지 캐시됩니다
+- 스크립트 파일 이름 = `{domain}.sh` (Unix) 또는 `{domain}.bat` (Windows)
+- `domain`에는 `/` 또는 `\`를 포함할 수 없습니다

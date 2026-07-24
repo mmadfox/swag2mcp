@@ -1,32 +1,32 @@
-# Adding a New MCP Tool
+# Ajouter un nouvel outil MCP
 
-## Steps
+## Étapes
 
-1. **Add a tool name constant** in `internal/service/service.go`
-2. **Create request/response types** in `internal/service/types.go`
-3. **Implement the service** in `internal/service/` (new file or add to existing)
-4. **Create a markdown definition** in `internal/service/definitions/` — this is what `MakeToolDefinitions` reads
-5. **Add method to `Svc` interface** in `internal/server/mcp/handler.go`
-6. **Add handler** in `handler.go`
-7. **Register tool** in `registerTools` in `mcp.go`
-8. **Generate mocks**: `go generate ./...`
-9. **Write tests**
+1. **Ajouter une constante de nom d'outil** dans `internal/service/service.go`
+2. **Créer les types requête/réponse** dans `internal/service/types.go`
+3. **Implémenter le service** dans `internal/service/` (nouveau fichier ou ajouter à un existant)
+4. **Créer une définition markdown** dans `internal/service/definitions/` — c'est ce que `MakeToolDefinitions` lit
+5. **Ajouter une méthode à l'interface `Svc`** dans `internal/server/mcp/handler.go`
+6. **Ajouter un gestionnaire** dans `handler.go`
+7. **Enregistrer l'outil** dans `registerTools` dans `mcp.go`
+8. **Générer les mocks** : `go generate ./...`
+9. **Écrire les tests**
 
-## 1. Tool name constant
+## 1. Constante de nom d'outil
 
-Add a constant in `internal/service/service.go`:
+Ajoutez une constante dans `internal/service/service.go` :
 
 ```go
 const MyNewTool = "my_new_tool"
 ```
 
-## 2. Request/Response types
+## 2. Types Requête/Réponse
 
-Define in `internal/service/types.go`:
+Définissez dans `internal/service/types.go` :
 
 ```go
 type MyNewToolRequest struct {
-    Param1 string `json:"param1" validate:"required" jsonschema:"required,Description of param1"`
+    Param1 string `json:"param1" validate:"required" jsonschema:"required,Description de param1"`
 }
 
 type MyNewToolResponse struct {
@@ -34,23 +34,23 @@ type MyNewToolResponse struct {
 }
 ```
 
-## 3. Service implementation
+## 3. Implémentation du service
 
-Create `internal/service/my_new_tool.go` or add to an existing service file. Follow the standard service pattern: validate → lookup → execute → return:
+Créez `internal/service/my_new_tool.go` ou ajoutez à un fichier de service existant. Suivez le modèle de service standard : valider → rechercher → exécuter → renvoyer :
 
 ```go
 func (s *Service) MyNewTool(ctx context.Context, req MyNewToolRequest) (MyNewToolResponse, error) {
     if err := s.validateRequest(req); err != nil {
         return MyNewToolResponse{}, NewLLMError(validationFailedErrCode, err.Error())
     }
-    // business logic
+    // logique métier
     return MyNewToolResponse{Result: "ok"}, nil
 }
 ```
 
-## 4. Markdown definition
+## 4. Définition markdown
 
-Create `internal/service/definitions/my_new_tool.md`. This file is read by `MakeToolDefinitions()` and embedded into the binary. The frontmatter `name:` field must match the constant:
+Créez `internal/service/definitions/my_new_tool.md`. Ce fichier est lu par `MakeToolDefinitions()` et intégré dans le binaire. Le champ `name:` du frontmatter doit correspondre à la constante :
 
 ```markdown
 ---
@@ -59,31 +59,31 @@ name: my_new_tool
 
 # my_new_tool
 
-Description of the tool.
+Description de l'outil.
 
-## Parameters
+## Paramètres
 
-| Parameter | Type | Description |
+| Paramètre | Type | Description |
 |-----------|------|-------------|
 | `param1` | string | Description |
 ```
 
-The `MakeToolDefinitions()` function in `tools.go` reads all `.md` files from the embedded `definitions/` directory, parses the YAML frontmatter for the `name` field, and uses the body as the tool description. The `instruction.md` file is treated specially — it becomes the system instruction for the LLM.
+La fonction `MakeToolDefinitions()` dans `tools.go` lit tous les fichiers `.md` du répertoire `definitions/` intégré, analyse le frontmatter YAML pour le champ `name` et utilise le corps comme description de l'outil. Le fichier `instruction.md` est traité spécialement — il devient l'instruction système pour le LLM.
 
-## 5. Svc Interface
+## 5. Interface Svc
 
-Add a method to the composed `Svc` interface in `handler.go`:
+Ajoutez une méthode à l'interface composée `Svc` dans `handler.go` :
 
 ```go
 type Svc interface {
-    // ... existing methods
+    // ... méthodes existantes
     MyNewTool(ctx context.Context, req service.MyNewToolRequest) (service.MyNewToolResponse, error)
 }
 ```
 
-## 6. Handler
+## 6. Gestionnaire
 
-Add a handler method on `handler` in `handler.go`. The handler delegates to the service and wraps the result in `StructuredContent`:
+Ajoutez une méthode de gestionnaire sur `handler` dans `handler.go`. Le gestionnaire délègue au service et encapsule le résultat dans `StructuredContent` :
 
 ```go
 func (h *handler) handleMyNewTool(
@@ -101,21 +101,21 @@ func (h *handler) handleMyNewTool(
 }
 ```
 
-## 7. Registration
+## 7. Enregistrement
 
-Register the tool in the `registerTools` function in `mcp.go`. Add an entry to the `toolRegistrations` map:
+Enregistrez l'outil dans la fonction `registerTools` dans `mcp.go`. Ajoutez une entrée à la map `toolRegistrations` :
 
 ```go
 service.MyNewTool: {
     addTool[service.MyNewToolRequest](mcpServer, h.handleMyNewTool),
-    true, // false if the tool is mutable (like invoke or auth)
+    true, // false si l'outil est modifiable (comme invoke ou auth)
 },
 ```
 
-The `registerTools` function signature is:
+La signature de la fonction `registerTools` est :
 
 ```go
 func registerTools(mcpServer *sdkmcp.Server, tools []service.Tool, h handler) {
 ```
 
-It iterates over the tool definitions returned by `MakeToolDefinitions()` and registers each one with its typed handler. The `toolRegistrations` map connects tool name constants to their handlers.
+Elle itère sur les définitions d'outils renvoyées par `MakeToolDefinitions()` et enregistre chacune avec son gestionnaire typé. La map `toolRegistrations` relie les constantes de nom d'outil à leurs gestionnaires.

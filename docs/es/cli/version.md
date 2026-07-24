@@ -1,31 +1,31 @@
 # version
 
-## Purpose
+## Propósito
 
-Print the swag2mcp version. Useful for verifying the installed version, reporting bugs, or checking compatibility.
+Imprimir la versión de swag2mcp. Útil para verificar la versión instalada, reportar errores o verificar la compatibilidad.
 
-## When to use
+## Cuándo usarlo
 
-- You want to check which version of swag2mcp is installed
-- You are reporting a bug and need to include the version
-- You want to verify a successful installation
+- Desea verificar qué versión de swag2mcp está instalada
+- Está reportando un error y necesita incluir la versión
+- Desea verificar una instalación exitosa
 
-## Syntax
+## Sintaxis
 
 ```bash
 swag2mcp version
 swag2mcp --version
 ```
 
-## Arguments
+## Argumentos
 
-None.
+Ninguno.
 
-## Flags
+## Banderas
 
-None.
+Ninguna.
 
-## How it works
+## Cómo funciona
 
 ```bash
 swag2mcp version
@@ -35,15 +35,15 @@ swag2mcp --version
 # swag2mcp v1.2.0
 ```
 
-## Output format
+## Formato de salida
 
 ```
 swag2mcp <version>
 ```
 
-The version is set at build time via `ldflags`. If not set, it defaults to `"dev"`.
+La versión se establece en tiempo de compilación mediante `ldflags`. Si no se establece, el valor predeterminado es `"dev"`.
 
-## Nuances
+## Matices
 
-- **Two forms:** Both `swag2mcp version` (subcommand) and `swag2mcp --version` (global flag) produce the same output.
-- **No config required:** This command works without a workspace or config file.
+- **Dos formas:** Tanto `swag2mcp version` (subcomando) como `swag2mcp --version` (bandera global) producen la misma salida.
+- **No requiere configuración:** Este comando funciona sin un espacio de trabajo o archivo de configuración.

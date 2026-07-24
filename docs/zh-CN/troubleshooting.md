@@ -1,552 +1,552 @@
-# Troubleshooting
+# 故障排除
 
-## Installation Problems
+## 安装问题
 
 ### swag2mcp: command not found
 
-The binary is not in your PATH.
+二进制文件不在你的 PATH 中。
 
 ```bash
-# Check if Go is installed
+# 检查是否安装了 Go
 go version
 
-# Find where Go installs binaries
+# 查找 Go 安装二进制文件的位置
 go env GOPATH
-# Usually ~/go or ~/go/bin
+# 通常是 ~/go 或 ~/go/bin
 
-# Add to PATH (add this to ~/.zshrc or ~/.bashrc)
+# 添加到 PATH（添加到 ~/.zshrc 或 ~/.bashrc）
 export PATH=$PATH:$(go env GOPATH)/bin
 
-# Or use the full path
+# 或使用完整路径
 ~/go/bin/swag2mcp --version
 ```
 
-If you downloaded a binary from GitHub Releases, make sure it's in a directory that's in your PATH:
+如果你从 GitHub Releases 下载了二进制文件，请确保它在 PATH 中的目录中：
 
 ```bash
-# Move to /usr/local/bin (macOS/Linux)
+# 移动到 /usr/local/bin（macOS/Linux）
 sudo mv swag2mcp /usr/local/bin/
 ```
 
 ### permission denied
 
-The binary does not have execute permissions.
+二进制文件没有执行权限。
 
 ```bash
-# For go install (fix ownership)
+# 对于 go install（修复所有权）
 sudo chown -R $(whoami) $(go env GOPATH)
 
-# For downloaded binary
+# 对于下载的二进制文件
 chmod +x /path/to/swag2mcp
 ```
 
-### Go version too old
+### Go 版本太旧
 
-swag2mcp requires Go 1.23+.
+swag2mcp 需要 Go 1.23+。
 
 ```bash
 go version
-# If version < 1.23, update Go:
+# 如果版本 < 1.23，更新 Go：
 # https://go.dev/dl/
 ```
 
-### Mock server not found
+### 找不到模拟服务器
 
-The mock server is a separate binary. Install it explicitly:
+模拟服务器是一个独立的二进制文件。需要显式安装：
 
 ```bash
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 ```
 
-## Configuration Problems
+## 配置问题
 
-### Configuration file not found
+### 找不到配置文件
 
-swag2mcp cannot find `swag2mcp.yaml`.
+swag2mcp 找不到 `swag2mcp.yaml`。
 
 ```bash
-# Create a new config
+# 创建新配置
 swag2mcp init
 
-# Or specify the path explicitly
+# 或显式指定路径
 swag2mcp mcp /path/to/workspace
 swag2mcp ls /path/to/workspace
 ```
 
-**Common cause:** You ran `swag2mcp mcp` from a random directory and it looked for `~/.swag2mcp/` instead of your project's workspace. Always pass the path explicitly.
+**常见原因：** 你从随机目录运行了 `swag2mcp mcp`，它查找的是 `~/.swag2mcp/` 而不是项目的工作区。始终显式传递路径。
 
-### Wrong workspace loaded
+### 加载了错误的工作区
 
-swag2mcp loaded a different workspace than expected.
+swag2mcp 加载了与预期不同的工作区。
 
-**Resolution order:** Explicit `[path]` → current directory (`./`) → `~/.swag2mcp/`. If you run `swag2mcp mcp` without a path from a directory that doesn't have `swag2mcp.yaml`, it falls back to `~/.swag2mcp/`.
+**解析顺序：** 显式 `[path]` → 当前目录（`./`）→ `~/.swag2mcp/`。如果你在没有路径的情况下从没有 `swag2mcp.yaml` 的目录运行 `swag2mcp mcp`，它会回退到 `~/.swag2mcp/`。
 
-**Fix:** Always pass the workspace path: `swag2mcp mcp /path/to/your/workspace`
+**修复：** 始终传递工作区路径：`swag2mcp mcp /path/to/your/workspace`
 
-### YAML parsing error
+### YAML 解析错误
 
-The config file has invalid YAML syntax.
+配置文件包含无效的 YAML 语法。
 
 ```bash
-# Validate the config
+# 验证配置
 swag2mcp validate
 
-# Common mistakes:
-# - Tabs instead of spaces (YAML requires spaces)
-# - Missing indentation for nested fields
-# - Unquoted strings with special characters (: # & {)
+# 常见错误：
+# - 使用制表符代替空格（YAML 需要空格）
+# - 嵌套字段缺少缩进
+# - 包含特殊字符的字符串未加引号（: # & {）
 ```
 
-**Tip:** Use a YAML linter or editor with YAML support to catch syntax errors.
+**提示：** 使用 YAML 检查器或支持 YAML 的编辑器来捕获语法错误。
 
-### Validation fails: "no specifications defined"
+### 验证失败："no specifications defined"
 
-The config file exists but has no specs.
+配置文件存在但没有 spec。
 
 ```bash
-# Add a spec
+# 添加 spec
 swag2mcp add spec
 
-# Or edit swag2mcp.yaml and add at least one spec
+# 或编辑 swag2mcp.yaml 并添加至少一个 spec
 ```
 
-### Validation fails: "duplicate domain"
+### 验证失败："duplicate domain"
 
-Two specs have the same `domain` value. Domains must be unique.
+两个 spec 具有相同的 `domain` 值。域必须唯一。
 
 ```bash
-# List current specs
+# 列出当前 spec
 swag2mcp ls
 
-# Check for duplicate domains in swag2mcp.yaml
+# 检查 swag2mcp.yaml 中的重复域
 ```
 
-### Validation fails: "invalid spec location"
+### 验证失败："invalid spec location"
 
-The `location` URL or file path is not accessible or not a valid spec file.
+`location` URL 或文件路径不可访问或不是有效的规范文件。
 
 ```bash
-# Check if the URL is reachable
+# 检查 URL 是否可达
 curl -I https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 
-# Check if the local file exists
+# 检查本地文件是否存在
 ls -la ./specs/my-api.yaml
 
-# Verify the file is valid OpenAPI/Swagger/Postman
-# (not just any JSON or HTML page)
+# 验证文件是有效的 OpenAPI/Swagger/Postman
+# （不仅仅是任何 JSON 或 HTML 页面）
 ```
 
-**Common cause:** The `location` field points to the API endpoint itself (e.g., `https://api.example.com/v1/users`) instead of the spec file URL. The location must point to an OpenAPI/Swagger/Postman file.
+**常见原因：** `location` 字段指向的是 API 端点本身（例如 `https://api.example.com/v1/users`），而不是规范文件 URL。location 必须指向 OpenAPI/Swagger/Postman 文件。
 
-## MCP Server Problems
+## MCP 服务器问题
 
-### Port already in use
+### 端口已被占用
 
-Another process is using the port.
+另一个进程正在使用该端口。
 
 ```bash
-# Find the process
+# 查找进程
 lsof -i :8080
 
-# Kill it
+# 终止它
 kill <PID>
 
-# Or use a different port
+# 或使用不同的端口
 swag2mcp mcp --transport sse --http-addr :9090
 ```
 
-### Connection refused
+### 连接被拒绝
 
-The MCP server is not running or not reachable.
+MCP 服务器未运行或无法访问。
 
 ```bash
-# Make sure the server is running
+# 确保服务器正在运行
 swag2mcp mcp --transport sse --http-addr 127.0.0.1:8080
 
-# In another terminal, check the health endpoint
+# 在另一个终端中，检查健康端点
 curl http://127.0.0.1:8080/health
 
-# If using a custom path
+# 如果使用自定义路径
 curl http://127.0.0.1:8080/custom-path/health
 ```
 
-### MCP tools not showing up in the LLM client
+### MCP 工具未在 LLM 客户端中显示
 
-The LLM client cannot see any tools.
+LLM 客户端看不到任何工具。
 
 ```bash
-# Check that specs are loaded
+# 检查 spec 是否已加载
 swag2mcp ls
 
-# Check that specs are not disabled
+# 检查 spec 是否未禁用
 swag2mcp validate
 
-# Check the server logs
+# 检查服务器日志
 swag2mcp mcp --logfile /tmp/swag2mcp.log
 cat /tmp/swag2mcp.log
 
-# Verify the workspace path in your IDE config is correct
-# (must be an absolute path)
+# 验证 IDE 配置中的工作区路径是否正确
+# （必须是绝对路径）
 ```
 
-**Common causes:**
-- Wrong workspace path in IDE config
-- All specs have `disable: true`
-- Specs are filtered out by `--tags`
-- Config file doesn't exist at the specified path
+**常见原因：**
+- IDE 配置中的工作区路径错误
+- 所有 spec 都设置了 `disable: true`
+- 通过 `--tags` 过滤掉了 spec
+- 指定路径下不存在配置文件
 
-### MCP handshake fails (HTTP transport)
+### MCP 握手失败（HTTP 传输）
 
-For SSE and Streamable HTTP transports, the MCP protocol requires initialization before tool calls work.
+对于 SSE 和 Streamable HTTP 传输，MCP 协议需要在工具调用工作之前进行初始化。
 
 ```
-Step 1: POST /mcp → {"method":"initialize", ...}
-Step 2: POST /mcp → {"method":"notifications/initialized"}
-Step 3: POST /mcp → {"method":"tools/list", ...}  ← now works
+步骤 1：POST /mcp → {"method":"initialize", ...}
+步骤 2：POST /mcp → {"method":"notifications/initialized"}
+步骤 3：POST /mcp → {"method":"tools/list", ...}  ← 现在可以工作
 ```
 
-Make sure your LLM client completes the handshake before calling tools.
+确保你的 LLM 客户端在调用工具之前完成握手。
 
-### Health check returns 404
+### 健康检查返回 404
 
-The health endpoint path may differ from the MCP path.
+健康端点路径可能与 MCP 路径不同。
 
 ```bash
-# Default health endpoint
+# 默认健康端点
 curl http://127.0.0.1:8080/health
 
-# If you changed the MCP path, health is still at /health
-# (not affected by --http-path)
+# 如果你更改了 MCP 路径，健康检查仍在 /health
+# （不受 --http-path 影响）
 ```
 
-### Auth tool not available
+### Auth 工具不可用
 
-The `auth` MCP tool is not showing up.
+`auth` MCP 工具没有显示。
 
-The `auth` tool is **disabled by default** (`--disable-llm-auth=true`). This is intentional for production security.
+`auth` 工具**默认是禁用的**（`--disable-llm-auth=true`）。这是生产环境安全的有意设计。
 
 ```bash
-# Enable the auth tool
+# 启用 auth 工具
 swag2mcp mcp --disable-llm-auth=false
 ```
 
-## Authentication Problems
+## 认证问题
 
 ### 401 Unauthorized
 
-The API rejected the request due to missing or invalid credentials.
+API 因缺少或无效的凭据而拒绝了请求。
 
 ```bash
-# Check that auth is configured
+# 检查是否配置了认证
 swag2mcp info
 
-# Validate the config
+# 验证配置
 swag2mcp validate
 
-# Check that environment variables are set
+# 检查环境变量是否已设置
 echo $MY_TOKEN
 
-# Verify the token is not expired (bearer tokens are static)
+# 验证令牌是否未过期（bearer 令牌是静态的）
 ```
 
-**Common causes:**
-- Token is missing or empty
-- Environment variable not set
-- Token has expired (bearer tokens don't auto-refresh)
-- Wrong auth type configured
+**常见原因：**
+- 令牌缺失或为空
+- 环境变量未设置
+- 令牌已过期（bearer 令牌不会自动刷新）
+- 配置了错误的认证类型
 
 ### 403 Forbidden
 
-The API rejected the request due to insufficient permissions.
+API 因权限不足而拒绝了请求。
 
-- The token may not have the required scopes
-- The API key may not have access to this resource
-- Check the API documentation for required permissions
+- 令牌可能没有所需的范围
+- API 密钥可能没有此资源的访问权限
+- 查看 API 文档了解所需权限
 
-### OAuth2 token endpoint unreachable
+### OAuth2 令牌端点无法访问
 
-swag2mcp cannot reach the OAuth2 token URL.
+swag2mcp 无法访问 OAuth2 令牌 URL。
 
 ```bash
-# Check the token_url in your config
-# Verify the URL is correct and reachable
+# 检查配置中的 token_url
+# 验证 URL 是否正确且可达
 curl -X POST https://auth.example.com/oauth/token \
   -d "grant_type=client_credentials" \
   -d "client_id=test" \
   -d "client_secret=test"
 
-# Check network connectivity
-# Check proxy settings if behind a corporate proxy
+# 检查网络连接
+# 如果在公司代理后面，检查代理设置
 ```
 
-### Digest auth fails
+### Digest 认证失败
 
-swag2mcp cannot complete the Digest authentication handshake.
+swag2mcp 无法完成 Digest 认证握手。
 
-- The server must return a `WWW-Authenticate: Digest ...` header with a 401 response
-- The challenge is cached for 5 minutes — if the server changes its nonce, wait for the cache to expire
-- Check that username and password are correct
+- 服务器必须在 401 响应中返回 `WWW-Authenticate: Digest ...` 头
+- 挑战被缓存 5 分钟 — 如果服务器更改了 nonce，请等待缓存过期
+- 检查用户名和密码是否正确
 
-### HMAC signature mismatch
+### HMAC 签名不匹配
 
-The API rejected the HMAC-signed request.
+API 拒绝了 HMAC 签名的请求。
 
-- Verify that `api_key` and `secret_key` are correct
-- Check that the API uses Binance-style HMAC-SHA256 signing
-- Some exchanges use different signing methods — HMAC auth is specifically for Binance-compatible APIs
+- 验证 `api_key` 和 `secret_key` 是否正确
+- 检查 API 是否使用 Binance 风格的 HMAC-SHA256 签名
+- 某些交易所使用不同的签名方法 — HMAC 认证专门用于兼容 Binance 的 API
 
-### Script auth fails
+### Script 认证失败
 
-The external auth script failed.
+外部认证脚本失败。
 
 ```bash
-# Check that the script exists
+# 检查脚本是否存在
 ls -la ~/.swag2mcp/auth_scripts/my-domain.sh
 
-# Run the script manually to test
+# 手动运行脚本进行测试
 sh ~/.swag2mcp/auth_scripts/my-domain.sh
 
-# Check the script output format (must be JSON: {"token": "...", "expires_in": 3600})
-# Check that the script completes within 30 seconds
-# Check that the script has execute permissions
+# 检查脚本输出格式（必须是 JSON：{"token": "...", "expires_in": 3600}）
+# 检查脚本是否在 30 秒内完成
+# 检查脚本是否有执行权限
 chmod +x ~/.swag2mcp/auth_scripts/my-domain.sh
 ```
 
-## Search Problems
+## 搜索问题
 
-### No search results
+### 没有搜索结果
 
-The search returned no endpoints.
+搜索没有返回任何端点。
 
 ```bash
-# Check that specs are loaded
+# 检查 spec 是否已加载
 swag2mcp ls
 
-# Check that specs are not disabled
+# 检查 spec 是否未禁用
 swag2mcp validate
 
-# Try a simpler query
-# Try searching by method: method:GET
-# Try searching by tag: tag:pets
+# 尝试更简单的查询
+# 尝试按方法搜索：method:GET
+# 尝试按标签搜索：tag:pets
 
-# The index is rebuilt on every MCP server start
-# If you just added a spec, restart the server
+# 索引在每次 MCP 服务器启动时重建
+# 如果你刚刚添加了 spec，请重启服务器
 ```
 
-### Search returns irrelevant results
+### 搜索结果不相关
 
-The query is too broad or ambiguous.
+查询太宽泛或模糊。
 
-- Use field filters to narrow: `method:GET +tag:pets`
-- Use exact phrases: `"find pet by status"`
-- Use the `limit` parameter to get more focused results
+- 使用字段过滤器缩小范围：`method:GET +tag:pets`
+- 使用精确短语：`"find pet by status"`
+- 使用 `limit` 参数获取更集中的结果
 
-## API Call Problems
+## API 调用问题
 
-### invoke returns an error
+### invoke 返回错误
 
-The API call failed.
+API 调用失败。
 
 ```bash
-# Check the error message — it includes the HTTP status code
-# 4xx errors: check parameters, auth, or permissions
-# 5xx errors: the API server has a problem
+# 检查错误消息 — 它包含 HTTP 状态码
+# 4xx 错误：检查参数、认证或权限
+# 5xx 错误：API 服务器有问题
 
-# Always inspect the endpoint before invoking
+# 在调用之前始终检查端点
 inspect(endpointId: "...")
 
-# Check that all required parameters are provided
-# Check parameter types (string, number, boolean)
+# 检查是否提供了所有必需参数
+# 检查参数类型（字符串、数字、布尔值）
 ```
 
-### Rate limit error
+### 速率限制错误
 
-The LLM called the same endpoint too quickly.
+LLM 调用同一端点太快。
 
-Each endpoint has a 10-second cooldown. Wait before calling again, or disable the rate limiter:
+每个端点有 10 秒的冷却时间。等待后再调用，或禁用速率限制器：
 
 ```yaml
 disable_ratelimiter: true
 ```
 
-### Response too large (fileRef returned)
+### 响应太大（返回了 fileRef）
 
-The response exceeded `max_response_size`.
+响应超过了 `max_response_size`。
 
-This is normal. Use the response tools to explore the data:
+这是正常情况。使用响应工具探索数据：
 
 ```
-1. response_outline(path) → understand the structure
-2. response_compress(path, mode: "first_of_array") → get a sample
-3. response_slice(path, jsonPath: "data.0") → get specific data
+1. response_outline(path) → 了解结构
+2. response_compress(path, mode: "first_of_array") → 获取样本
+3. response_slice(path, jsonPath: "data.0") → 获取特定数据
 ```
 
-Or increase the limit:
+或增加限制：
 
 ```yaml
 http_client:
   max_response_size: 4194304  # 4 MB
 ```
 
-### Slow API responses
+### API 响应慢
 
-The API is taking too long to respond.
+API 响应时间太长。
 
 ```yaml
 http_client:
-  timeout: 120s  # Increase from default 30s
+  timeout: 120s  # 从默认的 30s 增加
 ```
 
-## Workspace Problems
+## 工作区问题
 
-### swag2mcp init fails: "directory is not empty"
+### swag2mcp init 失败："directory is not empty"
 
-The target directory already has files.
+目标目录已有文件。
 
 ```bash
-# Use --force to overwrite
+# 使用 --force 覆盖
 swag2mcp init --force
 
-# Or use a different directory
+# 或使用不同的目录
 swag2mcp init ./new-workspace
 ```
 
-### swag2mcp update fails
+### swag2mcp update 失败
 
-One or more spec files could not be downloaded.
+一个或多个规范文件无法下载。
 
 ```bash
-# Check the error message for which URL failed
-# Verify the URL is accessible
+# 检查错误消息中哪个 URL 失败
+# 验证 URL 是否可访问
 curl -I <failed-url>
 
-# Check network connectivity
-# Check proxy settings
+# 检查网络连接
+# 检查代理设置
 ```
 
-### Export creates no ZIP
+### Export 没有创建 ZIP
 
-The `[output]` argument must be a file path ending in `.zip`, not a directory.
+`[output]` 参数必须是 `.zip` 结尾的文件路径，而不是目录。
 
 ```bash
-# Correct
+# 正确
 swag2mcp export /path/to/workspace /path/to/backup.zip
 
-# Wrong (no ZIP will be created)
+# 错误（不会创建 ZIP）
 swag2mcp export /path/to/workspace /some/directory
 ```
 
-### Import fails: "not a valid swag2mcp backup"
+### Import 失败："not a valid swag2mcp backup"
 
-The ZIP file was not created by `swag2mcp export`.
+ZIP 文件不是由 `swag2mcp export` 创建的。
 
-Only ZIP archives created by `swag2mcp export` can be imported. The archive has a specific internal structure (`swag2mcp.yaml`, `specs/`, `auth_scripts/`).
+只有 `swag2mcp export` 创建的 ZIP 归档才能被导入。该归档具有特定的内部结构（`swag2mcp.yaml`、`specs/`、`auth_scripts/`）。
 
-## TUI Problems
+## TUI 问题
 
-### TUI doesn't render correctly
+### TUI 显示不正确
 
-The terminal is too small or doesn't support the required features.
+终端太小或不支持所需功能。
 
-- Minimum terminal size: 80×24 characters
-- The TUI uses Bubbletea and works in most modern terminals
-- Try resizing your terminal window
-- Try a different terminal emulator
+- 最小终端尺寸：80×24 字符
+- TUI 使用 Bubbletea，适用于大多数现代终端
+- 尝试调整终端窗口大小
+- 尝试不同的终端模拟器
 
-### TUI shows "no specs found"
+### TUI 显示 "no specs found"
 
-The workspace has no configured specs.
+工作区没有配置的 spec。
 
 ```bash
-# Check specs
+# 检查 spec
 swag2mcp ls
 
-# Add a spec
+# 添加 spec
 swag2mcp add spec
 ```
 
-## Mock Server Problems
+## 模拟服务器问题
 
-### Mock server doesn't start
+### 模拟服务器无法启动
 
 ```bash
-# Check that mock_enabled: true in config
-# Check that every collection has base_mock_url set
-# Check that ports are not in use
+# 检查配置中 mock_enabled: true
+# 检查每个 collection 是否设置了 base_mock_url
+# 检查端口是否未被占用
 lsof -i :9090
 
-# Check the mock server logs
+# 检查模拟服务器日志
 swag2mcp-mock mockserver
 ```
 
-### Mock server returns empty responses
+### 模拟服务器返回空响应
 
-The spec file may not have response schemas defined.
+规范文件可能没有定义响应模式。
 
-- Mock server generates data from response schemas
-- If no schema is found, it returns `{}`
-- Check that your OpenAPI spec has `responses` with `schema` defined
+- 模拟服务器从响应模式生成数据
+- 如果找不到模式，返回 `{}`
+- 检查你的 OpenAPI 规范是否定义了包含 `schema` 的 `responses`
 
-## Network Problems
+## 网络问题
 
-### Proxy connection failed
+### 代理连接失败
 
-swag2mcp cannot connect through the configured proxy.
+swag2mcp 无法通过配置的代理连接。
 
 ```bash
-# Check proxy URL format (must include scheme: http://, https://, socks5://)
-# Check proxy credentials
-# Check bypass list — the target may be in the bypass list
-# Test the proxy with curl
+# 检查代理 URL 格式（必须包含协议：http://、https://、socks5://）
+# 检查代理凭据
+# 检查绕过列表 — 目标可能在绕过列表中
+# 使用 curl 测试代理
 curl -x http://proxy.company.com:8080 https://api.example.com
 ```
 
-### TLS/SSL errors
+### TLS/SSL 错误
 
-Certificate verification failed.
+证书验证失败。
 
-- If using a self-signed certificate for the MCP server, the client must trust it
-- For the mock server with `--tls`, a self-signed certificate is generated automatically
-- For API calls, swag2mcp uses the system's certificate store
+- 如果对 MCP 服务器使用自签名证书，客户端必须信任它
+- 对于使用 `--tls` 的模拟服务器，会自动生成自签名证书
+- 对于 API 调用，swag2mcp 使用系统的证书存储
 
-## Other Problems
+## 其他问题
 
-### High disk usage
+### 磁盘使用率高
 
-The cache and responses directories can grow over time.
+缓存和响应目录会随时间增长。
 
 ```bash
-# Clean everything
+# 清理所有内容
 swag2mcp clean
 
-# Old responses (>48h) are cleaned automatically on MCP server start
-# Cache files expire randomly between 1-48 hours
+# 旧响应（超过 48 小时）在 MCP 服务器启动时自动清理
+# 缓存文件在 1-48 小时内随机过期
 ```
 
-### "command not found" after go install
+### go install 后 "command not found"
 
-The `go install` directory is not in your PATH.
+`go install` 目录不在你的 PATH 中。
 
 ```bash
-# Find where Go installs binaries
+# 查找 Go 安装二进制文件的位置
 go env GOPATH
-# Add to PATH
+# 添加到 PATH
 export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
-### LLM doesn't use the tools correctly
+### LLM 没有正确使用工具
 
-The LLM may need better instructions or a formatting skill.
+LLM 可能需要更好的指令或格式化技能。
 
-- Use `llm_instruction` in your spec config to describe what the API does
-- Consider using the [swag2mcp-format skill](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md) for consistent output formatting
-- The quality of LLM responses depends on the model and the instructions it receives
+- 在 spec 配置中使用 `llm_instruction` 来描述 API 的功能
+- 考虑使用 [swag2mcp-format 技能](https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md) 实现一致的输出格式
+- LLM 响应的质量取决于模型及其接收的指令
 
-### How do I report a bug?
+### 如何报告 bug？
 
-Open an issue on [GitHub](https://github.com/mmadfox/swag2mcp/issues) with:
-- swag2mcp version (`swag2mcp --version`)
-- Your operating system and architecture
-- The exact command you ran
-- The full error message
-- Your config file (with secrets removed)
+在 [GitHub](https://github.com/mmadfox/swag2mcp/issues) 上提交 issue，包含以下信息：
+- swag2mcp 版本（`swag2mcp --version`）
+- 你的操作系统和架构
+- 你运行的确切命令
+- 完整的错误消息
+- 你的配置文件（移除密钥）

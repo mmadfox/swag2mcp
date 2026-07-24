@@ -1,49 +1,49 @@
-# Building
+# ビルド
 
-## Requirements
+## 要件
 
 - Go 1.26+
 - Make
 
-## Commands
+## コマンド
 
 ```bash
-# Build
+# ビルド
 make build
 
-# Build with version
+# バージョン指定でビルド
 make build VERSION=1.0.0
 
-# Lint
+# リンター
 make lint
 
-# Tests
+# テスト
 go test ./...
 
-# All tests
+# 全テスト
 make testall
 ```
 
 ## GoReleaser
 
-For releases:
+リリース用：
 
 ```bash
 goreleaser release --snapshot --clean
 ```
 
-## Platforms
+## プラットフォーム
 
-| Platform | Architecture |
+| プラットフォーム | アーキテクチャ |
 |----------|-------------|
-| Linux | amd64, arm64 |
-| macOS | amd64, arm64 |
+| Linux | amd64、arm64 |
+| macOS | amd64、arm64 |
 | Windows | amd64 |
 
-## Lint
+## リンター
 
 ```bash
 make lint
 ```
 
-Uses `golangci-lint` with 80+ linters. Config in `.golangci.yml`.
+`golangci-lint` を 80 以上のリンターとともに使用します。設定は `.golangci.yml` にあります。

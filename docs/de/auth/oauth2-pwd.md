@@ -1,16 +1,16 @@
 # OAuth2 Password Grant
 
-## Purpose
+## Zweck
 
-OAuth2 Resource Owner Password Grant — authentication using a user's username and password. Suitable for first-party applications where the user trusts the app with their credentials.
+OAuth2-Resource-Owner-Password-Grant — Authentifizierung mit Benutzername und Passwort eines Benutzers. Geeignet für Erstanbieteranwendungen, bei denen der Benutzer der App seine Anmeldeinformationen anvertraut.
 
-## When to use
+## Wann verwenden
 
-- First-party applications (mobile, web)
-- Integration with Keycloak and similar Identity Providers
-- When the API supports OAuth2 Password Grant
+- Erstanbieteranwendungen (mobil, Web)
+- Integration mit Keycloak und ähnlichen Identitätsanbietern
+- Wenn die API OAuth2 Password Grant unterstützt
 
-## Configuration
+## Konfiguration
 
 ```yaml
 specs:
@@ -33,20 +33,20 @@ specs:
           - profile
 ```
 
-## Parameters
+## Parameter
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `client_id` | Yes | Client identifier |
-| `username` | Yes | Username |
-| `password` | Yes | Password |
-| `token_url` | Yes | Token endpoint URL |
-| `client_secret` | No | Client secret (optional, for public clients) |
-| `scopes` | No | List of permissions (optional) |
+| Parameter | Erforderlich | Beschreibung |
+|-----------|-------------|--------------|
+| `client_id` | Ja | Client-Identifikator |
+| `username` | Ja | Benutzername |
+| `password` | Ja | Passwort |
+| `token_url` | Ja | Token-Endpunkt-URL |
+| `client_secret` | Nein | Client-Geheimnis (optional, für öffentliche Clients) |
+| `scopes` | Nein | Liste der Berechtigungen (optional) |
 
-## Notes
+## Hinweise
 
-- `client_secret` is optional — **public clients** are supported (e.g., Keycloak)
-- swag2mcp automatically refreshes the token when it expires
-- The token is cached until expiry
-- All parameters can be stored in environment variables
+- `client_secret` ist optional — **öffentliche Clients** werden unterstützt (z. B. Keycloak)
+- swag2mcp erneuert das Token automatisch, wenn es abläuft
+- Das Token wird bis zum Ablauf zwischengespeichert
+- Alle Parameter können in Umgebungsvariablen gespeichert werden

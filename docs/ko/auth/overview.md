@@ -1,12 +1,12 @@
-# Authentication
+# 인증
 
-## Overview
+## 개요
 
-swag2mcp supports **9 authentication methods** for working with APIs that require authorization. You configure it once in the config file — after that, every API call through `invoke` automatically includes the right tokens and headers.
+swag2mcp는 인증이 필요한 API 작업을 위한 **9가지 인증 방법**을 지원합니다. 설정 파일에 한 번 구성하면 `invoke`를 통한 모든 API 호출에 올바른 토큰과 헤더가 자동으로 포함됩니다.
 
-### Where to configure
+### 설정 위치
 
-Authentication is set at the **spec** level in `swag2mcp.yaml`:
+인증은 `swag2mcp.yaml`의 **spec** 수준에서 설정됩니다:
 
 ```yaml
 specs:
@@ -22,16 +22,16 @@ specs:
         token: "my-token"
 ```
 
-### How it works
+### 작동 방식
 
-- You specify the auth type and parameters in the config
-- swag2mcp automatically applies them to every request when you call `invoke`
-- You **don't need** to request a token before calling an API — it happens automatically
-- If a token expires (OAuth2, Script), swag2mcp refreshes it on its own
+- 설정에서 인증 유형과 매개변수를 지정합니다
+- swag2mcp는 `invoke`를 호출할 때 모든 요청에 자동으로 적용합니다
+- API를 호출하기 전에 토큰을 요청할 **필요가 없습니다** — 자동으로 처리됩니다
+- 토큰이 만료되면(OAuth2, Script) swag2mcp가 자체적으로 갱신합니다
 
-### Environment variables
+### 환경 변수
 
-Sensitive data (tokens, passwords, keys) can be stored in environment variables using `$(VAR_NAME)` syntax:
+민감한 데이터(토큰, 비밀번호, 키)는 `$(VAR_NAME)` 구문을 사용하여 환경 변수에 저장할 수 있습니다:
 
 ```yaml
 auth:
@@ -40,24 +40,24 @@ auth:
     token: "$(MY_API_TOKEN)"
 ```
 
-swag2mcp substitutes the value of `MY_API_TOKEN` at startup.
+swag2mcp는 시작 시 `MY_API_TOKEN`의 값을 치환합니다.
 
-### MCP auth tool
+### MCP auth 도구
 
-The LLM agent can retrieve a token or headers through the `auth` MCP tool — for example, to build a curl command or show the user.
+LLM 에이전트는 `auth` MCP 도구를 통해 토큰이나 헤더를 검색할 수 있습니다 — 예를 들어, curl 명령어를 만들거나 사용자에게 보여주는 용도입니다.
 
-In **production**, this tool should be disabled with `--disable-llm-auth` (enabled by default) so the LLM never has access to tokens.
+**프로덕션**에서는 이 도구를 `--disable-llm-auth`로 비활성화해야 합니다(기본적으로 활성화됨). 이렇게 하면 LLM이 토큰에 접근할 수 없습니다.
 
-### Methods
+### 방법
 
-| Method | Description | Best for |
-|--------|-------------|----------|
-| [`none`](/auth/none) | No authentication | Public APIs |
-| [`basic`](/auth/basic) | HTTP Basic (username + password) | Legacy APIs, simple auth |
-| [`bearer`](/auth/bearer) | Bearer Token (JWT, token) | Modern REST APIs |
-| [`api-key`](/auth/api-key) | API key in header or query parameter | Services with API keys |
-| [`digest`](/auth/digest) | HTTP Digest (username + password) | Legacy APIs, more secure than Basic |
-| [`hmac`](/auth/hmac) | HMAC-SHA256 signature (Binance-style) | Cryptocurrency exchanges |
-| [`oauth2-cc`](/auth/oauth2-cc) | OAuth2 Client Credentials | Server-to-server, microservices |
-| [`oauth2-pwd`](/auth/oauth2-pwd) | OAuth2 Password Grant | Apps with user login |
-| [`script`](/auth/script) | External script to obtain a token | Any custom auth scheme |
+| 방법 | 설명 | 최적 용도 |
+|------|------|----------|
+| [`none`](/auth/none) | 인증 없음 | 공개 API |
+| [`basic`](/auth/basic) | HTTP Basic (username + password) | 레거시 API, 간단한 인증 |
+| [`bearer`](/auth/bearer) | Bearer Token (JWT, token) | 현대 REST API |
+| [`api-key`](/auth/api-key) | 헤더 또는 쿼리 매개변수의 API 키 | API 키가 있는 서비스 |
+| [`digest`](/auth/digest) | HTTP Digest (username + password) | 레거시 API, Basic보다 안전 |
+| [`hmac`](/auth/hmac) | HMAC-SHA256 서명 (Binance 스타일) | 암호화폐 거래소 |
+| [`oauth2-cc`](/auth/oauth2-cc) | OAuth2 Client Credentials | 서버 간, 마이크로서비스 |
+| [`oauth2-pwd`](/auth/oauth2-pwd) | OAuth2 Password Grant | 사용자 로그인이 있는 앱 |
+| [`script`](/auth/script) | 토큰 획득을 위한 외부 스크립트 | 모든 커스텀 인증 체계 |

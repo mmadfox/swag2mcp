@@ -1,14 +1,14 @@
-# Spec Settings
+# Настройки спецификации
 
-Spec settings define an API service and override global settings for that specific API. Each spec represents one logical API (e.g., "Open-Meteo Weather APIs") and can contain multiple collections (spec files).
+Настройки спецификации определяют API-сервис и переопределяют глобальные настройки для этого конкретного API. Каждая спецификация представляет один логический API (например, "Open-Meteo Weather APIs") и может содержать несколько коллекций (файлов спецификаций).
 
-## Spec Section
+## Раздел спецификации
 
 ```yaml
 specs:
   - domain: meteo
     llm_title: Open-Meteo Weather APIs
-    llm_instruction: "Use this API for weather forecasts and climate data"
+    llm_instruction: "Используй этот API для прогнозов погоды и климатических данных"
     base_url: https://api.open-meteo.com
     disable: false
     tags: ["weather", "climate"]
@@ -24,61 +24,61 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
 ```
 
-## Parameters
+## Параметры
 
 ### domain
 
-- **Type:** `string`
-- **Required:** Yes
-- **Description:** Unique identifier for this API spec. Used internally to reference the spec.
-- **Rules:** 1-60 characters. Only lowercase letters (`a-z`), digits (`0-9`), hyphens (`-`), and underscores (`_`).
-- **Example:** `meteo`, `binance`, `my-api`
+- **Тип:** `string`
+- **Обязательно:** Да
+- **Описание:** Уникальный идентификатор этой спецификации API. Используется внутри системы для ссылки на спецификацию.
+- **Правила:** 1-60 символов. Только строчные буквы (`a-z`), цифры (`0-9`), дефисы (`-`) и подчёркивания (`_`).
+- **Пример:** `meteo`, `binance`, `my-api`
 
 ### llm_title
 
-- **Type:** `string`
-- **Required:** Yes
-- **Description:** Human-readable name that the LLM uses to reference this API. Shown in MCP tool responses.
-- **Rules:** 5-120 characters. Letters, digits, spaces, and basic punctuation only.
-- **Example:** `Open-Meteo Weather APIs`, `Binance Market Data`
+- **Тип:** `string`
+- **Обязательно:** Да
+- **Описание:** Человекочитаемое имя, которое LLM использует для обращения к этому API. Отображается в ответах MCP-инструментов.
+- **Правила:** 5-120 символов. Только буквы, цифры, пробелы и базовая пунктуация.
+- **Пример:** `Open-Meteo Weather APIs`, `Binance Market Data`
 
 ### llm_instruction
 
-- **Type:** `string`
-- **Default:** `""`
-- **Description:** Instructions for the LLM on how to use this API. Describes what the API does and when to use it.
-- **Rules:** Max 500 characters. Letters, digits, spaces, and basic punctuation only.
-- **Example:** `"Use this API for weather forecasts, current conditions, and climate data."`
+- **Тип:** `string`
+- **По умолчанию:** `""`
+- **Описание:** Инструкции для LLM о том, как использовать этот API. Описывает, что делает API и когда его использовать.
+- **Правила:** Макс. 500 символов. Только буквы, цифры, пробелы и базовая пунктуация.
+- **Пример:** `"Используй этот API для прогнозов погоды, текущих условий и климатических данных."`
 
 ### base_url
 
-- **Type:** `string`
-- **Required:** Yes
-- **Description:** Base URL for all API requests in this spec. The endpoint paths from the OpenAPI spec are appended to this URL.
-- **Example:** `https://api.open-meteo.com`, `https://api.binance.com`
-- **Note:** Can be overridden at the collection level if different collections use different base URLs.
+- **Тип:** `string`
+- **Обязательно:** Да
+- **Описание:** Базовый URL для всех запросов к API в этой спецификации. Пути эндпоинтов из OpenAPI-спецификации добавляются к этому URL.
+- **Пример:** `https://api.open-meteo.com`, `https://api.binance.com`
+- **Примечание:** Может быть переопределён на уровне коллекции, если разные коллекции используют разные базовые URL.
 
 ### disable
 
-- **Type:** `bool`
-- **Default:** `false`
-- **Description:** When `true`, this spec is excluded from MCP tools. It is not loaded, indexed, or available to the LLM.
-- **When to use:** Temporarily disable an API without removing it from the config. Useful for APIs that are down, deprecated, or under maintenance.
+- **Тип:** `bool`
+- **По умолчанию:** `false`
+- **Описание:** Если `true`, эта спецификация исключается из MCP-инструментов. Она не загружается, не индексируется и недоступна LLM.
+- **Когда использовать:** Временно отключить API без удаления из конфига. Полезно для API, которые недоступны, устарели или находятся на обслуживании.
 
 ### tags
 
-- **Type:** `[]string` (array of strings)
-- **Default:** `[]`
-- **Description:** Tags for filtering specs. Used with the `--tags` flag in CLI commands (`ls`, `validate`, `mcp`, `update`).
-- **Example:** `["public", "weather"]`, `["internal", "production"]`
-- **Effect:** When you run `swag2mcp mcp --tags=public`, only specs with the `public` tag are loaded.
+- **Тип:** `[]string` (массив строк)
+- **По умолчанию:** `[]`
+- **Описание:** Теги для фильтрации спецификаций. Используются с флагом `--tags` в командах CLI (`ls`, `validate`, `mcp`, `update`).
+- **Пример:** `["public", "weather"]`, `["internal", "production"]`
+- **Эффект:** Когда вы запускаете `swag2mcp mcp --tags=public`, загружаются только спецификации с тегом `public`.
 
 ### http_client
 
-- **Type:** `object`
-- **Default:** inherits from global
-- **Description:** Override global HTTP client settings for this spec. All settings from the global `http_client` can be overridden: `timeout`, `max_response_size`, `user_agent`, `follow_redirects`, `max_redirects`, `random`, `proxy`, `headers`, `cookies`.
-- **Example:**
+- **Тип:** `object`
+- **По умолчанию:** наследуется от глобального
+- **Описание:** Переопределить глобальные настройки HTTP-клиента для этой спецификации. Все настройки из глобального `http_client` могут быть переопределены: `timeout`, `max_response_size`, `user_agent`, `follow_redirects`, `max_redirects`, `random`, `proxy`, `headers`, `cookies`.
+- **Пример:**
   ```yaml
   http_client:
     timeout: 60s
@@ -89,10 +89,10 @@ specs:
 
 ### auth
 
-- **Type:** `object`
-- **Default:** `none` (no authentication)
-- **Description:** Authentication configuration for this spec. See the [Authentication](/auth/overview) section for all 9 methods and their parameters.
-- **Example:**
+- **Тип:** `object`
+- **По умолчанию:** `none` (без аутентификации)
+- **Описание:** Конфигурация аутентификации для этой спецификации. Подробнее о всех 9 методах и их параметрах: [Аутентификация](/auth/overview).
+- **Пример:**
   ```yaml
   auth:
     type: bearer
@@ -102,15 +102,15 @@ specs:
 
 ### collections
 
-- **Type:** `[]object` (array of collections)
-- **Required:** Yes (at least 1)
-- **Description:** List of OpenAPI/Swagger/Postman spec files that belong to this spec. Each collection is one spec file.
-- **Rules:** 1-30 collections per spec.
-- **See:** [Collection Settings](./collection-settings) for all collection parameters.
+- **Тип:** `[]object` (массив коллекций)
+- **Обязательно:** Да (как минимум 1)
+- **Описание:** Список файлов спецификаций OpenAPI/Swagger/Postman, принадлежащих этой спецификации. Каждая коллекция — это один файл спецификации.
+- **Правила:** 1-30 коллекций на спецификацию.
+- **См.:** [Настройки коллекции](./collection-settings) — все параметры коллекций.
 
-## Disabling a Spec
+## Отключение спецификации
 
-Disabled specs are not loaded or indexed. The LLM cannot see or use them.
+Отключённые спецификации не загружаются и не индексируются. LLM не может их видеть или использовать.
 
 ```yaml
 specs:
@@ -123,9 +123,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## HTTP Client Override
+## Переопределение HTTP-клиента
 
-All `http_client` settings from the global level can be overridden at the spec level. The spec values take precedence over global values for this spec only.
+Все настройки `http_client` с глобального уровня могут быть переопределены на уровне спецификации. Значения спецификации имеют приоритет над глобальными значениями только для этой спецификации.
 
 ```yaml
 specs:
@@ -142,9 +142,9 @@ specs:
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 ```
 
-## Proxy Override
+## Переопределение прокси
 
-If this spec requires a different proxy than the global one, configure it at the spec level:
+Если этой спецификации требуется другой прокси, чем глобальный, настройте его на уровне спецификации:
 
 ```yaml
 specs:

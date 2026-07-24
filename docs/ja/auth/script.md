@@ -1,16 +1,16 @@
-# Script Auth
+# Script 認証
 
-## Purpose
+## 目的
 
-Authentication via an external script — the most flexible method. You can write a script in any language (bash, Python, etc.) that obtains a token however you like and returns it to swag2mcp.
+外部スクリプトによる認証 — 最も柔軟な方法。任意の言語（bash、Python など）でスクリプトを記述し、好きな方法でトークンを取得して swag2mcp に返すことができます。
 
-## When to use
+## 使用するタイミング
 
-- Custom or non-standard authentication schemes
-- Complex token acquisition logic (multi-step, with additional checks)
-- When none of the standard methods fit your needs
+- カスタムまたは非標準の認証スキーム
+- 複雑なトークン取得ロジック（マルチステップ、追加チェック付き）
+- 標準の方法がニーズに合わない場合
 
-## Configuration
+## 設定
 
 ```yaml
 specs:
@@ -26,22 +26,22 @@ specs:
         domain: "my-auth"
 ```
 
-## Parameters
+## パラメーター
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `domain` | Yes | Script file name (without extension) |
+| パラメーター | 必須 | 説明 |
+|-----------|------|------|
+| `domain` | はい | スクリプトファイル名（拡張子なし） |
 
-## Script location
+## スクリプトの場所
 
-The script must be placed in the `auth_scripts` directory of your workspace:
+スクリプトはワークスペースの `auth_scripts` ディレクトリに配置する必要があります：
 
 - **Linux / macOS:** `{workspace}/auth_scripts/{domain}.sh`
 - **Windows:** `{workspace}/auth_scripts/{domain}.bat`
 
-## Script output format
+## スクリプトの出力形式
 
-The script must output JSON to stdout with the token and its expiry time:
+スクリプトはトークンとその有効期限を JSON で stdout に出力する必要があります：
 
 ```bash
 #!/bin/bash
@@ -55,17 +55,17 @@ TOKEN=$(curl -s -X POST https://auth.example.com/token \
 echo "{\"token\": \"$TOKEN\", \"expires_in\": 3600}"
 ```
 
-### JSON fields
+### JSON フィールド
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `token` | Yes | Authentication token |
-| `expires_in` | No | Token lifetime in seconds (default: 3600) |
+| フィールド | 必須 | 説明 |
+|-----------|------|------|
+| `token` | はい | 認証トークン |
+| `expires_in` | いいえ | トークンの有効期間（秒）（デフォルト：3600） |
 
-## Notes
+## 注意点
 
-- swag2mcp runs the script on every request if the cached token has expired
-- The script must complete within 30 seconds
-- The token is cached until its expiry time
-- Script filename = `{domain}.sh` (Unix) or `{domain}.bat` (Windows)
-- `domain` must not contain `/` or `\`
+- swag2mcp はキャッシュされたトークンが期限切れの場合、リクエストごとにスクリプトを実行します
+- スクリプトは 30 秒以内に完了する必要があります
+- トークンは有効期限までキャッシュされます
+- スクリプトファイル名 = `{domain}.sh`（Unix）または `{domain}.bat`（Windows）
+- `domain` に `/` または `\` を含めることはできません

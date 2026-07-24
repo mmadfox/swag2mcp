@@ -1,16 +1,16 @@
 # OAuth2 Client Credentials
 
-## Purpose
+## Zweck
 
-OAuth2 Client Credentials Grant — authentication for server-to-server communication. The application obtains a token using its client_id and client_secret, without user involvement.
+OAuth2-Client-Credentials-Grant — Authentifizierung für Server-zu-Server-Kommunikation. Die Anwendung erhält ein Token mit ihrer client_id und client_secret, ohne Benutzerbeteiligung.
 
-## When to use
+## Wann verwenden
 
-- Microservices and server-to-server integrations
-- Machine-to-machine communication
-- When the API uses OAuth2 and you have a client_id + client_secret
+- Microservices und Server-zu-Server-Integrationen
+- Maschine-zu-Maschine-Kommunikation
+- Wenn die API OAuth2 verwendet und Sie eine client_id + client_secret haben
 
-## Configuration
+## Konfiguration
 
 ```yaml
 specs:
@@ -31,18 +31,18 @@ specs:
           - write
 ```
 
-## Parameters
+## Parameter
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `client_id` | Yes | Client identifier |
-| `client_secret` | Yes | Client secret |
-| `token_url` | Yes | Token endpoint URL |
-| `scopes` | No | List of permissions (optional) |
+| Parameter | Erforderlich | Beschreibung |
+|-----------|-------------|--------------|
+| `client_id` | Ja | Client-Identifikator |
+| `client_secret` | Ja | Client-Geheimnis |
+| `token_url` | Ja | Token-Endpunkt-URL |
+| `scopes` | Nein | Liste der Berechtigungen (optional) |
 
-## Notes
+## Hinweise
 
-- swag2mcp automatically requests a new token when the current one expires
-- The token is cached until its expiry time (`expires_in`)
-- If the server doesn't provide `expires_in`, the token is considered valid for 1 hour
-- All parameters can be stored in environment variables
+- swag2mcp fordert automatisch ein neues Token an, wenn das aktuelle abläuft
+- Das Token wird bis zu seiner Ablaufzeit (`expires_in`) zwischengespeichert
+- Wenn der Server kein `expires_in` angibt, gilt das Token für 1 Stunde als gültig
+- Alle Parameter können in Umgebungsvariablen gespeichert werden

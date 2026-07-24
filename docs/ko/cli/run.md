@@ -1,72 +1,72 @@
 # run
 
-## Purpose
+## 목적
 
-Launch the interactive **TUI (Terminal User Interface)** API explorer. This is a full-screen application for searching, browsing, inspecting, and invoking API endpoints without leaving the terminal.
+대화형 **TUI(터미널 사용자 인터페이스)** API 탐색기를 실행합니다. 터미널을 떠나지 않고 API 엔드포인트를 검색, 탐색, 검사, 호출할 수 있는 전체 화면 애플리케이션입니다.
 
-## When to use
+## 사용 시기
 
-- You want to explore your APIs interactively
-- You need to search for a specific endpoint across all specs
-- You want to browse the spec → collection → tag → endpoint hierarchy
-- You want to test an API call before configuring the MCP server
+- API를 대화형으로 탐색하려고 할 때
+- 모든 spec에서 특정 엔드포인트를 검색해야 할 때
+- spec → collection → tag → endpoint 계층 구조를 탐색하려고 할 때
+- MCP 서버를 설정하기 전에 API 호출을 테스트하려고 할 때
 
-## Syntax
+## 구문
 
 ```bash
 swag2mcp run [path]
 ```
 
-## Arguments
+## 인수
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 인수 | 위치 | 필수 | 설명 |
+|------|------|------|------|
+| `path` | 1 | 아니요 | 워크스페이스 디렉토리. 생략 시 경로 해결 규칙에 따라 결정됩니다. |
 
-## Flags
+## 플래그
 
-None.
+없음.
 
-## Modes
+## 모드
 
-### Search mode
+### 검색 모드
 
-Full-text search across all endpoints in all specs. Supports filtering by HTTP method, tag, and path.
+모든 spec의 모든 엔드포인트에 대한 전문 검색입니다. HTTP 메서드, 태그, 경로별 필터링을 지원합니다.
 
-- Type a query to search endpoint names, paths, and descriptions
-- Filter results by method (GET, POST, PUT, DELETE, etc.)
-- View endpoint details with a single keystroke
+- 쿼리를 입력하여 엔드포인트 이름, 경로, 설명 검색
+- 메서드(GET, POST, PUT, DELETE 등)로 결과 필터링
+- 한 번의 키 입력으로 엔드포인트 세부 정보 보기
 
-### Browse mode
+### 탐색 모드
 
-Tree navigation through the spec hierarchy:
+Spec 계층 구조를 통한 트리 탐색:
 
 ```
 Spec → Collection → Tag → Endpoint
 ```
 
-- Navigate down the tree to find specific endpoints
-- View endpoint details (parameters, request body, responses)
-- Invoke the API directly from the TUI
+- 트리를 따라 내려가 특정 엔드포인트 찾기
+- 엔드포인트 세부 정보 보기 (매개변수, 요청 본문, 응답)
+- TUI에서 직접 API 호출
 
-## Navigation
+## 탐색
 
-| Key | Action |
-|-----|--------|
-| `↑` / `↓` | Navigate up/down |
-| `Enter` | Select or open |
-| `Esc` | Go back |
-| `Tab` | Switch between Search and Browse modes |
-| `/` | Focus search input |
-| `q` | Quit |
+| 키 | 동작 |
+|-----|------|
+| `↑` / `↓` | 위/아래 이동 |
+| `Enter` | 선택 또는 열기 |
+| `Esc` | 뒤로 가기 |
+| `Tab` | 검색과 탐색 모드 간 전환 |
+| `/` | 검색 입력 포커스 |
+| `q` | 종료 |
 
-## Post-command verification
+## 명령 후 검증
 
-The TUI loads all specs from the workspace. If a spec fails to load, an error message is shown in the interface.
+TUI는 워크스페이스에서 모든 spec을 로드합니다. spec 로드에 실패하면 인터페이스에 오류 메시지가 표시됩니다.
 
-## Nuances
+## 세부 사항
 
-- **Auto-init:** If no config file exists, `run` automatically runs the init wizard first.
-- **No flags:** The `run` command has no flags — all configuration comes from the workspace.
-- **Terminal size:** The TUI requires a terminal with at least 80×24 characters. It may not render correctly in very small terminals.
-- **Dependencies:** The TUI uses Bubbletea. It works over SSH and in most terminal emulators.
+- **자동 초기화:** 설정 파일이 없으면 `run`이 자동으로 init 마법사를 먼저 실행합니다.
+- **플래그 없음:** `run` 명령어에는 플래그가 없습니다 — 모든 설정은 워크스페이스에서 가져옵니다.
+- **터미널 크기:** TUI는 최소 80×24 문자의 터미널이 필요합니다. 매우 작은 터미널에서는 올바르게 렌더링되지 않을 수 있습니다.
+- **의존성:** TUI는 Bubbletea를 사용합니다. SSH 및 대부분의 터미널 에뮬레이터에서 작동합니다.

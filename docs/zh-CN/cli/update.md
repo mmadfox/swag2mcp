@@ -1,63 +1,63 @@
 # update
 
-## Purpose
+## 用途
 
-Re-validate the configuration, clear the cache, and re-download all spec files. This is a **full refresh** of the workspace — it ensures all cached specs are up to date and the index is rebuilt.
+重新验证配置、清除缓存并重新下载所有规范文件。这是工作区的**完全刷新** — 它确保所有缓存的规范是最新的，并且索引被重建。
 
-## When to use
+## 何时使用
 
-- Remote spec files have changed and you want the latest version
-- After editing `swag2mcp.yaml` to add or change spec locations
-- When troubleshooting stale or corrupted cache
-- Before running `mcp` to ensure everything is fresh
+- 远程规范文件已更改，你想要最新版本
+- 在编辑 `swag2mcp.yaml` 以添加或更改规范位置后
+- 排查过时或损坏的缓存时
+- 在运行 `mcp` 之前确保一切是最新的
 
-## Syntax
+## 语法
 
 ```bash
 swag2mcp update [path]
 ```
 
-## Arguments
+## 参数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 参数 | 位置 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | 1 | 否 | 工作区目录。如果省略，通过路径解析规则解析。 |
 
-## Flags
+## 标志
 
-None.
+无。
 
-## How it works
+## 工作原理
 
-The `update` command runs a pipeline of operations:
+`update` 命令运行一系列操作：
 
-1. **Load config** — reads `swag2mcp.yaml` from the workspace
-2. **Validate** — runs the same checks as `validate` (YAML syntax, structure, spec file reachability, format, auth, HTTP client)
-3. **Clean** — removes all contents of `cache/` and `responses/`
-4. **Re-cache** — downloads all remote spec files and copies local spec files into the cache
-5. **Re-index** — rebuilds the full-text search index for all endpoints
-6. **Auth scripts** — creates stub auth scripts for specs using `ScriptAuth`
-7. **Orphan cleanup** — removes auth scripts for specs that no longer exist
+1. **加载配置** — 从工作区读取 `swag2mcp.yaml`
+2. **验证** — 运行与 `validate` 相同的检查（YAML 语法、结构、规范文件可达性、格式、认证、HTTP 客户端）
+3. **清理** — 删除 `cache/` 和 `responses/` 的所有内容
+4. **重新缓存** — 下载所有远程规范文件并将本地规范文件复制到缓存
+5. **重新索引** — 为所有端点重建全文搜索索引
+6. **认证脚本** — 为使用 `ScriptAuth` 的 spec 创建存根认证脚本
+7. **孤立清理** — 删除不再存在的 spec 的认证脚本
 
 ```bash
 swag2mcp update
 swag2mcp update ./my-workspace
 ```
 
-## What happens to disabled collections
+## 禁用的 collection 会发生什么
 
-Collections with `disable: true` are skipped entirely — they are not cached or indexed.
+带有 `disable: true` 的 collection 被完全跳过 — 它们不会被缓存或索引。
 
-## Post-command verification
+## 命令后验证
 
 ```bash
 swag2mcp ls [path]
-# All specs should still be listed and reachable
+# 所有 spec 应仍然列出且可达
 ```
 
-## Nuances
+## 细节
 
-- **No auto-init:** If the config file does not exist, `update` returns an error: `"configuration not found at <path>"`. Run `init` first.
-- **Network dependency:** All remote spec URLs must be reachable. If any download fails, the entire update fails with a clear error message.
-- **Auth script creation:** If a spec uses `ScriptAuth` and the stub script doesn't exist, `update` creates it. If creation fails, the update fails.
-- **`update` vs `clean`:** `clean` only removes cache. `update` removes cache **and** re-downloads everything. Use `clean` when you just want to free space; use `update` when you want to refresh.
+- **无自动初始化：** 如果配置文件不存在，`update` 返回错误：`"configuration not found at <path>"`。先运行 `init`。
+- **网络依赖：** 所有远程规范 URL 必须可达。如果任何下载失败，整个更新失败并显示清晰的错误消息。
+- **认证脚本创建：** 如果 spec 使用 `ScriptAuth` 且存根脚本不存在，`update` 会创建它。如果创建失败，更新失败。
+- **`update` vs `clean`：** `clean` 只删除缓存。`update` 删除缓存**并**重新下载所有内容。当你只想释放空间时使用 `clean`；当你想刷新时使用 `update`。

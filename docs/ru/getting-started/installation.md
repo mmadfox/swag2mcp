@@ -1,13 +1,13 @@
-# Installation
+# Установка
 
-## Requirements
+## Требования
 
-- **macOS, Linux, or Windows** (amd64 / arm64)
-- **Go 1.26+** (only for `go install` or building from source)
+- **macOS, Linux или Windows** (amd64 / arm64)
+- **Go 1.26+** (только для `go install` или сборки из исходников)
 
-## Compatibility
+## Совместимость
 
-| Method | macOS | Linux | Windows |
+| Метод | macOS | Linux | Windows |
 |--------|-------|-------|---------|
 | One-liner (curl) | ✅ | ✅ | ❌ |
 | Homebrew | ✅ | ✅ | ❌ |
@@ -17,19 +17,19 @@
 | Docker | ❌ | ✅ | ❌ |
 | GitHub Release | ✅ | ✅ | ✅ |
 | go install | ✅ | ✅ | ✅ |
-| Build from source | ✅ | ✅ | ✅ |
+| Сборка из исходников | ✅ | ✅ | ✅ |
 
 ---
 
 ## macOS
 
-### One-liner (recommended)
+### One-liner (рекомендовано)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
 ```
 
-Installs to `/usr/local/bin/swag2mcp` (or `~/.local/bin/swag2mcp` if `/usr/local/bin` is not writable).
+Устанавливается в `/usr/local/bin/swag2mcp` (или `~/.local/bin/swag2mcp`, если `/usr/local/bin` недоступен для записи).
 
 ### Homebrew
 
@@ -61,13 +61,13 @@ sudo mv swag2mcp /usr/local/bin/
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 ```
 
-Ensure `$GOPATH/bin` is in your `$PATH`:
+Убедитесь, что `$GOPATH/bin` находится в `$PATH`:
 
 ```bash
 export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
-### Build from source
+### Сборка из исходников
 
 ```bash
 git clone https://github.com/mmadfox/swag2mcp.git
@@ -80,13 +80,13 @@ sudo mv swag2mcp /usr/local/bin/
 
 ## Linux
 
-### One-liner (recommended)
+### One-liner (рекомендовано)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
 ```
 
-Installs to `/usr/local/bin/swag2mcp` (or `~/.local/bin/swag2mcp` if `/usr/local/bin` is not writable).
+Устанавливается в `/usr/local/bin/swag2mcp` (или `~/.local/bin/swag2mcp`, если `/usr/local/bin` недоступен для записи).
 
 ### Homebrew
 
@@ -97,7 +97,7 @@ brew install mmadfox/tap/swag2mcp
 ### APT (Debian / Ubuntu)
 
 ```bash
-# Download the .deb from the latest release
+# Скачайте .deb из последнего релиза
 curl -LO https://github.com/mmadfox/swag2mcp/releases/latest/download/swag2mcp_linux_amd64.deb
 sudo dpkg -i swag2mcp_linux_amd64.deb
 ```
@@ -105,7 +105,7 @@ sudo dpkg -i swag2mcp_linux_amd64.deb
 ### RPM (Fedora / RHEL)
 
 ```bash
-# Download the .rpm from the latest release
+# Скачайте .rpm из последнего релиза
 curl -LO https://github.com/mmadfox/swag2mcp/releases/latest/download/swag2mcp_linux_amd64.rpm
 sudo rpm -i swag2mcp_linux_amd64.rpm
 ```
@@ -116,13 +116,13 @@ sudo rpm -i swag2mcp_linux_amd64.rpm
 docker pull ghcr.io/mmadfox/swag2mcp:latest
 ```
 
-Run with stdio transport:
+Запуск с stdio-транспортом:
 
 ```bash
 docker run --rm -i ghcr.io/mmadfox/swag2mcp:latest swag2mcp mcp
 ```
 
-Run with HTTP transport:
+Запуск с HTTP-транспортом:
 
 ```bash
 docker run --rm -p 8080:8080 ghcr.io/mmadfox/swag2mcp:latest swag2mcp mcp --transport sse --http-addr :8080
@@ -152,13 +152,13 @@ sudo mv swag2mcp /usr/local/bin/
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 ```
 
-Ensure `$GOPATH/bin` is in your `$PATH`:
+Убедитесь, что `$GOPATH/bin` находится в `$PATH`:
 
 ```bash
 export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
-### Build from source
+### Сборка из исходников
 
 ```bash
 git clone https://github.com/mmadfox/swag2mcp.git
@@ -181,7 +181,7 @@ scoop install mmadfox/swag2mcp
 ### GitHub Release
 
 ```powershell
-# Download the latest release
+# Скачайте последний релиз
 curl -LO https://github.com/mmadfox/swag2mcp/releases/latest/download/swag2mcp_windows_amd64.zip
 Expand-Archive swag2mcp_windows_amd64.zip -DestinationPath .
 move swag2mcp.exe C:\Windows\System32\
@@ -193,7 +193,7 @@ move swag2mcp.exe C:\Windows\System32\
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 ```
 
-### Build from source
+### Сборка из исходников
 
 ```powershell
 git clone https://github.com/mmadfox/swag2mcp.git
@@ -203,9 +203,9 @@ go build -o swag2mcp.exe ./cmd/swag2mcp
 
 ---
 
-## Mock Server
+## Mock-сервер
 
-The `swag2mcp-mock` binary is available as a separate download. Install it using the same method as the main binary:
+Бинарный файл `swag2mcp-mock` доступен для отдельной загрузки. Установите его тем же способом, что и основной бинарник:
 
 ::: code-group
 
@@ -219,40 +219,40 @@ go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 
 :::
 
-Or download from [GitHub Releases](https://github.com/mmadfox/swag2mcp/releases) — look for `swag2mcp-mock_<version>_<os>_<arch>.tar.gz`.
+Или скачайте с [GitHub Releases](https://github.com/mmadfox/swag2mcp/releases) — ищите `swag2mcp-mock_<version>_<os>_<arch>.tar.gz`.
 
 ---
 
-## Install via LLM Agent
+## Установка через LLM-агента
 
-If you use an AI-powered IDE (OpenCode, Cursor, Claude Desktop, VS Code, etc.), you can install swag2mcp through your agent:
+Если вы используете AI-помощника в IDE (OpenCode, Cursor, Claude Desktop, VS Code и др.), вы можете установить swag2mcp через агента:
 
-1. Ask your agent to add the swag2mcp skills:
-
-   ```
-   "Create the .agents/skills/swag2mcp-cli directory and add the skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md to .agents/skills/swag2mcp-cli/SKILL.md"
-   "Create the .agents/skills/swag2mcp-format directory and add the skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md to .agents/skills/swag2mcp-format/SKILL.md"
-   ```
-
-2. Then tell your agent:
+1. Попросите агента добавить навыки swag2mcp:
 
    ```
-   "Set up swag2mcp"
+   "Создай директорию .agents/skills/swag2mcp-cli и добавь навык из https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md в .agents/skills/swag2mcp-cli/SKILL.md"
+   "Создай директорию .agents/skills/swag2mcp-format и добавь навык из https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md в .agents/skills/swag2mcp-format/SKILL.md"
    ```
 
-   The agent will download and install swag2mcp, then create a workspace with ready-to-use specs.
+2. Затем скажите агенту:
 
-> Some IDEs require a restart after adding skills.
+   ```
+   "Настрой swag2mcp"
+   ```
+
+   Агент скачает и установит swag2mcp, затем создаст рабочую область с готовыми к использованию спецификациями.
+
+> Некоторым IDE требуется перезапуск после добавления навыков.
 
 ---
 
-## Verify
+## Проверка
 
 ```bash
 swag2mcp --version
 ```
 
-Expected output (version may vary):
+Ожидаемый вывод (версия может отличаться):
 
 ```
 swag2mcp v*.*.*
@@ -260,6 +260,6 @@ swag2mcp v*.*.*
 
 ---
 
-## Next Steps
+## Следующие шаги
 
-- [Quick Start](quickstart.md) — get running in 2 minutes
+- [Быстрый старт](quickstart.md) — запустите за 2 минуты

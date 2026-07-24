@@ -1,35 +1,35 @@
 # validate
 
-## Purpose
+## 目的
 
-Check the configuration file and all referenced spec files for errors. This is a **read-only** diagnostic command — it never modifies anything.
+設定ファイルと参照されているすべての spec ファイルのエラーをチェックします。これは**読み取り専用**の診断コマンドです — 何も変更しません。
 
-## When to use
+## 使用するタイミング
 
-- After editing `swag2mcp.yaml` manually
-- Before running `mcp` or `update` to catch issues early
-- When troubleshooting why a spec isn't loading
-- In CI/CD pipelines to validate configuration changes
+- `swag2mcp.yaml` を手動で編集した後
+- `mcp` または `update` を実行する前に、問題を早期に発見するため
+- spec が読み込まれない理由をトラブルシューティングする場合
+- CI/CD パイプラインで設定変更を検証するため
 
-## Syntax
+## 構文
 
 ```bash
 swag2mcp validate [path] [flags]
 ```
 
-## Arguments
+## 引数
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 引数 | 位置 | 必須 | 説明 |
+|------|------|------|------|
+| `path` | 1 | いいえ | ワークスペースディレクトリ。省略時はパス解決ルールに従います。 |
 
-## Flags
+## フラグ
 
-| Flag | Shorthand | Type | Default | Description |
-|------|-----------|------|---------|-------------|
-| `--tags` | `-t` | `string` | `""` | Validate only specs with matching tags (comma-separated) |
+| フラグ | 省略形 | 型 | デフォルト | 説明 |
+|-------|--------|-----|-----------|------|
+| `--tags` | `-t` | `string` | `""` | 一致するタグを持つ spec のみを検証（カンマ区切り） |
 
-## How it works
+## 仕組み
 
 ```bash
 swag2mcp validate
@@ -37,29 +37,29 @@ swag2mcp validate ./my-workspace
 swag2mcp validate --tags=public
 ```
 
-## What is checked
+## チェックされるもの
 
-| Check | Description |
-|-------|-------------|
-| YAML syntax | The config file must be valid YAML |
-| Config structure | All required fields present, types are correct |
-| Domain uniqueness | No duplicate domains |
-| Domain format | Lowercase, digits, hyphens only |
-| Spec file existence | The `location` file or URL must be reachable |
-| Spec format | The file must be valid OpenAPI 3.x, Swagger 2.0, or Postman collection |
-| Auth settings | Auth type and config are valid for the selected method |
-| HTTP client | HTTP client settings are valid |
+| チェック | 説明 |
+|---------|------|
+| YAML 構文 | 設定ファイルが有効な YAML であること |
+| 設定構造 | すべての必須フィールドが存在し、型が正しいこと |
+| ドメインの一意性 | 重複ドメインがないこと |
+| ドメイン形式 | 小文字、数字、ハイフンのみ |
+| Spec ファイルの存在 | `location` ファイルまたは URL が到達可能であること |
+| Spec 形式 | ファイルが有効な OpenAPI 3.x、Swagger 2.0、または Postman collection であること |
+| 認証設定 | 認証タイプと設定が選択された方式に対して有効であること |
+| HTTP クライアント | HTTP クライアント設定が有効であること |
 
-## What is NOT checked
+## チェックされないもの
 
-| Not checked | Reason |
-|-------------|--------|
-| Authentication endpoints | `validate` checks auth config syntax but does not test login/token exchange |
-| API endpoint availability | Only the spec file URL is checked, not the `base_url` |
-| `base_url` correctness | Format is validated, but no test request is made |
-| Mock server configuration | `base_mock_url` is not verified for connectivity |
+| チェックされない | 理由 |
+|-------------|------|
+| 認証エンドポイント | `validate` は認証設定の構文をチェックしますが、ログイン/トークン交換はテストしません |
+| API エンドポイントの可用性 | spec ファイルの URL のみがチェックされ、`base_url` はチェックされません |
+| `base_url` の正確性 | 形式は検証されますが、テストリクエストは行われません |
+| モックサーバー設定 | `base_mock_url` の接続性は検証されません |
 
-## Example output
+## 出力例
 
 ```
 ✅ Configuration is valid.
@@ -68,12 +68,12 @@ swag2mcp validate --tags=public
 ✗ Spec old-api: file not found
 ```
 
-## Post-command verification
+## コマンド実行後の確認
 
-If validation passes, the configuration is ready for `mcp`, `update`, or `run`.
+検証に合格した場合、設定は `mcp`、`update`、または `run` の準備ができています。
 
-## Nuances
+## ニュアンス
 
-- **No auto-init:** Unlike `add`, `ls`, or `run`, `validate` does **not** auto-initialize if the config is missing. It returns an error: `"configuration not found at <path>"`.
-- **Network access:** Remote spec URLs are fetched during validation. The command may take longer if specs are hosted on slow servers.
-- **Tag filtering:** When `--tags` is set, only specs matching the specified tags are validated. Other specs are skipped.
+- **自動初期化なし:** `add`、`ls`、`run` とは異なり、`validate` は設定がない場合に自動初期化**しません**。エラーを返します：`"configuration not found at <path>"`。
+- **ネットワークアクセス:** リモート spec URL は検証中に取得されます。spec が遅いサーバーでホストされている場合、コマンドに時間がかかることがあります。
+- **タグフィルタリング:** `--tags` が設定されている場合、指定されたタグに一致する spec のみが検証されます。他の spec はスキップされます。

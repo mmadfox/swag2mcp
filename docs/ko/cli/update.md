@@ -1,63 +1,63 @@
 # update
 
-## Purpose
+## 목적
 
-Re-validate the configuration, clear the cache, and re-download all spec files. This is a **full refresh** of the workspace — it ensures all cached specs are up to date and the index is rebuilt.
+설정을 재검증하고, 캐시를 지우고, 모든 명세 파일을 다시 다운로드합니다. 이는 워크스페이스의 **전체 새로고침**입니다 — 모든 캐시된 명세가 최신 상태이고 인덱스가 재구축됩니다.
 
-## When to use
+## 사용 시기
 
-- Remote spec files have changed and you want the latest version
-- After editing `swag2mcp.yaml` to add or change spec locations
-- When troubleshooting stale or corrupted cache
-- Before running `mcp` to ensure everything is fresh
+- 원격 명세 파일이 변경되어 최신 버전을 원할 때
+- `swag2mcp.yaml`을 편집하여 명세 위치를 추가하거나 변경한 후
+- 오래되었거나 손상된 캐시를 해결할 때
+- `mcp`를 실행하기 전에 모든 것이 최신 상태인지 확인하려고 할 때
 
-## Syntax
+## 구문
 
 ```bash
 swag2mcp update [path]
 ```
 
-## Arguments
+## 인수
 
-| Argument | Position | Required | Description |
-|----------|----------|----------|-------------|
-| `path` | 1 | No | Workspace directory. If omitted, resolves via path resolution rules. |
+| 인수 | 위치 | 필수 | 설명 |
+|------|------|------|------|
+| `path` | 1 | 아니요 | 워크스페이스 디렉토리. 생략 시 경로 해결 규칙에 따라 결정됩니다. |
 
-## Flags
+## 플래그
 
-None.
+없음.
 
-## How it works
+## 작동 방식
 
-The `update` command runs a pipeline of operations:
+`update` 명령어는 일련의 작업을 실행합니다:
 
-1. **Load config** — reads `swag2mcp.yaml` from the workspace
-2. **Validate** — runs the same checks as `validate` (YAML syntax, structure, spec file reachability, format, auth, HTTP client)
-3. **Clean** — removes all contents of `cache/` and `responses/`
-4. **Re-cache** — downloads all remote spec files and copies local spec files into the cache
-5. **Re-index** — rebuilds the full-text search index for all endpoints
-6. **Auth scripts** — creates stub auth scripts for specs using `ScriptAuth`
-7. **Orphan cleanup** — removes auth scripts for specs that no longer exist
+1. **설정 로드** — 워크스페이스에서 `swag2mcp.yaml` 읽기
+2. **검증** — `validate`와 동일한 검사 실행 (YAML 구문, 구조, 명세 파일 접근성, 형식, 인증, HTTP 클라이언트)
+3. **정리** — `cache/`와 `responses/`의 모든 내용 제거
+4. **재캐싱** — 모든 원격 명세 파일 다운로드 및 로컬 명세 파일을 캐시로 복사
+5. **재인덱싱** — 모든 엔드포인트의 전문 검색 인덱스 재구축
+6. **인증 스크립트** — `ScriptAuth`를 사용하는 spec용 스텁 인증 스크립트 생성
+7. **고아 정리** — 더 이상 존재하지 않는 spec의 인증 스크립트 제거
 
 ```bash
 swag2mcp update
 swag2mcp update ./my-workspace
 ```
 
-## What happens to disabled collections
+## 비활성화된 collection의 처리
 
-Collections with `disable: true` are skipped entirely — they are not cached or indexed.
+`disable: true`가 있는 collection은 완전히 건너뜁니다 — 캐시되거나 인덱싱되지 않습니다.
 
-## Post-command verification
+## 명령 후 검증
 
 ```bash
 swag2mcp ls [path]
-# All specs should still be listed and reachable
+# 모든 spec이 여전히 나열되고 접근 가능해야 함
 ```
 
-## Nuances
+## 세부 사항
 
-- **No auto-init:** If the config file does not exist, `update` returns an error: `"configuration not found at <path>"`. Run `init` first.
-- **Network dependency:** All remote spec URLs must be reachable. If any download fails, the entire update fails with a clear error message.
-- **Auth script creation:** If a spec uses `ScriptAuth` and the stub script doesn't exist, `update` creates it. If creation fails, the update fails.
-- **`update` vs `clean`:** `clean` only removes cache. `update` removes cache **and** re-downloads everything. Use `clean` when you just want to free space; use `update` when you want to refresh.
+- **자동 초기화 없음:** 설정 파일이 없으면 `update`가 오류를 반환합니다: `"configuration not found at <path>"`. 먼저 `init`을 실행하세요.
+- **네트워크 의존성:** 모든 원격 명세 URL에 접근할 수 있어야 합니다. 다운로드가 실패하면 전체 업데이트가 명확한 오류 메시지와 함께 실패합니다.
+- **인증 스크립트 생성:** spec이 `ScriptAuth`를 사용하고 스텁 스크립트가 없으면 `update`가 생성합니다. 생성에 실패하면 업데이트가 실패합니다.
+- **`update` vs `clean`:** `clean`은 캐시만 제거합니다. `update`는 캐시를 제거하고 **모든 것을 다시 다운로드합니다**. 공간 확보만 필요하면 `clean`을 사용하고, 새로고침이 필요하면 `update`를 사용하세요.

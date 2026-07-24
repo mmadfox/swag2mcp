@@ -1,78 +1,78 @@
-# FAQ
+# 常见问题
 
-## General
+## 通用
 
-### What is swag2mcp and what problem does it solve?
+### 什么是 swag2mcp，它解决了什么问题？
 
-swag2mcp bridges OpenAPI/Swagger/Postman API specifications with LLM agents via the Model Context Protocol (MCP). Instead of writing custom code to connect each API to an AI agent, you configure it once in a YAML file and the LLM gets 19 tools to discover, inspect, and call your APIs.
+swag2mcp 通过模型上下文协议（MCP）将 OpenAPI/Swagger/Postman API 规范与 LLM 智能体连接起来。无需为每个 API 编写自定义代码来连接 AI 智能体，你只需在 YAML 文件中配置一次，LLM 就能获得 19 个工具来发现、检查和调用你的 API。
 
-### How is it different from other API-to-LLM tools?
+### 它与其他 API 到 LLM 的工具有什么不同？
 
-- **No coding required** — configure APIs in YAML, no integration code needed
-- **19 MCP tools** — complete toolkit from discovery to invocation to large response handling
-- **9 auth methods** — works with any API authentication scheme
-- **Full-text search** — bluge-powered search across all endpoints
-- **TUI explorer** — interactive terminal interface for browsing and testing
-- **Mock server** — test without real API calls
+- **无需编码** — 在 YAML 中配置 API，无需集成代码
+- **19 个 MCP 工具** — 从发现到调用再到大响应处理的完整工具包
+- **9 种认证方法** — 适用于任何 API 认证方案
+- **全文搜索** — 基于 bluge 的跨所有端点的搜索
+- **TUI 浏览器** — 用于浏览和测试的交互式终端界面
+- **模拟服务器** — 无需真实 API 调用即可测试
 
-### What API specification formats are supported?
+### 支持哪些 API 规范格式？
 
-OpenAPI 3.x, Swagger 2.0, and Postman Collections v2.1.
+OpenAPI 3.x、Swagger 2.0 和 Postman Collections v2.1。
 
-### What is the difference between a spec and a collection?
+### spec 和 collection 有什么区别？
 
-A **spec** represents a logical API service (e.g., "Open-Meteo Weather APIs"). A **collection** is one OpenAPI/Swagger/Postman file. A spec can have multiple collections — for example, when an API has separate spec files for different services (forecast, air quality, marine).
+**Spec** 代表一个逻辑 API 服务（例如"Open-Meteo 天气 API"）。**Collection** 是一个 OpenAPI/Swagger/Postman 文件。一个 spec 可以有多个 collection — 例如，当一个 API 的不同服务（天气预报、空气质量、海洋）有单独的规范文件时。
 
-### What MCP transports are supported?
+### 支持哪些 MCP 传输方式？
 
-Three transports: `stdio` (default, for local LLM clients), `sse` (Server-Sent Events for remote clients), and `streamable-http` (modern HTTP streaming).
+三种传输方式：`stdio`（默认，用于本地 LLM 客户端）、`sse`（服务器发送事件，用于远程客户端）和 `streamable-http`（现代 HTTP 流式传输）。
 
-### Can I use swag2mcp with any LLM?
+### 我可以将 swag2mcp 与任何 LLM 一起使用吗？
 
-Yes, any LLM client that supports the MCP protocol: Claude Desktop, VS Code, Cursor, Windsurf, JetBrains IDEs, OpenCode, and others.
+可以，任何支持 MCP 协议的 LLM 客户端：Claude Desktop、VS Code、Cursor、Windsurf、JetBrains IDE、OpenCode 等。
 
-## Installation
+## 安装
 
-### How do I install swag2mcp?
+### 如何安装 swag2mcp？
 
 ```bash
-# Option 1: Download from GitHub Releases
-# Go to https://github.com/mmadfox/swag2mcp/releases/latest
-# Download the archive for your OS and architecture
+# 选项 1：从 GitHub Releases 下载
+# 访问 https://github.com/mmadfox/swag2mcp/releases/latest
+# 下载适用于你的操作系统和架构的压缩包
 
-# Option 2: Install with Go
+# 选项 2：使用 Go 安装
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
 ```
 
-### Do I need Go installed?
+### 我需要安装 Go 吗？
 
-No. Pre-built binaries are available for Linux (amd64, arm64), macOS (amd64, arm64), and Windows (amd64) on the [GitHub Releases page](https://github.com/mmadfox/swag2mcp/releases).
+不需要。预构建的二进制文件适用于 Linux（amd64、arm64）、macOS（amd64、arm64）和 Windows（amd64），可在 [GitHub Releases 页面](https://github.com/mmadfox/swag2mcp/releases) 获取。
 
-### How do I install the mock server?
+### 如何安装模拟服务器？
 
-The mock server is a separate binary:
+模拟服务器是一个独立的二进制文件：
 
 ```bash
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 ```
 
-Or download `swag2mcp-mock_<version>_<os>_<arch>.tar.gz` from GitHub Releases.
+或者从 GitHub Releases 下载 `swag2mcp-mock_<version>_<os>_<arch>.tar.gz`。
 
-## Getting Started
+## 快速入门
 
-### How do I quickly get started?
+### 如何快速开始？
 
 ```bash
-# 1. Initialize a workspace
+# 1. 初始化工作区
 mkdir -p .swag2mcp && swag2mcp init ./.swag2mcp
 
-# 2. Start the MCP server (public example specs are included after init)
+# 2. 启动 MCP 服务器（初始化后包含公共示例规范）
 swag2mcp mcp
 ```
 
-After `init`, the workspace already includes several public example specs (icanhazdadjoke, Open-Meteo, Binance, PokéAPI). You can start the MCP server immediately — no need to add specs manually.
+执行 `init` 后，工作区已包含多个公共示例规范（icanhazdadjoke、Open-Meteo、Binance、PokéAPI）。你可以立即启动 MCP 服务器 — 无需手动添加规范。
 
-If you want to add your own API instead:
+如果你想添加自己的 API：
 
 ```bash
 swag2mcp add spec --yaml - <<EOF
@@ -85,9 +85,9 @@ collections:
 EOF
 ```
 
-### How do I connect swag2mcp to my IDE?
+### 如何将 swag2mcp 连接到我的 IDE？
 
-**VS Code** (`.vscode/settings.json`):
+**VS Code**（`.vscode/settings.json`）：
 ```json
 {
   "mcp": {
@@ -101,7 +101,7 @@ EOF
 }
 ```
 
-**Cursor** (`~/.cursor/mcp.json`):
+**Cursor**（`~/.cursor/mcp.json`）：
 ```json
 {
   "mcpServers": {
@@ -113,7 +113,7 @@ EOF
 }
 ```
 
-**Claude Desktop** (`claude_desktop_config.json`):
+**Claude Desktop**（`claude_desktop_config.json`）：
 ```json
 {
   "mcpServers": {
@@ -125,21 +125,21 @@ EOF
 }
 ```
 
-Always use an absolute path to the workspace directory.
+始终使用工作区目录的绝对路径。
 
-## Configuration
+## 配置
 
-### Where is the config file located?
+### 配置文件在哪里？
 
-Default: `~/.swag2mcp/swag2mcp.yaml`. You can also create it in any directory and pass the path to commands.
+默认位置：`~/.swag2mcp/swag2mcp.yaml`。你也可以在任何目录中创建它，并将路径传递给命令。
 
-### How do I add an API?
+### 如何添加 API？
 
 ```bash
-# Interactive mode
+# 交互模式
 swag2mcp add spec
 
-# With YAML (recommended for scripting)
+# 使用 YAML（推荐用于脚本）
 swag2mcp add spec --yaml - <<EOF
 domain: my-api
 llm_title: My API
@@ -150,7 +150,7 @@ collections:
 EOF
 ```
 
-### How do I add a collection to an existing spec?
+### 如何向现有 spec 添加 collection？
 
 ```bash
 swag2mcp add collection --yaml - <<EOF
@@ -160,17 +160,17 @@ location: https://example.com/air-quality.yaml
 EOF
 ```
 
-### How do I disable a spec temporarily?
+### 如何临时禁用一个 spec？
 
-Set `disable: true` in the spec config. The spec will not be loaded or indexed.
+在 spec 配置中设置 `disable: true`。该 spec 将不会被加载或索引。
 
-### Can I filter which specs are loaded?
+### 我可以过滤加载哪些 spec 吗？
 
-Yes, use the `--tags` flag: `swag2mcp mcp --tags=public`. Only specs with matching tags will be loaded.
+可以，使用 `--tags` 标志：`swag2mcp mcp --tags=public`。只有具有匹配标签的 spec 才会被加载。
 
-### How do I use environment variables for secrets?
+### 如何使用环境变量存储密钥？
 
-Use `$(VAR_NAME)` syntax in auth fields:
+在 auth 字段中使用 `$(VAR_NAME)` 语法：
 
 ```yaml
 auth:
@@ -179,17 +179,17 @@ auth:
     token: "$(MY_API_TOKEN)"
 ```
 
-Set the variable before starting: `export MY_API_TOKEN="eyJhbGci..."`
+在启动前设置环境变量：`export MY_API_TOKEN="eyJhbGci..."`
 
-## Authentication
+## 认证
 
-### What auth methods are supported?
+### 支持哪些认证方法？
 
-Nine methods: `none`, `basic`, `bearer`, `digest`, `hmac`, `oauth2-cc` (client credentials), `oauth2-pwd` (password grant), `api-key`, and `script`.
+九种方法：`none`、`basic`、`bearer`、`digest`、`hmac`、`oauth2-cc`（客户端凭证）、`oauth2-pwd`（密码授权）、`api-key` 和 `script`。
 
-### How do I pass a token?
+### 如何传递令牌？
 
-Via the config file or environment variables:
+通过配置文件或环境变量：
 
 ```yaml
 auth:
@@ -198,148 +198,148 @@ auth:
     token: "$(MY_TOKEN)"
 ```
 
-### Do I need to call auth before invoke?
+### 在调用 invoke 之前需要调用 auth 吗？
 
-No. The `invoke` tool automatically applies authentication from the spec's config. You only need the `auth` MCP tool if you want to show the token to the user (e.g., for a curl command).
+不需要。`invoke` 工具会自动应用 spec 配置中的认证。只有在你想向用户显示令牌时（例如用于 curl 命令），才需要使用 `auth` MCP 工具。
 
-### Why is the auth tool not showing up?
+### 为什么 auth 工具没有显示？
 
-The `auth` tool is disabled by default (`--disable-llm-auth=true`). This is a security measure for production. To enable it: `swag2mcp mcp --disable-llm-auth=false`.
+`auth` 工具默认是禁用的（`--disable-llm-auth=true`）。这是生产环境的安全措施。要启用它：`swag2mcp mcp --disable-llm-auth=false`。
 
-### How do OAuth2 tokens refresh?
+### OAuth2 令牌如何刷新？
 
-OAuth2 Client Credentials and Password Grant tokens are automatically refreshed when they expire. Bearer tokens are static and must be updated manually.
+OAuth2 客户端凭证和密码授权令牌在过期时会自动刷新。Bearer 令牌是静态的，必须手动更新。
 
-## MCP Server
+## MCP 服务器
 
-### How do I start the MCP server?
+### 如何启动 MCP 服务器？
 
 ```bash
-# Default (stdio transport)
+# 默认（stdio 传输）
 swag2mcp mcp
 
-# With HTTP transport
+# 使用 HTTP 传输
 swag2mcp mcp --transport sse --http-addr :8080
 ```
 
-### How do I change the port?
+### 如何更改端口？
 
 ```bash
 swag2mcp mcp --transport sse --http-addr 0.0.0.0:9090
 ```
 
-### How do I secure the MCP HTTP endpoint?
+### 如何保护 MCP HTTP 端点？
 
-Set a bearer token:
+设置 bearer 令牌：
 
 ```bash
 swag2mcp mcp --transport sse --http-addr :8080 --auth-token "my-secret"
 ```
 
-The LLM client must include `Authorization: Bearer my-secret` in every request.
+LLM 客户端必须在每个请求中包含 `Authorization: Bearer my-secret`。
 
-### What is the MCP handshake for HTTP transport?
+### HTTP 传输的 MCP 握手是什么？
 
-For SSE and Streamable HTTP transports, the MCP protocol requires a three-step handshake:
-
-```
-Step 1: POST /mcp → {"method":"initialize", ...}
-Step 2: POST /mcp → {"method":"notifications/initialized"}
-Step 3: POST /mcp → {"method":"tools/list", ...}  ← now works
-```
-
-Tool calls will fail before initialization.
-
-## Usage
-
-### How do I search for endpoints?
-
-Use the `search` MCP tool or the TUI (`swag2mcp run`). The search supports field filters (`method:GET`, `tag:pets`), fuzzy search, wildcards, and boolean operators.
-
-### How do I call an API?
-
-The LLM uses the `invoke` MCP tool. Always inspect the endpoint first to understand required parameters:
+对于 SSE 和 Streamable HTTP 传输，MCP 协议需要三步握手：
 
 ```
-inspect(endpointId: "...")  → understand the contract
-invoke(endpointId: "...", parameters: {...})  → make the call
+步骤 1：POST /mcp → {"method":"initialize", ...}
+步骤 2：POST /mcp → {"method":"notifications/initialized"}
+步骤 3：POST /mcp → {"method":"tools/list", ...}  ← 现在可以工作
 ```
 
-### What happens if a response is too large?
+在初始化之前，工具调用将失败。
 
-Responses exceeding `max_response_size` (default 1 MB) are saved to disk. The LLM receives a file reference and can explore it with `response_outline`, `response_compress`, and `response_slice` tools.
+## 使用
 
-### How does the rate limiter work?
+### 如何搜索端点？
 
-Each endpoint has a 10-second cooldown. If the LLM calls the same endpoint twice within 10 seconds, the second call is silently blocked. You can disable or adjust this in the config.
+使用 `search` MCP 工具或 TUI（`swag2mcp run`）。搜索支持字段过滤器（`method:GET`、`tag:pets`）、模糊搜索、通配符和布尔运算符。
 
-### Can I test without making real API calls?
+### 如何调用 API？
 
-Yes, use the mock server:
+LLM 使用 `invoke` MCP 工具。始终先检查端点以了解所需参数：
+
+```
+inspect(endpointId: "...")  → 了解契约
+invoke(endpointId: "...", parameters: {...})  → 发起调用
+```
+
+### 如果响应太大怎么办？
+
+超过 `max_response_size`（默认 1 MB）的响应会保存到磁盘。LLM 收到文件引用，可以使用 `response_outline`、`response_compress` 和 `response_slice` 工具进行探索。
+
+### 速率限制器如何工作？
+
+每个端点有 10 秒的冷却时间。如果 LLM 在 10 秒内两次调用同一端点，第二次调用将被静默阻止。你可以在配置中禁用或调整此设置。
+
+### 我可以在不进行真实 API 调用的情况下测试吗？
+
+可以，使用模拟服务器：
 
 ```bash
 swag2mcp-mock mockserver
 ```
 
-It generates fake responses based on OpenAPI schemas.
+它基于 OpenAPI 模式生成模拟响应。
 
-## Workspace Management
+## 工作区管理
 
-### How do I backup my configuration?
+### 如何备份我的配置？
 
 ```bash
 swag2mcp export --output ~/backups/swag2mcp-2026-07-24.zip
 ```
 
-### How do I transfer to another machine?
+### 如何迁移到另一台机器？
 
 ```bash
-# On the old machine
+# 在旧机器上
 swag2mcp export --output swag2mcp.zip
 
-# Copy the ZIP, then on the new machine
+# 复制 ZIP，然后在新机器上
 swag2mcp import --from-zip swag2mcp.zip
 ```
 
-### How do I update spec files?
+### 如何更新规范文件？
 
 ```bash
 swag2mcp update
 ```
 
-This re-validates the config, clears the cache, and re-downloads all spec files.
+这会重新验证配置、清除缓存并重新下载所有规范文件。
 
-### How do I clean up disk space?
+### 如何清理磁盘空间？
 
 ```bash
 swag2mcp clean
 ```
 
-Removes cached spec files and saved API responses. Old responses (>48h) are also cleaned automatically on MCP server start.
+删除缓存的规范文件和保存的 API 响应。旧响应（超过 48 小时）也会在 MCP 服务器启动时自动清理。
 
 ## TUI
 
-### What is the TUI and how do I use it?
+### 什么是 TUI，如何使用它？
 
-The TUI (Terminal User Interface) is an interactive API explorer. Launch it with `swag2mcp run`. It has three modes: Search (full-text search), Browse (tree navigation: Spec → Collection → Tag → Endpoint), and Auth (view tokens).
+TUI（终端用户界面）是一个交互式 API 浏览器。使用 `swag2mcp run` 启动。它有三种模式：搜索（全文搜索）、浏览（树形导航：Spec → Collection → Tag → Endpoint）和认证（查看令牌）。
 
-### What are the keyboard shortcuts?
+### 键盘快捷键有哪些？
 
-| Key | Action |
-|-----|--------|
-| `↑/↓` | Navigate |
-| `Enter` | Select |
-| `Esc` | Back |
-| `Tab` | Switch modes |
-| `/` | Search |
-| `N/P` | Next/previous page |
-| `q` | Quit |
+| 按键 | 操作 |
+|------|------|
+| `↑/↓` | 导航 |
+| `Enter` | 选择 |
+| `Esc` | 返回 |
+| `Tab` | 切换模式 |
+| `/` | 搜索 |
+| `N/P` | 下一页/上一页 |
+| `q` | 退出 |
 
-## Advanced
+## 高级
 
-### Can I use a proxy?
+### 我可以使用代理吗？
 
-Yes, configure it in `http_client.proxy`:
+可以，在 `http_client.proxy` 中配置：
 
 ```yaml
 http_client:
@@ -352,14 +352,14 @@ http_client:
       - "*.internal.com"
 ```
 
-### Can I add a custom auth method?
+### 我可以添加自定义认证方法吗？
 
-Yes, implement the `Authenticator` interface in `internal/auth/` and register it in the config parser. See the Development section for details.
+可以，在 `internal/auth/` 中实现 `Authenticator` 接口，并在配置解析器中注册。详情请参阅开发部分。
 
-### Can I add a custom MCP tool?
+### 我可以添加自定义 MCP 工具吗？
 
-Yes, add a method to the `Svc` interface, implement it in the service layer, add a handler, and register it. See the Development section for details.
+可以，向 `Svc` 接口添加方法，在服务层实现它，添加处理程序并注册。详情请参阅开发部分。
 
-### What is the difference between `swag2mcp` and `swag2mcp-mock`?
+### `swag2mcp` 和 `swag2mcp-mock` 有什么区别？
 
-`swag2mcp` is the main binary with CLI commands and the MCP server. `swag2mcp-mock` is a separate binary that starts mock servers for testing without real API calls.
+`swag2mcp` 是主二进制文件，包含 CLI 命令和 MCP 服务器。`swag2mcp-mock` 是一个独立的二进制文件，用于启动模拟服务器，无需真实 API 调用即可进行测试。

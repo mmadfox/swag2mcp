@@ -1,4 +1,4 @@
-# OpenCode Integration
+# Интеграция с OpenCode
 
 ## stdio
 
@@ -28,20 +28,20 @@
 }
 ```
 
-## Example Queries
+## Примеры запросов
 
-Once connected, you can ask:
+После подключения вы можете спросить:
 
-- "What APIs do you have?"
-- "Show all endpoints in petstore"
-- "Find an API for creating a user"
-- "Call GET /pet/1 and show the result"
+- "Какие API у тебя есть?"
+- "Покажи все эндпоинты в petstore"
+- "Найди API для создания пользователя"
+- "Вызови GET /pet/1 и покажи результат"
 
-## Others
+## Другие клиенты
 
-Don't see your client? All MCP integrations follow the same pattern:
-- Set the command to `swag2mcp` with argument `mcp`
-- Optionally add a workspace path: `mcp /path/to/workspace`
-- Check your client's documentation for the exact config file location and format
+Не нашли свой клиент? Все MCP-интеграции следуют одному шаблону:
+- Укажите команду `swag2mcp` с аргументом `mcp`
+- При необходимости добавьте путь к рабочей области: `mcp /path/to/workspace`
+- Проверьте документацию вашего клиента для точного расположения и формата файла конфигурации
 
-Most MCP clients support stdio transport, and some support HTTP (SSE / Streamable HTTP).
+Большинство MCP-клиентов поддерживают stdio-транспорт, а некоторые — HTTP (SSE / Streamable HTTP).
