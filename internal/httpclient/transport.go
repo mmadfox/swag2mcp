@@ -12,6 +12,7 @@ type randomizingTransport struct {
 	Cookies   []Cookie
 }
 
+// RoundTrip decorates the request with browser-like headers and cookies before dispatching it.
 func (t *randomizingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if req.Header.Get("User-Agent") == "" && t.UserAgent != "" {
 		req.Header.Set("User-Agent", t.UserAgent)

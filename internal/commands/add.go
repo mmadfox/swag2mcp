@@ -56,9 +56,9 @@ Interactive mode (default):
   swag2mcp add spec
 
 Non-interactive mode with YAML:
-  swag2mcp add spec --yaml 'domain: petstore
-  llm_title: Petstore API
-  base_url: https://petstore.swagger.io/v2'
+  swag2mcp add spec --yaml 'domain: meteo
+  llm_title: Open-Meteo API
+  base_url: https://meteo.swagger.io/v2'
 
   Or pipe from stdin:
   cat spec.yaml | swag2mcp add spec --yaml -
@@ -67,24 +67,7 @@ Show YAML example:
   swag2mcp add spec --example`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if opts.Example {
-				fmt.Print(string(config.ExampleSpecAddYAML()))
-				return nil
-			}
-
-			configPath, err := ensureConfigExists(resolveBasePath(args))
-			if err != nil {
-				return err
-			}
-
-			if opts.YAML != "" {
-				data, err := readYAMLInput(opts.YAML)
-				if err != nil {
-					return err
-				}
-				return tui.AddSpecFromYAML(configPath, data)
-			}
-			return tui.AddSpecTUI(configPath)
+			return runAddSpec(resolveBasePath(args), opts.YAML, opts.Example)
 		},
 	}
 
@@ -94,6 +77,27 @@ Show YAML example:
 	cmd.SilenceErrors = true
 
 	return cmd
+}
+
+func runAddSpec(basePath, yaml string, example bool) error {
+	if example {
+		fmt.Print(string(config.ExampleSpecAddYAML()))
+		return nil
+	}
+
+	configPath, err := ensureConfigExists(basePath)
+	if err != nil {
+		return err
+	}
+
+	if yaml != "" {
+		data, err := readYAMLInput(yaml)
+		if err != nil {
+			return err
+		}
+		return tui.AddSpecFromYAML(configPath, data)
+	}
+	return tui.AddSpecTUI(configPath)
 }
 
 func newAddCollectionCmd() *cobra.Command {
@@ -111,9 +115,9 @@ Interactive mode (default):
   swag2mcp add collection
 
 Non-interactive mode with YAML:
-  swag2mcp add collection --yaml 'spec_domain: petstore
+  swag2mcp add collection --yaml 'spec_domain: meteo
   llm_title: Orders Collection
-  location: https://petstore.example.com/orders.json'
+  location: https://meteo.example.com/orders.json'
 
   Or pipe from stdin:
   cat collection.yaml | swag2mcp add collection --yaml -
@@ -122,24 +126,7 @@ Show YAML example:
   swag2mcp add collection --example`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if opts.Example {
-				fmt.Print(string(config.ExampleCollectionAddYAML()))
-				return nil
-			}
-
-			configPath, err := ensureConfigExists(resolveBasePath(args))
-			if err != nil {
-				return err
-			}
-
-			if opts.YAML != "" {
-				data, err := readYAMLInput(opts.YAML)
-				if err != nil {
-					return err
-				}
-				return tui.AddCollectionFromYAML(configPath, data)
-			}
-			return tui.AddCollectionTUI(configPath)
+			return runAddCollection(resolveBasePath(args), opts.YAML, opts.Example)
 		},
 	}
 
@@ -149,4 +136,25 @@ Show YAML example:
 	cmd.SilenceErrors = true
 
 	return cmd
+}
+
+func runAddCollection(basePath, yaml string, example bool) error {
+	if example {
+		fmt.Print(string(config.ExampleCollectionAddYAML()))
+		return nil
+	}
+
+	configPath, err := ensureConfigExists(basePath)
+	if err != nil {
+		return err
+	}
+
+	if yaml != "" {
+		data, err := readYAMLInput(yaml)
+		if err != nil {
+			return err
+		}
+		return tui.AddCollectionFromYAML(configPath, data)
+	}
+	return tui.AddCollectionTUI(configPath)
 }

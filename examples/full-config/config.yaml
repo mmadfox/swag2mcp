@@ -1,8 +1,12 @@
 # swag2mcp — Full Configuration
 # Demonstrates every feature: multiple specs, all auth types, tags, http_client,
 # proxy, randomize, environment variables, disable flags, collection overrides,
-# and mock server.
+# mock server, and rate limiter control.
 mock_enabled: true
+# Disables the per-endpoint 10-second rate limiter for the invoke tool.
+# Set to true when testing or when you need to call the same endpoint
+# repeatedly without waiting. Defaults to false (rate limiter enabled).
+disable_ratelimiter: false
 http_client:
   random: true
   proxy:
@@ -44,10 +48,10 @@ specs:
         token: $(PAYMENTS_API_TOKEN)
     collections:
       - llm_title: Transactions
-        location: https://api.payments.example.com/openapi/transactions.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
         base_mock_url: localhost:8080
       - llm_title: Refunds
-        location: https://api.payments.example.com/openapi/refunds.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
         disable: true
 
   # ─── Spec 2: Internal API with Basic auth ─────────────────────────────
@@ -82,7 +86,7 @@ specs:
     llm_title: Legacy API (Deprecated)
     collections:
       - llm_title: Old Endpoints
-        location: https://legacy.example.com/swagger.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
 
   # ─── Spec 4: OAuth2 Client Credentials ─────────────────────────────────
   - domain: analytics-api
@@ -105,6 +109,6 @@ specs:
           - analytics:write
     collections:
       - llm_title: Reports
-        location: https://analytics.example.com/openapi/reports.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
       - llm_title: Dashboards
-        location: https://analytics.example.com/openapi/dashboards.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json

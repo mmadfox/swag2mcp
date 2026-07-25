@@ -2,37 +2,29 @@ package service
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestInvokeRateLimiter_FirstCallAllowed(t *testing.T) {
 	t.Parallel()
 
 	rl := newInvokeRateLimiter()
-	if err := rl.allow("ep-1"); err != nil {
-		t.Fatalf("allow() = %v, want nil", err)
-	}
+	require.NoError(t, rl.allow("ep-1"))
 }
 
 func TestInvokeRateLimiter_SecondCallBlocked(t *testing.T) {
 	t.Parallel()
 
 	rl := newInvokeRateLimiter()
-	if err := rl.allow("ep-1"); err != nil {
-		t.Fatalf("first allow() = %v", err)
-	}
-	if err := rl.allow("ep-1"); err == nil {
-		t.Fatal("second allow() = nil, want error")
-	}
+	require.NoError(t, rl.allow("ep-1"))
+	require.Error(t, rl.allow("ep-1"))
 }
 
 func TestInvokeRateLimiter_DifferentEndpoints(t *testing.T) {
 	t.Parallel()
 
 	rl := newInvokeRateLimiter()
-	if err := rl.allow("ep-1"); err != nil {
-		t.Fatalf("allow(ep-1) = %v", err)
-	}
-	if err := rl.allow("ep-2"); err != nil {
-		t.Fatalf("allow(ep-2) = %v", err)
-	}
+	require.NoError(t, rl.allow("ep-1"))
+	require.NoError(t, rl.allow("ep-2"))
 }

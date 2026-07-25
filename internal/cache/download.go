@@ -9,17 +9,15 @@ import (
 	"net/url"
 	"path/filepath"
 	"runtime"
-	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/httpclient"
 )
-
-const defaultHTTPTimeout = 30 * time.Second
 
 type httpClient struct {
 	cli *http.Client
 }
 
+// defaultHTTPClient creates an httpClient with the default timeout.
 func defaultHTTPClient() *httpClient {
 	cli, err := httpclient.New(httpclient.Config{
 		Timeout: defaultHTTPTimeout,
@@ -30,8 +28,9 @@ func defaultHTTPClient() *httpClient {
 	return &httpClient{cli: cli}
 }
 
-func (h *httpClient) Get(specURL string) ([]byte, error) {
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, specURL, nil)
+// Get fetches a spec from the given URL and returns the response body.
+func (h *httpClient) Get(ctx context.Context, specURL string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, specURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
 	}
@@ -58,6 +57,7 @@ func (h *httpClient) Get(specURL string) ([]byte, error) {
 	return data, nil
 }
 
+// fileURIToPath converts a file:// URI to a local filesystem path.
 func fileURIToPath(rawURL string) (string, error) {
 	u, err := url.Parse(rawURL)
 	if err != nil {

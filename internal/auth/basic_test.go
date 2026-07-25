@@ -4,6 +4,9 @@ import (
 	"context"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBasicAuthClient_Apply(t *testing.T) {
@@ -13,30 +16,17 @@ func TestBasicAuthClient_Apply(t *testing.T) {
 		Username: "alice",
 		Password: "secret123",
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
 	var info Info
-	if err := client.Apply(req, &info); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, &info), "Apply()")
 
 	user, pass, ok := req.BasicAuth()
-	if !ok {
-		t.Fatal("expected BasicAuth to be set")
-	}
-	if user != "alice" {
-		t.Errorf("username = %q, want %q", user, "alice")
-	}
-	if pass != "secret123" {
-		t.Errorf("password = %q, want %q", pass, "secret123")
-	}
-
-	if v := info.Headers["Authorization"]; v == "" {
-		t.Error("info.Headers[Authorization] is empty")
-	}
+	require.True(t, ok, "expected BasicAuth to be set")
+	assert.Equal(t, "alice", user)
+	assert.Equal(t, "secret123", pass)
+	assert.NotEmpty(t, info.Headers[headerAuthorization])
 }
 
 func TestBasicAuthClient_Apply_EnvVars(t *testing.T) {
@@ -47,23 +37,13 @@ func TestBasicAuthClient_Apply_EnvVars(t *testing.T) {
 		Username: "$(TEST_BASIC_USER)",
 		Password: "$(TEST_BASIC_PASS)",
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
 
 	user, pass, ok := req.BasicAuth()
-	if !ok {
-		t.Fatal("expected BasicAuth to be set")
-	}
-	if user != "bob" {
-		t.Errorf("username = %q, want %q", user, "bob")
-	}
-	if pass != "bobpass" {
-		t.Errorf("password = %q, want %q", pass, "bobpass")
-	}
+	require.True(t, ok, "expected BasicAuth to be set")
+	assert.Equal(t, "bob", user)
+	assert.Equal(t, "bobpass", pass)
 }

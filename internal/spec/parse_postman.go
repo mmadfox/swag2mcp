@@ -97,6 +97,7 @@ type postmanURLEncoded struct {
 	Description string `json:"description,omitempty"`
 }
 
+// parsePostman parses a Postman collection into a unified Doc.
 func parsePostman(data []byte) (*Doc, error) {
 	var col postmanCollection
 	if err := json.Unmarshal(data, &col); err != nil {
@@ -120,6 +121,7 @@ func parsePostman(data []byte) (*Doc, error) {
 	return doc, nil
 }
 
+// flattenPostmanItems recursively flattens nested Postman items into path items.
 func flattenPostmanItems(folderNames []string, items []postmanItem, doc *Doc) error {
 	for _, item := range items {
 		if item.Request != nil {
@@ -136,6 +138,7 @@ func flattenPostmanItems(folderNames []string, items []postmanItem, doc *Doc) er
 	return nil
 }
 
+// postmanItemToPathItem converts a Postman item to a unified PathItem.
 func postmanItemToPathItem(item postmanItem, folderNames []string) *PathItem {
 	req := item.Request
 
@@ -174,6 +177,7 @@ func postmanItemToPathItem(item postmanItem, folderNames []string) *PathItem {
 	}
 }
 
+// extractPostmanPath extracts the API path from a Postman URL (string or structured).
 func extractPostmanPath(rawURL json.RawMessage) string {
 	if rawURL == nil {
 		return "/"
@@ -189,26 +193,8 @@ func extractPostmanPath(rawURL json.RawMessage) string {
 		return "/"
 	}
 
-	// Prefer structured path over raw — it handles path variables properly.
-	if len(u.Path) > 0 {
-		var segments []string
-		for _, seg := range u.Path {
-			var s string
-			if err := json.Unmarshal(seg, &s); err == nil {
-				segments = append(segments, s)
-				continue
-			}
-			var pv struct {
-				Type  string `json:"type"`
-				Value string `json:"value"`
-			}
-			if err := json.Unmarshal(seg, &pv); err == nil && pv.Value != "" {
-				segments = append(segments, "{"+pv.Value+"}")
-			}
-		}
-		if len(segments) > 0 {
-			return "/" + strings.Join(segments, "/")
-		}
+	if path := buildStructuredPath(u.Path); path != "" {
+		return path
 	}
 
 	// Fallback to raw
@@ -219,6 +205,32 @@ func extractPostmanPath(rawURL json.RawMessage) string {
 	return "/"
 }
 
+func buildStructuredPath(path []json.RawMessage) string {
+	var segments []string
+	for _, seg := range path {
+		var s string
+		if err := json.Unmarshal(seg, &s); err == nil {
+			if strings.HasPrefix(s, ":") {
+				s = "{" + s[1:] + "}"
+			}
+			segments = append(segments, s)
+			continue
+		}
+		var pv struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		}
+		if err := json.Unmarshal(seg, &pv); err == nil && pv.Value != "" {
+			segments = append(segments, "{"+pv.Value+"}")
+		}
+	}
+	if len(segments) == 0 {
+		return ""
+	}
+	return "/" + strings.Join(segments, "/")
+}
+
+// extractPathFromURLString extracts the path portion from a URL string, converting :param to {param}.
 func extractPathFromURLString(rawURL string) string {
 	if !strings.Contains(rawURL, "://") {
 		rawURL = "http://" + rawURL
@@ -241,6 +253,7 @@ func extractPathFromURLString(rawURL string) string {
 	return strings.Join(segments, "/")
 }
 
+// appendPostmanURLParams extracts path variables and query parameters from a Postman URL.
 func appendPostmanURLParams(rawURL json.RawMessage, op *Operation) {
 	var u postmanURL
 	if err := json.Unmarshal(rawURL, &u); err != nil {
@@ -270,6 +283,7 @@ func appendPostmanURLParams(rawURL json.RawMessage, op *Operation) {
 	}
 }
 
+// appendPostmanHeaders extracts header parameters from a Postman request.
 func appendPostmanHeaders(headers []postmanHeader, op *Operation) {
 	for _, h := range headers {
 		if h.Disabled {
@@ -284,6 +298,7 @@ func appendPostmanHeaders(headers []postmanHeader, op *Operation) {
 	}
 }
 
+// appendPostmanBody extracts the request body from a Postman request.
 func appendPostmanBody(body *postmanBody, op *Operation, method string) {
 	if body == nil {
 		return
@@ -357,6 +372,7 @@ func appendPostmanBody(body *postmanBody, op *Operation, method string) {
 	}
 }
 
+// postmanTag returns the tag for a Postman item, using the last folder name if available.
 func postmanTag(itemName string, folders []string) string {
 	if len(folders) > 0 {
 		return sanitizePostmanTag(folders[len(folders)-1])
@@ -364,6 +380,7 @@ func postmanTag(itemName string, folders []string) string {
 	return sanitizePostmanTag(itemName)
 }
 
+// sanitizePostmanTag converts a tag name to lowercase with hyphens replacing non-alphanumeric chars.
 func sanitizePostmanTag(name string) string {
 	tag := strings.ToLower(name)
 	tag = strings.Map(func(r rune) rune {
@@ -375,6 +392,7 @@ func sanitizePostmanTag(name string) string {
 	return strings.Trim(tag, "-")
 }
 
+// guessPostmanContentType guesses the content type from the raw body text.
 func guessPostmanContentType(body *postmanBody) string {
 	if body == nil || body.Raw == "" {
 		return mediaTypeJSON

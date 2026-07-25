@@ -97,8 +97,8 @@ func TestListConfig_WithAuth(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ListConfig() = %v", err)
 	}
-	if !strings.Contains(output, "Auth:") {
-		t.Error("output missing auth info")
+	if !strings.Contains(output, "bearer") {
+		t.Error("output missing auth type")
 	}
 }
 

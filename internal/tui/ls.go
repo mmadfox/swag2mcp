@@ -29,14 +29,15 @@ func ListConfig(configPath string, tags []string) (string, error) {
 			continue
 		}
 
-		fmt.Fprintf(w, "  %s\t%s\t%s\n", spec.Domain, spec.LLMTitle, spec.BaseURL)
+		authType := "-"
+		if spec.Auth.Client != nil && spec.Auth.Client.Type() != "none" {
+			authType = string(spec.Auth.Client.Type())
+		}
+
+		fmt.Fprintf(w, "  %s\t%s\t%s\t%s\n", spec.Domain, spec.LLMTitle, spec.BaseURL, authType)
 
 		if len(spec.Tags) > 0 {
 			fmt.Fprintf(w, "    Tags:\t%s\n", strings.Join(spec.Tags, ", "))
-		}
-
-		if spec.Auth.Client != nil && spec.Auth.Client.Type() != "none" {
-			fmt.Fprintf(w, "    Auth:\t%s\n", spec.Auth.Client.Type())
 		}
 
 		if len(spec.Collections) > 0 {

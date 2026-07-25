@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mmadfox/swag2mcp/internal/types"
+	"github.com/mmadfox/swag2mcp/internal/model"
 )
 
 func TestMakeToolDefinitions_IncludesAuthByDefault(t *testing.T) {
@@ -130,7 +130,7 @@ func TestMakeAvaliablesSpecs_NoSpecs(t *testing.T) {
 	t.Parallel()
 
 	svc := newTestService(t)
-	result := svc.makeAvaliablesSpecs()
+	result := svc.makeAvailableSpecs()
 	if result != "" {
 		t.Errorf("expected empty string, got %q", result)
 	}
@@ -142,7 +142,7 @@ func TestMakeAvaliablesSpecs_WithSpecs(t *testing.T) {
 	svc := newTestService(t)
 	seedTestData(t, svc, t.Name())
 
-	result := svc.makeAvaliablesSpecs()
+	result := svc.makeAvailableSpecs()
 	if result == "" {
 		t.Fatal("expected non-empty result")
 	}
@@ -164,7 +164,7 @@ func TestMakeAvaliablesSpecs_WithLLMInstruction(t *testing.T) {
 	specInfo, _, _, _ := seedTestData(t, svc, t.Name())
 	specInfo.LLMInstruction = "line1\nline2\nline3"
 
-	result := svc.makeAvaliablesSpecs()
+	result := svc.makeAvailableSpecs()
 	if !strings.Contains(result, "instruction:") {
 		t.Error("missing instruction field")
 	}
@@ -178,7 +178,7 @@ func TestMakeAvaliablesSpecs_CollectionsBySpecError(t *testing.T) {
 
 	svc.index.RemoveCollectionsBySpec(specInfo.ID)
 
-	result := svc.makeAvaliablesSpecs()
+	result := svc.makeAvailableSpecs()
 	if !strings.Contains(result, "No available collections") {
 		t.Error("expected 'No available collections' message")
 	}
@@ -193,14 +193,14 @@ func TestMakeAvaliablesSpecs_MoreThan10Collections(t *testing.T) {
 	// Add 11 collections to the spec
 	for i := range 11 {
 		collID := fmt.Sprintf("coll-%d", i)
-		svc.index.AddCollection(&types.Collection{
+		svc.index.AddCollection(&model.Collection{
 			ID:     collID,
 			SpecID: specInfo.ID,
 			Title:  fmt.Sprintf("Collection %d", i),
 		})
 	}
 
-	result := svc.makeAvaliablesSpecs()
+	result := svc.makeAvailableSpecs()
 	if !strings.Contains(result, "more than 10 collections") {
 		t.Error("expected 'more than 10 collections' message")
 	}
@@ -213,7 +213,7 @@ func TestMakeAvaliablesSpecs_CollectionLLMInstruction(t *testing.T) {
 	_, collectionInfo, _, _ := seedTestData(t, svc, t.Name())
 	collectionInfo.LLMInstruction = "custom instruction for this collection"
 
-	result := svc.makeAvaliablesSpecs()
+	result := svc.makeAvailableSpecs()
 	if !strings.Contains(result, "custom instruction for this collection") {
 		t.Error("expected collection LLMInstruction in output")
 	}

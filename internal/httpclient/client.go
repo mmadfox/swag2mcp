@@ -53,6 +53,7 @@ func New(cfg Config) (*http.Client, error) {
 	return client, nil
 }
 
+// newTransport creates an [http.RoundTripper] with optional proxy and randomization.
 func newTransport(cfg Config) (http.RoundTripper, error) {
 	base, err := newBaseTransport(cfg.Proxy)
 	if err != nil {
@@ -73,6 +74,7 @@ func newTransport(cfg Config) (http.RoundTripper, error) {
 	return transport, nil
 }
 
+// newBaseTransport creates an [http.Transport] with proxy support.
 func newBaseTransport(proxyCfg *ProxyConfig) (*http.Transport, error) {
 	t := &http.Transport{
 		MaxIdleConns:        maxIdleConnections,
@@ -135,6 +137,7 @@ func newBaseTransport(proxyCfg *ProxyConfig) (*http.Transport, error) {
 	return t, nil
 }
 
+// bypassProxy returns a proxy function that bypasses the proxy for matching hosts.
 func bypassProxy(proxyURL *url.URL, bypass []string) func(*http.Request) (*url.URL, error) {
 	return func(req *http.Request) (*url.URL, error) {
 		host := req.URL.Hostname()
@@ -145,6 +148,8 @@ func bypassProxy(proxyURL *url.URL, bypass []string) func(*http.Request) (*url.U
 	}
 }
 
+// matchBypass checks whether a host matches any bypass pattern.
+// Supports exact match, wildcard (*.example.com), and substring pattern (/pattern/).
 func matchBypass(host string, bypass []string) bool {
 	for _, b := range bypass {
 		switch {
@@ -165,6 +170,7 @@ func matchBypass(host string, bypass []string) bool {
 	return false
 }
 
+// applyRedirects configures redirect handling on the client based on config.
 func applyRedirects(client *http.Client, cfg Config) {
 	if cfg.FollowRedirects != nil && !*cfg.FollowRedirects {
 		client.CheckRedirect = func(_ *http.Request, _ []*http.Request) error {

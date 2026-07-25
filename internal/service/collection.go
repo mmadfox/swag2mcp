@@ -32,33 +32,33 @@ type (
 )
 
 // CollectionsBySpec returns a list of all available collections for a given spec.
-func (s *Service) CollectionsBySpec(_ context.Context, req CollectionsRequest) (CollectionsResponse, error) {
-	if err := s.validateRequest(req); err != nil {
+func (s *Service) CollectionsBySpec(_ context.Context, rq CollectionsRequest) (CollectionsResponse, error) {
+	if err := s.validateRequest(rq); err != nil {
 		return CollectionsResponse{}, NewValidationError(
 			"The spec ID is invalid — it must be a 32-character hex string. Use spec_list to find available specs.",
 			err,
 		)
 	}
 
-	spec, err := s.index.SpecByID(req.SpecID)
+	sp, err := s.index.SpecByID(rq.SpecID)
 	if err != nil {
-		return CollectionsResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", req.SpecID), err)
+		return CollectionsResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", rq.SpecID), err)
 	}
 
-	collections, err := s.index.CollectionsBySpec(req.SpecID)
+	colls, err := s.index.CollectionsBySpec(rq.SpecID)
 	if err != nil {
-		return CollectionsResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", req.SpecID), err)
+		return CollectionsResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", rq.SpecID), err)
 	}
 
-	resp := CollectionsResponse{
+	r := CollectionsResponse{
 		Spec: Spec{
-			ID:     spec.ID,
-			Domain: spec.Domain,
+			ID:     sp.ID,
+			Domain: sp.Domain,
 		},
-		Collections: make([]CollectionItem, 0, len(collections)),
+		Collections: make([]CollectionItem, 0, len(colls)),
 	}
-	for _, c := range collections {
-		resp.Collections = append(resp.Collections, CollectionItem{
+	for _, c := range colls {
+		r.Collections = append(r.Collections, CollectionItem{
 			ID:           c.ID,
 			Title:        c.Title,
 			LLMTitle:     c.LLMTitle,
@@ -67,56 +67,56 @@ func (s *Service) CollectionsBySpec(_ context.Context, req CollectionsRequest) (
 		})
 	}
 
-	sort.Slice(resp.Collections, func(i, j int) bool {
-		return resp.Collections[i].ID < resp.Collections[j].ID
+	sort.Slice(r.Collections, func(i, j int) bool {
+		return r.Collections[i].ID < r.Collections[j].ID
 	})
 
-	return resp, nil
+	return r, nil
 }
 
 // CollectionByID returns a collection by its ID.
-func (s *Service) CollectionByID(_ context.Context, req CollectionByIDRequest) (CollectionByIDResponse, error) {
-	if err := s.validateRequest(req); err != nil {
+func (s *Service) CollectionByID(_ context.Context, rq CollectionByIDRequest) (CollectionByIDResponse, error) {
+	if err := s.validateRequest(rq); err != nil {
 		return CollectionByIDResponse{}, NewValidationError(
 			"The collection ID is invalid — it must be a 32-character hex string.",
 			err,
 		)
 	}
 
-	var resp CollectionByIDResponse
-	collection, err := s.index.CollectionByID(req.ID)
+	var r CollectionByIDResponse
+	coll, err := s.index.CollectionByID(rq.ID)
 	if err != nil {
-		return CollectionByIDResponse{}, NewNotFoundError(fmt.Sprintf("Collection %q not found — use collection_by_spec to list collections.", req.ID), err)
+		return CollectionByIDResponse{}, NewNotFoundError(fmt.Sprintf("Collection %q not found — use collection_by_spec to list collections.", rq.ID), err)
 	}
-	resp.Collection = Collection{
-		ID:           collection.ID,
-		Title:        collection.Title,
-		CountMethods: collection.Stats.Methods,
+	r.Collection = Collection{
+		ID:           coll.ID,
+		Title:        coll.Title,
+		CountMethods: coll.Stats.Methods,
 	}
 
-	spec, err := s.index.SpecByID(collection.SpecID)
+	sp, err := s.index.SpecByID(coll.SpecID)
 	if err != nil {
-		return CollectionByIDResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — the collection references a spec that no longer exists.", collection.SpecID), err)
+		return CollectionByIDResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — the collection references a spec that no longer exists.", coll.SpecID), err)
 	}
-	resp.Spec = Spec{
-		ID:     spec.ID,
-		Domain: spec.Domain,
+	r.Spec = Spec{
+		ID:     sp.ID,
+		Domain: sp.Domain,
 	}
 
-	tags, err := s.index.TagsByCollection(req.ID)
+	ts, err := s.index.TagsByCollection(rq.ID)
 	if err == nil {
-		resp.Tags = make([]TagListItem, 0, len(tags))
-		for _, t := range tags {
-			resp.Tags = append(resp.Tags, TagListItem{
-				ID:           t.ID,
-				Title:        t.Name,
-				CountMethods: t.Stats.Methods,
+		r.Tags = make([]TagListItem, 0, len(ts))
+		for _, tg := range ts {
+			r.Tags = append(r.Tags, TagListItem{
+				ID:           tg.ID,
+				Title:        tg.Name,
+				CountMethods: tg.Stats.Methods,
 			})
 		}
-		sort.Slice(resp.Tags, func(i, j int) bool {
-			return resp.Tags[i].ID < resp.Tags[j].ID
+		sort.Slice(r.Tags, func(i, j int) bool {
+			return r.Tags[i].ID < r.Tags[j].ID
 		})
 	}
 
-	return resp, nil
+	return r, nil
 }

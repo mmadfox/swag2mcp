@@ -80,7 +80,7 @@ func parseSpecDocument(location string, ws *workspace.Workspace) (*spec.Doc, err
 	}
 
 	cacheDir := cache.New(workspaceDir)
-	if resolvedPath, resolveError := cacheDir.Resolve(location); resolveError == nil {
+	if resolvedPath, resolveError := cacheDir.Resolve(context.Background(), location); resolveError == nil {
 		localPath = resolvedPath
 	}
 
@@ -157,7 +157,9 @@ func (m *apiMockServer) shutdown() {
 			apiShutdownTimeout*time.Second,
 		)
 		defer shutdownCancel()
-		_ = m.server.Shutdown(shutdownContext)
+		if err := m.server.Shutdown(shutdownContext); err != nil {
+			m.logger.Warn("mock api server shutdown error", "error", err)
+		}
 	}
 }
 
@@ -225,7 +227,7 @@ func (m *apiMockServer) findResponseSchema(operation *spec.Operation) *spec.Sche
 }
 
 // schemaForContentType extracts the JSON schema from a content map,
-// preferring application/json and */* content types.
+// preferring application/json and */* content model.
 func schemaForContentType(content map[string]*spec.MediaType) *spec.Schema {
 	if content == nil {
 		return nil

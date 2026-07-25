@@ -40,6 +40,14 @@ const (
 	EndpointBySpec = "endpoint_by_spec"
 	// Auth is the name of the auth tool.
 	Auth = "auth"
+	// Info is the name of the info tool.
+	Info = "info"
+	// ResponseOutline is the name of the response_outline tool.
+	ResponseOutline = "response_outline"
+	// ResponseCompress is the name of the response_compress tool.
+	ResponseCompress = "response_compress"
+	// ResponseSlice is the name of the response_slice tool.
+	ResponseSlice = "response_slice"
 )
 
 //go:embed definitions/*.md
@@ -72,7 +80,7 @@ func (s *Service) MakeToolDefinitions() (ToolDefinitions, error) {
 			continue
 		}
 
-		// Check if this is the instruction file
+		// Check if this is the instruction file.
 		if entry.Name() == "instruction.md" {
 			instruction, err = loadInstructionFromEmbed()
 			if err != nil {
@@ -91,7 +99,7 @@ func (s *Service) MakeToolDefinitions() (ToolDefinitions, error) {
 		tools = append(tools, loadedTool)
 	}
 
-	availableSpecs := s.makeAvaliablesSpecs()
+	availableSpecs := s.makeAvailableSpecs()
 
 	if err != nil {
 		return ToolDefinitions{}, fmt.Errorf("failed to make available specs: %w", err)
@@ -125,7 +133,7 @@ func loadToolFromEmbed(filename string) (Tool, error) {
 		return Tool{}, errors.New("invalid markdown format: missing frontmatter delimiter")
 	}
 
-	// Find the end of frontmatter
+	// Find the end of frontmatter.
 	frontmatterEnd := -1
 	for i := 1; i < len(lines); i++ {
 		if lines[i] == "---" {
@@ -138,7 +146,7 @@ func loadToolFromEmbed(filename string) (Tool, error) {
 		return Tool{}, errors.New("invalid markdown format: missing closing frontmatter delimiter")
 	}
 
-	// Extract name from frontmatter
+	// Extract name from frontmatter.
 	var name string
 	for i := 1; i < frontmatterEnd; i++ {
 		if after, ok := strings.CutPrefix(lines[i], "name:"); ok {
@@ -151,7 +159,7 @@ func loadToolFromEmbed(filename string) (Tool, error) {
 		return Tool{}, errors.New("invalid markdown format: missing name in frontmatter")
 	}
 
-	// Extract description (everything after frontmatter)
+	// Extract description (everything after frontmatter).
 	var description strings.Builder
 	inDescription := false
 	for i := frontmatterEnd + 1; i < len(lines); i++ {
@@ -170,8 +178,8 @@ func loadToolFromEmbed(filename string) (Tool, error) {
 	}, nil
 }
 
-// makeAvaliablesSpecs generates a structured, readable string of available specs and their collections.
-func (s *Service) makeAvaliablesSpecs() string {
+// makeAvailableSpecs generates a structured string of available specs and their collections.
+func (s *Service) makeAvailableSpecs() string {
 	var sb strings.Builder
 	specs := s.index.AllSpecs()
 	if len(specs) == 0 {
@@ -198,7 +206,7 @@ func (s *Service) makeAvaliablesSpecs() string {
 
 		if len(spec.LLMInstruction) > 0 {
 			sb.WriteString("instruction: ")
-			sb.WriteString(strings.ReplaceAll(spec.LLMInstruction, "\n", " ")) // Normalize to single line
+			sb.WriteString(strings.ReplaceAll(spec.LLMInstruction, "\n", " ")) // Normalize to a single line.
 			sb.WriteString("\n")
 		}
 

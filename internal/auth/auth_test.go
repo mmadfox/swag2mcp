@@ -2,6 +2,21 @@ package auth
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+// Compile-time checks: all auth clients satisfy the Authenticator interface.
+var (
+	_ Authenticator = (*NoAuthClient)(nil)
+	_ Authenticator = (*BasicAuthClient)(nil)
+	_ Authenticator = (*BearerTokenAuthClient)(nil)
+	_ Authenticator = (*DigestAuthClient)(nil)
+	_ Authenticator = (*OAuth2ClientCredentialsAuthClient)(nil)
+	_ Authenticator = (*OAuth2PasswordAuthClient)(nil)
+	_ Authenticator = (*APIKeyAuthClient)(nil)
+	_ Authenticator = (*ScriptAuthClient)(nil)
+	_ Authenticator = (*HMACAuthClient)(nil)
 )
 
 func TestType_String(t *testing.T) {
@@ -20,14 +35,13 @@ func TestType_String(t *testing.T) {
 		{"oauth2-pwd", OAuth2Password, "oauth2-pwd"},
 		{"api-key", APIKeyAuth, "api-key"},
 		{"script", ScriptAuth, "script"},
+		{"hmac", HMACAuth, "hmac"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := tt.typ.String(); got != tt.want {
-				t.Errorf("Type.String() = %q, want %q", got, tt.want)
-			}
+			assert.Equal(t, tt.want, tt.typ.String())
 		})
 	}
 }
@@ -37,80 +51,60 @@ func TestResolveEnv(t *testing.T) {
 	t.Run("returns value when env var is set", func(t *testing.T) {
 		t.Setenv("TEST_SWAG_MYVAR", "hello")
 		got := resolveEnv("$(TEST_SWAG_MYVAR)")
-		if got != "hello" {
-			t.Errorf("resolveEnv = %q, want %q", got, "hello")
-		}
+		assert.Equal(t, "hello", got)
 	})
 
 	t.Run("trims leading whitespace inside parens", func(t *testing.T) {
 		t.Setenv("TEST_SWAG_MYVAR", "hello")
 		got := resolveEnv("$(  TEST_SWAG_MYVAR)")
-		if got != "hello" {
-			t.Errorf("resolveEnv = %q, want %q", got, "hello")
-		}
+		assert.Equal(t, "hello", got)
 	})
 
 	t.Run("trims trailing whitespace inside parens", func(t *testing.T) {
 		t.Setenv("TEST_SWAG_MYVAR", "hello")
 		got := resolveEnv("$(TEST_SWAG_MYVAR  )")
-		if got != "hello" {
-			t.Errorf("resolveEnv = %q, want %q", got, "hello")
-		}
+		assert.Equal(t, "hello", got)
 	})
 
 	t.Run("trims whitespace on both sides inside parens", func(t *testing.T) {
 		t.Setenv("TEST_SWAG_MYVAR", "hello")
 		got := resolveEnv("$(  TEST_SWAG_MYVAR  )")
-		if got != "hello" {
-			t.Errorf("resolveEnv = %q, want %q", got, "hello")
-		}
+		assert.Equal(t, "hello", got)
 	})
 
 	t.Run("returns empty string when env var is not set", func(t *testing.T) {
 		t.Parallel()
 		got := resolveEnv("$(TEST_SWAG_UNSET_VAR)")
-		if got != "" {
-			t.Errorf("resolveEnv = %q, want %q", got, "")
-		}
+		assert.Equal(t, "", got)
 	})
 
 	t.Run("returns original string when no pattern matches", func(t *testing.T) {
 		t.Parallel()
 		got := resolveEnv("plaintext")
-		if got != "plaintext" {
-			t.Errorf("resolveEnv = %q, want %q", got, "plaintext")
-		}
+		assert.Equal(t, "plaintext", got)
 	})
 
 	t.Run("returns original string when parens are empty", func(t *testing.T) {
 		t.Parallel()
 		got := resolveEnv("$(  )")
-		if got != "$(  )" {
-			t.Errorf("resolveEnv = %q, want %q", got, "$(  )")
-		}
+		assert.Equal(t, "$(  )", got)
 	})
 
 	t.Run("returns original string when only open paren", func(t *testing.T) {
 		t.Parallel()
 		got := resolveEnv("$(")
-		if got != "$(" {
-			t.Errorf("resolveEnv = %q, want %q", got, "$(")
-		}
+		assert.Equal(t, "$(", got)
 	})
 
 	t.Run("returns empty string for empty input", func(t *testing.T) {
 		t.Parallel()
 		got := resolveEnv("")
-		if got != "" {
-			t.Errorf("resolveEnv = %q, want %q", got, "")
-		}
+		assert.Equal(t, "", got)
 	})
 
 	t.Run("trims whitespace around input", func(t *testing.T) {
 		t.Setenv("TEST_SWAG_MYVAR", "hello")
 		got := resolveEnv("  $(TEST_SWAG_MYVAR)  ")
-		if got != "hello" {
-			t.Errorf("resolveEnv = %q, want %q", got, "hello")
-		}
+		assert.Equal(t, "hello", got)
 	})
 }

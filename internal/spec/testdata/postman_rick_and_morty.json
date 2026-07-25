@@ -1,0 +1,124 @@
+{
+  "info": {
+    "name": "Rick and Morty API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Characters",
+      "item": [
+        {
+          "name": "List all characters",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://rickandmortyapi.com/api/character?page=19",
+              "protocol": "https",
+              "host": [
+                "rickandmortyapi",
+                "com"
+              ],
+              "path": [
+                "api",
+                "character"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "19",
+                  "description": "Page number"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Create character",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "https://rickandmortyapi.com/api/character",
+              "protocol": "https",
+              "host": [
+                "rickandmortyapi",
+                "com"
+              ],
+              "path": [
+                "api",
+                "character"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Rick Sanchez\", \"status\": \"Alive\"}"
+            }
+          }
+        },
+        {
+          "name": "Get character by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://rickandmortyapi.com/api/character/:characterId",
+              "protocol": "https",
+              "host": [
+                "rickandmortyapi",
+                "com"
+              ],
+              "path": [
+                "api",
+                "character",
+                {
+                  "type": "string",
+                  "value": "characterId"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "characterId",
+                  "value": "1",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://rickandmortyapi.com/api/health",
+              "protocol": "https",
+              "host": [
+                "rickandmortyapi",
+                "com"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

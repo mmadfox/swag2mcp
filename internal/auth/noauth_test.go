@@ -4,6 +4,9 @@ import (
 	"context"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNoAuthClient_Apply(t *testing.T) {
@@ -15,20 +18,10 @@ func TestNoAuthClient_Apply(t *testing.T) {
 	req.Header.Set("X-Custom", "should-stay")
 
 	var info Info
-	if err := client.Apply(req, &info); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
+	require.NoError(t, client.Apply(req, &info), "Apply()")
 
-	if v := req.Header.Get("Authorization"); v != "" {
-		t.Errorf("Authorization = %q, want empty", v)
-	}
-	if v := req.Header.Get("X-Custom"); v != "should-stay" {
-		t.Errorf("X-Custom = %q, want %q", v, "should-stay")
-	}
-	if info.Headers != nil {
-		t.Errorf("info.Headers = %v, want nil", info.Headers)
-	}
-	if info.QueryParams != nil {
-		t.Errorf("info.QueryParams = %v, want nil", info.QueryParams)
-	}
+	assert.Empty(t, req.Header.Get(headerAuthorization))
+	assert.Equal(t, "should-stay", req.Header.Get("X-Custom"))
+	assert.Nil(t, info.Headers)
+	assert.Nil(t, info.QueryParams)
 }

@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"os"
+	"log/slog"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -25,8 +25,8 @@ func newInitCmd() *cobra.Command {
 		Long: `Initialize workspace and configuration.
 
   swag2mcp init              — create ~/.swag2mcp/swag2mcp.yaml
-  swag2mcp init ./           — create ./.swag2mcp/swag2mcp.yaml
-  swag2mcp init path/to      — create path/to/.swag2mcp/swag2mcp.yaml
+  swag2mcp init ./           — create ./swag2mcp.yaml
+  swag2mcp init path/to      — create path/to/swag2mcp.yaml
   swag2mcp init -i           — interactive wizard
   swag2mcp init -f           — force overwrite existing configuration`,
 		Args: cobra.MaximumNArgs(1),
@@ -35,71 +35,7 @@ func newInitCmd() *cobra.Command {
 			if len(args) > 0 {
 				basePath = args[0]
 			}
-
-			var workspaceDir string
-			var configPath string
-
-			if basePath == "" {
-				ws, wsErr := workspace.New("")
-				if wsErr != nil {
-					return fmt.Errorf("workspace: %w", wsErr)
-				}
-				workspaceDir = ws.Root()
-				configPath = ws.ConfigPath()
-			} else {
-				absBase, err := filepath.Abs(basePath)
-				if err != nil {
-					return fmt.Errorf("resolve path: %w", err)
-				}
-				workspaceDir = filepath.Join(absBase, workspace.DefaultRootName)
-				configPath = workspace.ConfigPathIn(workspaceDir)
-			}
-
-			if opts.Interactive {
-				if !opts.Force {
-					if _, err := os.Stat(configPath); err == nil {
-						return fmt.Errorf("configuration already exists at %s\n  Use --force to overwrite", configPath)
-					}
-				}
-
-				cfgPath, wsDir, _, err := tui.RunTUI()
-				if err != nil {
-					return fmt.Errorf("init wizard: %w", err)
-				}
-
-				ws, wsErr := workspace.New(wsDir)
-				if wsErr == nil {
-					if cfg, loadErr := config.Load(cfgPath); loadErr == nil {
-						ensureAuthScripts(cfg, ws)
-					}
-				}
-
-				cmd.Printf("\n✅ Configuration written to: %s\n", cfgPath)
-				cmd.Printf("✅ Workspace initialized at: %s\n", wsDir)
-				cmd.Println("Run `swag2mcp mcp` to start the server.")
-				return nil
-			}
-
-			if !opts.Force {
-				if _, err := os.Stat(configPath); err == nil {
-					return fmt.Errorf("configuration already exists at %s\n  Use --force to overwrite", configPath)
-				}
-			}
-
-			if err := tui.Setup(configPath, workspaceDir); err != nil {
-				return fmt.Errorf("init: %w", err)
-			}
-
-			ws, wsErr := workspace.New(workspaceDir)
-			if wsErr == nil {
-				if cfg, loadErr := config.Load(configPath); loadErr == nil {
-					ensureAuthScripts(cfg, ws)
-				}
-			}
-
-			cmd.Printf("✅ Configuration written to %s\n", configPath)
-			cmd.Printf("✅ Workspace initialized at %s\n", workspaceDir)
-			return nil
+			return runInit(basePath, opts.Interactive, opts.Force, cmd)
 		},
 	}
 
@@ -111,10 +47,81 @@ func newInitCmd() *cobra.Command {
 	return cmd
 }
 
+func runInit(basePath string, interactive, force bool, cmd *cobra.Command) error {
+	if interactive {
+		cfgPath, wsDir, _, err := tui.Run()
+		if err != nil {
+			return fmt.Errorf("init wizard: %w", err)
+		}
+
+		ws, wsErr := workspace.New(wsDir)
+		if wsErr == nil {
+			if cfg, loadErr := config.Load(cfgPath); loadErr == nil {
+				ensureAuthScripts(cfg, ws)
+			}
+		}
+
+		return nil
+	}
+
+	var (
+		workspaceDir string
+		configPath   string
+	)
+
+	if basePath == "" {
+		ws, wsErr := workspace.New("")
+		if wsErr != nil {
+			return fmt.Errorf("workspace: %w", wsErr)
+		}
+		workspaceDir = ws.Root()
+		configPath = ws.ConfigPath()
+	} else {
+		absBase, err := filepath.Abs(basePath)
+		if err != nil {
+			return fmt.Errorf("resolve path: %w", err)
+		}
+		workspaceDir = absBase
+		configPath = filepath.Join(absBase, "swag2mcp.yaml")
+	}
+
+	if !force {
+		ws, wsErr := workspace.New(workspaceDir)
+		if wsErr != nil {
+			return fmt.Errorf("workspace: %w", wsErr)
+		}
+		empty, emptyErr := ws.IsEmpty()
+		if emptyErr != nil {
+			return fmt.Errorf("check directory: %w", emptyErr)
+		}
+		if !empty {
+			return fmt.Errorf("directory %q is not empty\n  Use --force to initialize in a non-empty directory", workspaceDir)
+		}
+	}
+
+	if err := tui.Setup(configPath, workspaceDir); err != nil {
+		return fmt.Errorf("init: %w", err)
+	}
+
+	ws, wsErr := workspace.New(workspaceDir)
+	if wsErr == nil {
+		if cfg, loadErr := config.Load(configPath); loadErr == nil {
+			ensureAuthScripts(cfg, ws)
+		}
+	}
+
+	cmd.Printf("✅ Configuration written to %s\n", configPath)
+	cmd.Printf("✅ Workspace initialized at %s\n", workspaceDir)
+	cmd.Printf("\nNext step: edit %s or run 'swag2mcp ls' to list configured specs\n", filepath.Base(configPath))
+	return nil
+}
+
 func ensureAuthScripts(cfg *config.Config, ws *workspace.Workspace) {
 	for spec := range cfg.Iterate(nil) {
 		if spec.Auth.Client != nil && spec.Auth.Client.Type() == auth.ScriptAuth {
-			_ = ws.EnsureAuthScript(spec.Domain)
+			if err := ws.EnsureAuthScript(spec.Domain); err != nil {
+				slog.Default().Warn("failed to ensure auth script", "domain", spec.Domain, "error", err)
+			}
 		}
 	}
 }

@@ -9,10 +9,12 @@ type LocationError struct {
 	Err      error
 }
 
+// Error returns a human-readable description of the location error.
 func (e *LocationError) Error() string {
 	return fmt.Sprintf("%s: %s", e.Type, e.Err)
 }
 
+// Unwrap returns the underlying error for use with [errors.Is] and [errors.As].
 func (e *LocationError) Unwrap() error {
 	return e.Err
 }

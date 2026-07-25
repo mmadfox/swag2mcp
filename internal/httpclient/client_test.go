@@ -1,71 +1,52 @@
 package httpclient
 
 import (
+	"errors"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNew_DefaultTimeout(t *testing.T) {
 	client, err := New(Config{})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client.Timeout != defaultTimeout {
-		t.Errorf("Timeout = %v, want %v", client.Timeout, defaultTimeout)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, defaultTimeout, client.Timeout)
 }
 
 func TestNew_CustomTimeout(t *testing.T) {
 	client, err := New(Config{Timeout: 15 * time.Second})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client.Timeout != 15*time.Second {
-		t.Errorf("Timeout = %v, want %v", client.Timeout, 15*time.Second)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, 15*time.Second, client.Timeout)
 }
 
 func TestNew_NoFollowRedirects(t *testing.T) {
 	follow := false
 	client, err := New(Config{FollowRedirects: &follow})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client.CheckRedirect == nil {
-		t.Fatal("CheckRedirect is nil, expected ErrUseLastResponse")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, client.CheckRedirect)
 }
 
 func TestNew_MaxRedirects(t *testing.T) {
 	maxRedirects := 3
 	client, err := New(Config{MaxRedirects: &maxRedirects})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client.CheckRedirect == nil {
-		t.Fatal("CheckRedirect is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, client.CheckRedirect)
 }
 
 func TestNew_DefaultRedirects(t *testing.T) {
 	client, err := New(Config{})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client.CheckRedirect != nil {
-		t.Fatal("CheckRedirect should be nil by default")
-	}
+	require.NoError(t, err)
+	assert.Nil(t, client.CheckRedirect)
 }
 
 func TestNew_NoConfig(t *testing.T) {
 	client, err := New(Config{})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client == nil {
-		t.Fatal("client is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, client)
 }
 
 func TestNew_Randomize(t *testing.T) {
@@ -74,12 +55,8 @@ func TestNew_Randomize(t *testing.T) {
 		UserAgent: "test-agent",
 		Headers:   map[string]string{"Accept": "text/plain"},
 	})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client == nil {
-		t.Fatal("client is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, client)
 }
 
 func TestNew_ProxyHTTP(t *testing.T) {
@@ -88,12 +65,8 @@ func TestNew_ProxyHTTP(t *testing.T) {
 			URL: "http://127.0.0.1:8080",
 		},
 	})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client == nil {
-		t.Fatal("client is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, client)
 }
 
 func TestNew_ProxySOCKS5(t *testing.T) {
@@ -102,12 +75,8 @@ func TestNew_ProxySOCKS5(t *testing.T) {
 			URL: "socks5://127.0.0.1:1080",
 		},
 	})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client == nil {
-		t.Fatal("client is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, client)
 }
 
 func TestNew_ProxySOCKS5h(t *testing.T) {
@@ -116,12 +85,8 @@ func TestNew_ProxySOCKS5h(t *testing.T) {
 			URL: "socks5h://127.0.0.1:1080",
 		},
 	})
-	if err != nil {
-		t.Fatalf("New() = %v", err)
-	}
-	if client == nil {
-		t.Fatal("client is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, client)
 }
 
 func TestNew_ProxyInvalidScheme(t *testing.T) {
@@ -130,9 +95,7 @@ func TestNew_ProxyInvalidScheme(t *testing.T) {
 			URL: "ftp://127.0.0.1:21",
 		},
 	})
-	if err == nil {
-		t.Fatal("expected error for unsupported proxy scheme")
-	}
+	require.Error(t, err)
 }
 
 func TestNew_ProxyInvalidURL(t *testing.T) {
@@ -141,9 +104,7 @@ func TestNew_ProxyInvalidURL(t *testing.T) {
 			URL: "://invalid",
 		},
 	})
-	if err == nil {
-		t.Fatal("expected error for invalid proxy URL")
-	}
+	require.Error(t, err)
 }
 
 func TestNewDefault_NoGlobalConfig(t *testing.T) {
@@ -152,12 +113,8 @@ func TestNewDefault_NoGlobalConfig(t *testing.T) {
 	t.Cleanup(func() { globalConfig = oldCfg })
 
 	client, err := NewDefault()
-	if err != nil {
-		t.Fatalf("NewDefault() = %v", err)
-	}
-	if client == nil {
-		t.Fatal("client is nil")
-	}
+	require.NoError(t, err)
+	require.NotNil(t, client)
 }
 
 func TestSetGlobalConfig(t *testing.T) {
@@ -169,36 +126,145 @@ func TestSetGlobalConfig(t *testing.T) {
 	})
 
 	client, err := NewDefault()
-	if err != nil {
-		t.Fatalf("NewDefault() = %v", err)
-	}
-	if client.Timeout != 10*time.Second {
-		t.Errorf("Timeout = %v, want %v", client.Timeout, 10*time.Second)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, 10*time.Second, client.Timeout)
 }
 
 func TestMatchBypass_Exact(t *testing.T) {
-	if !matchBypass("example.com", []string{"example.com"}) {
-		t.Error("expected match for exact host")
-	}
+	assert.True(t, matchBypass("example.com", []string{"example.com"}))
 }
 
 func TestMatchBypass_Wildcard(t *testing.T) {
-	if !matchBypass("api.example.com", []string{"*.example.com"}) {
-		t.Error("expected match for wildcard")
-	}
+	assert.True(t, matchBypass("api.example.com", []string{"*.example.com"}))
 }
 
 func TestMatchBypass_NoMatch(t *testing.T) {
-	if matchBypass("other.com", []string{"example.com"}) {
-		t.Error("expected no match")
-	}
+	assert.False(t, matchBypass("other.com", []string{"example.com"}))
 }
 
 func TestMatchBypass_Empty(t *testing.T) {
-	if matchBypass("example.com", nil) {
-		t.Error("expected no match for empty bypass list")
-	}
+	assert.False(t, matchBypass("example.com", nil))
+}
+
+func TestBypassProxy_Matches(t *testing.T) {
+	proxyURL, _ := url.Parse("http://proxy:8080")
+	bypassFn := bypassProxy(proxyURL, []string{"example.com"})
+
+	req, _ := http.NewRequest(http.MethodGet, "http://example.com/path", nil)
+	result, err := bypassFn(req)
+	require.NoError(t, err)
+	assert.Nil(t, result)
+}
+
+func TestBypassProxy_NoMatch(t *testing.T) {
+	proxyURL, _ := url.Parse("http://proxy:8080")
+	bypassFn := bypassProxy(proxyURL, []string{"example.com"})
+
+	req, _ := http.NewRequest(http.MethodGet, "http://other.com/path", nil)
+	result, err := bypassFn(req)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.Equal(t, "http://proxy:8080", result.String())
+}
+
+func TestBypassProxy_EmptyBypass(t *testing.T) {
+	proxyURL, _ := url.Parse("http://proxy:8080")
+	bypassFn := bypassProxy(proxyURL, nil)
+
+	req, _ := http.NewRequest(http.MethodGet, "http://example.com/path", nil)
+	result, err := bypassFn(req)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+}
+
+func TestBypassProxy_Wildcard(t *testing.T) {
+	proxyURL, _ := url.Parse("http://proxy:8080")
+	bypassFn := bypassProxy(proxyURL, []string{"*.example.com"})
+
+	req, _ := http.NewRequest(http.MethodGet, "http://api.example.com/path", nil)
+	result, err := bypassFn(req)
+	require.NoError(t, err)
+	assert.Nil(t, result)
+}
+
+func TestBypassProxy_RegexPattern(t *testing.T) {
+	proxyURL, _ := url.Parse("http://proxy:8080")
+	bypassFn := bypassProxy(proxyURL, []string{"/internal/"})
+
+	req, _ := http.NewRequest(http.MethodGet, "http://api.internal.example.com/path", nil)
+	result, err := bypassFn(req)
+	require.NoError(t, err)
+	assert.Nil(t, result)
+}
+
+func TestApplyRedirects_NoFollow(t *testing.T) {
+	client := &http.Client{}
+	follow := false
+	applyRedirects(client, Config{FollowRedirects: &follow})
+
+	require.NotNil(t, client.CheckRedirect)
+	err := client.CheckRedirect(nil, nil)
+	assert.True(t, errors.Is(err, http.ErrUseLastResponse))
+}
+
+func TestApplyRedirects_MaxRedirects(t *testing.T) {
+	client := &http.Client{}
+	maxRedir := 3
+	applyRedirects(client, Config{MaxRedirects: &maxRedir})
+
+	require.NotNil(t, client.CheckRedirect)
+
+	req1, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
+	req2, _ := http.NewRequest(http.MethodGet, "http://example.com/2", nil)
+	req3, _ := http.NewRequest(http.MethodGet, "http://example.com/3", nil)
+
+	err := client.CheckRedirect(req1, []*http.Request{req1, req2, req3})
+	require.Error(t, err)
+}
+
+func TestApplyRedirects_UnderMaxRedirects(t *testing.T) {
+	client := &http.Client{}
+	maxRedir := 5
+	applyRedirects(client, Config{MaxRedirects: &maxRedir})
+
+	require.NotNil(t, client.CheckRedirect)
+
+	req1, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
+	err := client.CheckRedirect(req1, []*http.Request{req1})
+	require.NoError(t, err)
+}
+
+func TestApplyRedirects_Default(t *testing.T) {
+	client := &http.Client{}
+	applyRedirects(client, Config{})
+	assert.Nil(t, client.CheckRedirect)
+}
+
+func TestApplyRedirects_FollowTrue(t *testing.T) {
+	client := &http.Client{}
+	follow := true
+	applyRedirects(client, Config{FollowRedirects: &follow})
+	assert.Nil(t, client.CheckRedirect)
+}
+
+func TestMatchBypass_Regex(t *testing.T) {
+	assert.True(t, matchBypass("api.internal.example.com", []string{"/internal/"}))
+}
+
+func TestMatchBypass_RegexNoMatch(t *testing.T) {
+	assert.False(t, matchBypass("api.example.com", []string{"/internal/"}))
+}
+
+func TestMatchBypass_WildcardNoMatch(t *testing.T) {
+	assert.False(t, matchBypass("example.com", []string{"*.example.com"}))
+}
+
+func TestMatchBypass_Multiple(t *testing.T) {
+	assert.True(t, matchBypass("test.local", []string{"example.com", "*.local", "other.com"}))
+}
+
+func TestMatchBypass_NoMatchMultiple(t *testing.T) {
+	assert.False(t, matchBypass("remote.com", []string{"example.com", "*.local"}))
 }
 
 func TestRandomizeConfig_Nil(_ *testing.T) {
@@ -209,27 +275,13 @@ func TestRandomizeConfig_FillsEmpty(t *testing.T) {
 	cfg := &Config{}
 	RandomizeConfig(cfg)
 
-	if cfg.UserAgent == "" {
-		t.Error("UserAgent should be filled")
-	}
-	if cfg.Headers == nil {
-		t.Fatal("Headers should be initialized")
-	}
-	if cfg.Headers["Accept"] == "" {
-		t.Error("Accept should be filled")
-	}
-	if cfg.Headers["Accept-Language"] == "" {
-		t.Error("Accept-Language should be filled")
-	}
-	if cfg.Headers["Accept-Encoding"] == "" {
-		t.Error("Accept-Encoding should be filled")
-	}
-	if cfg.Headers["Referer"] == "" {
-		t.Error("Referer should be filled")
-	}
-	if cfg.Headers["Sec-Ch-Ua"] == "" {
-		t.Error("Sec-Ch-Ua should be filled")
-	}
+	require.NotEmpty(t, cfg.UserAgent)
+	require.NotNil(t, cfg.Headers)
+	assert.NotEmpty(t, cfg.Headers["Accept"])
+	assert.NotEmpty(t, cfg.Headers["Accept-Language"])
+	assert.NotEmpty(t, cfg.Headers["Accept-Encoding"])
+	assert.NotEmpty(t, cfg.Headers["Referer"])
+	assert.NotEmpty(t, cfg.Headers["Sec-Ch-Ua"])
 }
 
 func TestRandomizeConfig_DoesNotOverwrite(t *testing.T) {
@@ -241,12 +293,8 @@ func TestRandomizeConfig_DoesNotOverwrite(t *testing.T) {
 	}
 	RandomizeConfig(cfg)
 
-	if cfg.UserAgent != "MyBot/1.0" {
-		t.Errorf("UserAgent was overwritten: %q", cfg.UserAgent)
-	}
-	if cfg.Headers["Accept"] != "application/custom" {
-		t.Errorf("Accept was overwritten: %q", cfg.Headers["Accept"])
-	}
+	assert.Equal(t, "MyBot/1.0", cfg.UserAgent)
+	assert.Equal(t, "application/custom", cfg.Headers["Accept"])
 }
 
 func TestRandomizingTransport_SetsHeaders(t *testing.T) {
@@ -260,12 +308,8 @@ func TestRandomizingTransport_SetsHeaders(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
 	_, _ = rt.RoundTrip(req)
 
-	if req.Header.Get("User-Agent") != "test-agent" {
-		t.Errorf("User-Agent = %q, want test-agent", req.Header.Get("User-Agent"))
-	}
-	if req.Header.Get("X-Custom") != "value" {
-		t.Errorf("X-Custom = %q, want value", req.Header.Get("X-Custom"))
-	}
+	assert.Equal(t, "test-agent", req.Header.Get("User-Agent"))
+	assert.Equal(t, "value", req.Header.Get("X-Custom"))
 }
 
 func TestRandomizingTransport_DoesNotOverwrite(t *testing.T) {
@@ -281,12 +325,8 @@ func TestRandomizingTransport_DoesNotOverwrite(t *testing.T) {
 	req.Header.Set("Accept", "application/json")
 	_, _ = rt.RoundTrip(req)
 
-	if req.Header.Get("User-Agent") != "existing-agent" {
-		t.Errorf("User-Agent was overwritten: %q", req.Header.Get("User-Agent"))
-	}
-	if req.Header.Get("Accept") != "application/json" {
-		t.Errorf("Accept was overwritten: %q", req.Header.Get("Accept"))
-	}
+	assert.Equal(t, "existing-agent", req.Header.Get("User-Agent"))
+	assert.Equal(t, "application/json", req.Header.Get("Accept"))
 }
 
 type mockRoundTripper struct{}

@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
+// toJSON converts raw bytes (JSON or YAML) to normalized JSON.
 func toJSON(data []byte) ([]byte, error) {
 	if len(data) == 0 {
 		return nil, errors.New("empty document")
@@ -104,6 +105,7 @@ func preprocessV3(data []byte) []byte {
 	return fixed
 }
 
+// fixItems replaces boolean items values with empty schema objects for kin-openapi compat.
 func fixItems(v any) {
 	switch node := v.(type) {
 	case map[string]any:
@@ -127,6 +129,7 @@ type versionDoc struct {
 	OpenAPI string `json:"openapi"`
 }
 
+// detectVersion reads the swagger or openapi field to determine the spec version.
 func detectVersion(data []byte) (string, error) {
 	var v versionDoc
 	if err := json.Unmarshal(data, &v); err != nil {

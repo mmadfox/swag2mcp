@@ -1,121 +1,86 @@
-# swag2mcp — example configuration
-# Replace the values below with your own API specifications.
+# swag2mcp — configuration
+# Ready-to-use specs from the repository.
+# Uncomment or modify as needed.
+disable_ratelimiter: true
+
+http_client:
+  headers:
+    Accept: application/json
+
 mcp:
   transport: stdio
-  
+
 specs:
-  - domain: train-booking
-    disable: true
-    base_url: https://api.trains-railway.com
-    http_client:
-      headers:
-        X-Request-ID: generated-request-id
-        X-User-Agent: mobile-app-v2.5
-
-    llm_title: Railway Ticket Booking System API
+  - domain: meteo
+    llm_title: Open-Meteo Weather API
     llm_instruction: |
-      This API provides comprehensive functionality for booking train tickets,
-      managing reservations, and viewing train schedules across the national railway network.
-      Use this for passenger travel planning and ticket purchase operations.
-
-    auth:
-      type: bearer
-      config:
-        token: $(TOKEN_AUTH)
-
+      Use the Open-Meteo API to get weather forecasts, air quality, marine,
+      climate, flood, elevation, and historical weather data. Most endpoints
+      require latitude and longitude. Help the user build the right query.
+    base_url: https://api.open-meteo.com
     collections:
-      - llm_title: Train Schedules and Availability
-        location: /some/path/to/spec/train-schedules.json
-        disable: true
-      - llm_title: Booking and Reservations
-        location: /some/path/to/spec/train-bookings.json
-      - llm_title: Passenger Services
-        location: /some/path/to/spec/train-passengers.json
+      - llm_title: Forecast
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
+      - llm_title: Air Quality
+        base_url: https://air-quality-api.open-meteo.com
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/air-quality.yml
+      - llm_title: Marine
+        base_url: https://marine-api.open-meteo.com
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/marine.yml
+      - llm_title: Climate
+        base_url: https://climate-api.open-meteo.com
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/climate.yml
+      - llm_title: Historical Weather
+        base_url: https://archive-api.open-meteo.com
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/historical-weather.yml
+      - llm_title: Ensemble
+        base_url: https://ensemble-api.open-meteo.com
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/ensemble.yml
+      - llm_title: Seasonal
+        base_url: https://seasonal-api.open-meteo.com
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/seasonal.yml
+      - llm_title: Flood
+        base_url: https://flood-api.open-meteo.com
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/flood.yml
+      - llm_title: Elevation
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/elevation.yml
 
-    tags:
-      - trains
-      - transportation
-      - booking
-      - public-transport
-
-  - domain: petfood-shop
-    base_url: https://shop.petfood.local
-    http_client:
-      headers:
-        X-Shop-ID: petshop-main
-        X-Currency: USD
-
-    llm_title: Pet Food E-Commerce Platform
+  - domain: rick-and-morty
+    llm_title: Rick and Morty API
     llm_instruction: |
-      Complete e-commerce solution for pet food and accessories.
-      Handles product catalog, orders, inventory management, and customer accounts
-      for pet owners and veterinary clinics.
-
+      Use the Rick and Morty API to look up characters, locations, and
+      episodes from the show. Help the user paginate results and filter by
+      name, status, species, etc.
+    base_url: https://rickandmortyapi.com/api
     collections:
-      - llm_title: Product Catalog and Inventory
-        location: /some/path/to/spec/petfood-products.json
-      - llm_title: Customer Orders and Cart
-        location: /some/path/to/spec/petfood-orders.json
-      - llm_title: Customer Accounts and Profiles
-        location: /some/path/to/spec/petfood-customers.json
-      - llm_title: Recommendations and Loyalty
-        location: /some/path/to/spec/petfood-rewards.json
+      - llm_title: Rick and Morty Collection
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/rick-and-morty.json
 
-    tags:
-      - e-commerce
-      - pet-care
-      - retail
-      - subscription
-
-  - domain: music-stream
-    base_url: https://stream.music.global
-    http_client:
-      headers:
-        X-Device-ID: device-{{device_uuid}}
-        X-App-Version: 4.2.1
-
-    llm_title: Global Music Streaming Service
+  - domain: binance
+    llm_title: Binance Spot API
     llm_instruction: |
-      Modern music streaming platform with personalized recommendations,
-      playlist management, and social features. Supports premium and free tiers
-      with ad-supported listening options.
-
+      Use the Binance Spot API to get market data, exchange info, order books,
+      recent trades, and klines. This is read-only public market data.
+    base_url: https://api.binance.com
     collections:
-      - llm_title: Music Library and Playback
-        location: /some/path/to/spec/music-library.json
-      - llm_title: Playlists and Favorites
-        location: /some/path/to/spec/music-playlists.json
-      - llm_title: User Profiles and Social
-        location: /some/path/to/spec/music-social.json
-      - llm_title: Recommendations and Discovery
-        location: /some/path/to/spec/music-discovery.json
+      - llm_title: Spot Market Data
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
 
-    tags:
-      - music
-      - entertainment
-      - streaming
-      - social
-
-  - domain: cinema-tickets
-    base_url: https://tickets.cinema.world
-    llm_title: Cinema Ticket Booking Platform
+  - domain: dadjoke
+    llm_title: icanhazdadjoke API
     llm_instruction: |
-      Comprehensive cinema management and ticket booking system.
-      Handles movie schedules, seat selection, theater management,
-      and concession ordering for movie theaters worldwide.
-
+      Use this API to fetch random dad jokes. Great for lightening the mood.
+    base_url: https://icanhazdadjoke.com
     collections:
-      - llm_title: Movie Schedule and Selection
-        location: /some/path/to/spec/cinema-movies.json
-      - llm_title: Theater Management and Seating
-        location: /some/path/to/spec/cinema-theaters.json
-      - llm_title: Ticket Sales and Concessions
-        location: /some/path/to/spec/cinema-sales.json
-      - llm_title: Membership and Loyalty Programs
-        location: /some/path/to/spec/cinema-membership.json
+      - llm_title: Dad Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
 
-    tags:
-      - cinema
-      - entertainment
-      - events
-      - ticketing
+  - domain: pokeapi
+    llm_title: PokéAPI
+    llm_instruction: |
+      Use PokéAPI to look up Pokémon, abilities, types, moves, and other
+      game data. Help the user navigate by name or id.
+    base_url: https://pokeapi.co
+    collections:
+      - llm_title: Pokémon Data
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/pokeapi.yaml

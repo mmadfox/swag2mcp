@@ -1,10 +1,16 @@
 package workspace
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 )
@@ -23,19 +29,18 @@ func New(root string) (*Workspace, error) {
 		if err != nil {
 			return nil, fmt.Errorf("cannot determine home directory: %w", err)
 		}
-		root = filepath.Join(home, DefaultRootName)
-	} else {
-		absRoot, err := filepath.Abs(root)
-		if err != nil {
-			return nil, fmt.Errorf("resolve path: %w", err)
-		}
-		root = absRoot
+		return &Workspace{root: filepath.Join(home, DefaultRootName)}, nil
 	}
-	return &Workspace{root: root}, nil
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		return nil, fmt.Errorf("resolve path: %w", err)
+	}
+	return &Workspace{root: absRoot}, nil
 }
 
-// NewFromBase creates a Workspace rooted at base/.swag2mcp.
+// NewFromBase creates a Workspace rooted at the given base directory.
 // If base is empty, it defaults to ~/.swag2mcp.
+// If base is provided, it is used as the workspace root directly.
 func NewFromBase(base string) (*Workspace, error) {
 	if base == "" {
 		return New("")
@@ -44,7 +49,7 @@ func NewFromBase(base string) (*Workspace, error) {
 	if err != nil {
 		return nil, fmt.Errorf("resolve path: %w", err)
 	}
-	return New(filepath.Join(abs, DefaultRootName))
+	return &Workspace{root: abs}, nil
 }
 
 // Init creates the workspace root and all standard subdirectories.
@@ -91,6 +96,26 @@ func ConfigPathIn(workspaceDir string) string {
 // ConfigPath returns the config file path inside this workspace.
 func (w *Workspace) ConfigPath() string {
 	return ConfigPathIn(w.root)
+}
+
+// IsEmpty checks whether the workspace directory is empty or does not exist.
+// Returns true if the directory does not exist, exists but is empty,
+// or contains only swag2mcp.yaml (from a previous init).
+func (w *Workspace) IsEmpty() (bool, error) {
+	entries, err := os.ReadDir(w.root)
+	if os.IsNotExist(err) {
+		return true, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("read directory %q: %w", w.root, err)
+	}
+	for _, entry := range entries {
+		if entry.Name() == "swag2mcp.yaml" {
+			continue
+		}
+		return false, nil
+	}
+	return true, nil
 }
 
 // ConfigExists checks whether the config file exists in this workspace.
@@ -235,6 +260,146 @@ echo '{"token": "your-token-here", "expires_in": 3600}'
 	}
 
 	return nil
+}
+
+// DownloadSpec downloads a spec file from a URL or reads it from a local path.
+// Returns the raw file data.
+func (w *Workspace) DownloadSpec(ctx context.Context, source string) ([]byte, error) {
+	if source == "" {
+		return nil, errors.New("source is empty")
+	}
+
+	isURL := strings.HasPrefix(source, "https://") || strings.HasPrefix(source, "http://")
+	isFileURL := strings.HasPrefix(source, "file://")
+
+	switch {
+	case isFileURL:
+		return w.downloadFromFileURL(source)
+	case isURL:
+		return w.downloadFromHTTP(ctx, source)
+	default:
+		return w.downloadFromLocalPath(source)
+	}
+}
+
+// downloadFromFileURL reads a file from a file:// URL.
+func (w *Workspace) downloadFromFileURL(rawURL string) ([]byte, error) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid file URL: %w", err)
+	}
+	path, err := url.PathUnescape(u.Path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unescape URL path: %w", err)
+	}
+	if runtime.GOOS == osWindows && len(path) > 0 && path[0] == '/' {
+		path = path[1:]
+	}
+	data, err := os.ReadFile(filepath.FromSlash(path))
+	if err != nil {
+		return nil, fmt.Errorf("read file %q: %w", path, err)
+	}
+	return data, nil
+}
+
+// downloadFromHTTP downloads a spec file from an HTTP(S) URL.
+func (w *Workspace) downloadFromHTTP(ctx context.Context, source string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, source, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("download %q: %w", source, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("unexpected HTTP status %d for %q", resp.StatusCode, source)
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response body: %w", err)
+	}
+	return data, nil
+}
+
+// downloadFromLocalPath reads a spec file from a local filesystem path.
+func (w *Workspace) downloadFromLocalPath(source string) ([]byte, error) {
+	path := source
+	if !filepath.IsAbs(path) {
+		abs, err := filepath.Abs(path)
+		if err != nil {
+			return nil, fmt.Errorf("resolve path: %w", err)
+		}
+		path = abs
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read file %q: %w", path, err)
+	}
+	return data, nil
+}
+
+// SpecPath returns the full path to a spec file in the specs/ directory.
+func (w *Workspace) SpecPath(name string) string {
+	return filepath.Join(w.SpecsDir(), name)
+}
+
+// ListSpecs returns the filenames of all files in the specs/ directory.
+func (w *Workspace) ListSpecs() ([]string, error) {
+	entries, err := os.ReadDir(w.SpecsDir())
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("read specs dir: %w", err)
+	}
+	names := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		names = append(names, entry.Name())
+	}
+	return names, nil
+}
+
+// specNameExists checks if a filename already exists in the specs/ directory.
+func (w *Workspace) specNameExists(name string) (bool, error) {
+	names, err := w.ListSpecs()
+	if err != nil {
+		return false, err
+	}
+	return slices.Contains(names, name), nil
+}
+
+// SaveSpec saves spec data to the specs/ directory with the given name.
+// Returns an error if a file with that name already exists.
+func (w *Workspace) SaveSpec(name string, data []byte) (string, error) {
+	if name == "" {
+		return "", errors.New("name is empty")
+	}
+	if len(data) == 0 {
+		return "", errors.New("data is empty")
+	}
+
+	if err := os.MkdirAll(w.SpecsDir(), 0750); err != nil {
+		return "", fmt.Errorf("create specs dir: %w", err)
+	}
+
+	exists, existsErr := w.specNameExists(name)
+	if existsErr != nil {
+		return "", existsErr
+	}
+	if exists {
+		return "", fmt.Errorf("spec file %q already exists in %s", name, w.SpecsDir())
+	}
+
+	path := w.SpecPath(name)
+	if writeErr := os.WriteFile(filepath.Clean(path), data, 0600); writeErr != nil {
+		return "", fmt.Errorf("write spec file %q: %w", path, writeErr)
+	}
+	return path, nil
 }
 
 // RemoveOrphanAuthScripts removes auth script files for domains not in the active list.

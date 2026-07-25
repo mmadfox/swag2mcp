@@ -14,8 +14,8 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/httpclient"
 	"github.com/mmadfox/swag2mcp/internal/id"
 	"github.com/mmadfox/swag2mcp/internal/index"
+	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/mmadfox/swag2mcp/internal/spec"
-	"github.com/mmadfox/swag2mcp/internal/types"
 )
 
 //go:embed testdata/invoke/*.yaml
@@ -263,7 +263,7 @@ func TestInvoke_CollectionHeaders(t *testing.T) {
 	// Override collection headers
 	collectionID := id.Collection(specInfo.ID, t.Name()+"/collection")
 	collection, _ := serviceInstance.index.CollectionByID(collectionID)
-	collection.HTTPClient = &types.HTTPClientConfig{
+	collection.HTTPClient = &model.HTTPClientConfig{
 		Headers: map[string]string{
 			"X-Region": "us-east-1",
 		},
@@ -447,6 +447,46 @@ func TestInvoke_DigestAuth(t *testing.T) {
 	}
 }
 
+// TestInvoke_HMACAuth verifies that HMAC-SHA256 authentication works.
+func TestInvoke_HMACAuth(t *testing.T) {
+	t.Parallel()
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	testServer := newTestServer(t, testServerConfig{
+		ExpectedMethod: http.MethodGet,
+		ExpectedPath:   "/users",
+		AuthType:       "hmac",
+		AuthCredentials: map[string]string{
+			"api_key": "test-api-key",
+		},
+		StatusCode:   http.StatusOK,
+		ResponseBody: map[string]any{"users": []any{}},
+	})
+	t.Cleanup(testServer.Close)
+
+	authenticator := &auth.HMACAuthClient{APIKey: "test-api-key", SecretKey: "test-secret-key"}
+	if newError := authenticator.New(); newError != nil {
+		t.Fatalf("failed to init authenticator: %v", newError)
+	}
+
+	serviceInstance := buildTestService(t, "hmac-auth", specDoc, nil, authenticator)
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	response, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("StatusCode = %d, want %d", response.StatusCode, http.StatusOK)
+	}
+}
+
 // TestInvoke_NotFoundError verifies that invoking a non-existent endpoint returns an error.
 func TestInvoke_NotFoundError(t *testing.T) {
 	t.Parallel()
@@ -547,7 +587,7 @@ func TestInvoke_Cookies(t *testing.T) {
 
 	collectionID := id.Collection(specInfo.ID, t.Name()+"/collection")
 	collection, _ := serviceInstance.index.CollectionByID(collectionID)
-	collection.HTTPClient = &types.HTTPClientConfig{
+	collection.HTTPClient = &model.HTTPClientConfig{
 		Cookies: []httpclient.Cookie{
 			{Name: "session_id", Value: "abc123"},
 			{Name: "theme", Value: "dark"},
@@ -590,7 +630,7 @@ func TestInvoke_HTTPClientConfigHeaders(t *testing.T) {
 
 	collectionID := id.Collection(specInfo.ID, t.Name()+"/collection")
 	collection, _ := serviceInstance.index.CollectionByID(collectionID)
-	collection.HTTPClient = &types.HTTPClientConfig{
+	collection.HTTPClient = &model.HTTPClientConfig{
 		Headers: map[string]string{
 			"X-Custom-Header": "custom-value",
 		},
@@ -810,7 +850,7 @@ func TestInvoke_NilOperation(t *testing.T) {
 	seedTestData(t, svc, t.Name())
 
 	// Create an endpoint with a valid Operation first, then set it to nil after indexing
-	nilOpEndpoint := &types.Endpoint{
+	nilOpEndpoint := &model.Endpoint{
 		ID:           "00000000000000000000000000000001",
 		SpecID:       "00000000000000000000000000000002",
 		CollectionID: "00000000000000000000000000000003",
@@ -820,10 +860,10 @@ func TestInvoke_NilOperation(t *testing.T) {
 		Operation:    &spec.Operation{ID: "nilOp", Summary: "nil op"},
 	}
 	if err := svc.index.EnsureIndex(
-		&types.Spec{ID: "00000000000000000000000000000002", Domain: "nil-op-spec"},
-		[]*types.Collection{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000002"}},
-		[]*types.Tag{{ID: "00000000000000000000000000000004", SpecID: "00000000000000000000000000000002", CollectionID: "00000000000000000000000000000003"}},
-		[]*types.Endpoint{nilOpEndpoint},
+		&model.Spec{ID: "00000000000000000000000000000002", Domain: "nil-op-spec"},
+		[]*model.Collection{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000002"}},
+		[]*model.Tag{{ID: "00000000000000000000000000000004", SpecID: "00000000000000000000000000000002", CollectionID: "00000000000000000000000000000003"}},
+		[]*model.Endpoint{nilOpEndpoint},
 	); err != nil {
 		t.Fatalf("EnsureIndex() = %v", err)
 	}
@@ -850,7 +890,7 @@ func TestInvoke_OrphanSpec(t *testing.T) {
 	if idxErr != nil {
 		t.Fatalf("index.New() = %v", idxErr)
 	}
-	orphanEndpoint := &types.Endpoint{
+	orphanEndpoint := &model.Endpoint{
 		ID:           "00000000000000000000000000000001",
 		SpecID:       "00000000000000000000000000000000",
 		CollectionID: "00000000000000000000000000000002",
@@ -860,10 +900,10 @@ func TestInvoke_OrphanSpec(t *testing.T) {
 		Operation:    &spec.Operation{ID: "orphanOp"},
 	}
 	if idxErr = orphanIdx.EnsureIndex(
-		&types.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
-		[]*types.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
-		[]*types.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
-		[]*types.Endpoint{orphanEndpoint},
+		&model.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
+		[]*model.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
+		[]*model.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
+		[]*model.Endpoint{orphanEndpoint},
 	); idxErr != nil {
 		t.Fatalf("EnsureIndex() = %v", idxErr)
 	}
@@ -890,7 +930,7 @@ func TestInvoke_OrphanCollection(t *testing.T) {
 	if idxErr != nil {
 		t.Fatalf("index.New() = %v", idxErr)
 	}
-	orphanEndpoint := &types.Endpoint{
+	orphanEndpoint := &model.Endpoint{
 		ID:           "00000000000000000000000000000001",
 		SpecID:       "00000000000000000000000000000000",
 		CollectionID: "00000000000000000000000000000002",
@@ -900,10 +940,10 @@ func TestInvoke_OrphanCollection(t *testing.T) {
 		Operation:    &spec.Operation{ID: "orphanOp"},
 	}
 	if idxErr = orphanIdx.EnsureIndex(
-		&types.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
-		[]*types.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
-		[]*types.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
-		[]*types.Endpoint{orphanEndpoint},
+		&model.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
+		[]*model.Collection{{ID: "00000000000000000000000000000002", SpecID: "00000000000000000000000000000000"}},
+		[]*model.Tag{{ID: "00000000000000000000000000000003", SpecID: "00000000000000000000000000000000", CollectionID: "00000000000000000000000000000002"}},
+		[]*model.Endpoint{orphanEndpoint},
 	); idxErr != nil {
 		t.Fatalf("EnsureIndex() = %v", idxErr)
 	}
@@ -1024,7 +1064,7 @@ type testServerConfig struct {
 
 // newTestServer creates an [httptest.Server] that validates incoming requests against the config.
 //
-//nolint:gocognit
+
 func newTestServer(t *testing.T, config testServerConfig) *httptest.Server {
 	t.Helper()
 
@@ -1139,6 +1179,20 @@ func validateAuthHeader(t *testing.T, request *http.Request, config testServerCo
 		if !strings.HasPrefix(authHeader, "Digest ") {
 			return fmt.Sprintf("expected Digest auth, got %s", authHeader)
 		}
+	case "hmac":
+		expectedAPIKey := config.AuthCredentials["api_key"]
+		actualAPIKey := request.Header.Get("X-MBX-APIKEY")
+		if actualAPIKey != expectedAPIKey {
+			return fmt.Sprintf("expected X-MBX-APIKEY %s, got %s", expectedAPIKey, actualAPIKey)
+		}
+		signature := request.URL.Query().Get("signature")
+		if signature == "" {
+			return "missing signature query param"
+		}
+		timestamp := request.URL.Query().Get("timestamp")
+		if timestamp == "" {
+			return "missing timestamp query param"
+		}
 	}
 
 	return ""
@@ -1239,20 +1293,20 @@ func buildTestService(t *testing.T, _ string, specDoc *spec.Doc, specHeaders map
 	serviceInstance.index = newIndex
 
 	specID := id.Domain(uniqueDomain)
-	specInfo := &types.Spec{
+	specInfo := &model.Spec{
 		ID:      specID,
 		Domain:  uniqueDomain,
 		BaseURL: "http://test-server",
 		Auth:    authenticator,
 	}
 	if len(specHeaders) > 0 {
-		specInfo.HTTPClient = &types.HTTPClientConfig{
+		specInfo.HTTPClient = &model.HTTPClientConfig{
 			Headers: specHeaders,
 		}
 	}
 
 	collectionID := id.Collection(specID, uniqueDomain+"/collection")
-	collectionInfo := &types.Collection{
+	collectionInfo := &model.Collection{
 		ID:     collectionID,
 		SpecID: specID,
 	}
@@ -1260,8 +1314,8 @@ func buildTestService(t *testing.T, _ string, specDoc *spec.Doc, specHeaders map
 		collectionInfo.HTTPClient = specInfo.HTTPClient
 	}
 
-	var allTags []*types.Tag
-	var allEndpoints []*types.Endpoint
+	var allTags []*model.Tag
+	var allEndpoints []*model.Endpoint
 
 	for index, pathItem := range specDoc.PathItems {
 		operation := pathItem.Operation
@@ -1271,7 +1325,7 @@ func buildTestService(t *testing.T, _ string, specDoc *spec.Doc, specHeaders map
 
 		tagName := fmt.Sprintf("%s-tag-%d", uniqueDomain, index)
 		tagID := id.Tag(specID, collectionID, tagName)
-		tagInfo := &types.Tag{
+		tagInfo := &model.Tag{
 			ID:           tagID,
 			SpecID:       specID,
 			CollectionID: collectionID,
@@ -1279,7 +1333,7 @@ func buildTestService(t *testing.T, _ string, specDoc *spec.Doc, specHeaders map
 		}
 		allTags = append(allTags, tagInfo)
 
-		endpoint := &types.Endpoint{
+		endpoint := &model.Endpoint{
 			ID: id.Method(
 				specID,
 				collectionID,
@@ -1299,7 +1353,7 @@ func buildTestService(t *testing.T, _ string, specDoc *spec.Doc, specHeaders map
 		allEndpoints = append(allEndpoints, endpoint)
 	}
 
-	if ensureError := serviceInstance.index.EnsureIndex(specInfo, []*types.Collection{collectionInfo}, allTags, allEndpoints); ensureError != nil {
+	if ensureError := serviceInstance.index.EnsureIndex(specInfo, []*model.Collection{collectionInfo}, allTags, allEndpoints); ensureError != nil {
 		t.Fatalf("failed to index: %v", ensureError)
 	}
 
@@ -1323,4 +1377,226 @@ func findEndpointID(t *testing.T, serviceInstance *Service, method string, pathS
 func specIDForTest(t *testing.T) string {
 	t.Helper()
 	return id.Domain(t.Name())
+}
+
+// TestInvoke_CustomHeadersPassedThrough verifies that custom headers from InvokeRequest.Headers
+// are sent with the HTTP request.
+func TestInvoke_CustomHeadersPassedThrough(t *testing.T) {
+	t.Parallel()
+
+	var capturedHeaders http.Header
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedHeaders = r.Header
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	t.Cleanup(testServer.Close)
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+		Headers:    map[string]string{"X-Custom-Header": "custom-value", "X-Another": "another-value"},
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	if capturedHeaders.Get("X-Custom-Header") != "custom-value" {
+		t.Errorf("X-Custom-Header = %q, want %q", capturedHeaders.Get("X-Custom-Header"), "custom-value")
+	}
+	if capturedHeaders.Get("X-Another") != "another-value" {
+		t.Errorf("X-Another = %q, want %q", capturedHeaders.Get("X-Another"), "another-value")
+	}
+}
+
+// TestInvoke_CustomCookiesPassedThrough verifies that custom cookies from InvokeRequest.Cookies
+// are sent with the HTTP request.
+func TestInvoke_CustomCookiesPassedThrough(t *testing.T) {
+	t.Parallel()
+
+	var capturedCookies []string
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedCookies = r.Header.Values("Cookie")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	t.Cleanup(testServer.Close)
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+		Cookies:    map[string]string{"session": "abc123", "theme": "dark"},
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	cookieStr := strings.Join(capturedCookies, "; ")
+	if !strings.Contains(cookieStr, "session=abc123") {
+		t.Errorf("Cookie 'session=abc123' not found in: %s", cookieStr)
+	}
+	if !strings.Contains(cookieStr, "theme=dark") {
+		t.Errorf("Cookie 'theme=dark' not found in: %s", cookieStr)
+	}
+}
+
+// TestInvoke_HeadersWithAuth verifies that both auth headers and custom invoke headers
+// are present in the HTTP request.
+func TestInvoke_HeadersWithAuth(t *testing.T) {
+	t.Parallel()
+
+	var capturedAuthHeader, capturedCustomHeader string
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedAuthHeader = r.Header.Get("Authorization")
+		capturedCustomHeader = r.Header.Get("X-Custom-Header")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	t.Cleanup(testServer.Close)
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	authenticator := &auth.BearerTokenAuthClient{Token: "test-bearer-token"}
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, authenticator)
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+		Headers:    map[string]string{"X-Custom-Header": "custom-value"},
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	if capturedAuthHeader != "Bearer test-bearer-token" {
+		t.Errorf("Authorization = %q, want %q", capturedAuthHeader, "Bearer test-bearer-token")
+	}
+	if capturedCustomHeader != "custom-value" {
+		t.Errorf("X-Custom-Header = %q, want %q", capturedCustomHeader, "custom-value")
+	}
+}
+
+// TestInvoke_AuthHeaderOverridesInvoke verifies that the auth transport's Authorization header
+// takes precedence over an Authorization header passed via InvokeRequest.Headers.
+func TestInvoke_AuthHeaderOverridesInvoke(t *testing.T) {
+	t.Parallel()
+
+	var capturedAuthHeader string
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedAuthHeader = r.Header.Get("Authorization")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	t.Cleanup(testServer.Close)
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	authenticator := &auth.BearerTokenAuthClient{Token: "correct-token"}
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, authenticator)
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+		Headers:    map[string]string{"Authorization": "Bearer wrong-token"},
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	if capturedAuthHeader != "Bearer correct-token" {
+		t.Errorf("Authorization = %q, want %q", capturedAuthHeader, "Bearer correct-token")
+	}
+}
+
+// TestInvoke_GlobalHeadersApplied verifies that global http_client headers and User-Agent
+// are applied to the HTTP request even when Randomize is false.
+func TestInvoke_GlobalHeadersApplied(t *testing.T) {
+	t.Parallel()
+
+	var capturedAccept, capturedUA string
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedAccept = r.Header.Get("Accept")
+		capturedUA = r.Header.Get("User-Agent")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	t.Cleanup(testServer.Close)
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+	serviceInstance.globalHeaders = map[string]string{"Accept": "application/json"}
+	serviceInstance.globalUserAgent = "swag2mcp-test/1.0"
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	if capturedAccept != "application/json" {
+		t.Errorf("Accept = %q, want %q", capturedAccept, "application/json")
+	}
+	if capturedUA != "swag2mcp-test/1.0" {
+		t.Errorf("User-Agent = %q, want %q", capturedUA, "swag2mcp-test/1.0")
+	}
+}
+
+// TestInvoke_GlobalCookiesApplied verifies that global http_client cookies
+// are applied to the HTTP request.
+func TestInvoke_GlobalCookiesApplied(t *testing.T) {
+	t.Parallel()
+
+	var capturedCookies string
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedCookies = r.Header.Get("Cookie")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	t.Cleanup(testServer.Close)
+
+	specDoc := parseSpecFromFile(t, "users.yaml")
+	serviceInstance := buildTestService(t, t.Name(), specDoc, nil, nil)
+	serviceInstance.globalCookies = []httpclient.Cookie{
+		{Name: "global-session", Value: "abc"},
+		{Name: "global-theme", Value: "dark"},
+	}
+	specInfo, _ := serviceInstance.index.SpecByID(specIDForTest(t))
+	specInfo.BaseURL = testServer.URL
+
+	endpointID := findEndpointID(t, serviceInstance, http.MethodGet, "/users")
+
+	_, invokeError := serviceInstance.Invoke(context.Background(), InvokeRequest{
+		EndpointID: endpointID,
+	})
+	if invokeError != nil {
+		t.Fatalf("Invoke() returned error: %v", invokeError)
+	}
+
+	if !strings.Contains(capturedCookies, "global-session=abc") {
+		t.Errorf("Cookie 'global-session=abc' not found in: %s", capturedCookies)
+	}
+	if !strings.Contains(capturedCookies, "global-theme=dark") {
+		t.Errorf("Cookie 'global-theme=dark' not found in: %s", capturedCookies)
+	}
 }

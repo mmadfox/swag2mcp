@@ -22,7 +22,7 @@ type state int
 
 const (
 	stateWorkspaceDir state = iota
-	stateConfigPath
+	stateDirNotEmpty
 	stateAskAddSpec
 	stateSpecDomain
 	stateSpecTitle
@@ -90,6 +90,10 @@ var availableAuthMethods = []authMethod{
 	{Type: "script", Label: "Script (custom auth logic)", Fields: []authFieldDef{
 		{Name: "source", Placeholder: "path/to/script.sh or inline code"},
 	}},
+	{Type: "hmac", Label: "HMAC-SHA256 (API Key + Secret Key)", Fields: []authFieldDef{
+		{Name: "api_key", Placeholder: "your-api-key", SupportsEnv: true},
+		{Name: "secret_key", Placeholder: "your-secret-key", SupportsEnv: true},
+	}},
 }
 
 // SpecInput holds the user-provided data for a single API specification.
@@ -126,6 +130,7 @@ type hint struct {
 // model is the Bubbletea model for the initialization wizard.
 type model struct {
 	state          state
+	prevStates     []state
 	configPath     string
 	workspaceDir   string
 	specs          []SpecInput
@@ -177,6 +182,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.state == stateConfirm {
 				return m.handleConfirm()
 			}
+			if m.state == stateDirNotEmpty {
+				return m.transitionTo(stateAskAddSpec)
+			}
 
 		case "n", "N":
 			if m.state == stateAskAddSpec || m.state == stateAskAddCollection || m.state == stateAskAddAnotherSpec {
@@ -185,6 +193,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.state == stateConfirm {
 				m.state = stateAskAddAnotherSpec
 				return m, nil
+			}
+			if m.state == stateDirNotEmpty {
+				return m, tea.Quit
+			}
+
+		case "b", "B":
+			if m.state == stateAskAddSpec || m.state == stateAskAddCollection || m.state == stateAskAddAnotherSpec || m.state == stateConfirm || m.state == stateDirNotEmpty {
+				if len(m.prevStates) > 0 {
+					last := m.prevStates[len(m.prevStates)-1]
+					m.prevStates = m.prevStates[:len(m.prevStates)-1]
+					m.state = last
+					m.input.Focus()
+					return m, textinput.Blink
+				}
 			}
 		}
 	}
@@ -196,6 +218,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // transitionTo sets the state and refocuses the text input.
 func (m model) transitionTo(s state) (tea.Model, tea.Cmd) {
+	m.prevStates = append(m.prevStates, m.state)
 	m.state = s
 	m.input.Focus()
 	return m, textinput.Blink
@@ -211,19 +234,22 @@ func (m model) handleEnter() (tea.Model, tea.Cmd) {
 			val = workspace.DefaultRoot()
 		}
 		m.workspaceDir = val
+		m.configPath = filepath.Join(val, "swag2mcp.yaml")
 		m.input.SetValue("")
-		m.input.Placeholder = workspace.DefaultConfigPath()
-		return m.transitionTo(stateConfigPath)
 
-	case stateConfigPath:
-		if val == "" {
-			val = workspace.DefaultConfigPath()
+		ws, wsErr := workspace.New(val)
+		if wsErr != nil {
+			m.err = wsErr
+			return m, tea.Quit
 		}
-		if info, statErr := os.Stat(val); statErr == nil && info.IsDir() {
-			val = filepath.Join(val, "swag2mcp.yaml")
+		empty, emptyErr := ws.IsEmpty()
+		if emptyErr != nil {
+			m.err = emptyErr
+			return m, tea.Quit
 		}
-		m.configPath = val
-		m.input.SetValue("")
+		if !empty {
+			return m.transitionTo(stateDirNotEmpty)
+		}
 		return m.transitionTo(stateAskAddSpec)
 
 	case stateSpecDomain:
@@ -256,7 +282,7 @@ func (m model) handleEnter() (tea.Model, tea.Cmd) {
 		}
 		m.curSpec.BaseURL = val
 		m.input.SetValue("")
-		m.input.Placeholder = "petstore, public (comma-separated)"
+		m.input.Placeholder = "meteo, public (comma-separated)"
 		return m.transitionTo(stateSpecTags)
 
 	case stateSpecTags:
@@ -407,16 +433,10 @@ func (m model) currentHint() hint {
 			description: "Where should the workspace directory be created?\n  This will store cached specs, local spec files, and API responses.",
 			placeholder: workspace.DefaultRoot(),
 		}
-	case stateConfigPath:
-		return hint{
-			title:       "Config file path",
-			description: "Where should the swag2mcp.yaml configuration file be created?",
-			placeholder: workspace.DefaultConfigPath(),
-		}
 	case stateSpecDomain:
 		return hint{
 			title:       fmt.Sprintf("Spec #%d — Domain", len(m.specs)+1),
-			description: "A unique identifier for this API.\n  Examples: petstore, github-api, stripe.",
+			description: "A unique identifier for this API.\n  Examples: meteo, rick-and-morty, github-api.",
 			placeholder: "my-api",
 			rules:       "Rules: 1–60 characters. Letters, digits, hyphens, and underscores only.",
 		}
@@ -512,7 +532,7 @@ func (m model) View() string {
 	s += "  ╰──────────────────────────────────────────────╯\n\n"
 
 	switch m.state {
-	case stateConfigPath, stateWorkspaceDir, stateSpecDomain, stateSpecTitle, stateSpecInstruction, stateSpecBaseURL, stateSpecTags, stateAuthType, stateAuthField, stateCollTitle, stateCollLocation:
+	case stateWorkspaceDir, stateSpecDomain, stateSpecTitle, stateSpecInstruction, stateSpecBaseURL, stateSpecTags, stateAuthType, stateAuthField, stateCollTitle, stateCollLocation:
 		h := m.currentHint()
 		s += fmt.Sprintf("  %s\n", h.title)
 		s += "  " + headerLine(h.title) + "\n\n"
@@ -523,26 +543,33 @@ func (m model) View() string {
 		s += "  ────\n\n"
 		s += "  [" + h.placeholder + "]\n"
 		s += "  " + m.input.View() + "\n\n"
-		s += "  Press Enter to confirm. Leave empty for default.\n"
+		s += "  Press Enter to confirm. Leave empty for default.  [B]ack\n"
 
 	case stateAskAddSpec:
 		s += "  Add an API specification?\n"
 		s += "  ─────────────────────────\n\n"
 		s += "  An API specification describes a set of related endpoints.\n"
-		s += "  You can add one or more specifications (e.g. petstore, github-api).\n\n"
-		s += "  Type y (yes) or n (no), then press Enter.\n"
+		s += "  You can add one or more specifications (e.g. meteo, rick-and-morty, github-api).\n\n"
+		s += "  Type y (yes) or n (no), then press Enter.  [B]ack\n"
 
 	case stateAskAddCollection:
 		s += fmt.Sprintf("  Spec #%d (%s) — Add a collection?\n", len(m.specs)+1, m.curSpec.Domain)
 		s += "  ───────────────────────────────\n\n"
 		s += "  A collection points to a single Swagger/OpenAPI spec file.\n"
 		s += "  Each specification can have multiple collections.\n\n"
-		s += "  Type y (yes) or n (no), then press Enter.\n"
+		s += "  Type y (yes) or n (no), then press Enter.  [B]ack\n"
 
 	case stateAskAddAnotherSpec:
 		s += "  Add another API specification?\n"
 		s += "  ───────────────────────────────\n\n"
-		s += "  Type y (yes) or n (no), then press Enter.\n"
+		s += "  Type y (yes) or n (no), then press Enter.  [B]ack\n"
+
+	case stateDirNotEmpty:
+		s += "  Directory is not empty\n"
+		s += "  ────────────────────────\n\n"
+		s += fmt.Sprintf("  The directory %q already contains files.\n", m.workspaceDir)
+		s += "  Initializing here may conflict with existing content.\n\n"
+		s += "  Continue anyway?  y (yes) or n (no), then press Enter.  [B]ack\n"
 
 	case stateConfirm:
 		s += "  Review your configuration:\n"
@@ -566,7 +593,7 @@ func (m model) View() string {
 			s += "\n"
 		}
 		s += "  Write configuration and initialize workspace?\n"
-		s += "  Type y (yes) or n (no), then press Enter.\n"
+		s += "  Type y (yes) or n (no), then press Enter.  [B]ack\n"
 
 	case stateDone:
 		if m.err != nil {
@@ -574,7 +601,7 @@ func (m model) View() string {
 		} else {
 			s += fmt.Sprintf("  ✅ Configuration written to: %s\n", m.configPath)
 			s += fmt.Sprintf("  ✅ Workspace initialized at: %s\n", m.workspaceDir)
-			s += "  Run `swag2mcp mcp` to start the server.\n\n"
+			s += "  Run `swag2mcp mcp" + m.mcpPathHint() + "` to start the server.\n\n"
 		}
 	}
 
@@ -587,8 +614,18 @@ func headerLine(title string) string {
 	return strings.Repeat("─", n)
 }
 
-// RunTUI starts the interactive initialization wizard.
-func RunTUI() (configPath, workspaceDir string, specs []SpecInput, err error) {
+// mcpPathHint returns the path argument for the mcp command if the workspace
+// is not the default one.
+func (m model) mcpPathHint() string {
+	def := workspace.DefaultRoot()
+	if m.workspaceDir == def {
+		return ""
+	}
+	return " " + m.workspaceDir
+}
+
+// Run starts the interactive initialization wizard.
+func Run() (configPath, workspaceDir string, specs []SpecInput, err error) {
 	p := tea.NewProgram(initialModel())
 	final, runErr := p.Run()
 	if runErr != nil {

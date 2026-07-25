@@ -1,0 +1,121 @@
+openapi: 3.0.0
+info:
+  title: PokéAPI
+  version: "2.0.0"
+  description: The RESTful Pokémon API
+servers:
+  - url: https://pokeapi.co
+tags:
+  - name: pokemon
+    description: Pokémon data endpoints
+paths:
+  /api/v2/pokemon:
+    get:
+      tags: [pokemon]
+      summary: List Pokémon
+      description: Returns a list of Pokémon
+      operationId: listPokemon
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+          description: Results per page
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+          description: Page offset
+      responses:
+        '200':
+          description: List of Pokémon
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        url:
+                          type: string
+  /api/v2/pokemon/{id}:
+    get:
+      tags: [pokemon]
+      summary: Get Pokémon by ID or name
+      description: Returns a Pokémon by its ID or name
+      operationId: getPokemon
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Pokémon ID or name (e.g. 1, pikachu)
+      responses:
+        '200':
+          description: Pokémon data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  height:
+                    type: integer
+                  weight:
+                    type: integer
+                  types:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+  /api/v2/type/{id}:
+    get:
+      tags: [pokemon]
+      summary: Get Pokémon type
+      description: Returns a Pokémon type by ID or name
+      operationId: getType
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Type ID or name (e.g. 1, fire)
+      responses:
+        '200':
+          description: Type data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  pokemon:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        pokemon:
+                          type: object
+                          properties:
+                            name:
+                              type: string

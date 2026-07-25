@@ -10,6 +10,7 @@ import (
 
 const specVersion20 = "2.0"
 
+// parseV2 parses a Swagger 2.0 document into a unified Doc.
 func parseV2(data []byte) (*Doc, error) {
 	var swag spec.Swagger
 	if err := swag.UnmarshalJSON(data); err != nil {
@@ -45,6 +46,7 @@ func parseV2(data []byte) (*Doc, error) {
 	return doc, nil
 }
 
+// pathItemToOps converts a Swagger path item into a slice of PathItems (one per method).
 func pathItemToOps(path string, item spec.PathItem) []*PathItem {
 	var out []*PathItem
 	type entry struct {
@@ -73,6 +75,7 @@ func pathItemToOps(path string, item spec.PathItem) []*PathItem {
 	return out
 }
 
+// swaggerOpToOp converts a go-openapi Operation to the unified Operation type.
 func swaggerOpToOp(op *spec.Operation) *Operation {
 	o := &Operation{
 		ID:          op.ID,
@@ -138,6 +141,7 @@ func swaggerOpToOp(op *spec.Operation) *Operation {
 	return o
 }
 
+// findBodyParam finds the body parameter from a Swagger parameter list.
 func findBodyParam(params []spec.Parameter) *spec.Parameter {
 	for i := range params {
 		if params[i].In == "body" {
@@ -147,6 +151,7 @@ func findBodyParam(params []spec.Parameter) *spec.Parameter {
 	return nil
 }
 
+// firstConsumes returns the first content type from the consumes list, defaulting to JSON.
 func firstConsumes(consumes []string) string {
 	if len(consumes) > 0 {
 		return consumes[0]
@@ -154,6 +159,7 @@ func firstConsumes(consumes []string) string {
 	return mediaTypeJSON
 }
 
+// swaggerSchemaToSchema converts a go-openapi Schema to the unified Schema type.
 func swaggerSchemaToSchema(s *spec.Schema) *Schema {
 	if s == nil {
 		return nil

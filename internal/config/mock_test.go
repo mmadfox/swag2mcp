@@ -3,7 +3,9 @@ package config
 import (
 	"testing"
 
-	"gopkg.in/yaml.v3"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v3"
 )
 
 func TestValidateConfig_MockEnabled_DuplicatePorts(t *testing.T) {
@@ -40,9 +42,7 @@ func TestValidateConfig_MockEnabled_DuplicatePorts(t *testing.T) {
 	}
 
 	err := ValidateConfig(cfg, ValidateOptions{})
-	if err == nil {
-		t.Fatal("expected error for duplicate mock ports")
-	}
+	require.Error(t, err, "expected error for duplicate mock ports")
 }
 
 func TestValidateConfig_MockEnabled_DuplicatePortsCollection(t *testing.T) {
@@ -72,9 +72,7 @@ func TestValidateConfig_MockEnabled_DuplicatePortsCollection(t *testing.T) {
 	}
 
 	err := ValidateConfig(cfg, ValidateOptions{})
-	if err == nil {
-		t.Fatal("expected error for duplicate mock ports in collections")
-	}
+	require.Error(t, err, "expected error for duplicate mock ports in collections")
 }
 
 func TestValidateConfig_MockEnabled_UniquePorts(t *testing.T) {
@@ -111,51 +109,33 @@ func TestValidateConfig_MockEnabled_UniquePorts(t *testing.T) {
 	}
 
 	err := ValidateConfig(cfg, ValidateOptions{})
-	if err != nil {
-		t.Fatalf("ValidateConfig() = %v, want nil", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestExampleMockConfigYAML(t *testing.T) {
 	t.Parallel()
 
-	data := ExampleMockConfigYAML()
-	if len(data) == 0 {
-		t.Fatal("ExampleMockConfigYAML() returned empty data")
-	}
+	data := exampleMockConfigYAML()
+	require.NotEmpty(t, data, "exampleMockConfigYAML() returned empty data")
 
 	var raw map[string]any
-	if err := yaml.Unmarshal(data, &raw); err != nil {
-		t.Fatalf("failed to unmarshal example YAML: %v", err)
-	}
-	if raw["mock_enabled"] != true {
-		t.Error("mock_enabled should be true")
-	}
+	require.NoError(t, yaml.Unmarshal(data, &raw))
+	assert.Equal(t, true, raw["mock_enabled"])
+
 	specs, ok := raw["specs"].([]any)
-	if !ok {
-		t.Fatal("specs section is missing")
-	}
-	if len(specs) == 0 {
-		t.Fatal("specs is empty")
-	}
+	require.True(t, ok, "specs section is missing")
+	require.NotEmpty(t, specs, "specs is empty")
+
 	spec, ok := specs[0].(map[string]any)
-	if !ok {
-		t.Fatal("first spec is not a map")
-	}
+	require.True(t, ok, "first spec is not a map")
+
 	collections, ok := spec["collections"].([]any)
-	if !ok {
-		t.Fatal("collections section is missing in spec")
-	}
-	if len(collections) == 0 {
-		t.Fatal("collections is empty")
-	}
+	require.True(t, ok, "collections section is missing in spec")
+	require.NotEmpty(t, collections, "collections is empty")
+
 	collection, ok := collections[0].(map[string]any)
-	if !ok {
-		t.Fatal("first collection is not a map")
-	}
-	if collection["base_mock_url"] == nil {
-		t.Error("base_mock_url is missing in collection")
-	}
+	require.True(t, ok, "first collection is not a map")
+	require.NotNil(t, collection["base_mock_url"], "base_mock_url is missing in collection")
 }
 
 func TestExtractPort(t *testing.T) {
@@ -180,9 +160,7 @@ func TestExtractPort(t *testing.T) {
 		t.Run(tt.addr, func(t *testing.T) {
 			t.Parallel()
 			got := extractPort(tt.addr)
-			if got != tt.want {
-				t.Errorf("extractPort(%q) = %d, want %d", tt.addr, got, tt.want)
-			}
+			assert.Equal(t, tt.want, got, "extractPort(%q)", tt.addr)
 		})
 	}
 }

@@ -20,7 +20,7 @@ type Cookie struct {
 
 // ProxyConfig holds proxy connection settings.
 type ProxyConfig struct {
-	URL      string   `yaml:"url"`
+	URL      string   `yaml:"url"                  validate:"omitempty,proxy_url_format"`
 	Username string   `yaml:"username,omitempty"`
 	Password string   `yaml:"password,omitempty"`
 	Bypass   []string `yaml:"bypass,omitempty"`
@@ -36,14 +36,21 @@ type HTTPClientConfig struct {
 // GlobalHTTPClientConfig holds global HTTP client settings.
 type GlobalHTTPClientConfig struct {
 	Randomize       bool              `yaml:"random,omitempty"`
-	Proxy           *ProxyConfig      `yaml:"proxy,omitempty"`
+	Proxy           *ProxyConfig      `yaml:"proxy,omitempty"              validate:"omitempty"`
 	Headers         map[string]string `yaml:"headers,omitempty"`
-	Cookies         []Cookie          `yaml:"cookies,omitempty"`
+	Cookies         []Cookie          `yaml:"cookies,omitempty"            validate:"omitempty,dive"`
 	UserAgent       string            `yaml:"user_agent,omitempty"`
-	Timeout         time.Duration     `yaml:"timeout,omitempty"`
+	Timeout         time.Duration     `yaml:"timeout,omitempty"            validate:"omitempty,min=1000000000,max=300000000000"`
 	FollowRedirects *bool             `yaml:"follow_redirects,omitempty"`
-	MaxRedirects    *int              `yaml:"max_redirects,omitempty"`
-	MaxResponseSize *int              `yaml:"max_response_size,omitempty"`
+	MaxRedirects    *int              `yaml:"max_redirects,omitempty"      validate:"omitempty,min=0,max=50"`
+	MaxResponseSize *int              `yaml:"max_response_size,omitempty"   validate:"omitempty,min=256,max=10485760"`
+}
+
+// MockAuthConfig holds port configuration for mock auth servers.
+type MockAuthConfig struct {
+	OAuth2Port int `yaml:"oauth2_port,omitempty" validate:"omitempty,min=1024,max=65535"`
+	DigestPort int `yaml:"digest_port,omitempty" validate:"omitempty,min=1024,max=65535"`
+	HMACPort   int `yaml:"hmac_port,omitempty"   validate:"omitempty,min=1024,max=65535"`
 }
 
 // Config is the top-level swag2mcp configuration.
@@ -52,10 +59,44 @@ type GlobalHTTPClientConfig struct {
 //   - Specs: at least one spec must be defined.
 //   - MockEnabled: when true, all specs and collections must have BaseMockURL set.
 type Config struct {
-	MockEnabled bool                    `yaml:"mock_enabled,omitempty"`
-	HTTPClient  *GlobalHTTPClientConfig `yaml:"http_client,omitempty"`
-	MCP         *MCPConfig              `yaml:"mcp,omitempty"`
-	Specs       []Spec                  `yaml:"specs"`
+	MockEnabled        bool                    `yaml:"mock_enabled,omitempty"`
+	MockAuth           *MockAuthConfig         `yaml:"mock_auth,omitempty"`
+	HTTPClient         *GlobalHTTPClientConfig `yaml:"http_client,omitempty"`
+	MCP                *MCPConfig              `yaml:"mcp,omitempty"`
+	DisableRateLimiter bool                    `yaml:"disable_ratelimiter,omitempty"`
+	Specs              []Spec                  `yaml:"specs"`
+}
+
+const (
+	defaultUserAgent       = "swag2mcp-global/1.0"
+	defaultTimeout         = 30 * time.Second
+	defaultMaxRedirects    = 10
+	defaultMaxResponseSize = 1048576
+)
+
+// SetDefaults fills nil/zero fields with sensible defaults.
+func (c *GlobalHTTPClientConfig) SetDefaults() {
+	if c == nil {
+		return
+	}
+	if c.UserAgent == "" && !c.Randomize {
+		c.UserAgent = defaultUserAgent
+	}
+	if c.Timeout <= 0 {
+		c.Timeout = defaultTimeout
+	}
+	if c.FollowRedirects == nil {
+		v := true
+		c.FollowRedirects = &v
+	}
+	if c.MaxRedirects == nil {
+		v := defaultMaxRedirects
+		c.MaxRedirects = &v
+	}
+	if c.MaxResponseSize == nil {
+		v := defaultMaxResponseSize
+		c.MaxResponseSize = &v
+	}
 }
 
 // MCPConfig holds the MCP server configuration.
@@ -82,7 +123,7 @@ func (c *MCPAuthConfig) Resolve() {
 // Spec defines a single API specification group.
 //
 // Validation rules:
-//   - Domain: required, 1-60 chars, letters/digits/underscore/hyphen only.
+//   - Domain: required, 1-60 lowercase chars, letters/digits/underscore/hyphen only.
 //   - LLMTitle: required, 20-120 chars, allows letters/digits/punctuation.
 //   - LLMInstruction: optional, max 500 chars, allows letters/digits/punctuation.
 //   - Collections: required, 1-30 collections per spec.
@@ -118,6 +159,7 @@ type Collection struct {
 	BaseMockURL    string            `yaml:"base_mock_url,omitempty"                      validate:"omitempty,mock_addr_format"`
 }
 
+// Iterate returns an iterator over non-disabled specs that match the given filter.
 func (c *Config) Iterate(f *Filter) iter.Seq[*Spec] {
 	return func(yield func(*Spec) bool) {
 		for _, spec := range c.Specs {
@@ -136,7 +178,7 @@ func (c *Config) Iterate(f *Filter) iter.Seq[*Spec] {
 	}
 }
 
-//nolint:gocognit // validation requires many checks
+//nolint:gocognit // Validation requires many checks for different field model.
 func (c *Config) Validate(f *Filter) error {
 	var errs validationErrors
 

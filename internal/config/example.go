@@ -2,7 +2,7 @@ package config
 
 import (
 	"github.com/mmadfox/swag2mcp/internal/auth"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // SpecAddRequest wraps Spec for the add spec command.
@@ -21,18 +21,18 @@ type CollectionAddRequest struct {
 func ExampleSpecAddYAML() []byte {
 	example := SpecAddRequest{
 		Spec: Spec{
-			Domain:         "petstore",
-			LLMTitle:       "Petstore API",
+			Domain:         "meteo",
+			LLMTitle:       "Open-Meteo API",
 			LLMInstruction: "Use this API to manage pets, orders, and users.",
-			BaseURL:        "https://petstore.swagger.io/v2",
+			BaseURL:        "https://meteo.swagger.io/v2",
 			Tags:           []string{"public", "demo"},
 			Auth: Auth{
 				Client: &auth.BearerTokenAuthClient{Token: "your-token-here"},
 			},
 			Collections: []Collection{
 				{
-					LLMTitle: "Petstore Swagger",
-					Location: "https://petstore.swagger.io/v2/swagger.json",
+					LLMTitle: "Open-Meteo Swagger",
+					Location: "https://meteo.swagger.io/v2/swagger.json",
 				},
 			},
 		},
@@ -44,10 +44,10 @@ func ExampleSpecAddYAML() []byte {
 // ExampleCollectionAddYAML returns a pretty-printed YAML example for add collection.
 func ExampleCollectionAddYAML() []byte {
 	example := CollectionAddRequest{
-		SpecDomain: "petstore",
+		SpecDomain: "meteo",
 		Collection: Collection{
 			LLMTitle: "Orders Collection",
-			Location: "https://petstore.example.com/orders.json",
+			Location: "https://meteo.example.com/orders.json",
 		},
 	}
 	data, _ := yaml.Marshal(example)
@@ -55,7 +55,7 @@ func ExampleCollectionAddYAML() []byte {
 }
 
 // ExampleMCPStdioYAML returns a YAML example for MCP with stdio transport.
-func ExampleMCPStdioYAML() []byte {
+func exampleMCPStdioYAML() []byte {
 	data, _ := yaml.Marshal(map[string]any{
 		"mcp": map[string]any{
 			"transport": "stdio",
@@ -65,7 +65,7 @@ func ExampleMCPStdioYAML() []byte {
 }
 
 // ExampleMCPSSEYAML returns a YAML example for MCP with SSE transport and auth.
-func ExampleMCPSSEYAML() []byte {
+func exampleMCPSSEYAML() []byte {
 	data, _ := yaml.Marshal(map[string]any{
 		"mcp": map[string]any{
 			"transport": "sse",
@@ -80,7 +80,7 @@ func ExampleMCPSSEYAML() []byte {
 }
 
 // ExampleMCPStreamableHTTPYAML returns a YAML example for MCP with streamable HTTP transport and auth.
-func ExampleMCPStreamableHTTPYAML() []byte {
+func exampleMCPStreamableHTTPYAML() []byte {
 	data, _ := yaml.Marshal(map[string]any{
 		"mcp": map[string]any{
 			"transport": "streamable-http",
@@ -95,18 +95,18 @@ func ExampleMCPStreamableHTTPYAML() []byte {
 }
 
 // ExampleMockConfigYAML returns a YAML example for mock server configuration.
-func ExampleMockConfigYAML() []byte {
+func exampleMockConfigYAML() []byte {
 	data, _ := yaml.Marshal(map[string]any{
 		"mock_enabled": true,
 		"specs": []map[string]any{
 			{
-				"domain":    "petstore",
-				"llm_title": "Petstore API",
-				"base_url":  "https://petstore.swagger.io/v2",
+				"domain":    "meteo",
+				"llm_title": "Open-Meteo API",
+				"base_url":  "https://meteo.swagger.io/v2",
 				"collections": []map[string]any{
 					{
-						"llm_title":     "Petstore Swagger",
-						"location":      "specs/petstore.json",
+						"llm_title":     "Open-Meteo Swagger",
+						"location":      "specs/meteo.json",
 						"base_mock_url": "localhost:8080",
 					},
 				},

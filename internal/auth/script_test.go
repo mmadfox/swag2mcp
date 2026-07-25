@@ -7,13 +7,18 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func writeScript(t *testing.T, dir, content string) {
 	t.Helper()
 
-	var ext string
-	var header string
+	var (
+		ext    string
+		header string
+	)
 	if runtime.GOOS == "windows" {
 		ext = ".bat"
 		header = "@echo off\n"
@@ -23,15 +28,10 @@ func writeScript(t *testing.T, dir, content string) {
 	}
 
 	scriptPath := filepath.Join(dir, "auth_scripts", "testdomain"+ext)
-	if err := os.MkdirAll(filepath.Dir(scriptPath), 0700); err != nil {
-		t.Fatalf("mkdir: %v", err)
-	}
-	if err := os.WriteFile(scriptPath, []byte(header+content), 0700); err != nil {
-		t.Fatalf("write script: %v", err)
-	}
+	require.NoError(t, os.MkdirAll(filepath.Dir(scriptPath), 0700), "mkdir")
+	require.NoError(t, os.WriteFile(scriptPath, []byte(header+content), 0700), "write script")
 }
 
-//nolint:gocognit
 func TestScriptAuthClient_Apply(t *testing.T) {
 	t.Parallel()
 
@@ -45,22 +45,14 @@ func TestScriptAuthClient_Apply(t *testing.T) {
 			Domain:       "testdomain",
 			workspaceDir: dir,
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := newGetRequest()
 		var info Info
-		if err := client.Apply(req, &info); err != nil {
-			t.Fatalf("Apply() = %v", err)
-		}
+		require.NoError(t, client.Apply(req, &info), "Apply()")
 
-		if v := req.Header.Get("Authorization"); v != "Bearer script-token-456" {
-			t.Errorf("Authorization = %q, want %q", v, "Bearer script-token-456")
-		}
-		if v := info.Headers["Authorization"]; v != "Bearer script-token-456" {
-			t.Errorf("info.Headers[Authorization] = %q, want %q", v, "Bearer script-token-456")
-		}
+		assert.Equal(t, "Bearer script-token-456", req.Header.Get(headerAuthorization))
+		assert.Equal(t, "Bearer script-token-456", info.Headers[headerAuthorization])
 	})
 
 	t.Run("caches token and reuses on second Apply", func(t *testing.T) {
@@ -73,23 +65,15 @@ func TestScriptAuthClient_Apply(t *testing.T) {
 			Domain:       "testdomain",
 			workspaceDir: dir,
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req1, _ := newGetRequest()
-		if err := client.Apply(req1, nil); err != nil {
-			t.Fatalf("Apply #1 = %v", err)
-		}
+		require.NoError(t, client.Apply(req1, nil), "Apply #1")
 
 		req2, _ := newGetRequest()
-		if err := client.Apply(req2, nil); err != nil {
-			t.Fatalf("Apply #2 = %v", err)
-		}
+		require.NoError(t, client.Apply(req2, nil), "Apply #2")
 
-		if v := req2.Header.Get("Authorization"); v != "Bearer cached-script-token" {
-			t.Errorf("Authorization = %q, want %q", v, "Bearer cached-script-token")
-		}
+		assert.Equal(t, "Bearer cached-script-token", req2.Header.Get(headerAuthorization))
 	})
 
 	t.Run("returns error on invalid JSON output", func(t *testing.T) {
@@ -102,14 +86,11 @@ func TestScriptAuthClient_Apply(t *testing.T) {
 			Domain:       "testdomain",
 			workspaceDir: dir,
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := newGetRequest()
-		if err := client.Apply(req, nil); err == nil {
-			t.Fatal("expected error for invalid JSON, got nil")
-		}
+		err := client.Apply(req, nil)
+		require.Error(t, err, "expected error for invalid JSON")
 	})
 
 	t.Run("returns error on missing token field", func(t *testing.T) {
@@ -122,14 +103,11 @@ func TestScriptAuthClient_Apply(t *testing.T) {
 			Domain:       "testdomain",
 			workspaceDir: dir,
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := newGetRequest()
-		if err := client.Apply(req, nil); err == nil {
-			t.Fatal("expected error for missing token, got nil")
-		}
+		err := client.Apply(req, nil)
+		require.Error(t, err, "expected error for missing token")
 	})
 
 	t.Run("uses default expires_in when not provided", func(t *testing.T) {
@@ -142,18 +120,12 @@ func TestScriptAuthClient_Apply(t *testing.T) {
 			Domain:       "testdomain",
 			workspaceDir: dir,
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := newGetRequest()
-		if err := client.Apply(req, nil); err != nil {
-			t.Fatalf("Apply() = %v", err)
-		}
+		require.NoError(t, client.Apply(req, nil), "Apply()")
 
-		if v := req.Header.Get("Authorization"); v != "Bearer no-expiry-token" {
-			t.Errorf("Authorization = %q, want %q", v, "Bearer no-expiry-token")
-		}
+		assert.Equal(t, "Bearer no-expiry-token", req.Header.Get(headerAuthorization))
 	})
 
 	t.Run("returns error on script execution failure", func(t *testing.T) {
@@ -166,14 +138,11 @@ func TestScriptAuthClient_Apply(t *testing.T) {
 			Domain:       "testdomain",
 			workspaceDir: dir,
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := newGetRequest()
-		if err := client.Apply(req, nil); err == nil {
-			t.Fatal("expected error for script failure, got nil")
-		}
+		err := client.Apply(req, nil)
+		require.Error(t, err, "expected error for script failure")
 	})
 }
 

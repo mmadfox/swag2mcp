@@ -7,62 +7,75 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/httpclient"
 	"github.com/mmadfox/swag2mcp/internal/id"
+	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/mmadfox/swag2mcp/internal/spec"
-	"github.com/mmadfox/swag2mcp/internal/types"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
 // BootstrapRequest is the request for the Bootstrap method.
 type BootstrapRequest struct {
-	ConfFilepath string
+	ConfFilePath string
 	Tags         []string
 }
 
 // Bootstrap loads the configuration, initializes the workspace, creates the
 // global HTTP client, and indexes all specs, collections, tags, and endpoints.
-func (s *Service) Bootstrap(_ context.Context, request BootstrapRequest) error {
-	configuration, loadError := s.loadConfiguration(request.ConfFilepath, request.Tags)
-	if loadError != nil {
-		return fmt.Errorf("failed to load config: %w", loadError)
+func (s *Service) Bootstrap(ctx context.Context, request BootstrapRequest) error {
+	s.startedAt = time.Now()
+
+	cfg, err := s.loadConfiguration(request.ConfFilePath, request.Tags)
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+	s.config = cfg
+	s.disableRateLimiter.Store(cfg.DisableRateLimiter)
+
+	if err := s.initializeWorkspace(filepath.Dir(request.ConfFilePath)); err != nil {
+		return err
 	}
 
-	if initError := s.initializeWorkspace(filepath.Dir(request.ConfFilepath)); initError != nil {
-		return initError
+	httpCfg := buildGlobalHTTPConfig(cfg.HTTPClient)
+	if httpCfg.Randomize {
+		httpclient.RandomizeConfig(&httpCfg)
 	}
 
-	globalHTTPConfig := buildGlobalHTTPConfig(configuration.HTTPClient)
-	if globalHTTPConfig.Randomize {
-		httpclient.RandomizeConfig(&globalHTTPConfig)
+	client, err := httpclient.New(httpCfg)
+	if err != nil {
+		return fmt.Errorf("failed to create HTTP client: %w", err)
 	}
+	s.httpClient = client
+	s.httpClientConfig = httpCfg
+	s.maxResponseSize = resolveMaxResponseSize(httpCfg.MaxResponseSize)
+	s.globalHeaders = httpCfg.Headers
+	s.globalUserAgent = httpCfg.UserAgent
+	s.globalCookies = httpCfg.Cookies
 
-	httpClient, clientError := httpclient.New(globalHTTPConfig)
-	if clientError != nil {
-		return fmt.Errorf("failed to create HTTP client: %w", clientError)
-	}
-	s.httpClient = httpClient
-	s.maxResponseSize = resolveMaxResponseSize(globalHTTPConfig.MaxResponseSize)
-
-	httpclient.SetGlobalConfig(globalHTTPConfig)
+	httpclient.SetGlobalConfig(httpCfg)
 
 	filter := config.NewFilter(request.Tags)
 
-	for specConfig := range configuration.Iterate(filter) {
-		if specError := s.processSpec(specConfig); specError != nil {
-			return specError
+	for sc := range cfg.Iterate(filter) {
+		if err := s.processSpec(ctx, sc, cfg.MockEnabled, cfg.MockAuth); err != nil {
+			return err
 		}
 	}
+
+	s.buildSnapshot()
 
 	return nil
 }
 
 func buildGlobalHTTPConfig(global *config.GlobalHTTPClientConfig) httpclient.Config {
 	if global == nil {
-		return httpclient.Config{}
+		return httpclient.Config{
+			UserAgent: defaultUserAgent,
+		}
 	}
 
 	cfg := httpclient.Config{
@@ -72,6 +85,10 @@ func buildGlobalHTTPConfig(global *config.GlobalHTTPClientConfig) httpclient.Con
 		FollowRedirects: global.FollowRedirects,
 		MaxRedirects:    global.MaxRedirects,
 		MaxResponseSize: global.MaxResponseSize,
+	}
+
+	if cfg.UserAgent == "" && !cfg.Randomize {
+		cfg.UserAgent = defaultUserAgent
 	}
 	if global.Headers != nil {
 		cfg.Headers = make(map[string]string, len(global.Headers))
@@ -102,221 +119,254 @@ func buildGlobalHTTPConfig(global *config.GlobalHTTPClientConfig) httpclient.Con
 }
 
 func (s *Service) loadConfiguration(configFilepath string, tags []string) (*config.Config, error) {
-	configuration, loadError := config.Load(configFilepath)
-	if loadError != nil {
-		return nil, loadError
-	}
-
-	filter := config.NewFilter(tags)
-	if err := configuration.Validate(filter); err != nil {
+	cfg, err := config.Load(configFilepath)
+	if err != nil {
 		return nil, err
 	}
 
-	return configuration, nil
-}
-
-func (s *Service) initializeWorkspace(workspaceDirectory string) error {
-	if workspaceDirectory != "" && workspaceDirectory != s.ws.Root() {
-		newWorkspace, workspaceError := workspace.New(workspaceDirectory)
-		if workspaceError != nil {
-			return fmt.Errorf("failed to create workspace: %w", workspaceError)
-		}
-		s.ws = newWorkspace
+	filter := config.NewFilter(tags)
+	if err := cfg.Validate(filter); err != nil {
+		return nil, err
 	}
 
-	if initError := s.ws.Init(); initError != nil {
-		return fmt.Errorf("failed to init workspace: %w", initError)
+	return cfg, nil
+}
+
+func (s *Service) initializeWorkspace(wsDir string) error {
+	if wsDir != "" && wsDir != s.ws.Root() {
+		ws, err := workspace.New(wsDir)
+		if err != nil {
+			return fmt.Errorf("failed to create workspace: %w", err)
+		}
+		s.ws = ws
+	}
+
+	if err := s.ws.Init(); err != nil {
+		return fmt.Errorf("failed to init workspace: %w", err)
 	}
 
 	s.cache.SetWorkspaceDir(s.ws.Root())
 	return nil
 }
 
-func (s *Service) processSpec(specConfig *config.Spec) error {
-	specification, specError := s.buildSpecInfo(specConfig)
-	if specError != nil {
-		return specError
+func (s *Service) processSpec(ctx context.Context, sc *config.Spec, mockEnabled bool, ma *config.MockAuthConfig) error {
+	sp, err := s.buildSpecInfo(sc, mockEnabled, ma)
+	if err != nil {
+		return err
 	}
 
-	allTags := make(map[string]*types.Tag)
-	allCollections := make(map[string]*types.Collection)
-	allEndpoints := make(map[string]*types.Endpoint)
+	tags := make(map[string]*model.Tag)
+	colls := make(map[string]*model.Collection)
+	eps := make(map[string]*model.Endpoint)
 
-	for index := range specConfig.Collections {
-		collectionConfig := &specConfig.Collections[index]
-		if collectionConfig.Disable {
+	for i := range sc.Collections {
+		cc := &sc.Collections[i]
+		if cc.Disable {
 			continue
 		}
 
-		collectionInfo, processError := s.processCollection(
-			specification, specConfig, collectionConfig,
-			allTags, allEndpoints,
+		coll, err := s.processCollection(
+			ctx, sp, sc, cc,
+			tags, eps,
 		)
-		if processError != nil {
-			return processError
+		if err != nil {
+			return err
 		}
 
-		allCollections[collectionInfo.ID] = collectionInfo
-		specification.Stats.Collections++
+		colls[coll.ID] = coll
+		sp.Stats.Collections++
 	}
 
-	return s.indexSpec(specification, allCollections, allTags, allEndpoints)
+	sp.Stats.Tags = len(tags)
+	sp.Stats.Methods = len(eps)
+
+	return s.indexSpec(sp, colls, tags, eps)
 }
 
 func (s *Service) processCollection(
-	specification *types.Spec,
-	specConfig *config.Spec,
-	collectionConfig *config.Collection,
-	allTags map[string]*types.Tag,
-	allEndpoints map[string]*types.Endpoint,
-) (*types.Collection, error) {
-	collectionInfo := &types.Collection{
-		ID:             id.Collection(specification.ID, collectionConfig.Location),
-		SpecID:         specification.ID,
-		LLMTitle:       collectionConfig.LLMTitle,
-		LLMInstruction: collectionConfig.LLMInstruction,
-		BaseURL:        collectionConfig.BaseURL,
-		BaseMockURL:    collectionConfig.BaseMockURL,
+	ctx context.Context,
+	sp *model.Spec,
+	sc *config.Spec,
+	cc *config.Collection,
+	tags map[string]*model.Tag,
+	eps map[string]*model.Endpoint,
+) (*model.Collection, error) {
+	coll := &model.Collection{
+		ID:             id.Collection(sp.ID, cc.Location),
+		SpecID:         sp.ID,
+		LLMTitle:       cc.LLMTitle,
+		LLMInstruction: cc.LLMInstruction,
+		BaseURL:        cc.BaseURL,
+		BaseMockURL:    cc.BaseMockURL,
 		HTTPClient: mergeHTTPClientConfig(
-			specConfig.HTTPClient,
-			collectionConfig.HTTPClient,
+			sc.HTTPClient,
+			cc.HTTPClient,
 		),
 	}
 
-	specDocument, parseError := s.parseSpecDocument(collectionConfig.Location)
-	if parseError != nil {
-		return nil, parseError
+	doc, err := s.parseSpecDocument(ctx, cc.Location)
+	if err != nil {
+		return nil, err
 	}
 
-	applySpecMetadata(collectionInfo, specDocument)
+	applySpecMetadata(coll, doc)
 
-	for _, pathItem := range specDocument.PathItems {
-		operation := pathItem.Operation
-		if operation == nil {
+	for _, pi := range doc.PathItems {
+		op := pi.Operation
+		if op == nil {
 			continue
 		}
 
-		tagName := resolveTagName(operation.Tags)
-		tagID := id.Tag(specification.ID, collectionInfo.ID, tagName)
+		tagName := resolveTagName(op.Tags)
+		tagID := id.Tag(sp.ID, coll.ID, tagName)
 
-		tagInfo, tagExists := allTags[tagID]
-		if !tagExists {
-			collectionInfo.Stats.Tags++
-			tagInfo = &types.Tag{
+		tag, exists := tags[tagID]
+		if !exists {
+			coll.Stats.Tags++
+			tag = &model.Tag{
 				ID:           tagID,
-				SpecID:       specification.ID,
-				CollectionID: collectionInfo.ID,
+				SpecID:       sp.ID,
+				CollectionID: coll.ID,
 				Name:         tagName,
 			}
-			allTags[tagID] = tagInfo
+			tags[tagID] = tag
 		}
 
-		collectionInfo.Stats.Methods++
-		tagInfo.Stats.Methods++
+		coll.Stats.Methods++
+		tag.Stats.Methods++
 
-		endpoint := types.Endpoint{
+		ep := model.Endpoint{
 			ID: id.Method(
-				specification.ID,
-				collectionInfo.ID,
+				sp.ID,
+				coll.ID,
 				tagID,
-				pathItem.Method,
-				pathItem.Path,
-				operation.ID,
+				pi.Method,
+				pi.Path,
+				op.ID,
 			),
-			SpecID:       specification.ID,
-			CollectionID: collectionInfo.ID,
+			SpecID:       sp.ID,
+			CollectionID: coll.ID,
 			TagID:        tagID,
 			Tag:          tagName,
-			Name:         pathItem.Method,
-			Path:         pathItem.Path,
-			Operation:    operation,
+			Name:         pi.Method,
+			Path:         pi.Path,
+			Operation:    op,
 		}
-		allEndpoints[endpoint.ID] = &endpoint
+		eps[ep.ID] = &ep
 	}
 
-	return collectionInfo, nil
+	return coll, nil
 }
 
-func (s *Service) parseSpecDocument(location string) (*spec.Doc, error) {
-	localPath := location
-	var resolveError error
+func (s *Service) parseSpecDocument(ctx context.Context, location string) (*spec.Doc, error) {
+	lp := location
 
 	if s.cache != nil {
-		localPath, resolveError = s.cache.Resolve(location)
-		if resolveError != nil {
-			return nil, fmt.Errorf("collection %q: %w", location, resolveError)
+		var err error
+		lp, err = s.cache.Resolve(ctx, location)
+		if err != nil {
+			return nil, fmt.Errorf("collection %q: %w", location, err)
 		}
 	}
 
-	data, readError := os.ReadFile(localPath)
-	if readError != nil {
-		return nil, fmt.Errorf("collection %q: read file: %w", location, readError)
+	data, err := os.ReadFile(lp)
+	if err != nil {
+		return nil, fmt.Errorf("collection %q: read file: %w", location, err)
 	}
 
-	specDocument, parseError := spec.Parse(data)
-	if parseError != nil {
-		return nil, fmt.Errorf("collection %q: parse spec: %w", location, parseError)
+	doc, err := spec.Parse(data)
+	if err != nil {
+		return nil, fmt.Errorf("collection %q: parse spec: %w", location, err)
 	}
 
-	return specDocument, nil
+	return doc, nil
 }
 
-func (s *Service) buildSpecInfo(specConfig *config.Spec) (*types.Spec, error) {
-	specification := &types.Spec{
-		ID:             id.Domain(specConfig.Domain),
-		Domain:         specConfig.Domain,
-		LLMTitle:       specConfig.LLMTitle,
-		LLMInstruction: specConfig.LLMInstruction,
-		BaseURL:        specConfig.BaseURL,
-		Auth:           specConfig.Auth.Client,
+func (s *Service) buildSpecInfo(sc *config.Spec, mockEnabled bool, ma *config.MockAuthConfig) (*model.Spec, error) {
+	sp := &model.Spec{
+		ID:             id.Domain(sc.Domain),
+		Domain:         sc.Domain,
+		LLMTitle:       sc.LLMTitle,
+		LLMInstruction: sc.LLMInstruction,
+		BaseURL:        sc.BaseURL,
+		Auth:           sc.Auth.Client,
 	}
 
-	if specConfig.HTTPClient != nil {
-		specification.HTTPClient = &types.HTTPClientConfig{
-			Headers: specConfig.HTTPClient.Headers,
-			Cookies: convertCookies(specConfig.HTTPClient.Cookies),
+	if sc.HTTPClient != nil {
+		sp.HTTPClient = &model.HTTPClientConfig{
+			Headers: sc.HTTPClient.Headers,
+			Cookies: convertCookies(sc.HTTPClient.Cookies),
 		}
 	}
 
-	if specConfig.Auth.Client != nil {
-		if initError := specification.InitAuthenticator(); initError != nil {
+	if sc.Auth.Client != nil {
+		if err := sp.InitAuthenticator(); err != nil {
 			return nil, fmt.Errorf(
 				"spec %s, failed to initialize authenticator: %w",
-				specConfig.Domain, initError,
+				sc.Domain, err,
 			)
 		}
 
-		if scriptClient, isScript := specConfig.Auth.Client.(*auth.ScriptAuthClient); isScript {
+		if scriptClient, isScript := sc.Auth.Client.(*auth.ScriptAuthClient); isScript {
 			scriptClient.SetWorkspaceDir(s.ws.Root())
+		}
+
+		if mockEnabled {
+			applyMockAuthURLs(sc.Auth.Client, ma)
 		}
 	}
 
-	return specification, nil
+	return sp, nil
+}
+
+const (
+	defaultUserAgent      = "swag2mcp-global/1.0"
+	defaultMockOAuth2Port = 9090
+	defaultMockDigestPort = 9091
+)
+
+func applyMockAuthURLs(client auth.Authenticator, mockAuth *config.MockAuthConfig) {
+	oauth2Port := defaultMockOAuth2Port
+	digestPort := defaultMockDigestPort
+	if mockAuth != nil {
+		if mockAuth.OAuth2Port > 0 {
+			oauth2Port = mockAuth.OAuth2Port
+		}
+		if mockAuth.DigestPort > 0 {
+			digestPort = mockAuth.DigestPort
+		}
+	}
+	if setter, ok := client.(auth.TokenURLSetter); ok {
+		setter.SetTokenURL(fmt.Sprintf("http://127.0.0.1:%d/token", oauth2Port))
+	}
+	if setter, ok := client.(auth.MockBaseURLSetter); ok {
+		setter.SetMockBaseURL(fmt.Sprintf("http://127.0.0.1:%d/", digestPort))
+	}
 }
 
 func (s *Service) indexSpec(
-	specification *types.Spec,
-	allCollections map[string]*types.Collection,
-	allTags map[string]*types.Tag,
-	allEndpoints map[string]*types.Endpoint,
+	sp *model.Spec,
+	colls map[string]*model.Collection,
+	tags map[string]*model.Tag,
+	eps map[string]*model.Endpoint,
 ) error {
-	collections := make([]*types.Collection, 0, len(allCollections))
-	for _, collection := range allCollections {
-		collections = append(collections, collection)
+	collections := make([]*model.Collection, 0, len(colls))
+	for _, c := range colls {
+		collections = append(collections, c)
 	}
 
-	tags := make([]*types.Tag, 0, len(allTags))
-	for _, tag := range allTags {
-		tags = append(tags, tag)
+	ts := make([]*model.Tag, 0, len(tags))
+	for _, t := range tags {
+		ts = append(ts, t)
 	}
 
-	endpoints := make([]*types.Endpoint, 0, len(allEndpoints))
-	for _, endpoint := range allEndpoints {
-		endpoints = append(endpoints, endpoint)
+	endpoints := make([]*model.Endpoint, 0, len(eps))
+	for _, e := range eps {
+		endpoints = append(endpoints, e)
 	}
 
-	if indexError := s.index.EnsureIndex(specification, collections, tags, endpoints); indexError != nil {
-		return fmt.Errorf("failed to ensure index: %w", indexError)
+	if err := s.index.EnsureIndex(sp, collections, ts, endpoints); err != nil {
+		return fmt.Errorf("failed to ensure index: %w", err)
 	}
 
 	return nil
@@ -329,7 +379,7 @@ func resolveTagName(tags []string) string {
 	return "default"
 }
 
-func applySpecMetadata(collection *types.Collection, specDocument *spec.Doc) {
+func applySpecMetadata(collection *model.Collection, specDocument *spec.Doc) {
 	if len(collection.LLMTitle) == 0 && len(specDocument.Title) > 0 {
 		collection.LLMTitle = specDocument.Title
 	}
@@ -363,8 +413,8 @@ func convertCookies(cookies []config.Cookie) []httpclient.Cookie {
 // spec → collection. Collection overrides spec.
 func mergeHTTPClientConfig(
 	spec, collection *config.HTTPClientConfig,
-) *types.HTTPClientConfig {
-	result := &types.HTTPClientConfig{}
+) *model.HTTPClientConfig {
+	result := &model.HTTPClientConfig{}
 
 	levels := []*config.HTTPClientConfig{spec, collection}
 
@@ -379,14 +429,14 @@ func mergeHTTPClientConfig(
 	return result
 }
 
-func mergeHeaders(result *types.HTTPClientConfig, level *config.HTTPClientConfig) {
+func mergeHeaders(result *model.HTTPClientConfig, level *config.HTTPClientConfig) {
 	if result.Headers == nil && len(level.Headers) > 0 {
 		result.Headers = make(map[string]string, len(level.Headers))
 		maps.Copy(result.Headers, level.Headers)
 	}
 }
 
-func mergeCookies(result *types.HTTPClientConfig, level *config.HTTPClientConfig) {
+func mergeCookies(result *model.HTTPClientConfig, level *config.HTTPClientConfig) {
 	if len(result.Cookies) > 0 || len(level.Cookies) == 0 {
 		return
 	}

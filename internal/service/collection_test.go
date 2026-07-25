@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/index"
-	"github.com/mmadfox/swag2mcp/internal/types"
+	"github.com/mmadfox/swag2mcp/internal/model"
 )
 
 func TestCollectionsBySpec_Success(t *testing.T) {
@@ -101,10 +101,10 @@ func TestCollectionByID_OrphanSpec(t *testing.T) {
 		t.Fatalf("index.New() = %v", idxErr)
 	}
 	if idxErr = orphanIdx.EnsureIndex(
-		&types.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
-		[]*types.Collection{{ID: "00000000000000000000000000000001", SpecID: "00000000000000000000000000000000"}},
-		[]*types.Tag{},
-		[]*types.Endpoint{},
+		&model.Spec{ID: "00000000000000000000000000000000", Domain: "orphan"},
+		[]*model.Collection{{ID: "00000000000000000000000000000001", SpecID: "00000000000000000000000000000000"}},
+		[]*model.Tag{},
+		[]*model.Endpoint{},
 	); idxErr != nil {
 		t.Fatalf("EnsureIndex() = %v", idxErr)
 	}

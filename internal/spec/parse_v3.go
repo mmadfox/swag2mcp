@@ -8,6 +8,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
+// parseV3 parses an OpenAPI 3.x document into a unified Doc.
 func parseV3(data []byte) (*Doc, error) {
 	loader := openapi3.NewLoader()
 	doc, err := loader.LoadFromData(data)
@@ -18,6 +19,7 @@ func parseV3(data []byte) (*Doc, error) {
 	return openapi3DocToDoc(doc), nil
 }
 
+// openapi3DocToDoc converts a kin-openapi T to the unified Doc type.
 func openapi3DocToDoc(doc *openapi3.T) *Doc {
 	out := &Doc{
 		Version: doc.OpenAPI,
@@ -44,6 +46,7 @@ func openapi3DocToDoc(doc *openapi3.T) *Doc {
 	return out
 }
 
+// openapi3PathItemToOps converts a kin-openapi PathItem into a slice of PathItems (one per method).
 func openapi3PathItemToOps(path string, item *openapi3.PathItem) []*PathItem {
 	var out []*PathItem
 	type entry struct {
@@ -73,6 +76,7 @@ func openapi3PathItemToOps(path string, item *openapi3.PathItem) []*PathItem {
 	return out
 }
 
+// openapi3OpToOp converts a kin-openapi Operation to the unified Operation type.
 func openapi3OpToOp(op *openapi3.Operation) *Operation {
 	o := &Operation{
 		ID:          op.OperationID,
@@ -126,6 +130,7 @@ func openapi3OpToOp(op *openapi3.Operation) *Operation {
 	return o
 }
 
+// openapi3ContentToContent converts kin-openapi Content to the unified MediaType map.
 func openapi3ContentToContent(content openapi3.Content) map[string]*MediaType {
 	if len(content) == 0 {
 		return nil
@@ -139,54 +144,17 @@ func openapi3ContentToContent(content openapi3.Content) map[string]*MediaType {
 	return out
 }
 
-//
-//nolint:gocognit
+// schemaRefToSchema converts a kin-openapi SchemaRef to the unified Schema type.
 func schemaRefToSchema(sref *openapi3.SchemaRef) *Schema {
 	if sref == nil || sref.Value == nil {
 		return nil
 	}
 	s := sref.Value
 
-	// Type: *Types -> pick first non-null type
-	typ := ""
-	if s.Type != nil {
-		types := s.Type.Slice()
-		for _, t := range types {
-			if !strings.EqualFold(t, "null") {
-				typ = t
-				break
-			}
-		}
-	}
-
-	props := make(map[string]*Schema, len(s.Properties))
-	for k, vref := range s.Properties {
-		props[k] = schemaRefToSchema(vref)
-	}
-
-	oneOf := make([]*Schema, 0, len(s.OneOf))
-	for _, ss := range s.OneOf {
-		if s := schemaRefToSchema(ss); s != nil {
-			oneOf = append(oneOf, s)
-		}
-	}
-	anyOf := make([]*Schema, 0, len(s.AnyOf))
-	for _, ss := range s.AnyOf {
-		if s := schemaRefToSchema(ss); s != nil {
-			anyOf = append(anyOf, s)
-		}
-	}
-	allOf := make([]*Schema, 0, len(s.AllOf))
-	for _, ss := range s.AllOf {
-		if s := schemaRefToSchema(ss); s != nil {
-			allOf = append(allOf, s)
-		}
-	}
-
 	return &Schema{
-		Type:        typ,
+		Type:        extractSchemaType(s),
 		Format:      s.Format,
-		Properties:  props,
+		Properties:  extractSchemaProperties(s),
 		Items:       schemaRefToSchema(s.Items),
 		Required:    s.Required,
 		Ref:         sref.Ref,
@@ -196,8 +164,41 @@ func schemaRefToSchema(sref *openapi3.SchemaRef) *Schema {
 		ReadOnly:    s.ReadOnly,
 		WriteOnly:   s.WriteOnly,
 		Example:     s.Example,
-		OneOf:       oneOf,
-		AnyOf:       anyOf,
-		AllOf:       allOf,
+		OneOf:       extractSchemaComposition(s.OneOf),
+		AnyOf:       extractSchemaComposition(s.AnyOf),
+		AllOf:       extractSchemaComposition(s.AllOf),
 	}
+}
+
+// extractSchemaType returns the first non-null type from a schema's type list.
+func extractSchemaType(s *openapi3.Schema) string {
+	if s.Type == nil {
+		return ""
+	}
+	for _, t := range s.Type.Slice() {
+		if !strings.EqualFold(t, "null") {
+			return t
+		}
+	}
+	return ""
+}
+
+// extractSchemaProperties converts a schema's property map to the unified Schema map.
+func extractSchemaProperties(s *openapi3.Schema) map[string]*Schema {
+	props := make(map[string]*Schema, len(s.Properties))
+	for k, vref := range s.Properties {
+		props[k] = schemaRefToSchema(vref)
+	}
+	return props
+}
+
+// extractSchemaComposition converts a slice of SchemaRefs to a slice of unified Schemas.
+func extractSchemaComposition(refs []*openapi3.SchemaRef) []*Schema {
+	out := make([]*Schema, 0, len(refs))
+	for _, ss := range refs {
+		if s := schemaRefToSchema(ss); s != nil {
+			out = append(out, s)
+		}
+	}
+	return out
 }

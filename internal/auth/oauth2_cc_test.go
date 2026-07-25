@@ -9,9 +9,11 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-//nolint:gocognit
 func TestOAuth2ClientCredentialsAuthClient_Apply(t *testing.T) {
 	t.Parallel()
 
@@ -45,25 +47,15 @@ func TestOAuth2ClientCredentialsAuthClient_Apply(t *testing.T) {
 		client := &OAuth2ClientCredentialsAuthClient{
 			ClientID: "test-client", ClientSecret: "test-secret", TokenURL: srv.URL + "/token",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
 		var info Info
-		if err := client.Apply(req, &info); err != nil {
-			t.Fatalf("Apply() = %v", err)
-		}
+		require.NoError(t, client.Apply(req, &info), "Apply()")
 
-		if reqCount.Load() != 1 {
-			t.Errorf("expected 1 token request, got %d", reqCount.Load())
-		}
-		if v := req.Header.Get("Authorization"); v != "Bearer access-token-123" {
-			t.Errorf("Authorization = %q, want %q", v, "Bearer access-token-123")
-		}
-		if v := info.Headers["Authorization"]; v != "Bearer access-token-123" {
-			t.Errorf("info.Headers[Authorization] = %q, want %q", v, "Bearer access-token-123")
-		}
+		assert.Equal(t, int32(1), reqCount.Load(), "expected 1 token request")
+		assert.Equal(t, "Bearer access-token-123", req.Header.Get(headerAuthorization))
+		assert.Equal(t, "Bearer access-token-123", info.Headers[headerAuthorization])
 	})
 
 	t.Run("caches token and reuses on second Apply", func(t *testing.T) {
@@ -81,26 +73,16 @@ func TestOAuth2ClientCredentialsAuthClient_Apply(t *testing.T) {
 		client := &OAuth2ClientCredentialsAuthClient{
 			ClientID: "c", ClientSecret: "s", TokenURL: srv.URL + "/token",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req1, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-		if err := client.Apply(req1, nil); err != nil {
-			t.Fatalf("Apply #1 = %v", err)
-		}
+		require.NoError(t, client.Apply(req1, nil), "Apply #1")
 
 		req2, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-		if err := client.Apply(req2, nil); err != nil {
-			t.Fatalf("Apply #2 = %v", err)
-		}
+		require.NoError(t, client.Apply(req2, nil), "Apply #2")
 
-		if reqCount.Load() != 1 {
-			t.Errorf("expected 1 token request (cached), got %d", reqCount.Load())
-		}
-		if v := req2.Header.Get("Authorization"); v != "Bearer cached-token" {
-			t.Errorf("Authorization = %q, want %q", v, "Bearer cached-token")
-		}
+		assert.Equal(t, int32(1), reqCount.Load(), "expected 1 token request (cached)")
+		assert.Equal(t, "Bearer cached-token", req2.Header.Get(headerAuthorization))
 	})
 
 	t.Run("refetches token after expiration", func(t *testing.T) {
@@ -122,28 +104,18 @@ func TestOAuth2ClientCredentialsAuthClient_Apply(t *testing.T) {
 		client := &OAuth2ClientCredentialsAuthClient{
 			ClientID: "c", ClientSecret: "s", TokenURL: srv.URL + "/token",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req1, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-		if err := client.Apply(req1, nil); err != nil {
-			t.Fatalf("Apply #1 = %v", err)
-		}
+		require.NoError(t, client.Apply(req1, nil), "Apply #1")
 
 		time.Sleep(1100 * time.Millisecond)
 
 		req2, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-		if err := client.Apply(req2, nil); err != nil {
-			t.Fatalf("Apply #2 = %v", err)
-		}
+		require.NoError(t, client.Apply(req2, nil), "Apply #2")
 
-		if reqCount.Load() != 2 {
-			t.Errorf("expected 2 token requests (expired), got %d", reqCount.Load())
-		}
-		if v := req2.Header.Get("Authorization"); v != "Bearer token-2" {
-			t.Errorf("Authorization = %q, want %q", v, "Bearer token-2")
-		}
+		assert.Equal(t, int32(2), reqCount.Load(), "expected 2 token requests (expired)")
+		assert.Equal(t, "Bearer token-2", req2.Header.Get(headerAuthorization))
 	})
 
 	t.Run("returns error on non-200 response", func(t *testing.T) {
@@ -158,14 +130,11 @@ func TestOAuth2ClientCredentialsAuthClient_Apply(t *testing.T) {
 		client := &OAuth2ClientCredentialsAuthClient{
 			ClientID: "bad", ClientSecret: "bad", TokenURL: srv.URL + "/token",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-		if err := client.Apply(req, nil); err == nil {
-			t.Fatal("expected error, got nil")
-		}
+		err := client.Apply(req, nil)
+		require.Error(t, err, "expected error")
 	})
 
 	t.Run("returns error on empty access_token", func(t *testing.T) {
@@ -181,14 +150,11 @@ func TestOAuth2ClientCredentialsAuthClient_Apply(t *testing.T) {
 		client := &OAuth2ClientCredentialsAuthClient{
 			ClientID: "c", ClientSecret: "s", TokenURL: srv.URL + "/token",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-		if err := client.Apply(req, nil); err == nil {
-			t.Fatal("expected error for empty access_token, got nil")
-		}
+		err := client.Apply(req, nil)
+		require.Error(t, err, "expected error for empty access_token")
 	})
 }
 
@@ -212,15 +178,9 @@ func TestOAuth2ClientCredentialsAuthClient_Apply_EnvVars(t *testing.T) {
 		ClientID: "$(TEST_OAUTH2_CLIENT_ID)", ClientSecret: "$(TEST_OAUTH2_CLIENT_SECRET)",
 		TokenURL: srv.URL + "/token",
 	}
-	if err := client.New(); err != nil {
-		t.Fatalf("New() = %v", err)
-	}
+	require.NoError(t, client.New(), "New()")
 
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-	if err := client.Apply(req, nil); err != nil {
-		t.Fatalf("Apply() = %v", err)
-	}
-	if v := req.Header.Get("Authorization"); v != "Bearer env-token" {
-		t.Errorf("Authorization = %q, want %q", v, "Bearer env-token")
-	}
+	require.NoError(t, client.Apply(req, nil), "Apply()")
+	assert.Equal(t, "Bearer env-token", req.Header.Get(headerAuthorization))
 }

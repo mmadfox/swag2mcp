@@ -4,9 +4,11 @@ import (
 	"context"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-//nolint:gocognit
 func TestAPIKeyAuthClient_Apply(t *testing.T) {
 	t.Parallel()
 
@@ -18,22 +20,14 @@ func TestAPIKeyAuthClient_Apply(t *testing.T) {
 			Value: "my-api-key-value",
 			In:    "header",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
 		var info Info
-		if err := client.Apply(req, &info); err != nil {
-			t.Fatalf("Apply() = %v", err)
-		}
+		require.NoError(t, client.Apply(req, &info), "Apply()")
 
-		if v := req.Header.Get("X-Api-Key"); v != "my-api-key-value" {
-			t.Errorf("X-Api-Key = %q, want %q", v, "my-api-key-value")
-		}
-		if v := info.Headers["X-Api-Key"]; v != "my-api-key-value" {
-			t.Errorf("info.Headers[X-Api-Key] = %q, want %q", v, "my-api-key-value")
-		}
+		assert.Equal(t, "my-api-key-value", req.Header.Get("X-Api-Key"))
+		assert.Equal(t, "my-api-key-value", info.Headers["X-Api-Key"])
 	})
 
 	t.Run("sets query param when In is query", func(t *testing.T) {
@@ -44,22 +38,14 @@ func TestAPIKeyAuthClient_Apply(t *testing.T) {
 			Value: "query-key-value",
 			In:    "query",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
 		var info Info
-		if err := client.Apply(req, &info); err != nil {
-			t.Fatalf("Apply() = %v", err)
-		}
+		require.NoError(t, client.Apply(req, &info), "Apply()")
 
-		if v := req.URL.Query().Get("api_key"); v != "query-key-value" {
-			t.Errorf("query api_key = %q, want %q", v, "query-key-value")
-		}
-		if v := info.QueryParams["api_key"]; v != "query-key-value" {
-			t.Errorf("info.QueryParams[api_key] = %q, want %q", v, "query-key-value")
-		}
+		assert.Equal(t, "query-key-value", req.URL.Query().Get("api_key"))
+		assert.Equal(t, "query-key-value", info.QueryParams["api_key"])
 	})
 
 	t.Run("defaults to header when In is unknown", func(t *testing.T) {
@@ -70,18 +56,12 @@ func TestAPIKeyAuthClient_Apply(t *testing.T) {
 			Value: "fallback-value",
 			In:    "unknown",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
-		if err := client.Apply(req, nil); err != nil {
-			t.Fatalf("Apply() = %v", err)
-		}
+		require.NoError(t, client.Apply(req, nil), "Apply()")
 
-		if v := req.Header.Get("X-Auth"); v != "fallback-value" {
-			t.Errorf("X-Auth = %q, want %q", v, "fallback-value")
-		}
+		assert.Equal(t, "fallback-value", req.Header.Get("X-Auth"))
 	})
 
 	t.Run("does not set empty value", func(t *testing.T) {
@@ -92,21 +72,13 @@ func TestAPIKeyAuthClient_Apply(t *testing.T) {
 			Value: "",
 			In:    "header",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
 		var info Info
-		if err := client.Apply(req, &info); err != nil {
-			t.Fatalf("Apply() = %v", err)
-		}
+		require.NoError(t, client.Apply(req, &info), "Apply()")
 
-		if v := req.Header.Get("X-Key"); v != "" {
-			t.Errorf("X-Key = %q, want empty", v)
-		}
-		if info.Headers != nil {
-			t.Errorf("info.Headers = %v, want nil", info.Headers)
-		}
+		assert.Empty(t, req.Header.Get("X-Key"))
+		assert.Nil(t, info.Headers)
 	})
 }

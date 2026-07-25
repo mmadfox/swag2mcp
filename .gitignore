@@ -39,6 +39,8 @@ Thumbs.db
 *.tmp
 *.log
 .gigacode/
-.agents
 .swag2mcp
+.opencode
 main
+tmp
+playground

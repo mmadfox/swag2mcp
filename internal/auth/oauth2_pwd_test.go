@@ -8,9 +8,11 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-//nolint:gocyclo,gocognit,cyclop // test code
 func TestOAuth2PasswordAuthClient_Apply(t *testing.T) {
 	t.Parallel()
 
@@ -72,25 +74,15 @@ func TestOAuth2PasswordAuthClient_Apply(t *testing.T) {
 			ClientSecret: "test-secret",
 			TokenURL:     srv.URL + "/token",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
 		var info Info
-		if err := client.Apply(req, &info); err != nil {
-			t.Fatalf("Apply() = %v", err)
-		}
+		require.NoError(t, client.Apply(req, &info), "Apply()")
 
-		if reqCount.Load() != 1 {
-			t.Errorf("expected 1 token request, got %d", reqCount.Load())
-		}
-		if v := req.Header.Get("Authorization"); v != "Bearer pwd-access-token" {
-			t.Errorf("Authorization = %q, want %q", v, "Bearer pwd-access-token")
-		}
-		if v := info.Headers["Authorization"]; v != "Bearer pwd-access-token" {
-			t.Errorf("info.Headers[Authorization] = %q, want %q", v, "Bearer pwd-access-token")
-		}
+		assert.Equal(t, int32(1), reqCount.Load(), "expected 1 token request")
+		assert.Equal(t, "Bearer pwd-access-token", req.Header.Get(headerAuthorization))
+		assert.Equal(t, "Bearer pwd-access-token", info.Headers[headerAuthorization])
 	})
 
 	t.Run("caches token and reuses on second Apply", func(t *testing.T) {
@@ -116,26 +108,16 @@ func TestOAuth2PasswordAuthClient_Apply(t *testing.T) {
 			ClientSecret: "s",
 			TokenURL:     srv.URL + "/token",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req1, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
-		if err := client.Apply(req1, nil); err != nil {
-			t.Fatalf("Apply #1 = %v", err)
-		}
+		require.NoError(t, client.Apply(req1, nil), "Apply #1")
 
 		req2, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
-		if err := client.Apply(req2, nil); err != nil {
-			t.Fatalf("Apply #2 = %v", err)
-		}
+		require.NoError(t, client.Apply(req2, nil), "Apply #2")
 
-		if reqCount.Load() != 1 {
-			t.Errorf("expected 1 token request (cached), got %d", reqCount.Load())
-		}
-		if v := req2.Header.Get("Authorization"); v != "Bearer cached-pwd-token" {
-			t.Errorf("Authorization = %q, want %q", v, "Bearer cached-pwd-token")
-		}
+		assert.Equal(t, int32(1), reqCount.Load(), "expected 1 token request (cached)")
+		assert.Equal(t, "Bearer cached-pwd-token", req2.Header.Get(headerAuthorization))
 	})
 
 	t.Run("refetches token after expiration", func(t *testing.T) {
@@ -161,28 +143,18 @@ func TestOAuth2PasswordAuthClient_Apply(t *testing.T) {
 			ClientSecret: "s",
 			TokenURL:     srv.URL + "/token",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req1, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
-		if err := client.Apply(req1, nil); err != nil {
-			t.Fatalf("Apply #1 = %v", err)
-		}
+		require.NoError(t, client.Apply(req1, nil), "Apply #1")
 
 		time.Sleep(1100 * time.Millisecond)
 
 		req2, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
-		if err := client.Apply(req2, nil); err != nil {
-			t.Fatalf("Apply #2 = %v", err)
-		}
+		require.NoError(t, client.Apply(req2, nil), "Apply #2")
 
-		if reqCount.Load() != 2 {
-			t.Errorf("expected 2 token requests (expired), got %d", reqCount.Load())
-		}
-		if v := req2.Header.Get("Authorization"); v != "Bearer pwd-token-2" {
-			t.Errorf("Authorization = %q, want %q", v, "Bearer pwd-token-2")
-		}
+		assert.Equal(t, int32(2), reqCount.Load(), "expected 2 token requests (expired)")
+		assert.Equal(t, "Bearer pwd-token-2", req2.Header.Get(headerAuthorization))
 	})
 
 	t.Run("successful token fetch without client_secret (public client)", func(t *testing.T) {
@@ -230,19 +202,13 @@ func TestOAuth2PasswordAuthClient_Apply(t *testing.T) {
 			ClientID: "public-client",
 			TokenURL: srv.URL + "/token",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
 		var info Info
-		if err := client.Apply(req, &info); err != nil {
-			t.Fatalf("Apply() = %v", err)
-		}
+		require.NoError(t, client.Apply(req, &info), "Apply()")
 
-		if v := req.Header.Get("Authorization"); v != "Bearer public-client-token" {
-			t.Errorf("Authorization = %q, want %q", v, "Bearer public-client-token")
-		}
+		assert.Equal(t, "Bearer public-client-token", req.Header.Get(headerAuthorization))
 	})
 
 	t.Run("returns error on non-200 response", func(t *testing.T) {
@@ -261,14 +227,11 @@ func TestOAuth2PasswordAuthClient_Apply(t *testing.T) {
 			ClientSecret: "s",
 			TokenURL:     srv.URL + "/token",
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
-		if err := client.Apply(req, nil); err == nil {
-			t.Fatal("expected error, got nil")
-		}
+		err := client.Apply(req, nil)
+		require.Error(t, err, "expected error")
 	})
 
 	t.Run("sends scopes when configured", func(t *testing.T) {
@@ -294,16 +257,10 @@ func TestOAuth2PasswordAuthClient_Apply(t *testing.T) {
 			TokenURL:     srv.URL + "/token",
 			Scopes:       []string{"read", "write"},
 		}
-		if err := client.New(); err != nil {
-			t.Fatalf("New() = %v", err)
-		}
+		require.NoError(t, client.New(), "New()")
 
 		req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
-		if err := client.Apply(req, nil); err != nil {
-			t.Fatalf("Apply() = %v", err)
-		}
-		if v := req.Header.Get("Authorization"); v != "Bearer scoped-token" {
-			t.Errorf("Authorization = %q, want %q", v, "Bearer scoped-token")
-		}
+		require.NoError(t, client.Apply(req, nil), "Apply()")
+		assert.Equal(t, "Bearer scoped-token", req.Header.Get(headerAuthorization))
 	})
 }

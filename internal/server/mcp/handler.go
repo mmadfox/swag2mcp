@@ -7,7 +7,8 @@ import (
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-type svc interface {
+// Svc defines the service interface consumed by MCP tool handlers.
+type Svc interface {
 	Specs(_ context.Context) (service.SpecsResponse, error)
 	SpecByID(_ context.Context, req service.SpecByIDRequest) (service.SpecByIDResponse, error)
 	CollectionByID(_ context.Context, req service.CollectionByIDRequest) (service.CollectionByIDResponse, error)
@@ -26,14 +27,17 @@ type svc interface {
 	Inspect(_ context.Context, req service.InspectRequest) (service.InspectResponse, error)
 	Invoke(_ context.Context, req service.InvokeRequest) (service.InvokeResponse, error)
 	Auth(_ context.Context, req service.AuthRequest) (service.AuthResponse, error)
+	Info(_ context.Context) (service.InfoResponse, error)
+	ResponseOutline(_ context.Context, req service.ResponseOutlineRequest) (service.ResponseOutlineResponse, error)
+	ResponseCompress(_ context.Context, req service.ResponseCompressRequest) (service.ResponseCompressResponse, error)
+	ResponseSlice(_ context.Context, req service.ResponseSliceRequest) (service.ResponseSliceResponse, error)
 	MakeToolDefinitions() (service.ToolDefinitions, error)
 }
 
 type handler struct {
-	service svc
+	service Svc
 }
 
-// handleSpecByID handles the spec_by_id tool call.
 func (h *handler) handleSpecByID(
 	ctx context.Context,
 	_ *sdkmcp.CallToolRequest,
@@ -48,7 +52,6 @@ func (h *handler) handleSpecByID(
 	}, nil, nil
 }
 
-// handleSpecList handles the spec_list tool call.
 func (h *handler) handleSpecList(
 	ctx context.Context,
 	_ *sdkmcp.CallToolRequest,
@@ -63,7 +66,6 @@ func (h *handler) handleSpecList(
 	}, nil, nil
 }
 
-// handleCollectionByID handles the collection_by_id tool call.
 func (h *handler) handleCollectionByID(
 	ctx context.Context,
 	_ *sdkmcp.CallToolRequest,
@@ -78,7 +80,6 @@ func (h *handler) handleCollectionByID(
 	}, nil, nil
 }
 
-// handleCollectionBySpec handles the collection_by_spec tool call.
 func (h *handler) handleCollectionBySpec(
 	ctx context.Context,
 	_ *sdkmcp.CallToolRequest,
@@ -93,7 +94,6 @@ func (h *handler) handleCollectionBySpec(
 	}, nil, nil
 }
 
-// handleTagsByCollection handles the tag_by_collection tool call.
 func (h *handler) handleTagsByCollection(
 	ctx context.Context,
 	_ *sdkmcp.CallToolRequest,
@@ -108,7 +108,6 @@ func (h *handler) handleTagsByCollection(
 	}, nil, nil
 }
 
-// handleTagsBySpec handles the tag_by_spec tool call.
 func (h *handler) handleTagsBySpec(
 	ctx context.Context,
 	_ *sdkmcp.CallToolRequest,
@@ -123,7 +122,6 @@ func (h *handler) handleTagsBySpec(
 	}, nil, nil
 }
 
-// handleTagByID handles the tag_by_id tool call.
 func (h *handler) handleTagByID(
 	ctx context.Context,
 	_ *sdkmcp.CallToolRequest,
@@ -138,7 +136,6 @@ func (h *handler) handleTagByID(
 	}, nil, nil
 }
 
-// handleEndpointByID handles the endpoint_by_id tool call.
 func (h *handler) handleEndpointByID(
 	ctx context.Context,
 	_ *sdkmcp.CallToolRequest,
@@ -153,7 +150,6 @@ func (h *handler) handleEndpointByID(
 	}, nil, nil
 }
 
-// handleEndpointsByTag handles the endpoint_by_tag tool call.
 func (h *handler) handleEndpointsByTag(
 	ctx context.Context,
 	_ *sdkmcp.CallToolRequest,
@@ -168,7 +164,6 @@ func (h *handler) handleEndpointsByTag(
 	}, nil, nil
 }
 
-// handleEndpointsByCollection handles the endpoint_by_collection tool call.
 func (h *handler) handleEndpointsByCollection(
 	ctx context.Context,
 	_ *sdkmcp.CallToolRequest,
@@ -183,7 +178,6 @@ func (h *handler) handleEndpointsByCollection(
 	}, nil, nil
 }
 
-// handleEndpointsBySpec handles the endpoint_by_spec tool call.
 func (h *handler) handleEndpointsBySpec(
 	ctx context.Context,
 	_ *sdkmcp.CallToolRequest,
@@ -198,7 +192,6 @@ func (h *handler) handleEndpointsBySpec(
 	}, nil, nil
 }
 
-// handleSearch handles the search tool call.
 func (h *handler) handleSearch(
 	ctx context.Context,
 	_ *sdkmcp.CallToolRequest,
@@ -213,7 +206,6 @@ func (h *handler) handleSearch(
 	}, nil, nil
 }
 
-// handleInspect handles the inspect tool call.
 func (h *handler) handleInspect(
 	ctx context.Context,
 	_ *sdkmcp.CallToolRequest,
@@ -228,7 +220,6 @@ func (h *handler) handleInspect(
 	}, nil, nil
 }
 
-// handleInvoke handles the invoke tool call.
 func (h *handler) handleInvoke(
 	ctx context.Context,
 	_ *sdkmcp.CallToolRequest,
@@ -243,13 +234,68 @@ func (h *handler) handleInvoke(
 	}, nil, nil
 }
 
-// handleAuth handles the auth tool call.
 func (h *handler) handleAuth(
 	ctx context.Context,
 	_ *sdkmcp.CallToolRequest,
 	req service.AuthRequest,
 ) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.Auth(ctx, req)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &sdkmcp.CallToolResult{
+		StructuredContent: resp,
+	}, nil, nil
+}
+
+func (h *handler) handleInfo(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	_ any,
+) (*sdkmcp.CallToolResult, any, error) {
+	resp, err := h.service.Info(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &sdkmcp.CallToolResult{
+		StructuredContent: resp,
+	}, nil, nil
+}
+
+func (h *handler) handleResponseOutline(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.ResponseOutlineRequest,
+) (*sdkmcp.CallToolResult, any, error) {
+	resp, err := h.service.ResponseOutline(ctx, req)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &sdkmcp.CallToolResult{
+		StructuredContent: resp,
+	}, nil, nil
+}
+
+func (h *handler) handleResponseCompress(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.ResponseCompressRequest,
+) (*sdkmcp.CallToolResult, any, error) {
+	resp, err := h.service.ResponseCompress(ctx, req)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &sdkmcp.CallToolResult{
+		StructuredContent: resp,
+	}, nil, nil
+}
+
+func (h *handler) handleResponseSlice(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.ResponseSliceRequest,
+) (*sdkmcp.CallToolResult, any, error) {
+	resp, err := h.service.ResponseSlice(ctx, req)
 	if err != nil {
 		return nil, nil, err
 	}

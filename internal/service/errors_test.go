@@ -4,92 +4,66 @@ import (
 	"encoding/json"
 	"errors"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestLLMError_ValidationError(t *testing.T) {
 	t.Parallel()
 
 	llmErr := NewValidationError("invalid input", nil)
-	if llmErr.Code != validationFailedErrCode {
-		t.Errorf("Code = %q, want %q", llmErr.Code, validationFailedErrCode)
-	}
-	if llmErr.Message != "invalid input" {
-		t.Errorf("Message = %q, want %q", llmErr.Message, "invalid input")
-	}
+	require.Equal(t, validationFailedErrCode, llmErr.Code)
+	require.Equal(t, "invalid input", llmErr.Message)
 }
 
 func TestLLMError_NotFoundError(t *testing.T) {
 	t.Parallel()
 
 	llmErr := NewNotFoundError("not found", nil)
-	if llmErr.Code != notFoundErrCode {
-		t.Errorf("Code = %q, want %q", llmErr.Code, notFoundErrCode)
-	}
+	require.Equal(t, notFoundErrCode, llmErr.Code)
 }
 
 func TestLLMError_RateLimitError(t *testing.T) {
 	t.Parallel()
 
 	llmErr := NewRateLimitError(errors.New("rate limit exceeded"))
-	if llmErr.Code != rateLimitErrCode {
-		t.Errorf("Code = %q, want %q", llmErr.Code, rateLimitErrCode)
-	}
-	if llmErr.Message != "rate limit exceeded" {
-		t.Errorf("Message = %q, want %q", llmErr.Message, "rate limit exceeded")
-	}
+	require.Equal(t, rateLimitErrCode, llmErr.Code)
+	require.Equal(t, "rate limit exceeded", llmErr.Message)
 }
 
 func TestLLMError_InvokeError(t *testing.T) {
 	t.Parallel()
 
 	llmErr := NewInvokeError("request failed", errors.New("connection refused"))
-	if llmErr.Code != invokeErrorErrCode {
-		t.Errorf("Code = %q, want %q", llmErr.Code, invokeErrorErrCode)
-	}
-	if llmErr.Message != "request failed" {
-		t.Errorf("Message = %q, want %q", llmErr.Message, "request failed")
-	}
-	if llmErr.Original != "connection refused" {
-		t.Errorf("Original = %q, want %q", llmErr.Original, "connection refused")
-	}
+	require.Equal(t, invokeErrorErrCode, llmErr.Code)
+	require.Equal(t, "request failed", llmErr.Message)
+	require.Equal(t, "connection refused", llmErr.Original)
 }
 
 func TestLLMError_InvokeError_NilError(t *testing.T) {
 	t.Parallel()
 
 	llmErr := NewInvokeError("request failed", nil)
-	if llmErr.Original != "" {
-		t.Errorf("Original = %q, want empty", llmErr.Original)
-	}
+	require.Empty(t, llmErr.Original)
 }
 
 func TestLLMError_JSONSerialization(t *testing.T) {
 	t.Parallel()
 
 	llmErr := NewValidationError("test message", nil)
-	data, marshalErr := json.Marshal(llmErr)
-	if marshalErr != nil {
-		t.Fatalf("json.Marshal() = %v", marshalErr)
-	}
+	data, err := json.Marshal(llmErr)
+	require.NoError(t, err)
 
 	var decoded LLMError
-	if unmarshalErr := json.Unmarshal(data, &decoded); unmarshalErr != nil {
-		t.Fatalf("json.Unmarshal() = %v", unmarshalErr)
-	}
-	if decoded.Code != validationFailedErrCode {
-		t.Errorf("Code = %q, want %q", decoded.Code, validationFailedErrCode)
-	}
-	if decoded.Message != "test message" {
-		t.Errorf("Message = %q, want %q", decoded.Message, "test message")
-	}
+	err = json.Unmarshal(data, &decoded)
+	require.NoError(t, err)
+	require.Equal(t, validationFailedErrCode, decoded.Code)
+	require.Equal(t, "test message", decoded.Message)
 }
 
 func TestLLMError_ErrorString(t *testing.T) {
 	t.Parallel()
 
 	llmErr := NewNotFoundError("spec not found", nil)
-	errStr := llmErr.Error()
-	if errStr == "" {
-		t.Fatal("Error() returned empty string")
-	}
+	require.NotEmpty(t, llmErr.Error())
 }

@@ -5,10 +5,13 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/cache"
-	"gopkg.in/yaml.v3"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v3"
 )
 
 func TestValidateConfig_Valid(t *testing.T) {
@@ -31,9 +34,7 @@ func TestValidateConfig_Valid(t *testing.T) {
 	}
 
 	err := ValidateConfig(cfg, ValidateOptions{})
-	if err != nil {
-		t.Fatalf("ValidateConfig() = %v, want nil", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestValidateConfig_DuplicateDomain(t *testing.T) {
@@ -67,9 +68,7 @@ func TestValidateConfig_DuplicateDomain(t *testing.T) {
 	}
 
 	err := ValidateConfig(cfg, ValidateOptions{})
-	if err == nil {
-		t.Fatal("expected error for duplicate domain")
-	}
+	require.Error(t, err, "expected error for duplicate domain")
 }
 
 func TestValidateConfig_WithTags(t *testing.T) {
@@ -93,9 +92,7 @@ func TestValidateConfig_WithTags(t *testing.T) {
 	}
 
 	err := ValidateConfig(cfg, ValidateOptions{Tags: []string{"public"}})
-	if err != nil {
-		t.Fatalf("ValidateConfig() = %v, want nil", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestValidateConfig_DisabledSpec(t *testing.T) {
@@ -119,9 +116,7 @@ func TestValidateConfig_DisabledSpec(t *testing.T) {
 	}
 
 	err := ValidateConfig(cfg, ValidateOptions{})
-	if err != nil {
-		t.Fatalf("ValidateConfig() = %v, want nil (disabled specs are skipped)", err)
-	}
+	require.NoError(t, err, "disabled specs are skipped")
 }
 
 func TestValidateConfig_DisabledCollection(t *testing.T) {
@@ -149,9 +144,7 @@ func TestValidateConfig_DisabledCollection(t *testing.T) {
 	}
 
 	err := ValidateConfig(cfg, ValidateOptions{})
-	if err != nil {
-		t.Fatalf("ValidateConfig() = %v, want nil (disabled collections are skipped)", err)
-	}
+	require.NoError(t, err, "disabled collections are skipped")
 }
 
 func TestValidateConfig_AuthValidationError(t *testing.T) {
@@ -177,9 +170,7 @@ func TestValidateConfig_AuthValidationError(t *testing.T) {
 	}
 
 	err := ValidateConfig(cfg, ValidateOptions{})
-	if err == nil {
-		t.Fatal("expected error for invalid auth config")
-	}
+	require.Error(t, err, "expected error for invalid auth config")
 }
 
 func TestValidateConfig_WithCache(t *testing.T) {
@@ -190,9 +181,7 @@ func TestValidateConfig_WithCache(t *testing.T) {
 
 	// Create a local spec file that the cache can resolve
 	specFile := filepath.Join(dir, "spec.yaml")
-	if err := os.WriteFile(specFile, []byte("openapi: 3.0.0"), 0600); err != nil {
-		t.Fatalf("WriteFile() = %v", err)
-	}
+	require.NoError(t, os.WriteFile(specFile, []byte("openapi: 3.0.0"), 0600))
 
 	cfg := &Config{
 		Specs: []Spec{
@@ -211,9 +200,7 @@ func TestValidateConfig_WithCache(t *testing.T) {
 	}
 
 	err := ValidateConfig(cfg, ValidateOptions{Cache: c})
-	if err != nil {
-		t.Fatalf("ValidateConfig() with cache = %v, want nil", err)
-	}
+	require.NoError(t, err)
 }
 
 func TestValidateConfig_WithCache_LocationError(t *testing.T) {
@@ -239,18 +226,14 @@ func TestValidateConfig_WithCache_LocationError(t *testing.T) {
 	}
 
 	err := ValidateConfig(cfg, ValidateOptions{Cache: c})
-	if err == nil {
-		t.Fatal("expected error for nonexistent location with cache")
-	}
+	require.Error(t, err, "expected error for nonexistent location with cache")
 }
 
 func TestValidationErrors_Empty(t *testing.T) {
 	t.Parallel()
 
 	var ve validationErrors
-	if ve.Error() != "no validation errors" {
-		t.Errorf("Error() = %q, want %q", ve.Error(), "no validation errors")
-	}
+	assert.Equal(t, "no validation errors", ve.Error())
 }
 
 func TestValidationErrors_WithErrors(t *testing.T) {
@@ -259,10 +242,7 @@ func TestValidationErrors_WithErrors(t *testing.T) {
 	ve := validationErrors{
 		{field: "specs", message: "no specifications defined"},
 	}
-	errStr := ve.Error()
-	if errStr == "" {
-		t.Fatal("Error() returned empty string")
-	}
+	assert.NotEmpty(t, ve.Error())
 }
 
 func TestValidationErrors_WithSpec(t *testing.T) {
@@ -275,10 +255,7 @@ func TestValidationErrors_WithSpec(t *testing.T) {
 			spec:    "test-api",
 		},
 	}
-	errStr := ve.Error()
-	if errStr == "" {
-		t.Fatal("Error() returned empty string")
-	}
+	assert.NotEmpty(t, ve.Error())
 }
 
 func TestValidationErrors_WithSpecAndCollection(t *testing.T) {
@@ -292,10 +269,7 @@ func TestValidationErrors_WithSpecAndCollection(t *testing.T) {
 			collection: "Main",
 		},
 	}
-	errStr := ve.Error()
-	if errStr == "" {
-		t.Fatal("Error() returned empty string")
-	}
+	assert.NotEmpty(t, ve.Error())
 }
 
 func TestHumanReadableError_Required(t *testing.T) {
@@ -318,9 +292,7 @@ func TestHumanReadableError_Required(t *testing.T) {
 	}
 
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for empty domain")
-	}
+	require.Error(t, err, "expected error for empty domain")
 }
 
 func TestHumanReadableError_Min(t *testing.T) {
@@ -343,9 +315,7 @@ func TestHumanReadableError_Min(t *testing.T) {
 	}
 
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for too short LLMTitle")
-	}
+	require.Error(t, err, "expected error for too short LLMTitle")
 }
 
 func TestHumanReadableError_Max(t *testing.T) {
@@ -370,9 +340,7 @@ func TestHumanReadableError_Max(t *testing.T) {
 	}
 
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for too long LLMTitle")
-	}
+	require.Error(t, err, "expected error for too long LLMTitle")
 }
 
 func TestHumanReadableError_InvalidURL(t *testing.T) {
@@ -395,9 +363,7 @@ func TestHumanReadableError_InvalidURL(t *testing.T) {
 	}
 
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for invalid URL")
-	}
+	require.Error(t, err, "expected error for invalid URL")
 }
 
 func TestHumanReadableError_LocationMin(t *testing.T) {
@@ -420,9 +386,7 @@ func TestHumanReadableError_LocationMin(t *testing.T) {
 	}
 
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for too short Location")
-	}
+	require.Error(t, err, "expected error for too short Location")
 }
 
 func TestHumanReadableError_LocationMax(t *testing.T) {
@@ -447,9 +411,7 @@ func TestHumanReadableError_LocationMax(t *testing.T) {
 	}
 
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for too long Location")
-	}
+	require.Error(t, err, "expected error for too long Location")
 }
 
 func TestHumanReadableError_LLMInstructionMax(t *testing.T) {
@@ -475,9 +437,7 @@ func TestHumanReadableError_LLMInstructionMax(t *testing.T) {
 	}
 
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for too long LLMInstruction")
-	}
+	require.Error(t, err, "expected error for too long LLMInstruction")
 }
 
 func TestHumanReadableError_DomainFormat(t *testing.T) {
@@ -500,9 +460,7 @@ func TestHumanReadableError_DomainFormat(t *testing.T) {
 	}
 
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for invalid domain format")
-	}
+	require.Error(t, err, "expected error for invalid domain format")
 }
 
 func TestHumanReadableError_TitleFormat(t *testing.T) {
@@ -525,9 +483,7 @@ func TestHumanReadableError_TitleFormat(t *testing.T) {
 	}
 
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for invalid title format")
-	}
+	require.Error(t, err, "expected error for invalid title format")
 }
 
 func TestHumanReadableError_InstructionFormat(t *testing.T) {
@@ -551,9 +507,7 @@ func TestHumanReadableError_InstructionFormat(t *testing.T) {
 	}
 
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for invalid instruction format")
-	}
+	require.Error(t, err, "expected error for invalid instruction format")
 }
 
 func TestHumanReadableError_CollectionURL(t *testing.T) {
@@ -577,9 +531,7 @@ func TestHumanReadableError_CollectionURL(t *testing.T) {
 	}
 
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for invalid collection URL")
-	}
+	require.Error(t, err, "expected error for invalid collection URL")
 }
 
 func TestHumanReadableError_CollectionLocationMin(t *testing.T) {
@@ -602,9 +554,7 @@ func TestHumanReadableError_CollectionLocationMin(t *testing.T) {
 	}
 
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for too short Location")
-	}
+	require.Error(t, err, "expected error for too short Location")
 }
 
 func TestHumanReadableError_CollectionLocationMax(t *testing.T) {
@@ -629,9 +579,7 @@ func TestHumanReadableError_CollectionLocationMax(t *testing.T) {
 	}
 
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for too long Location")
-	}
+	require.Error(t, err, "expected error for too long Location")
 }
 
 func TestHumanReadableError_CollectionLLMTitleMax(t *testing.T) {
@@ -656,9 +604,7 @@ func TestHumanReadableError_CollectionLLMTitleMax(t *testing.T) {
 	}
 
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for too long Collection LLMTitle")
-	}
+	require.Error(t, err, "expected error for too long Collection LLMTitle")
 }
 
 func TestHumanReadableError_CollectionLLMInstructionMax(t *testing.T) {
@@ -684,9 +630,7 @@ func TestHumanReadableError_CollectionLLMInstructionMax(t *testing.T) {
 	}
 
 	err := cfg.Validate(nil)
-	if err == nil {
-		t.Fatal("expected error for too long Collection LLMInstruction")
-	}
+	require.Error(t, err, "expected error for too long Collection LLMInstruction")
 }
 
 func TestConfig_Iterate_EarlyBreak(t *testing.T) {
@@ -719,140 +663,393 @@ func TestConfig_Iterate_EarlyBreak(t *testing.T) {
 			break
 		}
 	}
-	if count != 1 {
-		t.Errorf("Iterate early break count = %d, want 1", count)
-	}
+	assert.Equal(t, 1, count)
 }
 
 func TestExampleSpecAddYAML(t *testing.T) {
 	t.Parallel()
 
 	data := ExampleSpecAddYAML()
-	if len(data) == 0 {
-		t.Fatal("ExampleSpecAddYAML() returned empty data")
-	}
+	require.NotEmpty(t, data, "ExampleSpecAddYAML() returned empty data")
 
 	// Verify it's valid YAML and contains expected fields
 	var raw map[string]any
-	if err := yaml.Unmarshal(data, &raw); err != nil {
-		t.Fatalf("failed to unmarshal example YAML: %v", err)
-	}
-	if raw["domain"] == nil {
-		t.Error("domain is missing")
-	}
-	if raw["base_url"] == nil {
-		t.Error("base_url is missing")
-	}
-	if raw["collections"] == nil {
-		t.Error("collections is missing")
-	}
+	require.NoError(t, yaml.Unmarshal(data, &raw))
+	require.NotNil(t, raw["domain"], "domain is missing")
+	require.NotNil(t, raw["base_url"], "base_url is missing")
+	require.NotNil(t, raw["collections"], "collections is missing")
 }
 
 func TestExampleCollectionAddYAML(t *testing.T) {
 	t.Parallel()
 
 	data := ExampleCollectionAddYAML()
-	if len(data) == 0 {
-		t.Fatal("ExampleCollectionAddYAML() returned empty data")
-	}
+	require.NotEmpty(t, data, "ExampleCollectionAddYAML() returned empty data")
 
 	var raw map[string]any
-	if err := yaml.Unmarshal(data, &raw); err != nil {
-		t.Fatalf("failed to unmarshal example YAML: %v", err)
-	}
-	if raw["spec_domain"] == nil {
-		t.Error("spec_domain is missing")
-	}
-	if raw["location"] == nil {
-		t.Error("location is missing")
-	}
+	require.NoError(t, yaml.Unmarshal(data, &raw))
+	require.NotNil(t, raw["spec_domain"], "spec_domain is missing")
+	require.NotNil(t, raw["location"], "location is missing")
 }
 
 func TestExampleMCPStdioYAML(t *testing.T) {
 	t.Parallel()
 
-	data := ExampleMCPStdioYAML()
-	if len(data) == 0 {
-		t.Fatal("ExampleMCPStdioYAML() returned empty data")
-	}
+	data := exampleMCPStdioYAML()
+	require.NotEmpty(t, data, "exampleMCPStdioYAML() returned empty data")
 
 	var raw map[string]any
-	if err := yaml.Unmarshal(data, &raw); err != nil {
-		t.Fatalf("failed to unmarshal example YAML: %v", err)
-	}
+	require.NoError(t, yaml.Unmarshal(data, &raw))
 	mcp, ok := raw["mcp"].(map[string]any)
-	if !ok {
-		t.Fatal("mcp section is missing")
-	}
-	if mcp["transport"] != "stdio" {
-		t.Errorf("transport = %v, want %q", mcp["transport"], "stdio")
-	}
+	require.True(t, ok, "mcp section is missing")
+	assert.Equal(t, "stdio", mcp["transport"])
 }
 
 func TestExampleMCPSSEYAML(t *testing.T) {
 	t.Parallel()
 
-	data := ExampleMCPSSEYAML()
-	if len(data) == 0 {
-		t.Fatal("ExampleMCPSSEYAML() returned empty data")
-	}
+	data := exampleMCPSSEYAML()
+	require.NotEmpty(t, data, "exampleMCPSSEYAML() returned empty data")
 
 	var raw map[string]any
-	if err := yaml.Unmarshal(data, &raw); err != nil {
-		t.Fatalf("failed to unmarshal example YAML: %v", err)
-	}
+	require.NoError(t, yaml.Unmarshal(data, &raw))
 	mcp, ok := raw["mcp"].(map[string]any)
-	if !ok {
-		t.Fatal("mcp section is missing")
-	}
-	if mcp["transport"] != "sse" {
-		t.Errorf("transport = %v, want %q", mcp["transport"], "sse")
-	}
-	if mcp["addr"] != ":8080" {
-		t.Errorf("addr = %v, want %q", mcp["addr"], ":8080")
-	}
-	if mcp["path"] != "/mcp" {
-		t.Errorf("path = %v, want %q", mcp["path"], "/mcp")
-	}
+	require.True(t, ok, "mcp section is missing")
+	assert.Equal(t, "sse", mcp["transport"])
+	assert.Equal(t, ":8080", mcp["addr"])
+	assert.Equal(t, "/mcp", mcp["path"])
 	auth, ok := mcp["auth"].(map[string]any)
-	if !ok {
-		t.Fatal("auth section is missing")
-	}
-	if auth["token"] != "your-secret-token" {
-		t.Errorf("token = %v, want %q", auth["token"], "your-secret-token")
-	}
+	require.True(t, ok, "auth section is missing")
+	assert.Equal(t, "your-secret-token", auth["token"])
 }
 
 func TestExampleMCPStreamableHTTPYAML(t *testing.T) {
 	t.Parallel()
 
-	data := ExampleMCPStreamableHTTPYAML()
-	if len(data) == 0 {
-		t.Fatal("ExampleMCPStreamableHTTPYAML() returned empty data")
-	}
+	data := exampleMCPStreamableHTTPYAML()
+	require.NotEmpty(t, data, "exampleMCPStreamableHTTPYAML() returned empty data")
 
 	var raw map[string]any
-	if err := yaml.Unmarshal(data, &raw); err != nil {
-		t.Fatalf("failed to unmarshal example YAML: %v", err)
-	}
+	require.NoError(t, yaml.Unmarshal(data, &raw))
 	mcp, ok := raw["mcp"].(map[string]any)
-	if !ok {
-		t.Fatal("mcp section is missing")
-	}
-	if mcp["transport"] != "streamable-http" {
-		t.Errorf("transport = %v, want %q", mcp["transport"], "streamable-http")
-	}
-	if mcp["addr"] != ":9090" {
-		t.Errorf("addr = %v, want %q", mcp["addr"], ":9090")
-	}
-	if mcp["path"] != "/api/mcp" {
-		t.Errorf("path = %v, want %q", mcp["path"], "/api/mcp")
-	}
+	require.True(t, ok, "mcp section is missing")
+	assert.Equal(t, "streamable-http", mcp["transport"])
+	assert.Equal(t, ":9090", mcp["addr"])
+	assert.Equal(t, "/api/mcp", mcp["path"])
 	auth, ok := mcp["auth"].(map[string]any)
-	if !ok {
-		t.Fatal("auth section is missing")
+	require.True(t, ok, "auth section is missing")
+	assert.Equal(t, "your-secret-token", auth["token"])
+}
+
+func TestValidateConfig_HTTPClient_Valid(t *testing.T) {
+	t.Parallel()
+
+	timeout := 15 * time.Second
+	maxRedir := 5
+	maxSize := 4096
+	follow := true
+
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{
+			UserAgent:       "test-agent/1.0",
+			Timeout:         timeout,
+			FollowRedirects: &follow,
+			MaxRedirects:    &maxRedir,
+			MaxResponseSize: &maxSize,
+		},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
 	}
-	if auth["token"] != "your-secret-token" {
-		t.Errorf("token = %v, want %q", auth["token"], "your-secret-token")
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	require.NoError(t, err)
+}
+
+func TestValidateConfig_HTTPClient_Nil(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
 	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	require.NoError(t, err)
+}
+
+func TestValidateConfig_HTTPClient_InvalidProxyURL(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{
+			Proxy: &ProxyConfig{
+				URL: "ftp://proxy.example.com:8080",
+			},
+		},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	require.Error(t, err, "expected error for invalid proxy URL scheme")
+}
+
+func TestValidateConfig_HTTPClient_ValidProxyURL(t *testing.T) {
+	t.Parallel()
+
+	urls := []string{
+		"http://proxy.example.com:8080",
+		"https://proxy.example.com:8443",
+		"socks5://127.0.0.1:1080",
+		"socks5h://127.0.0.1:1080",
+	}
+
+	for _, u := range urls {
+		t.Run(u, func(t *testing.T) {
+			t.Parallel()
+
+			cfg := &Config{
+				HTTPClient: &GlobalHTTPClientConfig{
+					Proxy: &ProxyConfig{URL: u},
+				},
+				Specs: []Spec{
+					{
+						Domain:   "test-api",
+						LLMTitle: "Test API v1",
+						BaseURL:  "https://api.example.com",
+						Collections: []Collection{
+							{
+								LLMTitle: "Main Collection",
+								Location: "https://example.com/spec.yaml",
+							},
+						},
+					},
+				},
+			}
+
+			err := ValidateConfig(cfg, ValidateOptions{})
+			require.NoError(t, err, "ValidateConfig() with proxy %q", u)
+		})
+	}
+}
+
+func TestValidateConfig_HTTPClient_MaxResponseSizeTooSmall(t *testing.T) {
+	t.Parallel()
+
+	val := 100
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{
+			MaxResponseSize: &val,
+		},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	require.Error(t, err, "expected error for MaxResponseSize < 256")
+}
+
+func TestValidateConfig_HTTPClient_MaxResponseSizeTooLarge(t *testing.T) {
+	t.Parallel()
+
+	val := 20_000_000
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{
+			MaxResponseSize: &val,
+		},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	require.Error(t, err, "expected error for MaxResponseSize > 10MB")
+}
+
+func TestValidateConfig_HTTPClient_MaxRedirectsTooLarge(t *testing.T) {
+	t.Parallel()
+
+	val := 100
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{
+			MaxRedirects: &val,
+		},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	require.Error(t, err, "expected error for MaxRedirects > 50")
+}
+
+func TestValidateConfig_HTTPClient_TimeoutTooSmall(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{
+			Timeout: 500 * time.Millisecond,
+		},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	require.Error(t, err, "expected error for Timeout < 1s")
+}
+
+func TestValidateConfig_HTTPClient_TimeoutTooLarge(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{
+			Timeout: 600 * time.Second,
+		},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	require.Error(t, err, "expected error for Timeout > 300s")
+}
+
+func TestValidateConfig_HTTPClient_DefaultsApplied(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		HTTPClient: &GlobalHTTPClientConfig{},
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidateConfig(cfg, ValidateOptions{})
+	require.NoError(t, err)
+
+	assert.Equal(t, "swag2mcp-global/1.0", cfg.HTTPClient.UserAgent)
+	assert.Equal(t, 30*time.Second, cfg.HTTPClient.Timeout)
+	require.NotNil(t, cfg.HTTPClient.MaxRedirects)
+	assert.Equal(t, 10, *cfg.HTTPClient.MaxRedirects)
+	require.NotNil(t, cfg.HTTPClient.MaxResponseSize)
+	assert.Equal(t, 1048576, *cfg.HTTPClient.MaxResponseSize)
+}
+
+func TestConfig_Validate_UppercaseDomain(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		Specs: []Spec{
+			{
+				Domain:   "PETSTORE",
+				LLMTitle: "Open-Meteo API",
+				BaseURL:  "https://meteo.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main",
+						Location: "https://meteo.example.com/openapi.yaml",
+					},
+				},
+			},
+		},
+	}
+
+	err := cfg.Validate(nil)
+	require.Error(t, err, "expected error for uppercase domain")
+	require.Contains(t, err.Error(), "lowercase")
 }

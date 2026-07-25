@@ -206,23 +206,23 @@ Non-interactive and interactive functions for adding specs/collections to config
 
 ```yaml
 # add spec
-domain: petstore
-llm_title: Petstore API
+domain: meteo
+llm_title: Open-Meteo API
 llm_instruction: Use this API to manage pets.
-base_url: https://petstore.swagger.io/v2
+base_url: https://meteo.swagger.io/v2
 tags: [public, demo]
 auth:
   type: bearer
   config:
     token: $(TOKEN)
 collections:
-  - llm_title: Petstore Swagger
-    location: https://petstore.swagger.io/v2/swagger.json
+  - llm_title: Open-Meteo Swagger
+    location: https://meteo.swagger.io/v2/swagger.json
 
 # add collection
-spec_domain: petstore
+spec_domain: meteo
 llm_title: Orders Collection
-location: https://petstore.example.com/orders.json
+location: https://meteo.example.com/orders.json
 ```
 
 ---
@@ -277,7 +277,7 @@ Non-interactive workspace initialization and embedded file access.
 
 | File | Content |
 |------|---------|
-| `init.swag2mcp.yaml` | Example config with 4 sample specs (train-booking, petfood-shop, music-stream, cinema-tickets) |
+| `init.swag2mcp.yaml` | Example config with 5 sample specs (meteo, rick-and-morty, binance, dadjoke, pokeapi) |
 | `config.tmpl` | Go template for config YAML generation |
 
 ---

@@ -1,0 +1,11 @@
+specs:
+  - domain: meteo
+    llm_title: Open-Meteo API
+    collections:
+      - title: Pets
+        location: ./tests/testdata/meteo.yaml
+  - domain: meteo
+    llm_title: Duplicate Open-Meteo
+    collections:
+      - title: Store
+        location: ./tests/testdata/meteo.yaml

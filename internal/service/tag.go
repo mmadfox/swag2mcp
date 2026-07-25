@@ -41,77 +41,77 @@ type (
 )
 
 // TagsByCollection returns a list of all available tags for a given collection.
-func (s *Service) TagsByCollection(_ context.Context, req TagsByCollectionRequest) (TagsByCollectionResponse, error) {
-	if err := s.validateRequest(req); err != nil {
+func (s *Service) TagsByCollection(_ context.Context, rq TagsByCollectionRequest) (TagsByCollectionResponse, error) {
+	if err := s.validateRequest(rq); err != nil {
 		return TagsByCollectionResponse{}, NewValidationError(
 			"The collection ID is invalid — it must be a 32-character hex string.",
 			err,
 		)
 	}
 
-	collection, err := s.index.CollectionByID(req.CollectionID)
+	coll, err := s.index.CollectionByID(rq.CollectionID)
 	if err != nil {
 		return TagsByCollectionResponse{}, NewNotFoundError(
-			fmt.Sprintf("Collection %q not found — use collection_by_spec to list collections.", req.CollectionID),
+			fmt.Sprintf("Collection %q not found — use collection_by_spec to list collections.", rq.CollectionID),
 			err,
 		)
 	}
 
-	spec, err := s.index.SpecByID(collection.SpecID)
+	sp, err := s.index.SpecByID(coll.SpecID)
 	if err != nil {
-		return TagsByCollectionResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — the collection references a spec that no longer exists.", collection.SpecID), err)
+		return TagsByCollectionResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — the collection references a spec that no longer exists.", coll.SpecID), err)
 	}
 
-	tags, err := s.index.TagsByCollection(req.CollectionID)
+	ts, err := s.index.TagsByCollection(rq.CollectionID)
 	if err != nil {
 		return TagsByCollectionResponse{}, NewNotFoundError(
-			fmt.Sprintf("Collection %q not found — use collection_by_spec to list collections.", req.CollectionID),
+			fmt.Sprintf("Collection %q not found — use collection_by_spec to list collections.", rq.CollectionID),
 			err,
 		)
 	}
 
-	resp := TagsByCollectionResponse{
+	r := TagsByCollectionResponse{
 		Spec: Spec{
-			ID:     spec.ID,
-			Domain: spec.Domain,
+			ID:     sp.ID,
+			Domain: sp.Domain,
 		},
 		Collection: Collection{
-			ID:           collection.ID,
-			Title:        collection.Title,
-			CountMethods: collection.Stats.Methods,
+			ID:           coll.ID,
+			Title:        coll.Title,
+			CountMethods: coll.Stats.Methods,
 		},
-		Tags: make([]TagListItem, 0, len(tags)),
+		Tags: make([]TagListItem, 0, len(ts)),
 	}
-	for _, t := range tags {
-		resp.Tags = append(resp.Tags, TagListItem{
-			ID:           t.ID,
-			Title:        t.Name,
-			CountMethods: t.Stats.Methods,
+	for _, tg := range ts {
+		r.Tags = append(r.Tags, TagListItem{
+			ID:           tg.ID,
+			Title:        tg.Name,
+			CountMethods: tg.Stats.Methods,
 		})
 	}
 
-	sort.Slice(resp.Tags, func(i, j int) bool {
-		return resp.Tags[i].ID < resp.Tags[j].ID
+	sort.Slice(r.Tags, func(i, j int) bool {
+		return r.Tags[i].ID < r.Tags[j].ID
 	})
 
-	return resp, nil
+	return r, nil
 }
 
 // TagByID returns a tag by its ID.
-func (s *Service) TagByID(_ context.Context, req TagByIDRequest) (TagByIDResponse, error) {
-	if err := s.validateRequest(req); err != nil {
+func (s *Service) TagByID(_ context.Context, rq TagByIDRequest) (TagByIDResponse, error) {
+	if err := s.validateRequest(rq); err != nil {
 		return TagByIDResponse{}, NewValidationError(
 			"The tag ID is invalid — it must be a 32-character hex string.",
 			err,
 		)
 	}
 
-	tag, err := s.index.TagByID(req.ID)
+	tag, err := s.index.TagByID(rq.ID)
 	if err != nil {
-		return TagByIDResponse{}, NewNotFoundError(fmt.Sprintf("Tag %q not found — use tag_by_collection or tag_by_spec to list tags.", req.ID), err)
+		return TagByIDResponse{}, NewNotFoundError(fmt.Sprintf("Tag %q not found — use tag_by_collection or tag_by_spec to list tags.", rq.ID), err)
 	}
 
-	resp := TagByIDResponse{
+	r := TagByIDResponse{
 		Tag: TagListItem{
 			ID:           tag.ID,
 			Title:        tag.Name,
@@ -119,37 +119,37 @@ func (s *Service) TagByID(_ context.Context, req TagByIDRequest) (TagByIDRespons
 		},
 	}
 
-	return resp, nil
+	return r, nil
 }
 
 // TagsBySpec returns a list of all available tags for a given spec.
-func (s *Service) TagsBySpec(_ context.Context, req TagsBySpecRequest) (TagsBySpecResponse, error) {
-	if err := s.validateRequest(req); err != nil {
+func (s *Service) TagsBySpec(_ context.Context, rq TagsBySpecRequest) (TagsBySpecResponse, error) {
+	if err := s.validateRequest(rq); err != nil {
 		return TagsBySpecResponse{}, NewValidationError(
 			"The spec ID is invalid — it must be a 32-character hex string. Use spec_list to find available specs.",
 			err,
 		)
 	}
 
-	tags, err := s.index.TagsBySpec(req.SpecID)
+	ts, err := s.index.TagsBySpec(rq.SpecID)
 	if err != nil {
-		return TagsBySpecResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", req.SpecID), err)
+		return TagsBySpecResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", rq.SpecID), err)
 	}
 
-	resp := TagsBySpecResponse{
-		Tags: make([]TagListItem, 0, len(tags)),
+	r := TagsBySpecResponse{
+		Tags: make([]TagListItem, 0, len(ts)),
 	}
-	for _, t := range tags {
-		resp.Tags = append(resp.Tags, TagListItem{
-			ID:           t.ID,
-			Title:        t.Name,
-			CountMethods: t.Stats.Methods,
+	for _, tg := range ts {
+		r.Tags = append(r.Tags, TagListItem{
+			ID:           tg.ID,
+			Title:        tg.Name,
+			CountMethods: tg.Stats.Methods,
 		})
 	}
 
-	sort.Slice(resp.Tags, func(i, j int) bool {
-		return resp.Tags[i].ID < resp.Tags[j].ID
+	sort.Slice(r.Tags, func(i, j int) bool {
+		return r.Tags[i].ID < r.Tags[j].ID
 	})
 
-	return resp, nil
+	return r, nil
 }
