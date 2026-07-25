@@ -1,0 +1,13 @@
+openapi: 3.0.3
+info:
+  title: Orphan Tags
+  version: 1.0.0
+tags:
+  - name: DeclaredButUnused  
+  - name: Parent
+  - name: Parent / Child
+paths:
+  /test:
+    get:
+      tags: [Parent / Child, NotDeclaredAtAll]  
+      responses: { '200': { description: OK } }

@@ -1,0 +1,111 @@
+openapi: 3.1.0
+info:
+  title: OpenAPI 3.1.0 Example
+  version: 1.0.0
+  summary: Краткое описание (новое в 3.1!)  
+  description: Полное описание с поддержкой JSON Schema 2020-12
+  contact:
+    name: API Team
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema  
+servers:
+  - url: https://api.example.com/v1
+webhooks:                       
+  newUser:
+    post:
+      summary: Webhook при создании пользователя
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Webhook processed
+  userDeleted:
+    post:
+      summary: Webhook при удалении пользователя
+      responses:
+        '200':
+          description: OK
+tags:
+  - name: Users
+paths:
+  /users:
+    get:
+      tags: [Users]
+      parameters:
+        - name: limit
+          in: query
+          examples:           
+            small:
+              value: 10
+            large:
+              value: 100
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      tags: [Users]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: Created
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        bio:
+          type:                 
+            - string
+            - 'null'
+        tags:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+        age:
+          type: integer
+          exclusiveMinimum: 0   
+          exclusiveMaximum: 150
+        score:
+          type:
+            - number
+            - 'null'
+      required: [name]
+      dependentSchemas:        
+        name:
+          required: [id]
+    UserCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          pattern: '^[a-zA-Z]+$'
+      required: [name]
+      unevaluatedProperties: false  
+  pathItems:                    
+    UserItem:
+      get:
+        summary: Получить пользователя
+        responses:
+          '200':
+            description: OK
+security:
+  - bearerAuth: []

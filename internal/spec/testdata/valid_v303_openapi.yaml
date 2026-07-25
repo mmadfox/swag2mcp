@@ -1,0 +1,188 @@
+openapi: 3.0.3
+info:
+  title: OpenAPI 3.0.3 Example
+  version: 1.0.0
+  description: Самая популярная версия OpenAPI
+  contact:
+    name: API Team
+    url: https://example.com
+    email: api@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: https://api.example.com/{version}
+    variables:
+      version:
+        default: v1
+        enum: [v1, v2]
+tags:
+  - name: Users
+    description: Операции с пользователями
+    externalDocs:
+      url: https://docs.example.com/users
+paths:
+  /users:
+    get:
+      tags: [Users]
+      summary: Список пользователей
+      operationId: listUsers
+      deprecated: false
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: X-Request-ID
+          in: header
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Rate-Limit:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+              example:
+                - id: 1
+                  name: John
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags: [Users]
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+            examples:
+              john:
+                summary: Пример John
+                value:
+                  name: John
+                  email: john@example.com
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+      callbacks:                # поддержка callbacks
+        onUserCreated:
+          '{$request.body#/callbackUrl}':
+            post:
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/User'
+              responses:
+                '200':
+                  description: OK
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        bio:
+          type: string
+          nullable: true
+        role:
+          type: string
+          enum: [admin, user, guest]
+          default: user
+      required: [name, email]
+    UserCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+      required: [name, email]
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+  parameters:
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+  responses:
+    NotFound:
+      description: Resource not found
+  examples:
+    UserExample:
+      summary: Пример пользователя
+      value:
+        id: 1
+        name: John
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.com/oauth/authorize
+          tokenUrl: https://example.com/oauth/token
+          scopes:
+            read: Read access
+            write: Write access
+  links:
+    GetUserById:
+      operationId: getUser
+      parameters:
+        userId: '$response.body#/id'
+  callbacks:
+    WebhookCallback:
+      '{$request.body#/url}':
+        post:
+          responses:
+            '200':
+              description: OK
+security:
+  - bearerAuth: []
+  - apiKey: []
+externalDocs:
+  description: Full documentation
+  url: https://docs.example.com

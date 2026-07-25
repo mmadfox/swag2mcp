@@ -1,0 +1,27 @@
+openapi: 3.0.3
+info:
+  title: Cross-Domain Operations
+  version: 1.0.0
+tags:
+  - name: Catalog
+    description: Каталог товаров
+  - name: Sales
+    description: Продажи
+  - name: Inventory
+    description: Склад
+paths:
+  /checkout:
+    post:
+      summary: Оформление заказа
+      description: |
+        Эта операция одновременно:
+        - Уменьшает остатки на складе (Inventory)
+        - Создаёт заказ в продажах (Sales)
+        - Может резервировать товары из каталога (Catalog)
+      tags:
+        - Sales
+        - Inventory
+        - Catalog
+      responses:
+        '201':
+          description: Заказ создан

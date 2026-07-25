@@ -1,0 +1,10 @@
+openapi: 3.0.3
+info:
+  title: Duplicate Tags
+  version: 1.0.0
+tags:
+  - name: Items
+    description: Первый
+  - name: Items  
+    description: Второй
+paths: {}

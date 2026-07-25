@@ -1,0 +1,78 @@
+{
+  "info": {
+    "name": "Petstore API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Pets",
+      "item": [
+        {
+          "name": "List all pets",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://api.petstore.com/v1/pets",
+              "protocol": "https",
+              "host": ["api", "petstore", "com"],
+              "path": ["v1", "pets"],
+              "query": [
+                { "key": "limit", "value": "10", "description": "Max results" },
+                { "key": "status", "value": "available", "disabled": true }
+              ]
+            },
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "Create pet",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "https://api.petstore.com/v1/pets",
+              "protocol": "https",
+              "host": ["api", "petstore", "com"],
+              "path": ["v1", "pets"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Fluffy\", \"species\": \"cat\"}"
+            }
+          }
+        },
+        {
+          "name": "Get pet by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://api.petstore.com/v1/pets/:petId",
+              "protocol": "https",
+              "host": ["api", "petstore", "com"],
+              "path": ["v1", "pets", { "type": "path", "value": "petId" }],
+              "variable": [
+                { "key": "petId", "value": "123" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "url": "https://api.petstore.com/health"
+          }
+        }
+      ]
+    }
+  ]
+}

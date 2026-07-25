@@ -1,0 +1,8 @@
+specs:
+  - domain: Some organization 1
+    llm_title: Some title
+    llm_instruction: Some instruction 
+    collections:
+      - llm_title: Some collection
+        llm_instruction: Some collection instruction
+        location: ./testdata/valid_v311_openapi.yaml 

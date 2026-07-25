@@ -1,0 +1,25 @@
+openapi: 3.0.3
+info:
+  title: Microservices Tags
+  version: 1.0.0
+tags:
+  - name: User Service
+  - name: Notification Service
+  - name: Email Service
+  - name: SMS Service
+paths:
+  /users/register:
+    post:
+      summary: Регистрация пользователя
+      description: |
+        Создаёт пользователя и отправляет уведомления:
+        - Email Service: приветственное письмо
+        - SMS Service: код подтверждения
+      tags:
+        - User Service
+        - Notification Service
+        - Email Service
+        - SMS Service
+      responses:
+        '201':
+          description: Пользователь создан

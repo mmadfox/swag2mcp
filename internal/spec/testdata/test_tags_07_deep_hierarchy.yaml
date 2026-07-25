@@ -1,0 +1,15 @@
+openapi: 3.0.3
+info:
+  title: Deep Hierarchy
+  version: 1.0.0
+tags:
+  - name: L1
+  - name: L1 / L2
+  - name: L1 / L2 / L3
+  - name: L1 / L2 / L3 / L4
+  - name: L1 / L2 / L3 / L4 / L5
+paths:
+  /deep:
+    get:
+      tags: [L1 / L2 / L3 / L4 / L5]
+      responses: { '200': { description: OK } }

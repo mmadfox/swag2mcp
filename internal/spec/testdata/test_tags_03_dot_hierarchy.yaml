@@ -1,0 +1,24 @@
+openapi: 3.0.3
+info:
+  title: Dot Hierarchy
+  version: 1.0.0
+tags:
+  - name: api
+  - name: api.v1
+  - name: api.v1.users
+  - name: api.v1.users.admin
+  - name: api.v2
+  - name: api.v2.users
+paths:
+  /v1/users:
+    get:
+      tags: [api.v1.users]
+      responses: { '200': { description: OK } }
+  /v1/users/admin:
+    get:
+      tags: [api.v1.users.admin]
+      responses: { '200': { description: OK } }
+  /v2/users:
+    get:
+      tags: [api.v2.users]
+      responses: { '200': { description: OK } }

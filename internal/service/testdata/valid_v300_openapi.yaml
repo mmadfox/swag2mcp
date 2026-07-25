@@ -1,0 +1,62 @@
+openapi: 3.0.0
+info:
+  title: OpenAPI 3.0.0 Example
+  version: 1.0.0
+  description: Первый релиз OpenAPI 3.x
+servers: 
+  - url: https://api.example.com/v1
+    description: Production
+  - url: https://staging-api.example.com/v1
+    description: Staging
+tags:
+  - name: Users
+paths:
+  /users:
+    get:
+      tags: [Users]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:              
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      tags: [Users]
+      requestBody:              
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: Created
+components:                    
+  schemas:
+    User:
+      type: object
+      required: [name]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        bio:
+          type: string
+          nullable: true        
+  securitySchemes:             
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []

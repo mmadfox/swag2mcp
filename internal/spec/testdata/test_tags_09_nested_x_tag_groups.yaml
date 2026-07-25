@@ -1,0 +1,53 @@
+openapi: 3.0.3
+info:
+  title: Nested x-tag-groups
+  version: 1.0.0
+tags:
+  - name: Users
+  - name: Admin Users
+  - name: Regular Users
+  - name: Items
+  - name: Physical Items
+  - name: Digital Items
+x-tag-groups:
+  - name: User Management
+    tags:
+      - Users
+    x-tag-groups:  
+      - name: User Types
+        tags:
+          - Admin Users
+          - Regular Users
+  - name: Catalog
+    tags:
+      - Items
+    x-tag-groups:
+      - name: Item Types
+        tags:
+          - Physical Items
+          - Digital Items
+paths:
+  /users:
+    get:
+      tags: [Users]
+      responses: { '200': { description: OK } }
+  /users/admin:
+    get:
+      tags: [Admin Users]
+      responses: { '200': { description: OK } }
+  /users/regular:
+    get:
+      tags: [Regular Users]
+      responses: { '200': { description: OK } }
+  /items:
+    get:
+      tags: [Items]
+      responses: { '200': { description: OK } }
+  /items/physical:
+    get:
+      tags: [Physical Items]
+      responses: { '200': { description: OK } }
+  /items/digital:
+    get:
+      tags: [Digital Items]
+      responses: { '200': { description: OK } }

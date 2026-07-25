@@ -1,0 +1,26 @@
+openapi: 3.0.3
+info:
+  title: Hierarchy + Function
+  version: 1.0.0
+tags:
+  - name: Catalog
+  - name: Catalog / Products
+  - name: Search
+  - name: Filters
+paths:
+  /products/search:
+    get:
+      summary: Поиск товаров
+      description: Поиск с фильтрами в каталоге
+      tags:
+        - Catalog / Products
+        - Search
+        - Filters
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK

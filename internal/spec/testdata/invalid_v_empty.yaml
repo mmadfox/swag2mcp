@@ -1,0 +1,5 @@
+openapi: ""
+info:
+  title: Empty Version
+  version: 1.0.0
+paths: {}

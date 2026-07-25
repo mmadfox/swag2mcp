@@ -1,0 +1,30 @@
+openapi: 3.0.3
+info:
+  title: x-parent-tag
+  version: 1.0.0
+tags:
+  - name: Catalog
+  - name: Categories
+    x-parent-tag: Catalog
+  - name: Products
+    x-parent-tag: Catalog
+  - name: Variants
+    x-parent-tag: Products
+  - name: Users
+paths:
+  /categories:
+    get:
+      tags: [Categories]
+      responses: { '200': { description: OK } }
+  /products:
+    get:
+      tags: [Products]
+      responses: { '200': { description: OK } }
+  /products/variants:
+    get:
+      tags: [Variants]
+      responses: { '200': { description: OK } }
+  /users:
+    get:
+      tags: [Users]
+      responses: { '200': { description: OK } }

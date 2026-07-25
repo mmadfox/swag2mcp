@@ -1,0 +1,18 @@
+openapi: 3.0.3
+info:
+  title: Multiple Hierarchical Tags
+  version: 1.0.0
+tags:
+  - name: Catalog
+  - name: Catalog / Products
+  - name: Sales
+  - name: Sales / Orders
+  - name: CrossDomain
+paths:
+  /checkout:
+    post:
+      tags:
+        - Catalog / Products
+        - Sales / Orders
+        - CrossDomain
+      responses: { '200': { description: OK } }
