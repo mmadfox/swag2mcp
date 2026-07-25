@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // Workspace manages the workspace directory and its standard subdirectories.
@@ -162,10 +163,46 @@ func removeContents(dir string) error {
 	return nil
 }
 
+// CleanOldResponses removes response files older than maxAge from the responses directory.
+func (w *Workspace) CleanOldResponses(maxAge time.Duration) error {
+	dir := w.ResponsesDir()
+	entries, err := os.ReadDir(dir)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("read responses dir: %w", err)
+	}
+
+	now := time.Now()
+	var errs []string
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		info, statErr := entry.Info()
+		if statErr != nil {
+			errs = append(errs, statErr.Error())
+			continue
+		}
+		if now.Sub(info.ModTime()) > maxAge {
+			p := filepath.Join(dir, entry.Name())
+			if rmErr := os.Remove(p); rmErr != nil {
+				errs = append(errs, rmErr.Error())
+			}
+		}
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("failed to remove some old response files: %s", strings.Join(errs, "; "))
+	}
+	return nil
+}
+
 // AuthScriptPath returns the path to the auth script for the given domain.
 func (w *Workspace) AuthScriptPath(domain string) string {
 	ext := ".sh"
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == osWindows {
 		ext = ".bat"
 	}
 	return filepath.Join(w.AuthScriptsDir(), domain+ext)
@@ -183,7 +220,7 @@ func (w *Workspace) EnsureAuthScript(domain string) error {
 	}
 
 	var content string
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == osWindows {
 		content = `@echo off
 echo {"token": "your-token-here", "expires_in": 3600}
 `

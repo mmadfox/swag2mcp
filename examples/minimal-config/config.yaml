@@ -1,0 +1,9 @@
+# swag2mcp — Minimal Configuration
+# This is the simplest possible config: one spec, one collection, no auth.
+specs:
+  - domain: weather-api
+    base_url: https://api.weather.example.com/v1
+    llm_title: Weather Forecast API
+    collections:
+      - llm_title: Weather Data
+        location: https://api.weather.example.com/v1/openapi.json

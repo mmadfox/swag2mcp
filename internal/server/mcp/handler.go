@@ -25,6 +25,7 @@ type svc interface {
 	Search(ctx context.Context, req service.SearchRequest) (service.SearchResponse, error)
 	Inspect(_ context.Context, req service.InspectRequest) (service.InspectResponse, error)
 	Invoke(_ context.Context, req service.InvokeRequest) (service.InvokeResponse, error)
+	Auth(_ context.Context, req service.AuthRequest) (service.AuthResponse, error)
 	MakeToolDefinitions() (service.ToolDefinitions, error)
 }
 
@@ -234,6 +235,21 @@ func (h *handler) handleInvoke(
 	req service.InvokeRequest,
 ) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.Invoke(ctx, req)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &sdkmcp.CallToolResult{
+		StructuredContent: resp,
+	}, nil, nil
+}
+
+// handleAuth handles the auth tool call.
+func (h *handler) handleAuth(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.AuthRequest,
+) (*sdkmcp.CallToolResult, any, error) {
+	resp, err := h.service.Auth(ctx, req)
 	if err != nil {
 		return nil, nil, err
 	}

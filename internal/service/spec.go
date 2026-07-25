@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
 )
 
 type (
@@ -25,17 +26,21 @@ type (
 
 // Specs returns a list of all available openapi/swagger specifications.
 func (s *Service) Specs(_ context.Context) (SpecsResponse, error) {
-	allspecs := s.index.AllSpecs()
+	allSpecs := s.index.AllSpecs()
 	resp := SpecsResponse{
-		Specs: make([]SpecItem, len(allspecs)),
+		Specs: make([]SpecItem, len(allSpecs)),
 	}
 
-	for i, spec := range allspecs {
+	for i, spec := range allSpecs {
 		resp.Specs[i] = SpecItem{
 			ID:     spec.ID,
 			Domain: spec.Domain,
 		}
 	}
+
+	sort.Slice(resp.Specs, func(i, j int) bool {
+		return resp.Specs[i].ID < resp.Specs[j].ID
+	})
 
 	return resp, nil
 }
@@ -44,7 +49,7 @@ func (s *Service) Specs(_ context.Context) (SpecsResponse, error) {
 func (s *Service) SpecByID(_ context.Context, req SpecByIDRequest) (SpecByIDResponse, error) {
 	if err := s.validateRequest(req); err != nil {
 		return SpecByIDResponse{}, NewValidationError(
-			"specId must be a 32-character lowercase hex string (MD5 format)",
+			"The spec ID is invalid — it must be a 32-character hex string. Use spec_list to find available specs.",
 			err,
 		)
 	}
@@ -52,7 +57,7 @@ func (s *Service) SpecByID(_ context.Context, req SpecByIDRequest) (SpecByIDResp
 	var resp SpecByIDResponse
 	spec, err := s.index.SpecByID(req.ID)
 	if err != nil {
-		return SpecByIDResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", req.ID), err)
+		return SpecByIDResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", req.ID), err)
 	}
 	resp.Spec = Spec{
 		ID:     spec.ID,
@@ -61,6 +66,7 @@ func (s *Service) SpecByID(_ context.Context, req SpecByIDRequest) (SpecByIDResp
 
 	collections, err := s.index.CollectionsBySpec(req.ID)
 	if err == nil {
+		resp.Collections = make([]CollectionItem, 0, len(collections))
 		for _, c := range collections {
 			resp.Collections = append(resp.Collections, CollectionItem{
 				ID:           c.ID,
@@ -69,6 +75,9 @@ func (s *Service) SpecByID(_ context.Context, req SpecByIDRequest) (SpecByIDResp
 				CountMethods: c.Stats.Methods,
 			})
 		}
+		sort.Slice(resp.Collections, func(i, j int) bool {
+			return resp.Collections[i].ID < resp.Collections[j].ID
+		})
 	}
 
 	return resp, nil

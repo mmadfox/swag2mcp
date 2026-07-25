@@ -1,0 +1,12 @@
+# swag2mcp — MCP Stdio Transport
+# Default transport: communicates over stdin/stdout.
+# No additional configuration needed — just run `swag2mcp mcp`.
+mcp:
+  transport: stdio
+specs:
+  - domain: weather-api
+    base_url: https://api.weather.example.com/v1
+    llm_title: Weather Forecast API
+    collections:
+      - llm_title: Weather Data
+        location: https://api.weather.example.com/v1/openapi.json

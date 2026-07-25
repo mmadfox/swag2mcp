@@ -16,7 +16,7 @@ func (NoAuthClient) Type() Type {
 	return NoAuth
 }
 
-func (NoAuthClient) Apply(_ *http.Request) error {
+func (NoAuthClient) Apply(_ *http.Request, _ *Info) error {
 	return nil
 }
 

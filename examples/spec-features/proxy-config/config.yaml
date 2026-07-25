@@ -1,0 +1,30 @@
+# swag2mcp — Proxy Configuration
+http_client:
+  random: true
+  proxy:
+    url: socks5h://127.0.0.1:1080
+    username: $(PROXY_USER)
+    password: $(PROXY_PASS)
+    bypass:
+      - "*.local"
+      - "10.0.0.0/8"
+      - "172.16.0.0/12"
+      - "192.168.0.0/16"
+  timeout: 30s
+
+specs:
+  - domain: external-api
+    base_url: https://api.external.example.com
+    llm_title: External API
+    collections:
+      - llm_title: Main
+        location: https://api.external.example.com/openapi.json
+
+  - domain: internal-api
+    base_url: https://internal.example.com
+    llm_title: Internal API
+    collections:
+      - llm_title: Users
+        location: https://internal.example.com/openapi/users.json
+      - llm_title: Billing
+        location: https://internal.example.com/openapi/billing.json

@@ -1,7 +1,5 @@
 # swag2mcp
 
-> ⚠️ **Work in progress** — API may change, contributions welcome.
-
 **swag2mcp** is a CLI tool and MCP (Model Context Protocol) server that bridges OpenAPI/Swagger/Postman API specifications with LLM agents (Opencode, Crush, Copilot, Cursor, etc.).
 
 It indexes your API specs into a full-text search engine, exposes them through 14 MCP tools, and lets LLMs discover, inspect, and invoke real API endpoints — all without writing a single line of integration code.
@@ -44,6 +42,24 @@ swag2mcp run
 ### YAML Schema
 
 ```yaml
+mock_enabled: true                    # optional, enables mock server mode
+
+http_client:                        # optional, global HTTP defaults
+  random: false                     # optional, enables browser-like headers
+  proxy:                            # optional
+    url: socks5h://127.0.0.1:1080   # http, https, socks5, socks5h
+    username: ""                    # optional
+    password: ""                    # optional
+    bypass: []                      # optional, e.g. ["*.local", "10.0.0.0/8"]
+  headers:                          # optional
+    X-API-Version: "2"
+  cookies: []                       # optional
+  user_agent: ""                    # optional
+  timeout: 0s                       # optional
+  follow_redirects: true            # optional
+  max_redirects: 10                 # optional
+  max_response_size: 1048           # optional, bytes (default 1KB, max 1MB)
+
 specs:
   - domain: petstore                    # required, 1-60 chars, [a-zA-Z0-9_-]
     llm_title: Petstore API             # required, 5-120 chars
@@ -52,8 +68,9 @@ specs:
     base_url: https://petstore.swagger.io/v2  # required, valid URL
     disable: false                      # optional
     tags: [public, demo]                # optional, for filtering
-    headers:                            # optional
-      X-API-Version: "2"
+    http_client:                        # optional, overrides global (headers + cookies only)
+      headers:
+        X-API-Version: "2"
     auth:                               # optional
       type: bearer                      # see Auth Methods below
       config:
@@ -62,10 +79,12 @@ specs:
       - llm_title: Petstore Swagger     # optional, max 120 chars
         llm_instruction: |             # optional, max 360 chars
           Main petstore endpoints
+        title: ""                      # optional, auto-populated from spec
         location: https://petstore.swagger.io/v2/swagger.json  # required, 5-250 chars
         disable: false                  # optional
-        headers: {}                     # optional
         base_url: ""                    # optional, overrides spec base_url
+        base_mock_url: localhost:8080   # optional, format "host:port" or "host:port/path"
+        http_client: {}                 # optional, overrides spec (headers + cookies only)
 ```
 
 ### Tags — Filtering Specs by Project
@@ -211,11 +230,54 @@ Start the MCP server in headless mode (stdio transport). This is the primary pro
 |------|-------|---------|-------------|
 | `--logfile` | `-f` | `""` | Log file path |
 | `--tags` | `-t` | `""` | Filter specs by tags |
+| `--disable-llm-auth` | | `true` | `true` — auth happens under the hood (LLM never sees tokens). `false` — LLM can request tokens via the `auth` tool |
+| `--dump-dir` | | `""` | Directory to dump HTTP requests for debugging |
 
 ```bash
 swag2mcp mcp
 swag2mcp mcp --tags=public --logfile=/var/log/swag2mcp.log
+swag2mcp mcp --disable-llm-auth=false
+swag2mcp mcp --dump-dir=/tmp/dump
 ```
+
+### `mockserver [path]`
+
+Start mock HTTP servers for all API specifications. Each collection gets its own
+HTTP server that generates random data matching the OpenAPI response schemas.
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--tls` | `false` | Enable TLS with self-signed certificate |
+| `--tls-cert` | `""` | Path to TLS certificate file |
+| `--tls-key` | `""` | Path to TLS key file |
+
+```bash
+swag2mcp-mock
+swag2mcp-mock --tls
+```
+
+**Workflow:**
+1. Add `mock_enabled: true` and `base_mock_url` to your config
+2. Start mock server: `swag2mcp-mock`
+3. Start MCP server: `swag2mcp mcp` — invoke will use `base_mock_url` instead of `base_url`
+
+### Mock Auth Credentials
+
+When `auth` is configured in a spec, the mock server starts an auth mock
+on a random port. Each auth type accepts the following credentials:
+
+| Auth Type | Endpoint | Accepts | Example Request |
+|-----------|----------|---------|-----------------|
+| `basic` | `GET /` | Any `user:password` in Base64 | `Authorization: Basic YWRtaW46cGFzcw==` |
+| `bearer` | `GET /` | Any non-empty token | `Authorization: Bearer any-token` |
+| `digest` | `GET /` | Any Digest response | `Authorization: Digest username="test", realm="...", nonce="...", uri="/", response="..."` |
+| `oauth2-cc` | `POST /token` | Any `client_id` + `client_secret` | `grant_type=client_credentials&client_id=any&client_secret=any` |
+| `oauth2-pwd` | `POST /token` | Any `username` + `password` | `grant_type=password&username=any&password=any` |
+| `api-key` | `GET /` | Any `X-Api-Key` header or `api_key` query | `X-Api-Key: any-key` |
+| `script` | `GET /token` | No credentials required | `GET /token` |
+
+All auth mocks return `{"status":"authenticated","method":"<type>"}`.
+OAuth2 mocks return `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}`.
 
 ---
 
@@ -226,13 +288,15 @@ The MCP server exposes 14 tools over stdio transport. LLM agents (Opencode, Crus
 ### Tool Hierarchy
 
 ```
-spec_list
-  └─ spec_by_id
-       └─ collection_by_spec
-            └─ tag_by_collection
-                 └─ endpoint_by_tag
-                      └─ inspect
-                           └─ invoke
+spec_list                       — list all available specs
+  └─ spec_by_id                 — spec details by ID
+       └─ collection_by_spec    — collections in a spec
+            └─ tag_by_collection     — tags in a collection
+                 └─ endpoint_by_tag  — endpoints under a tag
+                      └─ inspect          — full OpenAPI operation
+                           └─ invoke       — execute API call
+
+search                          — full-text search across all endpoints
 ```
 
 ### Tool Reference
@@ -253,6 +317,7 @@ spec_list
 | `search` | `query`, `limit` | Endpoints | Full-text search |
 | `inspect` | `endpointId` | Full Operation | Complete OpenAPI operation object |
 | `invoke` | `endpointId`, `parameters`, `requestBody` | Response | Executes real API call |
+| `auth` | `specId` | Token | Get auth token for a spec |
 
 ---
 
@@ -327,9 +392,22 @@ swag2mcp <command> ./       → {cwd}/.swag2mcp/
 swag2mcp <command> path/to  → {cwd}/path/to/.swag2mcp/
 ```
 
----
+### .gitignore
 
-## Caching
+Only temporary data should be gitignored:
+
+```
+.swag2mcp/cache/*
+.swag2mcp/responses/*
+```
+
+The config `.swag2mcp/swag2mcp.yaml` and spec files in `.swag2mcp/specs/` **must be in the repository**.
+
+### Recommendation
+
+Keep all spec files in `.swag2mcp/specs/` — this is the only way to ensure they are used directly without being copied to cache.
+
+---
 
 ### Rules
 

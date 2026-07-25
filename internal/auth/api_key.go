@@ -19,14 +19,12 @@ func (c *APIKeyAuthClient) Type() Type {
 	return APIKeyAuth
 }
 
-func (c *APIKeyAuthClient) Apply(req *http.Request) error {
+func (c *APIKeyAuthClient) Apply(req *http.Request, out *Info) error {
 	switch c.In {
 	case "query":
-		q := req.URL.Query()
-		q.Set(c.Key, c.Value)
-		req.URL.RawQuery = q.Encode()
+		setAuthQuery(req, out, c.Key, c.Value)
 	default:
-		req.Header.Set(c.Key, c.Value)
+		setAuthHeader(req, out, c.Key, c.Value)
 	}
 	return nil
 }

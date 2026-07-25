@@ -53,3 +53,65 @@ func ExampleCollectionAddYAML() []byte {
 	data, _ := yaml.Marshal(example)
 	return data
 }
+
+// ExampleMCPStdioYAML returns a YAML example for MCP with stdio transport.
+func ExampleMCPStdioYAML() []byte {
+	data, _ := yaml.Marshal(map[string]any{
+		"mcp": map[string]any{
+			"transport": "stdio",
+		},
+	})
+	return data
+}
+
+// ExampleMCPSSEYAML returns a YAML example for MCP with SSE transport and auth.
+func ExampleMCPSSEYAML() []byte {
+	data, _ := yaml.Marshal(map[string]any{
+		"mcp": map[string]any{
+			"transport": "sse",
+			"addr":      ":8080",
+			"path":      "/mcp",
+			"auth": map[string]any{
+				"token": "your-secret-token",
+			},
+		},
+	})
+	return data
+}
+
+// ExampleMCPStreamableHTTPYAML returns a YAML example for MCP with streamable HTTP transport and auth.
+func ExampleMCPStreamableHTTPYAML() []byte {
+	data, _ := yaml.Marshal(map[string]any{
+		"mcp": map[string]any{
+			"transport": "streamable-http",
+			"addr":      ":9090",
+			"path":      "/api/mcp",
+			"auth": map[string]any{
+				"token": "your-secret-token",
+			},
+		},
+	})
+	return data
+}
+
+// ExampleMockConfigYAML returns a YAML example for mock server configuration.
+func ExampleMockConfigYAML() []byte {
+	data, _ := yaml.Marshal(map[string]any{
+		"mock_enabled": true,
+		"specs": []map[string]any{
+			{
+				"domain":    "petstore",
+				"llm_title": "Petstore API",
+				"base_url":  "https://petstore.swagger.io/v2",
+				"collections": []map[string]any{
+					{
+						"llm_title":     "Petstore Swagger",
+						"location":      "specs/petstore.json",
+						"base_mock_url": "localhost:8080",
+					},
+				},
+			},
+		},
+	})
+	return data
+}

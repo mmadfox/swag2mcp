@@ -14,7 +14,10 @@ import (
 	"time"
 )
 
-const scriptDefaultExpiresIn = 3600
+const (
+	scriptDefaultExpiresIn = 3600
+	windowsOS              = "windows"
+)
 
 // ScriptAuthClient holds a domain name used to locate the auth script.
 // The script must be located at {workspaceDir}/auth_scripts/{domain}.sh (Unix)
@@ -52,10 +55,10 @@ func (c *ScriptAuthClient) Type() Type {
 	return ScriptAuth
 }
 
-func (c *ScriptAuthClient) Apply(req *http.Request) error {
+func (c *ScriptAuthClient) Apply(req *http.Request, out *Info) error {
 	c.mu.Lock()
 	if c.token != "" && time.Now().Before(c.expiresAt) {
-		req.Header.Set("Authorization", "Bearer "+c.token)
+		setAuthHeader(req, out, "Authorization", "Bearer "+c.token)
 		c.mu.Unlock()
 		return nil
 	}
@@ -69,14 +72,14 @@ func (c *ScriptAuthClient) Apply(req *http.Request) error {
 	c.mu.Lock()
 	c.token = token
 	c.expiresAt = time.Now().Add(time.Duration(expiresIn) * time.Second)
-	req.Header.Set("Authorization", "Bearer "+c.token)
+	setAuthHeader(req, out, "Authorization", "Bearer "+c.token)
 	c.mu.Unlock()
 	return nil
 }
 
 func (c *ScriptAuthClient) scriptPath() string {
 	ext := ".sh"
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windowsOS {
 		ext = ".bat"
 	}
 	return filepath.Join(c.workspaceDir, "auth_scripts", c.Domain+ext)
@@ -85,11 +88,11 @@ func (c *ScriptAuthClient) scriptPath() string {
 func (c *ScriptAuthClient) execute() (string, int, error) {
 	scriptPath := c.scriptPath()
 
-	ctx, cancel := context.WithTimeout(context.Background(), defaultHTTPTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second) //nolint:mnd // script timeout
 	defer cancel()
 
 	var cmd *exec.Cmd
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windowsOS {
 		cmd = exec.CommandContext(ctx, "cmd", "/c", scriptPath)
 	} else {
 		cmd = exec.CommandContext(ctx, "sh", scriptPath)

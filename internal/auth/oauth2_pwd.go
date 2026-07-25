@@ -11,16 +11,19 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 )
 
 // OAuth2PasswordAuthClient holds configuration for the OAuth2 resource owner password flow.
 type OAuth2PasswordAuthClient struct {
-	Username     string   `yaml:"username"         validate:"required"`
-	Password     string   `yaml:"password"         validate:"required"`
-	ClientID     string   `yaml:"client_id"        validate:"required"`
-	ClientSecret string   `yaml:"client_secret"    validate:"required"`
-	TokenURL     string   `yaml:"token_url"        validate:"required,url"`
-	Scopes       []string `yaml:"scopes,omitempty"`
+	Username string   `yaml:"username"         validate:"required"`
+	Password string   `yaml:"password"         validate:"required"`
+	ClientID string   `yaml:"client_id"        validate:"required"`
+	TokenURL string   `yaml:"token_url"        validate:"required,url"`
+	Scopes   []string `yaml:"scopes,omitempty"`
+
+	ClientSecret string `yaml:"client_secret,omitempty"`
 
 	mu        sync.Mutex
 	token     string
@@ -39,10 +42,10 @@ func (c *OAuth2PasswordAuthClient) Type() Type {
 	return OAuth2Password
 }
 
-func (c *OAuth2PasswordAuthClient) Apply(req *http.Request) error {
+func (c *OAuth2PasswordAuthClient) Apply(req *http.Request, out *Info) error {
 	c.mu.Lock()
 	if c.token != "" && time.Now().Before(c.expiresAt) {
-		req.Header.Set("Authorization", "Bearer "+c.token)
+		setAuthHeader(req, out, "Authorization", "Bearer "+c.token)
 		c.mu.Unlock()
 		return nil
 	}
@@ -56,24 +59,27 @@ func (c *OAuth2PasswordAuthClient) Apply(req *http.Request) error {
 	c.mu.Lock()
 	c.token = token
 	c.expiresAt = time.Now().Add(time.Duration(expiresIn) * time.Second)
-	req.Header.Set("Authorization", "Bearer "+c.token)
+	setAuthHeader(req, out, "Authorization", "Bearer "+c.token)
 	c.mu.Unlock()
 	return nil
 }
 
 func (c *OAuth2PasswordAuthClient) fetchToken() (string, int, error) {
+	const grantTypePassword = "password"
 	form := url.Values{
-		"grant_type":    {"password"},
-		"username":      {c.Username},
-		"password":      {c.Password},
-		"client_id":     {c.ClientID},
-		"client_secret": {c.ClientSecret},
+		"grant_type": {grantTypePassword},
+		"username":   {c.Username},
+		"password":   {c.Password}, //nolint:goconst // form field name
+		"client_id":  {c.ClientID},
+	}
+	if c.ClientSecret != "" {
+		form.Set("client_secret", c.ClientSecret)
 	}
 	if len(c.Scopes) > 0 {
 		form.Set("scope", strings.Join(c.Scopes, " "))
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), defaultHTTPTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second) //nolint:mnd // token request timeout
 	defer cancel()
 
 	tokenReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.TokenURL, strings.NewReader(form.Encode()))
@@ -82,7 +88,11 @@ func (c *OAuth2PasswordAuthClient) fetchToken() (string, int, error) {
 	}
 	tokenReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := defaultHTTPClient.Do(tokenReq)
+	cli, cliErr := httpclient.NewDefault()
+	if cliErr != nil {
+		return "", 0, fmt.Errorf("create http client: %w", cliErr)
+	}
+	resp, err := cli.Do(tokenReq)
 	if err != nil {
 		return "", 0, fmt.Errorf("token request: %w", err)
 	}

@@ -1,0 +1,13 @@
+# swag2mcp — HTTP Basic Authentication
+specs:
+  - domain: admin-api
+    base_url: https://admin.example.com
+    llm_title: Admin API
+    auth:
+      type: basic
+      config:
+        username: $(BASIC_USER)
+        password: $(BASIC_PASS)
+    collections:
+      - llm_title: Admin Endpoints
+        location: https://admin.example.com/openapi.json

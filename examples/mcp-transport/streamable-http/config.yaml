@@ -1,0 +1,18 @@
+# swag2mcp — MCP Streamable HTTP Transport
+# Streamable HTTP transport (2025-03-26+ MCP spec).
+# Supports stateless mode, session resumption, and bearer token auth.
+# Clients send JSON-RPC requests via HTTP POST and receive responses
+# as JSON or SSE streams.
+mcp:
+  transport: streamable-http
+  addr: ":9090"
+  path: "/api/mcp"
+  auth:
+    token: $(MCP_AUTH_TOKEN)
+specs:
+  - domain: weather-api
+    base_url: https://api.weather.example.com/v1
+    llm_title: Weather Forecast API
+    collections:
+      - llm_title: Weather Data
+        location: https://api.weather.example.com/v1/openapi.json

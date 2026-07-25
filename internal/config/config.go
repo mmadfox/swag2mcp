@@ -3,14 +3,80 @@ package config
 import (
 	"fmt"
 	"iter"
+	"time"
+
+	"github.com/mmadfox/swag2mcp/internal/env"
 )
+
+// Cookie represents an HTTP cookie for configuration.
+type Cookie struct {
+	Name     string `yaml:"name"     validate:"required"`
+	Value    string `yaml:"value"    validate:"required"`
+	Domain   string `yaml:"domain,omitempty"`
+	Path     string `yaml:"path,omitempty"`
+	Secure   bool   `yaml:"secure,omitempty"`
+	HTTPOnly bool   `yaml:"http_only,omitempty"`
+}
+
+// ProxyConfig holds proxy connection settings.
+type ProxyConfig struct {
+	URL      string   `yaml:"url"`
+	Username string   `yaml:"username,omitempty"`
+	Password string   `yaml:"password,omitempty"`
+	Bypass   []string `yaml:"bypass,omitempty"`
+}
+
+// HTTPClientConfig holds per-request HTTP settings for a spec or collection.
+// These values are applied to each request at invocation time.
+type HTTPClientConfig struct {
+	Headers map[string]string `yaml:"headers,omitempty"`
+	Cookies []Cookie          `yaml:"cookies,omitempty"`
+}
+
+// GlobalHTTPClientConfig holds global HTTP client settings.
+type GlobalHTTPClientConfig struct {
+	Randomize       bool              `yaml:"random,omitempty"`
+	Proxy           *ProxyConfig      `yaml:"proxy,omitempty"`
+	Headers         map[string]string `yaml:"headers,omitempty"`
+	Cookies         []Cookie          `yaml:"cookies,omitempty"`
+	UserAgent       string            `yaml:"user_agent,omitempty"`
+	Timeout         time.Duration     `yaml:"timeout,omitempty"`
+	FollowRedirects *bool             `yaml:"follow_redirects,omitempty"`
+	MaxRedirects    *int              `yaml:"max_redirects,omitempty"`
+	MaxResponseSize *int              `yaml:"max_response_size,omitempty"`
+}
 
 // Config is the top-level swag2mcp configuration.
 //
 // Validation rules:
 //   - Specs: at least one spec must be defined.
+//   - MockEnabled: when true, all specs and collections must have BaseMockURL set.
 type Config struct {
-	Specs []Spec `yaml:"specs"`
+	MockEnabled bool                    `yaml:"mock_enabled,omitempty"`
+	HTTPClient  *GlobalHTTPClientConfig `yaml:"http_client,omitempty"`
+	MCP         *MCPConfig              `yaml:"mcp,omitempty"`
+	Specs       []Spec                  `yaml:"specs"`
+}
+
+// MCPConfig holds the MCP server configuration.
+type MCPConfig struct {
+	Transport string         `yaml:"transport,omitempty" validate:"omitempty,oneof=stdio sse streamable-http"`
+	Addr      string         `yaml:"addr,omitempty"`
+	Path      string         `yaml:"path,omitempty"`
+	Auth      *MCPAuthConfig `yaml:"auth,omitempty"`
+}
+
+// MCPAuthConfig holds the MCP server authentication configuration.
+type MCPAuthConfig struct {
+	Token string `yaml:"token,omitempty"`
+}
+
+// Resolve resolves environment variable references in the token.
+func (c *MCPAuthConfig) Resolve() {
+	if c == nil {
+		return
+	}
+	c.Token = env.Parse(c.Token)
 }
 
 // Spec defines a single API specification group.
@@ -29,7 +95,7 @@ type Spec struct {
 	Disable        bool              `yaml:"disable,omitempty"`
 	Tags           []string          `yaml:"tags,omitempty"`
 	BaseURL        string            `yaml:"base_url,omitempty"        validate:"required,url"`
-	Headers        map[string]string `yaml:"headers,omitempty"`
+	HTTPClient     *HTTPClientConfig `yaml:"http_client,omitempty"`
 	Auth           Auth              `yaml:"auth,omitempty"`
 }
 
@@ -40,14 +106,16 @@ type Spec struct {
 //   - LLMInstruction: optional, max 360 chars, allows letters/digits/punctuation.
 //   - Location: required, 5-250 chars (path or URL to the spec file).
 //   - BaseURL: optional, must be a valid URL if set.
+//   - BaseMockURL: optional, format "host:port".
 type Collection struct {
 	LLMTitle       string            `yaml:"llm_title,omitempty"       json:"llm_title" validate:"omitempty,max=120,title_format"`
 	LLMInstruction string            `yaml:"llm_instruction,omitempty"                  validate:"omitempty,max=360,instruction_format"`
 	Title          string            `yaml:"title,omitempty"`
 	Location       string            `yaml:"location"                  json:"location"  validate:"required,min=5,max=250"`
 	Disable        bool              `yaml:"disable,omitempty"          json:"disable"`
-	Headers        map[string]string `yaml:"headers,omitempty"`
+	HTTPClient     *HTTPClientConfig `yaml:"http_client,omitempty"`
 	BaseURL        string            `yaml:"base_url,omitempty"                          validate:"omitempty,url"`
+	BaseMockURL    string            `yaml:"base_mock_url,omitempty"                      validate:"omitempty,mock_addr_format"`
 }
 
 func (c *Config) Iterate(f *Filter) iter.Seq[*Spec] {
@@ -68,6 +136,7 @@ func (c *Config) Iterate(f *Filter) iter.Seq[*Spec] {
 	}
 }
 
+//nolint:gocognit // validation requires many checks
 func (c *Config) Validate(f *Filter) error {
 	var errs validationErrors
 
@@ -104,6 +173,15 @@ func (c *Config) Validate(f *Filter) error {
 			}
 			collPrefix := fmt.Sprintf("%s.collections[%d]", specPrefix, j)
 			errs = append(errs, collectStructErrors(collPrefix, collection)...)
+
+			if c.MockEnabled && collection.BaseMockURL == "" {
+				errs = append(errs, validationError{
+					field:      collPrefix + ".base_mock_url",
+					spec:       spec.Domain,
+					collection: collection.LLMTitle,
+					message:    "BaseMockURL is required when mock_enabled is true",
+				})
+			}
 		}
 	}
 

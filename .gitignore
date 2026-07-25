@@ -31,9 +31,6 @@ go.work.sum
 .DS_Store
 Thumbs.db
 
-# Binary
-mcp-swagger-server
-
 # Environment variables
 .env
 .env.local
@@ -44,3 +41,4 @@ mcp-swagger-server
 .gigacode/
 .agents
 .swag2mcp
+main

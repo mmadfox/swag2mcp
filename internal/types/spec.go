@@ -2,8 +2,15 @@ package types
 
 import (
 	"github.com/mmadfox/swag2mcp/internal/auth"
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 	"github.com/mmadfox/swag2mcp/internal/spec"
 )
+
+// HTTPClientConfig holds per-request HTTP settings for a spec or collection.
+type HTTPClientConfig struct {
+	Headers map[string]string   `json:"headers,omitempty"`
+	Cookies []httpclient.Cookie `json:"cookies,omitempty"`
+}
 
 type Spec struct {
 	ID             string             `json:"id"`
@@ -11,7 +18,7 @@ type Spec struct {
 	LLMTitle       string             `json:"llmtitle"`
 	LLMInstruction string             `json:"llminstruction"`
 	BaseURL        string             `json:"baseurl"`
-	Headers        map[string]string  `json:"headers"`
+	HTTPClient     *HTTPClientConfig  `json:"httpClient,omitempty"`
 	Auth           auth.Authenticator `json:"auth"`
 	Stats          struct {
 		Collections int `json:"collections"`
@@ -34,7 +41,8 @@ type Collection struct {
 	LLMInstruction string            `json:"llminstruction"`
 	Title          string            `json:"title"`
 	BaseURL        string            `json:"baseurl,omitempty"`
-	Headers        map[string]string `json:"headers,omitempty"`
+	BaseMockURL    string            `json:"base_mock_url,omitempty"`
+	HTTPClient     *HTTPClientConfig `json:"httpClient,omitempty"`
 	Stats          struct {
 		Tags    int `json:"tags"`
 		Methods int `json:"methods"`

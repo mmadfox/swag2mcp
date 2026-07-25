@@ -16,8 +16,10 @@ func (c *BearerTokenAuthClient) Type() Type {
 	return BearerTokenAuth
 }
 
-func (c *BearerTokenAuthClient) Apply(req *http.Request) error {
-	req.Header.Set("Authorization", "Bearer "+c.Token)
+func (c *BearerTokenAuthClient) Apply(req *http.Request, out *Info) error {
+	if c.Token != "" {
+		setAuthHeader(req, out, "Authorization", "Bearer "+c.Token)
+	}
 	return nil
 }
 

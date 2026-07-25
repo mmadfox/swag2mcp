@@ -5,6 +5,8 @@
 // responses, and authentication scripts.
 package workspace
 
+import "time"
+
 const (
 	// DefaultRootName is the default workspace directory name under the user's home.
 	DefaultRootName = ".swag2mcp"
@@ -20,4 +22,10 @@ const (
 
 	// DirAuthScripts is the subdirectory for authentication scripts.
 	DirAuthScripts = "auth_scripts"
+
+	// DefaultResponseMaxAge is the default age after which response files are cleaned up.
+	DefaultResponseMaxAge = 48 * time.Hour
+
+	// osWindows is the [runtime.GOOS] value for Windows.
+	osWindows = "windows"
 )

@@ -1,0 +1,39 @@
+# swag2mcp — Tags Filtering
+specs:
+  - domain: payments-api
+    base_url: https://api.payments.example.com
+    llm_title: Payments API
+    tags:
+      - production
+      - payments
+    collections:
+      - llm_title: Transactions
+        location: https://api.payments.example.com/openapi.json
+
+  - domain: analytics-api
+    base_url: https://api.analytics.example.com
+    llm_title: Analytics API
+    tags:
+      - production
+      - analytics
+    collections:
+      - llm_title: Reports
+        location: https://api.analytics.example.com/openapi.json
+
+  - domain: staging-api
+    base_url: https://staging.example.com
+    llm_title: Staging API
+    tags:
+      - staging
+    collections:
+      - llm_title: Test Endpoints
+        location: https://staging.example.com/openapi.json
+
+  - domain: dev-api
+    base_url: https://dev.example.com
+    llm_title: Development API
+    tags:
+      - development
+    collections:
+      - llm_title: Dev Endpoints
+        location: https://dev.example.com/openapi.json

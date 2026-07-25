@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"time"
+
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 )
 
 const defaultHTTPTimeout = 30 * time.Second
@@ -19,11 +21,13 @@ type httpClient struct {
 }
 
 func defaultHTTPClient() *httpClient {
-	return &httpClient{
-		cli: &http.Client{
-			Timeout: defaultHTTPTimeout,
-		},
+	cli, err := httpclient.New(httpclient.Config{
+		Timeout: defaultHTTPTimeout,
+	})
+	if err != nil {
+		cli = &http.Client{Timeout: defaultHTTPTimeout}
 	}
+	return &httpClient{cli: cli}
 }
 
 func (h *httpClient) Get(specURL string) ([]byte, error) {

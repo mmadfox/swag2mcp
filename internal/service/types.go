@@ -62,10 +62,11 @@ type SpecItem struct {
 
 // CollectionItem represents a collection in the spec.
 type CollectionItem struct {
-	ID           string `json:"id"           jsonschema:"required,Unique identifier for the collection"`
-	Title        string `json:"title"        jsonschema:"required,Human-readable title of the collection"`
-	CountTags    int    `json:"countTags"    jsonschema:"required,Number of tags in the collection"`
-	CountMethods int    `json:"countMethods" jsonschema:"required,Number of methods in the collection"`
+	ID           string `json:"id"`
+	Title        string `json:"title"`
+	LLMTitle     string `json:"llmTitle,omitempty"`
+	CountTags    int    `json:"countTags"`
+	CountMethods int    `json:"countMethods"`
 }
 
 // Collection represents a collection in the spec.

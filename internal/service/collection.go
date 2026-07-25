@@ -35,19 +35,19 @@ type (
 func (s *Service) CollectionsBySpec(_ context.Context, req CollectionsRequest) (CollectionsResponse, error) {
 	if err := s.validateRequest(req); err != nil {
 		return CollectionsResponse{}, NewValidationError(
-			"specId must be a 32-character lowercase hex string (MD5 format)",
+			"The spec ID is invalid — it must be a 32-character hex string. Use spec_list to find available specs.",
 			err,
 		)
 	}
 
 	spec, err := s.index.SpecByID(req.SpecID)
 	if err != nil {
-		return CollectionsResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", req.SpecID), err)
+		return CollectionsResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", req.SpecID), err)
 	}
 
 	collections, err := s.index.CollectionsBySpec(req.SpecID)
 	if err != nil {
-		return CollectionsResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", req.SpecID), err)
+		return CollectionsResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — use spec_list to see all available specs.", req.SpecID), err)
 	}
 
 	resp := CollectionsResponse{
@@ -61,6 +61,7 @@ func (s *Service) CollectionsBySpec(_ context.Context, req CollectionsRequest) (
 		resp.Collections = append(resp.Collections, CollectionItem{
 			ID:           c.ID,
 			Title:        c.Title,
+			LLMTitle:     c.LLMTitle,
 			CountTags:    c.Stats.Tags,
 			CountMethods: c.Stats.Methods,
 		})
@@ -77,7 +78,7 @@ func (s *Service) CollectionsBySpec(_ context.Context, req CollectionsRequest) (
 func (s *Service) CollectionByID(_ context.Context, req CollectionByIDRequest) (CollectionByIDResponse, error) {
 	if err := s.validateRequest(req); err != nil {
 		return CollectionByIDResponse{}, NewValidationError(
-			"specId must be a 32-character lowercase hex string (MD5 format)",
+			"The collection ID is invalid — it must be a 32-character hex string.",
 			err,
 		)
 	}
@@ -85,7 +86,7 @@ func (s *Service) CollectionByID(_ context.Context, req CollectionByIDRequest) (
 	var resp CollectionByIDResponse
 	collection, err := s.index.CollectionByID(req.ID)
 	if err != nil {
-		return CollectionByIDResponse{}, NewNotFoundError(fmt.Sprintf("collection %q not found", req.ID), err)
+		return CollectionByIDResponse{}, NewNotFoundError(fmt.Sprintf("Collection %q not found — use collection_by_spec to list collections.", req.ID), err)
 	}
 	resp.Collection = Collection{
 		ID:           collection.ID,
@@ -95,7 +96,7 @@ func (s *Service) CollectionByID(_ context.Context, req CollectionByIDRequest) (
 
 	spec, err := s.index.SpecByID(collection.SpecID)
 	if err != nil {
-		return CollectionByIDResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", collection.SpecID), err)
+		return CollectionByIDResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — the collection references a spec that no longer exists.", collection.SpecID), err)
 	}
 	resp.Spec = Spec{
 		ID:     spec.ID,
@@ -112,6 +113,9 @@ func (s *Service) CollectionByID(_ context.Context, req CollectionByIDRequest) (
 				CountMethods: t.Stats.Methods,
 			})
 		}
+		sort.Slice(resp.Tags, func(i, j int) bool {
+			return resp.Tags[i].ID < resp.Tags[j].ID
+		})
 	}
 
 	return resp, nil

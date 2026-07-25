@@ -10,11 +10,16 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 )
 
 const (
 	digestNonceTTL   = 5 * time.Minute
 	digestNonceBytes = 8
+	digestAlgoMD5    = "MD5"
+	digestQopAuth    = "auth"
+	digestQopAuthInt = "auth-int"
 )
 
 // DigestAuthClient holds credentials for HTTP Digest authentication.
@@ -51,7 +56,7 @@ func (c *DigestAuthClient) Type() Type {
 	return DigestAuth
 }
 
-func (c *DigestAuthClient) Apply(req *http.Request) error {
+func (c *DigestAuthClient) Apply(req *http.Request, out *Info) error {
 	c.mu.Lock()
 	challenge := digestChallenge{
 		realm:     c.realm,
@@ -88,7 +93,7 @@ func (c *DigestAuthClient) Apply(req *http.Request) error {
 
 	nc++
 	auth := c.buildDigest(req.Method, req.URL.RequestURI(), challenge, nc, cnonce)
-	req.Header.Set("Authorization", auth)
+	setAuthHeader(req, out, "Authorization", auth)
 
 	c.mu.Lock()
 	c.nonceCount = nc
@@ -103,7 +108,11 @@ func (c *DigestAuthClient) fetchChallenge(req *http.Request) (digestChallenge, e
 		return digestChallenge{}, fmt.Errorf("create challenge request: %w", reqErr)
 	}
 
-	resp, doErr := defaultHTTPClient.Do(fakeReq)
+	cli, cliErr := httpclient.NewDefault()
+	if cliErr != nil {
+		return digestChallenge{}, fmt.Errorf("create http client: %w", cliErr)
+	}
+	resp, doErr := cli.Do(fakeReq)
 	if doErr != nil {
 		return digestChallenge{}, fmt.Errorf("challenge request: %w", doErr)
 	}
@@ -122,7 +131,7 @@ func (c *DigestAuthClient) fetchChallenge(req *http.Request) (digestChallenge, e
 }
 
 func parseDigestChallenge(header string) digestChallenge {
-	c := digestChallenge{algorithm: "MD5"}
+	c := digestChallenge{algorithm: digestAlgoMD5}
 	rest := header[len("Digest "):]
 
 	for part := range strings.SplitSeq(rest, ",") {
@@ -159,7 +168,7 @@ func (c *DigestAuthClient) buildDigest(method, uri string, ch digestChallenge, n
 	ncStr := fmt.Sprintf("%08x", nc)
 
 	var response string
-	if ch.qop == "auth" || ch.qop == "auth-int" {
+	if ch.qop == digestQopAuth || ch.qop == digestQopAuthInt {
 		respInput := fmt.Sprintf("%s:%s:%s:%s:%s:%s", ha1, ch.nonce, ncStr, cnonce, ch.qop, ha2)
 		response = md5hex(respInput)
 	} else {

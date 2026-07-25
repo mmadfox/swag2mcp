@@ -1,0 +1,17 @@
+# swag2mcp — OAuth2 Client Credentials
+specs:
+  - domain: machine-api
+    base_url: https://api.machine.example.com
+    llm_title: Machine-to-Machine API
+    auth:
+      type: oauth2-cc
+      config:
+        client_id: $(OAUTH2_CLIENT_ID)
+        client_secret: $(OAUTH2_CLIENT_SECRET)
+        token_url: https://auth.example.com/oauth/token
+        scopes:
+          - api:read
+          - api:write
+    collections:
+      - llm_title: API Resources
+        location: https://api.machine.example.com/openapi.json

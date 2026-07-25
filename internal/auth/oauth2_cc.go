@@ -11,6 +11,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 )
 
 const defaultExpiresIn = 3600
@@ -43,10 +45,10 @@ func (c *OAuth2ClientCredentialsAuthClient) Type() Type {
 	return OAuth2ClientCredentials
 }
 
-func (c *OAuth2ClientCredentialsAuthClient) Apply(req *http.Request) error {
+func (c *OAuth2ClientCredentialsAuthClient) Apply(req *http.Request, out *Info) error {
 	c.mu.Lock()
 	if c.token != "" && time.Now().Before(c.expiresAt) {
-		req.Header.Set("Authorization", "Bearer "+c.token)
+		setAuthHeader(req, out, "Authorization", "Bearer "+c.token)
 		c.mu.Unlock()
 		return nil
 	}
@@ -60,7 +62,7 @@ func (c *OAuth2ClientCredentialsAuthClient) Apply(req *http.Request) error {
 	c.mu.Lock()
 	c.token = token
 	c.expiresAt = time.Now().Add(time.Duration(expiresIn) * time.Second)
-	req.Header.Set("Authorization", "Bearer "+c.token)
+	setAuthHeader(req, out, "Authorization", "Bearer "+c.token)
 	c.mu.Unlock()
 	return nil
 }
@@ -75,7 +77,7 @@ func (c *OAuth2ClientCredentialsAuthClient) fetchToken() (string, int, error) {
 		form.Set("scope", strings.Join(c.Scopes, " "))
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), defaultHTTPTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second) //nolint:mnd // token request timeout
 	defer cancel()
 
 	tokenReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.TokenURL, strings.NewReader(form.Encode()))
@@ -84,7 +86,11 @@ func (c *OAuth2ClientCredentialsAuthClient) fetchToken() (string, int, error) {
 	}
 	tokenReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := defaultHTTPClient.Do(tokenReq)
+	cli, cliErr := httpclient.NewDefault()
+	if cliErr != nil {
+		return "", 0, fmt.Errorf("create http client: %w", cliErr)
+	}
+	resp, err := cli.Do(tokenReq)
 	if err != nil {
 		return "", 0, fmt.Errorf("token request: %w", err)
 	}

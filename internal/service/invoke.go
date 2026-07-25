@@ -3,136 +3,519 @@ package service
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
+	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
+	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/spec"
 	"github.com/mmadfox/swag2mcp/internal/types"
 )
 
-type (
-	// InvokeRequest represents a request to invoke an endpoint.
-	InvokeRequest struct {
-		EndpointID  string         `json:"endpointId"            validate:"required,md5" jsonschema:"required,The 32-character MD5 hash ID of the endpoint to invoke"`
-		Parameters  map[string]any `json:"parameters,omitempty"                          jsonschema:"optional,Path, query, and header parameters as key-value pairs"`
-		RequestBody map[string]any `json:"requestBody,omitempty"                         jsonschema:"optional,Request body for POST/PUT/PATCH requests"`
-	}
+const (
+	defaultMaxResponseSize = 1048    // 1 KB
+	maxMaxResponseSize     = 1048576 // 1 MB
+	randSuffixLen          = 6
 
-	// InvokeResponse represents a response to invoke an endpoint.
-	InvokeResponse struct {
-		StatusCode int               `json:"statusCode" jsonschema:"required,HTTP response status code"`
-		Headers    map[string]string `json:"headers"    jsonschema:"required,HTTP response headers"`
-		Body       any               `json:"body"       jsonschema:"required,Response body data"`
-	}
+	schemaTypeObject = "object"
+	schemaTypeArray  = "array"
 )
 
-// Invoke invokes an endpoint.
-// It validates the request, builds the HTTP request, and sends it.
-func (s *Service) Invoke(ctx context.Context, req InvokeRequest) (InvokeResponse, error) {
-	if err := s.validateRequest(req); err != nil {
+// InvokeRequest represents a request to invoke an API endpoint.
+type InvokeRequest struct {
+	EndpointID  string         `json:"endpointId"            validate:"required,md5" jsonschema:"required,The 32-character MD5 hash ID of the endpoint to invoke"`
+	Parameters  map[string]any `json:"parameters,omitempty"                          jsonschema:"optional,Path, query, and header parameters as key-value pairs"`
+	RequestBody map[string]any `json:"requestBody,omitempty"                         jsonschema:"optional,Request body for POST/PUT/PATCH requests"`
+}
+
+// FileReference holds information about a response saved to disk.
+type FileReference struct {
+	Path        string `json:"path"`
+	Size        int    `json:"size"`
+	SizeHint    string `json:"sizeHint"`
+	MaxSizeHint string `json:"maxSizeHint"`
+	Message     string `json:"message"`
+	OpenCmd     string `json:"openCmd"`
+}
+
+// InvokeResponse represents the response from invoking an API endpoint.
+type InvokeResponse struct {
+	StatusCode int               `json:"statusCode" jsonschema:"required,HTTP response status code"`
+	Headers    map[string]string `json:"headers"    jsonschema:"required,HTTP response headers"`
+	Body       any               `json:"body"       jsonschema:"required,Response body data"`
+	FileRef    *FileReference    `json:"fileRef,omitempty"`
+}
+
+// Invoke validates the request, builds an HTTP request, sends it, and returns the response.
+func (s *Service) Invoke(ctx context.Context, request InvokeRequest) (InvokeResponse, error) {
+	if err := s.validateRequest(request); err != nil {
 		return InvokeResponse{}, NewValidationError(
-			"endpointId must be a 32-character lowercase hex string (MD5 format)",
+			"The endpoint ID is invalid — it must be a 32-character hex string. Use the search tool to find the correct endpoint ID.",
 			err,
 		)
 	}
 
-	ep, err := s.index.EndpointByID(req.EndpointID)
+	if err := s.rateLimiter.allow(request.EndpointID); err != nil {
+		return InvokeResponse{}, NewRateLimitError(err)
+	}
+
+	endpoint, err := s.index.EndpointByID(request.EndpointID)
 	if err != nil {
-		return InvokeResponse{}, NewNotFoundError(fmt.Sprintf("endpoint %q not found", req.EndpointID), err)
+		return InvokeResponse{}, NewNotFoundError(
+			fmt.Sprintf("Endpoint %q not found — use the search tool to find the correct endpoint ID.", request.EndpointID), err,
+		)
 	}
 
-	if ep.Operation == nil {
-		return InvokeResponse{}, NewValidationError("endpoint has no operation definition", nil)
+	if endpoint.Operation == nil {
+		return InvokeResponse{}, NewValidationError("This endpoint has no operation definition — it may be malformed or incomplete.", nil)
 	}
 
-	spec, err := s.index.SpecByID(ep.SpecID)
+	specification, err := s.index.SpecByID(endpoint.SpecID)
 	if err != nil {
-		return InvokeResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", ep.SpecID), err)
+		return InvokeResponse{}, NewNotFoundError(
+			fmt.Sprintf("Spec %q not found — the endpoint references a specification that no longer exists.", endpoint.SpecID), err,
+		)
 	}
 
-	collection, err := s.index.CollectionByID(ep.CollectionID)
+	collection, err := s.index.CollectionByID(endpoint.CollectionID)
 	if err != nil {
-		return InvokeResponse{}, NewNotFoundError(fmt.Sprintf("collection %q not found", ep.CollectionID), err)
+		return InvokeResponse{}, NewNotFoundError(
+			fmt.Sprintf("Collection %q not found — the endpoint references a collection that no longer exists.", endpoint.CollectionID), err,
+		)
 	}
 
-	if verr := validateParams(ep.Operation, req.Parameters); verr != nil {
-		return InvokeResponse{}, NewValidationError("parameter validation failed", verr)
+	if validationError := validateParameters(endpoint.Operation, request.Parameters); validationError != nil {
+		return InvokeResponse{}, NewValidationError("Parameter validation failed — check that all required parameters are provided and match the expected names.", validationError)
 	}
 
-	if verr := validateRequestBody(ep.Operation, req.RequestBody); verr != nil {
-		return InvokeResponse{}, NewValidationError("request body validation failed", verr)
+	if validationError := validateRequestBody(endpoint.Operation, request.RequestBody); validationError != nil {
+		return InvokeResponse{}, NewValidationError("Request body validation failed — check that all required fields are present and no unknown fields are included.", validationError)
 	}
 
-	httpReq, buildErr := buildHTTPRequest(ctx, spec, collection, ep, req.Parameters, req.RequestBody)
-	if buildErr != nil {
-		return InvokeResponse{}, fmt.Errorf("failed to build request: %w", buildErr)
+	httpRequest, buildError := newRequestBuilder(
+		withContext(ctx),
+		withSpec(specification),
+		withCollection(collection),
+		withEndpoint(endpoint),
+		withParameters(request.Parameters),
+		withBody(request.RequestBody),
+		withHTTPConfig(mergeHTTPClientConfigs(specification.HTTPClient, collection.HTTPClient)),
+	).build()
+	if buildError != nil {
+		return InvokeResponse{}, NewInvokeError("Failed to build the HTTP request — check the endpoint parameters and try again.", buildError)
 	}
 
-	client := authHTTPClient(spec)
-	resp, doErr := client.Do(httpReq)
-	if doErr != nil {
-		return InvokeResponse{}, fmt.Errorf("request failed: %w", doErr)
-	}
-	defer resp.Body.Close()
+	s.dumpRequest(httpRequest, specification.Domain)
 
-	body, readErr := io.ReadAll(resp.Body)
-	if readErr != nil {
-		return InvokeResponse{}, fmt.Errorf("failed to read response: %w", readErr)
+	httpClient := s.httpClient
+	if specification.Auth != nil {
+		baseTransport := s.httpClient.Transport
+		if baseTransport == nil {
+			baseTransport = http.DefaultTransport
+		}
+		httpClient = &http.Client{
+			Transport: &auth.Transport{
+				Base: baseTransport,
+				Auth: specification.Auth,
+			},
+			Timeout:       s.httpClient.Timeout,
+			CheckRedirect: s.httpClient.CheckRedirect,
+		}
 	}
 
-	headers := make(map[string]string, len(resp.Header))
-	for k, vals := range resp.Header {
-		headers[k] = strings.Join(vals, ", ")
+	response, doError := httpClient.Do(httpRequest)
+	if doError != nil {
+		return InvokeResponse{}, NewInvokeError("The API request failed — the server may be unreachable or returned an error.", doError)
+	}
+	defer response.Body.Close()
+
+	body, readError := io.ReadAll(response.Body)
+	if readError != nil {
+		return InvokeResponse{}, NewInvokeError("Failed to read the API response — the connection may have been interrupted.", readError)
 	}
 
-	var bodyAny any
-	if len(body) > 0 {
-		var parsed any
-		if jsonErr := json.Unmarshal(body, &parsed); jsonErr == nil {
-			bodyAny = parsed
+	maxSize := s.maxResponseSize
+	if len(body) > maxSize {
+		return s.saveLargeResponse(response, body, specification.Domain, endpoint, maxSize)
+	}
+
+	return newInvokeResponse(response, body), nil
+}
+
+// requestBuilder builds an [http.Request] from spec, collection, endpoint, and parameters.
+type requestBuilder struct {
+	context    context.Context
+	spec       *types.Spec
+	collection *types.Collection
+	endpoint   *types.Endpoint
+	parameters map[string]any
+	body       map[string]any
+	httpConfig *types.HTTPClientConfig
+}
+
+// requestOption is a functional option for configuring a requestBuilder.
+type requestOption func(*requestBuilder)
+
+// newRequestBuilder creates a new requestBuilder with the given options.
+func newRequestBuilder(options ...requestOption) *requestBuilder {
+	builder := &requestBuilder{
+		context: context.Background(),
+	}
+	for _, option := range options {
+		option(builder)
+	}
+	return builder
+}
+
+// withContext sets the context for the request.
+func withContext(ctx context.Context) requestOption {
+	return func(builder *requestBuilder) {
+		builder.context = ctx
+	}
+}
+
+// withSpec sets the API specification.
+func withSpec(specification *types.Spec) requestOption {
+	return func(builder *requestBuilder) {
+		builder.spec = specification
+	}
+}
+
+// withCollection sets the collection.
+func withCollection(collection *types.Collection) requestOption {
+	return func(builder *requestBuilder) {
+		builder.collection = collection
+	}
+}
+
+// withEndpoint sets the endpoint.
+func withEndpoint(endpoint *types.Endpoint) requestOption {
+	return func(builder *requestBuilder) {
+		builder.endpoint = endpoint
+	}
+}
+
+// withParameters sets the request parameters.
+func withParameters(parameters map[string]any) requestOption {
+	return func(builder *requestBuilder) {
+		builder.parameters = parameters
+	}
+}
+
+// withBody sets the request body.
+func withBody(body map[string]any) requestOption {
+	return func(builder *requestBuilder) {
+		builder.body = body
+	}
+}
+
+// withHTTPConfig sets the HTTP client configuration.
+func withHTTPConfig(config *types.HTTPClientConfig) requestOption {
+	return func(builder *requestBuilder) {
+		builder.httpConfig = config
+	}
+}
+
+// build constructs the [http.Request] from the configured options.
+func (builder *requestBuilder) build() (*http.Request, error) {
+	targetURL := builder.resolveBaseURL()
+	targetURL = strings.TrimRight(targetURL, "/")
+	requestURL := targetURL + "/" + strings.TrimLeft(builder.endpoint.Path, "/")
+
+	pathParameters := builder.filterParametersByLocation("path")
+	for parameterName, parameterValue := range pathParameters {
+		requestURL = strings.ReplaceAll(
+			requestURL,
+			"{"+parameterName+"}",
+			url.PathEscape(parameterValue),
+		)
+	}
+
+	parsedURL, parseError := url.Parse(requestURL)
+	if parseError != nil {
+		return nil, fmt.Errorf("invalid URL %q: %w", requestURL, parseError)
+	}
+
+	queryParameters := builder.filterParametersByLocation("query")
+	queryValues := parsedURL.Query()
+	for parameterName, parameterValue := range queryParameters {
+		queryValues.Set(parameterName, parameterValue)
+	}
+	parsedURL.RawQuery = queryValues.Encode()
+
+	var bodyReader io.Reader
+	if builder.body != nil {
+		bodyBytes, marshalError := json.Marshal(builder.body)
+		if marshalError != nil {
+			return nil, fmt.Errorf("failed to marshal request body: %w", marshalError)
+		}
+		bodyReader = bytes.NewReader(bodyBytes)
+	}
+
+	httpRequest, requestError := http.NewRequestWithContext(
+		builder.context,
+		builder.endpoint.Name,
+		parsedURL.String(),
+		bodyReader,
+	)
+	if requestError != nil {
+		return nil, fmt.Errorf("failed to create request: %w", requestError)
+	}
+
+	builder.applyHeaders(httpRequest)
+	builder.applyHTTPClientConfig(httpRequest)
+
+	return httpRequest, nil
+}
+
+// resolveBaseURL returns the base URL, preferring the collection's over the spec's.
+// If BaseMockURL is set on the collection, it is used with http:// prefix.
+func (builder *requestBuilder) resolveBaseURL() string {
+	if builder.collection.BaseMockURL != "" {
+		return "http://" + builder.collection.BaseMockURL
+	}
+	if builder.collection.BaseURL != "" {
+		return builder.collection.BaseURL
+	}
+	return builder.spec.BaseURL
+}
+
+// filterParametersByLocation returns parameters that match the given location (path, query, header).
+func (builder *requestBuilder) filterParametersByLocation(location string) map[string]string {
+	result := make(map[string]string, len(builder.parameters))
+	for _, parameter := range builder.endpoint.Operation.Parameters {
+		if parameter.In != location {
+			continue
+		}
+		value, exists := builder.parameters[parameter.Name]
+		if !exists {
+			continue
+		}
+		result[parameter.Name] = fmt.Sprintf("%v", value)
+	}
+	return result
+}
+
+// applyHeaders sets operation-level headers and defaults on the request.
+func (builder *requestBuilder) applyHeaders(httpRequest *http.Request) {
+	headerParameters := builder.filterParametersByLocation("header")
+	for parameterName, parameterValue := range headerParameters {
+		httpRequest.Header.Set(parameterName, parameterValue)
+	}
+
+	if builder.body != nil && httpRequest.Header.Get("Content-Type") == "" {
+		httpRequest.Header.Set("Content-Type", "application/json")
+	}
+
+	if httpRequest.Header.Get("Accept") == "" {
+		isJSON := builder.body != nil || httpRequest.Header.Get("Content-Type") == "application/json" //nolint:goconst // content-type value
+		if isJSON {
+			httpRequest.Header.Set("Accept", "application/json, text/plain, */*")
 		} else {
-			bodyAny = string(body)
+			httpRequest.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+		}
+	}
+}
+
+// applyHTTPClientConfig applies per-request HTTP config (headers, cookies) to the request.
+func (builder *requestBuilder) applyHTTPClientConfig(httpRequest *http.Request) {
+	if builder.httpConfig == nil {
+		return
+	}
+
+	for headerName, headerValue := range builder.httpConfig.Headers {
+		httpRequest.Header.Set(headerName, headerValue)
+	}
+
+	if len(builder.httpConfig.Cookies) > 0 {
+		for _, cookie := range builder.httpConfig.Cookies {
+			httpRequest.AddCookie(&http.Cookie{ //nolint:gosec // cookies are user-configured, not secrets
+				Name:     cookie.Name,
+				Value:    cookie.Value,
+				Domain:   cookie.Domain,
+				Path:     cookie.Path,
+				Secure:   cookie.Secure,
+				HttpOnly: cookie.HTTPOnly,
+			})
+		}
+	}
+}
+
+// newInvokeResponse reads the HTTP response and creates an InvokeResponse.
+func newInvokeResponse(response *http.Response, body []byte) InvokeResponse {
+	headers := make(map[string]string, len(response.Header))
+	for key, values := range response.Header {
+		headers[key] = strings.Join(values, ", ")
+	}
+
+	var parsedBody any
+	if len(body) > 0 {
+		if jsonError := json.Unmarshal(body, &parsedBody); jsonError == nil {
+			return InvokeResponse{
+				StatusCode: response.StatusCode,
+				Headers:    headers,
+				Body:       parsedBody,
+			}
 		}
 	}
 
 	return InvokeResponse{
-		StatusCode: resp.StatusCode,
+		StatusCode: response.StatusCode,
 		Headers:    headers,
-		Body:       bodyAny,
+		Body:       string(body),
+	}
+}
+
+// saveLargeResponse saves a response body that exceeds the max size to a file
+// and returns an InvokeResponse with a FileReference instead of the full body.
+func (s *Service) saveLargeResponse(
+	response *http.Response,
+	body []byte,
+	domain string,
+	endpoint *types.Endpoint,
+	maxSize int,
+) (InvokeResponse, error) {
+	headers := make(map[string]string, len(response.Header))
+	for key, values := range response.Header {
+		headers[key] = strings.Join(values, ", ")
+	}
+
+	method := strings.ToLower(endpoint.Name)
+	path := strings.TrimPrefix(endpoint.Path, "/")
+	path = strings.ReplaceAll(path, "/", "_")
+	path = strings.ReplaceAll(path, "{", "")
+	path = strings.ReplaceAll(path, "}", "")
+	suffix := randomSuffix(randSuffixLen)
+	filename := fmt.Sprintf("%s-%s-%s-%s.json", domain, method, path, suffix)
+	filePath := filepath.Join(s.ws.ResponsesDir(), filename)
+
+	if err := os.MkdirAll(s.ws.ResponsesDir(), 0750); err != nil {
+		return InvokeResponse{}, fmt.Errorf("failed to create responses dir: %w", err)
+	}
+
+	if err := os.WriteFile(filePath, body, 0600); err != nil {
+		return InvokeResponse{}, fmt.Errorf("failed to write response file: %w", err)
+	}
+
+	sizeHint := formatSize(len(body))
+	maxSizeHint := formatSize(maxSize)
+	message := fmt.Sprintf(
+		"Response body (%s) exceeds the maximum size limit (%s). The full response has been saved to disk.",
+		sizeHint, maxSizeHint,
+	)
+
+	return InvokeResponse{
+		StatusCode: response.StatusCode,
+		Headers:    headers,
+		Body: map[string]string{
+			"message": message,
+		},
+		FileRef: &FileReference{
+			Path:        filePath,
+			Size:        len(body),
+			SizeHint:    sizeHint,
+			MaxSizeHint: maxSizeHint,
+			Message:     message,
+			OpenCmd:     openCommand(filePath),
+		},
 	}, nil
 }
 
-// validateParams checks that all required parameters are present and that no
+// resolveMaxResponseSize returns the effective max response size.
+// Default is 2 KB, maximum is 1 MB.
+func resolveMaxResponseSize(maxResponseSize *int) int {
+	if maxResponseSize == nil {
+		return defaultMaxResponseSize
+	}
+	if *maxResponseSize > maxMaxResponseSize {
+		return maxMaxResponseSize
+	}
+	if *maxResponseSize <= 0 {
+		return defaultMaxResponseSize
+	}
+	return *maxResponseSize
+}
+
+// openCommand returns the OS-specific command to open a file.
+func openCommand(path string) string {
+	switch runtime.GOOS {
+	case "darwin":
+		return "open " + path
+	case "windows":
+		return "start " + path
+	default:
+		return "xdg-open " + path
+	}
+}
+
+// formatSize returns a human-readable size string.
+func formatSize(bytes int) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
+// randomSuffix generates a random hex string of length n.
+func randomSuffix(n int) string {
+	byteLen := (n + 1) / 2 //nolint:mnd // hex encoding: 2 chars per byte
+	b := make([]byte, byteLen)
+	if _, err := rand.Read(b); err != nil {
+		return fmt.Sprintf("%0*x", n, 0)
+	}
+	return hex.EncodeToString(b)[:n]
+}
+
+// validateParameters checks that all required parameters are present and that no
 // unknown parameters are passed. Every parameter must be declared in the operation spec.
-func validateParams(op *spec.Operation, params map[string]any) error {
-	schemaParamNames := make(map[string]struct{}, len(op.Parameters))
-	for _, p := range op.Parameters {
-		schemaParamNames[p.Name] = struct{}{}
+func validateParameters(operation *spec.Operation, parameters map[string]any) error {
+	declaredParameterNames := make(map[string]struct{}, len(operation.Parameters))
+	for _, parameter := range operation.Parameters {
+		declaredParameterNames[parameter.Name] = struct{}{}
 	}
 
-	for name := range params {
-		if _, ok := schemaParamNames[name]; !ok {
-			return fmt.Errorf("unknown parameter %q, all parameters must match the operation schema", name)
+	for parameterName := range parameters {
+		if _, exists := declaredParameterNames[parameterName]; !exists {
+			return fmt.Errorf(
+				"unknown parameter %q, all parameters must match the operation schema",
+				parameterName,
+			)
 		}
 	}
 
-	var missing []string
-	for _, p := range op.Parameters {
-		if !p.Required {
+	var missingRequiredParameters []string
+	for _, parameter := range operation.Parameters {
+		if !parameter.Required {
 			continue
 		}
-		if _, ok := params[p.Name]; !ok {
-			missing = append(missing, p.Name)
+		if _, exists := parameters[parameter.Name]; !exists {
+			missingRequiredParameters = append(missingRequiredParameters, parameter.Name)
 		}
 	}
-	if len(missing) > 0 {
-		return fmt.Errorf("missing required parameters: %s", strings.Join(missing, ", "))
+
+	if len(missingRequiredParameters) > 0 {
+		return fmt.Errorf(
+			"missing required parameters: %s",
+			strings.Join(missingRequiredParameters, ", "),
+		)
 	}
 
 	return nil
@@ -141,12 +524,12 @@ func validateParams(op *spec.Operation, params map[string]any) error {
 // validateRequestBody validates a request body against the operation's request body schema.
 // It checks that all required properties are present and that no unknown keys are passed.
 // Type validation is not performed.
-func validateRequestBody(op *spec.Operation, body map[string]any) error {
-	if op.RequestBody == nil {
+func validateRequestBody(operation *spec.Operation, body map[string]any) error {
+	if operation.RequestBody == nil {
 		return nil
 	}
 
-	if op.RequestBody.Required && body == nil {
+	if operation.RequestBody.Required && body == nil {
 		return errors.New("request body is required for this endpoint")
 	}
 
@@ -154,7 +537,7 @@ func validateRequestBody(op *spec.Operation, body map[string]any) error {
 		return nil
 	}
 
-	schema := schemaForContent(op.RequestBody.Content)
+	schema := schemaForContentType(operation.RequestBody.Content)
 	if schema == nil {
 		return nil
 	}
@@ -162,165 +545,127 @@ func validateRequestBody(op *spec.Operation, body map[string]any) error {
 	return validateSchemaValue(schema, body, "$")
 }
 
-// schemaForContent extracts the JSON schema from a content map, preferring application/json.
-func schemaForContent(content map[string]*spec.MediaType) *spec.Schema {
+// schemaForContentType extracts the JSON schema from a content map, preferring application/json.
+func schemaForContentType(content map[string]*spec.MediaType) *spec.Schema {
 	if content == nil {
 		return nil
 	}
-	mt, ok := content["application/json"]
-	if !ok || mt == nil {
+	mediaType, exists := content["application/json"]
+	if !exists || mediaType == nil {
 		return nil
 	}
-	return mt.Schema
+	return mediaType.Schema
 }
 
 // validateSchemaValue recursively validates a value against a schema path.
 // It is used for request body validation.
-//
-//nolint:gocognit // recursive schema validation is inherently complex
-func validateSchemaValue(schema *spec.Schema, val any, path string) error {
+func validateSchemaValue(schema *spec.Schema, value any, path string) error {
 	if schema == nil {
 		return nil
 	}
 
 	switch schema.Type {
-	case "object":
-		m, ok := val.(map[string]any)
-		if !ok {
-			// skip type validation per user request
-			return nil
-		}
+	case schemaTypeObject:
+		return validateObjectSchema(schema, value, path)
+	case schemaTypeArray:
+		return validateArraySchema(schema, value, path)
+	}
 
-		for _, reqField := range schema.Required {
-			if _, exists := m[reqField]; !exists {
-				return fmt.Errorf("missing required field %q at %s", reqField, path)
-			}
-		}
+	return nil
+}
 
-		for key := range m {
-			if _, defined := schema.Properties[key]; !defined {
-				return fmt.Errorf("unknown field %q at %s, all fields must match the schema", key, path)
-			}
-		}
+// validateObjectSchema validates a map value against an object schema.
+func validateObjectSchema(schema *spec.Schema, value any, path string) error {
+	objectValue, ok := value.(map[string]any)
+	if !ok {
+		return nil
+	}
 
-		for key, propSchema := range schema.Properties {
-			if childVal, exists := m[key]; exists {
-				childPath := path + "." + key
-				if err := validateSchemaValue(propSchema, childVal, childPath); err != nil {
-					return err
-				}
-			}
+	for _, requiredField := range schema.Required {
+		if _, exists := objectValue[requiredField]; !exists {
+			return fmt.Errorf("missing required field %q at %s", requiredField, path)
 		}
+	}
 
-	case "array":
-		arr, ok := val.([]any)
-		if !ok {
-			return nil
+	for key := range objectValue {
+		if _, defined := schema.Properties[key]; !defined {
+			return fmt.Errorf(
+				"unknown field %q at %s, all fields must match the schema",
+				key, path,
+			)
 		}
-		for i, item := range arr {
-			childPath := fmt.Sprintf("%s[%d]", path, i)
-			if err := validateSchemaValue(schema.Items, item, childPath); err != nil {
-				return err
-			}
+	}
+
+	for key, propertySchema := range schema.Properties {
+		childValue, exists := objectValue[key]
+		if !exists {
+			continue
+		}
+		childPath := path + "." + key
+		if validationError := validateSchemaValue(propertySchema, childValue, childPath); validationError != nil {
+			return validationError
 		}
 	}
 
 	return nil
 }
 
-func authHTTPClient(spec *types.Spec) *http.Client {
-	if spec.Auth != nil {
-		return auth.NewHTTPClient(spec.Auth)
+// validateArraySchema validates a slice value against an array schema.
+func validateArraySchema(schema *spec.Schema, value any, path string) error {
+	arrayValue, ok := value.([]any)
+	if !ok {
+		return nil
 	}
-	return http.DefaultClient
+
+	for index, item := range arrayValue {
+		childPath := fmt.Sprintf("%s[%d]", path, index)
+		if validationError := validateSchemaValue(schema.Items, item, childPath); validationError != nil {
+			return validationError
+		}
+	}
+
+	return nil
 }
 
-// TODO:
-//
-//nolint:nolintlint,gocognit
-func buildHTTPRequest(
-	ctx context.Context,
-	spec *types.Spec,
-	collection *types.Collection,
-	ep *types.Endpoint,
-	params map[string]any,
-	requestBody map[string]any,
-) (*http.Request, error) {
-	baseURL := spec.BaseURL
-	if len(collection.BaseURL) > 0 {
-		baseURL = collection.BaseURL
-	}
-	baseURL = strings.TrimRight(baseURL, "/")
-	reqURL := baseURL + "/" + strings.TrimLeft(ep.Path, "/")
-
-	paramByIn := func(in string) map[string]string {
-		m := make(map[string]string, len(params))
-		for _, p := range ep.Operation.Parameters {
-			if p.In != in {
-				continue
-			}
-			val, ok := params[p.Name]
-			if !ok {
-				continue
-			}
-			m[p.Name] = fmt.Sprintf("%v", val)
-		}
-		return m
+// dumpRequest writes the HTTP request to a file for debugging if dumpDir is configured.
+func (s *Service) dumpRequest(request *http.Request, domain string) {
+	if len(s.dumpDir) == 0 {
+		return
 	}
 
-	// substitute path parameters
-	// TODO:
-	pathParams := paramByIn("path")
-	for name, val := range pathParams {
-		reqURL = strings.ReplaceAll(reqURL, "{"+name+"}", url.PathEscape(val))
+	dump, dumpError := httputil.DumpRequestOut(request, true)
+	if dumpError != nil {
+		return
 	}
 
-	parsedURL, parseErr := url.Parse(reqURL)
-	if parseErr != nil {
-		return nil, fmt.Errorf("invalid URL %q: %w", reqURL, parseErr)
+	timestamp := time.Now().UnixMilli()
+	filename := fmt.Sprintf("invoke-%s-%d.txt", domain, timestamp)
+	filePath := filepath.Join(s.dumpDir, filename)
+
+	_ = os.MkdirAll(s.dumpDir, 0750)
+	_ = os.WriteFile(filePath, dump, 0600)
+}
+
+// mergeHTTPClientConfigs merges two per-request HTTP configs. Collection overrides spec.
+func mergeHTTPClientConfigs(spec, collection *types.HTTPClientConfig) *types.HTTPClientConfig {
+	if spec == nil {
+		return collection
+	}
+	if collection == nil {
+		return spec
 	}
 
-	// add query parameters
-	q := parsedURL.Query()
-	for name, val := range paramByIn("query") {
-		q.Set(name, val)
-	}
-	parsedURL.RawQuery = q.Encode()
-
-	// build body
-	var bodyReader io.Reader
-	if requestBody != nil {
-		bodyBytes, marshalErr := json.Marshal(requestBody)
-		if marshalErr != nil {
-			return nil, fmt.Errorf("failed to marshal request body: %w", marshalErr)
-		}
-		bodyReader = bytes.NewReader(bodyBytes)
+	result := &types.HTTPClientConfig{
+		Headers: make(map[string]string),
+		Cookies: collection.Cookies,
 	}
 
-	httpReq, reqErr := http.NewRequestWithContext(ctx, ep.Name, parsedURL.String(), bodyReader)
-	if reqErr != nil {
-		return nil, fmt.Errorf("failed to create request: %w", reqErr)
+	maps.Copy(result.Headers, spec.Headers)
+	maps.Copy(result.Headers, collection.Headers)
+
+	if len(result.Cookies) == 0 {
+		result.Cookies = spec.Cookies
 	}
 
-	// apply spec-level headers
-	for k, v := range spec.Headers {
-		httpReq.Header.Set(k, v)
-	}
-
-	// apply collection-level headers
-	for k, v := range collection.Headers {
-		httpReq.Header.Set(k, v)
-	}
-
-	// apply header parameters from operation
-	for name, val := range paramByIn("header") {
-		httpReq.Header.Set(name, val)
-	}
-
-	// apply content-type for json body
-	if requestBody != nil && httpReq.Header.Get("Content-Type") == "" {
-		httpReq.Header.Set("Content-Type", "application/json")
-	}
-
-	return httpReq, nil
+	return result
 }

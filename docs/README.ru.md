@@ -1,7 +1,5 @@
 # swag2mcp
 
-> ⚠️ **Work in progress** — API may change, contributions welcome.
-
 **swag2mcp** — это CLI-инструмент и MCP (Model Context Protocol) сервер, который связывает OpenAPI/Swagger/Postman спецификации с LLM-агентами (Opencode, Crush, Copilot, Cursor и другими).
 
 Он индексирует ваши API-спецификации в полнотекстовый поисковый движок, предоставляет 14 MCP-инструментов и позволяет LLM находить, изучать и вызывать реальные API-эндпоинты — без единой строки интеграционного кода.
@@ -44,6 +42,18 @@ swag2mcp run
 ### YAML Схема
 
 ```yaml
+mock_enabled: true                    # опционально, включает режим мок-сервера
+
+http_client:                        # опционально, глобальные настройки HTTP
+  headers:                          # опционально
+    X-API-Version: "2"
+  cookies: []                       # опционально
+  user_agent: ""                    # опционально
+  timeout: 0s                       # опционально
+  follow_redirects: true            # опционально
+  max_redirects: 10                 # опционально
+  max_response_size: 1048           # опционально, байт (по умолч. 1KB, макс 1MB)
+
 specs:
   - domain: petstore                    # обязательно, 1-60 символов, [a-zA-Z0-9_-]
     llm_title: Petstore API             # обязательно, 5-120 символов
@@ -52,8 +62,9 @@ specs:
     base_url: https://petstore.swagger.io/v2  # обязательно, валидный URL
     disable: false                      # опционально
     tags: [public, demo]                # опционально, для фильтрации
-    headers:                            # опционально
-      X-API-Version: "2"
+    http_client:                        # опционально, переопределяет глобальный
+      headers:
+        X-API-Version: "2"
     auth:                               # опционально
       type: bearer                      # см. Методы аутентификации
       config:
@@ -62,10 +73,12 @@ specs:
       - llm_title: Petstore Swagger     # опционально, макс 120 символов
         llm_instruction: |             # опционально, макс 360 символов
           Основные эндпоинты Petstore
+        title: ""                      # опционально, авто-заполняется из spec
         location: https://petstore.swagger.io/v2/swagger.json  # обязательно, 5-250 символов
         disable: false                  # опционально
-        headers: {}                     # опционально
         base_url: ""                    # опционально, переопределяет base_url спецификации
+        base_mock_url: localhost:8080   # опционально, формат "host:port" или "host:port/path"
+        http_client: {}                 # опционально, переопределяет spec
 ```
 
 ### Теги — фильтрация спецификаций по проектам
@@ -211,11 +224,54 @@ swag2mcp update
 |------|------------|--------------|----------|
 | `--logfile` | `-f` | `""` | Путь к лог-файлу |
 | `--tags` | `-t` | `""` | Фильтр спецификаций по тегам |
+| `--disable-llm-auth` | | `true` | `true` — аутентификация под капотом (LLM не видит токены). `false` — LLM может запрашивать токены через инструмент `auth` |
+| `--dump-dir` | | `""` | Директория для дампа HTTP запросов (отладка) |
 
 ```bash
 swag2mcp mcp
 swag2mcp mcp --tags=public --logfile=/var/log/swag2mcp.log
+swag2mcp mcp --disable-llm-auth=false
+swag2mcp mcp --dump-dir=/tmp/dump
 ```
+
+### `mockserver [path]`
+
+Запускает мок-серверы для всех API спецификаций. Каждая коллекция получает
+свой HTTP-сервер, который генерирует случайные данные по OpenAPI схеме ответа.
+
+| Флаг | По умолчанию | Описание |
+|------|-------------|----------|
+| `--tls` | `false` | Включить TLS с самоподписанным сертификатом |
+| `--tls-cert` | `""` | Путь к TLS сертификату |
+| `--tls-key` | `""` | Путь к TLS ключу |
+
+```bash
+swag2mcp-mock
+swag2mcp-mock --tls
+```
+
+**Рабочий процесс:**
+1. Добавить `mock_enabled: true` и `base_mock_url` в конфиг
+2. Запустить мок-сервер: `swag2mcp-mock`
+3. Запустить MCP сервер: `swag2mcp mcp` — invoke будет использовать `base_mock_url`
+
+### Mock Credentials для аутентификации
+
+Когда в конфиге указан `auth`, мок-сервер авторизации запускается на случайном
+порту. Каждый тип аутентификации принимает следующие credentials:
+
+| Тип | Endpoint | Принимает | Пример запроса |
+|-----|----------|-----------|----------------|
+| `basic` | `GET /` | Любые `user:password` в Base64 | `Authorization: Basic YWRtaW46cGFzcw==` |
+| `bearer` | `GET /` | Любой non-empty токен | `Authorization: Bearer any-token` |
+| `digest` | `GET /` | Любой Digest response | `Authorization: Digest username="test", realm="...", nonce="...", uri="/", response="..."` |
+| `oauth2-cc` | `POST /token` | Любые `client_id` + `client_secret` | `grant_type=client_credentials&client_id=any&client_secret=any` |
+| `oauth2-pwd` | `POST /token` | Любые `username` + `password` | `grant_type=password&username=any&password=any` |
+| `api-key` | `GET /` | Любой `X-Api-Key` header или `api_key` query | `X-Api-Key: any-key` |
+| `script` | `GET /token` | Не требует credentials | `GET /token` |
+
+Все мок-серверы авторизации возвращают `{"status":"authenticated","method":"<type>"}`.
+OAuth2 моки возвращают `{"access_token":"<random>","token_type":"Bearer","expires_in":3600}`.
 
 ---
 
@@ -226,13 +282,15 @@ MCP сервер предоставляет 14 инструментов чере
 ### Иерархия инструментов
 
 ```
-spec_list
-  └─ spec_by_id
-       └─ collection_by_spec
-            └─ tag_by_collection
-                 └─ endpoint_by_tag
-                      └─ inspect
-                           └─ invoke
+spec_list                       — список всех доступных спецификаций
+  └─ spec_by_id                 — детали спецификации по ID
+       └─ collection_by_spec    — коллекции в спецификации
+            └─ tag_by_collection     — теги в коллекции
+                 └─ endpoint_by_tag  — эндпоинты в теге
+                      └─ inspect          — полная OpenAPI операция
+                           └─ invoke       — выполнение API вызова
+
+search                          — полнотекстовый поиск по всем эндпоинтам
 ```
 
 ### Справочник инструментов
@@ -253,6 +311,7 @@ spec_list
 | `search` | `query`, `limit` | Endpoints | Полнотекстовый поиск |
 | `inspect` | `endpointId` | Full Operation | Полный объект OpenAPI операции |
 | `invoke` | `endpointId`, `parameters`, `requestBody` | Response | Выполнение реального API вызова |
+| `auth` | `specId` | Token | Получение auth токена для спецификации |
 
 ---
 
@@ -327,9 +386,22 @@ swag2mcp <command> ./       → {cwd}/.swag2mcp/
 swag2mcp <command> path/to  → {cwd}/path/to/.swag2mcp/
 ```
 
----
+### .gitignore
 
-## Кэширование
+В `.gitignore` должны попадать только временные данные:
+
+```
+.swag2mcp/cache/*
+.swag2mcp/responses/*
+```
+
+Конфиг `.swag2mcp/swag2mcp.yaml` и spec-файлы в `.swag2mcp/specs/` **должны быть в репозитории**.
+
+### Рекомендация
+
+Все spec-файлы храните в `.swag2mcp/specs/` — это единственный способ гарантировать, что они не будут скопированы в кэш и будут использоваться напрямую.
+
+---
 
 ### Правила
 

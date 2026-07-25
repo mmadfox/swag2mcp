@@ -1,0 +1,9 @@
+# swag2mcp — No Auth
+specs:
+  - domain: public-api
+    base_url: https://api.public.example.com
+    llm_title: Public API
+    # auth block is omitted — no authentication
+    collections:
+      - llm_title: Public Endpoints
+        location: https://api.public.example.com/openapi.json

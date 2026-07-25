@@ -15,6 +15,8 @@ const (
 	paramTypeFile = "file"
 	paramTypeObj  = "object"
 	paramInQuery  = "query"
+	paramInPath   = "path"
+	bodyModeRaw   = "raw"
 )
 
 type postmanCollection struct {
@@ -248,7 +250,7 @@ func appendPostmanURLParams(rawURL json.RawMessage, op *Operation) {
 	for _, v := range u.Variable {
 		op.Parameters = append(op.Parameters, &Parameter{
 			Name:     v.Key,
-			In:       "path",
+			In:       paramInPath,
 			Required: true,
 			Schema:   &Schema{Type: paramTypeStr},
 		})
@@ -297,7 +299,7 @@ func appendPostmanBody(body *postmanBody, op *Operation, method string) {
 	}
 
 	switch body.Mode {
-	case "raw":
+	case bodyModeRaw:
 		ct := guessPostmanContentType(body)
 		rb.Content[ct] = &MediaType{
 			Schema: &Schema{
@@ -330,7 +332,7 @@ func appendPostmanBody(body *postmanBody, op *Operation, method string) {
 			}
 			typ := paramTypeStr
 			if f.Type == paramTypeFile {
-				typ = "file"
+				typ = paramTypeFile
 			}
 			props[f.Key] = &Schema{Type: typ, Default: f.Value}
 		}

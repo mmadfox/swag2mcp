@@ -1,0 +1,19 @@
+# swag2mcp — OAuth2 Password Grant
+specs:
+  - domain: user-api
+    base_url: https://api.user.example.com
+    llm_title: User API
+    auth:
+      type: oauth2-pwd
+      config:
+        username: $(OAUTH2_USER)
+        password: $(OAUTH2_PASS)
+        client_id: $(OAUTH2_CLIENT_ID)
+        client_secret: $(OAUTH2_CLIENT_SECRET)
+        token_url: https://auth.example.com/oauth/token
+        scopes:
+          - profile
+          - email
+    collections:
+      - llm_title: User Resources
+        location: https://api.user.example.com/openapi.json

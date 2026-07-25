@@ -1,3 +1,6 @@
+mcp:
+  transport: stdio
+
 specs:
 {{- range .Specs}}
   - domain: "{{.Domain}}"
@@ -32,10 +35,6 @@ specs:
 #  - domain: train-booking
 #    disable: true
 #    base_url: https://api.trains-railway.com
-#    headers:
-#      X-Request-ID: generated-request-id
-#      X-User-Agent: mobile-app-v2.5
-#      Authorization: Bearer your-access-token
 #
 #    llm_title: Railway Ticket Booking System API
 #    llm_instruction: |

@@ -1,0 +1,20 @@
+# swag2mcp — LLM Metadata
+specs:
+  - domain: ecommerce
+    base_url: https://api.shop.example.com
+    llm_title: E-Commerce Platform API
+    llm_instruction: |
+      Complete online store API for managing products, orders, customers,
+      and inventory. Use this API when the user asks about shopping,
+      placing orders, tracking shipments, or managing their account.
+    collections:
+      - llm_title: Product Catalog
+        llm_instruction: |
+          Browse and search products, get product details, and manage
+          inventory levels. Use this for product-related queries.
+        location: https://api.shop.example.com/openapi/products.json
+      - llm_title: Order Management
+        llm_instruction: |
+          Create, view, update, and cancel orders. Also handles
+          shipping status and order history.
+        location: https://api.shop.example.com/openapi/orders.json

@@ -38,6 +38,8 @@ const (
 	EndpointByCollection = "endpoint_by_collection"
 	// EndpointBySpec is the name of the endpoint_by_spec tool.
 	EndpointBySpec = "endpoint_by_spec"
+	// Auth is the name of the auth tool.
+	Auth = "auth"
 )
 
 //go:embed definitions/*.md
@@ -82,6 +84,9 @@ func (s *Service) MakeToolDefinitions() (ToolDefinitions, error) {
 		loadedTool, loadErr := loadToolFromEmbed(entry.Name())
 		if loadErr != nil {
 			return ToolDefinitions{}, fmt.Errorf("failed to load tool from %s: %w", entry.Name(), loadErr)
+		}
+		if loadedTool.Name == Auth && s.disableLLMAuth.Load() {
+			continue
 		}
 		tools = append(tools, loadedTool)
 	}

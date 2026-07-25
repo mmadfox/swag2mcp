@@ -1,0 +1,14 @@
+# swag2mcp — Multiple Collections
+specs:
+  - domain: crm-api
+    base_url: https://api.crm.example.com
+    llm_title: CRM API
+    collections:
+      - llm_title: Contacts
+        location: https://api.crm.example.com/openapi/contacts.json
+      - llm_title: Deals
+        location: https://api.crm.example.com/openapi/deals.json
+      - llm_title: Tasks
+        location: https://api.crm.example.com/openapi/tasks.json
+      - llm_title: Reports
+        location: https://api.crm.example.com/openapi/reports.json

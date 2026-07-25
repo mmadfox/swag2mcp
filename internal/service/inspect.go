@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
-	"maps"
+	"strings"
 
 	"github.com/mmadfox/swag2mcp/internal/spec"
 )
@@ -16,16 +16,16 @@ type (
 
 	// InspectResponse represents a response to inspect an endpoint.
 	InspectResponse struct {
-		ID           string            `json:"id"                jsonschema:"required,Unique identifier for the endpoint"`
-		TagID        string            `json:"tagId"             jsonschema:"required,Unique identifier for the tag"`
-		CollectionID string            `json:"collectionId"      jsonschema:"required,Unique identifier for the collection"`
-		SpecID       string            `json:"specId"            jsonschema:"required,Unique identifier for the spec"`
-		SpecDomain   string            `json:"specDomain"        jsonschema:"required,Domain of the spec"`
-		Method       string            `json:"method"            jsonschema:"required,HTTP method (GET, POST, etc.)"`
-		Path         string            `json:"path"              jsonschema:"required,API path"`
-		BaseURL      string            `json:"baseUrl"           jsonschema:"required,Base URL of the API"`
-		Operation    *spec.Operation   `json:"operation"         jsonschema:"required,Operation details"`
-		Headers      map[string]string `json:"headers,omitempty" jsonschema:"optional,Headers to be sent with the request"`
+		ID           string          `json:"id"                jsonschema:"required,Unique identifier for the endpoint"`
+		TagID        string          `json:"tagId"             jsonschema:"required,Unique identifier for the tag"`
+		CollectionID string          `json:"collectionId"      jsonschema:"required,Unique identifier for the collection"`
+		SpecID       string          `json:"specId"            jsonschema:"required,Unique identifier for the spec"`
+		SpecDomain   string          `json:"specDomain"        jsonschema:"required,Domain of the spec"`
+		Method       string          `json:"method"            jsonschema:"required,HTTP method (GET, POST, etc.)"`
+		Path         string          `json:"path"              jsonschema:"required,API path"`
+		BaseURL      string          `json:"baseUrl"           jsonschema:"required,Base URL of the API"`
+		FullURL      string          `json:"fullUrl"           jsonschema:"required,Full URL of the endpoint"`
+		Operation    *spec.Operation `json:"operation"         jsonschema:"required,Operation details"`
 	}
 )
 
@@ -33,23 +33,23 @@ type (
 func (s *Service) Inspect(_ context.Context, req InspectRequest) (InspectResponse, error) {
 	if err := s.validateRequest(req); err != nil {
 		return InspectResponse{}, NewValidationError(
-			"endpointId must be a 32-character lowercase hex string (MD5 format)",
+			"The endpoint ID is invalid — it must be a 32-character hex string. Use the search tool to find the correct endpoint ID.",
 			err,
 		)
 	}
 
 	ep, eErr := s.index.EndpointByID(req.EndpointID)
 	if eErr != nil {
-		return InspectResponse{}, NewNotFoundError(fmt.Sprintf("endpoint %q not found", req.EndpointID), eErr)
+		return InspectResponse{}, NewNotFoundError(fmt.Sprintf("Endpoint %q not found — use the search tool to find the correct endpoint ID.", req.EndpointID), eErr)
 	}
 
 	spec, sErr := s.index.SpecByID(ep.SpecID)
 	if sErr != nil {
-		return InspectResponse{}, NewNotFoundError(fmt.Sprintf("spec %q not found", ep.SpecID), sErr)
+		return InspectResponse{}, NewNotFoundError(fmt.Sprintf("Spec %q not found — the endpoint references a spec that no longer exists.", ep.SpecID), sErr)
 	}
 	collection, cErr := s.index.CollectionByID(ep.CollectionID)
 	if cErr != nil {
-		return InspectResponse{}, NewNotFoundError(fmt.Sprintf("collection %q not found", ep.CollectionID), cErr)
+		return InspectResponse{}, NewNotFoundError(fmt.Sprintf("Collection %q not found — the endpoint references a collection that no longer exists.", ep.CollectionID), cErr)
 	}
 	baseURL := spec.BaseURL
 	if len(collection.BaseURL) > 0 {
@@ -66,12 +66,7 @@ func (s *Service) Inspect(_ context.Context, req InspectRequest) (InspectRespons
 		Path:         ep.Path,
 		Operation:    ep.Operation,
 		BaseURL:      baseURL,
-	}
-
-	if len(spec.Headers) > 0 || len(collection.Headers) > 0 {
-		resp.Headers = make(map[string]string, len(spec.Headers)+len(collection.Headers))
-		maps.Copy(resp.Headers, spec.Headers)
-		maps.Copy(resp.Headers, collection.Headers)
+		FullURL:      baseURL + "/" + strings.TrimLeft(ep.Path, "/"),
 	}
 
 	return resp, nil
