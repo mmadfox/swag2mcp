@@ -1,5 +1,10 @@
 package config
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"testing"
 
@@ -16,8 +21,8 @@ func TestAuth_UnmarshalYAML_none(t *testing.T) {
 	var a Auth
 	require.NoError(t, yaml.Unmarshal([]byte("type: none"), &a))
 	require.NotNil(t, a.Client)
-	_, ok := a.Client.(auth.NoAuthClient)
-	assert.True(t, ok, "expected auth.NoAuthClient")
+	_, ok := a.Client.(*auth.NoAuthClient)
+	assert.True(t, ok, "expected *auth.NoAuthClient")
 }
 
 func TestAuth_UnmarshalYAML_none_empty(t *testing.T) {
@@ -26,8 +31,8 @@ func TestAuth_UnmarshalYAML_none_empty(t *testing.T) {
 	var a Auth
 	require.NoError(t, yaml.Unmarshal([]byte("type:"), &a))
 	require.NotNil(t, a.Client)
-	_, ok := a.Client.(auth.NoAuthClient)
-	assert.True(t, ok, "expected auth.NoAuthClient")
+	_, ok := a.Client.(*auth.NoAuthClient)
+	assert.True(t, ok, "expected *auth.NoAuthClient")
 }
 
 func TestAuth_UnmarshalYAML_basic(t *testing.T) {

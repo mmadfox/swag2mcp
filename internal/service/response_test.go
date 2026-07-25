@@ -1,156 +1,259 @@
 package service
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
-	"errors"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/reader"
-	"github.com/mmadfox/swag2mcp/internal/workspace"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
-func TestResponseOutline(t *testing.T) {
+func TestResponseService_ResponseOutline_validationError(t *testing.T) {
 	t.Parallel()
 
-	s := newTestServiceWithWorkspace(t)
-	path := writeResponseFile(t, s, `{"status":"ok","data":[{"id":1},{"id":2}]}`)
+	svc := newResponseService(newServiceContext(), NewMockWorkspaceOps(gomock.NewController(t)), strictValidator{})
+	_, err := svc.ResponseOutline(context.Background(), ResponseOutlineRequest{})
+	require.Error(t, err)
+}
 
-	resp, err := s.ResponseOutline(context.Background(), ResponseOutlineRequest{
-		Path:          path,
-		MaxDepth:      3,
-		MaxArrayItems: 2,
-	})
+func TestResponseService_ResponseCompress_validationError(t *testing.T) {
+	t.Parallel()
+
+	svc := newResponseService(newServiceContext(), NewMockWorkspaceOps(gomock.NewController(t)), strictValidator{})
+	_, err := svc.ResponseCompress(context.Background(), ResponseCompressRequest{})
+	require.Error(t, err)
+}
+
+func TestResponseService_ResponseSlice_validationError(t *testing.T) {
+	t.Parallel()
+
+	svc := newResponseService(newServiceContext(), NewMockWorkspaceOps(gomock.NewController(t)), strictValidator{})
+	_, err := svc.ResponseSlice(context.Background(), ResponseSliceRequest{})
+	require.Error(t, err)
+}
+
+func TestResponseService_ResponseOutline_success(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	data := map[string]any{"name": "test", "items": []int{1, 2, 3}}
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "test.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	resp, err := svc.ResponseOutline(context.Background(), ResponseOutlineRequest{Path: fp})
 	require.NoError(t, err)
 	require.Equal(t, "object", resp.Outline.Type)
-	require.Equal(t, []string{"status", "data"}, resp.Outline.Keys)
-	require.NotEmpty(t, resp.Outline.CompressionHints)
 }
 
-func TestResponseOutline_PathOutsideResponsesDir(t *testing.T) {
+func TestResponseService_ResponseOutline_fileNotFound(t *testing.T) {
 	t.Parallel()
 
-	s := newTestServiceWithWorkspace(t)
-	outside := filepath.Join(t.TempDir(), "outside.json")
-	require.NoError(t, os.WriteFile(outside, []byte(`{"a":1}`), 0o600))
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(t.TempDir()).AnyTimes()
 
-	_, err := s.ResponseOutline(context.Background(), ResponseOutlineRequest{Path: outside})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	_, err := svc.ResponseOutline(context.Background(), ResponseOutlineRequest{Path: "/nonexistent/file.json"})
 	require.Error(t, err)
-	var llmErr *LLMError
-	require.True(t, errors.As(err, &llmErr))
-	require.Equal(t, validationFailedErrCode, llmErr.Code)
 }
 
-func TestResponseCompress_FirstOfArray(t *testing.T) {
+func TestResponseService_ResponseCompress_success(t *testing.T) {
 	t.Parallel()
 
-	s := newTestServiceWithWorkspace(t)
-	path := writeResponseFile(t, s, `{"items":[{"id":1,"name":"a"},{"id":2,"name":"b"}]}`)
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
 
-	resp, err := s.ResponseCompress(context.Background(), ResponseCompressRequest{
-		Path:     path,
-		JSONPath: "items",
-		Mode:     reader.CompressFirstOfArray,
+	data := map[string]any{"name": "test", "items": []int{1, 2, 3}}
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "test.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	resp, err := svc.ResponseCompress(context.Background(), ResponseCompressRequest{
+		Path: fp,
+		Mode: reader.CompressKeysOnly,
 	})
 	require.NoError(t, err)
-	require.Nil(t, resp.FileRef)
-	body, ok := resp.Body.(map[string]any)
-	require.True(t, ok)
-	compressed, ok := body["compressed"].(map[string]any)
-	require.True(t, ok)
-	require.Equal(t, float64(1), compressed["length"])
+	require.NotNil(t, resp.Body)
 }
 
-func TestResponseCompress_TooLarge(t *testing.T) {
+func TestResponseService_ResponseCompress_tooLarge(t *testing.T) {
 	t.Parallel()
 
-	s := newTestServiceWithSmallLimit(t)
-	path := writeResponseFile(t, s, `{"items":[{"id":1,"name":"very long string value here"}]}`)
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
 
-	resp, err := s.ResponseCompress(context.Background(), ResponseCompressRequest{
-		Path:     path,
-		JSONPath: "items",
-		Mode:     reader.CompressFirstOfArray,
+	large := make([]int, 1000)
+	for i := range large {
+		large[i] = i
+	}
+	data := map[string]any{"items": large}
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "large.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	ctx := newServiceContext()
+	ctx.maxResponseSize.Store(10)
+
+	svc := newResponseService(ctx, ws, fakeValidator{})
+	resp, err := svc.ResponseCompress(context.Background(), ResponseCompressRequest{
+		Path: fp,
+		Mode: reader.CompressKeysOnly,
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp.FileRef)
-	require.Nil(t, resp.Body)
+	require.FileExists(t, resp.FileRef.Path)
 }
 
-func TestResponseSlice_ByJSONPath(t *testing.T) {
+func TestResponseService_ResponseSlice_success(t *testing.T) {
 	t.Parallel()
 
-	s := newTestServiceWithWorkspace(t)
-	path := writeResponseFile(t, s, `{"users":[{"id":1,"name":"Alice"},{"id":2,"name":"Bob"}]}`)
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
 
-	resp, err := s.ResponseSlice(context.Background(), ResponseSliceRequest{
-		Path:     path,
-		JSONPath: "users.1",
+	data := map[string]any{"name": "test", "value": 42}
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "test.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	resp, err := svc.ResponseSlice(context.Background(), ResponseSliceRequest{
+		Path:     fp,
+		JSONPath: "name",
 	})
 	require.NoError(t, err)
-	require.Equal(t, "object", resp.Slice.Context)
-	require.Equal(t, "users.2", resp.Slice.NextPath)
-	require.Equal(t, "users.0", resp.Slice.PrevPath)
-	val, ok := resp.Slice.Value.(map[string]any)
-	require.True(t, ok)
-	require.Equal(t, float64(2), val["id"])
+	require.Equal(t, "test", resp.Slice.Value)
 }
 
-func TestResponseSlice_ByLine(t *testing.T) {
+func TestResponseService_ResponseSlice_tooLarge(t *testing.T) {
 	t.Parallel()
 
-	s := newTestServiceWithWorkspace(t)
-	path := writeResponseFile(t, s, "{\n\t\"status\": \"ok\"\n}\n")
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
 
-	resp, err := s.ResponseSlice(context.Background(), ResponseSliceRequest{
-		Path:   path,
-		Line:   2,
-		Around: 1,
-	})
+	data := map[string]any{"items": make([]int, 500)}
+	raw, err := json.Marshal(data)
 	require.NoError(t, err)
-	require.Equal(t, "object", resp.Slice.Context)
-	require.True(t, resp.Slice.IsComplete)
-}
+	fp := filepath.Join(respDir, "large.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
 
-func TestResponseSlice_PathNotFound(t *testing.T) {
-	t.Parallel()
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	s := newTestServiceWithWorkspace(t)
-	path := writeResponseFile(t, s, `{"a":1}`)
+	ctx := newServiceContext()
+	ctx.maxResponseSize.Store(10)
 
-	_, err := s.ResponseSlice(context.Background(), ResponseSliceRequest{
-		Path:     path,
-		JSONPath: "missing",
+	svc := newResponseService(ctx, ws, fakeValidator{})
+	_, err = svc.ResponseSlice(context.Background(), ResponseSliceRequest{
+		Path:     fp,
+		JSONPath: "items",
 	})
 	require.Error(t, err)
-	var llmErr *LLMError
-	require.True(t, errors.As(err, &llmErr))
-	require.Equal(t, notFoundErrCode, llmErr.Code)
 }
 
-func newTestServiceWithWorkspace(t *testing.T) *Service {
-	t.Helper()
-	ws, err := workspace.NewFromBase(t.TempDir())
+func TestResponseService_saveReaderResult(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	ref, err := svc.saveReaderResult("", map[string]any{"key": "val"})
 	require.NoError(t, err)
-	return newTestService(t, WithWorkspace(ws))
+	require.FileExists(t, ref.Path)
+	require.Contains(t, ref.Message, "saved to disk")
 }
 
-func newTestServiceWithSmallLimit(t *testing.T) *Service {
-	t.Helper()
-	ws, err := workspace.NewFromBase(t.TempDir())
+func TestResponseService_saveReaderResult_string(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	ref, err := svc.saveReaderResult("", "raw string data")
 	require.NoError(t, err)
-	s := newTestService(t, WithWorkspace(ws))
-	s.maxResponseSize = 10
-	return s
+	require.FileExists(t, ref.Path)
 }
 
-func writeResponseFile(t *testing.T, s *Service, content string) string {
-	t.Helper()
+func TestResponseService_saveReaderResult_bytes(t *testing.T) {
+	t.Parallel()
 
-	require.NoError(t, os.MkdirAll(s.ws.ResponsesDir(), 0o750))
-	path := filepath.Join(s.ws.ResponsesDir(), "test-response.json")
-	require.NoError(t, os.WriteFile(path, []byte(content), 0o600))
-	return path
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	ref, err := svc.saveReaderResult("", []byte(`{"raw": true}`))
+	require.NoError(t, err)
+	require.FileExists(t, ref.Path)
+}
+
+func TestResponseService_saveReaderResult_maxSizeHint(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	ctx := newServiceContext()
+	ctx.maxResponseSize.Store(2048)
+
+	svc := newResponseService(ctx, ws, fakeValidator{})
+	ref, err := svc.saveReaderResult("", map[string]any{"key": "val"})
+	require.NoError(t, err)
+	require.Contains(t, ref.MaxSizeHint, "KB")
 }

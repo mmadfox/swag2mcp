@@ -1,5 +1,10 @@
 package reader
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import "errors"
 
 var (
@@ -15,4 +20,8 @@ var (
 	ErrInvalidLineRange = errors.New("invalid line range")
 	// ErrNotJSON indicates the file is not valid JSON.
 	ErrNotJSON = errors.New("file is not valid JSON")
+	// ErrInvalidCompressMode indicates the compression mode is not supported.
+	ErrInvalidCompressMode = errors.New("invalid compress mode")
+	// ErrSelectKeysRequired indicates select_keys mode requires at least one key.
+	ErrSelectKeysRequired = errors.New("select_keys requires at least one selectKey")
 )

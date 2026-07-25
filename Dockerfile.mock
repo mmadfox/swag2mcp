@@ -1,0 +1,4 @@
+FROM gcr.io/distroless/static:nonroot
+COPY swag2mcp-mock /usr/local/bin/swag2mcp-mock
+USER 65532:65532
+ENTRYPOINT ["swag2mcp-mock"]

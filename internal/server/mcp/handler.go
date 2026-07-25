@@ -1,5 +1,10 @@
 package mcp
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
 
@@ -7,31 +12,56 @@ import (
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// Svc defines the service interface consumed by MCP tool handlers.
-type Svc interface {
-	Specs(_ context.Context) (service.SpecsResponse, error)
-	SpecByID(_ context.Context, req service.SpecByIDRequest) (service.SpecByIDResponse, error)
-	CollectionByID(_ context.Context, req service.CollectionByIDRequest) (service.CollectionByIDResponse, error)
-	CollectionsBySpec(_ context.Context, req service.CollectionsRequest) (service.CollectionsResponse, error)
-	TagsByCollection(_ context.Context, req service.TagsByCollectionRequest) (service.TagsByCollectionResponse, error)
-	TagsBySpec(_ context.Context, req service.TagsBySpecRequest) (service.TagsBySpecResponse, error)
-	TagByID(_ context.Context, req service.TagByIDRequest) (service.TagByIDResponse, error)
-	EndpointsByTag(_ context.Context, req service.EndpointsByTagRequest) (service.EndpointsByTagResponse, error)
+// CatalogReader provides read-only access to the API catalog (specs, collections, tags, endpoints).
+type CatalogReader interface {
+	Specs(ctx context.Context) (service.SpecsResponse, error)
+	SpecByID(ctx context.Context, req service.SpecByIDRequest) (service.SpecByIDResponse, error)
+	CollectionsBySpec(ctx context.Context, req service.CollectionsRequest) (service.CollectionsResponse, error)
+	CollectionByID(ctx context.Context, req service.CollectionByIDRequest) (service.CollectionByIDResponse, error)
+	TagsByCollection(ctx context.Context, req service.TagsByCollectionRequest) (service.TagsByCollectionResponse, error)
+	TagsBySpec(ctx context.Context, req service.TagsBySpecRequest) (service.TagsBySpecResponse, error)
+	TagByID(ctx context.Context, req service.TagByIDRequest) (service.TagByIDResponse, error)
+	EndpointsByTag(ctx context.Context, req service.EndpointsByTagRequest) (service.EndpointsByTagResponse, error)
 	EndpointsByCollection(
-		_ context.Context,
+		ctx context.Context,
 		req service.EndpointsByCollectionRequest,
 	) (service.EndpointsByCollectionResponse, error)
-	EndpointsBySpec(_ context.Context, req service.EndpointsBySpecRequest) (service.EndpointsBySpecResponse, error)
-	EndpointByID(_ context.Context, req service.EndpointByIDRequest) (service.EndpointByIDResponse, error)
+	EndpointsBySpec(ctx context.Context, req service.EndpointsBySpecRequest) (service.EndpointsBySpecResponse, error)
+	EndpointByID(ctx context.Context, req service.EndpointByIDRequest) (service.EndpointByIDResponse, error)
+}
+
+// EndpointExplorer provides search and inspection capabilities.
+type EndpointExplorer interface {
 	Search(ctx context.Context, req service.SearchRequest) (service.SearchResponse, error)
-	Inspect(_ context.Context, req service.InspectRequest) (service.InspectResponse, error)
-	Invoke(_ context.Context, req service.InvokeRequest) (service.InvokeResponse, error)
-	Auth(_ context.Context, req service.AuthRequest) (service.AuthResponse, error)
-	Info(_ context.Context) (service.InfoResponse, error)
-	ResponseOutline(_ context.Context, req service.ResponseOutlineRequest) (service.ResponseOutlineResponse, error)
-	ResponseCompress(_ context.Context, req service.ResponseCompressRequest) (service.ResponseCompressResponse, error)
-	ResponseSlice(_ context.Context, req service.ResponseSliceRequest) (service.ResponseSliceResponse, error)
+	Inspect(ctx context.Context, req service.InspectRequest) (service.InspectResponse, error)
+}
+
+// EndpointExecutor provides API invocation and authentication.
+type EndpointExecutor interface {
+	Invoke(ctx context.Context, req service.InvokeRequest) (service.InvokeResponse, error)
+	Auth(ctx context.Context, req service.AuthRequest) (service.AuthResponse, error)
+}
+
+// SystemInfo provides runtime information and tool definitions.
+type SystemInfo interface {
+	Info(ctx context.Context) (service.InfoResponse, error)
 	MakeToolDefinitions() (service.ToolDefinitions, error)
+}
+
+// ResponseManager provides access to saved response files.
+type ResponseManager interface {
+	ResponseOutline(ctx context.Context, req service.ResponseOutlineRequest) (service.ResponseOutlineResponse, error)
+	ResponseCompress(ctx context.Context, req service.ResponseCompressRequest) (service.ResponseCompressResponse, error)
+	ResponseSlice(ctx context.Context, req service.ResponseSliceRequest) (service.ResponseSliceResponse, error)
+}
+
+// Svc is the combined service interface consumed by MCP tool handlers.
+type Svc interface {
+	CatalogReader
+	EndpointExplorer
+	EndpointExecutor
+	SystemInfo
+	ResponseManager
 }
 
 type handler struct {

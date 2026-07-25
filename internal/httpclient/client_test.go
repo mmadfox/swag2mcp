@@ -1,5 +1,10 @@
 package httpclient
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"errors"
 	"net/http"
@@ -10,6 +15,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+type mockRoundTripper struct{}
+
+func (m *mockRoundTripper) RoundTrip(_ *http.Request) (*http.Response, error) {
+	return &http.Response{StatusCode: http.StatusOK, Header: make(http.Header)}, nil
+}
 
 func TestNew_DefaultTimeout(t *testing.T) {
 	client, err := New(Config{})
@@ -108,9 +119,7 @@ func TestNew_ProxyInvalidURL(t *testing.T) {
 }
 
 func TestNewDefault_NoGlobalConfig(t *testing.T) {
-	oldCfg := globalConfig
-	globalConfig = Config{}
-	t.Cleanup(func() { globalConfig = oldCfg })
+	globalConfig.Store(Config{})
 
 	client, err := NewDefault()
 	require.NoError(t, err)
@@ -118,9 +127,6 @@ func TestNewDefault_NoGlobalConfig(t *testing.T) {
 }
 
 func TestSetGlobalConfig(t *testing.T) {
-	oldCfg := globalConfig
-	t.Cleanup(func() { globalConfig = oldCfg })
-
 	SetGlobalConfig(Config{
 		Timeout: 10 * time.Second,
 	})
@@ -327,10 +333,4 @@ func TestRandomizingTransport_DoesNotOverwrite(t *testing.T) {
 
 	assert.Equal(t, "existing-agent", req.Header.Get("User-Agent"))
 	assert.Equal(t, "application/json", req.Header.Get("Accept"))
-}
-
-type mockRoundTripper struct{}
-
-func (m *mockRoundTripper) RoundTrip(_ *http.Request) (*http.Response, error) {
-	return &http.Response{StatusCode: http.StatusOK, Header: make(http.Header)}, nil
 }

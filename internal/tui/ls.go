@@ -1,5 +1,10 @@
 package tui
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"fmt"
 	"strings"
@@ -7,6 +12,8 @@ import (
 
 	"github.com/mmadfox/swag2mcp/internal/config"
 )
+
+const tabPadding = 3
 
 // ListConfig loads the config and returns a formatted listing of specs and collections.
 func ListConfig(configPath string, tags []string) (string, error) {
@@ -17,7 +24,7 @@ func ListConfig(configPath string, tags []string) (string, error) {
 
 	filter := config.NewFilter(tags)
 	var b strings.Builder
-	w := tabwriter.NewWriter(&b, 0, 0, 3, ' ', 0) //nolint:mnd // tab padding width
+	w := tabwriter.NewWriter(&b, 0, 0, tabPadding, ' ', 0)
 
 	fmt.Fprintln(w, "Specifications:")
 

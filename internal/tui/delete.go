@@ -1,5 +1,10 @@
 package tui
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"fmt"
 	"strings"
@@ -10,7 +15,7 @@ import (
 func promptSelection(label string, maxVal int) (int, error) {
 	fmt.Printf("  Select %s [1-%d] > ", label, maxVal)
 	var idx int
-	fmt.Scanf("%d", &idx)
+	fmt.Scanln(&idx)
 	if idx < 1 || idx > maxVal {
 		return 0, fmt.Errorf("invalid number")
 	}
@@ -62,7 +67,7 @@ func DeleteSpecTUI(configPath string) error {
 		return fmt.Errorf("write config: %w", err)
 	}
 
-	fmt.Println("  ✅ Specification deleted.")
+	fmt.Println("  Specification deleted.")
 	return nil
 }
 
@@ -122,6 +127,6 @@ func DeleteCollectionTUI(configPath string) error {
 		return fmt.Errorf("write config: %w", err)
 	}
 
-	fmt.Println("  ✅ Collection deleted.")
+	fmt.Println("  Collection deleted.")
 	return nil
 }

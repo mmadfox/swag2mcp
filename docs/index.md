@@ -1,60 +1,47 @@
 # swag2mcp
 
-**swag2mcp** bridges OpenAPI/Swagger/Postman API specifications with LLM agents via the Model Context Protocol (MCP).
+<div style="background: #dc2626; color: white; padding: 20px 24px; border-radius: 12px; text-align: center; font-size: 1.4em; font-weight: 700; margin: 24px 0;">
+  🚧 WORK IN PROGRESS — release coming soon!
+</div>
 
-```mermaid
-flowchart LR
-  A[OpenAPI Spec] --> B[swag2mcp]
-  C[Swagger Spec] --> B
-  D[Postman Collection] --> B
-  B --> E[MCP Server]
-  E --> F[LLM Agent]
-  F --> G[API Call]
-  G --> H[Response]
-  H --> F
-```
+Bridges OpenAPI/Swagger/Postman API specifications with LLM agents via the Model Context Protocol (MCP).
 
-## Features
+<a href="https://www.youtube.com/watch?v=1Da4UmE2f9U" target="_blank">
+  <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/docs/cover.png" alt="Preview">
+</a>
 
-- **19 MCP tools** for discovering, inspecting, and invoking APIs
-- **9 auth methods**: Basic, Bearer, Digest, HMAC, OAuth2, API Key, Script
-- **Full-text search** across all endpoints via bluge
-- **Interactive TUI** explorer
-- **Mock server** for development and testing
-- **3 transports**: stdio, SSE, Streamable HTTP
-- **OpenAPI 3.x**, Swagger 2.0, Postman Collections
-- **Cascade config**: global → spec → collection
-- **Rate limiting**: 10s per endpoint
-- **Response size management**: auto-save large responses to disk
-- **Export/Import** workspace as ZIP
-- **7 languages** documentation
+## Your API speaks LLM
 
-## Quick Start
+One line of config turns any OpenAPI/Swagger/Postman file into an MCP server. LLM agents discover, inspect, and invoke your APIs — zero integration code.
 
-```bash
-# Install
-go install github.com/mmadfox/swag2mcp@latest
+<img src="/architecture.svg" width="700" alt="swag2mcp architecture">
 
-# Initialize workspace
-swag2mcp init
+## Stop writing wrappers
 
-# Add an API spec
-swag2mcp add https://api.example.com/openapi.json
+Every time you connect a new API to an LLM, you write the same boilerplate: spec parsing, authentication, error handling, rate limiting. swag2mcp does it for you — 19 ready-made MCP tools.
 
-# Start MCP server
-swag2mcp mcp
-```
+## Who needs this
 
-## Integration
+| Role | Why |
+|------|-----|
+| **AI Agent Developer** | Connect any API in 2 minutes, not 2 days |
+| **MCP Engineer** | No handler code — just point to a spec |
+| **Architect** | Single API integration layer for all LLMs in your company |
+| **Data Analyst** | Access APIs via natural language, no coding |
+| **DevOps / SRE** | Monitoring and automation through LLM without extra services |
+| **Integrator** | 9 auth methods out of the box — Basic to OAuth2 to HMAC |
+| **QA Engineer** | Mock server for isolated testing without real APIs |
+| **Product Manager** | Rapid AI feature prototypes without backend work |
+| **and many others** | |
 
-| Client | Transport | Status |
-|--------|-----------|--------|
-| OpenCode | stdio / HTTP | ✅ |
-| Cursor | stdio | ✅ |
-| Claude Desktop | stdio | ✅ |
-| VS Code | stdio | ✅ |
-| Crush | stdio / HTTP | ✅ |
+---
 
 ## License
 
-MIT License
+Licensed under the **GNU Affero General Public License v3.0** (AGPL v3).
+
+See [LICENSE](https://github.com/mmadfox/swag2mcp/blob/main/LICENSE) for the full license text.
+
+```
+SPDX-License-Identifier: AGPL-3.0-only
+```

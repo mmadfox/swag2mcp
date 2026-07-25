@@ -1,5 +1,10 @@
 package mcp
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
 	"encoding/json"
@@ -16,6 +21,12 @@ import (
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
+const (
+	shutdownTimeout   = 5 * time.Second
+	readHeaderTimeout = 10 * time.Second
+	tokenExpiry       = 300 * time.Hour
+)
+
 // TransportType defines the MCP server transport.
 type TransportType int
 
@@ -26,12 +37,6 @@ const (
 	TransportSSE
 	// TransportStreamableHTTP uses the Streamable HTTP transport for MCP communication.
 	TransportStreamableHTTP
-)
-
-const (
-	shutdownTimeout   = 5 * time.Second
-	readHeaderTimeout = 10 * time.Second
-	tokenExpiry       = 300 * time.Hour
 )
 
 // TokenVerifier verifies bearer tokens for HTTP transport auth.
@@ -237,11 +242,6 @@ type slogWriter struct {
 func (w *slogWriter) Write(p []byte) (int, error) {
 	w.logger.Info(string(p))
 	return len(p), nil
-}
-
-// newTransport creates a transport for the MCP server (defaults to stdio).
-func newTransport(opts Options) sdkmcp.Transport {
-	return newStdioTransport(opts)
 }
 
 // newServer creates a new MCP server with the given tool definitions and options.

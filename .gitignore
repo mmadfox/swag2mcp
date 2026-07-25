@@ -44,3 +44,11 @@ Thumbs.db
 main
 tmp
 playground
+swag2mcp-mock
+
+# MkDocs build output
+site/
+
+# VitePress build output
+docs/.vitepress/dist/
+node_modules

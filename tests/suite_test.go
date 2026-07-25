@@ -1,5 +1,10 @@
 package tests
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"bytes"
 	"context"
@@ -22,6 +27,8 @@ const (
 )
 
 const specIDKey = "specId"
+
+var portCounter int32
 
 type BaseSuite struct {
 	suite.Suite
@@ -248,5 +255,3 @@ func (s *BaseSuite) GetEndpointID(client *mcpClient, specID, method, path string
 	s.Require().FailNowf("endpoint %s %s not found", method, path)
 	return ""
 }
-
-var portCounter int32

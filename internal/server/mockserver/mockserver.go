@@ -14,6 +14,11 @@
 // configuration (spec or collection level). The format is "host:port".
 package mockserver
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
 	"crypto/tls"
@@ -28,6 +33,12 @@ import (
 
 	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
+)
+
+const (
+	defaultOAuth2Port = 9090
+	defaultDigestPort = 9091
+	defaultHMACPort   = 9092
 )
 
 // Options holds configuration for the MockServer.
@@ -136,12 +147,6 @@ func (m *MockServer) Start(ctx context.Context) error {
 
 	return nil
 }
-
-const (
-	defaultOAuth2Port = 9090
-	defaultDigestPort = 9091
-	defaultHMACPort   = 9092
-)
 
 // startAuthServers creates and registers auth mock servers (OAuth2, Digest, HMAC).
 func (m *MockServer) startAuthServers() {

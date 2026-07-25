@@ -68,6 +68,101 @@ archives:
       - goos: windows
         formats: [zip]
 
+nfpms:
+  - id: swag2mcp
+    package_name: swag2mcp
+    builds: [swag2mcp]
+    vendor: mmadfox
+    homepage: https://github.com/mmadfox/swag2mcp
+    maintainer: mmadfox
+    description: Bridge OpenAPI/Swagger/Postman specs with LLM agents via MCP
+    formats:
+      - deb
+      - rpm
+
+dockers:
+  - id: swag2mcp
+    use: buildx
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - "ghcr.io/mmadfox/swag2mcp:{{ .Version }}"
+      - "ghcr.io/mmadfox/swag2mcp:latest"
+    build_flag_templates:
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+
+  - id: swag2mcp-mock
+    use: buildx
+    goos: linux
+    goarch: amd64
+    dockerfile: Dockerfile.mock
+    image_templates:
+      - "ghcr.io/mmadfox/swag2mcp-mock:{{ .Version }}"
+      - "ghcr.io/mmadfox/swag2mcp-mock:latest"
+    build_flag_templates:
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+
+brews:
+  - name: swag2mcp
+    ids: [swag2mcp]
+    repository:
+      owner: mmadfox
+      name: homebrew-tap
+    directory: Formula
+    commit_author:
+      name: goreleaserbot
+      email: bot@mmadfox.dev
+    homepage: https://github.com/mmadfox/swag2mcp
+    description: Bridge OpenAPI/Swagger/Postman specs with LLM agents via MCP
+    license: MIT
+
+  - name: swag2mcp-mock
+    ids: [swag2mcp-mock]
+    repository:
+      owner: mmadfox
+      name: homebrew-tap
+    directory: Formula
+    commit_author:
+      name: goreleaserbot
+      email: bot@mmadfox.dev
+    homepage: https://github.com/mmadfox/swag2mcp
+    description: Mock server for swag2mcp API testing
+    license: MIT
+
+scoops:
+  - name: swag2mcp
+    ids: [swag2mcp]
+    repository:
+      owner: mmadfox
+      name: scoop-bucket
+    directory: bucket
+    commit_author:
+      name: goreleaserbot
+      email: bot@mmadfox.dev
+    homepage: https://github.com/mmadfox/swag2mcp
+    description: Bridge OpenAPI/Swagger/Postman specs with LLM agents via MCP
+    license: MIT
+
+  - name: swag2mcp-mock
+    ids: [swag2mcp-mock]
+    repository:
+      owner: mmadfox
+      name: scoop-bucket
+    directory: bucket
+    commit_author:
+      name: goreleaserbot
+      email: bot@mmadfox.dev
+    homepage: https://github.com/mmadfox/swag2mcp
+    description: Mock server for swag2mcp API testing
+    license: MIT
+
+checksum:
+  name_template: "checksums.txt"
+
 changelog:
   sort: asc
   filters:

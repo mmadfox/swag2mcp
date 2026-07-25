@@ -1,5 +1,10 @@
 package config
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
 	"fmt"
@@ -10,10 +15,13 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/env"
 	"go.yaml.in/yaml/v3"
 )
+
+const configHTTPTimeout = 30 * time.Second
 
 // Load reads a YAML configuration from the given file path, HTTP URL, or file URL.
 func Load(confFilepath string) (*Config, error) {
@@ -58,11 +66,17 @@ func loadFromHTTPURL(urlStr string) (*Config, error) {
 	if _, err := url.Parse(urlStr); err != nil {
 		return nil, fmt.Errorf("invalid URL '%s': %w", urlStr, err)
 	}
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, urlStr, nil)
+
+	ctx, cancel := context.WithTimeout(context.Background(), configHTTPTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlStr, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	resp, err := http.DefaultClient.Do(req)
+
+	client := &http.Client{Timeout: configHTTPTimeout}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to GET from URL '%s': %w", urlStr, err)
 	}

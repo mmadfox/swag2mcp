@@ -1,5 +1,10 @@
 package auth
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
 	"net/http"
@@ -24,4 +29,25 @@ func TestNoAuthClient_Apply(t *testing.T) {
 	assert.Equal(t, "should-stay", req.Header.Get("X-Custom"))
 	assert.Nil(t, info.Headers)
 	assert.Nil(t, info.QueryParams)
+}
+
+func TestNoAuthClient_New(t *testing.T) {
+	t.Parallel()
+
+	client := NewNoAuthClient()
+	require.NoError(t, client.New())
+}
+
+func TestNoAuthClient_Type(t *testing.T) {
+	t.Parallel()
+
+	client := NewNoAuthClient()
+	assert.Equal(t, NoAuth, client.Type())
+}
+
+func TestNoAuthClient_Validate(t *testing.T) {
+	t.Parallel()
+
+	client := NewNoAuthClient()
+	require.NoError(t, client.Validate())
 }

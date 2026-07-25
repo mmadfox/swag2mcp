@@ -1,0 +1,20 @@
+#!/bin/bash
+# .githooks/pre-commit — adds AGPL header after package declaration in staged .go files
+
+for f in $(git diff --cached --name-only --diff-filter=ACM | grep '\.go$'); do
+    if [ ! -f "$f" ]; then
+        continue
+    fi
+    if grep -q "SPDX-License-Identifier" "$f"; then
+        continue
+    fi
+    sed -i '' '/^package /a\
+\
+// SPDX-License-Identifier: AGPL-3.0-only\
+//\
+// Use of this software is governed by the AGPL v3 license\
+// included in the /LICENSE file.
+' "$f"
+    goimports -w "$f" 2>/dev/null
+    git add "$f"
+done

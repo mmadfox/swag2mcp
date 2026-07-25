@@ -1,5 +1,10 @@
 package spec
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"fmt"
 	"net/http"
@@ -7,8 +12,6 @@ import (
 
 	"github.com/go-openapi/spec"
 )
-
-const specVersion20 = "2.0"
 
 // parseV2 parses a Swagger 2.0 document into a unified Doc.
 func parseV2(data []byte) (*Doc, error) {

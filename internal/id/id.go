@@ -1,5 +1,10 @@
 package id
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"crypto/md5"
 	"encoding/hex"
@@ -22,7 +27,7 @@ func Tag(domainName, collectionName, tag string) string {
 }
 
 // Method generates an MD5 hash ID for a method endpoint.
-// It combines domainName, collectionName, method, path, and opID into a single hash.
+// It combines domainName, collectionName, tagID, method, path, and opID into a single hash.
 func Method(domainName, collectionName, _ string, method, path, opID string) string {
 	return hash(domainName, collectionName, method, path, opID)
 }

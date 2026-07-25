@@ -1,5 +1,10 @@
 package tui
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
 	"encoding/json"
@@ -12,10 +17,28 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/service"
 	"github.com/mmadfox/swag2mcp/internal/spec"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
+
+const (
+	pageSize       = 10
+	maxSearchLimit = 50
+	actionHint     = "  Enter number and press Enter.  [B]ack  [M]enu.\n"
+)
+
+// ExplorerService defines the subset of service methods needed by the TUI explorer.
+type ExplorerService interface {
+	Search(ctx context.Context, req service.SearchRequest) (service.SearchResponse, error)
+	Specs(ctx context.Context) (service.SpecsResponse, error)
+	CollectionsBySpec(ctx context.Context, req service.CollectionsRequest) (service.CollectionsResponse, error)
+	TagsByCollection(ctx context.Context, req service.TagsByCollectionRequest) (service.TagsByCollectionResponse, error)
+	EndpointsByTag(ctx context.Context, req service.EndpointsByTagRequest) (service.EndpointsByTagResponse, error)
+	Inspect(ctx context.Context, req service.InspectRequest) (service.InspectResponse, error)
+	Auth(ctx context.Context, req service.AuthRequest) (service.AuthResponse, error)
+}
 
 type runState int
 
@@ -42,15 +65,9 @@ const (
 	modeAuth
 )
 
-const (
-	randSuffixLen = 6
-	pageSize      = 10
-	actionHint    = "  Enter number and press Enter.  [B]ack  [M]enu.\n"
-)
-
 type runModel struct {
 	state         runState
-	svc           *service.Service
+	svc           ExplorerService
 	ws            *workspace.Workspace
 	input         textinput.Model
 	err           error
@@ -73,7 +90,7 @@ type runModel struct {
 	mode          runMode
 }
 
-func newRunModel(svc *service.Service, ws *workspace.Workspace) runModel {
+func newRunModel(svc ExplorerService, ws *workspace.Workspace) runModel {
 	ti := textinput.New()
 	ti.CharLimit = 256
 	ti.Width = 60
@@ -289,7 +306,7 @@ func (m runModel) handleMenu() (tea.Model, tea.Cmd) {
 func (m runModel) doSearch(query string) (tea.Model, tea.Cmd) {
 	results, err := m.svc.Search(context.Background(), service.SearchRequest{
 		Query: query,
-		Limit: 50, //nolint:mnd // max search results
+		Limit: maxSearchLimit,
 	})
 	if err != nil {
 		m.err = err
@@ -550,7 +567,7 @@ func (m runModel) showEndpoint() (tea.Model, tea.Cmd) {
 	path = strings.ReplaceAll(path, "/", "_")
 	path = strings.ReplaceAll(path, "{", "")
 	path = strings.ReplaceAll(path, "}", "")
-	filename := fmt.Sprintf("%s-%s-%s-%s.json", m.epDetail.SpecDomain, method, path, randomSuffix(randSuffixLen))
+	filename := fmt.Sprintf("%s-%s-%s-%s.json", m.epDetail.SpecDomain, method, path, randomSuffix(config.RandSuffixLen))
 
 	if err := os.WriteFile(filename, data, 0600); err != nil {
 		m.err = fmt.Errorf("save endpoint: %w", err)
@@ -558,7 +575,7 @@ func (m runModel) showEndpoint() (tea.Model, tea.Cmd) {
 	}
 
 	absPath, _ := filepath.Abs(filename)
-	m.msg = fmt.Sprintf("✅ Saved to: %s", absPath)
+	m.msg = fmt.Sprintf("Saved to: %s", absPath)
 	return m, nil
 }
 
@@ -570,17 +587,17 @@ func (m runModel) View() string {
 	s += "  ╰──────────────────────────────────────────────╯\n\n"
 
 	if m.err != nil {
-		s += fmt.Sprintf("  ❌ Error: %s\n\n", m.err)
+		s += fmt.Sprintf("  Error: %s\n\n", m.err)
 	}
 
 	switch m.state {
 	case runMenu:
 		s += "  What would you like to do?\n"
 		s += "  ──────────────────────────\n\n"
-		s += "  1. 🔍  Search endpoints\n"
-		s += "  2. 📂  Browse by specification\n"
-		s += "  3. 🔑  Get auth token\n"
-		s += "  4. ❌  Exit\n\n"
+		s += "  1.  Search endpoints\n"
+		s += "  2.  Browse by specification\n"
+		s += "  3.  Get auth token\n"
+		s += "  4.  Exit\n\n"
 		s += "  Press 1, 2, 3, or 4.  (Esc/Ctrl+C to exit)\n"
 
 	case runSearchQuery:
@@ -775,7 +792,7 @@ func (m runModel) View() string {
 }
 
 // RunExplorer starts the interactive explorer TUI.
-func RunExplorer(svc *service.Service, ws *workspace.Workspace) error {
+func RunExplorer(svc ExplorerService, ws *workspace.Workspace) error {
 	p := tea.NewProgram(newRunModel(svc, ws))
 	_, err := p.Run()
 	return err

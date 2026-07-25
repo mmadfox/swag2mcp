@@ -1,5 +1,10 @@
 package tui
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"os"
 	"path/filepath"
@@ -162,6 +167,50 @@ func TestResolveConfigPath_Directory(t *testing.T) {
 	path := resolveConfigPath(tmpDir)
 	if path != filepath.Join(tmpDir, "swag2mcp.yaml") {
 		t.Errorf("got %q, want %q", path, filepath.Join(tmpDir, "swag2mcp.yaml"))
+	}
+}
+
+func TestAddSpecFromYAML_DuplicateDomain(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfgPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+
+	initialData := []byte("specs:\n  - domain: dup\n    llm_title: Original API\n    base_url: https://original.example.com\n    collections:\n      - llm_title: Main\n        location: https://example.com/spec.yaml\n")
+	if err := os.WriteFile(cfgPath, initialData, 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	yamlData := []byte("domain: dup\nllm_title: Duplicate API\nbase_url: https://dup.example.com\ncollections:\n  - llm_title: Coll\n    location: https://dup.example.com/spec.yaml\n")
+
+	err := AddSpecFromYAML(cfgPath, yamlData)
+	if err == nil {
+		t.Fatal("expected error for duplicate domain")
+	}
+	if !strings.Contains(err.Error(), "already exists") {
+		t.Errorf("expected 'already exists' error, got: %v", err)
+	}
+}
+
+func TestAddCollectionFromYAML_DuplicateLocation(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfgPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+
+	initialData := []byte("specs:\n  - domain: test-api\n    llm_title: Test API\n    base_url: https://example.com\n    collections:\n      - llm_title: Existing\n        location: https://example.com/existing.yaml\n")
+	if err := os.WriteFile(cfgPath, initialData, 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	yamlData := []byte("spec_domain: test-api\nllm_title: Duplicate Collection\nlocation: https://example.com/existing.yaml\n")
+
+	err := AddCollectionFromYAML(cfgPath, yamlData)
+	if err == nil {
+		t.Fatal("expected error for duplicate location")
+	}
+	if !strings.Contains(err.Error(), "already exists") {
+		t.Errorf("expected 'already exists' error, got: %v", err)
 	}
 }
 

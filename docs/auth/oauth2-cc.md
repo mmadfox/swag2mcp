@@ -1,33 +1,48 @@
 # OAuth2 Client Credentials
 
-OAuth2 authentication via Client Credentials Grant.
+## Purpose
+
+OAuth2 Client Credentials Grant — authentication for server-to-server communication. The application obtains a token using its client_id and client_secret, without user involvement.
+
+## When to use
+
+- Microservices and server-to-server integrations
+- Machine-to-machine communication
+- When the API uses OAuth2 and you have a client_id + client_secret
 
 ## Configuration
 
 ```yaml
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: oauth2-cc
-      oauth2_cc:
-        client_id: "{{CLIENT_ID}}"
-        client_secret: "{{CLIENT_SECRET}}"
+      config:
+        client_id: "$(CLIENT_ID)"
+        client_secret: "$(CLIENT_SECRET)"
         token_url: "https://auth.example.com/oauth/token"
-        scopes: ["read", "write"]
+        scopes:
+          - read
+          - write
 ```
-
-## How It Works
-
-1. swag2mcp requests a token from `token_url` with client_id and client_secret
-2. The Bearer token is used for all requests
-3. Token is automatically refreshed on expiry
 
 ## Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `client_id` | string | Client ID |
-| `client_secret` | string | Client secret |
-| `token_url` | string | Token endpoint URL |
-| `scopes` | array | Scope list |
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `client_id` | Yes | Client identifier |
+| `client_secret` | Yes | Client secret |
+| `token_url` | Yes | Token endpoint URL |
+| `scopes` | No | List of permissions (optional) |
+
+## Notes
+
+- swag2mcp automatically requests a new token when the current one expires
+- The token is cached until its expiry time (`expires_in`)
+- If the server doesn't provide `expires_in`, the token is considered valid for 1 hour
+- All parameters can be stored in environment variables

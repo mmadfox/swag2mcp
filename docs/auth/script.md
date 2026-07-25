@@ -1,50 +1,71 @@
 # Script Auth
 
-Authentication via external script.
+## Purpose
+
+Authentication via an external script — the most flexible method. You can write a script in any language (bash, Python, etc.) that obtains a token however you like and returns it to swag2mcp.
+
+## When to use
+
+- Custom or non-standard authentication schemes
+- Complex token acquisition logic (multi-step, with additional checks)
+- When none of the standard methods fit your needs
 
 ## Configuration
 
 ```yaml
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: script
-      script:
-        path: "./auth_scripts/get-token.sh"
-        args: ["--env", "production"]
-        timeout: 10s
+      config:
+        domain: "my-auth"
 ```
 
-## How It Works
+## Parameters
 
-1. swag2mcp runs the specified script
-2. Script outputs auth headers to stdout
-3. Output is parsed and added to the request
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `domain` | Yes | Script file name (without extension) |
 
-## Script Output Format
+## Script location
 
-Script must output headers in `Key: Value` format:
+The script must be placed in the `auth_scripts` directory of your workspace:
+
+- **Linux / macOS:** `{workspace}/auth_scripts/{domain}.sh`
+- **Windows:** `{workspace}/auth_scripts/{domain}.bat`
+
+## Script output format
+
+The script must output JSON to stdout with the token and its expiry time:
 
 ```bash
 #!/bin/bash
-# get-token.sh
+# auth_scripts/my-auth.sh
+
 TOKEN=$(curl -s -X POST https://auth.example.com/token \
   -d "grant_type=client_credentials" \
   -d "client_id=$CLIENT_ID" \
   -d "client_secret=$CLIENT_SECRET" | jq -r '.access_token')
 
-echo "Authorization: Bearer $TOKEN"
+echo "{\"token\": \"$TOKEN\", \"expires_in\": 3600}"
 ```
 
-## Parameters
+### JSON fields
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `path` | string | Script path |
-| `args` | array | Script arguments |
-| `timeout` | duration | Execution timeout (default 30s) |
+| Field | Required | Description |
+|-------|----------|-------------|
+| `token` | Yes | Authentication token |
+| `expires_in` | No | Token lifetime in seconds (default: 3600) |
 
-## Script Location
+## Notes
 
-Scripts are stored in `{workspace}/auth_scripts/`.
+- swag2mcp runs the script on every request if the cached token has expired
+- The script must complete within 30 seconds
+- The token is cached until its expiry time
+- Script filename = `{domain}.sh` (Unix) or `{domain}.bat` (Windows)
+- `domain` must not contain `/` or `\`

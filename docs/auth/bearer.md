@@ -1,26 +1,40 @@
 # Bearer Auth
 
-Bearer Token authentication (JWT, OAuth2 tokens).
+## Purpose
+
+Bearer Token authentication — the most common method for modern REST APIs. The token is sent in the `Authorization: Bearer &lt;token&gt;` header.
+
+## When to use
+
+- Modern REST APIs
+- JWT (JSON Web Tokens)
+- OAuth2 access tokens (when the token is already obtained)
+- Any API that accepts a Bearer Token
 
 ## Configuration
 
 ```yaml
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: bearer
-      bearer:
+      config:
         token: "eyJhbGciOiJIUzI1NiIs..."
 ```
 
-## How It Works
+## Parameters
 
-Header `Authorization: Bearer <token>` is added to every request.
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `token` | Yes | Bearer token (JWT, OAuth2 token, etc.) |
 
-## Environment Variables
+## Notes
 
-```yaml
-bearer:
-  token: "$(API_TOKEN)"
-```
+- The token is static — if it expires, you need to update it in the config manually
+- For automatic token refresh, use `oauth2-cc` or `oauth2-pwd`
+- Store the token in an environment variable: `token: "$(API_TOKEN)"`

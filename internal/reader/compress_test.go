@@ -1,5 +1,10 @@
 package reader_test
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"os"
 	"path/filepath"
@@ -275,7 +280,7 @@ func TestReader_CompressSelectKeys_EmptyKeys(t *testing.T) {
 		JSONPath: "users",
 		Mode:     reader.CompressSelectKeys,
 	})
-	require.Error(t, err)
+	require.ErrorIs(t, err, reader.ErrSelectKeysRequired)
 }
 
 func TestReader_Compress_InvalidMode(t *testing.T) {
@@ -288,7 +293,7 @@ func TestReader_Compress_InvalidMode(t *testing.T) {
 	_, err := r.Compress(path, reader.CompressOptions{
 		Mode: reader.CompressMode("unknown"),
 	})
-	require.Error(t, err)
+	require.ErrorIs(t, err, reader.ErrInvalidCompressMode)
 }
 
 func TestReader_Compress_JSONPathNotFound(t *testing.T) {

@@ -1,5 +1,10 @@
 package httpclient
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"strings"
 	"testing"
@@ -66,7 +71,6 @@ func TestDetectSystemLanguage(t *testing.T) {
 	t.Setenv("LANG", "ru_RU.UTF-8")
 	t.Setenv("MUI_LANG", "")
 	t.Setenv("LC_ALL", "")
-	cachedSystemLang = ""
 
 	lang := detectSystemLanguage()
 	assert.Equal(t, "ru_RU.UTF-8", lang)
@@ -76,7 +80,6 @@ func TestDetectSystemLanguage_Fallback(t *testing.T) {
 	t.Setenv("LANG", "")
 	t.Setenv("MUI_LANG", "")
 	t.Setenv("LC_ALL", "")
-	cachedSystemLang = ""
 
 	lang := detectSystemLanguage()
 	assert.Equal(t, "en_US.UTF-8", lang)
@@ -84,7 +87,6 @@ func TestDetectSystemLanguage_Fallback(t *testing.T) {
 
 func TestRandomAcceptLanguage_Russian(t *testing.T) {
 	t.Setenv("LANG", "ru_RU.UTF-8")
-	cachedSystemLang = ""
 
 	al := randomAcceptLanguage()
 	assert.Contains(t, al, "ru-RU")
@@ -92,7 +94,6 @@ func TestRandomAcceptLanguage_Russian(t *testing.T) {
 
 func TestRandomAcceptLanguage_English(t *testing.T) {
 	t.Setenv("LANG", "en_US.UTF-8")
-	cachedSystemLang = ""
 
 	al := randomAcceptLanguage()
 	assert.Contains(t, al, "en-US")
@@ -106,16 +107,4 @@ func TestRandomSecHeaders(t *testing.T) {
 	assert.Contains(t, h, "Sec-Fetch-Site")
 	assert.Contains(t, h, "Sec-Fetch-Mode")
 	assert.Contains(t, h, "Sec-Fetch-Dest")
-}
-
-func TestDetectSystemLanguage_Cache(t *testing.T) {
-	t.Setenv("LANG", "de_DE.UTF-8")
-	cachedSystemLang = ""
-
-	_ = detectSystemLanguage()
-
-	t.Setenv("LANG", "fr_FR.UTF-8")
-
-	lang := detectSystemLanguage()
-	assert.Equal(t, "de_DE.UTF-8", lang)
 }

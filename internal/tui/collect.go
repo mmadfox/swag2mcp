@@ -1,5 +1,10 @@
 package tui
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"fmt"
 	"strings"
@@ -7,9 +12,6 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
-
-// collectState represents a step in a collection sub-wizard.
-type collectState int
 
 const (
 	colDomain collectState = iota
@@ -24,6 +26,9 @@ const (
 	colCollLocation
 	colDone
 )
+
+// collectState represents a step in a collection sub-wizard.
+type collectState int
 
 // collectModel is a Bubbletea model for collecting a single spec or collection.
 type collectModel struct {

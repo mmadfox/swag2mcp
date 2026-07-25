@@ -1,5 +1,10 @@
 package spec
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"encoding/json"
 	"errors"
@@ -8,33 +13,6 @@ import (
 
 	"go.yaml.in/yaml/v3"
 )
-
-// toJSON converts raw bytes (JSON or YAML) to normalized JSON.
-func toJSON(data []byte) ([]byte, error) {
-	if len(data) == 0 {
-		return nil, errors.New("empty document")
-	}
-	// Fast path: already JSON
-	trimmed := strings.TrimLeft(string(data), " \t\r\n")
-	if trimmed != "" && trimmed[0] == '{' {
-		// Postman collections are always JSON. Check before parsing.
-		if isPostman(data) {
-			return data, nil
-		}
-		return data, nil
-	}
-	// YAML path — Postman collections are never YAML, so skip postman check.
-	var raw any
-	if err := yaml.Unmarshal(data, &raw); err != nil {
-		return nil, fmt.Errorf("not valid YAML: %w", err)
-	}
-	clean := cleanupYAML(raw)
-	jsonData, err := json.Marshal(clean)
-	if err != nil {
-		return nil, fmt.Errorf("yaml to json conversion: %w", err)
-	}
-	return jsonData, nil
-}
 
 // Parse parses a Swagger 2.0, OpenAPI 3.x, or Postman collection document (JSON or YAML)
 // and returns a unified Doc.
@@ -127,6 +105,33 @@ func fixItems(v any) {
 type versionDoc struct {
 	Swagger string `json:"swagger"`
 	OpenAPI string `json:"openapi"`
+}
+
+// toJSON converts raw bytes (JSON or YAML) to normalized JSON.
+func toJSON(data []byte) ([]byte, error) {
+	if len(data) == 0 {
+		return nil, errors.New("empty document")
+	}
+	// Fast path: already JSON
+	trimmed := strings.TrimLeft(string(data), " \t\r\n")
+	if trimmed != "" && trimmed[0] == '{' {
+		// Postman collections are always JSON. Check before parsing.
+		if isPostman(data) {
+			return data, nil
+		}
+		return data, nil
+	}
+	// YAML path — Postman collections are never YAML, so skip postman check.
+	var raw any
+	if err := yaml.Unmarshal(data, &raw); err != nil {
+		return nil, fmt.Errorf("not valid YAML: %w", err)
+	}
+	clean := cleanupYAML(raw)
+	jsonData, err := json.Marshal(clean)
+	if err != nil {
+		return nil, fmt.Errorf("yaml to json conversion: %w", err)
+	}
+	return jsonData, nil
 }
 
 // detectVersion reads the swagger or openapi field to determine the spec version.

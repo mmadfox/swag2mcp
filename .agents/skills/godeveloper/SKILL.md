@@ -35,6 +35,7 @@ This document defines how to write Go code for the **swag2mcp** project. It synt
 - Test files: `*_test.go` suffix.
 - Generated files: `mock_*_test.go` prefix (e.g., `mock_svc_test.go`).
 - `doc.go` for package documentation.
+- When a file contains helpers or sub-types used exclusively by one other file, prefix the filename with the owner's name: `invoke_param_validator.go`, `invoke_response_writer.go`, `bootstrap_config_loader.go`. This makes ownership obvious without needing package-level comments.
 
 ### 1.4 Types and Structs
 
@@ -150,9 +151,18 @@ import (
 
 ### 2.4 Grouping and Ordering
 
-- `type` declarations before `const` before `var`.
-- Related types, constants, and functions grouped together.
-- Methods grouped by receiver type.
+Within a file, declarations follow this order:
+
+1. `package` declaration
+2. `import` block
+3. `const` block — exported constants first, then unexported
+4. `var` block — exported vars first, then unexported
+5. `type` declarations — interfaces, then structs
+6. Constructor functions (`New*`)
+7. Method implementations grouped by receiver type
+8. Standalone functions
+
+Related types, constants, and functions are grouped together. Methods are grouped by receiver type.
 
 ### 2.5 Reduce Nesting
 
@@ -361,25 +371,35 @@ Use `fmt.Errorf("context: %w", err)` to wrap errors with context. Use `errors.Is
 
 ### 4.3 LLMError — Project-Specific Error Type
 
-Use `LLMError` for errors returned to the LLM. It has 4 codes:
+Use `LLMError` for errors returned to the LLM. It has 8 codes:
 - `validation_failed` — invalid input (wrong ID format, missing required fields)
 - `not_found` — entity not found in index
 - `rate_limit` — per-endpoint 10s cooldown exceeded
 - `invoke_error` — HTTP request/response failures
+- `config_error` — configuration loading or validation failure
+- `workspace_error` — workspace directory or file operation failure
+- `parse_error` — spec file parsing failure
+- `auth_error` — authentication token retrieval failure
 
-**Messages must explain what to do next:**
+**Message format rules:**
+- Each message must be ≤80 characters per line
+- Use multi-line string concatenation (`"line1 " + "line2"`) for longer messages
+- Messages must explain what went wrong AND what to do next
+- Use plain language suitable for an LLM consumer
+- No special characters (em dashes, arrows) — use hyphens and ASCII only
 
 ```go
 func (s *Service) EndpointByID(ctx context.Context, req EndpointByIDRequest) (EndpointByIDResponse, error) {
     if err := s.validateRequest(req); err != nil {
         return EndpointByIDResponse{}, NewLLMError(validationFailedErrCode,
-            "The endpoint ID is invalid — it must be a 32-character hex string. "+
+            "The endpoint ID is invalid. It must be a 32-character hex string. "+
             "Use the search tool to find the correct endpoint ID.")
     }
     ep, ok := s.index.EndpointByID(req.ID)
     if !ok {
         return EndpointByIDResponse{}, NewLLMError(notFoundErrCode,
-            fmt.Sprintf("No endpoint found with ID %q. Use the search tool to find the correct endpoint.", req.ID))
+            fmt.Sprintf("No endpoint found with ID %q. "+
+                "Use the search tool to find the correct endpoint.", req.ID))
     }
     return EndpointByIDResponse{...}, nil
 }
@@ -567,6 +587,7 @@ Run `go generate ./...` after changing the `svc` interface.
 - `*_test.go` in `package foo_test` for external tests.
 - `*_fuzz_test.go` for fuzz tests.
 - `*_benchmark_test.go` for benchmarks.
+- **One test file per source file** — `foo.go` has `foo_test.go`, `bar.go` has `bar_test.go`. Exceptions: `doc.go`, `deps.go` (interfaces only), `types.go` (data types + constants) do not need test files.
 
 ### 7.8 Service Test Pattern
 
@@ -601,6 +622,38 @@ func TestHandleSpecList(t *testing.T) {
     result, _, err := h.handleSpecList(context.Background(), nil, service.SpecsRequest{})
     require.NoError(t, err)
     require.NotNil(t, result)
+}
+```
+
+### 7.9 Non-Brittle Tests
+
+Tests must be resilient to refactoring. Follow these rules:
+
+- **Prefer `gomock.Any()` over exact matchers** — use `gomock.Any()` for arguments that are not directly relevant to the test case. Only use specific matchers (`gomock.Eq`, custom matchers) when the argument value matters for the test outcome.
+- **Test behavior, not implementation** — assert on return values and side effects, not on which internal methods were called in what order. Avoid asserting on intermediate state.
+- **Use `t.Parallel()`** in every test function to surface race conditions and reduce total runtime.
+- **Seed test data via helpers** — use `newTestService()` and `seedTestData()` instead of constructing entities inline. When the entity structure changes, only the helper needs updating.
+- **Avoid hardcoded IDs** — generate IDs via the project's `id.New()` function or extract them from seeded data. Hardcoded 32-char hex strings break when the hashing algorithm changes.
+- **Test error paths explicitly** — every error return should have at least one test case. Use `gomock.Any()` with `.Return(..., someError)` to simulate failures without coupling to specific argument values.
+- **No sleep-based timing** — use `clockmock` or inject a controllable clock for time-dependent logic. Never use `time.Sleep` in tests.
+- **Prefer `require` over `assert`** — use `require.NoError`, `require.Equal`, etc. to stop test execution on the first failure. Use `assert` only when checking multiple independent conditions in the same test.
+
+```go
+func TestEndpointByIDNotFound(t *testing.T) {
+    t.Parallel()
+    s := newTestService(t)
+    seedTestData(t, s, "test-domain")
+
+    // Use a generated ID that does not exist
+    fakeID := id.New("nonexistent")
+    _, err := s.EndpointByID(context.Background(), service.EndpointByIDRequest{
+        ID: fakeID,
+    })
+    require.Error(t, err)
+
+    var llmErr *service.LLMError
+    require.True(t, errors.As(err, &llmErr))
+    require.Equal(t, "not_found", llmErr.Code)
 }
 ```
 
@@ -728,17 +781,17 @@ type SearchResponse struct {
 ### 11.3 Functional Options Pattern
 
 ```go
-type NewOption func(*Service)
+type Option func(*Service)
 
-func New(opts ...NewOption) (*Service, error)
+func New(opts ...Option) (*Service, error)
 
-func WithDisableLLMAuth(disable bool) NewOption {
+func WithDisableLLMAuth(disable bool) Option {
     return func(s *Service) {
         s.disableLLMAuth.Store(disable)
     }
 }
 
-func WithVersion(version string) NewOption {
+func WithVersion(version string) Option {
     return func(s *Service) {
         s.version = version
     }

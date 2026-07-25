@@ -1,10 +1,15 @@
 package cache
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -14,7 +19,7 @@ import (
 )
 
 type httpClient struct {
-	cli *http.Client
+	client *http.Client
 }
 
 // defaultHTTPClient creates an httpClient with the default timeout.
@@ -23,9 +28,20 @@ func defaultHTTPClient() *httpClient {
 		Timeout: defaultHTTPTimeout,
 	})
 	if err != nil {
+		slog.Default().Warn("failed to create default HTTP client, using fallback", "error", err)
 		cli = &http.Client{Timeout: defaultHTTPTimeout}
 	}
-	return &httpClient{cli: cli}
+	return &httpClient{client: cli}
+}
+
+// SetClient replaces the underlying [http.Client].
+func (h *httpClient) SetClient(cli *http.Client) {
+	h.client = cli
+}
+
+// Do sends an HTTP request using the underlying client.
+func (h *httpClient) Do(req *http.Request) (*http.Response, error) {
+	return h.client.Do(req)
 }
 
 // Get fetches a spec from the given URL and returns the response body.
@@ -35,7 +51,7 @@ func (h *httpClient) Get(ctx context.Context, specURL string) ([]byte, error) {
 		return nil, fmt.Errorf("create request: %w", err)
 	}
 
-	resp, err := h.cli.Do(req)
+	resp, err := h.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("http get: %w", err)
 	}
@@ -51,7 +67,7 @@ func (h *httpClient) Get(ctx context.Context, specURL string) ([]byte, error) {
 	}
 
 	if len(data) == 0 {
-		return nil, errors.New("empty response body")
+		return nil, ErrEmptyBody
 	}
 
 	return data, nil

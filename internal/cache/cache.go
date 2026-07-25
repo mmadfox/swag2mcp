@@ -1,5 +1,10 @@
 package cache
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
 	"crypto/sha256"
@@ -11,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/env"
@@ -25,6 +31,10 @@ const (
 	MaxTTL = 48 * time.Hour
 	// MinTTL is the minimum time-to-live for cached spec files.
 	MinTTL = 1 * time.Hour
+
+	sourceURL   sourceType = "url"
+	sourceLocal sourceType = "local"
+
 	// defaultHTTPTimeout is the timeout for HTTP requests to download spec files.
 	defaultHTTPTimeout = 30 * time.Second
 	// fallbackTimeout is the timeout for HEAD requests in Exists.
@@ -33,13 +43,9 @@ const (
 
 type sourceType string
 
-const (
-	sourceURL   sourceType = "url"
-	sourceLocal sourceType = "local"
-)
-
 // Cache resolves spec locations to local file paths, caching sources on disk.
 type Cache struct {
+	mu           sync.Mutex
 	dir          string
 	specsDir     string
 	workspaceDir string
@@ -57,8 +63,21 @@ func New(workspaceDir string) *Cache {
 	}
 }
 
+// SetHTTPClient replaces the internal HTTP client used for downloading specs.
+// This allows the cache to use the globally configured HTTP client (with proxy,
+// timeouts, headers, etc.) instead of the default one.
+func (c *Cache) SetHTTPClient(cli *http.Client) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.cli.SetClient(cli)
+}
+
 // SetWorkspaceDir sets the workspace directory and updates all subdirectories.
 func (c *Cache) SetWorkspaceDir(workspaceDir string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	c.dir = filepath.Join(workspaceDir, CacheDirName)
 	c.specsDir = filepath.Join(workspaceDir, SpecsDirName)
 	c.workspaceDir = workspaceDir
@@ -72,8 +91,11 @@ func (c *Cache) SetWorkspaceDir(workspaceDir string) {
 //   - Local paths inside workspaceDir/specs are returned as-is (not cached).
 //   - Local paths outside workspaceDir/specs are cached on disk.
 func (c *Cache) Resolve(ctx context.Context, location string) (string, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if location == "" {
-		return "", errors.New("empty location")
+		return "", ErrEmptyLocation
 	}
 
 	normalized, stype, err := normalizeLocation(location)
@@ -141,9 +163,12 @@ func (c *Cache) isInsideSpecs(path string) bool {
 // Returns the resolved path only if the file actually exists there.
 func (c *Cache) resolveSpecsPath(location string) (string, bool) {
 	clean := filepath.Clean(location)
-	if !strings.HasPrefix(clean, SpecsDirName+string(filepath.Separator)) && clean != SpecsDirName {
+	isSpecsDir := clean == SpecsDirName
+	isInsideSpecs := strings.HasPrefix(clean, SpecsDirName+string(filepath.Separator))
+	if !isSpecsDir && !isInsideSpecs {
 		return "", false
 	}
+
 	resolved := filepath.Join(c.workspaceDir, clean)
 	if _, err := os.Stat(resolved); err != nil {
 		return "", false
@@ -205,8 +230,10 @@ func (c *Cache) loadSource(ctx context.Context, normalized string, stype sourceT
 // For http(s):// URLs it checks the cache first, then does a HEAD request.
 // Returns nil if accessible, [LocationError] otherwise.
 func (c *Cache) Exists(ctx context.Context, location string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if location == "" {
-		return errors.New("empty location")
+		return ErrEmptyLocation
 	}
 
 	stype, path, err := classifyLocation(location)
@@ -220,7 +247,11 @@ func (c *Cache) Exists(ctx context.Context, location string) error {
 	case sourceURL:
 		return c.existsURL(ctx, path)
 	default:
-		return &LocationError{Location: location, Type: "file", Err: errors.New("unknown location type")}
+		return &LocationError{
+			Location: location,
+			Type:     "file",
+			Err:      errors.New("unknown location type"),
+		}
 	}
 }
 
@@ -234,7 +265,11 @@ func classifyLocation(location string) (sourceType, string, error) {
 	case isFileURL:
 		path, err := fileURIToPath(location)
 		if err != nil {
-			return "", "", &LocationError{Location: location, Type: "file", Err: err}
+			return "", "", &LocationError{
+				Location: location,
+				Type:     "file",
+				Err:      err,
+			}
 		}
 		return sourceLocal, path, nil
 	case isURL:
@@ -256,7 +291,11 @@ func (c *Cache) existsFile(path string) error {
 		}
 	}
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return &LocationError{Location: path, Type: "file", Err: fmt.Errorf("file not found at %s", path)}
+		return &LocationError{
+			Location: path,
+			Type:     "file",
+			Err:      fmt.Errorf("file not found at %s", path),
+		}
 	}
 	return nil
 }
@@ -309,17 +348,29 @@ func (c *Cache) existsURL(ctx context.Context, url string) error {
 
 	req, err := http.NewRequestWithContext(headCtx, http.MethodHead, url, nil)
 	if err != nil {
-		return &LocationError{Location: url, Type: "url", Err: fmt.Errorf("create request: %w", err)}
+		return &LocationError{
+			Location: url,
+			Type:     "url",
+			Err:      fmt.Errorf("create request: %w", err),
+		}
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := c.cli.Do(req)
 	if err != nil {
-		return &LocationError{Location: url, Type: "url", Err: fmt.Errorf("unreachable: %w", err)}
+		return &LocationError{
+			Location: url,
+			Type:     "url",
+			Err:      fmt.Errorf("unreachable: %w", err),
+		}
 	}
 	_ = resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return &LocationError{Location: url, Type: "url", Err: fmt.Errorf("unexpected status %d", resp.StatusCode)}
+		return &LocationError{
+			Location: url,
+			Type:     "url",
+			Err:      fmt.Errorf("unexpected status %d", resp.StatusCode),
+		}
 	}
 
 	return nil

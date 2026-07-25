@@ -1,5 +1,10 @@
 package tui
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"bytes"
 	"fmt"
@@ -16,9 +21,6 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
-
-// state represents the current step in the initialization wizard.
-type state int
 
 const (
 	stateWorkspaceDir state = iota
@@ -38,6 +40,9 @@ const (
 	stateConfirm
 	stateDone
 )
+
+// state represents the current step in the initialization wizard.
+type state int
 
 // authFieldDef describes a single field for an auth method.
 type authFieldDef struct {
@@ -199,7 +204,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "b", "B":
-			if m.state == stateAskAddSpec || m.state == stateAskAddCollection || m.state == stateAskAddAnotherSpec || m.state == stateConfirm || m.state == stateDirNotEmpty {
+			if m.state == stateAskAddSpec ||
+				m.state == stateAskAddCollection ||
+				m.state == stateAskAddAnotherSpec ||
+				m.state == stateConfirm ||
+				m.state == stateDirNotEmpty {
 				if len(m.prevStates) > 0 {
 					last := m.prevStates[len(m.prevStates)-1]
 					m.prevStates = m.prevStates[:len(m.prevStates)-1]
@@ -597,10 +606,10 @@ func (m model) View() string {
 
 	case stateDone:
 		if m.err != nil {
-			s += fmt.Sprintf("  ❌ Error: %s\n\n", m.err)
+			s += fmt.Sprintf("  Error: %s\n\n", m.err)
 		} else {
-			s += fmt.Sprintf("  ✅ Configuration written to: %s\n", m.configPath)
-			s += fmt.Sprintf("  ✅ Workspace initialized at: %s\n", m.workspaceDir)
+			s += fmt.Sprintf("  Configuration written to: %s\n", m.configPath)
+			s += fmt.Sprintf("  Workspace initialized at: %s\n", m.workspaceDir)
 			s += "  Run `swag2mcp mcp" + m.mcpPathHint() + "` to start the server.\n\n"
 		}
 	}
@@ -680,8 +689,8 @@ func WriteResult(configPath, workspaceDir string, specs []SpecInput) error {
 	// Validate the written config and warn if issues are found.
 	var cfg config.Config
 	if parseErr := yaml.Unmarshal(data, &cfg); parseErr == nil {
-		if verr := cfg.Validate(config.NewFilter(nil)); verr != nil {
-			fmt.Fprintf(os.Stderr, "  ⚠️  Configuration written with validation warnings:\n    %s\n    File: %s\n", verr, configPath)
+		if validationErr := cfg.Validate(config.NewFilter(nil)); validationErr != nil {
+			fmt.Fprintf(os.Stderr, "  Configuration written with validation warnings:\n    %s\n    File: %s\n", validationErr, configPath)
 		}
 	}
 

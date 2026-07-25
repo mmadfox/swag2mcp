@@ -1,5 +1,10 @@
 package commands
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"fmt"
 	"os"
@@ -68,6 +73,8 @@ func runExport(basePath, outputPath string, specs []string, cmd *cobra.Command) 
 	if svcErr != nil {
 		return fmt.Errorf("service: %w", svcErr)
 	}
+
+	setupGlobalHTTPClient(ws.ConfigPath())
 
 	if outputPath == "" {
 		cwd, err := os.Getwd()

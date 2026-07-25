@@ -1,9 +1,19 @@
 package httpclient
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"math/rand/v2"
 	"os"
 	"strings"
+)
+
+const (
+	langCodeLen   = 2
+	langRegionLen = 5
 )
 
 var (
@@ -102,13 +112,6 @@ var (
 		"script",
 		"image",
 	}
-
-	cachedSystemLang string
-)
-
-const (
-	langCodeLen   = 2
-	langRegionLen = 5
 )
 
 // randomUserAgent returns a random browser User-Agent string.
@@ -160,12 +163,8 @@ func randomSecFetchDest() string {
 }
 
 // detectSystemLanguage detects the system language from environment variables.
-// Falls back to en_US.UTF-8 if none are set. Caches the result.
+// Falls back to en_US.UTF-8 if none are set.
 func detectSystemLanguage() string {
-	if cachedSystemLang != "" {
-		return cachedSystemLang
-	}
-
 	lang := os.Getenv("LANG")
 	if lang == "" {
 		lang = os.Getenv("MUI_LANG")
@@ -177,7 +176,6 @@ func detectSystemLanguage() string {
 		lang = "en_US.UTF-8"
 	}
 
-	cachedSystemLang = lang
 	return lang
 }
 

@@ -1,5 +1,10 @@
 package reader
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"bufio"
 	"encoding/json"
@@ -8,6 +13,14 @@ import (
 	"strconv"
 	"strings"
 )
+
+// pathForChild builds a dotted path to a child node.
+func pathForChild(parent, child string) string {
+	if parent == "" {
+		return child
+	}
+	return parent + "." + child
+}
 
 // Outline returns a structural summary of the JSON file at path.
 func (r *reader) Outline(path string, opts OutlineOptions) (Outline, error) {
@@ -401,12 +414,4 @@ func buildNavigationHints(path string, node outlineNode) navigation {
 		}
 	}
 	return nav
-}
-
-// pathForChild builds a dotted path to a child node.
-func pathForChild(parent, child string) string {
-	if parent == "" {
-		return child
-	}
-	return parent + "." + child
 }

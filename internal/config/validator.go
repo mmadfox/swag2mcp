@@ -1,5 +1,10 @@
 package config
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
 	"errors"
@@ -73,6 +78,7 @@ type ValidateOptions struct {
 func ValidateConfig(cfg *Config, opts ValidateOptions) error {
 	var errs validationErrors
 
+	cfg.SetDefaults()
 	cfg.HTTPClient.SetDefaults()
 
 	filter := NewFilter(opts.Tags)

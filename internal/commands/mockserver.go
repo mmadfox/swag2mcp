@@ -1,8 +1,14 @@
 package commands
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -37,6 +43,10 @@ Addresses for mock servers are taken from the base_mock_url field in the
 configuration (spec or collection level). Format: "host:port".`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(command *cobra.Command, arguments []string) error {
+			if showVersion, _ := command.Flags().GetBool("version"); showVersion {
+				fmt.Fprintf(os.Stdout, "swag2mcp-mock %s\n", Version)
+				return nil
+			}
 			basePath := ""
 			if len(arguments) > 0 {
 				basePath = arguments[0]
@@ -45,11 +55,14 @@ configuration (spec or collection level). Format: "host:port".`,
 		},
 	}
 
+	command.Flags().Bool("version", false, "Print the swag2mcp-mock version")
 	command.Flags().BoolVar(&options.TLS, "tls", false, "Enable TLS with self-signed certificate")
 	command.Flags().StringVar(&options.TLSCert, "tls-cert", "", "Path to TLS certificate file")
 	command.Flags().StringVar(&options.TLSKey, "tls-key", "", "Path to TLS key file")
 	command.SilenceUsage = true
 	command.SilenceErrors = true
+
+	command.AddCommand(newMockVersionCmd())
 
 	return command
 }

@@ -594,7 +594,3 @@ Tested against workspace with 4 specs: meteo, binance, dadjoke, pokeapi.
 - [ ] `http_client.timeout` — actual request timeout (not covered — requires slow server)
 - [ ] `base_url` per collection — overrides spec base_url (not covered — config validated but not tested with invoke)
 
-### 12.8 Known Issues / Bugs Found
-
-- ⚠️ UPPERCASE domain (e.g. "PETSTORE") accepted by `swag2mcp validate` without error — should either normalize to lowercase or reject (manual — `swag2mcp ls` shows "PETSTORE" as-is)
-- ⚠️ `search("path:/pets")` returns empty results — path field search may not work as expected with leading slash

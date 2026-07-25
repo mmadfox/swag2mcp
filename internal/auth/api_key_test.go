@@ -1,5 +1,10 @@
 package auth
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
 	"net/http"
@@ -81,4 +86,43 @@ func TestAPIKeyAuthClient_Apply(t *testing.T) {
 		assert.Empty(t, req.Header.Get("X-Key"))
 		assert.Nil(t, info.Headers)
 	})
+}
+
+func TestAPIKeyAuthClient_New(t *testing.T) {
+	t.Parallel()
+
+	client := &APIKeyAuthClient{Key: "X-Key", Value: "val", In: "header"}
+	require.NoError(t, client.New())
+}
+
+func TestAPIKeyAuthClient_Validate(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		client  *APIKeyAuthClient
+		wantErr bool
+	}{
+		{name: "valid", client: &APIKeyAuthClient{Key: "X-Key", Value: "val", In: "header"}, wantErr: false},
+		{name: "empty", client: &APIKeyAuthClient{}, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := tt.client.Validate()
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestAPIKeyAuthClient_Type(t *testing.T) {
+	t.Parallel()
+
+	client := &APIKeyAuthClient{}
+	assert.Equal(t, APIKeyAuth, client.Type())
 }

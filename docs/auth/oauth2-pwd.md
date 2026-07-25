@@ -1,40 +1,52 @@
-# OAuth2 Password
+# OAuth2 Password Grant
 
-OAuth2 authentication via Password Grant (Resource Owner Password Credentials).
+## Purpose
+
+OAuth2 Resource Owner Password Grant — authentication using a user's username and password. Suitable for first-party applications where the user trusts the app with their credentials.
+
+## When to use
+
+- First-party applications (mobile, web)
+- Integration with Keycloak and similar Identity Providers
+- When the API supports OAuth2 Password Grant
 
 ## Configuration
 
 ```yaml
 specs:
-  - domain: "api.example.com"
-    location: "https://api.example.com/openapi.json"
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    collections:
+      - llm_title: Jokes
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
     auth:
       type: oauth2-pwd
-      oauth2_pwd:
-        client_id: "{{CLIENT_ID}}"
-        client_secret: "{{CLIENT_SECRET}}"
-        username: "{{USERNAME}}"
-        password: "{{PASSWORD}}"
+      config:
+        client_id: "$(CLIENT_ID)"
+        client_secret: "$(CLIENT_SECRET)"
+        username: "$(USERNAME)"
+        password: "$(PASSWORD)"
         token_url: "https://auth.example.com/oauth/token"
-        scopes: ["openid", "profile"]
+        scopes:
+          - openid
+          - profile
 ```
-
-## How It Works
-
-1. swag2mcp sends username + password to `token_url`
-2. The Bearer token is used for all requests
-3. Token is automatically refreshed on expiry
 
 ## Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `client_id` | string | Client ID |
-| `client_secret` | string | Client secret (optional, for public client) |
-| `username` | string | Username |
-| `password` | string | Password |
-| `token_url` | string | Token endpoint URL |
-| `scopes` | array | Scope list |
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `client_id` | Yes | Client identifier |
+| `username` | Yes | Username |
+| `password` | Yes | Password |
+| `token_url` | Yes | Token endpoint URL |
+| `client_secret` | No | Client secret (optional, for public clients) |
+| `scopes` | No | List of permissions (optional) |
 
-!!! tip "Public Client"
-    `client_secret` is optional — public clients are supported (e.g., Keycloak).
+## Notes
+
+- `client_secret` is optional — **public clients** are supported (e.g., Keycloak)
+- swag2mcp automatically refreshes the token when it expires
+- The token is cached until expiry
+- All parameters can be stored in environment variables

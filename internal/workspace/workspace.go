@@ -1,5 +1,10 @@
 package workspace
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
 	"errors"
@@ -12,11 +17,15 @@ import (
 	"runtime"
 	"slices"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/mmadfox/swag2mcp/internal/httpclient"
 )
 
 // Workspace manages the workspace directory and its standard subdirectories.
 type Workspace struct {
+	mu   sync.RWMutex
 	root string
 }
 
@@ -71,6 +80,8 @@ func (w *Workspace) Init() error {
 
 // Root returns the absolute path to the workspace root directory.
 func (w *Workspace) Root() string {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
 	return w.root
 }
 
@@ -95,6 +106,8 @@ func ConfigPathIn(workspaceDir string) string {
 
 // ConfigPath returns the config file path inside this workspace.
 func (w *Workspace) ConfigPath() string {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
 	return ConfigPathIn(w.root)
 }
 
@@ -308,7 +321,12 @@ func (w *Workspace) downloadFromHTTP(ctx context.Context, source string) ([]byte
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
 	}
-	resp, err := http.DefaultClient.Do(req)
+
+	client, err := httpclient.NewDefault()
+	if err != nil {
+		return nil, fmt.Errorf("create http client: %w", err)
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("download %q: %w", source, err)
 	}

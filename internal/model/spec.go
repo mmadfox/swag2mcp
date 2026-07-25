@@ -1,6 +1,13 @@
 package model
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
+	"time"
+
 	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/httpclient"
 	"github.com/mmadfox/swag2mcp/internal/spec"
@@ -8,8 +15,15 @@ import (
 
 // HTTPClientConfig holds per-request HTTP settings for a spec or collection.
 type HTTPClientConfig struct {
-	Headers map[string]string   `json:"headers,omitempty"`
-	Cookies []httpclient.Cookie `json:"cookies,omitempty"`
+	Randomize       bool                    `json:"random,omitempty"`
+	Proxy           *httpclient.ProxyConfig `json:"proxy,omitempty"`
+	Headers         map[string]string       `json:"headers,omitempty"`
+	Cookies         []httpclient.Cookie     `json:"cookies,omitempty"`
+	UserAgent       string                  `json:"userAgent,omitempty"`
+	Timeout         time.Duration           `json:"timeout,omitempty"`
+	FollowRedirects *bool                   `json:"followRedirects,omitempty"`
+	MaxRedirects    *int                    `json:"maxRedirects,omitempty"`
+	MaxResponseSize *int                    `json:"maxResponseSize,omitempty"`
 }
 
 // Spec represents an API specification with its domain, metadata, authentication, and HTTP client config.
@@ -77,6 +91,9 @@ type Endpoint struct {
 
 // SummaryOrFallback returns the endpoint summary, falling back to description, then "Method /path".
 func (e *Endpoint) SummaryOrFallback() string {
+	if e.Operation == nil {
+		return e.Name + " " + e.Path
+	}
 	if e.Operation.Summary != "" {
 		return e.Operation.Summary
 	}

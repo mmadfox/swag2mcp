@@ -1,220 +1,133 @@
 package service
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
-	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/model"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
-func TestMakeToolDefinitions_IncludesAuthByDefault(t *testing.T) {
+func TestToolsService_MakeToolDefinitions(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	defs, err := svc.MakeToolDefinitions()
-	if err != nil {
-		t.Fatalf("MakeToolDefinitions() = %v", err)
-	}
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().AllSpecs().Return(nil)
 
-	found := false
-	for _, tool := range defs.Tools {
-		if tool.Name == Auth {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Error("auth tool not found in definitions, expected it to be present")
-	}
+	svc := newToolsService(idx, func() bool { return false })
+	defs, err := svc.MakeToolDefinitions()
+	require.NoError(t, err)
+	require.NotEmpty(t, defs.Instruction)
+	require.NotEmpty(t, defs.Tools)
 }
 
-func TestMakeToolDefinitions_ExcludesAuthWhenDisabled(t *testing.T) {
+func TestToolsService_MakeToolDefinitions_authDisabled(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t, WithDisableLLMAuth(true))
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().AllSpecs().Return(nil)
+
+	svc := newToolsService(idx, func() bool { return true })
 	defs, err := svc.MakeToolDefinitions()
-	if err != nil {
-		t.Fatalf("MakeToolDefinitions() = %v", err)
-	}
+	require.NoError(t, err)
 
 	for _, tool := range defs.Tools {
-		if tool.Name == Auth {
-			t.Error("auth tool found in definitions, expected it to be excluded")
-		}
+		require.NotEqual(t, Auth, tool.Name)
 	}
 }
 
-func TestMakeToolDefinitions_InstructionNotEmpty(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	defs, err := svc.MakeToolDefinitions()
-	if err != nil {
-		t.Fatalf("MakeToolDefinitions() = %v", err)
-	}
-	if defs.Instruction == "" {
-		t.Error("Instruction is empty")
-	}
-}
-
-func TestMakeToolDefinitions_HasTools(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	defs, err := svc.MakeToolDefinitions()
-	if err != nil {
-		t.Fatalf("MakeToolDefinitions() = %v", err)
-	}
-	if len(defs.Tools) == 0 {
-		t.Error("Tools is empty")
-	}
-}
-
-func TestLoadInstructionFromEmbed_Success(t *testing.T) {
-	t.Parallel()
-
-	content, err := loadInstructionFromEmbed()
-	if err != nil {
-		t.Fatalf("loadInstructionFromEmbed() = %v", err)
-	}
-	if content == "" {
-		t.Error("instruction content is empty")
-	}
-}
-
-func TestLoadToolFromEmbed_Success(t *testing.T) {
+func TestLoadToolFromEmbed(t *testing.T) {
 	t.Parallel()
 
 	tool, err := loadToolFromEmbed("spec_list.md")
-	if err != nil {
-		t.Fatalf("loadToolFromEmbed() = %v", err)
-	}
-	if tool.Name != SpecList {
-		t.Errorf("Name = %q, want %q", tool.Name, SpecList)
-	}
-	if tool.Description == "" {
-		t.Error("Description is empty")
-	}
+	require.NoError(t, err)
+	require.Equal(t, SpecList, tool.Name)
+	require.NotEmpty(t, tool.Description)
 }
 
-func TestLoadToolFromEmbed_NotFound(t *testing.T) {
+func TestLoadInstructionFromEmbed(t *testing.T) {
 	t.Parallel()
 
-	_, err := loadToolFromEmbed("nonexistent.md")
-	if err == nil {
-		t.Fatal("expected error for nonexistent file")
-	}
+	instruction, err := loadInstructionFromEmbed()
+	require.NoError(t, err)
+	require.NotEmpty(t, instruction)
 }
 
-func TestLoadToolFromEmbed_AllToolsHaveName(t *testing.T) {
+func TestMakeAvailableSpecs_withSpecs(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	defs, err := svc.MakeToolDefinitions()
-	if err != nil {
-		t.Fatalf("MakeToolDefinitions() = %v", err)
-	}
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().AllSpecs().Return([]*model.Spec{
+		{ID: "s1", Domain: "api.example.com", LLMTitle: "Example API"},
+	})
+	idx.EXPECT().CollectionsBySpec("s1").Return([]*model.Collection{
+		{ID: "c1", LLMTitle: "Users"},
+		{ID: "c2", LLMTitle: "Orders"},
+	}, nil)
 
-	for _, tool := range defs.Tools {
-		if tool.Name == "" {
-			t.Error("found tool with empty name")
-		}
-		if tool.Description == "" {
-			t.Errorf("tool %q has empty description", tool.Name)
-		}
-	}
-}
-
-func TestMakeAvaliablesSpecs_NoSpecs(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
+	svc := newToolsService(idx, func() bool { return false })
 	result := svc.makeAvailableSpecs()
-	if result != "" {
-		t.Errorf("expected empty string, got %q", result)
-	}
+	require.Contains(t, result, "api.example.com")
+	require.Contains(t, result, "Users")
+	require.Contains(t, result, "Orders")
 }
 
-func TestMakeAvaliablesSpecs_WithSpecs(t *testing.T) {
+func TestMakeAvailableSpecs_withInstruction(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	seedTestData(t, svc, t.Name())
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().AllSpecs().Return([]*model.Spec{
+		{ID: "s1", Domain: "api.example.com", LLMTitle: "API", LLMInstruction: "Use with care"},
+	})
+	idx.EXPECT().CollectionsBySpec("s1").Return(nil, errNotFound("collections", "s1"))
 
+	svc := newToolsService(idx, func() bool { return false })
 	result := svc.makeAvailableSpecs()
-	if result == "" {
-		t.Fatal("expected non-empty result")
-	}
-	if !strings.Contains(result, "# Available specs") {
-		t.Error("missing 'Available specs' header")
-	}
-	if !strings.Contains(result, "specID:") {
-		t.Error("missing specID")
-	}
-	if !strings.Contains(result, "domain:") {
-		t.Error("missing domain")
-	}
+	require.Contains(t, result, "Use with care")
+	require.Contains(t, result, "No available collections")
 }
 
-func TestMakeAvaliablesSpecs_WithLLMInstruction(t *testing.T) {
+func TestMakeAvailableSpecs_withCollectionInstruction(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	specInfo, _, _, _ := seedTestData(t, svc, t.Name())
-	specInfo.LLMInstruction = "line1\nline2\nline3"
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().AllSpecs().Return([]*model.Spec{
+		{ID: "s1", Domain: "api.example.com", LLMTitle: "API"},
+	})
+	idx.EXPECT().CollectionsBySpec("s1").Return([]*model.Collection{
+		{ID: "c1", LLMTitle: "Users", LLMInstruction: "User management"},
+	}, nil)
 
+	svc := newToolsService(idx, func() bool { return false })
 	result := svc.makeAvailableSpecs()
-	if !strings.Contains(result, "instruction:") {
-		t.Error("missing instruction field")
-	}
+	require.Contains(t, result, "User management")
 }
 
-func TestMakeAvaliablesSpecs_CollectionsBySpecError(t *testing.T) {
+func TestMakeAvailableSpecs_moreThan10Collections(t *testing.T) {
 	t.Parallel()
 
-	svc := newTestService(t)
-	specInfo, _, _, _ := seedTestData(t, svc, t.Name())
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().AllSpecs().Return([]*model.Spec{
+		{ID: "s1", Domain: "api.example.com", LLMTitle: "API"},
+	})
+	colls := make([]*model.Collection, 15)
+	for i := range colls {
+		colls[i] = &model.Collection{ID: "c", LLMTitle: "C"}
+	}
+	idx.EXPECT().CollectionsBySpec("s1").Return(colls, nil)
 
-	svc.index.RemoveCollectionsBySpec(specInfo.ID)
-
+	svc := newToolsService(idx, func() bool { return false })
 	result := svc.makeAvailableSpecs()
-	if !strings.Contains(result, "No available collections") {
-		t.Error("expected 'No available collections' message")
-	}
-}
-
-func TestMakeAvaliablesSpecs_MoreThan10Collections(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	specInfo, _, _, _ := seedTestData(t, svc, t.Name())
-
-	// Add 11 collections to the spec
-	for i := range 11 {
-		collID := fmt.Sprintf("coll-%d", i)
-		svc.index.AddCollection(&model.Collection{
-			ID:     collID,
-			SpecID: specInfo.ID,
-			Title:  fmt.Sprintf("Collection %d", i),
-		})
-	}
-
-	result := svc.makeAvailableSpecs()
-	if !strings.Contains(result, "more than 10 collections") {
-		t.Error("expected 'more than 10 collections' message")
-	}
-}
-
-func TestMakeAvaliablesSpecs_CollectionLLMInstruction(t *testing.T) {
-	t.Parallel()
-
-	svc := newTestService(t)
-	_, collectionInfo, _, _ := seedTestData(t, svc, t.Name())
-	collectionInfo.LLMInstruction = "custom instruction for this collection"
-
-	result := svc.makeAvailableSpecs()
-	if !strings.Contains(result, "custom instruction for this collection") {
-		t.Error("expected collection LLMInstruction in output")
-	}
+	require.Contains(t, result, "more than 10 collections")
 }

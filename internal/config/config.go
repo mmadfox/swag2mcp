@@ -1,11 +1,27 @@
 package config
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"fmt"
 	"iter"
 	"time"
 
 	"github.com/mmadfox/swag2mcp/internal/env"
+)
+
+const (
+	defaultUserAgent         = "swag2mcp-global/1.0"
+	defaultTimeout           = 30 * time.Second
+	defaultMaxRedirects      = 10
+	defaultRateLimitInterval = 10 * time.Second
+	MaxAllowedResponseSize   = 10485760 // 10 MB
+	DefaultMaxResponseSize   = 1048576  // 1 MB
+	defaultMaxResponseSize   = DefaultMaxResponseSize
+	RandSuffixLen            = 6
 )
 
 // Cookie represents an HTTP cookie for configuration.
@@ -27,10 +43,16 @@ type ProxyConfig struct {
 }
 
 // HTTPClientConfig holds per-request HTTP settings for a spec or collection.
-// These values are applied to each request at invocation time.
 type HTTPClientConfig struct {
-	Headers map[string]string `yaml:"headers,omitempty"`
-	Cookies []Cookie          `yaml:"cookies,omitempty"`
+	Randomize       bool              `yaml:"random,omitempty"`
+	Proxy           *ProxyConfig      `yaml:"proxy,omitempty"              validate:"omitempty"`
+	Headers         map[string]string `yaml:"headers,omitempty"`
+	Cookies         []Cookie          `yaml:"cookies,omitempty"            validate:"omitempty,dive"`
+	UserAgent       string            `yaml:"user_agent,omitempty"`
+	Timeout         time.Duration     `yaml:"timeout,omitempty"            validate:"omitempty,min=1000000000,max=300000000000"`
+	FollowRedirects *bool             `yaml:"follow_redirects,omitempty"`
+	MaxRedirects    *int              `yaml:"max_redirects,omitempty"      validate:"omitempty,min=0,max=50"`
+	MaxResponseSize *int              `yaml:"max_response_size,omitempty"   validate:"omitempty,min=256,max=10485760"`
 }
 
 // GlobalHTTPClientConfig holds global HTTP client settings.
@@ -53,26 +75,54 @@ type MockAuthConfig struct {
 	HMACPort   int `yaml:"hmac_port,omitempty"   validate:"omitempty,min=1024,max=65535"`
 }
 
+// MCPConfig holds the MCP server configuration.
+type MCPConfig struct {
+	Transport string         `yaml:"transport,omitempty" validate:"omitempty,oneof=stdio sse streamable-http"`
+	Addr      string         `yaml:"addr,omitempty"`
+	Path      string         `yaml:"path,omitempty"`
+	Auth      *MCPAuthConfig `yaml:"auth,omitempty"`
+}
+
+// MCPAuthConfig holds the MCP server authentication configuration.
+type MCPAuthConfig struct {
+	Token string `yaml:"token,omitempty"`
+}
+
 // Config is the top-level swag2mcp configuration.
-//
-// Validation rules:
-//   - Specs: at least one spec must be defined.
-//   - MockEnabled: when true, all specs and collections must have BaseMockURL set.
 type Config struct {
 	MockEnabled        bool                    `yaml:"mock_enabled,omitempty"`
 	MockAuth           *MockAuthConfig         `yaml:"mock_auth,omitempty"`
 	HTTPClient         *GlobalHTTPClientConfig `yaml:"http_client,omitempty"`
 	MCP                *MCPConfig              `yaml:"mcp,omitempty"`
 	DisableRateLimiter bool                    `yaml:"disable_ratelimiter,omitempty"`
+	RateLimitInterval  time.Duration           `yaml:"rate_limit_interval,omitempty"`
 	Specs              []Spec                  `yaml:"specs"`
 }
 
-const (
-	defaultUserAgent       = "swag2mcp-global/1.0"
-	defaultTimeout         = 30 * time.Second
-	defaultMaxRedirects    = 10
-	defaultMaxResponseSize = 1048576
-)
+// Spec defines a single API specification group.
+type Spec struct {
+	Domain         string            `yaml:"domain"                    validate:"required,domain_format"`
+	LLMTitle       string            `yaml:"llm_title,omitempty"       validate:"required,min=5,max=120,title_format"`
+	LLMInstruction string            `yaml:"llm_instruction,omitempty" validate:"omitempty,max=500,instruction_format"`
+	Collections    []Collection      `yaml:"collections,omitempty"     validate:"required,min=1,max=30"`
+	Disable        bool              `yaml:"disable,omitempty"`
+	Tags           []string          `yaml:"tags,omitempty"`
+	BaseURL        string            `yaml:"base_url,omitempty"        validate:"required,url"`
+	HTTPClient     *HTTPClientConfig `yaml:"http_client,omitempty"`
+	Auth           Auth              `yaml:"auth,omitempty"`
+}
+
+// Collection defines a single spec file (Swagger/OpenAPI) within a Spec.
+type Collection struct {
+	LLMTitle       string            `yaml:"llm_title,omitempty"       json:"llm_title" validate:"omitempty,max=120,title_format"`
+	LLMInstruction string            `yaml:"llm_instruction,omitempty"                  validate:"omitempty,max=360,instruction_format"`
+	Title          string            `yaml:"title,omitempty"`
+	Location       string            `yaml:"location"                  json:"location"  validate:"required,min=5,max=250"`
+	Disable        bool              `yaml:"disable,omitempty"          json:"disable"`
+	HTTPClient     *HTTPClientConfig `yaml:"http_client,omitempty"`
+	BaseURL        string            `yaml:"base_url,omitempty"                          validate:"omitempty,url"`
+	BaseMockURL    string            `yaml:"base_mock_url,omitempty"                      validate:"omitempty,mock_addr_format"`
+}
 
 // SetDefaults fills nil/zero fields with sensible defaults.
 func (c *GlobalHTTPClientConfig) SetDefaults() {
@@ -99,17 +149,14 @@ func (c *GlobalHTTPClientConfig) SetDefaults() {
 	}
 }
 
-// MCPConfig holds the MCP server configuration.
-type MCPConfig struct {
-	Transport string         `yaml:"transport,omitempty" validate:"omitempty,oneof=stdio sse streamable-http"`
-	Addr      string         `yaml:"addr,omitempty"`
-	Path      string         `yaml:"path,omitempty"`
-	Auth      *MCPAuthConfig `yaml:"auth,omitempty"`
-}
-
-// MCPAuthConfig holds the MCP server authentication configuration.
-type MCPAuthConfig struct {
-	Token string `yaml:"token,omitempty"`
+// SetDefaults fills zero fields with sensible defaults.
+func (c *Config) SetDefaults() {
+	if c == nil {
+		return
+	}
+	if c.RateLimitInterval <= 0 {
+		c.RateLimitInterval = defaultRateLimitInterval
+	}
 }
 
 // Resolve resolves environment variable references in the token.
@@ -120,43 +167,42 @@ func (c *MCPAuthConfig) Resolve() {
 	c.Token = env.Parse(c.Token)
 }
 
-// Spec defines a single API specification group.
-//
-// Validation rules:
-//   - Domain: required, 1-60 lowercase chars, letters/digits/underscore/hyphen only.
-//   - LLMTitle: required, 20-120 chars, allows letters/digits/punctuation.
-//   - LLMInstruction: optional, max 500 chars, allows letters/digits/punctuation.
-//   - Collections: required, 1-30 collections per spec.
-//   - BaseURL: required, must be a valid URL.
-type Spec struct {
-	Domain         string            `yaml:"domain"                    validate:"required,domain_format"`
-	LLMTitle       string            `yaml:"llm_title,omitempty"       validate:"required,min=5,max=120,title_format"`
-	LLMInstruction string            `yaml:"llm_instruction,omitempty" validate:"omitempty,max=500,instruction_format"`
-	Collections    []Collection      `yaml:"collections,omitempty"     validate:"required,min=1,max=30"`
-	Disable        bool              `yaml:"disable,omitempty"`
-	Tags           []string          `yaml:"tags,omitempty"`
-	BaseURL        string            `yaml:"base_url,omitempty"        validate:"required,url"`
-	HTTPClient     *HTTPClientConfig `yaml:"http_client,omitempty"`
-	Auth           Auth              `yaml:"auth,omitempty"`
+// Resolve resolves environment variable references in proxy fields.
+func (c *ProxyConfig) Resolve() {
+	if c == nil {
+		return
+	}
+	c.URL = env.Parse(c.URL)
+	c.Username = env.Parse(c.Username)
+	c.Password = env.Parse(c.Password)
 }
 
-// Collection defines a single spec file (Swagger/OpenAPI) within a Spec.
-//
-// Validation rules:
-//   - LLMTitle: optional, max 120 chars, allows letters/digits/punctuation.
-//   - LLMInstruction: optional, max 360 chars, allows letters/digits/punctuation.
-//   - Location: required, 5-250 chars (path or URL to the spec file).
-//   - BaseURL: optional, must be a valid URL if set.
-//   - BaseMockURL: optional, format "host:port".
-type Collection struct {
-	LLMTitle       string            `yaml:"llm_title,omitempty"       json:"llm_title" validate:"omitempty,max=120,title_format"`
-	LLMInstruction string            `yaml:"llm_instruction,omitempty"                  validate:"omitempty,max=360,instruction_format"`
-	Title          string            `yaml:"title,omitempty"`
-	Location       string            `yaml:"location"                  json:"location"  validate:"required,min=5,max=250"`
-	Disable        bool              `yaml:"disable,omitempty"          json:"disable"`
-	HTTPClient     *HTTPClientConfig `yaml:"http_client,omitempty"`
-	BaseURL        string            `yaml:"base_url,omitempty"                          validate:"omitempty,url"`
-	BaseMockURL    string            `yaml:"base_mock_url,omitempty"                      validate:"omitempty,mock_addr_format"`
+// Resolve resolves environment variable references in headers and cookie values.
+func (c *HTTPClientConfig) Resolve() {
+	if c == nil {
+		return
+	}
+	c.Proxy.Resolve()
+	for k, v := range c.Headers {
+		c.Headers[k] = env.Parse(v)
+	}
+	for i := range c.Cookies {
+		c.Cookies[i].Value = env.Parse(c.Cookies[i].Value)
+	}
+}
+
+// Resolve resolves environment variable references in headers and cookie values.
+func (c *GlobalHTTPClientConfig) Resolve() {
+	if c == nil {
+		return
+	}
+	c.Proxy.Resolve()
+	for k, v := range c.Headers {
+		c.Headers[k] = env.Parse(v)
+	}
+	for i := range c.Cookies {
+		c.Cookies[i].Value = env.Parse(c.Cookies[i].Value)
+	}
 }
 
 // Iterate returns an iterator over non-disabled specs that match the given filter.

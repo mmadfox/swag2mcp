@@ -1,0 +1,22 @@
+name: License Check
+on: [pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check license headers
+        run: |
+          missing=0
+          for f in $(find . -name '*.go' -not -path './vendor/*' -not -name 'mock_*' -not -name '*.pb.go'); do
+            if ! grep -q "SPDX-License-Identifier" "$f"; then
+              echo "Missing license header: $f"
+              missing=$((missing + 1))
+            fi
+          done
+          if [ "$missing" -gt 0 ]; then
+            echo "Found $missing file(s) without license header."
+            echo "Run 'scripts/add-license.sh' to fix."
+            exit 1
+          fi
+          echo "All files have license headers."

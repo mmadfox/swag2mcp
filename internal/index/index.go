@@ -1,5 +1,10 @@
 package index
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
 	"errors"
@@ -21,15 +26,8 @@ import (
 
 const initialSpecsCapacity = 8
 
-// newAnalyzer creates a default text analyzer with unicode tokenizer and lower-case filter.
-func newAnalyzer() *analysis.Analyzer {
-	return &analysis.Analyzer{
-		Tokenizer: tokenizer.NewUnicodeTokenizer(),
-		TokenFilters: []analysis.TokenFilter{
-			token.NewLowerCaseFilter(),
-		},
-	}
-}
+// ErrInvalidQuery is returned when a search query has invalid syntax.
+var ErrInvalidQuery = errors.New("invalid search query syntax")
 
 // EndpointCursor represents a position in the index.
 type EndpointCursor struct {
@@ -72,19 +70,19 @@ type Index struct {
 	noFullText            bool
 }
 
-// NewOption is a functional option for configuring an Index.
-type NewOption func(*Index)
+// Option is a functional option for configuring an Index.
+type Option func(*Index)
 
 // WithNoFullText disables full-text search indexing.
 // Use this for CLI commands that only need in-memory lookups.
-func WithNoFullText() NewOption {
+func WithNoFullText() Option {
 	return func(idx *Index) {
 		idx.noFullText = true
 	}
 }
 
 // New creates an empty in-memory index with type-based structures.
-func New(opts ...NewOption) (*Index, error) {
+func New(opts ...Option) (*Index, error) {
 	writer, err := bluge.OpenWriter(bluge.InMemoryOnlyConfig())
 	if err != nil {
 		return nil, fmt.Errorf("bluge open: %w", err)
@@ -111,6 +109,7 @@ func New(opts ...NewOption) (*Index, error) {
 }
 
 // EnsureIndex indexes all provided data: (spec, collections, tags, endpoints).
+// On error, all changes are rolled back to prevent partial indexing.
 func (idx *Index) EnsureIndex(
 	spec *model.Spec,
 	colls []*model.Collection,
@@ -125,14 +124,20 @@ func (idx *Index) EnsureIndex(
 	}
 
 	if err := idx.indexCollections(colls); err != nil {
+		idx.rollbackSpec(spec.ID)
 		return fmt.Errorf("indexing collections: %w", err)
 	}
 
 	if err := idx.indexTags(tags); err != nil {
+		idx.rollbackCollections(colls)
+		idx.rollbackSpec(spec.ID)
 		return fmt.Errorf("indexing tags: %w", err)
 	}
 
 	if err := idx.indexEndpoints(endpoints); err != nil {
+		idx.rollbackTags(tags)
+		idx.rollbackCollections(colls)
+		idx.rollbackSpec(spec.ID)
 		return fmt.Errorf("indexing endpoints: %w", err)
 	}
 
@@ -140,6 +145,52 @@ func (idx *Index) EnsureIndex(
 		return idx.index(endpoints)
 	}
 	return nil
+}
+
+// rollbackSpec removes a spec that was partially added.
+func (idx *Index) rollbackSpec(specID string) {
+	delete(idx.specs, specID)
+	for i, s := range idx.allSpecs {
+		if s.ID == specID {
+			idx.allSpecs = append(idx.allSpecs[:i], idx.allSpecs[i+1:]...)
+			break
+		}
+	}
+}
+
+// rollbackCollections removes collections that were partially added.
+func (idx *Index) rollbackCollections(colls []*model.Collection) {
+	for _, coll := range colls {
+		delete(idx.collectionByID, coll.ID)
+		collections := idx.collectionsBySpec[coll.SpecID]
+		for i, c := range collections {
+			if c.ID == coll.ID {
+				idx.collectionsBySpec[coll.SpecID] = append(collections[:i], collections[i+1:]...)
+				break
+			}
+		}
+	}
+}
+
+// rollbackTags removes tags that were partially added.
+func (idx *Index) rollbackTags(tags []*model.Tag) {
+	for _, tag := range tags {
+		delete(idx.tagByID, tag.ID)
+		tagColls := idx.tagsByCollection[tag.CollectionID]
+		for i, t := range tagColls {
+			if t.ID == tag.ID {
+				idx.tagsByCollection[tag.CollectionID] = append(tagColls[:i], tagColls[i+1:]...)
+				break
+			}
+		}
+		tagSpecs := idx.tagBySpec[tag.SpecID]
+		for i, t := range tagSpecs {
+			if t.ID == tag.ID {
+				idx.tagBySpec[tag.SpecID] = append(tagSpecs[:i], tagSpecs[i+1:]...)
+				break
+			}
+		}
+	}
 }
 
 // indexSpec indexes a spec.
@@ -245,7 +296,7 @@ func (idx *Index) AllSpecs() []*model.Spec {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
-	return idx.allSpecs
+	return append([]*model.Spec(nil), idx.allSpecs...)
 }
 
 // SpecByID returns a spec by its ID.
@@ -281,7 +332,7 @@ func (idx *Index) CollectionsBySpec(specID string) ([]*model.Collection, error) 
 	if !ok {
 		return nil, fmt.Errorf("collection by spec %q not found", specID)
 	}
-	return cols, nil
+	return append([]*model.Collection(nil), cols...), nil
 }
 
 // TagByID returns a tag by its ID.
@@ -305,7 +356,7 @@ func (idx *Index) TagsByCollection(collectionID string) ([]*model.Tag, error) {
 	if !ok {
 		return nil, fmt.Errorf("tags by collection %q not found", collectionID)
 	}
-	return tags, nil
+	return append([]*model.Tag(nil), tags...), nil
 }
 
 // TagsBySpec returns all tags for a given spec ID.
@@ -317,7 +368,7 @@ func (idx *Index) TagsBySpec(specID string) ([]*model.Tag, error) {
 	if !ok {
 		return nil, fmt.Errorf("tags by spec %q not found", specID)
 	}
-	return tags, nil
+	return append([]*model.Tag(nil), tags...), nil
 }
 
 // EndpointsByTag returns all endpoints for a given tag ID.
@@ -329,7 +380,7 @@ func (idx *Index) EndpointsByTag(tagID string) ([]*model.Endpoint, error) {
 	if !ok {
 		return nil, fmt.Errorf("endpoints by tag %q not found", tagID)
 	}
-	return endpoints, nil
+	return append([]*model.Endpoint(nil), endpoints...), nil
 }
 
 // EndpointsBySpec returns all endpoints for a given spec ID.
@@ -341,7 +392,7 @@ func (idx *Index) EndpointsBySpec(specID string) ([]*model.Endpoint, error) {
 	if !ok {
 		return nil, fmt.Errorf("spec %q not found", specID)
 	}
-	return endpoints, nil
+	return append([]*model.Endpoint(nil), endpoints...), nil
 }
 
 // EndpointByCollection returns all endpoints for a given collection ID.
@@ -353,7 +404,7 @@ func (idx *Index) EndpointByCollection(collectionID string) ([]*model.Endpoint, 
 	if !ok {
 		return nil, fmt.Errorf("endpoints by collection %q not found", collectionID)
 	}
-	return endpoints, nil
+	return append([]*model.Endpoint(nil), endpoints...), nil
 }
 
 // EndpointByID returns an endpoint by its ID.
@@ -419,10 +470,9 @@ func (idx *Index) IterateByCollections() iter.Seq[*CollectionCursor] {
 
 		for _, col := range idx.collectionByID {
 			spec := idx.specs[col.SpecID]
-			coll := idx.collectionByID[col.ID]
 			cursor := &CollectionCursor{
 				Spec:       spec,
-				Collection: coll,
+				Collection: col,
 			}
 			if !yield(cursor) {
 				return
@@ -441,7 +491,11 @@ func (idx *Index) Search(ctx context.Context, q string, limit int) ([]*model.End
 		limit = 50
 	}
 
-	query := idx.buildQuery(q)
+	query, err := idx.buildQuery(q)
+	if err != nil {
+		return nil, err
+	}
+
 	r, err := idx.reader()
 	if err != nil {
 		return nil, err
@@ -451,9 +505,9 @@ func (idx *Index) Search(ctx context.Context, q string, limit int) ([]*model.End
 }
 
 // buildQuery parses a query string into a bluge query, falling back to a match-all or match query.
-func (idx *Index) buildQuery(q string) bluge.Query {
+func (idx *Index) buildQuery(q string) (bluge.Query, error) {
 	if q == "*" {
-		return bluge.NewMatchAllQuery()
+		return bluge.NewMatchAllQuery(), nil
 	}
 
 	qsOpts := querystring.DefaultOptions().
@@ -462,10 +516,25 @@ func (idx *Index) buildQuery(q string) bluge.Query {
 		WithAnalyzerForField("_all", idx.analyzer)
 
 	if parsedQuery, err := querystring.ParseQueryString(q, qsOpts); err == nil {
-		return parsedQuery
+		return parsedQuery, nil
+	} else if hasQueryStringSyntax(q) {
+		return nil, fmt.Errorf(
+			"%w: invalid search query %q: %s. "+
+				"Use simple text search (e.g. 'get pet') or field search (e.g. method:GET, tag:pets)",
+			ErrInvalidQuery, q, err,
+		)
 	}
 
-	return bluge.NewMatchQuery(q).SetField("_all").SetAnalyzer(idx.analyzer)
+	return bluge.NewMatchQuery(q).SetField("_all").SetAnalyzer(idx.analyzer), nil
+}
+
+// hasQueryStringSyntax reports whether the query contains characters specific
+// to the bluge query string syntax (field:value, quoted strings, boolean operators).
+func hasQueryStringSyntax(q string) bool {
+	return strings.ContainsAny(q, ":()\"") ||
+		strings.Contains(q, " AND ") ||
+		strings.Contains(q, " OR ") ||
+		strings.Contains(q, " NOT ")
 }
 
 // reader returns a bluge reader, lazily initializing it via CAS on first call.
@@ -576,25 +645,162 @@ func (idx *Index) Size() int {
 	return len(idx.endpointByID)
 }
 
-// RemoveSpec removes a spec from the index by its ID.
+// RemoveSpec removes a spec from the index by its ID, including all related
+// collections, tags, and endpoints.
 func (idx *Index) RemoveSpec(specID string) {
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
+
+	idx.removeEndpointsBySpec(specID)
+	idx.removeTagsBySpec(specID)
+	idx.removeCollectionsBySpecID(specID)
+
 	delete(idx.specs, specID)
+	for i, s := range idx.allSpecs {
+		if s.ID == specID {
+			idx.allSpecs = append(idx.allSpecs[:i], idx.allSpecs[i+1:]...)
+			break
+		}
+	}
 }
 
-// RemoveCollection removes a collection from the index by its ID.
+// removeEndpointsBySpec removes all endpoints for a given spec ID from all maps.
+func (idx *Index) removeEndpointsBySpec(specID string) {
+	for _, ep := range idx.endpointsBySpec[specID] {
+		delete(idx.endpointByID, ep.ID)
+		idx.removeEndpointFromSlice(idx.endpointsByTag[ep.TagID], ep.ID, func(updated []*model.Endpoint) {
+			idx.endpointsByTag[ep.TagID] = updated
+		})
+	}
+	delete(idx.endpointsBySpec, specID)
+	delete(idx.endpointsByCollection, specID)
+}
+
+// removeTagsBySpec removes all tags for a given spec ID from all maps.
+func (idx *Index) removeTagsBySpec(specID string) {
+	for _, tag := range idx.tagBySpec[specID] {
+		delete(idx.tagByID, tag.ID)
+		idx.removeTagFromCollection(tag)
+	}
+	delete(idx.tagBySpec, specID)
+}
+
+// removeCollectionsBySpecID removes all collections for a given spec ID.
+func (idx *Index) removeCollectionsBySpecID(specID string) {
+	for _, coll := range idx.collectionsBySpec[specID] {
+		delete(idx.collectionByID, coll.ID)
+	}
+	delete(idx.collectionsBySpec, specID)
+}
+
+// RemoveCollection removes a collection from the index by its ID, including
+// all related tags and endpoints.
 func (idx *Index) RemoveCollection(collectionID string) {
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
+
+	idx.removeEndpointsByCollection(collectionID)
+	idx.removeTagsByCollection(collectionID)
+
+	coll, ok := idx.collectionByID[collectionID]
+	if ok {
+		idx.removeCollectionFromSpec(coll)
+	}
+
 	delete(idx.collectionByID, collectionID)
 }
 
-// RemoveTag removes a tag from the index by its ID.
+// removeEndpointsByCollection removes all endpoints for a given collection ID.
+func (idx *Index) removeEndpointsByCollection(collectionID string) {
+	for _, ep := range idx.endpointsByCollection[collectionID] {
+		delete(idx.endpointByID, ep.ID)
+		idx.removeEndpointFromSlice(idx.endpointsByTag[ep.TagID], ep.ID, func(updated []*model.Endpoint) {
+			idx.endpointsByTag[ep.TagID] = updated
+		})
+	}
+	delete(idx.endpointsByCollection, collectionID)
+}
+
+// removeTagsByCollection removes all tags for a given collection ID.
+func (idx *Index) removeTagsByCollection(collectionID string) {
+	for _, tag := range idx.tagsByCollection[collectionID] {
+		delete(idx.tagByID, tag.ID)
+		idx.removeTagFromSpec(tag)
+	}
+	delete(idx.tagsByCollection, collectionID)
+}
+
+// removeCollectionFromSpec removes a collection from the collectionsBySpec map.
+func (idx *Index) removeCollectionFromSpec(coll *model.Collection) {
+	collections := idx.collectionsBySpec[coll.SpecID]
+	for i, c := range collections {
+		if c.ID == coll.ID {
+			idx.collectionsBySpec[coll.SpecID] = append(collections[:i], collections[i+1:]...)
+			break
+		}
+	}
+}
+
+// RemoveTag removes a tag from the index by its ID, including all related endpoints.
 func (idx *Index) RemoveTag(tagID string) {
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
+
+	idx.removeEndpointsByTag(tagID)
+
+	tag, ok := idx.tagByID[tagID]
+	if ok {
+		idx.removeTagFromCollection(tag)
+		idx.removeTagFromSpec(tag)
+	}
+
 	delete(idx.tagByID, tagID)
+}
+
+// removeEndpointsByTag removes all endpoints for a given tag ID from all maps.
+func (idx *Index) removeEndpointsByTag(tagID string) {
+	for _, ep := range idx.endpointsByTag[tagID] {
+		delete(idx.endpointByID, ep.ID)
+		idx.removeEndpointFromSlice(idx.endpointsBySpec[ep.SpecID], ep.ID, func(updated []*model.Endpoint) {
+			idx.endpointsBySpec[ep.SpecID] = updated
+		})
+		idx.removeEndpointFromSlice(idx.endpointsByCollection[ep.CollectionID], ep.ID, func(updated []*model.Endpoint) {
+			idx.endpointsByCollection[ep.CollectionID] = updated
+		})
+	}
+	delete(idx.endpointsByTag, tagID)
+}
+
+// removeEndpointFromSlice removes an endpoint with the given ID from a slice.
+func (idx *Index) removeEndpointFromSlice(eps []*model.Endpoint, id string, set func([]*model.Endpoint)) {
+	for i, e := range eps {
+		if e.ID == id {
+			set(append(eps[:i], eps[i+1:]...))
+			break
+		}
+	}
+}
+
+// removeTagFromCollection removes a tag from the tagsByCollection map.
+func (idx *Index) removeTagFromCollection(tag *model.Tag) {
+	tagColls := idx.tagsByCollection[tag.CollectionID]
+	for i, t := range tagColls {
+		if t.ID == tag.ID {
+			idx.tagsByCollection[tag.CollectionID] = append(tagColls[:i], tagColls[i+1:]...)
+			break
+		}
+	}
+}
+
+// removeTagFromSpec removes a tag from the tagBySpec map.
+func (idx *Index) removeTagFromSpec(tag *model.Tag) {
+	tagSpecs := idx.tagBySpec[tag.SpecID]
+	for i, t := range tagSpecs {
+		if t.ID == tag.ID {
+			idx.tagBySpec[tag.SpecID] = append(tagSpecs[:i], tagSpecs[i+1:]...)
+			break
+		}
+	}
 }
 
 // RemoveAllTags removes all tags from the index.
@@ -619,4 +825,14 @@ func (idx *Index) AddCollection(coll *model.Collection) {
 	defer idx.mu.Unlock()
 	idx.collectionByID[coll.ID] = coll
 	idx.collectionsBySpec[coll.SpecID] = append(idx.collectionsBySpec[coll.SpecID], coll)
+}
+
+// newAnalyzer creates a default text analyzer with unicode tokenizer and lower-case filter.
+func newAnalyzer() *analysis.Analyzer {
+	return &analysis.Analyzer{
+		Tokenizer: tokenizer.NewUnicodeTokenizer(),
+		TokenFilters: []analysis.TokenFilter{
+			token.NewLowerCaseFilter(),
+		},
+	}
 }

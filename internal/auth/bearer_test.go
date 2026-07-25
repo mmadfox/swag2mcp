@@ -1,5 +1,10 @@
 package auth
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
 	"net/http"
@@ -47,4 +52,36 @@ func TestBearerTokenAuthClient_Apply_EnvVars(t *testing.T) {
 	require.NoError(t, client.Apply(req, nil), "Apply()")
 
 	assert.Equal(t, "Bearer env-bearer-token", req.Header.Get(headerAuthorization))
+}
+
+func TestBearerTokenAuthClient_Validate(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		client  *BearerTokenAuthClient
+		wantErr bool
+	}{
+		{name: "valid", client: &BearerTokenAuthClient{Token: "valid-token"}, wantErr: false},
+		{name: "empty token", client: &BearerTokenAuthClient{Token: ""}, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := tt.client.Validate()
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestBearerTokenAuthClient_Type(t *testing.T) {
+	t.Parallel()
+
+	client := &BearerTokenAuthClient{}
+	assert.Equal(t, BearerTokenAuth, client.Type())
 }

@@ -1,5 +1,10 @@
 package auth
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"context"
 	"net/http"
@@ -46,4 +51,36 @@ func TestBasicAuthClient_Apply_EnvVars(t *testing.T) {
 	require.True(t, ok, "expected BasicAuth to be set")
 	assert.Equal(t, "bob", user)
 	assert.Equal(t, "bobpass", pass)
+}
+
+func TestBasicAuthClient_Type(t *testing.T) {
+	t.Parallel()
+
+	client := &BasicAuthClient{}
+	assert.Equal(t, BasicAuth, client.Type())
+}
+
+func TestBasicAuthClient_Validate(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		client  *BasicAuthClient
+		wantErr bool
+	}{
+		{name: "valid", client: &BasicAuthClient{Username: "u", Password: "p"}, wantErr: false},
+		{name: "empty", client: &BasicAuthClient{}, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := tt.client.Validate()
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
 }

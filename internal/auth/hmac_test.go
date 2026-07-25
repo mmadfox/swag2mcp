@@ -1,5 +1,10 @@
 package auth
 
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Use of this software is governed by the AGPL v3 license
+// included in the /LICENSE file.
+
 import (
 	"crypto/hmac"
 	"crypto/sha256"
@@ -24,15 +29,26 @@ func TestHMACAuthClient_Type(t *testing.T) {
 func TestHMACAuthClient_Validate(t *testing.T) {
 	t.Parallel()
 
-	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
-	require.NoError(t, client.Validate())
-}
+	tests := []struct {
+		name    string
+		client  *HMACAuthClient
+		wantErr bool
+	}{
+		{name: "valid", client: &HMACAuthClient{APIKey: "key", SecretKey: "secret"}, wantErr: false},
+		{name: "empty", client: &HMACAuthClient{}, wantErr: true},
+	}
 
-func TestHMACAuthClient_Validate_Empty(t *testing.T) {
-	t.Parallel()
-
-	client := &HMACAuthClient{}
-	require.Error(t, client.Validate())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := tt.client.Validate()
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
 }
 
 func TestHMACAuthClient_New_EnvVars(t *testing.T) {
