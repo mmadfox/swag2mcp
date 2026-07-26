@@ -1,0 +1,29 @@
+import{_ as a,o as n,c as e,a2 as t}from"./chunks/framework.CHeM0PsO.js";const h=JSON.parse('{"title":"プロジェクト構造","description":"","frontmatter":{},"headers":[],"relativePath":"ja/development/project-structure.md","filePath":"ja/development/project-structure.md","lastUpdated":1784903584000}'),p={name:"ja/development/project-structure.md"};function d(c,s,l,r,o,i){return n(),e("div",null,[...s[0]||(s[0]=[t(`<h1 id="プロジェクト構造" tabindex="-1">プロジェクト構造 <a class="header-anchor" href="#プロジェクト構造" aria-label="Permalink to &quot;プロジェクト構造&quot;">​</a></h1><div class="language- vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang"></span><pre class="shiki shiki-themes github-light github-dark vp-code" tabindex="0"><code><span class="line"><span>swag2mcp/</span></span>
+<span class="line"><span>├── cmd/</span></span>
+<span class="line"><span>│   ├── swag2mcp/          # メインバイナリ</span></span>
+<span class="line"><span>│   │   └── main.go</span></span>
+<span class="line"><span>│   └── swag2mcp-mock/     # モックサーバー</span></span>
+<span class="line"><span>│       └── main.go</span></span>
+<span class="line"><span>├── internal/</span></span>
+<span class="line"><span>│   ├── auth/              # 9 つの認証方法</span></span>
+<span class="line"><span>│   ├── cache/             # スペックキャッシュ</span></span>
+<span class="line"><span>│   ├── commands/          # 13 の CLI コマンド（cobra）</span></span>
+<span class="line"><span>│   ├── config/            # YAML 設定</span></span>
+<span class="line"><span>│   ├── env/               # 環境変数</span></span>
+<span class="line"><span>│   ├── httpclient/        # HTTP クライアント</span></span>
+<span class="line"><span>│   ├── id/                # MD5 ID 生成</span></span>
+<span class="line"><span>│   ├── index/             # 全文検索（bluge）</span></span>
+<span class="line"><span>│   ├── model/             # データモデル</span></span>
+<span class="line"><span>│   ├── reader/            # 大規模レスポンス読み取り</span></span>
+<span class="line"><span>│   ├── server/</span></span>
+<span class="line"><span>│   │   ├── mcp/           # MCP サーバー（19 ツール）</span></span>
+<span class="line"><span>│   │   └── mockserver/    # モックサーバー</span></span>
+<span class="line"><span>│   ├── service/           # ビジネスロジック</span></span>
+<span class="line"><span>│   ├── spec/              # スペックパーサー</span></span>
+<span class="line"><span>│   ├── tui/               # TUI インターフェース</span></span>
+<span class="line"><span>│   └── workspace/         # ワークスペース管理</span></span>
+<span class="line"><span>├── specs/                 # サンプルスペック</span></span>
+<span class="line"><span>├── tests/                 # 統合テスト</span></span>
+<span class="line"><span>├── docs/                  # ドキュメント</span></span>
+<span class="line"><span>├── examples/              # 設定例</span></span>
+<span class="line"><span>└── playground/            # 開発サンドボックス</span></span></code></pre></div><h2 id="主要パッケージ" tabindex="-1">主要パッケージ <a class="header-anchor" href="#主要パッケージ" aria-label="Permalink to &quot;主要パッケージ&quot;">​</a></h2><table tabindex="0"><thead><tr><th>パッケージ</th><th>説明</th></tr></thead><tbody><tr><td><code>auth</code></td><td>9 つの認証方法</td></tr><tr><td><code>cache</code></td><td>TTL 付きディスクベースのキャッシュ</td></tr><tr><td><code>commands</code></td><td>Cobra CLI コマンド</td></tr><tr><td><code>config</code></td><td>カスケード付き YAML 設定</td></tr><tr><td><code>httpclient</code></td><td>設定可能な HTTP クライアント</td></tr><tr><td><code>index</code></td><td>全文検索（bluge）</td></tr><tr><td><code>server/mcp</code></td><td>MCP サーバー（3 つのトランスポート）</td></tr><tr><td><code>service</code></td><td>ビジネスロジック（コア）</td></tr><tr><td><code>spec</code></td><td>OpenAPI/Swagger/Postman パーサー</td></tr><tr><td><code>tui</code></td><td>Bubbletea TUI</td></tr><tr><td><code>workspace</code></td><td>ファイル管理</td></tr></tbody></table>`,4)])])}const u=a(p,[["render",d]]);export{h as __pageData,u as default};

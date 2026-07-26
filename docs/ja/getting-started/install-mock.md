@@ -123,7 +123,7 @@ docker pull ghcr.io/mmadfox/swag2mcp-mock:latest
 Mockサーバーを実行：
 
 ```bash
-docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-mock:latest mockserver
+docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-mock:latest
 ```
 
 確認：
@@ -226,7 +226,7 @@ docker pull ghcr.io/mmadfox/swag2mcp-mock:latest
 Mockサーバーを実行：
 
 ```bash
-docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-mock:latest mockserver
+docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-mock:latest
 ```
 
 確認：

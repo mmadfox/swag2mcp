@@ -66,13 +66,13 @@ specs:
 
 ```bash
 # Запуск с конфигом по умолчанию
-swag2mcp-mock mockserver
+swag2mcp-mock
 
 # Запуск с TLS
-swag2mcp-mock mockserver --tls
+swag2mcp-mock --tls
 
 # Запуск с пользовательским TLS-сертификатом
-swag2mcp-mock mockserver --tls --tls-cert cert.pem --tls-key key.pem
+swag2mcp-mock --tls --tls-cert cert.pem --tls-key key.pem
 ```
 
 ### TLS-флаги
@@ -98,7 +98,7 @@ swag2mcp-mock mockserver --tls --tls-cert cert.pem --tls-key key.pem
 
 ```bash
 # В одном терминале:
-swag2mcp-mock mockserver
+swag2mcp-mock
 
 # В другом терминале:
 curl http://localhost:8080/pets

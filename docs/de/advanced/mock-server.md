@@ -66,13 +66,13 @@ Ports für Mock-Authentifizierungsserver. Diese simulieren OAuth2-, Digest- und 
 
 ```bash
 # Mit Standardkonfiguration starten
-swag2mcp-mock mockserver
+swag2mcp-mock
 
 # Mit TLS starten
-swag2mcp-mock mockserver --tls
+swag2mcp-mock --tls
 
 # Mit benutzerdefiniertem TLS-Zertifikat starten
-swag2mcp-mock mockserver --tls --tls-cert cert.pem --tls-key key.pem
+swag2mcp-mock --tls --tls-cert cert.pem --tls-key key.pem
 ```
 
 ### TLS-Flags
@@ -98,7 +98,7 @@ Wenn Sie den Mock-Server starten, führt er folgende Schritte aus:
 
 ```bash
 # In einem Terminal:
-swag2mcp-mock mockserver
+swag2mcp-mock
 
 # In einem anderen Terminal:
 curl http://localhost:8080/pets

@@ -66,13 +66,13 @@ Puertos para servidores de autenticación simulados. Estos simulan endpoints de 
 
 ```bash
 # Iniciar con configuración predeterminada
-swag2mcp-mock mockserver
+swag2mcp-mock
 
 # Iniciar con TLS
-swag2mcp-mock mockserver --tls
+swag2mcp-mock --tls
 
 # Iniciar con certificado TLS personalizado
-swag2mcp-mock mockserver --tls --tls-cert cert.pem --tls-key key.pem
+swag2mcp-mock --tls --tls-cert cert.pem --tls-key key.pem
 ```
 
 ### Banderas TLS
@@ -98,7 +98,7 @@ Cuando inicia el servidor simulado, este:
 
 ```bash
 # En una terminal:
-swag2mcp-mock mockserver
+swag2mcp-mock
 
 # En otra terminal:
 curl http://localhost:8080/pets

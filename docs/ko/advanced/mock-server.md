@@ -66,13 +66,13 @@ specs:
 
 ```bash
 # 기본 설정으로 시작
-swag2mcp-mock mockserver
+swag2mcp-mock
 
 # TLS로 시작
-swag2mcp-mock mockserver --tls
+swag2mcp-mock --tls
 
 # 커스텀 TLS 인증서로 시작
-swag2mcp-mock mockserver --tls --tls-cert cert.pem --tls-key key.pem
+swag2mcp-mock --tls --tls-cert cert.pem --tls-key key.pem
 ```
 
 ### TLS 플래그
@@ -98,7 +98,7 @@ swag2mcp-mock mockserver --tls --tls-cert cert.pem --tls-key key.pem
 
 ```bash
 # 한 터미널에서:
-swag2mcp-mock mockserver
+swag2mcp-mock
 
 # 다른 터미널에서:
 curl http://localhost:8080/pets

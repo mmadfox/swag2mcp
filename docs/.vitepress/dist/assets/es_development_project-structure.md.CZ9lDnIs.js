@@ -1,0 +1,29 @@
+import{_ as s,o as n,c as e,a2 as t}from"./chunks/framework.CHeM0PsO.js";const m=JSON.parse('{"title":"Estructura del Proyecto","description":"","frontmatter":{},"headers":[],"relativePath":"es/development/project-structure.md","filePath":"es/development/project-structure.md","lastUpdated":1784903584000}'),p={name:"es/development/project-structure.md"};function c(d,a,o,r,i,l){return n(),e("div",null,[...a[0]||(a[0]=[t(`<h1 id="estructura-del-proyecto" tabindex="-1">Estructura del Proyecto <a class="header-anchor" href="#estructura-del-proyecto" aria-label="Permalink to &quot;Estructura del Proyecto&quot;">​</a></h1><div class="language- vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang"></span><pre class="shiki shiki-themes github-light github-dark vp-code" tabindex="0"><code><span class="line"><span>swag2mcp/</span></span>
+<span class="line"><span>├── cmd/</span></span>
+<span class="line"><span>│   ├── swag2mcp/          # Binario principal</span></span>
+<span class="line"><span>│   │   └── main.go</span></span>
+<span class="line"><span>│   └── swag2mcp-mock/     # Servidor simulado</span></span>
+<span class="line"><span>│       └── main.go</span></span>
+<span class="line"><span>├── internal/</span></span>
+<span class="line"><span>│   ├── auth/              # 9 métodos de autenticación</span></span>
+<span class="line"><span>│   ├── cache/             # Almacenamiento en caché de especificaciones</span></span>
+<span class="line"><span>│   ├── commands/          # 13 comandos CLI (cobra)</span></span>
+<span class="line"><span>│   ├── config/            # Configuración YAML</span></span>
+<span class="line"><span>│   ├── env/               # Variables de entorno</span></span>
+<span class="line"><span>│   ├── httpclient/        # Cliente HTTP</span></span>
+<span class="line"><span>│   ├── id/                # Generación de IDs MD5</span></span>
+<span class="line"><span>│   ├── index/             # Búsqueda de texto completo (bluge)</span></span>
+<span class="line"><span>│   ├── model/             # Modelos de datos</span></span>
+<span class="line"><span>│   ├── reader/            # Lectura de respuestas grandes</span></span>
+<span class="line"><span>│   ├── server/</span></span>
+<span class="line"><span>│   │   ├── mcp/           # Servidor MCP (19 herramientas)</span></span>
+<span class="line"><span>│   │   └── mockserver/    # Servidor simulado</span></span>
+<span class="line"><span>│   ├── service/           # Lógica de negocio</span></span>
+<span class="line"><span>│   ├── spec/              # Analizadores de especificaciones</span></span>
+<span class="line"><span>│   ├── tui/               # Interfaz TUI</span></span>
+<span class="line"><span>│   └── workspace/         # Gestión del espacio de trabajo</span></span>
+<span class="line"><span>├── specs/                 # Especificaciones de ejemplo</span></span>
+<span class="line"><span>├── tests/                 # Pruebas de integración</span></span>
+<span class="line"><span>├── docs/                  # Documentación</span></span>
+<span class="line"><span>├── examples/              # Ejemplos de configuración</span></span>
+<span class="line"><span>└── playground/            # Entorno de desarrollo</span></span></code></pre></div><h2 id="paquetes-clave" tabindex="-1">Paquetes Clave <a class="header-anchor" href="#paquetes-clave" aria-label="Permalink to &quot;Paquetes Clave&quot;">​</a></h2><table tabindex="0"><thead><tr><th>Paquete</th><th>Descripción</th></tr></thead><tbody><tr><td><code>auth</code></td><td>9 métodos de autenticación</td></tr><tr><td><code>cache</code></td><td>Almacenamiento en caché basado en disco con TTL</td></tr><tr><td><code>commands</code></td><td>Comandos CLI Cobra</td></tr><tr><td><code>config</code></td><td>Configuración YAML con cascada</td></tr><tr><td><code>httpclient</code></td><td>Cliente HTTP configurable</td></tr><tr><td><code>index</code></td><td>Búsqueda de texto completo (bluge)</td></tr><tr><td><code>server/mcp</code></td><td>Servidor MCP (3 transportes)</td></tr><tr><td><code>service</code></td><td>Lógica de negocio (núcleo)</td></tr><tr><td><code>spec</code></td><td>Analizadores OpenAPI/Swagger/Postman</td></tr><tr><td><code>tui</code></td><td>TUI Bubbletea</td></tr><tr><td><code>workspace</code></td><td>Gestión de archivos</td></tr></tbody></table>`,4)])])}const h=s(p,[["render",c]]);export{m as __pageData,h as default};

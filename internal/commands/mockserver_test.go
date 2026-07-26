@@ -12,7 +12,7 @@ import (
 
 func TestRunMockServer_NoConfig(t *testing.T) {
 	tmpDir := t.TempDir()
-	opts := &mockServerCmdOptions{}
+	opts := &mockRootCmdOptions{}
 	err := runMockServer(tmpDir, opts, context.Background())
 	if err == nil {
 		t.Fatal("runMockServer() expected error, got nil")

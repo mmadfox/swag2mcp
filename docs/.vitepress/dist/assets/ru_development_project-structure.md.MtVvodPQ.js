@@ -1,0 +1,29 @@
+import{_ as a,o as n,c as e,a2 as t}from"./chunks/framework.CHeM0PsO.js";const u=JSON.parse('{"title":"Структура проекта","description":"","frontmatter":{},"headers":[],"relativePath":"ru/development/project-structure.md","filePath":"ru/development/project-structure.md","lastUpdated":1784903584000}'),p={name:"ru/development/project-structure.md"};function d(c,s,l,r,o,i){return n(),e("div",null,[...s[0]||(s[0]=[t(`<h1 id="структура-проекта" tabindex="-1">Структура проекта <a class="header-anchor" href="#структура-проекта" aria-label="Permalink to &quot;Структура проекта&quot;">​</a></h1><div class="language- vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang"></span><pre class="shiki shiki-themes github-light github-dark vp-code" tabindex="0"><code><span class="line"><span>swag2mcp/</span></span>
+<span class="line"><span>├── cmd/</span></span>
+<span class="line"><span>│   ├── swag2mcp/          # Основной бинарник</span></span>
+<span class="line"><span>│   │   └── main.go</span></span>
+<span class="line"><span>│   └── swag2mcp-mock/     # Мок-сервер</span></span>
+<span class="line"><span>│       └── main.go</span></span>
+<span class="line"><span>├── internal/</span></span>
+<span class="line"><span>│   ├── auth/              # 9 методов аутентификации</span></span>
+<span class="line"><span>│   ├── cache/             # Кэширование спецификаций</span></span>
+<span class="line"><span>│   ├── commands/          # 13 CLI-команд (cobra)</span></span>
+<span class="line"><span>│   ├── config/            # YAML-конфигурация</span></span>
+<span class="line"><span>│   ├── env/               # Переменные окружения</span></span>
+<span class="line"><span>│   ├── httpclient/        # HTTP-клиент</span></span>
+<span class="line"><span>│   ├── id/                # Генерация MD5 ID</span></span>
+<span class="line"><span>│   ├── index/             # Полнотекстовый поиск (bluge)</span></span>
+<span class="line"><span>│   ├── model/             # Модели данных</span></span>
+<span class="line"><span>│   ├── reader/            # Чтение больших ответов</span></span>
+<span class="line"><span>│   ├── server/</span></span>
+<span class="line"><span>│   │   ├── mcp/           # MCP-сервер (19 инструментов)</span></span>
+<span class="line"><span>│   │   └── mockserver/    # Мок-сервер</span></span>
+<span class="line"><span>│   ├── service/           # Бизнес-логика</span></span>
+<span class="line"><span>│   ├── spec/              # Парсеры спецификаций</span></span>
+<span class="line"><span>│   ├── tui/               # TUI-интерфейс</span></span>
+<span class="line"><span>│   └── workspace/         # Управление рабочей областью</span></span>
+<span class="line"><span>├── specs/                 # Примеры спецификаций</span></span>
+<span class="line"><span>├── tests/                 # Интеграционные тесты</span></span>
+<span class="line"><span>├── docs/                  # Документация</span></span>
+<span class="line"><span>├── examples/              # Примеры конфигов</span></span>
+<span class="line"><span>└── playground/            # Песочница для разработки</span></span></code></pre></div><h2 id="ключевые-пакеты" tabindex="-1">Ключевые пакеты <a class="header-anchor" href="#ключевые-пакеты" aria-label="Permalink to &quot;Ключевые пакеты&quot;">​</a></h2><table tabindex="0"><thead><tr><th>Пакет</th><th>Описание</th></tr></thead><tbody><tr><td><code>auth</code></td><td>9 методов аутентификации</td></tr><tr><td><code>cache</code></td><td>Дисковое кэширование с TTL</td></tr><tr><td><code>commands</code></td><td>Cobra CLI-команды</td></tr><tr><td><code>config</code></td><td>YAML-конфиг с каскадом</td></tr><tr><td><code>httpclient</code></td><td>Настраиваемый HTTP-клиент</td></tr><tr><td><code>index</code></td><td>Полнотекстовый поиск (bluge)</td></tr><tr><td><code>server/mcp</code></td><td>MCP-сервер (3 транспорта)</td></tr><tr><td><code>service</code></td><td>Бизнес-логика (ядро)</td></tr><tr><td><code>spec</code></td><td>Парсеры OpenAPI/Swagger/Postman</td></tr><tr><td><code>tui</code></td><td>Bubbletea TUI</td></tr><tr><td><code>workspace</code></td><td>Управление файлами</td></tr></tbody></table>`,4)])])}const h=a(p,[["render",d]]);export{u as __pageData,h as default};

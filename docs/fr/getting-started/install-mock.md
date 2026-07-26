@@ -123,7 +123,7 @@ docker pull ghcr.io/mmadfox/swag2mcp-mock:latest
 Exécuter le serveur mock :
 
 ```bash
-docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-mock:latest mockserver
+docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-mock:latest
 ```
 
 Vérification :
@@ -226,7 +226,7 @@ docker pull ghcr.io/mmadfox/swag2mcp-mock:latest
 Exécuter le serveur mock :
 
 ```bash
-docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-mock:latest mockserver
+docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-mock:latest
 ```
 
 Vérification :

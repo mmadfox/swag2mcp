@@ -66,13 +66,13 @@ specs:
 
 ```bash
 # 使用默认配置启动
-swag2mcp-mock mockserver
+swag2mcp-mock
 
 # 使用 TLS 启动
-swag2mcp-mock mockserver --tls
+swag2mcp-mock --tls
 
 # 使用自定义 TLS 证书启动
-swag2mcp-mock mockserver --tls --tls-cert cert.pem --tls-key key.pem
+swag2mcp-mock --tls --tls-cert cert.pem --tls-key key.pem
 ```
 
 ### TLS 标志
@@ -98,7 +98,7 @@ swag2mcp-mock mockserver --tls --tls-cert cert.pem --tls-key key.pem
 
 ```bash
 # 在一个终端中：
-swag2mcp-mock mockserver
+swag2mcp-mock
 
 # 在另一个终端中：
 curl http://localhost:8080/pets

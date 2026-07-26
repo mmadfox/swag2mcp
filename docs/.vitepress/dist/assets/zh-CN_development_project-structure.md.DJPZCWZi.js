@@ -1,0 +1,29 @@
+import{_ as a,o as n,c as e,a2 as t}from"./chunks/framework.CHeM0PsO.js";const m=JSON.parse('{"title":"项目结构","description":"","frontmatter":{},"headers":[],"relativePath":"zh-CN/development/project-structure.md","filePath":"zh-CN/development/project-structure.md","lastUpdated":1784903584000}'),p={name:"zh-CN/development/project-structure.md"};function d(c,s,l,r,o,i){return n(),e("div",null,[...s[0]||(s[0]=[t(`<h1 id="项目结构" tabindex="-1">项目结构 <a class="header-anchor" href="#项目结构" aria-label="Permalink to &quot;项目结构&quot;">​</a></h1><div class="language- vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang"></span><pre class="shiki shiki-themes github-light github-dark vp-code" tabindex="0"><code><span class="line"><span>swag2mcp/</span></span>
+<span class="line"><span>├── cmd/</span></span>
+<span class="line"><span>│   ├── swag2mcp/          # 主二进制文件</span></span>
+<span class="line"><span>│   │   └── main.go</span></span>
+<span class="line"><span>│   └── swag2mcp-mock/     # 模拟服务器</span></span>
+<span class="line"><span>│       └── main.go</span></span>
+<span class="line"><span>├── internal/</span></span>
+<span class="line"><span>│   ├── auth/              # 9 种认证方法</span></span>
+<span class="line"><span>│   ├── cache/             # 规范缓存</span></span>
+<span class="line"><span>│   ├── commands/          # 13 个 CLI 命令（cobra）</span></span>
+<span class="line"><span>│   ├── config/            # YAML 配置</span></span>
+<span class="line"><span>│   ├── env/               # 环境变量</span></span>
+<span class="line"><span>│   ├── httpclient/        # HTTP 客户端</span></span>
+<span class="line"><span>│   ├── id/                # MD5 ID 生成</span></span>
+<span class="line"><span>│   ├── index/             # 全文搜索（bluge）</span></span>
+<span class="line"><span>│   ├── model/             # 数据模型</span></span>
+<span class="line"><span>│   ├── reader/            # 大响应读取</span></span>
+<span class="line"><span>│   ├── server/</span></span>
+<span class="line"><span>│   │   ├── mcp/           # MCP 服务器（19 个工具）</span></span>
+<span class="line"><span>│   │   └── mockserver/    # 模拟服务器</span></span>
+<span class="line"><span>│   ├── service/           # 业务逻辑</span></span>
+<span class="line"><span>│   ├── spec/              # 规范解析器</span></span>
+<span class="line"><span>│   ├── tui/               # TUI 界面</span></span>
+<span class="line"><span>│   └── workspace/         # 工作区管理</span></span>
+<span class="line"><span>├── specs/                 # 示例规范</span></span>
+<span class="line"><span>├── tests/                 # 集成测试</span></span>
+<span class="line"><span>├── docs/                  # 文档</span></span>
+<span class="line"><span>├── examples/              # 配置示例</span></span>
+<span class="line"><span>└── playground/            # 开发沙箱</span></span></code></pre></div><h2 id="关键包" tabindex="-1">关键包 <a class="header-anchor" href="#关键包" aria-label="Permalink to &quot;关键包&quot;">​</a></h2><table tabindex="0"><thead><tr><th>包</th><th>描述</th></tr></thead><tbody><tr><td><code>auth</code></td><td>9 种认证方法</td></tr><tr><td><code>cache</code></td><td>基于磁盘的缓存，带 TTL</td></tr><tr><td><code>commands</code></td><td>Cobra CLI 命令</td></tr><tr><td><code>config</code></td><td>带级联的 YAML 配置</td></tr><tr><td><code>httpclient</code></td><td>可配置的 HTTP 客户端</td></tr><tr><td><code>index</code></td><td>全文搜索（bluge）</td></tr><tr><td><code>server/mcp</code></td><td>MCP 服务器（3 种传输方式）</td></tr><tr><td><code>service</code></td><td>业务逻辑（核心）</td></tr><tr><td><code>spec</code></td><td>OpenAPI/Swagger/Postman 解析器</td></tr><tr><td><code>tui</code></td><td>Bubbletea TUI</td></tr><tr><td><code>workspace</code></td><td>文件管理</td></tr></tbody></table>`,4)])])}const u=a(p,[["render",d]]);export{m as __pageData,u as default};

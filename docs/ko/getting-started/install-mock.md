@@ -123,7 +123,7 @@ docker pull ghcr.io/mmadfox/swag2mcp-mock:latest
 Mock 서버 실행:
 
 ```bash
-docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-mock:latest mockserver
+docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-mock:latest
 ```
 
 확인:
@@ -226,7 +226,7 @@ docker pull ghcr.io/mmadfox/swag2mcp-mock:latest
 Mock 서버 실행:
 
 ```bash
-docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-mock:latest mockserver
+docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-mock:latest
 ```
 
 확인:

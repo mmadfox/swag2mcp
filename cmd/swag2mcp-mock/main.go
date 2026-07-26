@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	if err := commands.NewMockServerCmd().Execute(); err != nil {
+	if err := commands.NewMockRootCmd().Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)
 	}
