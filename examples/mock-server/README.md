@@ -25,7 +25,7 @@ specs:
         token: any-token
     collections:
       - llm_title: Open-Meteo Swagger
-        location: specs/meteo.json
+        location: specs/meteo/forecast.yml
         base_mock_url: localhost:8080
 ```
 

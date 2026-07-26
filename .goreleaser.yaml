@@ -84,6 +84,21 @@ nfpms:
         dst: /usr/lib/systemd/system/swag2mcp.service
         type: config
 
+  - id: swag2mcp-mock
+    package_name: swag2mcp-mock
+    builds: [swag2mcp-mock]
+    vendor: mmadfox
+    homepage: https://github.com/mmadfox/swag2mcp
+    maintainer: mmadfox
+    description: Mock server for swag2mcp API testing
+    formats:
+      - deb
+      - rpm
+    contents:
+      - src: scripts/swag2mcp-mock.service
+        dst: /usr/lib/systemd/system/swag2mcp-mock.service
+        type: config
+
 dockers:
   - id: swag2mcp
     use: buildx

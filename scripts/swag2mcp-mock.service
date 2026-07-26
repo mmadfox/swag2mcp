@@ -1,5 +1,5 @@
 [Unit]
-Description=swag2mcp MCP Server
+Description=swag2mcp Mock Server
 Documentation=https://github.com/mmadfox/swag2mcp
 After=network.target
 
@@ -7,8 +7,8 @@ After=network.target
 Type=simple
 # Default workspace: ~/.swag2mcp
 # If your workspace is elsewhere, specify the path:
-# ExecStart=/usr/bin/swag2mcp mcp --transport streamable-http --http-addr 127.0.0.1:8080 /path/to/workspace
-ExecStart=/usr/bin/swag2mcp mcp --transport streamable-http --http-addr 127.0.0.1:8080
+# ExecStart=/usr/bin/swag2mcp-mock /path/to/workspace
+ExecStart=/usr/bin/swag2mcp-mock
 Restart=on-failure
 RestartSec=5
 User=swag2mcp

@@ -16,5 +16,5 @@ specs:
         token: any-token
     collections:
       - llm_title: Open-Meteo Swagger
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
         base_mock_url: localhost:8080

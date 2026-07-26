@@ -7,6 +7,8 @@ mock_enabled: true
 # Set to true when testing or when you need to call the same endpoint
 # repeatedly without waiting. Defaults to false (rate limiter enabled).
 disable_ratelimiter: false
+rate_limit_interval: 5s
+
 http_client:
   random: true
   proxy:
@@ -48,10 +50,10 @@ specs:
         token: $(PAYMENTS_API_TOKEN)
     collections:
       - llm_title: Transactions
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
         base_mock_url: localhost:8080
       - llm_title: Refunds
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
         disable: true
 
   # ─── Spec 2: Internal API with Basic auth ─────────────────────────────
@@ -86,7 +88,7 @@ specs:
     llm_title: Legacy API (Deprecated)
     collections:
       - llm_title: Old Endpoints
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
 
   # ─── Spec 4: OAuth2 Client Credentials ─────────────────────────────────
   - domain: analytics-api
@@ -109,6 +111,6 @@ specs:
           - analytics:write
     collections:
       - llm_title: Reports
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
       - llm_title: Dashboards
-        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo.json
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
