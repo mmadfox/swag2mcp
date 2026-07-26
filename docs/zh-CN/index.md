@@ -1,7 +1,7 @@
 # swag2mcp
 
-<div style="background: #dc2626; color: white; padding: 20px 24px; border-radius: 12px; text-align: center; font-size: 1.4em; font-weight: 700; margin: 24px 0;">
-  🚧 开发中 — 即将发布！
+<div style="background: #c4b5fd; color: white; padding: 20px 24px; border-radius: 12px; text-align: center; font-size: 1.4em; font-weight: 700; margin: 24px 0;">
+  v0.1.0-alpha.1 — 内测版本。API 稳定，正在积极测试。欢迎反馈！
 </div>
 
 通过模型上下文协议（MCP）将 OpenAPI/Swagger/Postman API 规范与 LLM 智能体连接起来。
