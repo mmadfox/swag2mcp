@@ -6,8 +6,8 @@
 </p>
 
 <p align="center">
-  <strong style="background: #dc2626; color: white; padding: 12px 20px; border-radius: 8px; display: inline-block; font-size: 1.1em;">
-    🚧 WORK IN PROGRESS — release coming soon!
+  <strong style="background: #c4b5fd; color: white; padding: 12px 20px; border-radius: 8px; display: inline-block; font-size: 1.1em;">
+    v0.1.0-alpha.1 — alpha release. APIs are stable, actively tested. Feedback welcome!
   </strong>
 </p>
 
