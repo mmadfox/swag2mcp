@@ -1,0 +1,17 @@
+[Unit]
+Description=swag2mcp MCP Server
+Documentation=https://github.com/mmadfox/swag2mcp
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/swag2mcp mcp
+Restart=on-failure
+RestartSec=5
+User=swag2mcp
+Group=swag2mcp
+AmbientCapabilities=
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

@@ -79,6 +79,10 @@ nfpms:
     formats:
       - deb
       - rpm
+    contents:
+      - src: scripts/swag2mcp.service
+        dst: /usr/lib/systemd/system/swag2mcp.service
+        type: config
 
 dockers:
   - id: swag2mcp
