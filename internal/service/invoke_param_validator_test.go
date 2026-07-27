@@ -244,3 +244,79 @@ func TestValidateRequestBody_noJSONContent(t *testing.T) {
 	err := validateRequestBody(op, map[string]any{"name": "test"})
 	require.NoError(t, err)
 }
+
+func TestValidateRequestBody_graphQLStyle(t *testing.T) {
+	t.Parallel()
+
+	op := &spec.Operation{
+		RequestBody: &spec.RequestBody{
+			Required: true,
+			Content: map[string]*spec.MediaType{
+				"application/json": {
+					Schema: &spec.Schema{
+						Type:        "object",
+						Description: "GraphQL query",
+					},
+				},
+			},
+		},
+	}
+	err := validateRequestBody(op, map[string]any{"query": "{ users { id } }"})
+	require.NoError(t, err)
+}
+
+func TestValidateRequestBody_graphQLStyleWithVariables(t *testing.T) {
+	t.Parallel()
+
+	op := &spec.Operation{
+		RequestBody: &spec.RequestBody{
+			Required: true,
+			Content: map[string]*spec.MediaType{
+				"application/json": {
+					Schema: &spec.Schema{
+						Type:        "object",
+						Description: "GraphQL query",
+					},
+				},
+			},
+		},
+	}
+	err := validateRequestBody(op, map[string]any{
+		"query":     "query($id: ID!) { user(id: $id) { name } }",
+		"variables": map[string]any{"id": "123"},
+	})
+	require.NoError(t, err)
+}
+
+func TestValidateObjectSchema_noProperties(t *testing.T) {
+	t.Parallel()
+
+	sc := &spec.Schema{
+		Type: "object",
+	}
+	err := validateSchemaValue(sc, map[string]any{"query": "test", "variables": map[string]any{"id": "1"}}, "$")
+	require.NoError(t, err)
+}
+
+func TestValidateObjectSchema_noPropertiesWithRequired(t *testing.T) {
+	t.Parallel()
+
+	sc := &spec.Schema{
+		Type:     "object",
+		Required: []string{"query"},
+	}
+	err := validateSchemaValue(sc, map[string]any{"query": "test"}, "$")
+	require.NoError(t, err)
+}
+
+func TestValidateObjectSchema_noPropertiesMissingRequired(t *testing.T) {
+	t.Parallel()
+
+	sc := &spec.Schema{
+		Type:     "object",
+		Required: []string{"query"},
+	}
+	err := validateSchemaValue(sc, map[string]any{"variables": "test"}, "$")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "missing required field")
+}

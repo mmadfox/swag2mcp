@@ -121,12 +121,14 @@ func validateObjectSchema(sc *spec.Schema, value any, path string) error {
 		}
 	}
 
-	for key := range obj {
-		if _, defined := sc.Properties[key]; !defined {
-			return fmt.Errorf(
-				"unknown field %q at %s, all fields must match the schema",
-				key, path,
-			)
+	if len(sc.Properties) > 0 {
+		for key := range obj {
+			if _, defined := sc.Properties[key]; !defined {
+				return fmt.Errorf(
+					"unknown field %q at %s, all fields must match the schema",
+					key, path,
+				)
+			}
 		}
 	}
 
