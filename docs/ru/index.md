@@ -1,9 +1,5 @@
 # swag2mcp
 
-<div style="background: #c4b5fd; color: white; padding: 20px 24px; border-radius: 12px; text-align: center; font-size: 1.4em; font-weight: 700; margin: 24px 0;">
-  v0.1.0-alpha.1 — альфа-версия. API стабильны, активно тестируются. Ждём ваши отзывы!
-</div>
-
 Объединяет спецификации OpenAPI/Swagger/Postman с LLM-агентами через протокол MCP.
 
 <a href="https://www.youtube.com/watch?v=1Da4UmE2f9U" target="_blank">
