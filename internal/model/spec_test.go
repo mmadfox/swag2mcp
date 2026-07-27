@@ -253,19 +253,23 @@ func TestEndpoint_Fields(t *testing.T) {
 	t.Parallel()
 
 	e := &Endpoint{
-		ID:           "ep-1",
-		TagID:        "tag-1",
-		CollectionID: "coll-1",
-		SpecID:       "spec-1",
-		Name:         "GET",
-		Path:         "/users",
-		Tag:          "users-tag",
-		Operation:    &spec.Operation{ID: "getUsers"},
+		ID:              "ep-1",
+		TagID:           "tag-1",
+		CollectionID:    "coll-1",
+		SpecID:          "spec-1",
+		SpecDomain:      "test-domain",
+		CollectionTitle: "Test Collection",
+		Name:            "GET",
+		Path:            "/users",
+		Tag:             "users-tag",
+		Operation:       &spec.Operation{ID: "getUsers"},
 	}
 	assert.Equal(t, "ep-1", e.ID)
 	assert.Equal(t, "tag-1", e.TagID)
 	assert.Equal(t, "coll-1", e.CollectionID)
 	assert.Equal(t, "spec-1", e.SpecID)
+	assert.Equal(t, "test-domain", e.SpecDomain)
+	assert.Equal(t, "Test Collection", e.CollectionTitle)
 	assert.Equal(t, "GET", e.Name)
 	assert.Equal(t, "/users", e.Path)
 	assert.Equal(t, "users-tag", e.Tag)
