@@ -6,13 +6,16 @@ package reader
 // included in the /LICENSE file.
 
 import (
-	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
 )
+
+const countLinesBufSize = 32 * 1024
 
 // pathForChild builds a dotted path to a child node.
 func pathForChild(parent, child string) string {
@@ -63,6 +66,7 @@ func (r *reader) Outline(path string, opts OutlineOptions) (Outline, error) {
 }
 
 // countLines counts newline-separated lines in a file.
+// Uses a fixed-size buffer to avoid [bufio.Scanner]'s 64KB token limit.
 func countLines(path string) (int, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -71,14 +75,19 @@ func countLines(path string) (int, error) {
 	defer f.Close()
 
 	count := 0
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		count++
+	buf := make([]byte, countLinesBufSize)
+	for {
+		n, err := f.Read(buf)
+		if n > 0 {
+			count += bytes.Count(buf[:n], []byte{'\n'})
+		}
+		if err == io.EOF {
+			return count + 1, nil
+		}
+		if err != nil {
+			return 0, err
+		}
 	}
-	if err := scanner.Err(); err != nil {
-		return 0, err
-	}
-	return count, nil
 }
 
 // buildOutlineNode builds a recursive structural summary of the JSON value at path.

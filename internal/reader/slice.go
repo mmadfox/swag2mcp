@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -159,19 +160,24 @@ func (r *reader) sliceByLines(path string, opts SliceOptions) (Slice, error) {
 	defer f.Close()
 
 	var lines []string
-	scanner := bufio.NewScanner(f)
+	reader := bufio.NewReader(f)
 	lineNo := 0
-	for scanner.Scan() {
+	for {
+		line, err := reader.ReadString('\n')
 		lineNo++
 		if lineNo >= start && lineNo <= end {
-			lines = append(lines, scanner.Text())
+			// Strip the trailing newline (ReadString includes the delimiter).
+			lines = append(lines, strings.TrimSuffix(line, "\n"))
 		}
 		if lineNo >= end {
 			break
 		}
-	}
-	if err := scanner.Err(); err != nil {
-		return Slice{}, fmt.Errorf("scan file: %w", err)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return Slice{}, fmt.Errorf("read file: %w", err)
+		}
 	}
 
 	if len(lines) == 0 {

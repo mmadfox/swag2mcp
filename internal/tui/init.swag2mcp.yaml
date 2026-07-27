@@ -2,7 +2,7 @@
 # Ready-to-use specs from the repository.
 # Uncomment or modify as needed.
 disable_ratelimiter: false 
-rate_limit_interval: 3s
+rate_limit_interval: 1s
 
 mock_enabled: false 
 
