@@ -54,13 +54,15 @@ func seedTestData(
 
 	endpointID := id.Method(specID, collectionID, tagID, "GET", "/test", "testOp")
 	endpointInfo := &model.Endpoint{
-		ID:           endpointID,
-		SpecID:       specID,
-		CollectionID: collectionID,
-		TagID:        tagID,
-		Tag:          "test-tag",
-		Name:         "GET",
-		Path:         "/test",
+		ID:              endpointID,
+		SpecID:          specID,
+		SpecDomain:      domain,
+		CollectionID:    collectionID,
+		CollectionTitle: "Test Collection",
+		TagID:           tagID,
+		Tag:             "test-tag",
+		Name:            "GET",
+		Path:            "/test",
 		Operation: &spec.Operation{
 			ID:          "testOp",
 			Summary:     "Test endpoint",
@@ -503,9 +505,31 @@ func TestSearch_ByPath(t *testing.T) {
 	idx := newTestIndex(t)
 	seedTestData(t, idx, t.Name())
 
-	results, err := idx.Search(context.Background(), "test", 10)
+	results, err := idx.Search(context.Background(), "path:/test", 10)
 	require.NoError(t, err)
 	require.NotEmpty(t, results, "expected at least 1 result")
+}
+
+func TestSearch_ByPathWithSlash(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedTestData(t, idx, t.Name())
+
+	results, err := idx.Search(context.Background(), `path:"/test"`, 10)
+	require.NoError(t, err)
+	require.NotEmpty(t, results, "expected at least 1 result")
+}
+
+func TestSearch_ByPathNoResults(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedTestData(t, idx, t.Name())
+
+	results, err := idx.Search(context.Background(), "path:/nonexistent", 10)
+	require.NoError(t, err)
+	assert.Len(t, results, 0)
 }
 
 func TestSearch_BySummary(t *testing.T) {
@@ -561,6 +585,122 @@ func TestSearch_InvalidQuerySyntax(t *testing.T) {
 	_, err := idx.Search(context.Background(), "invalid:field:value", 10)
 	require.Error(t, err)
 	require.ErrorIs(t, err, ErrInvalidQuery)
+}
+
+func TestSearch_BySpecDomain(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedTestData(t, idx, "binance")
+
+	results, err := idx.Search(context.Background(), "spec_domain:binance", 10)
+	require.NoError(t, err)
+	require.NotEmpty(t, results, "expected results for spec_domain:binance")
+}
+
+func TestSearch_BySpecDomain_NoResults(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedTestData(t, idx, "binance")
+
+	results, err := idx.Search(context.Background(), "spec_domain:coinbase", 10)
+	require.NoError(t, err)
+	assert.Len(t, results, 0)
+}
+
+func TestSearch_ByCollectionTitle(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedTestData(t, idx, t.Name())
+
+	results, err := idx.Search(context.Background(), "collection_title:test", 10)
+	require.NoError(t, err)
+	require.NotEmpty(t, results, "expected results for collection_title:test")
+}
+
+func TestSearch_ByTagWithHyphen(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedTestData(t, idx, t.Name())
+
+	results, err := idx.Search(context.Background(), "tag:test-tag", 10)
+	require.NoError(t, err)
+	require.NotEmpty(t, results, "expected results for tag:test-tag")
+}
+
+func TestSearch_BySpecDomainInAll(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedTestData(t, idx, "binance")
+
+	results, err := idx.Search(context.Background(), "binance", 10)
+	require.NoError(t, err)
+	require.NotEmpty(t, results, "expected results for plain text 'binance' in _all field")
+}
+
+func TestSearch_ByCollectionTitleInAll(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedTestData(t, idx, t.Name())
+
+	results, err := idx.Search(context.Background(), "test collection", 10)
+	require.NoError(t, err)
+	require.NotEmpty(t, results, "expected results for 'test collection' in _all field")
+}
+
+func TestNormalizeFieldValues(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"tag:test-tag", "tag:test_tag"},
+		{"+tag:market-data", "+tag:market_data"},
+		{"method:GET", "method:GET"},
+		{"spec_domain:my-api", "spec_domain:my_api"},
+		{"+method:GET +tag:pets", "+method:GET +tag:pets"},
+		{"tag:market-data tag:store", "tag:market_data tag:store"},
+		{"simple text", "simple text"},
+		{"", ""},
+		{"path:/api/v3", `path:"/api/v3"`},
+		{"+path:/api/v3", `+path:"/api/v3"`},
+		{`path:"/api/v3"`, `path:"/api/v3"`},
+		{"path:/test", `path:"/test"`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			t.Parallel()
+			got := normalizeFieldValues(tt.input)
+			assert.Equal(t, tt.expected, got)
+		})
+	}
+}
+
+func TestNormalizeTag(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"test-tag", "test_tag"},
+		{"market-data", "market_data"},
+		{"pets", "pets"},
+		{"", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			t.Parallel()
+			got := normalizeTag(tt.input)
+			assert.Equal(t, tt.expected, got)
+		})
+	}
 }
 
 func TestSize(t *testing.T) {

@@ -32,6 +32,7 @@ type requestBuilder struct {
 	globalHeaders   map[string]string
 	globalUserAgent string
 	globalCookies   []httpclient.Cookie
+	mockEnabled     bool
 }
 
 // requestOption is a functional option for configuring a requestBuilder.
@@ -112,6 +113,12 @@ func withGlobalCookies(cookies []httpclient.Cookie) requestOption {
 	}
 }
 
+func withMockEnabled(enabled bool) requestOption {
+	return func(builder *requestBuilder) {
+		builder.mockEnabled = enabled
+	}
+}
+
 // build constructs the [http.Request] from the configured options.
 func (builder *requestBuilder) build(ctx context.Context) (*http.Request, error) {
 	baseURL := builder.resolveBaseURL()
@@ -165,7 +172,7 @@ func (builder *requestBuilder) build(ctx context.Context) (*http.Request, error)
 }
 
 func (builder *requestBuilder) resolveBaseURL() string {
-	if builder.collection.BaseMockURL != "" {
+	if builder.mockEnabled && builder.collection.BaseMockURL != "" {
 		return "http://" + builder.collection.BaseMockURL
 	}
 	if builder.collection.BaseURL != "" {

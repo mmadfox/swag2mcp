@@ -165,6 +165,8 @@ func (is *invokeService) buildRequest(
 	ep *model.Endpoint,
 	rq InvokeRequest,
 ) (*http.Request, error) {
+	cfg := is.ctx.loadConfig()
+	mockEnabled := cfg != nil && cfg.MockEnabled
 	return newRequestBuilder(
 		withSpec(sp),
 		withCollection(coll),
@@ -177,6 +179,7 @@ func (is *invokeService) buildRequest(
 		withGlobalHeaders(is.ctx.loadGlobalHeaders()),
 		withGlobalUserAgent(is.ctx.loadGlobalUserAgent()),
 		withGlobalCookies(is.ctx.loadGlobalCookies()),
+		withMockEnabled(mockEnabled),
 	).build(ctx)
 }
 

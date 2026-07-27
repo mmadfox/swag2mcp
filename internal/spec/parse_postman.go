@@ -338,7 +338,7 @@ func appendPostmanBody(body *postmanBody, op *Operation, method string) {
 		}
 		rb.Content["application/x-www-form-urlencoded"] = &MediaType{
 			Schema: &Schema{
-				Type:       "object",
+				Type:       paramTypeObj,
 				Properties: props,
 			},
 		}
@@ -367,6 +367,20 @@ func appendPostmanBody(body *postmanBody, op *Operation, method string) {
 			Schema: &Schema{
 				Type:        paramTypeObj,
 				Description: "GraphQL query",
+				Properties: map[string]*Schema{
+					"query": {
+						Type:        paramTypeStr,
+						Description: "GraphQL query string",
+					},
+					"variables": {
+						Type:        paramTypeObj,
+						Description: "GraphQL variables",
+					},
+					"operationName": {
+						Type:        paramTypeStr,
+						Description: "GraphQL operation name",
+					},
+				},
 			},
 		}
 	}

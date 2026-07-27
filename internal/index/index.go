@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"iter"
 	"log/slog"
+	"regexp"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -276,10 +277,21 @@ func (idx *Index) index(endpoints []*model.Endpoint) error {
 		summary := strings.ToLower(ep.SummaryOrFallback())
 		doc := bluge.NewDocument(ep.ID).
 			AddField(bluge.NewKeywordField("method", strings.ToLower(ep.Name)).StoreValue()).
-			AddField(bluge.NewKeywordField("tag", strings.ToLower(ep.Tag)).StoreValue()).
-			AddField(bluge.NewKeywordField("path", strings.ToLower(ep.Path)).StoreValue()).
-			AddField(bluge.NewTextField("summary", strings.ToLower(summary)).WithAnalyzer(idx.analyzer).StoreValue().SearchTermPositions()).
-			AddField(bluge.NewTextField("_all", fmt.Sprintf("%s %s %s %s", strings.ToLower(ep.Name), strings.ToLower(ep.Path), strings.ToLower(ep.Tag), strings.ToLower(summary))).WithAnalyzer(idx.analyzer).SearchTermPositions())
+			AddField(bluge.NewKeywordField("tag", normalizeTag(strings.ToLower(ep.Tag))).StoreValue()).
+			AddField(bluge.NewTextField("path",
+				strings.ToLower(ep.Path)).WithAnalyzer(idx.analyzer).StoreValue().SearchTermPositions()).
+			AddField(bluge.NewKeywordField("spec_domain", strings.ToLower(ep.SpecDomain)).StoreValue()).
+			AddField(bluge.NewTextField("collection_title",
+				strings.ToLower(ep.CollectionTitle)).WithAnalyzer(idx.analyzer).StoreValue()).
+			AddField(bluge.NewTextField("summary",
+				strings.ToLower(summary)).WithAnalyzer(idx.analyzer).StoreValue().SearchTermPositions()).
+			AddField(bluge.NewTextField("_all", fmt.Sprintf("%s %s %s %s %s %s",
+				strings.ToLower(ep.Name),
+				strings.ToLower(ep.Path),
+				strings.ToLower(ep.Tag),
+				strings.ToLower(ep.SpecDomain),
+				strings.ToLower(ep.CollectionTitle),
+				strings.ToLower(summary))).WithAnalyzer(idx.analyzer).SearchTermPositions())
 
 		batch.Update(bluge.Identifier(ep.ID), doc)
 	}
@@ -510,9 +522,12 @@ func (idx *Index) buildQuery(q string) (bluge.Query, error) {
 		return bluge.NewMatchAllQuery(), nil
 	}
 
+	q = normalizeFieldValues(q)
+
 	qsOpts := querystring.DefaultOptions().
 		WithDefaultAnalyzer(idx.analyzer).
 		WithAnalyzerForField("summary", idx.analyzer).
+		WithAnalyzerForField("path", idx.analyzer).
 		WithAnalyzerForField("_all", idx.analyzer)
 
 	if parsedQuery, err := querystring.ParseQueryString(q, qsOpts); err == nil {
@@ -526,6 +541,37 @@ func (idx *Index) buildQuery(q string) (bluge.Query, error) {
 	}
 
 	return bluge.NewMatchQuery(q).SetField("_all").SetAnalyzer(idx.analyzer), nil
+}
+
+// normalizeFieldValues normalizes field:value patterns in a query string so
+// bluge parses them correctly:
+//   - path: values are wrapped in quotes (slashes would break parsing)
+//   - tag: values have hyphens replaced with underscores (bluge treats - as NOT)
+//   - spec_domain: values have hyphens replaced with underscores
+func normalizeFieldValues(q string) string {
+	fieldRe := regexp.MustCompile(`([+\-]?\w+):([\w\-/]+)`)
+	return fieldRe.ReplaceAllStringFunc(q, func(match string) string {
+		parts := fieldRe.FindStringSubmatch(match)
+		if len(parts) == 0 {
+			return match
+		}
+		field := strings.TrimLeft(parts[1], "+")
+		value := parts[2]
+
+		switch {
+		case field == "path":
+			return parts[1] + ":\"" + value + "\""
+		case strings.Contains(value, "-"):
+			return parts[1] + ":" + strings.ReplaceAll(value, "-", "_")
+		}
+		return match
+	})
+}
+
+// normalizeTag replaces hyphens with underscores in tag values so bluge
+// keyword queries work correctly (bluge interprets hyphens as NOT).
+func normalizeTag(tag string) string {
+	return strings.ReplaceAll(tag, "-", "_")
 }
 
 // hasQueryStringSyntax reports whether the query contains characters specific

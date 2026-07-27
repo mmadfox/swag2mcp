@@ -79,14 +79,16 @@ type Tag struct {
 
 // Endpoint represents a single API endpoint with its method, path, tag, and operation details.
 type Endpoint struct {
-	ID           string          `json:"id"`
-	TagID        string          `json:"tagId"`
-	CollectionID string          `json:"collectionId"`
-	SpecID       string          `json:"specId"`
-	Name         string          `json:"method"`
-	Path         string          `json:"path"`
-	Tag          string          `json:"tag"`
-	Operation    *spec.Operation `json:"operation"`
+	ID              string          `json:"id"`
+	TagID           string          `json:"tagId"`
+	CollectionID    string          `json:"collectionId"`
+	SpecID          string          `json:"specId"`
+	SpecDomain      string          `json:"specDomain"`
+	CollectionTitle string          `json:"collectionTitle"`
+	Name            string          `json:"method"`
+	Path            string          `json:"path"`
+	Tag             string          `json:"tag"`
+	Operation       *spec.Operation `json:"operation"`
 }
 
 // SummaryOrFallback returns the endpoint summary, falling back to description, then "Method /path".

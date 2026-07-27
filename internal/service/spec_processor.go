@@ -113,13 +113,15 @@ func (s *Service) processCollection(
 				pi.Path,
 				op.ID,
 			),
-			SpecID:       sp.ID,
-			CollectionID: coll.ID,
-			TagID:        tagID,
-			Tag:          tagName,
-			Name:         pi.Method,
-			Path:         pi.Path,
-			Operation:    op,
+			SpecID:          sp.ID,
+			SpecDomain:      sp.Domain,
+			CollectionID:    coll.ID,
+			CollectionTitle: coll.Title,
+			TagID:           tagID,
+			Tag:             tagName,
+			Name:            pi.Method,
+			Path:            pi.Path,
+			Operation:       op,
 		}
 		eps[ep.ID] = &ep
 	}
