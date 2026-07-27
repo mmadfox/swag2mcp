@@ -422,7 +422,14 @@ func TestAppendPostmanBody_GraphQL(t *testing.T) {
 	op := &Operation{Parameters: make([]*Parameter, 0)}
 	appendPostmanBody(&postmanBody{Mode: "graphql"}, op, http.MethodPost)
 	require.NotNil(t, op.RequestBody, "RequestBody is nil")
-	require.NotNil(t, op.RequestBody.Content["application/json"], "expected application/json content type")
+	mt, exists := op.RequestBody.Content["application/json"]
+	require.True(t, exists, "expected application/json content type")
+	require.NotNil(t, mt.Schema, "expected schema")
+	assert.Equal(t, "object", mt.Schema.Type)
+	assert.Contains(t, mt.Schema.Properties, "query")
+	assert.Contains(t, mt.Schema.Properties, "variables")
+	assert.Contains(t, mt.Schema.Properties, "operationName")
+	assert.Equal(t, "string", mt.Schema.Properties["query"].Type)
 }
 
 func TestAppendPostmanBody_UnknownMode(t *testing.T) {

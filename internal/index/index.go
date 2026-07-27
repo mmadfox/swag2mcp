@@ -278,7 +278,8 @@ func (idx *Index) index(endpoints []*model.Endpoint) error {
 		doc := bluge.NewDocument(ep.ID).
 			AddField(bluge.NewKeywordField("method", strings.ToLower(ep.Name)).StoreValue()).
 			AddField(bluge.NewKeywordField("tag", normalizeTag(strings.ToLower(ep.Tag))).StoreValue()).
-			AddField(bluge.NewKeywordField("path", strings.ToLower(ep.Path)).StoreValue()).
+			AddField(bluge.NewTextField("path",
+				strings.ToLower(ep.Path)).WithAnalyzer(idx.analyzer).StoreValue().SearchTermPositions()).
 			AddField(bluge.NewKeywordField("spec_domain", strings.ToLower(ep.SpecDomain)).StoreValue()).
 			AddField(bluge.NewTextField("collection_title",
 				strings.ToLower(ep.CollectionTitle)).WithAnalyzer(idx.analyzer).StoreValue()).
@@ -521,11 +522,12 @@ func (idx *Index) buildQuery(q string) (bluge.Query, error) {
 		return bluge.NewMatchAllQuery(), nil
 	}
 
-	q = normalizeHyphensInFieldValues(q)
+	q = normalizeFieldValues(q)
 
 	qsOpts := querystring.DefaultOptions().
 		WithDefaultAnalyzer(idx.analyzer).
 		WithAnalyzerForField("summary", idx.analyzer).
+		WithAnalyzerForField("path", idx.analyzer).
 		WithAnalyzerForField("_all", idx.analyzer)
 
 	if parsedQuery, err := querystring.ParseQueryString(q, qsOpts); err == nil {
@@ -541,16 +543,26 @@ func (idx *Index) buildQuery(q string) (bluge.Query, error) {
 	return bluge.NewMatchQuery(q).SetField("_all").SetAnalyzer(idx.analyzer), nil
 }
 
-// normalizeHyphensInFieldValues replaces hyphens with underscores in field:value
-// patterns so bluge does not interpret them as the NOT operator.
-// For example, tag:market-data becomes tag:market_data.
-// The tag field is indexed with underscores instead of hyphens for the same reason.
-func normalizeHyphensInFieldValues(q string) string {
-	fieldRe := regexp.MustCompile(`([+\-]?\w+):([\w\-]+)`)
+// normalizeFieldValues normalizes field:value patterns in a query string so
+// bluge parses them correctly:
+//   - path: values are wrapped in quotes (slashes would break parsing)
+//   - tag: values have hyphens replaced with underscores (bluge treats - as NOT)
+//   - spec_domain: values have hyphens replaced with underscores
+func normalizeFieldValues(q string) string {
+	fieldRe := regexp.MustCompile(`([+\-]?\w+):([\w\-/]+)`)
 	return fieldRe.ReplaceAllStringFunc(q, func(match string) string {
 		parts := fieldRe.FindStringSubmatch(match)
-		if len(parts) > 2 && strings.Contains(parts[2], "-") {
-			return parts[1] + ":" + strings.ReplaceAll(parts[2], "-", "_")
+		if len(parts) == 0 {
+			return match
+		}
+		field := strings.TrimLeft(parts[1], "+")
+		value := parts[2]
+
+		switch {
+		case field == "path":
+			return parts[1] + ":\"" + value + "\""
+		case strings.Contains(value, "-"):
+			return parts[1] + ":" + strings.ReplaceAll(value, "-", "_")
 		}
 		return match
 	})

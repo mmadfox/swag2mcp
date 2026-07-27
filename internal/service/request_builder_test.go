@@ -125,10 +125,33 @@ func TestRequestBuilder_resolveBaseURL_mock(t *testing.T) {
 	t.Parallel()
 
 	b := &requestBuilder{
-		spec:       &model.Spec{BaseURL: "https://spec.example.com"},
-		collection: &model.Collection{BaseMockURL: "localhost:8080"},
+		spec:        &model.Spec{BaseURL: "https://spec.example.com"},
+		collection:  &model.Collection{BaseMockURL: "localhost:8080"},
+		mockEnabled: true,
 	}
 	require.Equal(t, "http://localhost:8080", b.resolveBaseURL())
+}
+
+func TestRequestBuilder_resolveBaseURL_mock_disabled(t *testing.T) {
+	t.Parallel()
+
+	b := &requestBuilder{
+		spec:        &model.Spec{BaseURL: "https://spec.example.com"},
+		collection:  &model.Collection{BaseMockURL: "localhost:8080", BaseURL: "https://coll.example.com"},
+		mockEnabled: false,
+	}
+	require.Equal(t, "https://coll.example.com", b.resolveBaseURL())
+}
+
+func TestRequestBuilder_resolveBaseURL_mock_disabled_fallback(t *testing.T) {
+	t.Parallel()
+
+	b := &requestBuilder{
+		spec:        &model.Spec{BaseURL: "https://spec.example.com"},
+		collection:  &model.Collection{BaseMockURL: "localhost:8080"},
+		mockEnabled: false,
+	}
+	require.Equal(t, "https://spec.example.com", b.resolveBaseURL())
 }
 
 func TestRequestBuilder_withHTTPConfig(t *testing.T) {

@@ -505,9 +505,31 @@ func TestSearch_ByPath(t *testing.T) {
 	idx := newTestIndex(t)
 	seedTestData(t, idx, t.Name())
 
-	results, err := idx.Search(context.Background(), "test", 10)
+	results, err := idx.Search(context.Background(), "path:/test", 10)
 	require.NoError(t, err)
 	require.NotEmpty(t, results, "expected at least 1 result")
+}
+
+func TestSearch_ByPathWithSlash(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedTestData(t, idx, t.Name())
+
+	results, err := idx.Search(context.Background(), `path:"/test"`, 10)
+	require.NoError(t, err)
+	require.NotEmpty(t, results, "expected at least 1 result")
+}
+
+func TestSearch_ByPathNoResults(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedTestData(t, idx, t.Name())
+
+	results, err := idx.Search(context.Background(), "path:/nonexistent", 10)
+	require.NoError(t, err)
+	assert.Len(t, results, 0)
 }
 
 func TestSearch_BySummary(t *testing.T) {
@@ -631,7 +653,7 @@ func TestSearch_ByCollectionTitleInAll(t *testing.T) {
 	require.NotEmpty(t, results, "expected results for 'test collection' in _all field")
 }
 
-func TestNormalizeHyphensInFieldValues(t *testing.T) {
+func TestNormalizeFieldValues(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -646,11 +668,15 @@ func TestNormalizeHyphensInFieldValues(t *testing.T) {
 		{"tag:market-data tag:store", "tag:market_data tag:store"},
 		{"simple text", "simple text"},
 		{"", ""},
+		{"path:/api/v3", `path:"/api/v3"`},
+		{"+path:/api/v3", `+path:"/api/v3"`},
+		{`path:"/api/v3"`, `path:"/api/v3"`},
+		{"path:/test", `path:"/test"`},
 	}
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
 			t.Parallel()
-			got := normalizeHyphensInFieldValues(tt.input)
+			got := normalizeFieldValues(tt.input)
 			assert.Equal(t, tt.expected, got)
 		})
 	}
