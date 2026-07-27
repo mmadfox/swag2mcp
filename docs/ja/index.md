@@ -1,9 +1,5 @@
 # swag2mcp
 
-<div style="background: #c4b5fd; color: white; padding: 20px 24px; border-radius: 12px; text-align: center; font-size: 1.4em; font-weight: 700; margin: 24px 0;">
-  v0.1.0-alpha.1 — アルファリリース。APIは安定しており、積極的にテスト中です。フィードバックをお待ちしています！
-</div>
-
 OpenAPI/Swagger/Postman の API 仕様を、Model Context Protocol (MCP) を介して LLM エージェントと連携させます。
 
 <a href="https://www.youtube.com/watch?v=1Da4UmE2f9U" target="_blank">
