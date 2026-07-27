@@ -235,3 +235,175 @@ func TestSwaggerOpToOp_DefaultResponse(t *testing.T) {
 	require.True(t, ok, "default response not found")
 	assert.Equal(t, "Default response", resp.Description)
 }
+
+func TestPathItemToOps_MergesPathLevelParams(t *testing.T) {
+	t.Parallel()
+
+	item := spec.PathItem{
+		PathItemProps: spec.PathItemProps{
+			Parameters: []spec.Parameter{
+				{
+					ParamProps: spec.ParamProps{
+						Name:     "id",
+						In:       "path",
+						Required: true,
+					},
+					SimpleSchema: spec.SimpleSchema{
+						Type: "string",
+					},
+				},
+			},
+			Get: &spec.Operation{
+				OperationProps: spec.OperationProps{
+					ID: "getItem",
+					Parameters: []spec.Parameter{
+						{
+							ParamProps: spec.ParamProps{
+								Name: "limit",
+								In:   "query",
+							},
+							SimpleSchema: spec.SimpleSchema{
+								Type: "integer",
+							},
+						},
+					},
+				},
+			},
+			Post: &spec.Operation{
+				OperationProps: spec.OperationProps{
+					ID: "createItem",
+				},
+			},
+		},
+	}
+
+	items := pathItemToOps("/items/{id}", item)
+	require.Len(t, items, 2)
+
+	// GET should have both path-level (id) and operation-level (limit) params
+	getOp := items[0]
+	require.Equal(t, "getItem", getOp.Operation.ID)
+	require.Len(t, getOp.Operation.Parameters, 2)
+	assert.Equal(t, "id", getOp.Operation.Parameters[0].Name)
+	assert.Equal(t, "path", getOp.Operation.Parameters[0].In)
+	assert.True(t, getOp.Operation.Parameters[0].Required)
+	assert.Equal(t, "limit", getOp.Operation.Parameters[1].Name)
+	assert.Equal(t, "query", getOp.Operation.Parameters[1].In)
+
+	// POST should have only path-level params
+	postOp := items[1]
+	require.Equal(t, "createItem", postOp.Operation.ID)
+	require.Len(t, postOp.Operation.Parameters, 1)
+	assert.Equal(t, "id", postOp.Operation.Parameters[0].Name)
+	assert.Equal(t, "path", postOp.Operation.Parameters[0].In)
+}
+
+func TestPathItemToOps_OpLevelOverridesPathLevel(t *testing.T) {
+	t.Parallel()
+
+	item := spec.PathItem{
+		PathItemProps: spec.PathItemProps{
+			Parameters: []spec.Parameter{
+				{
+					ParamProps: spec.ParamProps{
+						Name:     "id",
+						In:       "path",
+						Required: true,
+					},
+					SimpleSchema: spec.SimpleSchema{
+						Type: "string",
+					},
+				},
+			},
+			Get: &spec.Operation{
+				OperationProps: spec.OperationProps{
+					ID: "getItem",
+					Parameters: []spec.Parameter{
+						{
+							ParamProps: spec.ParamProps{
+								Name:     "id",
+								In:       "path",
+								Required: true,
+							},
+							SimpleSchema: spec.SimpleSchema{
+								Type: "integer",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	items := pathItemToOps("/items/{id}", item)
+	require.Len(t, items, 1)
+
+	getOp := items[0]
+	require.Len(t, getOp.Operation.Parameters, 1)
+	require.NotNil(t, getOp.Operation.Parameters[0].Schema)
+	assert.Equal(t, "integer", getOp.Operation.Parameters[0].Schema.Type)
+}
+
+func TestSwaggerParamsToParams_Full(t *testing.T) {
+	t.Parallel()
+
+	params := []spec.Parameter{
+		{
+			ParamProps: spec.ParamProps{
+				Name:        "id",
+				In:          "path",
+				Description: "Item ID",
+				Required:    true,
+			},
+			SimpleSchema: spec.SimpleSchema{
+				Type: "string",
+			},
+		},
+		{
+			ParamProps: spec.ParamProps{
+				Name:        "limit",
+				In:          "query",
+				Description: "Page limit",
+			},
+			SimpleSchema: spec.SimpleSchema{
+				Type:    "integer",
+				Default: 10,
+			},
+		},
+	}
+
+	result := swaggerParamsToParams(params)
+	require.Len(t, result, 2)
+
+	assert.Equal(t, "id", result[0].Name)
+	assert.Equal(t, "path", result[0].In)
+	assert.True(t, result[0].Required)
+	require.NotNil(t, result[0].Schema)
+	assert.Equal(t, "string", result[0].Schema.Type)
+
+	assert.Equal(t, "limit", result[1].Name)
+	assert.Equal(t, "query", result[1].In)
+	require.NotNil(t, result[1].Schema)
+	assert.Equal(t, "integer", result[1].Schema.Type)
+	assert.Equal(t, 10, result[1].Schema.Default)
+}
+
+func TestSwaggerParamsToParams_NilSchema(t *testing.T) {
+	t.Parallel()
+
+	params := []spec.Parameter{
+		{
+			ParamProps: spec.ParamProps{
+				Name: "x-api-key",
+				In:   "header",
+			},
+			// No SimpleSchema set - this tests the nil schema handling
+		},
+	}
+
+	result := swaggerParamsToParams(params)
+	require.Len(t, result, 1)
+	assert.Equal(t, "x-api-key", result[0].Name)
+	assert.Equal(t, "header", result[0].In)
+	assert.Nil(t, result[0].Schema)
+}

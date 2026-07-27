@@ -52,7 +52,11 @@ func openapi3DocToDoc(doc *openapi3.T) *Doc {
 }
 
 // openapi3PathItemToOps converts a kin-openapi PathItem into a slice of PathItems (one per method).
+// Path-level parameters are merged into each operation. Operation-level parameters with the same
+// name+in override path-level parameters, as per the OpenAPI spec.
 func openapi3PathItemToOps(path string, item *openapi3.PathItem) []*PathItem {
+	pathParams := openapi3ParamsToParams(item.Parameters)
+
 	var out []*PathItem
 	type entry struct {
 		method string
@@ -72,10 +76,33 @@ func openapi3PathItemToOps(path string, item *openapi3.PathItem) []*PathItem {
 		if e.op == nil {
 			continue
 		}
+		op := openapi3OpToOp(e.op)
+		if len(pathParams) > 0 {
+			op.Parameters = mergeParameters(pathParams, op.Parameters)
+		}
 		out = append(out, &PathItem{
 			Path:      path,
 			Method:    e.method,
-			Operation: openapi3OpToOp(e.op),
+			Operation: op,
+		})
+	}
+	return out
+}
+
+// openapi3ParamsToParams converts a slice of kin-openapi ParameterRef to unified Parameters.
+func openapi3ParamsToParams(refs []*openapi3.ParameterRef) []*Parameter {
+	out := make([]*Parameter, 0, len(refs))
+	for _, pref := range refs {
+		if pref == nil || pref.Value == nil {
+			continue
+		}
+		p := pref.Value
+		out = append(out, &Parameter{
+			Name:        p.Name,
+			In:          p.In,
+			Description: p.Description,
+			Required:    p.Required,
+			Schema:      schemaRefToSchema(p.Schema),
 		})
 	}
 	return out
@@ -206,4 +233,23 @@ func extractSchemaComposition(refs []*openapi3.SchemaRef) []*Schema {
 		}
 	}
 	return out
+}
+
+// mergeParameters merges base (path-level) parameters into op (operation-level) parameters.
+// Operation-level parameters with the same name+in override base parameters.
+func mergeParameters(base, op []*Parameter) []*Parameter {
+	seen := make(map[string]int, len(op))
+	for i, p := range op {
+		seen[p.Name+"\x00"+p.In] = i
+	}
+
+	merged := make([]*Parameter, 0, len(base)+len(op))
+	for _, p := range base {
+		if _, exists := seen[p.Name+"\x00"+p.In]; exists {
+			continue
+		}
+		merged = append(merged, p)
+	}
+	merged = append(merged, op...)
+	return merged
 }

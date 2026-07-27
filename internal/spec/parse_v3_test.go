@@ -114,3 +114,95 @@ func TestSchemaRefToSchema_Composition(t *testing.T) {
 	require.Len(t, s.AllOf, 1)
 	assert.Equal(t, "number", s.AllOf[0].Type)
 }
+
+func TestOpenapi3PathItemToOps_MergesPathLevelParams(t *testing.T) {
+	t.Parallel()
+
+	item := &openapi3.PathItem{
+		Parameters: []*openapi3.ParameterRef{
+			{
+				Value: &openapi3.Parameter{
+					Name:     "id",
+					In:       "path",
+					Required: true,
+					Schema:   &openapi3.SchemaRef{Value: &openapi3.Schema{Type: &openapi3.Types{"string"}}},
+				},
+			},
+		},
+		Get: &openapi3.Operation{
+			OperationID: "getItem",
+			Parameters: []*openapi3.ParameterRef{
+				{
+					Value: &openapi3.Parameter{
+						Name:   "limit",
+						In:     "query",
+						Schema: &openapi3.SchemaRef{Value: &openapi3.Schema{Type: &openapi3.Types{"integer"}}},
+					},
+				},
+			},
+		},
+		Post: &openapi3.Operation{
+			OperationID: "createItem",
+		},
+	}
+
+	items := openapi3PathItemToOps("/items/{id}", item)
+	require.Len(t, items, 2)
+
+	// GET should have both path-level (id) and operation-level (limit) params
+	getOp := items[0]
+	require.Equal(t, "getItem", getOp.Operation.ID)
+	require.Len(t, getOp.Operation.Parameters, 2)
+	assert.Equal(t, "id", getOp.Operation.Parameters[0].Name)
+	assert.Equal(t, "path", getOp.Operation.Parameters[0].In)
+	assert.True(t, getOp.Operation.Parameters[0].Required)
+	assert.Equal(t, "limit", getOp.Operation.Parameters[1].Name)
+	assert.Equal(t, "query", getOp.Operation.Parameters[1].In)
+
+	// POST should have only path-level params
+	postOp := items[1]
+	require.Equal(t, "createItem", postOp.Operation.ID)
+	require.Len(t, postOp.Operation.Parameters, 1)
+	assert.Equal(t, "id", postOp.Operation.Parameters[0].Name)
+	assert.Equal(t, "path", postOp.Operation.Parameters[0].In)
+}
+
+func TestOpenapi3PathItemToOps_OpLevelOverridesPathLevel(t *testing.T) {
+	t.Parallel()
+
+	item := &openapi3.PathItem{
+		Parameters: []*openapi3.ParameterRef{
+			{
+				Value: &openapi3.Parameter{
+					Name:     "id",
+					In:       "path",
+					Required: true,
+					Schema:   &openapi3.SchemaRef{Value: &openapi3.Schema{Type: &openapi3.Types{"string"}}},
+				},
+			},
+		},
+		Get: &openapi3.Operation{
+			OperationID: "getItem",
+			Parameters: []*openapi3.ParameterRef{
+				{
+					Value: &openapi3.Parameter{
+						Name:     "id",
+						In:       "path",
+						Required: true,
+						Schema: &openapi3.SchemaRef{
+							Value: &openapi3.Schema{Type: &openapi3.Types{"integer"}},
+						}, // override type
+					},
+				},
+			},
+		},
+	}
+
+	items := openapi3PathItemToOps("/items/{id}", item)
+	require.Len(t, items, 1)
+
+	getOp := items[0]
+	require.Len(t, getOp.Operation.Parameters, 1)
+	require.NotNil(t, getOp.Operation.Parameters[0].Schema)
+	assert.Equal(t, "integer", getOp.Operation.Parameters[0].Schema.Type)
+}

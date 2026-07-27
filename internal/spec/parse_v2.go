@@ -50,7 +50,11 @@ func parseV2(data []byte) (*Doc, error) {
 }
 
 // pathItemToOps converts a Swagger path item into a slice of PathItems (one per method).
+// Path-level parameters are merged into each operation. Operation-level parameters with the same
+// name+in override path-level parameters, as per the OpenAPI spec.
 func pathItemToOps(path string, item spec.PathItem) []*PathItem {
+	pathParams := swaggerParamsToParams(item.Parameters)
+
 	var out []*PathItem
 	type entry struct {
 		method string
@@ -69,11 +73,38 @@ func pathItemToOps(path string, item spec.PathItem) []*PathItem {
 		if e.op == nil {
 			continue
 		}
+		op := swaggerOpToOp(e.op)
+		if len(pathParams) > 0 {
+			op.Parameters = mergeParameters(pathParams, op.Parameters)
+		}
 		out = append(out, &PathItem{
 			Path:      path,
 			Method:    e.method,
-			Operation: swaggerOpToOp(e.op),
+			Operation: op,
 		})
+	}
+	return out
+}
+
+// swaggerParamsToParams converts a slice of go-openapi Parameters to unified Parameters.
+func swaggerParamsToParams(params []spec.Parameter) []*Parameter {
+	out := make([]*Parameter, 0, len(params))
+	for _, p := range params {
+		param := &Parameter{
+			Name:        p.Name,
+			In:          p.In,
+			Description: p.Description,
+			Required:    p.Required,
+			Schema:      swaggerSchemaToSchema(p.Schema),
+		}
+		if param.Schema == nil && p.Type != "" {
+			param.Schema = &Schema{
+				Type:    p.Type,
+				Format:  p.Format,
+				Default: p.Default,
+			}
+		}
+		out = append(out, param)
 	}
 	return out
 }

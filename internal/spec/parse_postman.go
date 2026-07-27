@@ -15,12 +15,14 @@ import (
 )
 
 const (
-	paramTypeStr  = "string"
-	paramTypeFile = "file"
-	paramTypeObj  = "object"
-	paramInQuery  = "query"
-	paramInPath   = "path"
-	bodyModeRaw   = "raw"
+	paramTypeStr      = "string"
+	paramTypeFile     = "file"
+	paramTypeObj      = "object"
+	paramInQuery      = "query"
+	paramInPath       = "path"
+	paramInHeader     = "header"
+	bodyModeRaw       = "raw"
+	graphQLQueryField = "query"
 )
 
 type postmanCollection struct {
@@ -295,7 +297,7 @@ func appendPostmanHeaders(headers []postmanHeader, op *Operation) {
 		}
 		op.Parameters = append(op.Parameters, &Parameter{
 			Name:        h.Key,
-			In:          "header",
+			In:          paramInHeader,
 			Description: h.Description,
 			Schema:      &Schema{Type: paramTypeStr, Default: h.Value},
 		})
@@ -368,7 +370,7 @@ func appendPostmanBody(body *postmanBody, op *Operation, method string) {
 				Type:        paramTypeObj,
 				Description: "GraphQL query",
 				Properties: map[string]*Schema{
-					"query": {
+					graphQLQueryField: {
 						Type:        paramTypeStr,
 						Description: "GraphQL query string",
 					},
