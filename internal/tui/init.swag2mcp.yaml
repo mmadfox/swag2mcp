@@ -101,3 +101,61 @@ specs:
       - llm_title: Pokémon Data
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/pokeapi.yaml
         base_mock_url: "localhost:9013"
+
+  - domain: frankfurter
+    llm_title: Frankfurter API
+    llm_instruction: |
+      Use Frankfurter to get current and historical exchange rates from
+      central banks. Query by currency pair, date range, or provider.
+    base_url: https://api.frankfurter.dev/v2
+    collections:
+      - llm_title: Frankfurter
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/frankfurter.yaml
+
+  - domain: coingecko
+    llm_title: CoinGecko API
+    llm_instruction: |
+      Use CoinGecko to get cryptocurrency prices, market data, and search
+      coins. Query by coin ID, symbol, or name.
+    base_url: https://api.coingecko.com/api/v3
+    auth:
+      type: api_key
+      config:
+        key: x_cg_demo_api_key
+        value: "CG-9NuxR56dEAEVna1Bss9ZkZXy"
+        in: query
+    collections:
+      - llm_title: CoinGecko Demo
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/coingecko.yaml
+
+  - domain: openweathermap
+    llm_title: OpenWeatherMap API
+    llm_instruction: |
+      Use OpenWeatherMap to get current weather data for any location.
+      Query by city name, coordinates, or zip code.
+    base_url: https://api.openweathermap.org/data/2.5
+    auth:
+      type: api_key
+      config:
+        key: appid
+        value: 067b1e290aa677ceac48f9055e4a71cf
+        in: query
+    collections:
+      - llm_title: OpenWeatherMap
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/openweathermap.yaml
+
+  - domain: github
+    llm_title: GitHub API
+    llm_instruction: |
+      Use the GitHub REST API to search repositories, list issues, get user
+      profiles, and browse contributors. This covers public resources only.
+      Authenticate with a personal access token for higher rate limits.
+    base_url: https://api.github.com
+    auth:
+      type: bearer
+      config:
+        # demo token
+        token: "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"
+    collections:
+      - llm_title: GitHub Repositories
+        location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/github/rest-api.yaml
