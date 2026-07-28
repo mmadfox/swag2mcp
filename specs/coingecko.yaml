@@ -1,0 +1,524 @@
+openapi: "3.0.0"
+info:
+  title: CoinGecko Demo API
+  description: >-
+    CoinGecko is a cryptocurrency data aggregator API. This demo API provides
+    access to public market data without authentication. For rate-limited
+    endpoints, a demo API key is available.
+  version: "3.0.0"
+servers:
+  - url: https://api.coingecko.com/api/v3
+tags:
+  - name: Server
+    description: API server status
+  - name: Simple
+    description: Simple price queries
+  - name: Coins
+    description: Detailed coin data
+  - name: Search
+    description: Search across coins, exchanges, and categories
+security:
+  - headerAuth: []
+  - queryAuth: []
+paths:
+  /ping:
+    get:
+      tags: [Server]
+      summary: API Server Status
+      description: Check the API server status
+      operationId: ping-server
+      responses:
+        "200":
+          description: Server status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PingServer"
+  /simple/price:
+    get:
+      tags: [Simple]
+      summary: Coin Price by IDs, Symbols, or Names
+      description: >-
+        Query the prices of one or more coins by using their unique
+        Coin API IDs, symbols, or names.
+      operationId: simple-price
+      parameters:
+        - name: vs_currencies
+          in: query
+          required: true
+          description: >-
+            Target currency of coins, comma-separated if querying
+            more than 1 currency.
+          schema:
+            type: string
+            default: usd
+        - name: ids
+          in: query
+          description: Coins' IDs, comma-separated if querying more than 1 coin
+          schema:
+            type: string
+            default: bitcoin
+        - name: symbols
+          in: query
+          description: Coins' symbols, comma-separated if querying more than 1 coin
+          schema:
+            type: string
+            default: btc
+        - name: names
+          in: query
+          description: Coins' names, comma-separated if querying more than 1 coin
+          schema:
+            type: string
+            default: Bitcoin
+        - name: include_market_cap
+          in: query
+          description: "Include market capitalization. Default: false"
+          schema:
+            type: boolean
+        - name: include_24hr_vol
+          in: query
+          description: "Include 24-hour trading volume. Default: false"
+          schema:
+            type: boolean
+        - name: include_24hr_change
+          in: query
+          description: "Include 24-hour change percentage. Default: false"
+          schema:
+            type: boolean
+        - name: include_last_updated_at
+          in: query
+          description: "Include last updated price time as a UNIX timestamp. Default: false"
+          schema:
+            type: boolean
+        - name: precision
+          in: query
+          description: Decimal places for currency price value
+          schema:
+            type: string
+            enum: [full, "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18"]
+      responses:
+        "200":
+          description: Coin prices
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimplePrice"
+  /simple/supported_vs_currencies:
+    get:
+      tags: [Simple]
+      summary: Currencies List
+      description: Query all the supported currencies on CoinGecko
+      operationId: simple-supported-currencies
+      responses:
+        "200":
+          description: List of supported currencies
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportedCurrencies"
+  /coins/list:
+    get:
+      tags: [Coins]
+      summary: Coins List
+      description: >-
+        Query all the supported coins on CoinGecko with coin ID,
+        name and symbol.
+      operationId: coins-list
+      parameters:
+        - name: include_platform
+          in: query
+          description: >-
+            Include platform and token's contract addresses.
+            Default: false
+          schema:
+            type: boolean
+        - name: status
+          in: query
+          description: "Filter by status of coins. Default: active"
+          schema:
+            type: string
+            enum: [active, inactive]
+      responses:
+        "200":
+          description: List of coins
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoinsList"
+  /coins/{id}:
+    get:
+      tags: [Coins]
+      summary: Coin Data by ID
+      description: >-
+        Query all the metadata and market data of a coin based on
+        a particular coin ID.
+      operationId: coins-id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: >-
+            Coin ID. Refers to /coins/list for available IDs.
+          schema:
+            type: string
+            default: bitcoin
+          example: bitcoin
+        - name: localization
+          in: query
+          description: "Include all localized languages. Default: true"
+          schema:
+            type: boolean
+        - name: tickers
+          in: query
+          description: "Include tickers data. Default: true"
+          schema:
+            type: boolean
+        - name: market_data
+          in: query
+          description: "Include market data. Default: true"
+          schema:
+            type: boolean
+        - name: community_data
+          in: query
+          description: "Include community data. Default: true"
+          schema:
+            type: boolean
+        - name: developer_data
+          in: query
+          description: "Include developer data. Default: true"
+          schema:
+            type: boolean
+        - name: sparkline
+          in: query
+          description: "Include sparkline 7-day data. Default: false"
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Coin data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoinData"
+  /coins/markets:
+    get:
+      tags: [Coins]
+      summary: Coins List with Market Data
+      description: >-
+        Query all the supported coins with price, market cap,
+        volume and market related data.
+      operationId: coins-markets
+      parameters:
+        - name: vs_currency
+          in: query
+          required: true
+          description: Target currency of coins and market data
+          schema:
+            type: string
+            default: usd
+        - name: ids
+          in: query
+          description: Coins' IDs, comma-separated
+          schema:
+            type: string
+            default: bitcoin
+        - name: category
+          in: query
+          description: Filter based on coins' category
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: "Sort result by field. Default: market_cap_desc"
+          schema:
+            type: string
+            enum:
+              - market_cap_asc
+              - market_cap_desc
+              - volume_asc
+              - volume_desc
+              - id_asc
+              - id_desc
+        - name: per_page
+          in: query
+          description: "Total results per page. Default: 100. Valid values: 1...250"
+          schema:
+            type: integer
+        - name: page
+          in: query
+          description: "Page through results. Default: 1"
+          schema:
+            type: integer
+        - name: sparkline
+          in: query
+          description: "Include sparkline 7-day data. Default: false"
+          schema:
+            type: boolean
+        - name: price_change_percentage
+          in: query
+          description: >-
+            Include price change percentage timeframe, comma-separated.
+            Valid values: 1h, 24h, 7d, 14d, 30d, 200d, 1y
+          schema:
+            type: string
+        - name: locale
+          in: query
+          description: "Language background. Default: en"
+          schema:
+            type: string
+            enum: [ar, bg, cs, da, de, el, en, es, fi, fr, he, hi, hr, hu, id, it, ja, ko, lt, nl, no, pl, pt, ro, ru, sk, sl, sv, th, tr, uk, vi, zh, zh-tw]
+      responses:
+        "200":
+          description: List of coins with market data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CoinsMarkets"
+  /search:
+    get:
+      tags: [Search]
+      summary: Search Queries
+      description: Search for coins, categories and markets listed on CoinGecko
+      operationId: search-data
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: Search query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Search"
+components:
+  schemas:
+    PingServer:
+      type: object
+      properties:
+        gecko_says:
+          type: string
+          example: "(V3) To the Moon!"
+    SimplePrice:
+      type: object
+      additionalProperties:
+        type: object
+        properties:
+          usd:
+            type: number
+          usd_market_cap:
+            type: number
+          usd_24h_vol:
+            type: number
+          usd_24h_change:
+            type: number
+          last_updated_at:
+            type: integer
+    SupportedCurrencies:
+      type: array
+      items:
+        type: string
+      example: [btc, eth, ltc, bch, bnb, eos, xrp, xlm, link, dot, yfi, sol, usd]
+    CoinsList:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+          symbol:
+            type: string
+          name:
+            type: string
+          platforms:
+            type: object
+            additionalProperties:
+              type: string
+    CoinData:
+      type: object
+      properties:
+        id:
+          type: string
+        symbol:
+          type: string
+        name:
+          type: string
+        description:
+          type: object
+          properties:
+            en:
+              type: string
+        links:
+          type: object
+          properties:
+            homepage:
+              type: array
+              items:
+                type: string
+            blockchain_site:
+              type: array
+              items:
+                type: string
+        image:
+          type: object
+          properties:
+            thumb:
+              type: string
+              format: uri
+            small:
+              type: string
+              format: uri
+            large:
+              type: string
+              format: uri
+        market_cap_rank:
+          type: ["integer", "null"]
+        genesis_date:
+          type: ["string", "null"]
+        sentiment_votes_up_percentage:
+          type: number
+        sentiment_votes_down_percentage:
+          type: number
+        market_data:
+          type: object
+          description: Market data including price, market cap, volume
+        last_updated:
+          type: string
+          format: date-time
+    CoinsMarkets:
+      type: object
+      properties:
+        id:
+          type: string
+        symbol:
+          type: string
+        name:
+          type: string
+        image:
+          type: string
+          format: uri
+        current_price:
+          type: number
+        market_cap:
+          type: integer
+        market_cap_rank:
+          type: ["integer", "null"]
+        fully_diluted_valuation:
+          type: ["integer", "null"]
+        total_volume:
+          type: integer
+        high_24h:
+          type: number
+        low_24h:
+          type: number
+        price_change_24h:
+          type: number
+        price_change_percentage_24h:
+          type: number
+        market_cap_change_24h:
+          type: number
+        market_cap_change_percentage_24h:
+          type: number
+        circulating_supply:
+          type: number
+        total_supply:
+          type: ["number", "null"]
+        max_supply:
+          type: ["number", "null"]
+        ath:
+          type: number
+        ath_change_percentage:
+          type: number
+        ath_date:
+          type: string
+          format: date-time
+        atl:
+          type: number
+        atl_change_percentage:
+          type: number
+        atl_date:
+          type: string
+          format: date-time
+        last_updated:
+          type: string
+          format: date-time
+    Search:
+      type: object
+      properties:
+        coins:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              api_symbol:
+                type: string
+              symbol:
+                type: string
+              market_cap_rank:
+                type: ["integer", "null"]
+              thumb:
+                type: string
+                format: uri
+              large:
+                type: string
+                format: uri
+        exchanges:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              market_type:
+                type: string
+              thumb:
+                type: string
+                format: uri
+              large:
+                type: string
+                format: uri
+        categories:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+        nfts:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              symbol:
+                type: string
+              thumb:
+                type: string
+                format: uri
+  securitySchemes:
+    headerAuth:
+      type: apiKey
+      description: API key sent via header
+      name: x-cg-demo-api-key
+      in: header
+    queryAuth:
+      type: apiKey
+      description: API key sent via query parameter
+      name: x_cg_demo_api_key
+      in: query
