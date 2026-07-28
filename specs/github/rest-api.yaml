@@ -1,0 +1,858 @@
+openapi: "3.0.3"
+info:
+  title: GitHub REST API
+  description: >-
+    The GitHub API for public resources. This spec covers core endpoints:
+    repositories, issues, users, and search. For authenticated requests,
+    use a personal access token with public_repo scope.
+  version: "1.0.0"
+  contact:
+    name: GitHub API Support
+    url: https://docs.github.com/en/rest
+servers:
+  - url: https://api.github.com
+tags:
+  - name: Repositories
+    description: Create, modify, and query repositories
+  - name: Issues
+    description: List, create, and modify issues
+  - name: Users
+    description: Access user profiles and lists
+  - name: Search
+    description: Search across repositories, issues, and users
+security:
+  - bearerAuth: []
+paths:
+  /repositories:
+    get:
+      tags: [Repositories]
+      operationId: listPublicRepositories
+      summary: List public repositories
+      description: List public repositories. Pass the special value all to list all public repositories.
+      parameters:
+        - name: since
+          in: query
+          description: A repository ID. Only return repositories with an ID greater than this ID.
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          description: Results per page (max 100)
+          schema:
+            type: integer
+            default: 30
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Repository"
+        "304":
+          description: Not modified
+        "422":
+          description: Validation failed
+  /repositories/{owner}/{repo}:
+    get:
+      tags: [Repositories]
+      operationId: getRepository
+      summary: Get a repository
+      description: Gets a repository using the repo owner and name.
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          description: The account owner of the repository
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          description: The name of the repository
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Repository"
+        "403":
+          description: Forbidden
+        "404":
+          description: Resource not found
+  /repos/{owner}/{repo}/contributors:
+    get:
+      tags: [Repositories]
+      operationId: listRepositoryContributors
+      summary: List repository contributors
+      description: >-
+        Lists contributors to a repository. Note: The response includes
+        public contributors only.
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          description: The account owner of the repository
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          description: The name of the repository
+          schema:
+            type: string
+        - name: anon
+          in: query
+          description: Set to 1 or true to include anonymous contributors
+          schema:
+            type: string
+            enum: ["1", "true", "0", "false"]
+        - name: per_page
+          in: query
+          description: Results per page (max 100)
+          schema:
+            type: integer
+            default: 30
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Contributor"
+        "404":
+          description: Resource not found
+  /repos/{owner}/{repo}/issues:
+    get:
+      tags: [Issues]
+      operationId: listIssues
+      summary: List repository issues
+      description: >-
+        List issues in a repository. Only open issues will be listed.
+        Note: GitHub's REST API considers every pull request an issue,
+        but not every issue is a pull request.
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          description: The account owner of the repository
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          description: The name of the repository
+          schema:
+            type: string
+        - name: milestone
+          in: query
+          description: >-
+            If an integer is passed, it should refer to a milestone by its
+            number field. If the string * is passed, issues with any milestone
+            are accepted. If the string none is passed, issues without
+            milestones are returned.
+          schema:
+            type: string
+        - name: state
+          in: query
+          description: Indicates the state of the issues to return
+          schema:
+            type: string
+            enum: [open, closed, all]
+            default: open
+        - name: assignee
+          in: query
+          description: >-
+            Can be the name of a user. Pass in none for issues with no
+            assigned user, and * for issues assigned to any user.
+          schema:
+            type: string
+        - name: creator
+          in: query
+          description: The user that created the issue
+          schema:
+            type: string
+        - name: mentioned
+          in: query
+          description: A user that's been mentioned in the issue
+          schema:
+            type: string
+        - name: labels
+          in: query
+          description: "A list of comma separated label names. Example: bug,ui,@high"
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: What to sort results by
+          schema:
+            type: string
+            enum: [created, updated, comments]
+            default: created
+        - name: direction
+          in: query
+          description: The direction to sort the results by
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: since
+          in: query
+          description: Only show results that were last updated after this time
+          schema:
+            type: string
+            format: date-time
+        - name: per_page
+          in: query
+          description: Results per page (max 100)
+          schema:
+            type: integer
+            default: 30
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Issue"
+        "301":
+          description: Moved permanently
+        "404":
+          description: Resource not found
+        "422":
+          description: Validation failed
+  /repos/{owner}/{repo}/issues/{issue_number}:
+    get:
+      tags: [Issues]
+      operationId: getIssue
+      summary: Get an issue
+      description: The API returns a 301 status for issues with labels too long.
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          description: The account owner of the repository
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          description: The name of the repository
+          schema:
+            type: string
+        - name: issue_number
+          in: path
+          required: true
+          description: The number that identifies the issue
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Issue"
+        "301":
+          description: Moved permanently
+        "304":
+          description: Not modified
+        "404":
+          description: Resource not found
+        "410":
+          description: Gone
+  /users/{username}:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Get a user
+      description: >-
+        Provides publicly available information about someone with a GitHub
+        account. If you are authenticated as the given user, you will see
+        private profiles.
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The handle for the GitHub user account
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: Resource not found
+  /users/{username}/followers:
+    get:
+      tags: [Users]
+      operationId: listFollowersOfUser
+      summary: List followers of a user
+      description: Lists the people following the specified user.
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The handle for the GitHub user account
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          description: Results per page (max 100)
+          schema:
+            type: integer
+            default: 30
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "404":
+          description: Resource not found
+  /search/repositories:
+    get:
+      tags: [Search]
+      operationId: searchRepositories
+      summary: Search repositories
+      description: >-
+        Find repositories via various qualifiers. You can qualify on the
+        qualifiers mentioned in the GitHub search syntax.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: The query contains one or more search qualifiers
+          schema:
+            type: string
+          example: "language:go stars:>100"
+        - name: sort
+          in: query
+          description: Sorts the results by a field
+          schema:
+            type: string
+            enum: [stars, forks, help-wanted-issues, updated]
+        - name: order
+          in: query
+          description: Determines whether the results are sorted in ascending or descending order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: per_page
+          in: query
+          description: Results per page (max 100)
+          schema:
+            type: integer
+            default: 30
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResult"
+        "422":
+          description: Validation failed
+  /search/issues:
+    get:
+      tags: [Search]
+      operationId: searchIssues
+      summary: Search issues and pull requests
+      description: >-
+        Find issues via various qualifiers. You can qualify on the
+        qualifiers mentioned in the GitHub search syntax.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: The query contains one or more search qualifiers
+          schema:
+            type: string
+          example: "is:issue is:open python"
+        - name: sort
+          in: query
+          description: Sorts the results by a field
+          schema:
+            type: string
+            enum:
+              - comments
+              - reactions
+              - reactions-+1
+              - reactions--1
+              - reactions-smile
+              - reactions-thinking_face
+              - reactions-heart
+              - reactions-tada
+              - reactions-rocket
+              - reactions-eyes
+              - created
+              - updated
+        - name: order
+          in: query
+          description: Determines whether the results are sorted in ascending or descending order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: per_page
+          in: query
+          description: Results per page (max 100)
+          schema:
+            type: integer
+            default: 30
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResult"
+        "422":
+          description: Validation failed
+  /search/users:
+    get:
+      tags: [Search]
+      operationId: searchUsers
+      summary: Search users
+      description: >-
+        Find users via various qualifiers. You can qualify on the
+        qualifiers mentioned in the GitHub search syntax.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: The query contains one or more search qualifiers
+          schema:
+            type: string
+          example: "location:moscow language:go"
+        - name: sort
+          in: query
+          description: Sorts the results by a field
+          schema:
+            type: string
+            enum: [followers, repositories, joined]
+        - name: order
+          in: query
+          description: Determines whether the results are sorted in ascending or descending order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: per_page
+          in: query
+          description: Results per page (max 100)
+          schema:
+            type: integer
+            default: 30
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResult"
+        "422":
+          description: Validation failed
+components:
+  schemas:
+    Repository:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the repository
+        node_id:
+          type: string
+          description: GraphQL node ID
+        name:
+          type: string
+          description: The name of the repository
+        full_name:
+          type: string
+          description: The full, globally unique, name of the repository
+        private:
+          type: boolean
+          description: Whether the repository is private
+        owner:
+          $ref: "#/components/schemas/SimpleUser"
+        html_url:
+          type: string
+          format: uri
+          description: URL to the repository's homepage
+        description:
+          type: ["string", "null"]
+          description: The repository description
+        fork:
+          type: boolean
+          description: Whether the repository is a fork
+        url:
+          type: string
+          format: uri
+          description: URL to the repository
+        created_at:
+          type: string
+          format: date-time
+          description: The time the repository was created
+        updated_at:
+          type: string
+          format: date-time
+          description: The time the repository was last pushed to
+        pushed_at:
+          type: string
+          format: date-time
+          description: The last time the repository was pushed to
+        stargazers_count:
+          type: integer
+          description: The number of users who've starred the repository
+        watchers_count:
+          type: integer
+          description: The number of users watching the repository
+        language:
+          type: ["string", "null"]
+          description: The primary language of the repository
+        has_issues:
+          type: boolean
+          description: Whether issues are enabled
+        has_projects:
+          type: boolean
+          description: Whether projects are enabled
+        forks_count:
+          type: integer
+          description: The number of forks
+        open_issues_count:
+          type: integer
+          description: The number of open issues
+        license:
+          type: ["object", "null"]
+          properties:
+            key:
+              type: string
+            name:
+              type: string
+            spdx_id:
+              type: string
+            url:
+              type: string
+              format: uri
+          description: The repository license
+    SimpleUser:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+          description: The user's full name
+        email:
+          type: ["string", "null"]
+          description: The user's email address
+        login:
+          type: string
+          description: The username
+        id:
+          type: integer
+          description: The user's ID
+        node_id:
+          type: string
+          description: GraphQL node ID
+        avatar_url:
+          type: string
+          format: uri
+          description: The URL to the user's avatar
+        gravatar_id:
+          type: string
+          description: The user's Gravatar ID
+        url:
+          type: string
+          format: uri
+          description: URL to the user's profile
+        html_url:
+          type: string
+          format: uri
+          description: URL to the user's profile page
+        type:
+          type: string
+          description: The type of GitHub user account
+          enum: [Bot, User, Organization]
+    User:
+      type: object
+      properties:
+        login:
+          type: string
+          description: The username
+        id:
+          type: integer
+          description: The user's ID
+        node_id:
+          type: string
+          description: GraphQL node ID
+        avatar_url:
+          type: string
+          format: uri
+          description: The URL to the user's avatar
+        gravatar_id:
+          type: string
+          description: The user's Gravatar ID
+        url:
+          type: string
+          format: uri
+          description: URL to the user's API endpoint
+        html_url:
+          type: string
+          format: uri
+          description: URL to the user's profile page
+        type:
+          type: string
+          description: The type of GitHub user account
+          enum: [Bot, User, Organization]
+        site_admin:
+          type: boolean
+          description: Whether the user is a site administrator
+        name:
+          type: ["string", "null"]
+          description: The user's full name
+        company:
+          type: ["string", "null"]
+          description: The user's company
+        blog:
+          type: ["string", "null"]
+          description: The user's blog/website
+        location:
+          type: ["string", "null"]
+          description: The user's location
+        email:
+          type: ["string", "null"]
+          description: The user's email address
+        hireable:
+          type: ["boolean", "null"]
+          description: Whether the user is looking for work
+        bio:
+          type: ["string", "null"]
+          description: The user's bio
+        twitter_username:
+          type: ["string", "null"]
+          description: The user's Twitter username
+        public_repos:
+          type: integer
+          description: The number of public repositories
+        public_gists:
+          type: integer
+          description: The number of public gists
+        followers:
+          type: integer
+          description: The number of followers
+        following:
+          type: integer
+          description: The number of following
+        created_at:
+          type: string
+          format: date-time
+          description: The time the user was created
+        updated_at:
+          type: string
+          format: date-time
+          description: The last time the user's profile was updated
+    Contributor:
+      type: object
+      properties:
+        login:
+          type: string
+          description: The username
+        id:
+          type: integer
+          description: The user's ID
+        node_id:
+          type: string
+          description: GraphQL node ID
+        avatar_url:
+          type: string
+          format: uri
+          description: The URL to the user's avatar
+        gravatar_id:
+          type: string
+          description: The user's Gravatar ID
+        url:
+          type: string
+          format: uri
+          description: URL to the user's API endpoint
+        html_url:
+          type: string
+          format: uri
+          description: URL to the user's profile page
+        type:
+          type: string
+          description: The type of GitHub user account
+          enum: [Bot, User, Organization]
+        site_admin:
+          type: boolean
+          description: Whether the user is a site administrator
+        contributions:
+          type: integer
+          description: The number of contributions the user has made
+    Issue:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The unique identifier for the issue
+        node_id:
+          type: string
+          description: GraphQL node ID
+        url:
+          type: string
+          format: uri
+          description: URL for the issue
+        number:
+          type: integer
+          description: The number of the issue
+        state:
+          type: string
+          description: The state of the issue
+          enum: [open, closed]
+        state_reason:
+          type: ["string", "null"]
+          description: The reason for the state
+          enum: [completed, not_planned, reopened, null]
+        title:
+          type: string
+          description: The title of the issue
+        body:
+          type: ["string", "null"]
+          description: The contents of the issue
+        labels:
+          type: array
+          items:
+            $ref: "#/components/schemas/Label"
+          description: Labels applied to the issue
+        assignee:
+          type: ["object", "null"]
+          description: The user assigned to the issue
+        assignees:
+          type: array
+          items:
+            $ref: "#/components/schemas/SimpleUser"
+          description: The users assigned to the issue
+        user:
+          $ref: "#/components/schemas/SimpleUser"
+          description: The user who opened the issue
+        comments:
+          type: integer
+          description: The number of comments on the issue
+        created_at:
+          type: string
+          format: date-time
+          description: The time the issue was created
+        updated_at:
+          type: string
+          format: date-time
+          description: The time the issue was last updated
+        closed_at:
+          type: ["string", "null"]
+          format: date-time
+          description: The time the issue was closed
+        author_association:
+          type: string
+          description: The author's association with the repository
+        html_url:
+          type: string
+          format: uri
+          description: URL to the issue page on GitHub
+    Label:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The unique identifier for the label
+        node_id:
+          type: string
+          description: GraphQL node ID
+        url:
+          type: string
+          format: uri
+          description: URL for the label
+        name:
+          type: string
+          description: The name of the label
+        description:
+          type: ["string", "null"]
+          description: The label description
+        color:
+          type: string
+          description: The hex color code for the label
+    SearchResult:
+      type: object
+      properties:
+        total_count:
+          type: integer
+          description: The total number of results
+        incomplete_results:
+          type: boolean
+          description: Whether the results are incomplete
+        items:
+          type: array
+          items:
+            type: object
+          description: The search results
+  securitySchemes:
+    bearerAuth:
+      type: http
+      description: >-
+        A personal access token can be used as a bearer token. Use the
+        public_repo scope for public repository access.
+      scheme: bearer
+      bearerFormat: JWT
