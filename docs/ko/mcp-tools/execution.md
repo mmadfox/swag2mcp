@@ -246,8 +246,8 @@
     "path": "/Users/user/.swag2mcp/responses/response_a1b2c3d4.json",
     "size": 1572864,
     "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "응답이 2 KB 제한을 초과하여 디스크에 저장되었습니다.",
+    "maxSizeHint": "1 MB",
+    "message": "응답이 1 MB 제한을 초과하여 디스크에 저장되었습니다.",
     "openCmd": "open /Users/user/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }
@@ -272,7 +272,7 @@
 
 - **인증은 자동:** `invoke` 도구는 spec의 인증 설정에서 자동으로 인증을 획득하고 적용합니다. 먼저 `auth`를 호출할 **필요가 없습니다**.
 - **속도 제한:** 각 엔드포인트에는 10초의 쿨다운이 있습니다. 동일한 엔드포인트에 대한 10초 내의 두 번째 호출은 자동으로 차단됩니다(`rate_limit` 오류 반환).
-- **응답 크기 제한:** 기본값은 2 KB입니다(`max_response_size`로 설정 가능). 응답이 이 제한을 초과하면 `{workspace}/responses/`에 저장되고 인라인 `body` 대신 `FileReference`가 반환됩니다.
+- **응답 크기 제한:** 기본값은 1 MB입니다(`max_response_size`로 설정 가능). 응답이 이 제한을 초과하면 `{workspace}/responses/`에 저장되고 인라인 `body` 대신 `FileReference`가 반환됩니다.
 - **매개변수 처리:** 경로 매개변수는 URL에 대입됩니다. 쿼리 매개변수가 추가됩니다. 요청의 매개변수가 작업 명세 기본값을 재정의합니다.
 - **요청 본문:** POST/PUT/PATCH의 경우 본문이 JSON으로 직렬화됩니다. `Content-Type`이 자동으로 `application/json`으로 설정됩니다.
 - **오류 처리:** HTTP 오류(2xx 아님)는 힌트에 상태 코드와 응답 본문과 함께 `invoke_error`로 반환됩니다.

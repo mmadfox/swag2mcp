@@ -278,7 +278,7 @@ invoke(endpointId: "...", parameters: {...})  → выполнить вызов
 Да, используйте mock-сервер:
 
 ```bash
-swag2mcp-mock mockserver
+swag2mcp-mock
 ```
 
 Он генерирует фиктивные ответы на основе OpenAPI-схем.
@@ -288,14 +288,14 @@ swag2mcp-mock mockserver
 ### Как сделать резервную копию конфигурации?
 
 ```bash
-swag2mcp export --output ~/backups/swag2mcp-2026-07-24.zip
+swag2mcp export ~/backups/swag2mcp-2026-07-24.zip
 ```
 
 ### Как перенести на другую машину?
 
 ```bash
 # На старой машине
-swag2mcp export --output swag2mcp.zip
+swag2mcp export swag2mcp.zip
 
 # Скопируйте ZIP, затем на новой машине
 swag2mcp import --from-zip swag2mcp.zip

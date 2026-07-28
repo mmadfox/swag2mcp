@@ -20,7 +20,7 @@ When you add a spec with a remote URL, swag2mcp downloads it and saves it to the
 
 Each cached file gets a random expiration time between **1 hour and 48 hours**. The randomness prevents all cached files from expiring at the same time (which would cause a thundering herd of downloads).
 
-- The TTL is reset every time the MCP server starts
+- The TTL is fixed at cache time and does not change on server restart
 - If a cached file is still within its TTL, it is reused
 - If the TTL has expired, the file is downloaded again
 

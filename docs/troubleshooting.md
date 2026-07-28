@@ -42,11 +42,11 @@ chmod +x /path/to/swag2mcp
 
 ### Go version too old
 
-swag2mcp requires Go 1.23+.
+swag2mcp requires Go 1.26+.
 
 ```bash
 go version
-# If version < 1.23, update Go:
+# If version < 1.26, update Go:
 # https://go.dev/dl/
 ```
 
@@ -476,7 +476,7 @@ swag2mcp add spec
 lsof -i :9090
 
 # Check the mock server logs
-swag2mcp-mock mockserver
+swag2mcp-mock
 ```
 
 ### Mock server returns empty responses

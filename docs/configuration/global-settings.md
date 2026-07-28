@@ -49,7 +49,7 @@ mock_auth:
 
 - **Type:** `bool`
 - **Default:** `false`
-- **Effect:** When `true`, swag2mcp starts mock servers for all specs that have `base_mock_url` configured. Each collection must have `base_mock_url` set.
+- **Effect:** When `true`, swag2mcp starts mock servers for specs that have `base_mock_url` configured. Collections without `base_mock_url` are skipped.
 - **When to enable:** You want to test your API integration without making real HTTP calls. Mock servers return fake data based on the OpenAPI schema.
 
 ### mock_auth

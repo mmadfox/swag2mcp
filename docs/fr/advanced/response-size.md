@@ -32,8 +32,8 @@ Les réponses API peuvent être très volumineuses — parfois trop grandes pour
     "path": "/Users/utilisateur/.swag2mcp/responses/response_a1b2c3d4.json",
     "size": 1572864,
     "sizeHint": "1.5 Mo",
-    "maxSizeHint": "2 Ko",
-    "message": "La réponse dépasse la limite de 2 Ko et a été sauvegardée sur le disque.",
+    "maxSizeHint": "1 Mo",
+    "message": "La réponse dépasse la limite de 1 Mo et a été sauvegardée sur le disque.",
     "openCmd": "open /Users/utilisateur/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }

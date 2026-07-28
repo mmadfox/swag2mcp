@@ -107,7 +107,7 @@ Adds random browser-like headers to each request to avoid fingerprinting and blo
 
 - **Type:** `bool`
 - **Default:** `false`
-- **Effect:** When `true`, swag2mcp generates random headers for each request: `User-Agent` (from a pool of real browser strings), `Accept`, `Accept-Language`, `Accept-Encoding`, `Cache-Control`. This overrides the `user_agent` setting.
+- **Effect:** When `true`, swag2mcp generates random headers for each request: `User-Agent` (from a pool of real browser strings), `Accept`, `Accept-Language`, `Accept-Encoding`, `Referer`, and browser-like security headers (`Sec-Ch-Ua`, `Sec-Ch-Ua-Platform`, `Sec-Fetch-Site`, `Sec-Fetch-Mode`, `Sec-Fetch-Dest`). This overrides the `user_agent` setting.
 - **When to enable:** APIs that block requests based on User-Agent or header patterns, scraping scenarios.
 
 ```yaml

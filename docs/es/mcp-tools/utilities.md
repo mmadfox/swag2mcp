@@ -98,7 +98,7 @@ Ninguno.
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 KB",
+    "max_response_size": "1 MB",
     "follow_redirects": true,
     "max_redirects": 10,
     "randomize": false,
@@ -128,7 +128,7 @@ Ninguno.
 | `uptime` | string | Tiempo de actividad del servidor (legible por humanos) |
 | `specs` | object | Resumen de especificaciones: total, activas, deshabilitadas, colecciones, endpoints |
 | `http_client` | object | Configuración del cliente HTTP |
-| `http_client.max_response_size` | string | Tamaño máximo de respuesta en formato legible por humanos (por ejemplo, "2 KB") |
+| `http_client.max_response_size` | string | Tamaño máximo de respuesta en formato legible por humanos (por ejemplo, "1 MB") |
 | `mcp` | object | Configuración del servidor MCP |
 | `auth` | object | Métodos de autenticación disponibles |
 | `mock` | object | Estado del servidor simulado |
@@ -196,9 +196,13 @@ Lee el archivo de respuesta guardado y analiza su estructura: tipo de nivel supe
       "response_compress(path, 'select_keys', 'data', selectKeys=[id, name])"
     ],
     "navigationHints": {
-      "paths": ["data", "meta", "error"],
-      "arrays": [
-        {"path": "data", "length": 500}
+      "topLevelPaths": [
+        {"path": "data", "type": "array"},
+        {"path": "meta", "type": "object"},
+        {"path": "error", "type": "null"}
+      ],
+      "arrayPaths": [
+        {"path": "data", "length": 500, "itemType": "object"}
       ]
     }
   }

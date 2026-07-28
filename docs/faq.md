@@ -278,7 +278,7 @@ Each endpoint has a 10-second cooldown. If the LLM calls the same endpoint twice
 Yes, use the mock server:
 
 ```bash
-swag2mcp-mock mockserver
+swag2mcp-mock
 ```
 
 It generates fake responses based on OpenAPI schemas.
@@ -288,14 +288,14 @@ It generates fake responses based on OpenAPI schemas.
 ### How do I backup my configuration?
 
 ```bash
-swag2mcp export --output ~/backups/swag2mcp-2026-07-24.zip
+swag2mcp export ~/backups/swag2mcp-2026-07-24.zip
 ```
 
 ### How do I transfer to another machine?
 
 ```bash
 # On the old machine
-swag2mcp export --output swag2mcp.zip
+swag2mcp export swag2mcp.zip
 
 # Copy the ZIP, then on the new machine
 swag2mcp import --from-zip swag2mcp.zip

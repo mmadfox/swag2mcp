@@ -98,7 +98,7 @@ swag2mcp 런타임의 포괄적인 요약을 반환합니다: 버전, 워크스�
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 KB",
+    "max_response_size": "1 MB",
     "follow_redirects": true,
     "max_redirects": 10,
     "randomize": false,
@@ -128,7 +128,7 @@ swag2mcp 런타임의 포괄적인 요약을 반환합니다: 버전, 워크스�
 | `uptime` | string | 서버 가동 시간 (사람이 읽을 수 있는 형식) |
 | `specs` | object | Spec 요약: total, active, disabled, collections, endpoints |
 | `http_client` | object | HTTP 클라이언트 설정 |
-| `http_client.max_response_size` | string | 사람이 읽을 수 있는 형식의 최대 응답 크기 (예: "2 KB") |
+| `http_client.max_response_size` | string | 사람이 읽을 수 있는 형식의 최대 응답 크기 (예: "1 MB") |
 | `mcp` | object | MCP 서버 설정 |
 | `auth` | object | 사용 가능한 인증 방법 |
 | `mock` | object | 모의 서버 상태 |
@@ -196,9 +196,13 @@ swag2mcp 런타임의 포괄적인 요약을 반환합니다: 버전, 워크스�
       "response_compress(path, 'select_keys', 'data', selectKeys=[id, name])"
     ],
     "navigationHints": {
-      "paths": ["data", "meta", "error"],
-      "arrays": [
-        {"path": "data", "length": 500}
+      "topLevelPaths": [
+        {"path": "data", "type": "array"},
+        {"path": "meta", "type": "object"},
+        {"path": "error", "type": "null"}
+      ],
+      "arrayPaths": [
+        {"path": "data", "length": 500, "itemType": "object"}
       ]
     }
   }

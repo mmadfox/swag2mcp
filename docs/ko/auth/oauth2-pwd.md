@@ -49,4 +49,5 @@ specs:
 - `client_secret`은 선택 사항 — **공개 클라이언트**가 지원됩니다 (예: Keycloak)
 - swag2mcp는 토큰이 만료되면 자동으로 갱신합니다
 - 토큰은 만료까지 캐시됩니다
-- 모든 매개변수를 환경 변수에 저장할 수 있습니다
+- `client_id`, `client_secret`, `username`, `password`는 `$(VAR)` 구문을 통한 환경 변수를 지원합니다
+- `token_url`과 `scopes`는 그대로 사용됩니다 (환경 변수 해결 없음)

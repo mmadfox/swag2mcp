@@ -49,7 +49,7 @@ mock_auth:
 
 - **类型：** `bool`
 - **默认值：** `false`
-- **效果：** 当为 `true` 时，swag2mcp 为所有配置了 `base_mock_url` 的 spec 启动模拟服务器。每个 collection 必须设置 `base_mock_url`。
+- **效果：** 当为 `true` 时，swag2mcp 为所有配置了 `base_mock_url` 的 spec 启动模拟服务器。没有设置 `base_mock_url` 的 collection 将被跳过。
 - **何时启用：** 你想在不进行真实 HTTP 调用的情况下测试 API 集成。模拟服务器基于 OpenAPI 模式返回模拟数据。
 
 ### mock_auth

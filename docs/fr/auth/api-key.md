@@ -27,7 +27,7 @@ specs:
       config:
         key: "X-API-Key"
         in: header
-        value: "$(CLE_API)"
+        value: "$(API_KEY)"
 ```
 
 ### Clé dans le paramètre de requête
@@ -45,7 +45,7 @@ specs:
       config:
         key: "api_key"
         in: query
-        value: "$(CLE_API)"
+        value: "$(API_KEY)"
 ```
 
 ## Paramètres
@@ -54,10 +54,10 @@ specs:
 |-----------|--------|-------------|
 | `key` | Oui | Nom de l'en-tête ou du paramètre de requête |
 | `in` | Oui | Où placer la clé : `header` ou `query` |
-| `value` | Oui | La valeur de la clé |
+| `value` | Oui | La valeur de la clé (supporte la résolution `$(VAR)`) |
 
 ## Notes
 
 - En mode `header`, la clé est ajoutée comme en-tête HTTP
 - En mode `query`, la clé est ajoutée comme paramètre URL
-- Stockez la valeur dans une variable d'environnement : `value: "$(MA_CLE_API)"`
+- Stockez la valeur dans une variable d'environnement : `value: "$(MY_API_KEY)"`

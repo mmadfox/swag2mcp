@@ -157,6 +157,8 @@ Después de conectarse, pregúntele a su agente LLM:
 
 Si el agente lista las herramientas de swag2mcp (`spec_list`, `search`, `invoke`, etc.) — todo está funcionando.
 
+> **Nota:** La herramienta `auth` está deshabilitada por defecto (`--disable-llm-auth=true`) por razones de seguridad. Si necesita que el LLM acceda a tokens de autenticación, inicie el servidor con `swag2mcp mcp --disable-llm-auth=false`.
+
 ### Consultas de ejemplo para probar
 
 | Pregunte a su agente | Qué sucede |

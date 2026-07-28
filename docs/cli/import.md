@@ -85,5 +85,4 @@ swag2mcp ls [path]
 - **Bulk mode requires config:** When using `--spec`, the config file must exist. Run `init` first if needed.
 - **Single import creates workspace:** If the workspace doesn't exist, it is created automatically.
 - **ZIP detection:** A positional argument ending in `.zip` is treated as a ZIP source. The `--from-zip` flag takes priority over positional detection.
-- **`--force`:** Available for ZIP restore to overwrite an existing workspace.
 - **HTTP client:** The global HTTP client settings from the config are applied during import (timeout, proxy, headers, etc.).

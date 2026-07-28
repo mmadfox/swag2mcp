@@ -85,5 +85,4 @@ swag2mcp ls [path]
 - **El modo masivo requiere configuración:** Al usar `--spec`, el archivo de configuración debe existir. Ejecute `init` primero si es necesario.
 - **La importación única crea el espacio de trabajo:** Si el espacio de trabajo no existe, se crea automáticamente.
 - **Detección de ZIP:** Un argumento posicional que termina en `.zip` se trata como un origen ZIP. La bandera `--from-zip` tiene prioridad sobre la detección posicional.
-- **`--force`:** Disponible para la restauración ZIP para sobrescribir un espacio de trabajo existente.
 - **Cliente HTTP:** La configuración global del cliente HTTP se aplica durante la importación (tiempo de espera, proxy, encabezados, etc.).

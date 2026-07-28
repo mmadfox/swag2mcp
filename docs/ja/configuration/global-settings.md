@@ -49,7 +49,7 @@ mock_auth:
 
 - **型:** `bool`
 - **デフォルト:** `false`
-- **効果:** `true` の場合、swag2mcp は `base_mock_url` が設定されているすべての spec のモックサーバーを起動します。各 collection に `base_mock_url` が設定されている必要があります。
+- **効果:** `true` の場合、swag2mcp は `base_mock_url` が設定されているすべての spec のモックサーバーを起動します。`base_mock_url` が設定されていない collection はスキップされます。
 - **有効にするタイミング:** 実際の HTTP 呼び出しを行わずに API 統合をテストしたい場合。モックサーバーは OpenAPI スキーマに基づいて偽のデータを返します。
 
 ### mock_auth

@@ -24,6 +24,10 @@ Fehlercodes:
 - `not_found` — Ressource nicht gefunden
 - `rate_limit` — Ratenlimit überschritten
 - `invoke_error` — API-Aufruffehler
+- `config_error` — Laden oder Validieren der Konfiguration fehlgeschlagen
+- `workspace_error` — Arbeitsbereichsverzeichnis oder Dateioperation
+- `parse_error` — Parsen der Spezifikationsdatei fehlgeschlagen
+- `auth_error` — Authentifizierung fehlgeschlagen
 
 ## Interfaces
 

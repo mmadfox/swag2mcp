@@ -42,11 +42,11 @@ chmod +x /path/to/swag2mcp
 
 ### Versión de Go demasiado antigua
 
-swag2mcp requiere Go 1.23+.
+swag2mcp requiere Go 1.26+.
 
 ```bash
 go version
-# Si la versión < 1.23, actualice Go:
+# Si la versión < 1.26, actualice Go:
 # https://go.dev/dl/
 ```
 
@@ -429,7 +429,6 @@ curl -I <url-fallida>
 El argumento `[output]` debe ser una ruta de archivo que termine en `.zip`, no un directorio.
 
 ```bash
-# Correcto
 swag2mcp export /path/to/workspace /path/to/backup.zip
 
 # Incorrecto (no se creará ningún ZIP)
@@ -476,7 +475,7 @@ swag2mcp add spec
 lsof -i :9090
 
 # Verifique los registros del servidor simulado
-swag2mcp-mock mockserver
+swag2mcp-mock
 ```
 
 ### El servidor simulado devuelve respuestas vacías

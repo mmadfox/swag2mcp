@@ -88,6 +88,63 @@ func TestAPIKeyAuthClient_Apply(t *testing.T) {
 	})
 }
 
+func TestAPIKeyAuthClient_Apply_EnvVars(t *testing.T) {
+	t.Run("resolves value from env in header mode", func(t *testing.T) {
+		t.Setenv("TEST_API_KEY_HDR", "env-key-value")
+
+		client := &APIKeyAuthClient{
+			Key:   "X-Api-Key",
+			Value: "$(TEST_API_KEY_HDR)",
+			In:    "header",
+		}
+		require.NoError(t, client.New(), "New()")
+
+		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
+		var info Info
+		require.NoError(t, client.Apply(req, &info), "Apply()")
+
+		assert.Equal(t, "env-key-value", req.Header.Get("X-Api-Key"))
+		assert.Equal(t, "env-key-value", info.Headers["X-Api-Key"])
+	})
+
+	t.Run("resolves value from env in query mode", func(t *testing.T) {
+		t.Setenv("TEST_API_KEY_QRY", "env-query-key")
+
+		client := &APIKeyAuthClient{
+			Key:   "api_key",
+			Value: "$(TEST_API_KEY_QRY)",
+			In:    "query",
+		}
+		require.NoError(t, client.New(), "New()")
+
+		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
+		var info Info
+		require.NoError(t, client.Apply(req, &info), "Apply()")
+
+		assert.Equal(t, "env-query-key", req.URL.Query().Get("api_key"))
+		assert.Equal(t, "env-query-key", info.QueryParams["api_key"])
+	})
+
+	t.Run("resolves key name from env", func(t *testing.T) {
+		t.Setenv("TEST_API_KEY_NAME", "X-Env-Key")
+		t.Setenv("TEST_API_KEY_VAL", "env-val")
+
+		client := &APIKeyAuthClient{
+			Key:   "$(TEST_API_KEY_NAME)",
+			Value: "$(TEST_API_KEY_VAL)",
+			In:    "header",
+		}
+		require.NoError(t, client.New(), "New()")
+
+		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
+		var info Info
+		require.NoError(t, client.Apply(req, &info), "Apply()")
+
+		assert.Equal(t, "env-val", req.Header.Get("X-Env-Key"))
+		assert.Equal(t, "env-val", info.Headers["X-Env-Key"])
+	})
+}
+
 func TestAPIKeyAuthClient_New(t *testing.T) {
 	t.Parallel()
 

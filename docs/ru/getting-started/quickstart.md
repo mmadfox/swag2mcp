@@ -157,6 +157,8 @@ swag2mcp mcp --tags weather,public
 
 Если агент перечислит инструменты swag2mcp (`spec_list`, `search`, `invoke` и т.д.) — всё работает.
 
+> **Примечание:** Инструмент `auth` отключён по умолчанию (`--disable-llm-auth=true`). Это мера безопасности. Чтобы включить: `swag2mcp mcp --disable-llm-auth=false`.
+
 ### Примеры запросов
 
 | Спросите агента | Что произойдёт |

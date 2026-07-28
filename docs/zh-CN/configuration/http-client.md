@@ -107,7 +107,7 @@ http_client:
 
 - **类型：** `bool`
 - **默认值：** `false`
-- **效果：** 当为 `true` 时，swag2mcp 为每个请求生成随机头：`User-Agent`（来自真实浏览器字符串池）、`Accept`、`Accept-Language`、`Accept-Encoding`、`Cache-Control`。这会覆盖 `user_agent` 设置。
+- **效果：** 当为 `true` 时，swag2mcp 为每个请求生成随机头：`User-Agent`（来自真实浏览器字符串池）、`Accept`、`Accept-Language`、`Accept-Encoding`、`Referer` 以及浏览器风格的安全头（`Sec-Ch-Ua`、`Sec-Ch-Ua-Platform`、`Sec-Fetch-Site`、`Sec-Fetch-Mode`、`Sec-Fetch-Dest`）。这会覆盖 `user_agent` 设置。
 - **何时启用：** 基于 User-Agent 或头模式阻止请求的 API、抓取场景。
 
 ```yaml

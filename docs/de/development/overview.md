@@ -2,7 +2,7 @@
 
 ## Über dieses Projekt
 
-swag2mcp ist ein Go-Projekt, das OpenAPI/Swagger/Postman-Spezifikationen mit LLM-Agenten über das Model Context Protocol (MCP) verbindet. Es ist mit Go 1.23+ gebaut und folgt strengen Codierungskonventionen, die von 80+ Linters durchgesetzt werden.
+swag2mcp ist ein Go-Projekt, das OpenAPI/Swagger/Postman-Spezifikationen mit LLM-Agenten über das Model Context Protocol (MCP) verbindet. Es ist mit Go 1.26+ gebaut und folgt strengen Codierungskonventionen, die von 80+ Linters durchgesetzt werden.
 
 Dieser Abschnitt ist für **Entwickler** geschrieben, die die Codebasis verstehen, dazu beitragen oder swag2mcp mit neuen Auth-Methoden, MCP-Tools oder Integrationen erweitern möchten.
 
@@ -123,7 +123,7 @@ Alle IDs sind deterministische MD5-Hashes:
 id.Domain("meteo")                          // 32-stelliger Hex-Wert
 id.Collection("meteo", "Forecast")          // 32-stelliger Hex-Wert
 id.Tag("meteo", "Forecast", "pets")         // 32-stelliger Hex-Wert
-id.Method("meteo", "Forecast", "pets", "GET", "/v2/pet/{petId}")
+id.Method("meteo", "Forecast", "", "pets", "GET", "/v2/pet/{petId}")
 ```
 
 ### Konfigurationskaskade
@@ -134,7 +134,7 @@ Die Konfiguration kaskadiert durch drei Ebenen: **global → spec → collection
 
 | Bereich | Konvention |
 |---------|------------|
-| **Go-Version** | 1.23+ |
+| **Go-Version** | 1.26+ |
 | **Formatierer** | gofmt, gofumpt, goimports, gci |
 | **Zellenlänge** | 120 Zeichen |
 | **Linter** | 80+ in `.golangci.yml` |

@@ -246,8 +246,8 @@ Execute a real API call to an endpoint. This is the only tool that makes actual 
     "path": "/Users/user/.swag2mcp/responses/response_a1b2c3d4.json",
     "size": 1572864,
     "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "Response exceeds the 2 KB limit and has been saved to disk.",
+    "maxSizeHint": "1 MB",
+    "message": "Response exceeds the 1 MB limit and has been saved to disk.",
     "openCmd": "open /Users/user/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }
@@ -272,7 +272,7 @@ When `invoke` returns a `fileRef`, use the response tools to explore the data:
 
 - **Auth is automatic:** The `invoke` tool automatically obtains and applies authentication from the spec's auth configuration. You do **not** need to call `auth` first.
 - **Rate limiting:** Each endpoint has a 10-second cooldown. A second call to the same endpoint within 10 seconds is silently blocked (returns `rate_limit` error).
-- **Response size limit:** Default is 2 KB (configurable via `max_response_size`). If the response exceeds this limit, it is saved to `{workspace}/responses/` and a `FileReference` is returned instead of inline `body`.
+- **Response size limit:** Default is 1 MB (configurable via `max_response_size`). If the response exceeds this limit, it is saved to `{workspace}/responses/` and a `FileReference` is returned instead of inline `body`.
 - **Parameter handling:** Path parameters are substituted into the URL. Query parameters are appended. Parameters from the request override operation spec defaults.
 - **Request body:** For POST/PUT/PATCH, the body is serialized as JSON. `Content-Type` is set to `application/json` automatically.
 - **Error handling:** HTTP errors (non-2xx) are returned as `invoke_error` with the status code and response body in the hint.

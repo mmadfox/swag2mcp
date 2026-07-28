@@ -105,7 +105,7 @@ $ swag2mcp info
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 KB",
+    "max_response_size": "1 MB",
     "follow_redirects": true
   },
   "mcp": {
@@ -165,7 +165,7 @@ swag2mcp clean
 ### 워크스페이스 백업
 
 ```bash
-swag2mcp export --output ~/backups/swag2mcp-2026-07-24.zip
+swag2mcp export ~/backups/swag2mcp-2026-07-24.zip
 ```
 
 ### 다른 머신에서 복원
@@ -190,5 +190,5 @@ swag2mcp run
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 
 # 모의 서버 시작
-swag2mcp-mock mockserver
+swag2mcp-mock
 ```

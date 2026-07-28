@@ -278,7 +278,7 @@ invoke(endpointId: "...", parameters: {...})  → 发起调用
 可以，使用模拟服务器：
 
 ```bash
-swag2mcp-mock mockserver
+swag2mcp-mock
 ```
 
 它基于 OpenAPI 模式生成模拟响应。

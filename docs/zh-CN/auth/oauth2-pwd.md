@@ -49,4 +49,5 @@ specs:
 - `client_secret` 是可选的 — 支持**公共客户端**（例如 Keycloak）
 - swag2mcp 在令牌过期时自动刷新
 - 令牌被缓存直到过期
-- 所有参数可以存储在环境变量中
+- `client_id`、`client_secret`、`username` 和 `password` 支持 `$(VAR)` 语法用于环境变量
+- `token_url` 和 `scopes` 按原样使用（不解析环境变量）

@@ -246,8 +246,8 @@ Exécuter un véritable appel API vers un point de terminaison. C'est le seul ou
     "path": "/Users/utilisateur/.swag2mcp/responses/response_a1b2c3d4.json",
     "size": 1572864,
     "sizeHint": "1.5 Mo",
-    "maxSizeHint": "2 Ko",
-    "message": "La réponse dépasse la limite de 2 Ko et a été enregistrée sur le disque.",
+    "maxSizeHint": "1 Mo",
+    "message": "La réponse dépasse la limite de 1 Mo et a été enregistrée sur le disque.",
     "openCmd": "open /Users/utilisateur/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }
@@ -272,7 +272,7 @@ Lorsque `invoke` renvoie une `fileRef`, utilisez les outils de réponse pour exp
 
 - **L'authentification est automatique :** L'outil `invoke` obtient et applique automatiquement l'authentification à partir de la configuration d'authentification de la spécification. Vous n'avez **pas** besoin d'appeler `auth` d'abord.
 - **Limitation de débit :** Chaque point de terminaison a un délai de refroidissement de 10 secondes. Un deuxième appel au même point de terminaison dans les 10 secondes est silencieusement bloqué (renvoie une erreur `rate_limit`).
-- **Limite de taille de réponse :** La valeur par défaut est de 2 Ko (configurable via `max_response_size`). Si la réponse dépasse cette limite, elle est enregistrée dans `{workspace}/responses/` et une `FileReference` est renvoyée au lieu du `body` en ligne.
+- **Limite de taille de réponse :** La valeur par défaut est de 1 Mo (configurable via `max_response_size`). Si la réponse dépasse cette limite, elle est enregistrée dans `{workspace}/responses/` et une `FileReference` est renvoyée au lieu du `body` en ligne.
 - **Gestion des paramètres :** Les paramètres de chemin sont substitués dans l'URL. Les paramètres de requête sont ajoutés. Les paramètres de la requête remplacent les valeurs par défaut de la spécification de l'opération.
 - **Corps de la requête :** Pour POST/PUT/PATCH, le corps est sérialisé en JSON. `Content-Type` est automatiquement défini sur `application/json`.
 - **Gestion des erreurs :** Les erreurs HTTP (non-2xx) sont renvoyées sous forme d'`invoke_error` avec le code d'état et le corps de la réponse dans l'indice.

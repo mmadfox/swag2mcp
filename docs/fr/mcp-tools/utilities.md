@@ -98,7 +98,7 @@ Aucun.
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 Ko",
+    "max_response_size": "1 Mo",
     "follow_redirects": true,
     "max_redirects": 10,
     "randomize": false,
@@ -128,7 +128,7 @@ Aucun.
 | `uptime` | string | Temps de fonctionnement du serveur (lisible) |
 | `specs` | object | Résumé des spécifications : total, actives, désactivées, collections, points de terminaison |
 | `http_client` | object | Configuration du client HTTP |
-| `http_client.max_response_size` | string | Taille maximale de réponse au format lisible (par exemple « 2 Ko ») |
+| `http_client.max_response_size` | string | Taille maximale de réponse au format lisible (par exemple « 1 Mo ») |
 | `mcp` | object | Configuration du serveur MCP |
 | `auth` | object | Méthodes d'authentification disponibles |
 | `mock` | object | État du serveur de simulation |
@@ -196,9 +196,13 @@ Lit le fichier de réponse enregistré et analyse sa structure : type de premier
       "response_compress(path, 'select_keys', 'data', selectKeys=[id, name])"
     ],
     "navigationHints": {
-      "paths": ["data", "meta", "error"],
-      "arrays": [
-        {"path": "data", "length": 500}
+      "topLevelPaths": [
+        {"path": "data", "type": "array"},
+        {"path": "meta", "type": "object"},
+        {"path": "error", "type": "null"}
+      ],
+      "arrayPaths": [
+        {"path": "data", "length": 500, "itemType": "object"}
       ]
     }
   }

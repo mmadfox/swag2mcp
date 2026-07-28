@@ -107,7 +107,7 @@ Ajoute des en-têtes aléatoires de type navigateur à chaque requête pour évi
 
 - **Type :** `bool`
 - **Valeur par défaut :** `false`
-- **Effet :** Lorsqu'il est `true`, swag2mcp génère des en-têtes aléatoires pour chaque requête : `User-Agent` (à partir d'un pool de chaînes de navigateurs réels), `Accept`, `Accept-Language`, `Accept-Encoding`, `Cache-Control`. Cela remplace le paramètre `user_agent`.
+- **Effet :** Lorsqu'il est `true`, swag2mcp génère des en-têtes aléatoires pour chaque requête : `User-Agent` (à partir d'un pool de chaînes de navigateurs réels), `Accept`, `Accept-Language`, `Accept-Encoding`, `Referer`, et des en-têtes de sécurité de type navigateur (`Sec-Ch-Ua`, `Sec-Ch-Ua-Platform`, `Sec-Fetch-Site`, `Sec-Fetch-Mode`, `Sec-Fetch-Dest`). Cela remplace le paramètre `user_agent`.
 - **Quand l'activer :** API qui bloquent les requêtes en fonction du User-Agent ou des modèles d'en-têtes, scénarios de collecte de données.
 
 ```yaml

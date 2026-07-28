@@ -107,7 +107,7 @@ http_client:
 
 - **Тип:** `bool`
 - **По умолчанию:** `false`
-- **Эффект:** Если `true`, swag2mcp генерирует случайные заголовки для каждого запроса: `User-Agent` (из пула реальных браузерных строк), `Accept`, `Accept-Language`, `Accept-Encoding`, `Cache-Control`. Это переопределяет настройку `user_agent`.
+- **Эффект:** Если `true`, swag2mcp генерирует случайные заголовки для каждого запроса: `User-Agent` (из пула реальных браузерных строк), `Accept`, `Accept-Language`, `Accept-Encoding`, `Referer`, `Sec-Ch-Ua`, `Sec-Ch-Ua-Platform`, `Sec-Fetch-Site`, `Sec-Fetch-Mode`, `Sec-Fetch-Dest`. Это переопределяет настройку `user_agent`.
 - **Когда включать:** API, которые блокируют запросы на основе User-Agent или шаблонов заголовков, сценарии парсинга.
 
 ```yaml

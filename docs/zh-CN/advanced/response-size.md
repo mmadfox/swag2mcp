@@ -32,8 +32,8 @@ API 响应可能非常大 — 有时大到无法放入 LLM 的上下文窗口。
     "path": "/Users/user/.swag2mcp/responses/response_a1b2c3d4.json",
     "size": 1572864,
     "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "Response exceeds the 2 KB limit and has been saved to disk.",
+    "maxSizeHint": "1 MB",
+    "message": "Response exceeds the 1 MB limit and has been saved to disk.",
     "openCmd": "open /Users/user/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }

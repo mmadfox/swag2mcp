@@ -2,7 +2,7 @@
 
 ## 关于此项目
 
-swag2mcp 是一个 Go 项目，通过模型上下文协议（MCP）将 OpenAPI/Swagger/Postman 规范与 LLM 智能体连接起来。它使用 Go 1.23+ 构建，并遵循由 80+ 个检查器强制执行的严格编码规范。
+swag2mcp 是一个 Go 项目，通过模型上下文协议（MCP）将 OpenAPI/Swagger/Postman 规范与 LLM 智能体连接起来。它使用 Go 1.26+ 构建，并遵循由 80+ 个检查器强制执行的严格编码规范。
 
 本节是为想要理解代码库、贡献或使用新的认证方法、MCP 工具和集成来扩展 swag2mcp 的**工程师**编写的。
 
@@ -123,7 +123,7 @@ func (h *handler) handleSearch(ctx context.Context, _ *sdkmcp.CallToolRequest, r
 id.Domain("meteo")                          // 32 字符十六进制
 id.Collection("meteo", "Forecast")          // 32 字符十六进制
 id.Tag("meteo", "Forecast", "pets")         // 32 字符十六进制
-id.Method("meteo", "Forecast", "pets", "GET", "/v2/pet/{petId}")
+id.Method("meteo", "Forecast", "", "pets", "GET", "/v2/pet/{petId}")
 ```
 
 ### 配置级联
@@ -134,7 +134,7 @@ id.Method("meteo", "Forecast", "pets", "GET", "/v2/pet/{petId}")
 
 | 领域 | 规范 |
 |------|------|
-| **Go 版本** | 1.23+ |
+| **Go 版本** | 1.26+ |
 | **格式化工具** | gofmt、gofumpt、goimports、gci |
 | **行长度** | 120 字符 |
 | **检查器** | `.golangci.yml` 中 80+ 个 |

@@ -32,8 +32,8 @@
     "path": "/Users/user/.swag2mcp/responses/response_a1b2c3d4.json",
     "size": 1572864,
     "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "Ответ превышает лимит 2 КБ и был сохранён на диск.",
+    "maxSizeHint": "1 MB",
+    "message": "Ответ превышает лимит 1 МБ и был сохранён на диск.",
     "openCmd": "open /Users/user/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }

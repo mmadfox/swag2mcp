@@ -246,8 +246,8 @@
     "path": "/Users/user/.swag2mcp/responses/response_a1b2c3d4.json",
     "size": 1572864,
     "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "Response exceeds the 2 KB limit and has been saved to disk.",
+    "maxSizeHint": "1 MB",
+    "message": "Response exceeds the 1 MB limit and has been saved to disk.",
     "openCmd": "open /Users/user/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }
@@ -272,7 +272,7 @@
 
 - **認証は自動：** `invoke` ツールはスペックの認証設定から自動的に認証を取得して適用します。事前に `auth` を呼び出す必要は**ありません**。
 - **レート制限：** 各エンドポイントには 10 秒のクールダウンがあります。同じエンドポイントへの 10 秒以内の 2 回目の呼び出しは静かにブロックされます（`rate_limit` エラーを返します）。
-- **レスポンスサイズ制限：** デフォルトは 2 KB（`max_response_size` で設定可能）。レスポンスがこの制限を超えると、`{workspace}/responses/` に保存され、インラインの `body` の代わりに `FileReference` が返されます。
+- **レスポンスサイズ制限：** デフォルトは 1 MB（`max_response_size` で設定可能）。レスポンスがこの制限を超えると、`{workspace}/responses/` に保存され、インラインの `body` の代わりに `FileReference` が返されます。
 - **パラメータ処理：** パスパラメータは URL に代入されます。クエリパラメータは追加されます。リクエストからのパラメータは操作スペックのデフォルトを上書きします。
 - **リクエストボディ：** POST/PUT/PATCH の場合、ボディは JSON としてシリアライズされます。`Content-Type` は自動的に `application/json` に設定されます。
 - **エラーハンドリング：** HTTP エラー（2xx 以外）は、ステータスコードとレスポンスボディを含む `invoke_error` として返されます。

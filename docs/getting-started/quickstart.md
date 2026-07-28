@@ -128,6 +128,8 @@ swag2mcp mcp
 swag2mcp mcp --transport sse --http-addr :8080
 ```
 
+> **Note:** The `auth` MCP tool is **disabled by default** (`--disable-llm-auth=true`) for production security. To enable it: `swag2mcp mcp --disable-llm-auth=false`
+
 Or configure in `swag2mcp.yaml`:
 
 ```yaml

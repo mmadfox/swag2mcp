@@ -278,7 +278,7 @@ Cada endpoint tiene un período de enfriamiento de 10 segundos. Si el LLM llama 
 Sí, use el servidor simulado:
 
 ```bash
-swag2mcp-mock mockserver
+swag2mcp-mock
 ```
 
 Genera respuestas falsas basadas en esquemas OpenAPI.
@@ -288,14 +288,14 @@ Genera respuestas falsas basadas en esquemas OpenAPI.
 ### ¿Cómo hago una copia de seguridad de mi configuración?
 
 ```bash
-swag2mcp export --output ~/backups/swag2mcp-2026-07-24.zip
+swag2mcp export ~/backups/swag2mcp-2026-07-24.zip
 ```
 
 ### ¿Cómo transfiero a otra máquina?
 
 ```bash
 # En la máquina antigua
-swag2mcp export --output swag2mcp.zip
+swag2mcp export swag2mcp.zip
 
 # Copie el ZIP, luego en la máquina nueva
 swag2mcp import --from-zip swag2mcp.zip

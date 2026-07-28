@@ -45,4 +45,7 @@ specs:
 - swag2mcp fordert automatisch ein neues Token an, wenn das aktuelle abläuft
 - Das Token wird bis zu seiner Ablaufzeit (`expires_in`) zwischengespeichert
 - Wenn der Server kein `expires_in` angibt, gilt das Token für 1 Stunde als gültig
-- Alle Parameter können in Umgebungsvariablen gespeichert werden
+- Alle Parameter können in Umgebungsvariablen gespeichert werden:
+- `client_id` — unterstützt `$(VAR)`-Syntax
+- `client_secret` — unterstützt `$(VAR)`-Syntax
+- `token_url` — unterstützt `$(VAR)`-Syntax

@@ -98,7 +98,7 @@ Keine.
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 KB",
+    "max_response_size": "1 MB",
     "follow_redirects": true,
     "max_redirects": 10,
     "randomize": false,
@@ -128,7 +128,7 @@ Keine.
 | `uptime` | string | Server-Betriebszeit (menschenlesbar) |
 | `specs` | object | Spec-Zusammenfassung: gesamt, aktiv, deaktiviert, Collections, Endpunkte |
 | `http_client` | object | HTTP-Client-Konfiguration |
-| `http_client.max_response_size` | string | Maximale Antwortgröße in menschenlesbarem Format (z. B. "2 KB") |
+| `http_client.max_response_size` | string | Maximale Antwortgröße in menschenlesbarem Format (z. B. "1 MB") |
 | `mcp` | object | MCP-Server-Konfiguration |
 | `auth` | object | Verfügbare Auth-Methoden |
 | `mock` | object | Mock-Server-Status |
@@ -196,8 +196,8 @@ Liest die gespeicherte Antwortdatei und analysiert ihre Struktur: Typ der oberst
       "response_compress(path, 'select_keys', 'data', selectKeys=[id, name])"
     ],
     "navigationHints": {
-      "paths": ["data", "meta", "error"],
-      "arrays": [
+      "topLevelPaths": ["data", "meta", "error"],
+      "arraysWithLength": [
         {"path": "data", "length": 500}
       ]
     }

@@ -173,7 +173,7 @@ Listet alle Endpunkte auf, die unter einem bestimmten Tag gruppiert sind. Dies i
 
 ### Zweck
 
-Ruft eine kurze Zusammenfassung eines einzelnen Endpunkts ab: Methode, Pfad, Zusammenfassung und Veraltungsstatus. Dies ist ein leichtgewichtiges Tool — für das vollständige OpenAPI-Operationsobjekt (Parameter, Anforderungstext, Antwortschemata) verwenden Sie `inspect`.
+Ruft eine kurze Zusammenfassung eines einzelnen Endpunkts ab: Methode, Pfad, Zusammenfassung und seine übergeordnete Spec, Collection und Tag. Dies ist ein leichtgewichtiges Tool — für das vollständige OpenAPI-Operationsobjekt (Parameter, Anforderungstext, Antwortschemata) verwenden Sie `inspect`.
 
 ### Wann verwenden
 

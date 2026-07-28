@@ -24,6 +24,10 @@ type LLMError struct {
 - `not_found` — リソースが見つからない
 - `rate_limit` — レート制限超過
 - `invoke_error` — API 呼び出しエラー
+- `config_error` — 設定ファイルの読み込みまたは保存の失敗
+- `workspace_error` — ワークスペースディレクトリの問題
+- `parse_error` — スペックファイルの解析の失敗
+- `auth_error` — 認証トークン取得の失敗
 
 ## インターフェース
 

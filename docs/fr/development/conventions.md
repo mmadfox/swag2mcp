@@ -24,6 +24,10 @@ Codes d'erreur :
 - `not_found` — ressource non trouvée
 - `rate_limit` — limite de débit dépassée
 - `invoke_error` — erreur d'appel API
+- `config_error` — échec de chargement ou de validation de la configuration
+- `workspace_error` — problème de répertoire de l'espace de travail
+- `parse_error` — échec d'analyse du fichier de spécification
+- `auth_error` — échec d'authentification
 
 ## Interfaces
 

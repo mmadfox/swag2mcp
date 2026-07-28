@@ -278,7 +278,7 @@ invoke(endpointId: "...", parameters: {...})  → 呼び出し
 はい、モックサーバーを使用します：
 
 ```bash
-swag2mcp-mock mockserver
+swag2mcp-mock
 ```
 
 OpenAPI スキーマに基づいて偽のレスポンスを生成します。
@@ -288,14 +288,14 @@ OpenAPI スキーマに基づいて偽のレスポンスを生成します。
 ### 設定をバックアップするには？
 
 ```bash
-swag2mcp export --output ~/backups/swag2mcp-2026-07-24.zip
+swag2mcp export ~/backups/swag2mcp-2026-07-24.zip
 ```
 
 ### 別のマシンに移行するには？
 
 ```bash
 # 古いマシンで
-swag2mcp export --output swag2mcp.zip
+swag2mcp export swag2mcp.zip
 
 # ZIP をコピーし、新しいマシンで
 swag2mcp import --from-zip swag2mcp.zip

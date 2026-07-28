@@ -278,7 +278,7 @@ invoke(endpointId: "...", parameters: {...})  → 호출 실행
 네, 모의 서버를 사용하세요:
 
 ```bash
-swag2mcp-mock mockserver
+swag2mcp-mock
 ```
 
 OpenAPI 스키마를 기반으로 가짜 응답을 생성합니다.
@@ -288,14 +288,14 @@ OpenAPI 스키마를 기반으로 가짜 응답을 생성합니다.
 ### 설정을 어떻게 백업하나요?
 
 ```bash
-swag2mcp export --output ~/backups/swag2mcp-2026-07-24.zip
+swag2mcp export ~/backups/swag2mcp-2026-07-24.zip
 ```
 
 ### 다른 머신으로 전송하려면 어떻게 하나요?
 
 ```bash
 # 이전 머신에서
-swag2mcp export --output swag2mcp.zip
+swag2mcp export swag2mcp.zip
 
 # ZIP을 복사한 후 새 머신에서
 swag2mcp import --from-zip swag2mcp.zip

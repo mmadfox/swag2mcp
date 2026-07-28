@@ -14,7 +14,7 @@ Cuando se agrega o actualiza una especificación, cada endpoint se indexa. Los s
 | `path` | Ruta del endpoint de API | `/api/v1/users/{id}` |
 | `summary` | Resumen de OpenAPI | "Find pet by ID" |
 | `tag` | Categoría del endpoint | "pets", "users" |
-| `_all` | Todos los campos combinados | method + path + tag + summary |
+| `_all` | Todos los campos combinados | method + path + tag + summary + description + operationId |
 
 El índice se reconstruye en cada inicio del servidor MCP. Se almacena en memoria para búsquedas rápidas.
 
@@ -103,4 +103,4 @@ La herramienta MCP `search` expone el motor de búsqueda al LLM:
 - **Todos los campos están en minúsculas** — las búsquedas no distinguen entre mayúsculas y minúsculas
 - **El límite máximo es 50** — no puede solicitar más de 50 resultados
 - **La sintaxis de consulta inválida** devuelve un mensaje de error útil con ejemplos
-- **El campo `_all`** combina method, path, tag y summary para búsquedas de texto simples
+- **El campo `_all`** combina method, path, tag, summary, description y operationId para búsquedas de texto simples

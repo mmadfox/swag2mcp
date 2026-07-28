@@ -140,8 +140,8 @@ Responses:
     "path": "/home/user/.swag2mcp/responses/response_x7k9m2.json",
     "size": 1572864,
     "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "La respuesta excede el límite de 2 KB y se ha guardado en disco."
+    "maxSizeHint": "1 MB",
+    "message": "La respuesta excede el límite de 1 MB y se ha guardado en disco."
   }
 }
 ```
@@ -223,7 +223,7 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 KB"
+    "max_response_size": "1 MB"
   },
   "mcp": {
     "transport": "stdio"
@@ -231,7 +231,7 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/
 }
 ```
 
-**LLM:** El sistema ha estado funcionando durante 2 horas y 15 minutos. Dos especificaciones están activas con 20 endpoints en total. El cliente HTTP tiene un tiempo de espera de 30 segundos y un límite de tamaño de respuesta de 2 KB.
+**LLM:** El sistema ha estado funcionando durante 2 horas y 15 minutos. Dos especificaciones están activas con 20 endpoints en total. El cliente HTTP tiene un tiempo de espera de 30 segundos y un límite de tamaño de respuesta de 1 MB.
 
 ---
 

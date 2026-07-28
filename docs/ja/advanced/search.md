@@ -14,7 +14,7 @@ spec が追加または更新されると、すべてのエンドポイントが
 | `path` | API エンドポイントパス | `/api/v1/users/{id}` |
 | `summary` | OpenAPI サマリー | "Find pet by ID" |
 | `tag` | エンドポイントカテゴリ | "pets"、"users" |
-| `_all` | 全フィールドの組み合わせ | method + path + tag + summary |
+| `_all` | 全フィールドの組み合わせ | method + path + tag + spec_domain + collection_title + summary |
 
 インデックスは MCP サーバー起動時に毎回再構築されます。高速検索のためにメモリ内に保存されます。
 
@@ -103,4 +103,4 @@ create~
 - **すべてのフィールドは小文字化** — 検索は大文字小文字を区別しません
 - **制限は最大 50** — 50 を超える結果を要求することはできません
 - **無効なクエリ構文** は例を含む役立つエラーメッセージを返します
-- **`_all` フィールド** はシンプルなテキスト検索のために method、path、tag、summary を結合します
+- **`_all` フィールド** はシンプルなテキスト検索のために method、path、tag、spec_domain、collection_title、summary を結合します

@@ -14,7 +14,7 @@ spec이 추가되거나 업데이트되면 모든 엔드포인트가 인덱싱�
 | `path` | API 엔드포인트 경로 | `/api/v1/users/{id}` |
 | `summary` | OpenAPI 요약 | "Find pet by ID" |
 | `tag` | 엔드포인트 카테고리 | "pets", "users" |
-| `_all` | 모든 필드 결합 | method + path + tag + summary |
+| `_all` | 모든 필드 결합 | method + path + tag + spec_domain + collection_title + summary |
 
 인덱스는 MCP 서버가 시작될 때마다 재구축됩니다. 빠른 검색을 위해 메모리에 저장됩니다.
 
@@ -103,4 +103,4 @@ create~
 - **모든 필드는 소문자로 변환됨** — 검색은 대소문자를 구분하지 않습니다
 - **제한은 최대 50개** — 50개 이상의 결과를 요청할 수 없습니다
 - **잘못된 쿼리 구문**은 예제와 함께 도움이 되는 오류 메시지를 반환합니다
-- **`_all` 필드**는 method, path, tag, summary를 결합하여 단순 텍스트 검색에 사용됩니다
+- **`_all` 필드**는 method, path, tag, spec_domain, collection_title, summary를 결합하여 단순 텍스트 검색에 사용됩니다

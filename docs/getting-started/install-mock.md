@@ -220,19 +220,19 @@ The container runs as a non-root user and needs access to your workspace directo
 Mount `~/.swag2mcp` (or your custom workspace path) to `/home/nonroot/.swag2mcp`:
 
 ```bash
-docker pull ghcr.io/mmadfox/swag2mcp:latest
+docker pull ghcr.io/mmadfox/swag2mcp-mock:latest
 ```
 
 Run mock server:
 
 ```bash
-docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest swag2mcp-mock mockserver
+docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-mock:latest
 ```
 
 Verify:
 
 ```bash
-docker run --rm -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest swag2mcp-mock --version
+docker run --rm -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-mock:latest swag2mcp-mock --version
 ```
 
 ---

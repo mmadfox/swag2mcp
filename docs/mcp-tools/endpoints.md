@@ -173,7 +173,7 @@ List all endpoints grouped under a specific tag. This is the most focused view �
 
 ### Purpose
 
-Get a quick summary of a single endpoint: method, path, summary, and deprecation status. This is a lightweight tool — for the full OpenAPI operation object (parameters, request body, response schemas), use `inspect`.
+Get a quick summary of a single endpoint: method, path, summary, and its parent spec, collection, and tag. This is a lightweight tool — for the full OpenAPI operation object (parameters, request body, response schemas), use `inspect`.
 
 ### When to use
 

@@ -45,4 +45,5 @@ specs:
 - swag2mcp 在当前令牌过期时自动请求新令牌
 - 令牌被缓存直到其过期时间（`expires_in`）
 - 如果服务器未提供 `expires_in`，令牌被视为有效 1 小时
-- 所有参数可以存储在环境变量中
+- `client_id` 和 `client_secret` 支持 `$(VAR)` 语法用于环境变量
+- `token_url` 和 `scopes` 按原样使用（不解析环境变量）

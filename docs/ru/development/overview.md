@@ -2,7 +2,7 @@
 
 ## О проекте
 
-swag2mcp — это Go-проект, который соединяет спецификации OpenAPI/Swagger/Postman с LLM-агентами через протокол Model Context Protocol (MCP). Он написан на Go 1.23+ и следует строгим соглашениям по кодированию, обеспечиваемым 80+ линтерами.
+swag2mcp — это Go-проект, который соединяет спецификации OpenAPI/Swagger/Postman с LLM-агентами через протокол Model Context Protocol (MCP). Он написан на Go 1.26+ и следует строгим соглашениям по кодированию, обеспечиваемым 80+ линтерами.
 
 Этот раздел написан для **инженеров**, которые хотят понять кодовую базу, внести свой вклад или расширить swag2mcp новыми методами аутентификации, MCP-инструментами или интеграциями.
 
@@ -123,7 +123,7 @@ func (h *handler) handleSearch(ctx context.Context, _ *sdkmcp.CallToolRequest, r
 id.Domain("meteo")                          // 32-char hex
 id.Collection("meteo", "Forecast")          // 32-char hex
 id.Tag("meteo", "Forecast", "pets")         // 32-char hex
-id.Method("meteo", "Forecast", "pets", "GET", "/v2/pet/{petId}")
+id.Method("meteo", "Forecast", "", "pets", "GET", "/v2/pet/{petId}")
 ```
 
 ### Каскад конфигурации
@@ -134,7 +134,7 @@ id.Method("meteo", "Forecast", "pets", "GET", "/v2/pet/{petId}")
 
 | Область | Соглашение |
 |---------|------------|
-| **Версия Go** | 1.23+ |
+| **Версия Go** | 1.26+ |
 | **Форматтеры** | gofmt, gofumpt, goimports, gci |
 | **Длина строки** | 120 символов |
 | **Линтеры** | 80+ в `.golangci.yml` |

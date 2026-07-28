@@ -13,7 +13,7 @@ Crea una copia de seguridad ZIP portátil de su espacio de trabajo.
 swag2mcp export
 
 # Exportar con ruta personalizada
-swag2mcp export --output ~/backups/swag2mcp-backup.zip
+swag2mcp export ~/backups/swag2mcp-backup.zip
 
 # Exportar solo especificaciones específicas
 swag2mcp export --spec meteo
@@ -46,7 +46,7 @@ Restaura un espacio de trabajo desde una copia de seguridad ZIP o importa archiv
 swag2mcp import --from-zip /path/to/backup.zip
 
 # Restaurar con sobrescritura
-swag2mcp import --from-zip /path/to/backup.zip -f
+swag2mcp import --from-zip /path/to/backup.zip --force
 ```
 
 El ZIP debe ser creado por `swag2mcp export` — los archivos ZIP arbitrarios no funcionarán.
@@ -76,14 +76,14 @@ Esto descarga el archivo de especificación de cada colección, lo guarda en `sp
 ### Copia de seguridad
 
 ```bash
-swag2mcp export --output swag2mcp-$(date +%Y-%m-%d).zip
+swag2mcp export swag2mcp-$(date +%Y-%m-%d).zip
 ```
 
 ### Transferencia a otra máquina
 
 ```bash
 # En la máquina antigua
-swag2mcp export --output swag2mcp.zip
+swag2mcp export swag2mcp.zip
 
 # Copie el ZIP a la máquina nueva, luego:
 swag2mcp import --from-zip swag2mcp.zip
@@ -93,7 +93,7 @@ swag2mcp import --from-zip swag2mcp.zip
 
 ```bash
 swag2mcp init
-swag2mcp export --output template.zip
+swag2mcp export template.zip
 # Comparta template.zip con un colega
 ```
 

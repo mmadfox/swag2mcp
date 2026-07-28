@@ -173,7 +173,7 @@ Listar todos los endpoints agrupados bajo una etiqueta específica. Esta es la v
 
 ### Propósito
 
-Obtener un resumen rápido de un solo endpoint: método, ruta, resumen y estado de obsolescencia. Esta es una herramienta ligera — para el objeto de operación OpenAPI completo (parámetros, cuerpo de solicitud, esquemas de respuesta), use `inspect`.
+Obtener un resumen rápido de un solo endpoint: método, ruta, resumen y su especificación, colección y etiqueta padre. Esta es una herramienta ligera — para el objeto de operación OpenAPI completo (parámetros, cuerpo de solicitud, esquemas de respuesta), use `inspect`.
 
 ### Cuándo usarlo
 

@@ -14,7 +14,7 @@ When a spec is added or updated, every endpoint is indexed. The following fields
 | `path` | API endpoint path | `/api/v1/users/{id}` |
 | `summary` | OpenAPI summary | "Find pet by ID" |
 | `tag` | Endpoint category | "pets", "users" |
-| `_all` | All fields combined | method + path + tag + summary |
+| `_all` | All fields combined | method + path + tag + spec_domain + collection_title + summary |
 
 The index is rebuilt on every MCP server start. It is stored in memory for fast searches.
 
@@ -103,4 +103,4 @@ The `search` MCP tool exposes the search engine to the LLM:
 - **All fields are lowercased** — searches are case-insensitive
 - **Limit is capped at 50** — you cannot request more than 50 results
 - **Invalid query syntax** returns a helpful error message with examples
-- **The `_all` field** combines method, path, tag, and summary for simple text searches
+- **The `_all` field** combines method, path, tag, spec_domain, collection_title, and summary for simple text searches

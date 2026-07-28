@@ -20,7 +20,7 @@ Cuando agrega una especificación con una URL remota, swag2mcp la descarga y la 
 
 Cada archivo en caché recibe un tiempo de expiración aleatorio entre **1 hora y 48 horas**. La aleatoriedad evita que todos los archivos en caché expiren al mismo tiempo (lo que causaría una avalancha de descargas).
 
-- El TTL se restablece cada vez que se inicia el servidor MCP
+- El TTL se restablece cada vez que se descarga o revalida un archivo
 - Si un archivo en caché aún está dentro de su TTL, se reutiliza
 - Si el TTL ha expirado, el archivo se descarga nuevamente
 

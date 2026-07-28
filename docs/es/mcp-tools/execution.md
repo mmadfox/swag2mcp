@@ -246,8 +246,8 @@ Ejecutar una llamada real a la API en un endpoint. Esta es la única herramienta
     "path": "/Users/user/.swag2mcp/responses/response_a1b2c3d4.json",
     "size": 1572864,
     "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "La respuesta excede el límite de 2 KB y se ha guardado en disco.",
+    "maxSizeHint": "1 MB",
+    "message": "La respuesta excede el límite de 1 MB y se ha guardado en disco.",
     "openCmd": "open /Users/user/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }
@@ -272,7 +272,7 @@ Cuando `invoke` devuelve un `fileRef`, use las herramientas de respuesta para ex
 
 - **La autenticación es automática:** La herramienta `invoke` obtiene y aplica automáticamente la autenticación de la configuración de la especificación. **No** necesita llamar a `auth` primero.
 - **Limitación de velocidad:** Cada endpoint tiene un enfriamiento de 10 segundos. Una segunda llamada al mismo endpoint dentro de 10 segundos se bloquea silenciosamente (devuelve error `rate_limit`).
-- **Límite de tamaño de respuesta:** El valor predeterminado es 2 KB (configurable mediante `max_response_size`). Si la respuesta excede este límite, se guarda en `{workspace}/responses/` y se devuelve un `FileReference` en lugar del `body` en línea.
+- **Límite de tamaño de respuesta:** El valor predeterminado es 1 MB (configurable mediante `max_response_size`). Si la respuesta excede este límite, se guarda en `{workspace}/responses/` y se devuelve un `FileReference` en lugar del `body` en línea.
 - **Manejo de parámetros:** Los parámetros de ruta se sustituyen en la URL. Los parámetros de consulta se agregan. Los parámetros de la solicitud anulan los valores predeterminados de la operación.
 - **Cuerpo de solicitud:** Para POST/PUT/PATCH, el cuerpo se serializa como JSON. `Content-Type` se establece en `application/json` automáticamente.
 - **Manejo de errores:** Los errores HTTP (no 2xx) se devuelven como `invoke_error` con el código de estado y el cuerpo de la respuesta en la sugerencia.

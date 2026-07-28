@@ -2,7 +2,7 @@
 
 ## このプロジェクトについて
 
-swag2mcp は、OpenAPI/Swagger/Postman 仕様と LLM エージェントを Model Context Protocol（MCP）を介して橋渡しする Go プロジェクトです。Go 1.23+ で構築され、80 以上のリンターによって強制される厳格なコーディング規約に従っています。
+swag2mcp は、OpenAPI/Swagger/Postman 仕様と LLM エージェントを Model Context Protocol（MCP）を介して橋渡しする Go プロジェクトです。Go 1.26+ で構築され、80 以上のリンターによって強制される厳格なコーディング規約に従っています。
 
 このセクションは、コードベースを理解し、貢献し、新しい認証方法、MCP ツール、または統合機能で swag2mcp を拡張したい**エンジニア**向けに書かれています。
 
@@ -123,7 +123,7 @@ LLM に返されるすべてのエラーは、8 つのコードのいずれか�
 id.Domain("meteo")                          // 32 文字の 16 進数
 id.Collection("meteo", "Forecast")          // 32 文字の 16 進数
 id.Tag("meteo", "Forecast", "pets")         // 32 文字の 16 進数
-id.Method("meteo", "Forecast", "pets", "GET", "/v2/pet/{petId}")
+id.Method("meteo", "Forecast", "", "pets", "GET", "/v2/pet/{petId}")
 ```
 
 ### 設定カスケード
@@ -134,7 +134,7 @@ id.Method("meteo", "Forecast", "pets", "GET", "/v2/pet/{petId}")
 
 | 領域 | 規約 |
 |------|------------|
-| **Go バージョン** | 1.23+ |
+| **Go バージョン** | 1.26+ |
 | **フォーマッター** | gofmt、gofumpt、goimports、gci |
 | **行長** | 120 文字 |
 | **リンター** | `.golangci.yml` で 80 以上 |

@@ -85,5 +85,4 @@ swag2mcp ls [path]
 - **Massenmodus erfordert Konfiguration:** Bei Verwendung von `--spec` muss die Konfigurationsdatei existieren. Führen Sie bei Bedarf zuerst `init` aus.
 - **Einzelimport erstellt Arbeitsbereich:** Wenn der Arbeitsbereich nicht existiert, wird er automatisch erstellt.
 - **ZIP-Erkennung:** Ein Positionsargument, das auf `.zip` endet, wird als ZIP-Quelle behandelt. Das Flag `--from-zip` hat Vorrang vor der Positionserkennung.
-- **`--force`:** Für die ZIP-Wiederherstellung verfügbar, um einen bestehenden Arbeitsbereich zu überschreiben.
 - **HTTP-Client:** Die globalen HTTP-Client-Einstellungen aus der Konfiguration werden während des Imports angewendet (Timeout, Proxy, Header usw.).

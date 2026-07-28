@@ -20,7 +20,7 @@ Wenn Sie eine Spec mit einer entfernten URL hinzufügen, lädt swag2mcp sie heru
 
 Jede zwischengespeicherte Datei erhält eine zufällige Ablaufzeit zwischen **1 Stunde und 48 Stunden**. Die Zufälligkeit verhindert, dass alle zwischengespeicherten Dateien gleichzeitig ablaufen (was zu einer Überlastung durch gleichzeitige Downloads führen würde).
 
-- Die TTL wird bei jedem Start des MCP-Servers zurückgesetzt
+- Die TTL wird bei der Zwischenspeicherung festgelegt und ändert sich nicht bei einem Server-Neustart
 - Wenn eine zwischengespeicherte Datei noch innerhalb ihrer TTL liegt, wird sie wiederverwendet
 - Wenn die TTL abgelaufen ist, wird die Datei erneut heruntergeladen
 

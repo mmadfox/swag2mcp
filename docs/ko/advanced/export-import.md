@@ -13,7 +13,7 @@ swag2mcp는 ZIP 아카이브를 통한 전체 워크스페이스 왕복을 지�
 swag2mcp export
 
 # 커스텀 경로로 내보내기
-swag2mcp export --output ~/backups/swag2mcp-backup.zip
+swag2mcp export /path/to/workspace ~/backups/swag2mcp-backup.zip
 
 # 특정 spec만 내보내기
 swag2mcp export --spec meteo
@@ -45,8 +45,8 @@ ZIP 백업에서 워크스페이스를 복원하거나 명세 파일을 가져�
 # 전체 워크스페이스 복원
 swag2mcp import --from-zip /path/to/backup.zip
 
-# 덮어쓰기로 복원
-swag2mcp import --from-zip /path/to/backup.zip -f
+# ZIP에서 복원
+swag2mcp import --from-zip /path/to/backup.zip
 ```
 
 ZIP은 `swag2mcp export`로 생성된 것이어야 합니다 — 임의의 ZIP 파일은 작동하지 않습니다.
@@ -76,14 +76,14 @@ swag2mcp import /path/to/workspace --spec meteo,store
 ### 백업
 
 ```bash
-swag2mcp export --output swag2mcp-$(date +%Y-%m-%d).zip
+swag2mcp export /path/to/workspace swag2mcp-$(date +%Y-%m-%d).zip
 ```
 
 ### 다른 머신으로 전송
 
 ```bash
 # 이전 머신에서
-swag2mcp export --output swag2mcp.zip
+swag2mcp export /path/to/workspace swag2mcp.zip
 
 # ZIP을 새 머신으로 복사한 후:
 swag2mcp import --from-zip swag2mcp.zip
@@ -93,7 +93,7 @@ swag2mcp import --from-zip swag2mcp.zip
 
 ```bash
 swag2mcp init
-swag2mcp export --output template.zip
+swag2mcp export /path/to/workspace template.zip
 # template.zip을 동료와 공유
 ```
 

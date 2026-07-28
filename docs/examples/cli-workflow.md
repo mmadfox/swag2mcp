@@ -105,7 +105,7 @@ $ swag2mcp info
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 KB",
+    "max_response_size": "1 MB",
     "follow_redirects": true
   },
   "mcp": {
@@ -165,7 +165,7 @@ swag2mcp clean
 ### Backup your workspace
 
 ```bash
-swag2mcp export --output ~/backups/swag2mcp-2026-07-24.zip
+swag2mcp export ~/backups/swag2mcp-2026-07-24.zip
 ```
 
 ### Restore on another machine
@@ -190,5 +190,5 @@ Opens a full-screen terminal UI for searching, browsing, and invoking APIs.
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 
 # Start mock servers
-swag2mcp-mock mockserver
+swag2mcp-mock
 ```

@@ -2,7 +2,7 @@
 
 ## À propos de ce projet
 
-swag2mcp est un projet Go qui fait le pont entre les spécifications OpenAPI/Swagger/Postman et les agents LLM via le Model Context Protocol (MCP). Il est construit avec Go 1.23+ et suit des conventions de codage strictes appliquées par plus de 80 analyseurs de code.
+swag2mcp est un projet Go qui fait le pont entre les spécifications OpenAPI/Swagger/Postman et les agents LLM via le Model Context Protocol (MCP). Il est construit avec Go 1.26+ et suit des conventions de codage strictes appliquées par plus de 80 analyseurs de code.
 
 Cette section est écrite pour les **ingénieurs** qui souhaitent comprendre la base de code, contribuer ou étendre swag2mcp avec de nouvelles méthodes d'authentification, de nouveaux outils MCP ou de nouvelles intégrations.
 
@@ -123,7 +123,7 @@ Tous les ID sont des hachages MD5 déterministes :
 id.Domain("meteo")                          // hexa 32 caractères
 id.Collection("meteo", "Forecast")          // hexa 32 caractères
 id.Tag("meteo", "Forecast", "pets")         // hexa 32 caractères
-id.Method("meteo", "Forecast", "pets", "GET", "/v2/pet/{petId}")
+id.Method("meteo", "Forecast", "", "pets", "GET", "/v2/pet/{petId}")
 ```
 
 ### Cascade de configuration
@@ -134,7 +134,7 @@ La configuration se propage en cascade à travers trois niveaux : **global → s
 
 | Domaine | Convention |
 |------|------------|
-| **Version Go** | 1.23+ |
+| **Version Go** | 1.26+ |
 | **Formateurs** | gofmt, gofumpt, goimports, gci |
 | **Longueur de ligne** | 120 caractères |
 | **Analyseurs** | 80+ dans `.golangci.yml` |
