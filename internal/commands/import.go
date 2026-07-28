@@ -34,6 +34,9 @@ Single import (requires source and name):
   swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
   swag2mcp import ./local-spec.yaml myspec
 
+Single import (name derived from URL):
+  swag2mcp import https://example.com/specs/petstore.yaml
+
 Bulk import (requires --spec flag):
   swag2mcp import --spec meteo
   swag2mcp import /path/to/workspace --spec meteo,store
@@ -181,10 +184,11 @@ func runImport(parsed importArgs, specs []string, cmd *cobra.Command) error {
 		return nil
 
 	case importModeSingle:
-		if parsed.source == "" || parsed.name == "" {
-			return errors.New("import requires a source and name (single import), --spec flag (bulk import), or --from-zip (restore from backup)\n\n" +
+		if parsed.source == "" {
+			return errors.New("import requires a source, --spec flag (bulk import), or --from-zip (restore from backup)\n\n" +
 				"Single import:\n" +
 				"  swag2mcp import <source> <name>\n" +
+				"  swag2mcp import <source>  (name derived from URL)\n" +
 				"  swag2mcp import /path/to/workspace <source> <name>\n\n" +
 				"Bulk import:\n" +
 				"  swag2mcp import --spec meteo\n" +

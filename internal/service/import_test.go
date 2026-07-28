@@ -22,11 +22,26 @@ func TestImportService_Import_noSource(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestImportService_Import_sourceWithoutName(t *testing.T) {
+func TestImportService_Import_sourceWithoutName_withFilename(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().DownloadSpec(gomock.Any(), "https://example.com/spec.yaml").Return([]byte("data"), nil)
+	ws.EXPECT().SaveSpec("spec.yaml", []byte("data")).Return("/specs/spec.yaml", nil)
+
+	svc := newImportService(ws)
+	resp, err := svc.Import(context.Background(), ImportRequest{Source: "https://example.com/spec.yaml"})
+	require.NoError(t, err)
+	require.Len(t, resp.Files, 1)
+	require.Equal(t, "spec.yaml", resp.Files[0].Name)
+}
+
+func TestImportService_Import_sourceWithoutName_noFilename(t *testing.T) {
 	t.Parallel()
 
 	svc := newImportService(NewMockWorkspaceOps(gomock.NewController(t)))
-	_, err := svc.Import(context.Background(), ImportRequest{Source: "https://example.com/spec.yaml"})
+	_, err := svc.Import(context.Background(), ImportRequest{Source: "https://example.com/"})
 	require.Error(t, err)
 }
 

@@ -79,6 +79,66 @@ func TestRunImport_NoSpec_MissingArgs(t *testing.T) {
 	}
 }
 
+func TestRunImport_NoSpec_NameDerivedFromURL(t *testing.T) {
+	tmpDir := t.TempDir()
+	ws, _ := workspace.New(tmpDir)
+	if err := ws.Init(); err != nil {
+		t.Fatalf("Init() = %v", err)
+	}
+
+	specContent := "openapi: 3.0.0\ninfo:\n  title: Test\n"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(specContent))
+	}))
+	t.Cleanup(srv.Close)
+
+	cmd := testCmd()
+	var buf bytes.Buffer
+	cmd.SetOut(&buf)
+
+	parsed := importArgs{
+		mode:     importModeSingle,
+		basePath: tmpDir,
+		source:   srv.URL + "/specs/petstore.yaml",
+	}
+	err := runImport(parsed, nil, cmd)
+	if err != nil {
+		t.Fatalf("runImport() = %v", err)
+	}
+
+	if !strings.Contains(buf.String(), "petstore.yaml") {
+		t.Errorf("output = %q, want success message with derived filename", buf.String())
+	}
+
+	specPath := filepath.Join(tmpDir, "specs", "petstore.yaml")
+	if _, err := os.Stat(specPath); os.IsNotExist(err) {
+		t.Errorf("spec file was not created at %s", specPath)
+	}
+}
+
+func TestRunImport_NoSpec_NameNotDerivedFromURL_NoFilename(t *testing.T) {
+	tmpDir := t.TempDir()
+	ws, _ := workspace.New(tmpDir)
+	if err := ws.Init(); err != nil {
+		t.Fatalf("Init() = %v", err)
+	}
+
+	cmd := testCmd()
+	var buf bytes.Buffer
+	cmd.SetOut(&buf)
+
+	parsed := importArgs{
+		mode:     importModeSingle,
+		basePath: tmpDir,
+		source:   "https://example.com/",
+	}
+	err := runImport(parsed, nil, cmd)
+	if err == nil {
+		t.Fatal("runImport() expected error for URL without filename, got nil")
+	}
+}
+
 func TestRunImport_WithSpec_Success(t *testing.T) {
 	tmpDir := t.TempDir()
 	ws, _ := workspace.New(tmpDir)

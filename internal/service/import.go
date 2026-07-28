@@ -59,10 +59,14 @@ func (ims *importService) Import(ctx context.Context, req ImportRequest) (Import
 	}
 
 	if req.Source != "" && req.Name == "" {
-		return ImportResponse{}, NewValidationError(
-			"Single import requires both a source URL and a filename.",
-			errors.New("name is required when source is provided"),
-		)
+		derived := specFileNameBase(req.Source)
+		if derived == "" || derived == defaultSpecName {
+			return ImportResponse{}, NewValidationError(
+				"Cannot derive filename from URL. Please provide a name explicitly.",
+				errors.New("filename not found in URL"),
+			)
+		}
+		req.Name = derived
 	}
 
 	if len(req.SpecFilter) > 0 {
