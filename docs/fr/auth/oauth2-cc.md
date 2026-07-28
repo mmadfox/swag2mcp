@@ -45,4 +45,5 @@ specs:
 - swag2mcp demande automatiquement un nouveau jeton lorsque le jeton actuel expire
 - Le jeton est mis en cache jusqu'à sa date d'expiration (`expires_in`)
 - Si le serveur ne fournit pas `expires_in`, le jeton est considéré comme valide pendant 1 heure
-- Tous les paramètres peuvent être stockés dans des variables d'environnement
+- `client_id` et `client_secret` prennent en charge la syntaxe `$(VAR)` pour les variables d'environnement
+- `token_url` et `scopes` sont utilisés tels quels (pas de résolution de variable d'environnement)

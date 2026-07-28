@@ -209,7 +209,8 @@
     "id": "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6",
     "method": "GET",
     "path": "/v1/forecast",
-    "summary": "Get weather forecast for a location"
+    "summary": "Get weather forecast for a location",
+    "deprecated": false
   }
 }
 ```

@@ -209,7 +209,8 @@ Obtenir un résumé rapide d'un seul point de terminaison : méthode, chemin, r�
     "id": "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6",
     "method": "GET",
     "path": "/v1/forecast",
-    "summary": "Obtenir les prévisions météorologiques pour un lieu"
+    "summary": "Obtenir les prévisions météorologiques pour un lieu",
+    "deprecated": false
   }
 }
 ```

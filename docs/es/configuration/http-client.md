@@ -107,7 +107,7 @@ Agrega encabezados aleatorios similares a los de un navegador a cada solicitud p
 
 - **Tipo:** `bool`
 - **Valor predeterminado:** `false`
-- **Efecto:** Cuando es `true`, swag2mcp genera encabezados aleatorios para cada solicitud: `User-Agent` (de un conjunto de cadenas de navegador reales), `Accept`, `Accept-Language`, `Accept-Encoding`, `Cache-Control`. Esto anula la configuración de `user_agent`.
+- **Efecto:** Cuando es `true`, swag2mcp genera encabezados aleatorios para cada solicitud: `User-Agent` (de un conjunto de cadenas de navegador reales), `Accept`, `Accept-Language`, `Accept-Encoding`, `Cache-Control`, `Sec-Ch-Ua`, `Sec-Ch-Ua-Mobile`, `Sec-Ch-Ua-Platform`, `Upgrade-Insecure-Requests`. Esto anula la configuración de `user_agent`.
 - **Cuándo habilitar:** APIs que bloquean solicitudes basadas en User-Agent o patrones de encabezados, escenarios de scraping.
 
 ```yaml

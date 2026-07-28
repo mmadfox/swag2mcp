@@ -13,7 +13,7 @@ Crée une sauvegarde ZIP portable de votre espace de travail.
 swag2mcp export
 
 # Exportation avec un chemin personnalisé
-swag2mcp export --output ~/sauvegardes/swag2mcp-sauvegarde.zip
+swag2mcp export /chemin/vers/espace-travail ~/sauvegardes/swag2mcp-sauvegarde.zip
 
 # Exportation de specs spécifiques uniquement
 swag2mcp export --spec meteo
@@ -44,9 +44,6 @@ Restaurez un espace de travail à partir d'une sauvegarde ZIP ou importez des fi
 ```bash
 # Restauration complète de l'espace de travail
 swag2mcp import --from-zip /chemin/vers/sauvegarde.zip
-
-# Restauration avec écrasement
-swag2mcp import --from-zip /chemin/vers/sauvegarde.zip -f
 ```
 
 Le ZIP doit être créé par `swag2mcp export` — les fichiers ZIP arbitraires ne fonctionneront pas.
@@ -76,14 +73,14 @@ Cela télécharge le fichier de spécification de chaque collection, le sauvegar
 ### Sauvegarde
 
 ```bash
-swag2mcp export --output swag2mcp-$(date +%Y-%m-%d).zip
+swag2mcp export /chemin/vers/espace-travail swag2mcp-$(date +%Y-%m-%d).zip
 ```
 
 ### Transfert vers une autre machine
 
 ```bash
 # Sur l'ancienne machine
-swag2mcp export --output swag2mcp.zip
+swag2mcp export /chemin/vers/espace-travail swag2mcp.zip
 
 # Copiez le ZIP sur la nouvelle machine, puis :
 swag2mcp import --from-zip swag2mcp.zip
@@ -93,7 +90,7 @@ swag2mcp import --from-zip swag2mcp.zip
 
 ```bash
 swag2mcp init
-swag2mcp export --output template.zip
+swag2mcp export /chemin/vers/espace-travail template.zip
 # Partagez template.zip avec un collègue
 ```
 

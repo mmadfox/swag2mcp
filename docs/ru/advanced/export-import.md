@@ -13,7 +13,7 @@ swag2mcp поддерживает полный цикл рабочей обла�
 swag2mcp export
 
 # Экспорт с пользовательским путём
-swag2mcp export --output ~/backups/swag2mcp-backup.zip
+swag2mcp export ~/backups/swag2mcp-backup.zip
 
 # Экспорт только определённых спецификаций
 swag2mcp export --spec meteo
@@ -45,8 +45,8 @@ swag2mcp export --spec meteo,store
 # Восстановление полной рабочей области
 swag2mcp import --from-zip /path/to/backup.zip
 
-# Восстановление с перезаписью
-swag2mcp import --from-zip /path/to/backup.zip -f
+# Восстановление
+swag2mcp import --from-zip /path/to/backup.zip
 ```
 
 ZIP должен быть создан командой `swag2mcp export` — произвольные ZIP-файлы не будут работать.
@@ -76,14 +76,14 @@ swag2mcp import /path/to/workspace --spec meteo,store
 ### Резервное копирование
 
 ```bash
-swag2mcp export --output swag2mcp-$(date +%Y-%m-%d).zip
+swag2mcp export swag2mcp-$(date +%Y-%m-%d).zip
 ```
 
 ### Перенос на другую машину
 
 ```bash
 # На старой машине
-swag2mcp export --output swag2mcp.zip
+swag2mcp export swag2mcp.zip
 
 # Скопируйте ZIP на новую машину, затем:
 swag2mcp import --from-zip swag2mcp.zip
@@ -93,7 +93,7 @@ swag2mcp import --from-zip swag2mcp.zip
 
 ```bash
 swag2mcp init
-swag2mcp export --output template.zip
+swag2mcp export template.zip
 # Поделитесь template.zip с коллегой
 ```
 

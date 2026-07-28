@@ -278,7 +278,7 @@ Chaque point d'accès a un délai de 10 secondes. Si le LLM appelle le même poi
 Oui, utilisez le serveur mock :
 
 ```bash
-swag2mcp-mock mockserver
+swag2mcp-mock
 ```
 
 Il génère des réponses factices basées sur les schémas OpenAPI.
@@ -288,14 +288,14 @@ Il génère des réponses factices basées sur les schémas OpenAPI.
 ### Comment sauvegarder ma configuration ?
 
 ```bash
-swag2mcp export --output ~/sauvegardes/swag2mcp-2026-07-24.zip
+swag2mcp export ~/sauvegardes/swag2mcp-2026-07-24.zip
 ```
 
 ### Comment transférer vers une autre machine ?
 
 ```bash
 # Sur l'ancienne machine
-swag2mcp export --output swag2mcp.zip
+swag2mcp export swag2mcp.zip
 
 # Copiez le ZIP, puis sur la nouvelle machine
 swag2mcp import --from-zip swag2mcp.zip

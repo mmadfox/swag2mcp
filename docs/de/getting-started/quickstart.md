@@ -112,6 +112,8 @@ Für andere IDEs (Cursor, VS Code, JetBrains) siehe den [Integrationsleitfaden](
 
 > **Starten Sie den MCP-Server nach jeder Konfigurationsänderung neu**, damit die Änderungen wirksam werden.
 
+> **Hinweis:** Das `auth`-Tool ist standardmäßig deaktiviert (`--disable-llm-auth=true`). Um es zu aktivieren: `swag2mcp mcp --disable-llm-auth=false`.
+
 ## 4. MCP-Server starten
 
 ### stdio (Standard) — für lokale IDE

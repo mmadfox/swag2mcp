@@ -13,7 +13,7 @@ swag2mcp は ZIP アーカイブによる完全なワークスペースのラウ
 swag2mcp export
 
 # カスタムパスでエクスポート
-swag2mcp export --output ~/backups/swag2mcp-backup.zip
+swag2mcp export ~/backups/swag2mcp-backup.zip
 
 # 特定の spec のみエクスポート
 swag2mcp export --spec meteo
@@ -44,9 +44,6 @@ ZIP バックアップからワークスペースを復元するか、spec フ�
 ```bash
 # ワークスペース全体を復元
 swag2mcp import --from-zip /path/to/backup.zip
-
-# 上書きして復元
-swag2mcp import --from-zip /path/to/backup.zip -f
 ```
 
 ZIP は `swag2mcp export` で作成されたものである必要があります — 任意の ZIP ファイルは機能しません。
@@ -76,14 +73,14 @@ swag2mcp import /path/to/workspace --spec meteo,store
 ### バックアップ
 
 ```bash
-swag2mcp export --output swag2mcp-$(date +%Y-%m-%d).zip
+swag2mcp export swag2mcp-$(date +%Y-%m-%d).zip
 ```
 
 ### 別のマシンへの転送
 
 ```bash
 # 古いマシンで
-swag2mcp export --output swag2mcp.zip
+swag2mcp export swag2mcp.zip
 
 # ZIP を新しいマシンにコピーし、次を実行：
 swag2mcp import --from-zip swag2mcp.zip
@@ -93,7 +90,7 @@ swag2mcp import --from-zip swag2mcp.zip
 
 ```bash
 swag2mcp init
-swag2mcp export --output template.zip
+swag2mcp export template.zip
 # template.zip を同僚と共有
 ```
 

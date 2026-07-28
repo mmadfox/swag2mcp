@@ -49,4 +49,4 @@ specs:
 - `client_secret` es opcional — se admiten **clientes públicos** (por ejemplo, Keycloak)
 - swag2mcp renueva automáticamente el token cuando expira
 - El token se almacena en caché hasta su expiración
-- Todos los parámetros pueden almacenarse en variables de entorno
+- Los campos `client_id`, `client_secret`, `username`, `password` y `token_url` admiten variables de entorno mediante `$(VAR)`

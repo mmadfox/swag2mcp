@@ -49,4 +49,9 @@ specs:
 - `client_secret` ist optional — **öffentliche Clients** werden unterstützt (z. B. Keycloak)
 - swag2mcp erneuert das Token automatisch, wenn es abläuft
 - Das Token wird bis zum Ablauf zwischengespeichert
-- Alle Parameter können in Umgebungsvariablen gespeichert werden
+- Alle Parameter können in Umgebungsvariablen gespeichert werden:
+- `client_id` — unterstützt `$(VAR)`-Syntax
+- `client_secret` — unterstützt `$(VAR)`-Syntax (optional)
+- `username` — unterstützt `$(VAR)`-Syntax
+- `password` — unterstützt `$(VAR)`-Syntax
+- `token_url` — unterstützt `$(VAR)`-Syntax

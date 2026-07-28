@@ -20,7 +20,7 @@ Lorsque vous ajoutez une spec avec une URL distante, swag2mcp la télécharge et
 
 Chaque fichier en cache reçoit un temps d'expiration aléatoire entre **1 heure et 48 heures**. Le caractère aléatoire empêche tous les fichiers en cache d'expirer en même temps (ce qui provoquerait une ruée de téléchargements).
 
-- Le TTL est réinitialisé à chaque démarrage du serveur MCP
+- Le TTL est fixé au moment de la mise en cache et ne change pas au redémarrage du serveur
 - Si un fichier en cache est encore dans son TTL, il est réutilisé
 - Si le TTL a expiré, le fichier est téléchargé à nouveau
 

@@ -18,6 +18,8 @@ type APIKeyAuthClient struct {
 
 // New initializes the APIKeyAuthClient. It always returns nil.
 func (c *APIKeyAuthClient) New() error {
+	c.Key = resolveEnv(c.Key)
+	c.Value = resolveEnv(c.Value)
 	return nil
 }
 

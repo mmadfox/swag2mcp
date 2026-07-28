@@ -44,9 +44,6 @@ swag2mcp export --spec meteo,store
 ```bash
 # 恢复完整工作区
 swag2mcp import --from-zip /path/to/backup.zip
-
-# 覆盖恢复
-swag2mcp import --from-zip /path/to/backup.zip -f
 ```
 
 ZIP 必须由 `swag2mcp export` 创建 — 任意 ZIP 文件将无法工作。

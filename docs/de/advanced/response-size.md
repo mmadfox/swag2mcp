@@ -32,8 +32,8 @@ API-Antworten können sehr groß sein — manchmal zu groß, um in das Kontextfe
     "path": "/Users/user/.swag2mcp/responses/response_a1b2c3d4.json",
     "size": 1572864,
     "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "Die Antwort überschreitet das Limit von 2 KB und wurde auf der Festplatte gespeichert.",
+    "maxSizeHint": "1 MB",
+    "message": "Die Antwort überschreitet das Limit von 1 MB und wurde auf der Festplatte gespeichert.",
     "openCmd": "open /Users/user/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }

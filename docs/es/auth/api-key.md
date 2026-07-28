@@ -54,7 +54,7 @@ specs:
 |-----------|-----------|-------------|
 | `key` | Sí | Nombre del encabezado o parámetro de consulta |
 | `in` | Sí | Dónde colocar la clave: `header` o `query` |
-| `value` | Sí | El valor de la clave |
+| `value` | Sí | El valor de la clave (admite resolución de `$(ENV_VAR)`) |
 
 ## Notas
 

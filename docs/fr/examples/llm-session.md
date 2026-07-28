@@ -140,8 +140,8 @@ Réponses :
     "path": "/home/utilisateur/.swag2mcp/responses/response_x7k9m2.json",
     "size": 1572864,
     "sizeHint": "1.5 Mo",
-    "maxSizeHint": "2 Ko",
-    "message": "La réponse dépasse la limite de 2 Ko et a été enregistrée sur le disque."
+    "maxSizeHint": "1 Mo",
+    "message": "La réponse dépasse la limite de 1 Mo et a été enregistrée sur le disque."
   }
 }
 ```
@@ -223,7 +223,7 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 Ko"
+    "max_response_size": "1 Mo"
   },
   "mcp": {
     "transport": "stdio"
@@ -231,7 +231,7 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/
 }
 ```
 
-**LLM :** Le système fonctionne depuis 2 heures et 15 minutes. Deux spécifications sont actives avec 20 points de terminaison au total. Le client HTTP a un délai d'attente de 30 secondes et une limite de taille de réponse de 2 Ko.
+**LLM :** Le système fonctionne depuis 2 heures et 15 minutes. Deux spécifications sont actives avec 20 points de terminaison au total. Le client HTTP a un délai d'attente de 30 secondes et une limite de taille de réponse de 1 Mo.
 
 ---
 

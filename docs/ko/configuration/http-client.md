@@ -107,7 +107,7 @@ http_client:
 
 - **타입:** `bool`
 - **기본값:** `false`
-- **효과:** `true`일 때 swag2mcp가 각 요청에 대해 무작위 헤더를 생성합니다: `User-Agent` (실제 브라우저 문자열 풀에서), `Accept`, `Accept-Language`, `Accept-Encoding`, `Cache-Control`. 이는 `user_agent` 설정을 재정의합니다.
+- **효과:** `true`일 때 swag2mcp가 각 요청에 대해 무작위 헤더를 생성합니다: `User-Agent` (실제 브라우저 문자열 풀에서), `Accept`, `Accept-Language`, `Accept-Encoding`, `Referer` 및 브라우저 유사 보안 헤더(`Sec-Ch-Ua`, `Sec-Ch-Ua-Platform`, `Sec-Fetch-Site`, `Sec-Fetch-Mode`, `Sec-Fetch-Dest`). 이는 `user_agent` 설정을 재정의합니다.
 - **활성화 시기:** User-Agent 또는 헤더 패턴을 기반으로 요청을 차단하는 API, 스크래핑 시나리오.
 
 ```yaml

@@ -246,8 +246,8 @@ Führt einen echten API-Aufruf an einen Endpunkt aus. Dies ist das einzige Tool,
     "path": "/Users/user/.swag2mcp/responses/response_a1b2c3d4.json",
     "size": 1572864,
     "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "Die Antwort überschreitet das Limit von 2 KB und wurde auf der Festplatte gespeichert.",
+    "maxSizeHint": "1 MB",
+    "message": "Die Antwort überschreitet das Limit von 1 MB und wurde auf der Festplatte gespeichert.",
     "openCmd": "open /Users/user/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }
@@ -272,7 +272,7 @@ Wenn `invoke` einen `fileRef` zurückgibt, verwenden Sie die Antwort-Tools, um d
 
 - **Auth ist automatisch:** Das `invoke`-Tool holt automatisch die Authentifizierung aus der Auth-Konfiguration der Spec und wendet sie an. Sie müssen **nicht** zuerst `auth` aufrufen.
 - **Ratenbegrenzung:** Jeder Endpunkt hat eine 10-Sekunden-Abklingzeit. Ein zweiter Aufruf desselben Endpunkts innerhalb von 10 Sekunden wird stillschweigend blockiert (gibt `rate_limit`-Fehler zurück).
-- **Antwortgrößenlimit:** Standard ist 2 KB (konfigurierbar über `max_response_size`). Wenn die Antwort dieses Limit überschreitet, wird sie in `{workspace}/responses/` gespeichert und ein `FileReference` wird anstelle des inline `body` zurückgegeben.
+- **Antwortgrößenlimit:** Standard ist 1 MB (konfigurierbar über `max_response_size`). Wenn die Antwort dieses Limit überschreitet, wird sie in `{workspace}/responses/` gespeichert und ein `FileReference` wird anstelle des inline `body` zurückgegeben.
 - **Parameterbehandlung:** Pfadparameter werden in die URL eingesetzt. Abfrageparameter werden angehängt. Parameter aus der Anfrage überschreiben die Standardwerte der Operationsspezifikation.
 - **Anforderungstext:** Für POST/PUT/PATCH wird der Text als JSON serialisiert. `Content-Type` wird automatisch auf `application/json` gesetzt.
 - **Fehlerbehandlung:** HTTP-Fehler (nicht-2xx) werden als `invoke_error` mit dem Statuscode und dem Antworttext im Hinweis zurückgegeben.

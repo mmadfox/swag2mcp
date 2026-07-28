@@ -107,7 +107,7 @@ http_client:
 
 - **型:** `bool`
 - **デフォルト:** `false`
-- **効果:** `true` の場合、swag2mcp は各リクエストにランダムなヘッダーを生成します：`User-Agent`（実際のブラウザ文字列のプールから）、`Accept`、`Accept-Language`、`Accept-Encoding`、`Cache-Control`。これにより `user_agent` 設定が上書きされます。
+- **効果:** `true` の場合、swag2mcp は各リクエストにランダムなヘッダーを生成します：`User-Agent`（実際のブラウザ文字列のプールから）、`Accept`、`Accept-Language`、`Accept-Encoding`、`Referer`、ブラウザ風のセキュリティヘッダー（`Sec-Ch-Ua`、`Sec-Ch-Ua-Platform`、`Sec-Fetch-Site`、`Sec-Fetch-Mode`、`Sec-Fetch-Dest`）。これにより `user_agent` 設定が上書きされます。
 - **有効にするタイミング:** User-Agent またはヘッダーパターンに基づいてリクエストをブロックする API、スクレイピングシナリオ。
 
 ```yaml

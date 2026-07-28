@@ -51,20 +51,27 @@ La sortie est un objet JSON avec la structure suivante :
     "endpoints": 42
   },
   "http_client": {
+    "randomize": false,
     "timeout": "30s",
-    "max_response_size": "2 Ko",
-    "proxy": "aucun",
     "follow_redirects": true,
     "max_redirects": 10,
-    "randomize": false
+    "max_response_size": "1 Mo",
+    "proxy": null,
+    "headers": {},
+    "cookies": []
   },
   "mcp": {
     "transport": "stdio",
     "addr": ":8080",
-    "path": "/mcp"
+    "path": "/mcp",
+    "auth_enabled": false
   },
-  "auth_methods": ["bearer", "api-key"],
-  "mock_enabled": false
+  "auth": {
+    "methods": ["bearer", "api-key"]
+  },
+  "mock": {
+    "enabled": false
+  }
 }
 ```
 

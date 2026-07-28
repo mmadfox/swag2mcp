@@ -12,8 +12,8 @@ Creates a portable ZIP backup of your workspace.
 # Export to default file (swag2mcp-backup-&lt;timestamp&gt;.zip)
 swag2mcp export
 
-# Export with custom path
-swag2mcp export --output ~/backups/swag2mcp-backup.zip
+# Export with custom output path
+swag2mcp export /path/to/workspace ~/backups/swag2mcp-backup.zip
 
 # Export only specific specs
 swag2mcp export --spec meteo
@@ -44,9 +44,6 @@ Restore a workspace from a ZIP backup or import spec files.
 ```bash
 # Restore full workspace
 swag2mcp import --from-zip /path/to/backup.zip
-
-# Restore with overwrite
-swag2mcp import --from-zip /path/to/backup.zip -f
 ```
 
 The ZIP must be created by `swag2mcp export` — arbitrary ZIP files will not work.
@@ -76,14 +73,14 @@ This downloads each collection's spec file, saves it to `specs/`, and updates th
 ### Backup
 
 ```bash
-swag2mcp export --output swag2mcp-$(date +%Y-%m-%d).zip
+swag2mcp export /path/to/workspace swag2mcp-$(date +%Y-%m-%d).zip
 ```
 
 ### Transfer to another machine
 
 ```bash
 # On old machine
-swag2mcp export --output swag2mcp.zip
+swag2mcp export /path/to/workspace swag2mcp.zip
 
 # Copy the ZIP to the new machine, then:
 swag2mcp import --from-zip swag2mcp.zip
@@ -93,7 +90,7 @@ swag2mcp import --from-zip swag2mcp.zip
 
 ```bash
 swag2mcp init
-swag2mcp export --output template.zip
+swag2mcp export /path/to/workspace template.zip
 # Share template.zip with a colleague
 ```
 

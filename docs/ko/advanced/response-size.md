@@ -32,8 +32,8 @@ API 응답은 매우 클 수 있습니다 — 때로는 LLM의 컨텍스트 윈�
     "path": "/Users/user/.swag2mcp/responses/response_a1b2c3d4.json",
     "size": 1572864,
     "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "응답이 2 KB 제한을 초과하여 디스크에 저장되었습니다.",
+    "maxSizeHint": "1 MB",
+    "message": "응답이 1 MB 제한을 초과하여 디스크에 저장되었습니다.",
     "openCmd": "open /Users/user/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }

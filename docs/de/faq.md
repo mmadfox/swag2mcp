@@ -278,7 +278,7 @@ Jeder Endpunkt hat eine 10-Sekunden-Abklingzeit. Wenn der LLM denselben Endpunkt
 Ja, verwenden Sie den Mock-Server:
 
 ```bash
-swag2mcp-mock mockserver
+swag2mcp-mock
 ```
 
 Er generiert gefälschte Antworten basierend auf OpenAPI-Schemata.
@@ -288,14 +288,14 @@ Er generiert gefälschte Antworten basierend auf OpenAPI-Schemata.
 ### Wie sichere ich meine Konfiguration?
 
 ```bash
-swag2mcp export --output ~/backups/swag2mcp-2026-07-24.zip
+swag2mcp export ~/backups/swag2mcp-2026-07-24.zip
 ```
 
 ### Wie übertrage ich auf einen anderen Rechner?
 
 ```bash
 # Auf dem alten Rechner
-swag2mcp export --output swag2mcp.zip
+swag2mcp export swag2mcp.zip
 
 # ZIP kopieren, dann auf dem neuen Rechner
 swag2mcp import --from-zip swag2mcp.zip

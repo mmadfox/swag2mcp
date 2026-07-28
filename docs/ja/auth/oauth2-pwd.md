@@ -49,4 +49,4 @@ specs:
 - `client_secret` はオプション — **パブリッククライアント** がサポートされています（例：Keycloak）
 - swag2mcp はトークンが期限切れになると自動的に更新します
 - トークンは期限までキャッシュされます
-- すべてのパラメーターは環境変数に保存できます
+- `client_id`、`client_secret`、`username`、`password` は環境変数に `$(VAR)` 構文をサポートしています

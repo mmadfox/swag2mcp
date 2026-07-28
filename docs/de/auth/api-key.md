@@ -54,10 +54,10 @@ specs:
 |-----------|-------------|--------------|
 | `key` | Ja | Name des Headers oder Abfrageparameters |
 | `in` | Ja | Wo der Schlüssel platziert wird: `header` oder `query` |
-| `value` | Ja | Der Schlüsselwert |
+| `value` | Ja | Der Schlüsselwert (unterstützt `$(VAR)`-Auflösung) |
 
 ## Hinweise
 
 - Im `header`-Modus wird der Schlüssel als HTTP-Header hinzugefügt
 - Im `query`-Modus wird der Schlüssel als URL-Parameter hinzugefügt
-- Speichern Sie den Wert in einer Umgebungsvariable: `value: "$(MY_API_KEY)"`
+- Der Schlüsselwert in `value` unterstützt `$(VAR)`-Auflösung aus Umgebungsvariablen

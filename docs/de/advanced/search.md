@@ -14,7 +14,7 @@ Wenn eine Spec hinzugefügt oder aktualisiert wird, wird jeder Endpunkt indizier
 | `path` | API-Endpunkt-Pfad | `/api/v1/users/{id}` |
 | `summary` | OpenAPI-Zusammenfassung | "Find pet by ID" |
 | `tag` | Endpunkt-Kategorie | "pets", "users" |
-| `_all` | Alle Felder kombiniert | method + path + tag + summary |
+| `_all` | Alle Felder kombiniert | method + path + tag + spec_domain + collection_title + summary |
 
 Der Index wird bei jedem MCP-Server-Neustart neu aufgebaut. Er wird für schnelle Suchvorgänge im Speicher gehalten.
 
@@ -103,4 +103,4 @@ Das `search`-MCP-Tool stellt die Suchmaschine dem LLM zur Verfügung:
 - **Alle Felder werden kleingeschrieben** — die Suche ist nicht case-sensitive
 - **Limit ist auf 50 begrenzt** — Sie können nicht mehr als 50 Ergebnisse anfordern
 - **Ungültige Abfragesyntax** gibt eine hilfreiche Fehlermeldung mit Beispielen zurück
-- **Das Feld `_all`** kombiniert Methode, Pfad, Tag und Zusammenfassung für einfache Textsuche
+- **Das Feld `_all`** kombiniert Methode, Pfad, Tag, spec_domain, collection_title und Zusammenfassung für einfache Textsuche

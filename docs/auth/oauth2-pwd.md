@@ -49,4 +49,5 @@ specs:
 - `client_secret` is optional — **public clients** are supported (e.g., Keycloak)
 - swag2mcp automatically refreshes the token when it expires
 - The token is cached until expiry
-- All parameters can be stored in environment variables
+- `client_id`, `client_secret`, `username`, and `password` support `$(VAR)` syntax for environment variables
+- `token_url` and `scopes` are used as-is (no environment variable resolution)

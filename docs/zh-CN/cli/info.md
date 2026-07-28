@@ -51,20 +51,27 @@ swag2mcp info ./my-workspace
     "endpoints": 42
   },
   "http_client": {
+    "randomize": false,
     "timeout": "30s",
-    "max_response_size": "2 KB",
-    "proxy": "none",
     "follow_redirects": true,
     "max_redirects": 10,
-    "randomize": false
+    "max_response_size": "1 MB",
+    "proxy": null,
+    "headers": {},
+    "cookies": []
   },
   "mcp": {
     "transport": "stdio",
     "addr": ":8080",
-    "path": "/mcp"
+    "path": "/mcp",
+    "auth_enabled": false
   },
-  "auth_methods": ["bearer", "api-key"],
-  "mock_enabled": false
+  "auth": {
+    "methods": ["bearer", "api-key"]
+  },
+  "mock": {
+    "enabled": false
+  }
 }
 ```
 
@@ -77,4 +84,5 @@ swag2mcp info ./my-workspace
 - **自动初始化：** 如果不存在配置文件，`info` 会自动先运行初始化向导。
 - **仅 JSON：** 输出始终是 JSON。对于人类可读的输出，使用 `ls`。
 - **`max_response_size`：** 以人类可读格式显示（例如 `"1 KB"`、`"2 MB"`）。
+- **可选字段：** `follow_redirects`、`max_redirects`、`proxy`、`headers` 和 `cookies` 仅在配置时包含在输出中（指针/omitempty 类型）。
 - **无全文索引：** `info` 禁用全文索引，因为它只需要配置和 spec 元数据。

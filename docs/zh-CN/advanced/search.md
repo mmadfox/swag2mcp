@@ -14,7 +14,7 @@ swag2mcp 包含一个内置的全文搜索引擎（bluge），用于索引所有
 | `path` | API 端点路径 | `/api/v1/users/{id}` |
 | `summary` | OpenAPI 摘要 | "Find pet by ID" |
 | `tag` | 端点类别 | "pets"、"users" |
-| `_all` | 所有字段组合 | method + path + tag + summary |
+| `_all` | 所有字段组合 | method + path + tag + spec_domain + collection_title + summary |
 
 索引在每次 MCP 服务器启动时重建。它存储在内存中以实现快速搜索。
 
@@ -103,4 +103,4 @@ create~
 - **所有字段小写** — 搜索不区分大小写
 - **限制上限为 50** — 你不能请求超过 50 个结果
 - **无效的查询语法** 返回带有示例的帮助性错误消息
-- **`_all` 字段** 组合 method、path、tag 和 summary 用于简单文本搜索
+- **`_all` 字段** 组合 method、path、tag、spec_domain、collection_title 和 summary 用于简单文本搜索

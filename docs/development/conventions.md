@@ -24,6 +24,10 @@ Error codes:
 - `not_found` — resource not found
 - `rate_limit` — rate limit exceeded
 - `invoke_error` — API call error
+- `config_error` — config file load or save failure
+- `workspace_error` — workspace directory issue
+- `parse_error` — spec file parse failure
+- `auth_error` — authentication failure
 
 ## Interfaces
 

@@ -140,8 +140,8 @@ Antworten:
     "path": "/home/user/.swag2mcp/responses/response_x7k9m2.json",
     "size": 1572864,
     "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "Die Antwort überschreitet das Limit von 2 KB und wurde auf der Festplatte gespeichert."
+    "maxSizeHint": "1 MB",
+    "message": "Die Antwort überschreitet das Limit von 1 MB und wurde auf der Festplatte gespeichert."
   }
 }
 ```
@@ -223,7 +223,7 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 KB"
+    "max_response_size": "1 MB"
   },
   "mcp": {
     "transport": "stdio"
@@ -231,7 +231,7 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/
 }
 ```
 
-**LLM:** Das System läuft seit 2 Stunden und 15 Minuten. Zwei Specs sind aktiv mit insgesamt 20 Endpunkten. Der HTTP-Client hat ein 30-Sekunden-Timeout und ein Antwortgrößenlimit von 2 KB.
+**LLM:** Das System läuft seit 2 Stunden und 15 Minuten. Zwei Specs sind aktiv mit insgesamt 20 Endpunkten. Der HTTP-Client hat ein 30-Sekunden-Timeout und ein Antwortgrößenlimit von 1 MB.
 
 ---
 

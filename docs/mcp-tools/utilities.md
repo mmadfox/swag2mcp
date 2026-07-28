@@ -98,7 +98,7 @@ None.
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 KB",
+    "max_response_size": "1 MB",
     "follow_redirects": true,
     "max_redirects": 10,
     "randomize": false,
@@ -128,7 +128,7 @@ None.
 | `uptime` | string | Server uptime (human-readable) |
 | `specs` | object | Spec summary: total, active, disabled, collections, endpoints |
 | `http_client` | object | HTTP client configuration |
-| `http_client.max_response_size` | string | Max response size in human-readable format (e.g. "2 KB") |
+| `http_client.max_response_size` | string | Max response size in human-readable format (e.g. "1 MB") |
 | `mcp` | object | MCP server configuration |
 | `auth` | object | Available auth methods |
 | `mock` | object | Mock server status |
@@ -196,9 +196,13 @@ Reads the saved response file and analyzes its structure: top-level type, keys, 
       "response_compress(path, 'select_keys', 'data', selectKeys=[id, name])"
     ],
     "navigationHints": {
-      "paths": ["data", "meta", "error"],
-      "arrays": [
-        {"path": "data", "length": 500}
+      "topLevelPaths": [
+        {"path": "data", "type": "array"},
+        {"path": "meta", "type": "object"},
+        {"path": "error", "type": "null"}
+      ],
+      "arrayPaths": [
+        {"path": "data", "length": 500, "itemType": "object"}
       ]
     }
   }

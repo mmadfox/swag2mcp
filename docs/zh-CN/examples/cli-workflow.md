@@ -105,7 +105,7 @@ $ swag2mcp info
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 KB",
+    "max_response_size": "1 MB",
     "follow_redirects": true
   },
   "mcp": {
@@ -190,5 +190,5 @@ swag2mcp run
 go install github.com/mmadfox/swag2mcp/cmd/swag2mcp-mock@latest
 
 # 启动模拟服务器
-swag2mcp-mock mockserver
+swag2mcp-mock
 ```

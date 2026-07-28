@@ -49,7 +49,7 @@ mock_auth:
 
 - **Type :** `bool`
 - **Valeur par défaut :** `false`
-- **Effet :** Lorsqu'il est `true`, swag2mcp démarre des serveurs de simulation pour toutes les spécifications qui ont `base_mock_url` configuré. Chaque collection doit avoir `base_mock_url` défini.
+- **Effet :** Lorsqu'il est `true`, swag2mcp démarre des serveurs de simulation pour les spécifications qui ont `base_mock_url` configuré. Les collections sans `base_mock_url` sont ignorées.
 - **Quand l'activer :** Vous souhaitez tester votre intégration API sans effectuer de véritables appels HTTP. Les serveurs de simulation renvoient des données factices basées sur le schéma OpenAPI.
 
 ### mock_auth

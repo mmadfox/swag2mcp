@@ -14,7 +14,7 @@ Lorsqu'une spec est ajoutée ou mise à jour, chaque point d'accès est indexé.
 | `path` | Chemin du point d'accès API | `/api/v1/users/{id}` |
 | `summary` | Résumé OpenAPI | « Trouver un animal par ID » |
 | `tag` | Catégorie du point d'accès | « animaux », « utilisateurs » |
-| `_all` | Tous les champs combinés | méthode + chemin + étiquette + résumé |
+| `_all` | Tous les champs combinés | méthode + chemin + étiquette + spec_domain + collection_title + résumé |
 
 L'index est reconstruit à chaque démarrage du serveur MCP. Il est stocké en mémoire pour des recherches rapides.
 
@@ -103,4 +103,4 @@ L'outil MCP `search` expose le moteur de recherche au LLM :
 - **Tous les champs sont en minuscules** — les recherches sont insensibles à la casse
 - **La limite est plafonnée à 50** — vous ne pouvez pas demander plus de 50 résultats
 - **Une syntaxe de requête invalide** retourne un message d'erreur utile avec des exemples
-- **Le champ `_all`** combine méthode, chemin, étiquette et résumé pour les recherches textuelles simples
+- **Le champ `_all`** combine méthode, chemin, étiquette, spec_domain, collection_title et résumé pour les recherches textuelles simples

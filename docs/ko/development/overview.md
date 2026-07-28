@@ -2,7 +2,7 @@
 
 ## 이 프로젝트에 대해
 
-swag2mcp는 OpenAPI/Swagger/Postman 명세를 Model Context Protocol(MCP)을 통해 LLM 에이전트와 연결하는 Go 프로젝트입니다. Go 1.23+로 빌드되었으며 80개 이상의 린터가 적용된 엄격한 코딩 규칙을 따릅니다.
+swag2mcp는 OpenAPI/Swagger/Postman 명세를 Model Context Protocol(MCP)을 통해 LLM 에이전트와 연결하는 Go 프로젝트입니다. Go 1.26+로 빌드되었으며 80개 이상의 린터가 적용된 엄격한 코딩 규칙을 따릅니다.
 
 이 섹션은 코드베이스를 이해하고, 기여하거나, 새 인증 방법, MCP 도구 또는 통합으로 swag2mcp를 확장하려는 **엔지니어**를 위해 작성되었습니다.
 
@@ -123,7 +123,7 @@ LLM에 반환되는 모든 오류는 8개 코드 중 하나와 함께 `LLMError`
 id.Domain("meteo")                          // 32자 16진수
 id.Collection("meteo", "Forecast")          // 32자 16진수
 id.Tag("meteo", "Forecast", "pets")         // 32자 16진수
-id.Method("meteo", "Forecast", "pets", "GET", "/v2/pet/{petId}")
+id.Method("meteo", "Forecast", "", "pets", "GET", "/v2/pet/{petId}")
 ```
 
 ### 설정 계단식
@@ -134,7 +134,7 @@ id.Method("meteo", "Forecast", "pets", "GET", "/v2/pet/{petId}")
 
 | 영역 | 규칙 |
 |------|------|
-| **Go 버전** | 1.23+ |
+| **Go 버전** | 1.26+ |
 | **포맷터** | gofmt, gofumpt, goimports, gci |
 | **줄 길이** | 120자 |
 | **린터** | `.golangci.yml`에 80개 이상 |

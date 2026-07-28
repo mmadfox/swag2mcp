@@ -54,10 +54,10 @@ specs:
 |-----------|----------|-------------|
 | `key` | Yes | Name of the header or query parameter |
 | `in` | Yes | Where to place the key: `header` or `query` |
-| `value` | Yes | The key value |
+| `value` | Yes | The key value (supports `$(VAR)` resolution) |
 
 ## Notes
 
 - In `header` mode, the key is added as an HTTP header
 - In `query` mode, the key is added as a URL parameter
-- Store the value in an environment variable: `value: "$(MY_API_KEY)"`
+- Store the key value in an environment variable: `value: "$(MY_API_KEY)"`

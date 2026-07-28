@@ -49,4 +49,5 @@ specs:
 - `client_secret` est optionnel — les **clients publics** sont pris en charge (par exemple, Keycloak)
 - swag2mcp renouvelle automatiquement le jeton à son expiration
 - Le jeton est mis en cache jusqu'à l'expiration
-- Tous les paramètres peuvent être stockés dans des variables d'environnement
+- `client_id`, `client_secret`, `username` et `password` prennent en charge la syntaxe `$(VAR)` pour les variables d'environnement
+- `token_url` et `scopes` sont utilisés tels quels (pas de résolution de variable d'environnement)

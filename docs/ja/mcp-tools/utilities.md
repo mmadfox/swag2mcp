@@ -98,7 +98,7 @@ swag2mcp ランタイムの包括的な概要（バージョン、ワークス�
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 KB",
+    "max_response_size": "1 MB",
     "follow_redirects": true,
     "max_redirects": 10,
     "randomize": false,
@@ -128,7 +128,7 @@ swag2mcp ランタイムの包括的な概要（バージョン、ワークス�
 | `uptime` | string | サーバー稼働時間（人間可読） |
 | `specs` | object | スペック概要：total、active、disabled、collections、endpoints |
 | `http_client` | object | HTTP クライアント設定 |
-| `http_client.max_response_size` | string | 人間可読形式の最大レスポンスサイズ（例："2 KB"） |
+| `http_client.max_response_size` | string | 人間可読形式の最大レスポンスサイズ（例："1 MB"） |
 | `mcp` | object | MCP サーバー設定 |
 | `auth` | object | 利用可能な認証方法 |
 | `mock` | object | モックサーバーステータス |
@@ -196,9 +196,13 @@ swag2mcp ランタイムの包括的な概要（バージョン、ワークス�
       "response_compress(path, 'select_keys', 'data', selectKeys=[id, name])"
     ],
     "navigationHints": {
-      "paths": ["data", "meta", "error"],
-      "arrays": [
-        {"path": "data", "length": 500}
+      "topLevelPaths": [
+        {"path": "data", "type": "array"},
+        {"path": "meta", "type": "object"},
+        {"path": "error", "type": "null"}
+      ],
+      "arrayPaths": [
+        {"path": "data", "length": 500, "itemType": "object"}
       ]
     }
   }

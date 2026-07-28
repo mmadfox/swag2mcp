@@ -140,8 +140,8 @@ Responses:
     "path": "/home/user/.swag2mcp/responses/response_x7k9m2.json",
     "size": 1572864,
     "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "응답이 2 KB 제한을 초과하여 디스크에 저장되었습니다."
+    "maxSizeHint": "1 MB",
+    "message": "응답이 1 MB 제한을 초과하여 디스크에 저장되었습니다."
   }
 }
 ```
@@ -223,7 +223,7 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 KB"
+    "max_response_size": "1 MB"
   },
   "mcp": {
     "transport": "stdio"
@@ -231,7 +231,7 @@ curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." https://api.example.com/
 }
 ```
 
-**LLM:** 시스템이 2시간 15분 동안 실행되었습니다. 두 개의 spec이 활성화되어 있으며 총 20개의 엔드포인트가 있습니다. HTTP 클라이언트는 30초 타임아웃과 2 KB 응답 크기 제한이 있습니다.
+**LLM:** 시스템이 2시간 15분 동안 실행되었습니다. 두 개의 spec이 활성화되어 있으며 총 20개의 엔드포인트가 있습니다. HTTP 클라이언트는 30초 타임아웃과 1 MB 응답 크기 제한이 있습니다.
 
 ---
 

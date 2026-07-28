@@ -49,7 +49,7 @@ mock_auth:
 
 - **타입:** `bool`
 - **기본값:** `false`
-- **효과:** `true`일 때 swag2mcp가 `base_mock_url`이 설정된 모든 spec에 대해 모의 서버를 시작합니다. 각 collection에 `base_mock_url`이 설정되어야 합니다.
+- **효과:** `true`일 때 swag2mcp가 `base_mock_url`이 설정된 모든 spec에 대해 모의 서버를 시작합니다. `base_mock_url`이 없는 collection은 건너뜁니다.
 - **활성화 시기:** 실제 HTTP 호출 없이 API 통합을 테스트하려고 할 때. 모의 서버는 OpenAPI 스키마를 기반으로 가짜 데이터를 반환합니다.
 
 ### mock_auth

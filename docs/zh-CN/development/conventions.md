@@ -24,6 +24,10 @@ type LLMError struct {
 - `not_found` — 资源未找到
 - `rate_limit` — 超过速率限制
 - `invoke_error` — API 调用错误
+- `config_error` — 配置文件加载或保存失败
+- `workspace_error` — 工作区目录问题
+- `parse_error` — 规范文件解析失败
+- `auth_error` — 认证失败
 
 ## 接口
 

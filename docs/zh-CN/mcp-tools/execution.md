@@ -246,8 +246,8 @@
     "path": "/Users/user/.swag2mcp/responses/response_a1b2c3d4.json",
     "size": 1572864,
     "sizeHint": "1.5 MB",
-    "maxSizeHint": "2 KB",
-    "message": "Response exceeds the 2 KB limit and has been saved to disk.",
+    "maxSizeHint": "1 MB",
+    "message": "Response exceeds the 1 MB limit and has been saved to disk.",
     "openCmd": "open /Users/user/.swag2mcp/responses/response_a1b2c3d4.json"
   }
 }
@@ -272,7 +272,7 @@
 
 - **认证是自动的：** `invoke` 工具自动从 spec 的认证配置中获取并应用认证。你**不需要**先调用 `auth`。
 - **速率限制：** 每个端点有 10 秒冷却时间。10 秒内对同一端点的第二次调用被静默阻止（返回 `rate_limit` 错误）。
-- **响应大小限制：** 默认 2 KB（可通过 `max_response_size` 配置）。如果响应超过此限制，保存到 `{workspace}/responses/` 并返回 `FileReference` 而不是内联 `body`。
+- **响应大小限制：** 默认 1 MB（可通过 `max_response_size` 配置）。如果响应超过此限制，保存到 `{workspace}/responses/` 并返回 `FileReference` 而不是内联 `body`。
 - **参数处理：** 路径参数替换到 URL 中。查询参数被追加。请求中的参数覆盖操作规范的默认值。
 - **请求体：** 对于 POST/PUT/PATCH，主体序列化为 JSON。`Content-Type` 自动设置为 `application/json`。
 - **错误处理：** HTTP 错误（非 2xx）作为 `invoke_error` 返回，状态码和响应体在提示中。

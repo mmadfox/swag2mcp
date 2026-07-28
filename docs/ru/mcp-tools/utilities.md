@@ -98,7 +98,7 @@
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 KB",
+    "max_response_size": "1 MB",
     "follow_redirects": true,
     "max_redirects": 10,
     "randomize": false,
@@ -128,7 +128,7 @@
 | `uptime` | string | Время работы сервера (человекочитаемое) |
 | `specs` | object | Сводка спецификаций: всего, активно, отключено, коллекций, эндпоинтов |
 | `http_client` | object | Конфигурация HTTP-клиента |
-| `http_client.max_response_size` | string | Максимальный размер ответа в человекочитаемом формате (например, "2 KB") |
+| `http_client.max_response_size` | string | Максимальный размер ответа в человекочитаемом формате (например, "1 MB") |
 | `mcp` | object | Конфигурация MCP-сервера |
 | `auth` | object | Доступные методы аутентификации |
 | `mock` | object | Статус мок-сервера |
@@ -196,9 +196,13 @@
       "response_compress(path, 'select_keys', 'data', selectKeys=[id, name])"
     ],
     "navigationHints": {
-      "paths": ["data", "meta", "error"],
-      "arrays": [
-        {"path": "data", "length": 500}
+      "topLevelPaths": [
+        {"path": "data", "type": "array"},
+        {"path": "meta", "type": "object"},
+        {"path": "error", "type": "null"}
+      ],
+      "arrayPaths": [
+        {"path": "data", "length": 500, "itemType": "object"}
       ]
     }
   }

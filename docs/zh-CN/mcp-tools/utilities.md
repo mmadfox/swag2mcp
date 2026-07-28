@@ -98,7 +98,7 @@
   },
   "http_client": {
     "timeout": "30s",
-    "max_response_size": "2 KB",
+    "max_response_size": "1 MB",
     "follow_redirects": true,
     "max_redirects": 10,
     "randomize": false,
@@ -128,7 +128,7 @@
 | `uptime` | string | 服务器运行时间（人类可读） |
 | `specs` | object | Spec 摘要：总数、活动、禁用、collection、端点 |
 | `http_client` | object | HTTP 客户端配置 |
-| `http_client.max_response_size` | string | 最大响应大小，人类可读格式（例如"2 KB"） |
+| `http_client.max_response_size` | string | 最大响应大小，人类可读格式（例如"1 MB"） |
 | `mcp` | object | MCP 服务器配置 |
 | `auth` | object | 可用的认证方法 |
 | `mock` | object | 模拟服务器状态 |
@@ -196,9 +196,13 @@
       "response_compress(path, 'select_keys', 'data', selectKeys=[id, name])"
     ],
     "navigationHints": {
-      "paths": ["data", "meta", "error"],
-      "arrays": [
-        {"path": "data", "length": 500}
+      "topLevelPaths": [
+        {"path": "data", "type": "array"},
+        {"path": "meta", "type": "object"},
+        {"path": "error", "type": "null"}
+      ],
+      "arrayPaths": [
+        {"path": "data", "length": 500, "itemType": "object"}
       ]
     }
   }

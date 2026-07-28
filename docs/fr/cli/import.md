@@ -85,5 +85,4 @@ swag2mcp ls [chemin]
 - **Le mode en masse nécessite une configuration :** Lors de l'utilisation de `--spec`, le fichier de configuration doit exister. Exécutez `init` d'abord si nécessaire.
 - **L'importation unique crée l'espace de travail :** Si l'espace de travail n'existe pas, il est créé automatiquement.
 - **Détection ZIP :** Un argument positionnel se terminant par `.zip` est traité comme une source ZIP. Le drapeau `--from-zip` a priorité sur la détection positionnelle.
-- **`--force` :** Disponible pour la restauration ZIP afin d'écraser un espace de travail existant.
 - **Client HTTP :** Les paramètres globaux du client HTTP de la configuration sont appliqués pendant l'importation (délai d'attente, proxy, en-têtes, etc.).

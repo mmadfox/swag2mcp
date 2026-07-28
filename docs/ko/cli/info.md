@@ -51,20 +51,27 @@ swag2mcp info ./my-workspace
     "endpoints": 42
   },
   "http_client": {
+    "randomize": false,
     "timeout": "30s",
-    "max_response_size": "2 KB",
-    "proxy": "none",
     "follow_redirects": true,
     "max_redirects": 10,
-    "randomize": false
+    "max_response_size": "1 MB",
+    "proxy": null,
+    "headers": {},
+    "cookies": []
   },
   "mcp": {
     "transport": "stdio",
     "addr": ":8080",
-    "path": "/mcp"
+    "path": "/mcp",
+    "auth_enabled": false
   },
-  "auth_methods": ["bearer", "api-key"],
-  "mock_enabled": false
+  "auth": {
+    "methods": ["bearer", "api-key"]
+  },
+  "mock": {
+    "enabled": false
+  }
 }
 ```
 
