@@ -80,7 +80,6 @@ func runValidate(basePath, tagsFilter string, w io.Writer) error {
 	}
 
 	if err := config.ValidateConfig(cfg, validateOpts); err != nil {
-		fmt.Fprintf(w, "❌ %s\n", err)
 		return err
 	}
 
