@@ -115,7 +115,8 @@ swag2mcp --version
 
 ### Docker
 
-Контейнер работает от имени непривилегированного пользователя и требует доступа к вашей рабочей директории. Смонтируйте `~/.swag2mcp` (или ваш кастомный путь) в `/home/nonroot/.swag2mcp`:
+Смонтируйте `~/.swag2mcp` (или ваш кастомный путь) в `/home/nonroot/.swag2mcp`.
+Entrypoint автоматически настраивает права доступа, чтобы контейнер мог читать вашу рабочую директорию.
 
 > **Пользователи Apple Silicon (M1/M2/M3/M4):** Добавьте `--platform linux/amd64` для запуска образа:
 > `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
@@ -210,7 +211,8 @@ swag2mcp --version
 
 ### Docker
 
-Контейнер работает от имени непривилегированного пользователя и требует доступа к вашей рабочей директории. Смонтируйте `~/.swag2mcp` (или ваш кастомный путь) в `/home/nonroot/.swag2mcp`:
+Смонтируйте `~/.swag2mcp` (или ваш кастомный путь) в `/home/nonroot/.swag2mcp`.
+Entrypoint автоматически настраивает права доступа, чтобы контейнер мог читать вашу рабочую директорию.
 
 > **Пользователи Apple Silicon (M1/M2/M3/M4):** Добавьте `--platform linux/amd64` для запуска образа:
 > `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
@@ -351,24 +353,9 @@ swag2mcp --version
 
 ## Установка через LLM-агента
 
-Если вы используете AI-помощника в IDE (OpenCode, Cursor, Claude Desktop, VS Code и др.), вы можете установить swag2mcp через агента:
+Если вы используете IDE с ИИ (OpenCode, Cursor, Claude Desktop, VS Code и т.д.), перейдите в раздел [Скиллы для LLM](/ru/llm-skills/overview) для инструкций по установке скиллов через агента или вручную.
 
-1. Попросите агента добавить навыки swag2mcp:
-
-   ```
-   "Создай директорию .agents/skills/swag2mcp-cli и добавь навык из https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md в .agents/skills/swag2mcp-cli/SKILL.md"
-   "Создай директорию .agents/skills/swag2mcp-format и добавь навык из https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md в .agents/skills/swag2mcp-format/SKILL.md"
-   ```
-
-2. Затем скажите агенту:
-
-   ```
-   "Настрой swag2mcp"
-   ```
-
-   Агент скачает и установит swag2mcp, затем создаст рабочую область с готовыми к использованию спецификациями.
-
-> Некоторым IDE требуется перезапуск после добавления навыков.
+> Некоторые IDE и LLM-клиенты требуют перезагрузки после добавления скиллов.
 
 ---
 

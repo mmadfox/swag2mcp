@@ -74,6 +74,14 @@ export default defineConfig({
             ],
           },
           {
+            text: 'Skills for LLM',
+            items: [
+              { text: 'Overview', link: '/llm-skills/overview' },
+              { text: 'swag2mcp-format', link: '/llm-skills/format' },
+              { text: 'swag2mcp-cli', link: '/llm-skills/cli' },
+            ],
+          },
+          {
             text: 'CLI',
             items: [
               { text: 'Overview', link: '/cli/overview' },
@@ -100,7 +108,6 @@ export default defineConfig({
               { text: 'Endpoints', link: '/mcp-tools/endpoints' },
               { text: 'Execution', link: '/mcp-tools/execution' },
               { text: 'Utilities', link: '/mcp-tools/utilities' },
-              { text: 'Skills', link: '/mcp-tools/skills' },
             ],
           },
           {
@@ -210,6 +217,14 @@ export default defineConfig({
             ],
           },
           {
+            text: 'Скиллы для LLM',
+            items: [
+              { text: 'Обзор', link: '/ru/llm-skills/overview' },
+              { text: 'swag2mcp-format', link: '/ru/llm-skills/format' },
+              { text: 'swag2mcp-cli', link: '/ru/llm-skills/cli' },
+            ],
+          },
+          {
             text: 'CLI',
             items: [
               { text: 'Обзор', link: '/ru/cli/overview' },
@@ -236,7 +251,6 @@ export default defineConfig({
               { text: 'Эндпоинты', link: '/ru/mcp-tools/endpoints' },
               { text: 'Выполнение', link: '/ru/mcp-tools/execution' },
               { text: 'Утилиты', link: '/ru/mcp-tools/utilities' },
-              { text: 'Скиллы', link: '/ru/mcp-tools/skills' },
             ],
           },
           {
@@ -346,6 +360,14 @@ export default defineConfig({
             ],
           },
           {
+            text: 'Skills für LLM',
+            items: [
+              { text: 'Übersicht', link: '/de/llm-skills/overview' },
+              { text: 'swag2mcp-format', link: '/de/llm-skills/format' },
+              { text: 'swag2mcp-cli', link: '/de/llm-skills/cli' },
+            ],
+          },
+          {
             text: 'CLI',
             items: [
               { text: 'Übersicht', link: '/de/cli/overview' },
@@ -372,7 +394,6 @@ export default defineConfig({
               { text: 'Endpunkte', link: '/de/mcp-tools/endpoints' },
               { text: 'Ausführung', link: '/de/mcp-tools/execution' },
               { text: 'Dienstprogramme', link: '/de/mcp-tools/utilities' },
-              { text: 'Fähigkeiten', link: '/de/mcp-tools/skills' },
             ],
           },
           {
@@ -482,6 +503,14 @@ export default defineConfig({
             ],
           },
           {
+            text: 'Skills pour LLM',
+            items: [
+              { text: 'Aperçu', link: '/fr/llm-skills/overview' },
+              { text: 'swag2mcp-format', link: '/fr/llm-skills/format' },
+              { text: 'swag2mcp-cli', link: '/fr/llm-skills/cli' },
+            ],
+          },
+          {
             text: 'CLI',
             items: [
               { text: 'Aperçu', link: '/fr/cli/overview' },
@@ -508,7 +537,6 @@ export default defineConfig({
               { text: 'Points de terminaison', link: '/fr/mcp-tools/endpoints' },
               { text: 'Exécution', link: '/fr/mcp-tools/execution' },
               { text: 'Utilitaires', link: '/fr/mcp-tools/utilities' },
-              { text: 'Compétences', link: '/fr/mcp-tools/skills' },
             ],
           },
           {
@@ -618,6 +646,14 @@ export default defineConfig({
             ],
           },
           {
+            text: 'Skills para LLM',
+            items: [
+              { text: 'Visión general', link: '/es/llm-skills/overview' },
+              { text: 'swag2mcp-format', link: '/es/llm-skills/format' },
+              { text: 'swag2mcp-cli', link: '/es/llm-skills/cli' },
+            ],
+          },
+          {
             text: 'CLI',
             items: [
               { text: 'Visión general', link: '/es/cli/overview' },
@@ -644,7 +680,6 @@ export default defineConfig({
               { text: 'Puntos finales', link: '/es/mcp-tools/endpoints' },
               { text: 'Ejecución', link: '/es/mcp-tools/execution' },
               { text: 'Utilidades', link: '/es/mcp-tools/utilities' },
-              { text: 'Habilidades', link: '/es/mcp-tools/skills' },
             ],
           },
           {
@@ -754,6 +789,14 @@ export default defineConfig({
             ],
           },
           {
+            text: 'LLM 技能',
+            items: [
+              { text: '概述', link: '/zh-CN/llm-skills/overview' },
+              { text: 'swag2mcp-format', link: '/zh-CN/llm-skills/format' },
+              { text: 'swag2mcp-cli', link: '/zh-CN/llm-skills/cli' },
+            ],
+          },
+          {
             text: 'CLI',
             items: [
               { text: '概述', link: '/zh-CN/cli/overview' },
@@ -780,7 +823,6 @@ export default defineConfig({
               { text: '端点', link: '/zh-CN/mcp-tools/endpoints' },
               { text: '执行', link: '/zh-CN/mcp-tools/execution' },
               { text: '实用工具', link: '/zh-CN/mcp-tools/utilities' },
-              { text: '技能', link: '/zh-CN/mcp-tools/skills' },
             ],
           },
           {
@@ -890,6 +932,14 @@ export default defineConfig({
             ],
           },
           {
+            text: 'LLMスキル',
+            items: [
+              { text: '概要', link: '/ja/llm-skills/overview' },
+              { text: 'swag2mcp-format', link: '/ja/llm-skills/format' },
+              { text: 'swag2mcp-cli', link: '/ja/llm-skills/cli' },
+            ],
+          },
+          {
             text: 'CLI',
             items: [
               { text: '概要', link: '/ja/cli/overview' },
@@ -916,7 +966,6 @@ export default defineConfig({
               { text: 'エンドポイント', link: '/ja/mcp-tools/endpoints' },
               { text: '実行', link: '/ja/mcp-tools/execution' },
               { text: 'ユーティリティ', link: '/ja/mcp-tools/utilities' },
-              { text: 'スキル', link: '/ja/mcp-tools/skills' },
             ],
           },
           {
@@ -1026,6 +1075,14 @@ export default defineConfig({
             ],
           },
           {
+            text: 'LLM 스킬',
+            items: [
+              { text: '개요', link: '/ko/llm-skills/overview' },
+              { text: 'swag2mcp-format', link: '/ko/llm-skills/format' },
+              { text: 'swag2mcp-cli', link: '/ko/llm-skills/cli' },
+            ],
+          },
+          {
             text: 'CLI',
             items: [
               { text: '개요', link: '/ko/cli/overview' },
@@ -1052,7 +1109,6 @@ export default defineConfig({
               { text: '엔드포인트', link: '/ko/mcp-tools/endpoints' },
               { text: '실행', link: '/ko/mcp-tools/execution' },
               { text: '유틸리티', link: '/ko/mcp-tools/utilities' },
-              { text: '스킬', link: '/ko/mcp-tools/skills' },
             ],
           },
           {

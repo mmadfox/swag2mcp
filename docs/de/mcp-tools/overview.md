@@ -44,7 +44,7 @@ Alle Tools geben Fehler als strukturierte `LLMError`-Objekte mit einem maschinen
 | **Endpunkte** | `endpoint_by_spec`, `endpoint_by_collection`, `endpoint_by_tag`, `endpoint_by_id` | Endpunkte auf verschiedenen Ebenen der Hierarchie anzeigen |
 | **Ausführung** | `search`, `inspect`, `invoke` | Suchen, den vollständigen Vertrag inspizieren und APIs aufrufen |
 | **Hilfsprogramme** | `auth`, `info`, `response_outline`, `response_compress`, `response_slice` | Auth-Tokens, Laufzeitinfo und Verarbeitung großer Antworten |
-| **Skills** | [Formatierungsleitfaden](/mcp-tools/skills) | Anpassen, wie Tool-Antworten angezeigt werden |
+| **Skills** | [Formatierungsleitfaden](/de/llm-skills/overview) | Anpassen, wie Tool-Antworten angezeigt werden |
 
 ## Vollständige Liste
 

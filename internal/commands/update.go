@@ -60,7 +60,11 @@ func runUpdate(basePath string) (int, error) {
 	configPath := ws.ConfigPath()
 
 	if ws.ConfigNotExists() {
-		return 0, fmt.Errorf("configuration not found at %s", configPath)
+		var err error
+		configPath, err = ensureConfigExists(basePath)
+		if err != nil {
+			return 0, fmt.Errorf("configuration not found at %s: %w", configPath, err)
+		}
 	}
 
 	cfg, err := config.Load(configPath)

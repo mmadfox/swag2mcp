@@ -115,8 +115,8 @@ swag2mcp --version
 
 ### Docker
 
-The container runs as a non-root user and needs access to your workspace directory.
-Mount `~/.swag2mcp` (or your custom workspace path) to `/home/nonroot/.swag2mcp`:
+Mount `~/.swag2mcp` (or your custom workspace path) to `/home/nonroot/.swag2mcp`.
+The entrypoint automatically adjusts file permissions so the container can read your workspace.
 
 > **Apple Silicon (M1/M2/M3/M4) users:** Add `--platform linux/amd64` to run the image:
 > `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
@@ -211,8 +211,8 @@ swag2mcp --version
 
 ### Docker
 
-The container runs as a non-root user and needs access to your workspace directory.
-Mount `~/.swag2mcp` (or your custom workspace path) to `/home/nonroot/.swag2mcp`:
+Mount `~/.swag2mcp` (or your custom workspace path) to `/home/nonroot/.swag2mcp`.
+The entrypoint automatically adjusts file permissions so the container can read your workspace.
 
 > **Apple Silicon (M1/M2/M3/M4) users:** Add `--platform linux/amd64` to run the image:
 > `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
@@ -353,24 +353,9 @@ swag2mcp --version
 
 ## Install via LLM Agent
 
-If you use an AI-powered IDE (OpenCode, Cursor, Claude Desktop, VS Code, etc.), you can install swag2mcp through your agent:
+If you use an AI-powered IDE (OpenCode, Cursor, Claude Desktop, VS Code, etc.), see [Skills for LLM](/llm-skills/overview) for how to install swag2mcp skills through your agent or manually.
 
-1. Ask your agent to add the swag2mcp skills:
-
-   ```
-   "Create the .agents/skills/swag2mcp-cli directory and add the skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md to .agents/skills/swag2mcp-cli/SKILL.md"
-   "Create the .agents/skills/swag2mcp-format directory and add the skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md to .agents/skills/swag2mcp-format/SKILL.md"
-   ```
-
-2. Then tell your agent:
-
-   ```
-   "Set up swag2mcp"
-   ```
-
-   The agent will download and install swag2mcp, then create a workspace with ready-to-use specs.
-
-> Some IDEs require a restart after adding skills.
+> Some IDEs and LLM clients require a restart after adding skills.
 
 ---
 

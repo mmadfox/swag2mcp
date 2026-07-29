@@ -75,7 +75,11 @@ func runMCP(basePath, version string, opts *mcpCmdOpts, cmd *cobra.Command) erro
 	configFile := ws.ConfigPath()
 
 	if ws.ConfigNotExists() {
-		return fmt.Errorf("configuration not found at %s", configFile)
+		var err error
+		configFile, err = ensureConfigExists(basePath)
+		if err != nil {
+			return fmt.Errorf("configuration not found at %s: %w", configFile, err)
+		}
 	}
 
 	var logger *slog.Logger

@@ -1,4 +1,5 @@
-FROM gcr.io/distroless/static:nonroot
+FROM alpine:latest
+RUN apk add --no-cache su-exec
 COPY swag2mcp-mock /usr/local/bin/swag2mcp-mock
-USER 65532:65532
-ENTRYPOINT ["swag2mcp-mock"]
+COPY scripts/entrypoint-mock.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

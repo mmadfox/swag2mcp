@@ -111,6 +111,8 @@ dockers:
       - "--label=org.opencontainers.image.version={{ .Version }}"
       - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
       - "--label=org.opencontainers.image.created={{ .Date }}"
+    extra_files:
+      - scripts/entrypoint.sh
 
   - id: swag2mcp-mock
     use: buildx
@@ -124,6 +126,8 @@ dockers:
       - "--label=org.opencontainers.image.version={{ .Version }}"
       - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
       - "--label=org.opencontainers.image.created={{ .Date }}"
+    extra_files:
+      - scripts/entrypoint-mock.sh
 
 brews:
   - name: swag2mcp

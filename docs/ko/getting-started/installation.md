@@ -115,7 +115,8 @@ swag2mcp --version
 
 ### Docker
 
-컨테이너는 non-root 사용자로 실행되며 작업 공간 디렉토리에 대한 액세스가 필요합니다. `~/.swag2mcp`(또는 사용자 정의 경로)를 `/home/nonroot/.swag2mcp`에 마운트하세요:
+`~/.swag2mcp`(또는 사용자 정의 경로)를 `/home/nonroot/.swag2mcp`에 마운트하세요.
+엔트리포인트가 자동으로 파일 권한을 조정하여 컨테이너가 작업 공간을 읽을 수 있도록 합니다.
 
 > **Apple Silicon (M1/M2/M3/M4) 사용자:** `--platform linux/amd64`를 추가하여 이미지를 실행하세요:
 > `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
@@ -210,7 +211,8 @@ swag2mcp --version
 
 ### Docker
 
-컨테이너는 non-root 사용자로 실행되며 작업 공간 디렉토리에 대한 액세스가 필요합니다. `~/.swag2mcp`(또는 사용자 정의 경로)를 `/home/nonroot/.swag2mcp`에 마운트하세요:
+`~/.swag2mcp`(또는 사용자 정의 경로)를 `/home/nonroot/.swag2mcp`에 마운트하세요.
+엔트리포인트가 자동으로 파일 권한을 조정하여 컨테이너가 작업 공간을 읽을 수 있도록 합니다.
 
 > **Apple Silicon (M1/M2/M3/M4) 사용자:** `--platform linux/amd64`를 추가하여 이미지를 실행하세요:
 > `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
@@ -351,24 +353,9 @@ swag2mcp --version
 
 ## LLM 에이전트를 통한 설치
 
-AI 기반 IDE(OpenCode, Cursor, Claude Desktop, VS Code 등)를 사용하는 경우 에이전트를 통해 swag2mcp를 설치할 수 있습니다:
+AI 기반 IDE(OpenCode, Cursor, Claude Desktop, VS Code 등)를 사용하는 경우 [LLM 스킬](/ko/llm-skills/overview)을 참조하여 에이전트를 통해 또는 수동으로 스킬을 설치하는 방법을 확인하세요.
 
-1. 에이전트에게 swag2mcp 스킬을 추가하도록 요청하세요:
-
-   ```
-   ".agents/skills/swag2mcp-cli 디렉토리를 만들고 https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md의 스킬을 .agents/skills/swag2mcp-cli/SKILL.md에 추가하세요"
-   ".agents/skills/swag2mcp-format 디렉토리를 만들고 https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md의 스킬을 .agents/skills/swag2mcp-format/SKILL.md에 추가하세요"
-   ```
-
-2. 그런 다음 에이전트에게 말하세요:
-
-   ```
-   "swag2mcp 설정"
-   ```
-
-   에이전트가 swag2mcp를 다운로드 및 설치하고 사용 준비가 된 명세가 있는 워크스페이스를 생성합니다.
-
-> 일부 IDE는 스킬 추가 후 재시작이 필요합니다.
+> 일부 IDE 및 LLM 클라이언트는 스킬 추가 후 재시작이 필요합니다.
 
 ---
 

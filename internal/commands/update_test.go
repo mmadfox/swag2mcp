@@ -16,12 +16,16 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/workspace"
 )
 
-func TestRunUpdate_NoConfig(t *testing.T) {
+func TestRunUpdate_NoConfigCreatesIt(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	_, err := runUpdate(tmpDir)
-	if err == nil {
-		t.Fatal("runUpdate() expected error for missing config, got nil")
+	if err != nil {
+		t.Fatalf("runUpdate() = %v", err)
+	}
+	ws, _ := workspace.New(tmpDir)
+	if !ws.ConfigExists() {
+		t.Fatal("config should have been created")
 	}
 }
 

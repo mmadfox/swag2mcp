@@ -110,11 +110,8 @@ swag2mcp-mock --version
 
 ### Docker
 
-コンテナは非rootユーザーとして実行され、ワークスペースディレクトリへのアクセスが必要です。
-`~/.swag2mcp`（またはカスタムワークスペースパス）を `/home/nonroot/.swag2mcp` にマウントしてください：
-
-> **Apple Silicon (M1/M2/M3/M4) ユーザー：** イメージを実行するには `--platform linux/amd64` を追加してください：
-> `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
+`~/.swag2mcp`（またはカスタムワークスペースパス）を `/home/nonroot/.swag2mcp` にマウントしてください。
+エントリポイントが自動的にファイルのアクセス権限を調整し、コンテナがワークスペースを読み取れるようにします。
 
 ```bash
 docker pull ghcr.io/mmadfox/swag2mcp-mock:latest
@@ -216,8 +213,8 @@ swag2mcp-mock --version
 
 ### Docker
 
-コンテナは非rootユーザーとして実行され、ワークスペースディレクトリへのアクセスが必要です。
-`~/.swag2mcp`（またはカスタムワークスペースパス）を `/home/nonroot/.swag2mcp` にマウントしてください：
+`~/.swag2mcp`（またはカスタムワークスペースパス）を `/home/nonroot/.swag2mcp` にマウントしてください。
+エントリポイントが自動的にファイルのアクセス権限を調整し、コンテナがワークスペースを読み取れるようにします。
 
 ```bash
 docker pull ghcr.io/mmadfox/swag2mcp-mock:latest

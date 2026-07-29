@@ -16,12 +16,16 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestRunValidate_NoConfig(t *testing.T) {
+func TestRunValidate_NoConfigCreatesIt(t *testing.T) {
 	tmpDir := t.TempDir()
 	var buf strings.Builder
 	err := runValidate(tmpDir, "", &buf)
-	if err == nil {
-		t.Fatal("runValidate() expected error, got nil")
+	if err != nil {
+		t.Fatalf("runValidate() = %v", err)
+	}
+	ws, _ := workspace.New(tmpDir)
+	if !ws.ConfigExists() {
+		t.Fatal("config should have been created")
 	}
 }
 

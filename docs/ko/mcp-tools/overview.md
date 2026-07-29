@@ -44,7 +44,7 @@ swag2mcp는 LLM 에이전트가 Model Context Protocol을 통해 API에 완전�
 | **엔드포인트** | `endpoint_by_spec`, `endpoint_by_collection`, `endpoint_by_tag`, `endpoint_by_id` | 계층 구조의 다양한 수준에서 엔드포인트 보기 |
 | **실행** | `search`, `inspect`, `invoke` | 검색, 전체 계약 검사, API 호출 |
 | **유틸리티** | `auth`, `info`, `response_outline`, `response_compress`, `response_slice` | 인증 토큰, 런타임 정보, 큰 응답 처리 |
-| **스킬** | [포맷팅 가이드](/mcp-tools/skills) | 도구 응답 표시 방식 사용자 정의 |
+| **스킬** | [포맷팅 가이드](/ko/llm-skills/overview) | 도구 응답 표시 방식 사용자 정의 |
 
 ## 전체 목록
 
