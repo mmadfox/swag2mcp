@@ -58,7 +58,11 @@ func runValidate(basePath, tagsFilter string, w io.Writer) error {
 	configPath := ws.ConfigPath()
 
 	if ws.ConfigNotExists() {
-		return fmt.Errorf("configuration not found at %s", configPath)
+		var err error
+		configPath, err = ensureConfigExists(basePath)
+		if err != nil {
+			return fmt.Errorf("configuration not found at %s: %w", configPath, err)
+		}
 	}
 
 	cfg, err := config.Load(configPath)

@@ -110,11 +110,8 @@ swag2mcp-mock --version
 
 ### Docker
 
-Der Container läuft als Nicht-Root-Benutzer und benötigt Zugriff auf Ihr Arbeitsverzeichnis.
-Mounten Sie `~/.swag2mcp` (oder Ihren benutzerdefinierten Arbeitsverzeichnispfad) nach `/home/nonroot/.swag2mcp`:
-
-> **Apple Silicon (M1/M2/M3/M4)-Benutzer:** Fügen Sie `--platform linux/amd64` hinzu, um das Image auszuführen:
-> `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
+Mounten Sie `~/.swag2mcp` (oder Ihren benutzerdefinierten Arbeitsverzeichnispfad) nach `/home/nonroot/.swag2mcp`.
+Der Entrypoint passt die Dateiberechtigungen automatisch an, damit der Container Ihr Arbeitsverzeichnis lesen kann.
 
 ```bash
 docker pull ghcr.io/mmadfox/swag2mcp-mock:latest
@@ -216,8 +213,8 @@ swag2mcp-mock --version
 
 ### Docker
 
-Der Container läuft als Nicht-Root-Benutzer und benötigt Zugriff auf Ihr Arbeitsverzeichnis.
-Mounten Sie `~/.swag2mcp` (oder Ihren benutzerdefinierten Arbeitsverzeichnispfad) nach `/home/nonroot/.swag2mcp`:
+Mounten Sie `~/.swag2mcp` (oder Ihren benutzerdefinierten Arbeitsverzeichnispfad) nach `/home/nonroot/.swag2mcp`.
+Der Entrypoint passt die Dateiberechtigungen automatisch an, damit der Container Ihr Arbeitsverzeichnis lesen kann.
 
 ```bash
 docker pull ghcr.io/mmadfox/swag2mcp-mock:latest

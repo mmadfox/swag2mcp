@@ -110,11 +110,8 @@ swag2mcp-mock --version
 
 ### Docker
 
-El contenedor se ejecuta como un usuario no root y necesita acceso a su directorio de trabajo.
-Monte `~/.swag2mcp` (o su ruta de workspace personalizada) en `/home/nonroot/.swag2mcp`:
-
-> **Usuarios de Apple Silicon (M1/M2/M3/M4):** Agregue `--platform linux/amd64` para ejecutar la imagen:
-> `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
+Monte `~/.swag2mcp` (o su ruta de workspace personalizada) en `/home/nonroot/.swag2mcp`.
+El entrypoint ajusta automáticamente los permisos de archivos para que el contenedor pueda leer su workspace.
 
 ```bash
 docker pull ghcr.io/mmadfox/swag2mcp-mock:latest
@@ -216,8 +213,8 @@ swag2mcp-mock --version
 
 ### Docker
 
-El contenedor se ejecuta como un usuario no root y necesita acceso a su directorio de trabajo.
-Monte `~/.swag2mcp` (o su ruta de workspace personalizada) en `/home/nonroot/.swag2mcp`:
+Monte `~/.swag2mcp` (o su ruta de workspace personalizada) en `/home/nonroot/.swag2mcp`.
+El entrypoint ajusta automáticamente los permisos de archivos para que el contenedor pueda leer su workspace.
 
 ```bash
 docker pull ghcr.io/mmadfox/swag2mcp-mock:latest

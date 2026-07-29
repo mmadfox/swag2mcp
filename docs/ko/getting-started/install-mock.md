@@ -110,11 +110,8 @@ swag2mcp-mock --version
 
 ### Docker
 
-컨테이너는 비-root 사용자로 실행되며 워크스페이스 디렉토리에 대한 액세스가 필요합니다.
-`~/.swag2mcp`(또는 사용자 정의 워크스페이스 경로)를 `/home/nonroot/.swag2mcp`에 마운트하세요:
-
-> **Apple Silicon (M1/M2/M3/M4) 사용자:** 이미지를 실행하려면 `--platform linux/amd64`를 추가하세요:
-> `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
+`~/.swag2mcp`(또는 사용자 정의 워크스페이스 경로)를 `/home/nonroot/.swag2mcp`에 마운트하세요.
+엔트리포인트가 자동으로 파일 권한을 조정하여 컨테이너가 워크스페이스를 읽을 수 있게 합니다.
 
 ```bash
 docker pull ghcr.io/mmadfox/swag2mcp-mock:latest
@@ -216,8 +213,8 @@ swag2mcp-mock --version
 
 ### Docker
 
-컨테이너는 비-root 사용자로 실행되며 워크스페이스 디렉토리에 대한 액세스가 필요합니다.
-`~/.swag2mcp`(또는 사용자 정의 워크스페이스 경로)를 `/home/nonroot/.swag2mcp`에 마운트하세요:
+`~/.swag2mcp`(또는 사용자 정의 워크스페이스 경로)를 `/home/nonroot/.swag2mcp`에 마운트하세요.
+엔트리포인트가 자동으로 파일 권한을 조정하여 컨테이너가 워크스페이스를 읽을 수 있게 합니다.
 
 ```bash
 docker pull ghcr.io/mmadfox/swag2mcp-mock:latest

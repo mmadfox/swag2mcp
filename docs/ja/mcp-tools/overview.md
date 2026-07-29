@@ -44,7 +44,7 @@ swag2mcp は **19 の MCP ツール** を提供し、LLM エージェントが M
 | **エンドポイント** | `endpoint_by_spec`, `endpoint_by_collection`, `endpoint_by_tag`, `endpoint_by_id` | 階層の異なるレベルでエンドポイントを表示 |
 | **実行** | `search`, `inspect`, `invoke` | 検索、完全な契約の検査、API の呼び出し |
 | **ユーティリティ** | `auth`, `info`, `response_outline`, `response_compress`, `response_slice` | 認証トークン、ランタイム情報、大規模レスポンス処理 |
-| **スキル** | [フォーマットガイド](/mcp-tools/skills) | ツールレスポンスの表示方法をカスタマイズ |
+| **スキル** | [フォーマットガイド](/ja/llm-skills/overview) | ツールレスポンスの表示方法をカスタマイズ |
 
 ## 全リスト
 

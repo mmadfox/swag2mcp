@@ -115,7 +115,8 @@ swag2mcp --version
 
 ### Docker
 
-容器以非 root 用户身份运行，需要访问您的工作区目录。将 `~/.swag2mcp`（或您的自定义路径）挂载到 `/home/nonroot/.swag2mcp`：
+将 `~/.swag2mcp`（或您的自定义路径）挂载到 `/home/nonroot/.swag2mcp`。
+入口点会自动调整文件权限，使容器能够读取您的工作区。
 
 > **Apple Silicon (M1/M2/M3/M4) 用户：** 添加 `--platform linux/amd64` 来运行镜像：
 > `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
@@ -210,7 +211,8 @@ swag2mcp --version
 
 ### Docker
 
-容器以非 root 用户身份运行，需要访问您的工作区目录。将 `~/.swag2mcp`（或您的自定义路径）挂载到 `/home/nonroot/.swag2mcp`：
+将 `~/.swag2mcp`（或您的自定义路径）挂载到 `/home/nonroot/.swag2mcp`。
+入口点会自动调整文件权限，使容器能够读取您的工作区。
 
 > **Apple Silicon (M1/M2/M3/M4) 用户：** 添加 `--platform linux/amd64` 来运行镜像：
 > `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
@@ -351,24 +353,9 @@ swag2mcp --version
 
 ## 通过 LLM 智能体安装
 
-如果你使用 AI 驱动的 IDE（OpenCode、Cursor、Claude Desktop、VS Code 等），你可以通过智能体安装 swag2mcp：
+如果您使用 AI 驱动的 IDE（OpenCode、Cursor、Claude Desktop、VS Code 等），请参阅 [LLM 技能](/zh-CN/llm-skills/overview) 了解如何通过智能体或手动安装技能。
 
-1. 让智能体添加 swag2mcp 技能：
-
-   ```
-   "Create the .agents/skills/swag2mcp-cli directory and add the skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md to .agents/skills/swag2mcp-cli/SKILL.md"
-   "Create the .agents/skills/swag2mcp-format directory and add the skill from https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md to .agents/skills/swag2mcp-format/SKILL.md"
-   ```
-
-2. 然后告诉你的智能体：
-
-   ```
-   "Set up swag2mcp"
-   ```
-
-   智能体将下载并安装 swag2mcp，然后创建带有即用型 spec 的工作区。
-
-> 某些 IDE 在添加技能后需要重启。
+> 某些 IDE 和 LLM 客户端在添加技能后需要重启。
 
 ---
 

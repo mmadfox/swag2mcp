@@ -44,7 +44,7 @@ Tous les outils renvoient des erreurs sous forme d'objets `LLMError` structurés
 | **Points de terminaison** | `endpoint_by_spec`, `endpoint_by_collection`, `endpoint_by_tag`, `endpoint_by_id` | Voir les points de terminaison à différents niveaux de la hiérarchie |
 | **Exécution** | `search`, `inspect`, `invoke` | Rechercher, inspecter le contrat complet et appeler des API |
 | **Utilitaires** | `auth`, `info`, `response_outline`, `response_compress`, `response_slice` | Jetons d'authentification, informations d'exécution et gestion des grandes réponses |
-| **Compétences** | [Guide de formatage](/mcp-tools/skills) | Personnaliser l'affichage des réponses des outils |
+| **Compétences** | [Guide de formatage](/fr/llm-skills/overview) | Personnaliser l'affichage des réponses des outils |
 
 ## Liste complète
 

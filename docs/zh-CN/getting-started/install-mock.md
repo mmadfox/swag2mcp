@@ -110,11 +110,8 @@ swag2mcp-mock --version
 
 ### Docker
 
-容器以非 root 用户身份运行，需要访问您的工作区目录。
-将 `~/.swag2mcp`（或您的自定义工作区路径）挂载到 `/home/nonroot/.swag2mcp`：
-
-> **Apple Silicon (M1/M2/M3/M4) 用户：** 添加 `--platform linux/amd64` 来运行镜像：
-> `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
+将 `~/.swag2mcp`（或您的自定义工作区路径）挂载到 `/home/nonroot/.swag2mcp`。
+入口点会自动调整文件权限，以便容器可以读取您的工作区。
 
 ```bash
 docker pull ghcr.io/mmadfox/swag2mcp-mock:latest
@@ -216,8 +213,8 @@ swag2mcp-mock --version
 
 ### Docker
 
-容器以非 root 用户身份运行，需要访问您的工作区目录。
-将 `~/.swag2mcp`（或您的自定义工作区路径）挂载到 `/home/nonroot/.swag2mcp`：
+将 `~/.swag2mcp`（或您的自定义工作区路径）挂载到 `/home/nonroot/.swag2mcp`。
+入口点会自动调整文件权限，以便容器可以读取您的工作区。
 
 ```bash
 docker pull ghcr.io/mmadfox/swag2mcp-mock:latest

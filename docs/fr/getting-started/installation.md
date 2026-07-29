@@ -115,7 +115,8 @@ swag2mcp --version
 
 ### Docker
 
-Le conteneur s'exécute en tant qu'utilisateur non-root et a besoin d'accéder à votre répertoire de travail. Montez `~/.swag2mcp` (ou votre chemin personnalisé) vers `/home/nonroot/.swag2mcp` :
+Montez `~/.swag2mcp` (ou votre chemin personnalisé) vers `/home/nonroot/.swag2mcp`.
+L'entrypoint ajuste automatiquement les permissions des fichiers pour que le conteneur puisse lire votre espace de travail.
 
 > **Utilisateurs Apple Silicon (M1/M2/M3/M4) :** Ajoutez `--platform linux/amd64` pour exécuter l'image :
 > `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
@@ -210,7 +211,8 @@ swag2mcp --version
 
 ### Docker
 
-Le conteneur s'exécute en tant qu'utilisateur non-root et a besoin d'accéder à votre répertoire de travail. Montez `~/.swag2mcp` (ou votre chemin personnalisé) vers `/home/nonroot/.swag2mcp` :
+Montez `~/.swag2mcp` (ou votre chemin personnalisé) vers `/home/nonroot/.swag2mcp`.
+L'entrypoint ajuste automatiquement les permissions des fichiers pour que le conteneur puisse lire votre espace de travail.
 
 > **Utilisateurs Apple Silicon (M1/M2/M3/M4) :** Ajoutez `--platform linux/amd64` pour exécuter l'image :
 > `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
@@ -351,24 +353,9 @@ swag2mcp --version
 
 ## Installation via Agent LLM
 
-Si vous utilisez un IDE avec IA intégrée (OpenCode, Cursor, Claude Desktop, VS Code, etc.), vous pouvez installer swag2mcp via votre agent :
+Si vous utilisez un IDE alimenté par l'IA (OpenCode, Cursor, Claude Desktop, VS Code, etc.), consultez [Skills pour LLM](/fr/llm-skills/overview) pour savoir comment installer les skills via votre agent ou manuellement.
 
-1. Demandez à votre agent d'ajouter les compétences swag2mcp :
-
-   ```
-   "Créez le répertoire .agents/skills/swag2mcp-cli et ajoutez la compétence depuis https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md vers .agents/skills/swag2mcp-cli/SKILL.md"
-   "Créez le répertoire .agents/skills/swag2mcp-format et ajoutez la compétence depuis https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md vers .agents/skills/swag2mcp-format/SKILL.md"
-   ```
-
-2. Ensuite, dites à votre agent :
-
-   ```
-   "Configurez swag2mcp"
-   ```
-
-   L'agent téléchargera et installera swag2mcp, puis créera un espace de travail avec des spécifications prêtes à l'emploi.
-
-> Certains IDE nécessitent un redémarrage après l'ajout de compétences.
+> Certains IDE et clients LLM nécessitent un redémarrage après l'ajout de skills.
 
 ---
 

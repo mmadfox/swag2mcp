@@ -115,7 +115,8 @@ swag2mcp --version
 
 ### Docker
 
-Der Container läuft als nicht-root Benutzer und benötigt Zugriff auf Ihr Arbeitsverzeichnis. Mounten Sie `~/.swag2mcp` (oder Ihren benutzerdefinierten Pfad) nach `/home/nonroot/.swag2mcp`:
+Mounten Sie `~/.swag2mcp` (oder Ihren benutzerdefinierten Pfad) nach `/home/nonroot/.swag2mcp`.
+Der Entrypoint passt Dateiberechtigungen automatisch an, damit der Container Ihr Arbeitsverzeichnis lesen kann.
 
 > **Apple Silicon (M1/M2/M3/M4) Benutzer:** Fügen Sie `--platform linux/amd64` hinzu:
 > `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
@@ -210,7 +211,8 @@ swag2mcp --version
 
 ### Docker
 
-Der Container läuft als nicht-root Benutzer und benötigt Zugriff auf Ihr Arbeitsverzeichnis. Mounten Sie `~/.swag2mcp` (oder Ihren benutzerdefinierten Pfad) nach `/home/nonroot/.swag2mcp`:
+Mounten Sie `~/.swag2mcp` (oder Ihren benutzerdefinierten Pfad) nach `/home/nonroot/.swag2mcp`.
+Der Entrypoint passt Dateiberechtigungen automatisch an, damit der Container Ihr Arbeitsverzeichnis lesen kann.
 
 > **Apple Silicon (M1/M2/M3/M4) Benutzer:** Fügen Sie `--platform linux/amd64` hinzu:
 > `docker run --rm --platform linux/amd64 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ...`
@@ -351,24 +353,9 @@ swag2mcp --version
 
 ## Über LLM-Agenten installieren
 
-Wenn Sie eine KI-gestützte IDE (OpenCode, Cursor, Claude Desktop, VS Code usw.) verwenden, können Sie swag2mcp über Ihren Agenten installieren:
+Wenn Sie eine KI-gestützte IDE (OpenCode, Cursor, Claude Desktop, VS Code usw.) verwenden, lesen Sie [Skills für LLM](/de/llm-skills/overview) für Anweisungen zur Installation von Skills über den Agenten oder manuell.
 
-1. Bitten Sie Ihren Agenten, die swag2mcp-Skills hinzuzufügen:
-
-   ```
-   "Erstellen Sie das Verzeichnis .agents/skills/swag2mcp-cli und fügen Sie den Skill von https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-cli/SKILL.md zu .agents/skills/swag2mcp-cli/SKILL.md hinzu"
-   "Erstellen Sie das Verzeichnis .agents/skills/swag2mcp-format und fügen Sie den Skill von https://github.com/mmadfox/swag2mcp/blob/main/.agents/skills/swag2mcp-format/SKILL.md zu .agents/skills/swag2mcp-format/SKILL.md hinzu"
-   ```
-
-2. Sagen Sie dann Ihrem Agenten:
-
-   ```
-   "Richte swag2mcp ein"
-   ```
-
-   Der Agent wird swag2mcp herunterladen und installieren und dann einen Arbeitsbereich mit gebrauchsfertigen Spezifikationen erstellen.
-
-> Einige IDEs erfordern einen Neustart nach dem Hinzufügen von Skills.
+> Einige IDEs und LLM-Clients erfordern einen Neustart nach dem Hinzufügen von Skills.
 
 ---
 

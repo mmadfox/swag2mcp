@@ -44,7 +44,7 @@ Todas las herramientas devuelven errores como objetos `LLMError` estructurados c
 | **Endpoints** | `endpoint_by_spec`, `endpoint_by_collection`, `endpoint_by_tag`, `endpoint_by_id` | Ver endpoints en diferentes niveles de la jerarquía |
 | **Ejecución** | `search`, `inspect`, `invoke` | Buscar, inspeccionar el contrato completo y llamar APIs |
 | **Utilidades** | `auth`, `info`, `response_outline`, `response_compress`, `response_slice` | Tokens de autenticación, información de ejecución y manejo de respuestas grandes |
-| **Habilidades** | [Guía de formato](/mcp-tools/skills) | Personalizar cómo se muestran las respuestas de las herramientas |
+| **Habilidades** | [Guía de formato](/es/llm-skills/overview) | Personalizar cómo se muestran las respuestas de las herramientas |
 
 ## Lista Completa
 

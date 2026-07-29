@@ -44,7 +44,7 @@ swag2mcp 提供 **19 个 MCP 工具**，让 LLM 智能体通过模型上下文�
 | **端点** | `endpoint_by_spec`、`endpoint_by_collection`、`endpoint_by_tag`、`endpoint_by_id` | 在层次结构的不同级别查看端点 |
 | **执行** | `search`、`inspect`、`invoke` | 搜索、检查完整契约和调用 API |
 | **实用工具** | `auth`、`info`、`response_outline`、`response_compress`、`response_slice` | 认证令牌、运行时信息和大响应处理 |
-| **技能** | [格式化指南](/mcp-tools/skills) | 自定义工具响应的显示方式 |
+| **技能** | [格式化指南](/zh-CN/llm-skills/overview) | 自定义工具响应的显示方式 |
 
 ## 完整列表
 
