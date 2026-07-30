@@ -45,9 +45,7 @@ main
 tmp
 playground
 swag2mcp-mock
-
-# MkDocs build output
-site/
+swag2mcp
 
 # VitePress build output
 docs/.vitepress/dist/
