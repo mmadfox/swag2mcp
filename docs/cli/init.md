@@ -48,6 +48,8 @@ swag2mcp init /absolute/path
 
 ### Interactive mode (`-i`)
 
+> Not recommended for regular use. This mode is intended for users who are not familiar with YAML. Writing the config file directly is faster and more reliable.
+
 Launches an 18-step TUI wizard that guides you through:
 
 1. Choosing the workspace directory

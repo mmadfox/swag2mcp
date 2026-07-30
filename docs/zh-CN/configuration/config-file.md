@@ -44,10 +44,6 @@ http_client:
 # ── MCP 服务器 ──────────────────────────────────────────
 mcp:
   transport: stdio
-  addr: ":8080"
-  path: "/mcp"
-  auth:
-    token: ""
 
 # ── 模拟服务器 ─────────────────────────────────────────
 mock_enabled: false

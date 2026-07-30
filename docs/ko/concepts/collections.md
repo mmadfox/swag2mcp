@@ -51,7 +51,7 @@ swag2mcp가 자동으로 소스 유형을 감지합니다:
 
 ```bash
 # 명세 파일을 워크스페이스로 가져오기
-swag2mcp import https://example.com/api.yaml myspec
+swag2mcp import https://example.com/api.yaml myspec.yaml
 
 # 가져오기 후 location이 다음과 같이 변경됨:
 # specs/myspec.yaml
@@ -170,13 +170,6 @@ cat collection.yaml | swag2mcp add collection --yaml -
 
 # YAML 예시 보기
 swag2mcp add collection --example
-```
-
-### 가져오기를 통해
-
-```bash
-# 명세 파일을 워크스페이스로 가져오기
-swag2mcp import https://example.com/api.yaml
 ```
 
 ## LLM Instruction

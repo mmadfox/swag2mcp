@@ -24,6 +24,10 @@
 
 以及所有标志、配置文件结构、身份验证方法和高级选项。
 
+## 直接链接
+
+<https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-cli/SKILL.md>
+
 ## 通过 LLM 代理安装
 
 将以下请求复制到您的 AI 驱动 IDE：

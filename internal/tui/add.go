@@ -152,10 +152,12 @@ func AddSpecTUI(configPath string) error {
 	}
 
 	if err := AtomicWriteConfig(configPath, func(cfg *config.Config) error {
+		domainMap := make(map[string]struct{}, len(cfg.Specs))
 		for _, sp := range cfg.Specs {
-			if sp.Domain == spec.Domain {
-				return fmt.Errorf("spec with domain %q already exists", spec.Domain)
-			}
+			domainMap[sp.Domain] = struct{}{}
+		}
+		if _, ok := domainMap[spec.Domain]; ok {
+			return fmt.Errorf("spec with domain %q already exists", spec.Domain)
 		}
 		newSpec := config.Spec{
 			Domain:         spec.Domain,
@@ -205,7 +207,7 @@ func AddCollectionTUI(configPath string) error {
 
 	fmt.Printf("  Select a spec [1-%d] > ", len(cfg.Specs))
 	var specIdx int
-	fmt.Scanf("%d", &specIdx)
+	fmt.Scanln(&specIdx)
 	if specIdx < 1 || specIdx > len(cfg.Specs) {
 		return fmt.Errorf("invalid spec number")
 	}
@@ -237,17 +239,25 @@ func AddCollectionTUI(configPath string) error {
 	}
 
 	if err := AtomicWriteConfig(configPath, func(cfg *config.Config) error {
-		if specIdx-1 < len(cfg.Specs) {
-			for _, c := range cfg.Specs[specIdx-1].Collections {
-				if c.Location == col.Location {
-					return fmt.Errorf("collection with location %q already exists in spec %q", col.Location, spec.Domain)
-				}
-			}
-			cfg.Specs[specIdx-1].Collections = append(cfg.Specs[specIdx-1].Collections, config.Collection{
-				LLMTitle: col.Title,
-				Location: col.Location,
-			})
+		specMap := make(map[string]int, len(cfg.Specs))
+		for i, sp := range cfg.Specs {
+			specMap[sp.Domain] = i
 		}
+		idx, ok := specMap[spec.Domain]
+		if !ok {
+			return fmt.Errorf("spec with domain %q not found", spec.Domain)
+		}
+		locMap := make(map[string]struct{}, len(cfg.Specs[idx].Collections))
+		for _, c := range cfg.Specs[idx].Collections {
+			locMap[c.Location] = struct{}{}
+		}
+		if _, ok := locMap[col.Location]; ok {
+			return fmt.Errorf("collection with location %q already exists in spec %q", col.Location, spec.Domain)
+		}
+		cfg.Specs[idx].Collections = append(cfg.Specs[idx].Collections, config.Collection{
+			LLMTitle: col.Title,
+			Location: col.Location,
+		})
 		return nil
 	}); err != nil {
 		return fmt.Errorf("write config: %w", err)

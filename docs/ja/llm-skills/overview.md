@@ -4,10 +4,10 @@
 
 ## 利用可能なスキル
 
-| スキル | 説明 | ソース |
-|--------|------|--------|
-| **swag2mcp-format** | すべてのMCPツールのレスポンスをコンパクトで読みやすいMarkdownテーブルにフォーマット | `swag2mcp-format/SKILL.md` |
-| **swag2mcp-cli** | 完全なCLIリファレンス — LLMはすべてのコマンド、フラグ、設定オプションを把握 | `swag2mcp-cli/SKILL.md` |
+| スキル | 説明 | ダウンロード |
+|--------|------|--------------|
+| **swag2mcp-format** | すべてのMCPツールのレスポンスをコンパクトで読みやすいMarkdownテーブルにフォーマット | [SKILL.md](https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-format/SKILL.md) |
+| **swag2mcp-cli** | 完全なCLIリファレンス — LLMはすべてのコマンド、フラグ、設定オプションを把握 | [SKILL.md](https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-cli/SKILL.md) |
 
 ## スキルが重要な理由
 
@@ -44,7 +44,7 @@ curl -o .agents/skills/swag2mcp-cli/SKILL.md \
 
 ## LLMクライアントの設定
 
-OpenCodeの場合は、`opencode.json`にスキルを追加します：
+LLMクライアントやIDEごとにスキルのインストール方法は異なります。以下の例は **OpenCode** 用です — お使いのクライアントのドキュメントで正しい方法を確認してください。
 
 ```json
 {

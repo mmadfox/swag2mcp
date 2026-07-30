@@ -30,9 +30,9 @@ func newImportCmd() *cobra.Command {
 		Long: `Import a spec file into the workspace specs/ directory.
 
 Single import (requires source and name):
-  swag2mcp import https://example.com/spec.yaml myspec
-  swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
-  swag2mcp import ./local-spec.yaml myspec
+  swag2mcp import https://example.com/spec.yaml myspec.yaml
+  swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
+  swag2mcp import ./local-spec.yaml myspec.yaml
 
 Single import (name derived from URL):
   swag2mcp import https://example.com/specs/petstore.yaml

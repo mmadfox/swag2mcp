@@ -24,6 +24,10 @@
 
 Плюс все флаги, структура конфигурационного файла, методы аутентификации и расширенные опции.
 
+## Прямая ссылка
+
+<https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-cli/SKILL.md>
+
 ## Установка через LLM-агента
 
 Скопируйте этот запрос в вашу IDE с ИИ:

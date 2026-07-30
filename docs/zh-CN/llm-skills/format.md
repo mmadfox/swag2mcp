@@ -16,6 +16,10 @@
 - `auth` — 身份验证信息
 - `info` — 运行时信息
 
+## 直接链接
+
+<https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-format/SKILL.md>
+
 ## 通过 LLM 代理安装
 
 将以下请求复制到您的 AI 驱动 IDE：

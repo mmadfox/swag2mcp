@@ -4,10 +4,10 @@
 
 ## 可用技能
 
-| 技能 | 描述 | 来源 |
+| 技能 | 描述 | 下载 |
 |------|------|------|
-| **swag2mcp-format** | 将所有 MCP 工具响应格式化为紧凑、易读的 Markdown 表格 | `swag2mcp-format/SKILL.md` |
-| **swag2mcp-cli** | 完整的 CLI 参考 — LLM 知道每个命令、标志和配置选项 | `swag2mcp-cli/SKILL.md` |
+| **swag2mcp-format** | 将所有 MCP 工具响应格式化为紧凑、易读的 Markdown 表格 | [SKILL.md](https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-format/SKILL.md) |
+| **swag2mcp-cli** | 完整的 CLI 参考 — LLM 知道每个命令、标志和配置选项 | [SKILL.md](https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-cli/SKILL.md) |
 
 ## 为什么技能很重要
 
@@ -44,7 +44,7 @@ curl -o .agents/skills/swag2mcp-cli/SKILL.md \
 
 ## 配置 LLM 客户端
 
-对于 OpenCode，将技能添加到 `opencode.json`：
+每个 LLM 客户端和 IDE 都有自己的技能安装方式。以下示例适用于 **OpenCode** — 请查看您的客户端文档以了解正确的方法。
 
 ```json
 {

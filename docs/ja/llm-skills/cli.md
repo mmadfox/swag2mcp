@@ -24,6 +24,10 @@
 
 さらに、すべてのフラグ、設定ファイル構造、認証方法、高度なオプション。
 
+## 直接リンク
+
+<https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-cli/SKILL.md>
+
 ## LLMエージェント経由でインストール
 
 次のリクエストをAI搭載IDEにコピーしてください：

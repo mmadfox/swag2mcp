@@ -16,6 +16,10 @@ Todas las herramientas MCP de swag2mcp:
 - `auth` — información de autenticación
 - `info` — información de ejecución
 
+## Enlace directo
+
+<https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-format/SKILL.md>
+
 ## Instalación a través del agente LLM
 
 Copie esta solicitud en su IDE con IA:

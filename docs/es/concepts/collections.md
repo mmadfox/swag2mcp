@@ -51,7 +51,7 @@ El directorio `specs/` dentro del espacio de trabajo (`~/.swag2mcp/specs/`) es e
 
 ```bash
 # Importar un archivo de especificación al espacio de trabajo
-swag2mcp import https://example.com/api.yaml myspec
+swag2mcp import https://example.com/api.yaml myspec.yaml
 
 # Después de la importación, la ubicación se convierte en:
 # specs/myspec.yaml
@@ -170,13 +170,6 @@ cat collection.yaml | swag2mcp add collection --yaml -
 
 # Mostrar ejemplo YAML
 swag2mcp add collection --example
-```
-
-### Mediante Importación
-
-```bash
-# Importar un archivo de especificación al espacio de trabajo
-swag2mcp import https://example.com/api.yaml
 ```
 
 ## Instrucción LLM

@@ -4,10 +4,10 @@
 
 ## 사용 가능한 스킬
 
-| 스킬 | 설명 | 소스 |
-|------|------|------|
-| **swag2mcp-format** | 모든 MCP 도구 응답을 간결하고 읽기 쉬운 Markdown 테이블로 포맷 | `swag2mcp-format/SKILL.md` |
-| **swag2mcp-cli** | 전체 CLI 참조 — LLM이 모든 명령, 플래그 및 설정 옵션을 정확히 파악 | `swag2mcp-cli/SKILL.md` |
+| 스킬 | 설명 | 다운로드 |
+|------|------|----------|
+| **swag2mcp-format** | 모든 MCP 도구 응답을 간결하고 읽기 쉬운 Markdown 테이블로 포맷 | [SKILL.md](https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-format/SKILL.md) |
+| **swag2mcp-cli** | 전체 CLI 참조 — LLM이 모든 명령, 플래그 및 설정 옵션을 정확히 파악 | [SKILL.md](https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-cli/SKILL.md) |
 
 ## 스킬이 중요한 이유
 
@@ -44,7 +44,7 @@ curl -o .agents/skills/swag2mcp-cli/SKILL.md \
 
 ## LLM 클라이언트 구성
 
-OpenCode의 경우 `opencode.json`에 스킬을 추가하세요:
+각 LLM 클라이언트 및 IDE마다 스킬 설치 방법이 다릅니다. 아래 예시는 **OpenCode**용입니다 — 클라이언트 문서에서 올바른 방법을 확인하세요.
 
 ```json
 {

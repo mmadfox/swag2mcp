@@ -51,7 +51,7 @@ The `specs/` directory inside the workspace (`~/.swag2mcp/specs/`) is the recomm
 
 ```bash
 # Import a spec file into the workspace
-swag2mcp import https://example.com/api.yaml myspec
+swag2mcp import https://example.com/api.yaml myspec.yaml
 
 # After import, the location becomes:
 # specs/myspec.yaml
@@ -170,13 +170,6 @@ cat collection.yaml | swag2mcp add collection --yaml -
 
 # Show YAML example
 swag2mcp add collection --example
-```
-
-### Via Import
-
-```bash
-# Import a spec file into the workspace
-swag2mcp import https://example.com/api.yaml
 ```
 
 ## LLM Instruction

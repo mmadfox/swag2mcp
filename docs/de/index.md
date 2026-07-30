@@ -3,7 +3,7 @@
 Verbindet OpenAPI/Swagger/Postman-API-Spezifikationen mit LLM-Agenten über das Model Context Protocol (MCP).
 
 <a href="https://www.youtube.com/watch?v=1Da4UmE2f9U" target="_blank">
-  <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/docs/cover.png" alt="Vorschau">
+  <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/docs/cover.jpg" alt="Vorschau">
 </a>
 
 ## Ihre API spricht LLM

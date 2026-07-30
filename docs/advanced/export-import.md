@@ -53,8 +53,8 @@ The ZIP must be created by `swag2mcp export` — arbitrary ZIP files will not wo
 Download a spec file and add it to the workspace:
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
+swag2mcp import https://example.com/spec.yaml myspec.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
 ```
 
 ### Bulk import from existing config

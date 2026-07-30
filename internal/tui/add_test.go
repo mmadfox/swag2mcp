@@ -6,10 +6,13 @@ package tui
 // included in the /LICENSE file.
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/mmadfox/swag2mcp/internal/config"
 )
 
 func TestAddSpecFromYAML(t *testing.T) {
@@ -257,5 +260,96 @@ func TestAddCollectionFromYAML_AtomicWriteError(t *testing.T) {
 
 	if err := AddCollectionFromYAML(cfgPath, yamlData); err == nil {
 		t.Error("AddCollectionFromYAML() expected error for read-only dir, got nil")
+	}
+}
+
+func TestAddSpecTUI_DuplicateDomain(t *testing.T) {
+	tmpDir := t.TempDir()
+	cfgPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+
+	initialData := []byte("specs:\n  - domain: dup\n    llm_title: Original API\n    base_url: https://original.example.com\n    collections:\n      - llm_title: Main\n        location: https://example.com/spec.yaml\n")
+	if err := os.WriteFile(cfgPath, initialData, 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	// AtomicWriteConfig callback should detect duplicate domain
+	err := AtomicWriteConfig(cfgPath, func(cfg *config.Config) error {
+		domainMap := make(map[string]struct{}, len(cfg.Specs))
+		for _, sp := range cfg.Specs {
+			domainMap[sp.Domain] = struct{}{}
+		}
+		if _, ok := domainMap["dup"]; ok {
+			return fmt.Errorf("spec with domain %q already exists", "dup")
+		}
+		return nil
+	})
+	if err == nil {
+		t.Fatal("expected error for duplicate domain")
+	}
+	if !strings.Contains(err.Error(), "already exists") {
+		t.Errorf("expected 'already exists' error, got: %v", err)
+	}
+}
+
+func TestAddCollectionTUI_DuplicateLocation(t *testing.T) {
+	tmpDir := t.TempDir()
+	cfgPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+
+	initialData := []byte("specs:\n  - domain: test-api\n    llm_title: Test API\n    base_url: https://example.com\n    collections:\n      - llm_title: Existing\n        location: https://example.com/existing.yaml\n")
+	if err := os.WriteFile(cfgPath, initialData, 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	// AtomicWriteConfig callback should detect duplicate location via map
+	err := AtomicWriteConfig(cfgPath, func(cfg *config.Config) error {
+		specMap := make(map[string]int, len(cfg.Specs))
+		for i, sp := range cfg.Specs {
+			specMap[sp.Domain] = i
+		}
+		idx, ok := specMap["test-api"]
+		if !ok {
+			return fmt.Errorf("spec with domain %q not found", "test-api")
+		}
+		locMap := make(map[string]struct{}, len(cfg.Specs[idx].Collections))
+		for _, c := range cfg.Specs[idx].Collections {
+			locMap[c.Location] = struct{}{}
+		}
+		if _, ok := locMap["https://example.com/existing.yaml"]; ok {
+			return fmt.Errorf("collection with location %q already exists in spec %q", "https://example.com/existing.yaml", "test-api")
+		}
+		return nil
+	})
+	if err == nil {
+		t.Fatal("expected error for duplicate location")
+	}
+	if !strings.Contains(err.Error(), "already exists") {
+		t.Errorf("expected 'already exists' error, got: %v", err)
+	}
+}
+
+func TestAddCollectionTUI_SpecNotFound(t *testing.T) {
+	tmpDir := t.TempDir()
+	cfgPath := filepath.Join(tmpDir, "swag2mcp.yaml")
+
+	initialData := []byte("specs:\n  - domain: existing\n    llm_title: Existing API\n    base_url: https://example.com\n    collections:\n      - llm_title: Main\n        location: https://example.com/spec.yaml\n")
+	if err := os.WriteFile(cfgPath, initialData, 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	err := AtomicWriteConfig(cfgPath, func(cfg *config.Config) error {
+		specMap := make(map[string]int, len(cfg.Specs))
+		for i, sp := range cfg.Specs {
+			specMap[sp.Domain] = i
+		}
+		if _, ok := specMap["nonexistent"]; !ok {
+			return fmt.Errorf("spec with domain %q not found", "nonexistent")
+		}
+		return nil
+	})
+	if err == nil {
+		t.Fatal("expected error for nonexistent spec")
+	}
+	if !strings.Contains(err.Error(), "not found") {
+		t.Errorf("expected 'not found' error, got: %v", err)
 	}
 }

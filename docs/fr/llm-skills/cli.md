@@ -24,6 +24,10 @@ Les 13 commandes CLI :
 
 Plus tous les drapeaux, la structure du fichier de configuration, les méthodes d'authentification et les options avancées.
 
+## Lien direct
+
+<https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-cli/SKILL.md>
+
 ## Installation via un agent LLM
 
 Copiez cette demande dans votre IDE alimenté par l'IA :

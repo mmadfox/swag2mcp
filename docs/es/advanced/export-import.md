@@ -56,8 +56,8 @@ El ZIP debe ser creado por `swag2mcp export` — los archivos ZIP arbitrarios no
 Descargue un archivo de especificación y agréguelo al espacio de trabajo:
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
+swag2mcp import https://example.com/spec.yaml myspec.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
 ```
 
 ### Importación masiva desde configuración existente

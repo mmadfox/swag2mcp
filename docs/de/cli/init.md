@@ -48,6 +48,8 @@ swag2mcp init /absoluter/pfad
 
 ### Interaktiver Modus (`-i`)
 
+> Nicht für den regelmäßigen Gebrauch empfohlen. Dieser Modus ist für Benutzer gedacht, die mit YAML nicht vertraut sind. Das direkte Schreiben der Konfigurationsdatei ist schneller und zuverlässiger.
+
 Startet einen 18-schrittigen TUI-Assistenten, der Sie durch Folgendes führt:
 
 1. Auswahl des Arbeitsbereichsverzeichnisses

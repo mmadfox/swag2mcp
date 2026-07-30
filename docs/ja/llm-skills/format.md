@@ -16,6 +16,10 @@
 - `auth` — 認証情報
 - `info` — 実行時情報
 
+## 直接リンク
+
+<https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-format/SKILL.md>
+
 ## LLMエージェント経由でインストール
 
 次のリクエストをAI搭載IDEにコピーしてください：

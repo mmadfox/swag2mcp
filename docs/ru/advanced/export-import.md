@@ -56,8 +56,8 @@ ZIP должен быть создан командой `swag2mcp export` — п
 Скачайте файл спецификации и добавьте его в рабочую область:
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
+swag2mcp import https://example.com/spec.yaml myspec.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
 ```
 
 ### Пакетный импорт из существующего конфига

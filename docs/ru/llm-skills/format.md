@@ -16,6 +16,10 @@
 - `auth` — информация об аутентификации
 - `info` — информация о рантайме
 
+## Прямая ссылка
+
+<https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-format/SKILL.md>
+
 ## Установка через LLM-агента
 
 Скопируйте этот запрос в вашу IDE с ИИ:

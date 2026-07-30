@@ -3,7 +3,7 @@
 OpenAPI/Swagger/Postman API 명세를 Model Context Protocol(MCP)을 통해 LLM 에이전트와 연결합니다.
 
 <a href="https://www.youtube.com/watch?v=1Da4UmE2f9U" target="_blank">
-  <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/docs/cover.png" alt="Preview">
+  <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/docs/cover.jpg" alt="Preview">
 </a>
 
 ## 당신의 API가 LLM과 대화합니다

@@ -172,13 +172,6 @@ cat collection.yaml | swag2mcp add collection --yaml -
 swag2mcp add collection --example
 ```
 
-### Via l'importation
-
-```bash
-# Importer un fichier de spécification dans l'espace de travail
-swag2mcp import https://example.com/api.yaml
-```
-
 ## Instruction LLM
 
 Les collections peuvent avoir leur propre `llm_instruction` (jusqu'à 360 caractères) pour des conseils plus spécifiques. Ceci est injecté dans l'invite système swag2mcp en plus de l'instruction au niveau de la spec.

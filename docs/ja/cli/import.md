@@ -39,9 +39,9 @@ swag2mcp import [path] [source] [name] [flags]
 spec ファイルをダウンロードし、ドメイン名を付けてワークスペースに追加します：
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
-swag2mcp import ./local-spec.yaml myspec
+swag2mcp import https://example.com/spec.yaml myspec.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
+swag2mcp import ./local-spec.yaml myspec.yaml
 ```
 
 spec ファイルは `specs/` に保存され、設定が新しい spec エントリで更新されます。

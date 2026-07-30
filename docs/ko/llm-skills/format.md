@@ -16,6 +16,10 @@
 - `auth` — 인증 정보
 - `info` — 런타임 정보
 
+## 직접 링크
+
+<https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-format/SKILL.md>
+
 ## LLM 에이전트를 통한 설치
 
 다음 요청을 AI 기반 IDE에 복사하세요:

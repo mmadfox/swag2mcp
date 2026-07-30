@@ -7,10 +7,6 @@ Der MCP-Server ist der Hauptinteraktionspunkt für LLM-Agenten. Er stellt alle k
 ```yaml
 mcp:
   transport: stdio
-  addr: ":8080"
-  path: "/mcp"
-  auth:
-    token: ""
 ```
 
 ## Transports

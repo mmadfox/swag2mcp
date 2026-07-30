@@ -24,6 +24,10 @@ All 13 CLI commands:
 
 Plus all flags, config file structure, auth methods, and advanced options.
 
+## Direct link
+
+<https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-cli/SKILL.md>
+
 ## Install via LLM agent
 
 Copy this request to your AI-powered IDE:
