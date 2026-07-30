@@ -1,10 +1,10 @@
+/*
+ * SPDX-FileCopyrightText: © 2025-2026 Sergey "mmadfox" Liskonog
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Package ratelimit provides a per-endpoint rate limiter for API invoke operations.
 package ratelimit
-
-// SPDX-License-Identifier: AGPL-3.0-only
-//
-// Use of this software is governed by the AGPL v3 license
-// included in the /LICENSE file.
 
 import (
 	"fmt"

@@ -34,10 +34,6 @@ OpenAPI/Swagger/Postman API 명세를 Model Context Protocol(MCP)을 통해 LLM 
 
 ## 라이선스
 
-**GNU Affero General Public License v3.0**(AGPL v3)에 따라 라이선스가 부여됩니다.
+**Apache License, Version 2.0**에 따라 라이선스가 부여됩니다.
 
 전체 라이선스 텍스트는 [LICENSE](https://github.com/mmadfox/swag2mcp/blob/main/LICENSE)를 참조하세요.
-
-```
-SPDX-License-Identifier: AGPL-3.0-only
-```

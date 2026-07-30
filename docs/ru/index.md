@@ -34,10 +34,6 @@
 
 ## Лицензия
 
-Распространяется под лицензией **GNU Affero General Public License v3.0** (AGPL v3).
+Распространяется под лицензией **Apache License, Version 2.0**.
 
 Полный текст лицензии: [LICENSE](https://github.com/mmadfox/swag2mcp/blob/main/LICENSE).
-
-```
-SPDX-License-Identifier: AGPL-3.0-only
-```

@@ -34,10 +34,6 @@ Jedes Mal, wenn Sie eine neue API mit einem LLM verbinden, schreiben Sie denselb
 
 ## Lizenz
 
-Lizenziert unter der **GNU Affero General Public License v3.0** (AGPL v3).
+Lizenziert unter der **Apache License, Version 2.0**.
 
 Siehe [LICENSE](https://github.com/mmadfox/swag2mcp/blob/main/LICENSE) für den vollständigen Lizenztext.
-
-```
-SPDX-License-Identifier: AGPL-3.0-only
-```

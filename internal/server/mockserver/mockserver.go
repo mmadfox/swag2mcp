@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: © 2025-2026 Sergey "mmadfox" Liskonog
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Package mockserver provides mock HTTP servers for API specifications and
 // authentication methods defined in the swag2mcp configuration.
 //
@@ -13,11 +18,6 @@
 // Addresses for mock servers are taken from the base_mock_url field in the
 // configuration (spec or collection level). The format is "host:port".
 package mockserver
-
-// SPDX-License-Identifier: AGPL-3.0-only
-//
-// Use of this software is governed by the AGPL v3 license
-// included in the /LICENSE file.
 
 import (
 	"context"
