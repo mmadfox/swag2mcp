@@ -82,4 +82,4 @@ if [ "$INSTALL_DIR" = "$HOME/.local/bin" ]; then
   echo "    sudo mv $INSTALL_DIR/swag2mcp /usr/local/bin/"
 fi
 
-echo "Run 'swag2mcp --version' to verify."
+echo "Run 'hash -r' or open a new terminal, then 'swag2mcp --version' to verify."
