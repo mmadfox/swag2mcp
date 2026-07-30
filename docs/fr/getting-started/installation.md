@@ -347,6 +347,32 @@ go build -o swag2mcp.exe ./cmd/swag2mcp
 swag2mcp --version
 ```
 
+### Docker
+
+Montez `~/.swag2mcp` (ou votre chemin personnalisé) vers `/home/nonroot/.swag2mcp`. L'entrypoint ajuste automatiquement les permissions des fichiers pour que le conteneur puisse lire votre espace de travail.
+
+```powershell
+docker pull ghcr.io/mmadfox/swag2mcp:latest
+```
+
+Run with stdio transport:
+
+```powershell
+docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest mcp
+```
+
+Run with HTTP transport:
+
+```powershell
+docker run --rm -p 8080:8080 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest mcp --transport sse --http-addr :8080
+```
+
+Verify:
+
+```powershell
+docker run --rm -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest --version
+```
+
 ---
 
 > Besoin du serveur mock ? Voir [Installer le serveur mock](install-mock.md).

@@ -347,6 +347,32 @@ go build -o swag2mcp.exe ./cmd/swag2mcp
 swag2mcp --version
 ```
 
+### Docker
+
+`~/.swag2mcp`(또는 사용자 정의 경로)를 `/home/nonroot/.swag2mcp`에 마운트하세요. 엔트리포인트가 자동으로 파일 권한을 조정하여 컨테이너가 작업 공간을 읽을 수 있도록 합니다.
+
+```powershell
+docker pull ghcr.io/mmadfox/swag2mcp:latest
+```
+
+Run with stdio transport:
+
+```powershell
+docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest mcp
+```
+
+Run with HTTP transport:
+
+```powershell
+docker run --rm -p 8080:8080 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest mcp --transport sse --http-addr :8080
+```
+
+Verify:
+
+```powershell
+docker run --rm -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest --version
+```
+
 ---
 
 > 모크 서버가 필요하신가요? [Mock Server 설치](install-mock.md)를 참조하세요.
