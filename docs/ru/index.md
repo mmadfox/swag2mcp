@@ -3,7 +3,7 @@
 Объединяет спецификации OpenAPI/Swagger/Postman с LLM-агентами через протокол MCP.
 
 <a href="https://www.youtube.com/watch?v=1Da4UmE2f9U" target="_blank">
-  <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/docs/cover.png" alt="Превью">
+  <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/docs/cover.jpg" alt="Превью">
 </a>
 
 ## Ваше API говорит на языке LLM

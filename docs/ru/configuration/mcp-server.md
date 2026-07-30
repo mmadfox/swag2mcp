@@ -7,10 +7,6 @@ MCP-сервер — это основная точка взаимодейств
 ```yaml
 mcp:
   transport: stdio
-  addr: ":8080"
-  path: "/mcp"
-  auth:
-    token: ""
 ```
 
 ## Транспорты

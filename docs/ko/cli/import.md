@@ -39,9 +39,9 @@ swag2mcp import [path] [source] [name] [flags]
 명세 파일을 다운로드하여 도메인 이름으로 워크스페이스에 추가:
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
-swag2mcp import ./local-spec.yaml myspec
+swag2mcp import https://example.com/spec.yaml myspec.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
+swag2mcp import ./local-spec.yaml myspec.yaml
 ```
 
 명세 파일은 `specs/`에 저장되고 설정이 새 spec 항목으로 업데이트됩니다.

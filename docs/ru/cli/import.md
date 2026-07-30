@@ -39,9 +39,9 @@ swag2mcp import [path] [source] [name] [flags]
 Загрузить файл спецификации и добавить его в рабочую область с именем домена:
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
-swag2mcp import ./local-spec.yaml myspec
+swag2mcp import https://example.com/spec.yaml myspec.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
+swag2mcp import ./local-spec.yaml myspec.yaml
 ```
 
 Файл спецификации сохраняется в `specs/`, а конфиг обновляется новой записью спецификации.

@@ -48,6 +48,8 @@ swag2mcp init /chemin/absolu
 
 ### Mode interactif (`-i`)
 
+> Non recommandé pour une utilisation régulière. Ce mode est destiné aux utilisateurs qui ne connaissent pas YAML. Écrire le fichier de configuration directement est plus rapide et plus fiable.
+
 Lance un assistant TUI en 18 étapes qui vous guide à travers :
 
 1. Le choix du répertoire de l'espace de travail

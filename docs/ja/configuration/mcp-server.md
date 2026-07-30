@@ -7,10 +7,6 @@ MCP サーバーは LLM エージェントの主要な対話ポイントです�
 ```yaml
 mcp:
   transport: stdio
-  addr: ":8080"
-  path: "/mcp"
-  auth:
-    token: ""
 ```
 
 ## トランスポート

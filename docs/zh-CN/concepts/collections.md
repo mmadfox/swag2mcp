@@ -51,7 +51,7 @@ swag2mcp 自动检测来源类型：
 
 ```bash
 # 将规范文件导入工作区
-swag2mcp import https://example.com/api.yaml myspec
+swag2mcp import https://example.com/api.yaml myspec.yaml
 
 # 导入后，location 变为：
 # specs/myspec.yaml
@@ -170,13 +170,6 @@ cat collection.yaml | swag2mcp add collection --yaml -
 
 # 显示 YAML 示例
 swag2mcp add collection --example
-```
-
-### 通过导入
-
-```bash
-# 将规范文件导入工作区
-swag2mcp import https://example.com/api.yaml
 ```
 
 ## LLM 指令

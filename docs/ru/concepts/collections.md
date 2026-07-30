@@ -51,7 +51,7 @@ swag2mcp автоматически определяет тип источник
 
 ```bash
 # Импорт файла спецификации в рабочую область
-swag2mcp import https://example.com/api.yaml myspec
+swag2mcp import https://example.com/api.yaml myspec.yaml
 
 # После импорта location становится:
 # specs/myspec.yaml
@@ -170,13 +170,6 @@ cat collection.yaml | swag2mcp add collection --yaml -
 
 # Показать YAML-пример
 swag2mcp add collection --example
-```
-
-### Через импорт
-
-```bash
-# Импорт файла спецификации в рабочую область
-swag2mcp import https://example.com/api.yaml
 ```
 
 ## LLM Instruction

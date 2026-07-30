@@ -7,10 +7,6 @@ Le serveur MCP est le principal point d'interaction pour les agents LLM. Il expo
 ```yaml
 mcp:
   transport: stdio
-  addr: ":8080"
-  path: "/mcp"
-  auth:
-    token: ""
 ```
 
 ## Transports

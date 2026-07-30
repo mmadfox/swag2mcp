@@ -7,10 +7,6 @@ MCP 서버는 LLM 에이전트의 주요 상호 작용 지점입니다. 설정�
 ```yaml
 mcp:
   transport: stdio
-  addr: ":8080"
-  path: "/mcp"
-  auth:
-    token: ""
 ```
 
 ## 전송 방식

@@ -53,8 +53,8 @@ Das ZIP muss von `swag2mcp export` erstellt worden sein — beliebige ZIP-Dateie
 Laden Sie eine Spezifikationsdatei herunter und fügen Sie sie zum Arbeitsbereich hinzu:
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /pfad/zu/arbeitsbereich https://example.com/spec.yaml myspec
+swag2mcp import https://example.com/spec.yaml myspec.yaml
+swag2mcp import /pfad/zu/arbeitsbereich https://example.com/spec.yaml myspec.yaml
 ```
 
 ### Massenimport aus bestehender Konfiguration

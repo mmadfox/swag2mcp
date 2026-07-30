@@ -53,8 +53,8 @@ ZIP 必须由 `swag2mcp export` 创建 — 任意 ZIP 文件将无法工作。
 下载规范文件并添加到工作区：
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
+swag2mcp import https://example.com/spec.yaml myspec.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
 ```
 
 ### 从现有配置批量导入

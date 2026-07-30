@@ -56,8 +56,8 @@ ZIP은 `swag2mcp export`로 생성된 것이어야 합니다 — 임의의 ZIP �
 명세 파일을 다운로드하여 워크스페이스에 추가:
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
+swag2mcp import https://example.com/spec.yaml myspec.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
 ```
 
 ### 기존 설정에서 대량 가져오기

@@ -7,10 +7,6 @@ MCP 服务器是 LLM 智能体的主要交互点。它将所有配置的 API 作
 ```yaml
 mcp:
   transport: stdio
-  addr: ":8080"
-  path: "/mcp"
-  auth:
-    token: ""
 ```
 
 ## 传输方式

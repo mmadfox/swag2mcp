@@ -4,10 +4,10 @@ Skills sind Markdown-Dateien, die Ihrem LLM-Agenten beibringen, effektiver mit s
 
 ## Verfügbare Skills
 
-| Skill | Beschreibung | Quelle |
-|-------|-------------|--------|
-| **swag2mcp-format** | Formatiert MCP-Tool-Antworten in kompakte, lesbare Markdown-Tabellen | `swag2mcp-format/SKILL.md` |
-| **swag2mcp-cli** | Vollständige CLI-Referenz — der LLM kennt jeden Befehl, jedes Flag und jede Konfigurationsoption | `swag2mcp-cli/SKILL.md` |
+| Skill | Beschreibung | Download |
+|-------|-------------|----------|
+| **swag2mcp-format** | Formatiert MCP-Tool-Antworten in kompakte, lesbare Markdown-Tabellen | [SKILL.md](https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-format/SKILL.md) |
+| **swag2mcp-cli** | Vollständige CLI-Referenz — der LLM kennt jeden Befehl, jedes Flag und jede Konfigurationsoption | [SKILL.md](https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-cli/SKILL.md) |
 
 ## Warum Skills wichtig sind
 
@@ -44,7 +44,7 @@ curl -o .agents/skills/swag2mcp-cli/SKILL.md \
 
 ## LLM-Client konfigurieren
 
-Für OpenCode fügen Sie die Skills in `opencode.json` hinzu:
+Jeder LLM-Client und jede IDE hat seine eigene Methode zur Installation von Skills. Das folgende Beispiel ist für **OpenCode** — lesen Sie in der Dokumentation Ihres Clients nach, wie Skills korrekt installiert werden.
 
 ```json
 {

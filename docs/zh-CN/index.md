@@ -3,7 +3,7 @@
 通过模型上下文协议（MCP）将 OpenAPI/Swagger/Postman API 规范与 LLM 智能体连接起来。
 
 <a href="https://www.youtube.com/watch?v=1Da4UmE2f9U" target="_blank">
-  <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/docs/cover.png" alt="预览">
+  <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/docs/cover.jpg" alt="预览">
 </a>
 
 ## 你的 API 会说 LLM 语言

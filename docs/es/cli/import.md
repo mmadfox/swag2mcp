@@ -39,9 +39,9 @@ swag2mcp import [path] [source] [name] [flags]
 Descargue un archivo de especificación y agréguelo al espacio de trabajo con un nombre de dominio:
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
-swag2mcp import ./local-spec.yaml myspec
+swag2mcp import https://example.com/spec.yaml myspec.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
+swag2mcp import ./local-spec.yaml myspec.yaml
 ```
 
 El archivo de especificación se guarda en `specs/` y la configuración se actualiza con la nueva entrada de especificación.

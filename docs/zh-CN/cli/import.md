@@ -39,9 +39,9 @@ swag2mcp import [path] [source] [name] [flags]
 下载规范文件并添加域名到工作区：
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
-swag2mcp import ./local-spec.yaml myspec
+swag2mcp import https://example.com/spec.yaml myspec.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
+swag2mcp import ./local-spec.yaml myspec.yaml
 ```
 
 规范文件保存到 `specs/`，配置更新为新的 spec 条目。

@@ -4,10 +4,10 @@ Skills — это markdown-файлы, которые обучают вашег�
 
 ## Доступные скиллы
 
-| Скилл | Описание | Источник |
-|-------|----------|----------|
-| **swag2mcp-format** | Форматирует ответы MCP-инструментов в компактные человекочитаемые markdown-таблицы | `swag2mcp-format/SKILL.md` |
-| **swag2mcp-cli** | Полный CLI-справочник — LLM знает каждую команду, флаг и опцию конфига | `swag2mcp-cli/SKILL.md` |
+| Скилл | Описание | Скачать |
+|-------|----------|---------|
+| **swag2mcp-format** | Форматирует ответы MCP-инструментов в компактные человекочитаемые markdown-таблицы | [SKILL.md](https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-format/SKILL.md) |
+| **swag2mcp-cli** | Полный CLI-справочник — LLM знает каждую команду, флаг и опцию конфига | [SKILL.md](https://raw.githubusercontent.com/mmadfox/swag2mcp/main/.agents/skills/swag2mcp-cli/SKILL.md) |
 
 ## Зачем нужны скиллы
 
@@ -43,6 +43,8 @@ curl -o .agents/skills/swag2mcp-cli/SKILL.md \
 ```
 
 ## Настройка LLM-клиента
+
+У каждого LLM-клиента и IDE свой способ установки скиллов. Пример ниже для **OpenCode** — обратитесь к документации вашего клиента для правильного метода.
 
 Для OpenCode добавьте скиллы в `opencode.json`:
 

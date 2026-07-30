@@ -39,9 +39,9 @@ swag2mcp import [path] [source] [name] [flags]
 Download a spec file and add it to the workspace with a domain name:
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
-swag2mcp import ./local-spec.yaml myspec
+swag2mcp import https://example.com/spec.yaml myspec.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
+swag2mcp import ./local-spec.yaml myspec.yaml
 ```
 
 The spec file is saved to `specs/` and the config is updated with the new spec entry.

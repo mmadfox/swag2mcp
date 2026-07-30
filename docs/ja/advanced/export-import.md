@@ -53,8 +53,8 @@ ZIP は `swag2mcp export` で作成されたものである必要があります
 spec ファイルをダウンロードしてワークスペースに追加します：
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
+swag2mcp import https://example.com/spec.yaml myspec.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
 ```
 
 ### 既存の設定からの一括インポート

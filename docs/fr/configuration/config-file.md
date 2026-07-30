@@ -44,10 +44,6 @@ http_client:
 # ── Serveur MCP ──────────────────────────────────────────
 mcp:
   transport: stdio
-  addr: ":8080"
-  path: "/mcp"
-  auth:
-    token: ""
 
 # ── Serveur de simulation ───────────────────────────────
 mock_enabled: false
