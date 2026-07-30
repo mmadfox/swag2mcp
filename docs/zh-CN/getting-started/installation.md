@@ -347,6 +347,32 @@ go build -o swag2mcp.exe ./cmd/swag2mcp
 swag2mcp --version
 ```
 
+### Docker
+
+将 `~/.swag2mcp`（或您的自定义路径）挂载到 `/home/nonroot/.swag2mcp`。入口点会自动调整文件权限，使容器能够读取您的工作区。
+
+```powershell
+docker pull ghcr.io/mmadfox/swag2mcp:latest
+```
+
+Run with stdio transport:
+
+```powershell
+docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest mcp
+```
+
+Run with HTTP transport:
+
+```powershell
+docker run --rm -p 8080:8080 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest mcp --transport sse --http-addr :8080
+```
+
+Verify:
+
+```powershell
+docker run --rm -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest --version
+```
+
 ---
 
 > 需要 mock 服务器？请查看[安装 Mock Server](install-mock.md)。

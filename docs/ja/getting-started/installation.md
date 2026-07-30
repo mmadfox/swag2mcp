@@ -347,6 +347,32 @@ go build -o swag2mcp.exe ./cmd/swag2mcp
 swag2mcp --version
 ```
 
+### Docker
+
+`~/.swag2mcp`（またはカスタムパス）を `/home/nonroot/.swag2mcp` にマウントしてください。エントリポイントが自動的にファイル権限を調整し、コンテナがワークスペースを読み取れるようにします。
+
+```powershell
+docker pull ghcr.io/mmadfox/swag2mcp:latest
+```
+
+Run with stdio transport:
+
+```powershell
+docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest mcp
+```
+
+Run with HTTP transport:
+
+```powershell
+docker run --rm -p 8080:8080 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest mcp --transport sse --http-addr :8080
+```
+
+Verify:
+
+```powershell
+docker run --rm -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest --version
+```
+
 ---
 
 > モックサーバーが必要ですか？[Mock Server のインストール](install-mock.md) を参照してください。

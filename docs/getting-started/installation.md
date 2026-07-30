@@ -347,6 +347,33 @@ Verify:
 swag2mcp --version
 ```
 
+### Docker
+
+Mount `~/.swag2mcp` (or your custom workspace path) to `/home/nonroot/.swag2mcp`.
+The entrypoint automatically adjusts file permissions so the container can read your workspace.
+
+```powershell
+docker pull ghcr.io/mmadfox/swag2mcp:latest
+```
+
+Run with stdio transport:
+
+```powershell
+docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest mcp
+```
+
+Run with HTTP transport:
+
+```powershell
+docker run --rm -p 8080:8080 -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest mcp --transport sse --http-addr :8080
+```
+
+Verify:
+
+```powershell
+docker run --rm -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest --version
+```
+
 ---
 
 > Need the mock server? See [Install Mock Server](install-mock.md).
