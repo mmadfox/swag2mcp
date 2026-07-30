@@ -34,12 +34,9 @@ const (
 //go:embed banner
 var bannerUnicode string
 
-//go:embed banner-ascii
-var bannerASCII string
-
 func banner() string {
 	if runtime.GOOS == "windows" {
-		return bannerASCII
+		return "  +--------------------------------------------+\n  |                  swag2mcp                  |\n  +--------------------------------------------+\n"
 	}
 	return bannerUnicode
 }
