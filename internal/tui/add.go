@@ -6,7 +6,6 @@ package tui
 // included in the /LICENSE file.
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -144,7 +143,7 @@ func AddSpecTUI(configPath string) error {
 	fmt.Println()
 
 	fmt.Print("  Write changes? (y/n) > ")
-	answer, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+	answer, _ := stdinReader.ReadString('\n')
 	answer = strings.TrimSpace(strings.ToLower(answer))
 	if answer != "y" && answer != "yes" {
 		fmt.Println("  Cancelled.")
@@ -230,7 +229,7 @@ func AddCollectionTUI(configPath string) error {
 	fmt.Println()
 
 	fmt.Print("  Write changes? (y/n) > ")
-	answer, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+	answer, _ := stdinReader.ReadString('\n')
 	answer = strings.TrimSpace(strings.ToLower(answer))
 	if answer != "y" && answer != "yes" {
 		fmt.Println("  Cancelled.")

@@ -256,6 +256,34 @@ func TestExtractPathFromURLString_InvalidURL(t *testing.T) {
 	assert.Equal(t, "http://[invalid]", path)
 }
 
+func TestExtractPathFromURLString_PostmanVar(t *testing.T) {
+	t.Parallel()
+
+	path := extractPathFromURLString("{{baseUrl}}/character")
+	assert.Equal(t, "/character", path)
+}
+
+func TestExtractPathFromURLString_PostmanVarOnly(t *testing.T) {
+	t.Parallel()
+
+	path := extractPathFromURLString("{{baseUrl}}")
+	assert.Equal(t, "/", path)
+}
+
+func TestExtractPathFromURLString_PostmanVarWithPath(t *testing.T) {
+	t.Parallel()
+
+	path := extractPathFromURLString("{{baseUrl}}/api/v1/users/:id")
+	assert.Equal(t, "/api/v1/users/{id}", path)
+}
+
+func TestExtractPathFromURLString_MultiplePostmanVars(t *testing.T) {
+	t.Parallel()
+
+	path := extractPathFromURLString("{{baseUrl}}/api/{{version}}/users")
+	assert.Equal(t, "/api/users", path)
+}
+
 func TestExtractPostmanPath_NilURL(t *testing.T) {
 	t.Parallel()
 

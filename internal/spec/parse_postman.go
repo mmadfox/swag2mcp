@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 )
 
@@ -24,6 +25,11 @@ const (
 	bodyModeRaw       = "raw"
 	graphQLQueryField = "query"
 )
+
+// postmanVarRe matches Postman variable placeholders like {{baseUrl}}.
+//
+//nolint:gochecknoglobals // compiled once for performance
+var postmanVarRe = regexp.MustCompile(`\{\{[^}]+\}\}`)
 
 type postmanCollection struct {
 	Info postmanInfo   `json:"info"`
@@ -238,6 +244,18 @@ func buildStructuredPath(path []json.RawMessage) string {
 
 // extractPathFromURLString extracts the path portion from a URL string, converting :param to {param}.
 func extractPathFromURLString(rawURL string) string {
+	rawURL = postmanVarRe.ReplaceAllString(rawURL, "")
+	rawURL = strings.TrimSpace(rawURL)
+	if rawURL == "" {
+		return "/"
+	}
+	if strings.HasPrefix(rawURL, "/") {
+		parsed, err := url.Parse("http://localhost" + rawURL)
+		if err != nil {
+			return rawURL
+		}
+		return convertColonParams(parsed.Path)
+	}
 	if !strings.Contains(rawURL, "://") {
 		rawURL = "http://" + rawURL
 	}
@@ -249,14 +267,26 @@ func extractPathFromURLString(rawURL string) string {
 	if path == "" {
 		return "/"
 	}
-	// Convert Postman :param syntax to {param}
+	return convertColonParams(path)
+}
+
+// convertColonParams converts Postman :param syntax to {param} and cleans double slashes.
+func convertColonParams(path string) string {
 	segments := strings.Split(path, "/")
-	for i, seg := range segments {
-		if strings.HasPrefix(seg, ":") {
-			segments[i] = "{" + seg[1:] + "}"
+	var cleaned []string
+	for _, seg := range segments {
+		if seg == "" {
+			continue
 		}
+		if strings.HasPrefix(seg, ":") {
+			seg = "{" + seg[1:] + "}"
+		}
+		cleaned = append(cleaned, seg)
 	}
-	return strings.Join(segments, "/")
+	if len(cleaned) == 0 {
+		return "/"
+	}
+	return "/" + strings.Join(cleaned, "/")
 }
 
 // appendPostmanURLParams extracts path variables and query parameters from a Postman URL.

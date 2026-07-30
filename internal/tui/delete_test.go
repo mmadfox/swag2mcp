@@ -24,6 +24,9 @@ func withStdinPipe(t *testing.T, input string) {
 	os.Stdin = r                              //nolint:reassign // test helper temporarily replaces os.Stdin to mock user input
 	t.Cleanup(func() { os.Stdin = oldStdin }) //nolint:reassign // restore original stdin
 
+	stdinReader.Reset(r)
+	t.Cleanup(func() { stdinReader.Reset(os.Stdin) })
+
 	w.WriteString(input)
 	w.Close()
 }

@@ -7,6 +7,7 @@ package tui
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"math/rand/v2"
@@ -28,6 +29,38 @@ const (
 	maxSearchLimit = 50
 	actionHint     = "  Enter number and press Enter.  [B]ack  [M]enu.\n"
 )
+
+//go:embed banner
+var bannerASCII string
+
+func pageTitle(state runState) string {
+	switch state {
+	case runMenu:
+		return "Menu"
+	case runSearchQuery:
+		return "Search"
+	case runSearchResults:
+		return "Search results"
+	case runBrowseSpecs:
+		return "Specifications"
+	case runBrowseCollections:
+		return "Collections"
+	case runBrowseTags:
+		return "Tags"
+	case runBrowseEndpoints:
+		return "Endpoints"
+	case runEndpointDetail:
+		return "Endpoint details"
+	case runAuthSpecs:
+		return "Auth — select spec"
+	case runAuthConfirm:
+		return "Auth — confirm"
+	case runAuthResult:
+		return "Auth — result"
+	default:
+		return ""
+	}
+}
 
 // ExplorerService defines the subset of service methods needed by the TUI explorer.
 type ExplorerService interface {
@@ -582,9 +615,8 @@ func (m runModel) showEndpoint() (tea.Model, tea.Cmd) {
 func (m runModel) View() string {
 	var s string
 
-	s += "\n  ╭──────────────────────────────────────────────╮\n"
-	s += "  │              swag2mcp — Explorer              │\n"
-	s += "  ╰──────────────────────────────────────────────╯\n\n"
+	s += bannerASCII
+	s += fmt.Sprintf("\n  Explorer / %s\n\n", pageTitle(m.state))
 
 	if m.err != nil {
 		s += fmt.Sprintf("  Error: %s\n\n", m.err)
