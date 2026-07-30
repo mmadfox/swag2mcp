@@ -6,7 +6,9 @@ package tui
 // included in the /LICENSE file.
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/mmadfox/swag2mcp/internal/config"
@@ -14,9 +16,10 @@ import (
 
 func promptSelection(label string, maxVal int) (int, error) {
 	fmt.Printf("  Select %s [1-%d] > ", label, maxVal)
+	line, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+	line = strings.TrimSpace(line)
 	var idx int
-	fmt.Scanln(&idx)
-	if idx < 1 || idx > maxVal {
+	if _, err := fmt.Sscan(line, &idx); err != nil || idx < 1 || idx > maxVal {
 		return 0, fmt.Errorf("invalid number")
 	}
 	return idx, nil
@@ -24,9 +27,8 @@ func promptSelection(label string, maxVal int) (int, error) {
 
 func confirmAction(prompt string) bool {
 	fmt.Printf("  %s (y/n) > ", prompt)
-	var answer string
-	fmt.Scanln(&answer)
-	answer = strings.TrimSpace(strings.ToLower(answer))
+	line, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+	answer := strings.TrimSpace(strings.ToLower(line))
 	return answer == "y" || answer == "yes"
 }
 
