@@ -1,9 +1,9 @@
-package swag2mcp
+/*
+ * SPDX-FileCopyrightText: © 2025-2026 Sergey "mmadfox" Liskonog
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-// SPDX-License-Identifier: AGPL-3.0-only
-//
-// Use of this software is governed by the AGPL v3 license
-// included in the /LICENSE file.
+package swag2mcp
 
 //go:generate go install go.uber.org/mock/mockgen@latest
 

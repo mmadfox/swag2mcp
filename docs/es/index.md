@@ -34,10 +34,6 @@ Cada vez que conecta una nueva API a un LLM, escribe el mismo código repetitivo
 
 ## Licencia
 
-Licenciado bajo la **GNU Affero General Public License v3.0** (AGPL v3).
+Licenciado bajo la **Apache License, Version 2.0**.
 
 Consulte [LICENSE](https://github.com/mmadfox/swag2mcp/blob/main/LICENSE) para el texto completo de la licencia.
-
-```
-SPDX-License-Identifier: AGPL-3.0-only
-```

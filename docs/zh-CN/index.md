@@ -34,10 +34,6 @@
 
 ## 许可证
 
-基于 **GNU Affero General Public License v3.0**（AGPL v3）许可。
+基于 **Apache License, Version 2.0** 许可。
 
 完整许可文本请参见 [LICENSE](https://github.com/mmadfox/swag2mcp/blob/main/LICENSE)。
-
-```
-SPDX-License-Identifier: AGPL-3.0-only
-```

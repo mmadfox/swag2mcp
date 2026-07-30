@@ -1,14 +1,14 @@
+/*
+ * SPDX-FileCopyrightText: © 2025-2026 Sergey "mmadfox" Liskonog
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Package workspace manages the workspace directory layout for swag2mcp.
 //
 // The workspace is the root directory (default ~/.swag2mcp) that contains
 // subdirectories for cached remote specs, local spec files, invocation
 // responses, and authentication scripts.
 package workspace
-
-// SPDX-License-Identifier: AGPL-3.0-only
-//
-// Use of this software is governed by the AGPL v3 license
-// included in the /LICENSE file.
 
 import "time"
 

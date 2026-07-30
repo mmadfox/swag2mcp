@@ -34,10 +34,6 @@ OpenAPI/Swagger/Postman の API 仕様を、Model Context Protocol (MCP) を介�
 
 ## ライセンス
 
-**GNU Affero General Public License v3.0** (AGPL v3) の下でライセンスされています。
+**Apache License, Version 2.0** の下でライセンスされています。
 
 全文は [LICENSE](https://github.com/mmadfox/swag2mcp/blob/main/LICENSE) をご覧ください。
-
-```
-SPDX-License-Identifier: AGPL-3.0-only
-```

@@ -34,10 +34,6 @@ Every time you connect a new API to an LLM, you write the same boilerplate: spec
 
 ## License
 
-Licensed under the **GNU Affero General Public License v3.0** (AGPL v3).
+Licensed under the **Apache License, Version 2.0**.
 
 See [LICENSE](https://github.com/mmadfox/swag2mcp/blob/main/LICENSE) for the full license text.
-
-```
-SPDX-License-Identifier: AGPL-3.0-only
-```
