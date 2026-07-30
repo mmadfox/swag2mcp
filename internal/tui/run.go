@@ -13,6 +13,7 @@ import (
 	"math/rand/v2"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -31,7 +32,17 @@ const (
 )
 
 //go:embed banner
+var bannerUnicode string
+
+//go:embed banner-ascii
 var bannerASCII string
+
+func banner() string {
+	if runtime.GOOS == "windows" {
+		return bannerASCII
+	}
+	return bannerUnicode
+}
 
 func pageTitle(state runState) string {
 	switch state {
@@ -615,7 +626,7 @@ func (m runModel) showEndpoint() (tea.Model, tea.Cmd) {
 func (m runModel) View() string {
 	var s string
 
-	s += bannerASCII
+	s += banner()
 	s += fmt.Sprintf("\n  Explorer / %s\n\n", pageTitle(m.state))
 
 	if m.err != nil {

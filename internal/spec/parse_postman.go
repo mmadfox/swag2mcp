@@ -27,8 +27,6 @@ const (
 )
 
 // postmanVarRe matches Postman variable placeholders like {{baseUrl}}.
-//
-//nolint:gochecknoglobals // compiled once for performance
 var postmanVarRe = regexp.MustCompile(`\{\{[^}]+\}\}`)
 
 type postmanCollection struct {
