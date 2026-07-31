@@ -19,6 +19,10 @@
 
 ---
 
+<p style="font-size:1.2em;font-weight:bold">🎬 <a href="https://swag2mcp.io/concepts/example" target="_blank" rel="noopener noreferrer">Live session</a></p>
+
+---
+
 ## Quick Start
 
 ### Install

@@ -59,6 +59,7 @@ export default defineConfig({
               { text: 'Tags', link: '/concepts/tags' },
               { text: 'Endpoints', link: '/concepts/endpoints' },
               { text: 'Workspace', link: '/concepts/workspace' },
+              { text: 'Example', link: '/concepts/example' },
             ],
           },
           {
