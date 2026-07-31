@@ -112,15 +112,15 @@ The token is cached in memory until it expires. On each API call, swag2mcp check
 
 #### Stub Creation
 
-When you configure `auth: { type: script, config: { domain: "myapi" } }`, swag2mcp creates a stub script automatically:
+When you configure `auth: { type: script, config: { domain: "jokes" } }`, swag2mcp creates a stub script automatically:
 
-**Unix (`auth_scripts/myapi.sh`):**
+**Unix (`auth_scripts/jokes.sh`):**
 ```bash
 #!/bin/sh
 echo '{"token": "your-token-here", "expires_in": 3600}'
 ```
 
-**Windows (`auth_scripts/myapi.bat`):**
+**Windows (`auth_scripts/jokes.bat`):**
 ```bat
 @echo off
 echo {"token": "your-token-here", "expires_in": 3600}

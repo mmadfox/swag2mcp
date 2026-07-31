@@ -27,7 +27,7 @@ const (
 // or {workspaceDir}/auth_scripts/{domain}.bat (Windows).
 // The script must output a JSON object: {"token": "...", "expires_in": N}.
 type ScriptAuthClient struct {
-	Domain string `yaml:"domain" validate:"required,script_domain_format"`
+	Domain string `yaml:"domain" validate:"required"`
 
 	mu           sync.Mutex
 	token        string

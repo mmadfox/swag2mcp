@@ -268,3 +268,33 @@ func newGetRequest(tb testing.TB) *http.Request {
 	}
 	return req
 }
+
+func TestScriptAuthClient_DomainValidation(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		domain  string
+		wantErr bool
+	}{
+		{"valid domain", "jokes", false},
+		{"valid with hyphens", "my-api", false},
+		{"valid with underscores", "my_api", false},
+		{"valid with digits", "api123", false},
+		{"invalid with slash", "my/domain", true},
+		{"invalid with backslash", "my\\domain", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			client := &ScriptAuthClient{Domain: tt.domain}
+			err := client.New()
+			if tt.wantErr {
+				require.Error(t, err, "expected error for domain %q", tt.domain)
+			} else {
+				require.NoError(t, err, "unexpected error for domain %q", tt.domain)
+			}
+		})
+	}
+}

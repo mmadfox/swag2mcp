@@ -452,6 +452,7 @@ ZIP 文件不是由 `swag2mcp export` 创建的。
 - TUI 使用 Bubbletea，适用于大多数现代终端
 - 尝试调整终端窗口大小
 - 尝试不同的终端模拟器
+- **Windows PowerShell 5.1：** TUI 可能会在新行上显示输入字段。请使用 **Windows Terminal** 或 **VS Code 终端** — 它们能正确处理 raw 模式。
 
 ### TUI 显示 "no specs found"
 

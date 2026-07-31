@@ -452,6 +452,7 @@ Le terminal est trop petit ou ne prend pas en charge les fonctionnalités requis
 - La TUI utilise Bubbletea et fonctionne dans la plupart des terminaux modernes
 - Essayez de redimensionner votre fenêtre de terminal
 - Essayez un émulateur de terminal différent
+- **Windows PowerShell 5.1 :** La TUI peut afficher les champs de saisie sur une nouvelle ligne. Utilisez **Windows Terminal** ou le **terminal VS Code** — ils gèrent correctement le mode raw.
 
 ### La TUI affiche « aucune spec trouvée »
 

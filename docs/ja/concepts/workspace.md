@@ -112,15 +112,15 @@ collection が `location: specs/{name}` を介して指すローカル spec フ�
 
 #### スタブの作成
 
-`auth: { type: script, config: { domain: "myapi" } }` を設定すると、swag2mcp は自動的にスタブスクリプトを作成します：
+`auth: { type: script, config: { domain: "jokes" } }` を設定すると、swag2mcp は自動的にスタブスクリプトを作成します：
 
-**Unix（`auth_scripts/myapi.sh`）:**
+**Unix（`auth_scripts/jokes.sh`）:**
 ```bash
 #!/bin/sh
 echo '{"token": "your-token-here", "expires_in": 3600}'
 ```
 
-**Windows（`auth_scripts/myapi.bat`）:**
+**Windows（`auth_scripts/jokes.bat`）:**
 ```bat
 @echo off
 echo {"token": "your-token-here", "expires_in": 3600}

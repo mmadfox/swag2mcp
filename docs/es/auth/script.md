@@ -2,7 +2,11 @@
 
 ## Propósito
 
-Autenticación a través de un script externo — el método más flexible. Puede escribir un script en cualquier lenguaje (bash, Python, etc.) que obtenga un token como desee y lo devuelva a swag2mcp.
+Autenticación mediante un script externo. swag2mcp admite dos tipos de scripts:
+- **`.sh`** — scripts de shell en Linux y macOS
+- **`.bat`** — scripts por lotes en Windows
+
+El script debe colocarse en el directorio `auth_scripts` de su espacio de trabajo y generar un token JSON en stdout.
 
 ## Cuándo usarlo
 
@@ -23,14 +27,14 @@ specs:
     auth:
       type: script
       config:
-        domain: "my-auth"
+        domain: "jokes"
 ```
 
 ## Parámetros
 
 | Parámetro | Requerido | Descripción |
 |-----------|-----------|-------------|
-| `domain` | Sí | Nombre del archivo de script (sin extensión) |
+| `domain` | Sí | Nombre del archivo de script (sin extensión). Debe coincidir con el `domain` de la spec — p. ej. si `domain: jokes`, el archivo debe ser `jokes.sh` (Unix) o `jokes.bat` (Windows). |
 
 ## Ubicación del script
 
@@ -45,7 +49,7 @@ El script debe generar JSON en stdout con el token y su tiempo de expiración:
 
 ```bash
 #!/bin/bash
-# auth_scripts/my-auth.sh
+# auth_scripts/jokes.sh
 
 TOKEN=$(curl -s -X POST https://auth.example.com/token \
   -d "grant_type=client_credentials" \

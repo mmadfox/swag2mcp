@@ -2,7 +2,11 @@
 
 ## 목적
 
-외부 스크립트를 통한 인증 — 가장 유연한 방법입니다. 원하는 방식으로 토큰을 획득하여 swag2mcp에 반환하는 스크립트를 모든 언어(bash, Python 등)로 작성할 수 있습니다.
+외부 스크립트를 통한 인증. swag2mcp는 두 가지 스크립트 유형을 지원합니다:
+- **`.sh`** — Linux 및 macOS의 셸 스크립트
+- **`.bat`** — Windows의 배치 스크립트
+
+스크립트는 작업 공간의 `auth_scripts` 디렉토리에 배치되어야 하며 JSON 토큰을 stdout에 출력해야 합니다.
 
 ## 사용 시기
 
@@ -23,14 +27,14 @@ specs:
     auth:
       type: script
       config:
-        domain: "my-auth"
+        domain: "jokes"
 ```
 
 ## 매개변수
 
 | 매개변수 | 필수 | 설명 |
 |---------|------|------|
-| `domain` | 예 | 스크립트 파일 이름 (확장자 제외) |
+| `domain` | 예 | 스크립트 파일 이름 (확장자 제외). spec의 `domain`과 일치해야 합니다 — 예: `domain: jokes`인 경우 스크립트 파일은 `jokes.sh`(Unix) 또는 `jokes.bat`(Windows)여야 합니다. |
 
 ## 스크립트 위치
 
@@ -45,7 +49,7 @@ specs:
 
 ```bash
 #!/bin/bash
-# auth_scripts/my-auth.sh
+# auth_scripts/jokes.sh
 
 TOKEN=$(curl -s -X POST https://auth.example.com/token \
   -d "grant_type=client_credentials" \

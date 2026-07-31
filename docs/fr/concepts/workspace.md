@@ -112,15 +112,15 @@ Le jeton est mis en cache en mémoire jusqu'à son expiration. À chaque appel A
 
 #### Création de stub
 
-Lorsque vous configurez `auth: { type: script, config: { domain: "monapi" } }`, swag2mcp crée un script stub automatiquement :
+Lorsque vous configurez `auth: { type: script, config: { domain: "jokes" } }`, swag2mcp crée un script stub automatiquement :
 
-**Unix (`auth_scripts/monapi.sh`) :**
+**Unix (`auth_scripts/jokes.sh`) :**
 ```bash
 #!/bin/sh
 echo '{"token": "votre-jeton-ici", "expires_in": 3600}'
 ```
 
-**Windows (`auth_scripts/monapi.bat`) :**
+**Windows (`auth_scripts/jokes.bat`) :**
 ```bat
 @echo off
 echo {"token": "votre-jeton-ici", "expires_in": 3600}

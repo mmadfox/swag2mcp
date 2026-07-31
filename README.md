@@ -19,3 +19,31 @@
 
 ---
 
+## Quick Start
+
+### Install
+
+**macOS / Linux (one-liner):**
+```bash
+curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
+```
+
+**Windows (Scoop):**
+```powershell
+scoop bucket add mmadfox https://github.com/mmadfox/scoop-bucket
+scoop install mmadfox/swag2mcp
+```
+
+**All platforms (go install):**
+```bash
+go install github.com/mmadfox/swag2mcp/cmd/swag2mcp@latest
+```
+
+**All platforms (Docker):**
+```bash
+docker pull ghcr.io/mmadfox/swag2mcp:latest
+docker run --rm -i -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:latest mcp
+```
+
+> For detailed installation instructions, see [Installation](https://mmadfox.github.io/swag2mcp/getting-started/installation).
+

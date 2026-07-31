@@ -6,6 +6,7 @@
 package tui
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"encoding/json"
@@ -627,7 +628,18 @@ func (m runModel) View() string {
 	s += fmt.Sprintf("\n  Explorer / %s\n\n", pageTitle(m.state))
 
 	if m.err != nil {
-		s += fmt.Sprintf("  Error: %s\n\n", m.err)
+		errMsg := m.err.Error()
+		if json.Valid([]byte(errMsg)) {
+			var buf bytes.Buffer
+			if err := json.Indent(&buf, []byte(errMsg), "", "  "); err == nil {
+				lines := strings.Split(buf.String(), "\n")
+				for i, line := range lines {
+					lines[i] = "  " + line
+				}
+				errMsg = strings.Join(lines, "\n")
+			}
+		}
+		s += fmt.Sprintf("  Error:\n%s\n\n", errMsg)
 	}
 
 	switch m.state {
