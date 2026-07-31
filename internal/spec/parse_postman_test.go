@@ -629,3 +629,76 @@ func TestAppendPostmanURLParams_WithQuery(t *testing.T) {
 	assert.Equal(t, "limit", op.Parameters[0].Name)
 	assert.Equal(t, "query", op.Parameters[0].In)
 }
+
+func TestPostmanItemToPathItem_WithResponseExample(t *testing.T) {
+	t.Parallel()
+
+	item := postmanItem{
+		Name: "Get all characters",
+		Request: &postmanRequest{
+			Method: "GET",
+			URL:    json.RawMessage(`"http://example.com/character"`),
+		},
+		Response: []postmanResponse{
+			{
+				Name:   "Get all characters",
+				Status: "OK",
+				Code:   200,
+				Body:   `{"info":{"count":1},"results":[{"id":1,"name":"Rick"}]}`,
+			},
+		},
+	}
+
+	pi := postmanItemToPathItem(item, nil)
+	require.NotNil(t, pi)
+	require.NotNil(t, pi.Operation)
+	require.NotNil(t, pi.Operation.Responses["200"])
+	require.NotNil(t, pi.Operation.Responses["200"].Example)
+
+	example, ok := pi.Operation.Responses["200"].Example.(map[string]any)
+	require.True(t, ok, "expected map example")
+	assert.Contains(t, example, "info")
+	assert.Contains(t, example, "results")
+}
+
+func TestPostmanItemToPathItem_WithInvalidResponseBody(t *testing.T) {
+	t.Parallel()
+
+	item := postmanItem{
+		Name: "Get error",
+		Request: &postmanRequest{
+			Method: "GET",
+			URL:    json.RawMessage(`"http://example.com/error"`),
+		},
+		Response: []postmanResponse{
+			{
+				Name:   "Error",
+				Status: "OK",
+				Code:   200,
+				Body:   "not-json",
+			},
+		},
+	}
+
+	pi := postmanItemToPathItem(item, nil)
+	require.NotNil(t, pi)
+	require.NotNil(t, pi.Operation.Responses["200"])
+	assert.Nil(t, pi.Operation.Responses["200"].Example, "expected nil for invalid JSON")
+}
+
+func TestPostmanItemToPathItem_WithoutResponse(t *testing.T) {
+	t.Parallel()
+
+	item := postmanItem{
+		Name: "No response",
+		Request: &postmanRequest{
+			Method: "GET",
+			URL:    json.RawMessage(`"http://example.com/noresp"`),
+		},
+	}
+
+	pi := postmanItemToPathItem(item, nil)
+	require.NotNil(t, pi)
+	require.NotNil(t, pi.Operation.Responses["200"])
+	assert.Nil(t, pi.Operation.Responses["200"].Example, "expected nil when no response")
+}

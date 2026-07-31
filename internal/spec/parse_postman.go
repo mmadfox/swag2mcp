@@ -40,10 +40,19 @@ type postmanInfo struct {
 }
 
 type postmanItem struct {
-	Name        string          `json:"name"`
-	Description json.RawMessage `json:"description"`
-	Request     *postmanRequest `json:"request,omitempty"`
-	Item        []postmanItem   `json:"item,omitempty"`
+	Name        string            `json:"name"`
+	Description json.RawMessage   `json:"description"`
+	Request     *postmanRequest   `json:"request,omitempty"`
+	Response    []postmanResponse `json:"response,omitempty"`
+	Item        []postmanItem     `json:"item,omitempty"`
+}
+
+type postmanResponse struct {
+	Name   string          `json:"name"`
+	Status string          `json:"status"`
+	Code   int             `json:"code"`
+	Body   string          `json:"body"`
+	Header []postmanHeader `json:"header,omitempty"`
 }
 
 type postmanRequest struct {
@@ -176,9 +185,21 @@ func postmanItemToPathItem(item postmanItem, folderNames []string) *PathItem {
 	appendPostmanBody(req.Body, op, method)
 
 	// Default response
-	op.Responses["200"] = &Response{
+	resp := &Response{
 		Description: "OK",
 	}
+
+	if len(item.Response) > 0 {
+		first := item.Response[0]
+		if first.Body != "" {
+			var example any
+			if err := json.Unmarshal([]byte(first.Body), &example); err == nil {
+				resp.Example = example
+			}
+		}
+	}
+
+	op.Responses["200"] = resp
 
 	return &PathItem{
 		Path:      apiPath,

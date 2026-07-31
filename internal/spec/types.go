@@ -66,6 +66,7 @@ type RequestBody struct {
 type Response struct {
 	Description string                `json:"description,omitempty"`
 	Content     map[string]*MediaType `json:"content,omitempty"`
+	Example     any                   `json:"example,omitempty"`
 }
 
 // MediaType represents a media type with an associated schema.

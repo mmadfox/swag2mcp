@@ -618,13 +618,19 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{baseUrl}}/location/3",
+									"raw": "{{baseUrl}}/location/:id",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
 										"location",
-										"3"
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "3"
+										}
 									]
 								}
 							},
@@ -635,13 +641,19 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{baseUrl}}/location/3",
+											"raw": "{{baseUrl}}/location/:id",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
 												"location",
-												"3"
+												":id"
+											],
+											"variable": [
+												{
+													"key": "id",
+													"value": "3"
+												}
 											]
 										}
 									},
@@ -1044,13 +1056,19 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{baseUrl}}/episode/28",
+									"raw": "{{baseUrl}}/episode/:id",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
 										"episode",
-										"28"
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "28"
+										}
 									]
 								}
 							},
@@ -1061,13 +1079,19 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{baseUrl}}/episode/28",
+											"raw": "{{baseUrl}}/episode/:id",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
 												"episode",
-												"28"
+												":id"
+											],
+											"variable": [
+												{
+													"key": "id",
+													"value": "28"
+												}
 											]
 										}
 									},
