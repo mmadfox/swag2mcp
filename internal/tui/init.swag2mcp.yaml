@@ -7,6 +7,7 @@ rate_limit_interval: 1s
 mock_enabled: false 
 
 http_client:
+  max_response_size: 30000
   user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
   headers:
     Accept: application/json
@@ -155,7 +156,7 @@ specs:
       type: bearer
       config:
         # demo token
-        token: "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"
+        token: "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"
     collections:
       - llm_title: GitHub Repositories
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/github/rest-api.yaml

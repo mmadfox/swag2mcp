@@ -452,6 +452,7 @@ The terminal is too small or doesn't support the required features.
 - The TUI uses Bubbletea and works in most modern terminals
 - Try resizing your terminal window
 - Try a different terminal emulator
+- **Windows PowerShell 5.1:** The TUI may display input fields on a new line. Use **Windows Terminal** or **VS Code terminal** instead — they handle raw mode correctly.
 
 ### TUI shows "no specs found"
 

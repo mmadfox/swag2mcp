@@ -112,15 +112,15 @@ swag2mcp mcp ./my-workspace
 
 #### 存根创建
 
-当你配置 `auth: { type: script, config: { domain: "myapi" } }` 时，swag2mcp 会自动创建存根脚本：
+当你配置 `auth: { type: script, config: { domain: "jokes" } }` 时，swag2mcp 会自动创建存根脚本：
 
-**Unix（`auth_scripts/myapi.sh`）：**
+**Unix（`auth_scripts/jokes.sh`）：**
 ```bash
 #!/bin/sh
 echo '{"token": "your-token-here", "expires_in": 3600}'
 ```
 
-**Windows（`auth_scripts/myapi.bat`）：**
+**Windows（`auth_scripts/jokes.bat`）：**
 ```bat
 @echo off
 echo {"token": "your-token-here", "expires_in": 3600}

@@ -112,15 +112,15 @@ swag2mcp mcp ./my-workspace
 
 #### Создание заглушки
 
-Когда вы настраиваете `auth: { type: script, config: { domain: "myapi" } }`, swag2mcp автоматически создаёт скрипт-заглушку:
+Когда вы настраиваете `auth: { type: script, config: { domain: "jokes" } }`, swag2mcp автоматически создаёт скрипт-заглушку:
 
-**Unix (`auth_scripts/myapi.sh`):**
+**Unix (`auth_scripts/jokes.sh`):**
 ```bash
 #!/bin/sh
 echo '{"token": "ваш-токен-здесь", "expires_in": 3600}'
 ```
 
-**Windows (`auth_scripts/myapi.bat`):**
+**Windows (`auth_scripts/jokes.bat`):**
 ```bat
 @echo off
 echo {"token": "ваш-токен-здесь", "expires_in": 3600}

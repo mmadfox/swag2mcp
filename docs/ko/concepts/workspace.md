@@ -112,15 +112,15 @@ collection이 `location: specs/{name}`을 통해 가리키는 로컬 명세 파�
 
 #### 스텁 생성
 
-`auth: { type: script, config: { domain: "myapi" } }`를 설정하면 swag2mcp가 자동으로 스텁 스크립트를 생성합니다:
+`auth: { type: script, config: { domain: "jokes" } }`를 설정하면 swag2mcp가 자동으로 스텁 스크립트를 생성합니다:
 
-**Unix (`auth_scripts/myapi.sh`):**
+**Unix (`auth_scripts/jokes.sh`):**
 ```bash
 #!/bin/sh
 echo '{"token": "your-token-here", "expires_in": 3600}'
 ```
 
-**Windows (`auth_scripts/myapi.bat`):**
+**Windows (`auth_scripts/jokes.bat`):**
 ```bat
 @echo off
 echo {"token": "your-token-here", "expires_in": 3600}

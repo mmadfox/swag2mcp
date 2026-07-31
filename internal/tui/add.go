@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
@@ -122,6 +123,11 @@ func AddSpecTUI(configPath string) error {
 		return err
 	}
 
+	if runtime.GOOS == "windows" {
+		stdinReader.Discard(stdinReader.Buffered())
+		fmt.Print("\r\n")
+	}
+
 	fmt.Printf("\n  Review:\n")
 	fmt.Printf("  ────────\n")
 	fmt.Printf("  Spec: %s (%s)\n", spec.LLMTitle, spec.Domain)
@@ -215,6 +221,11 @@ func AddCollectionTUI(configPath string) error {
 	col, err := collectCollection(specIdx, len(spec.Collections)+1, spec.Domain)
 	if err != nil {
 		return err
+	}
+
+	if runtime.GOOS == "windows" {
+		stdinReader.Discard(stdinReader.Buffered())
+		fmt.Print("\r\n")
 	}
 
 	note := ""

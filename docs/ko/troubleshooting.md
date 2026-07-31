@@ -452,6 +452,7 @@ ZIP 파일이 `swag2mcp export`로 생성되지 않았습니다.
 - TUI는 Bubbletea를 사용하며 대부분의 최신 터미널에서 작동합니다
 - 터미널 창 크기를 조정해 보세요
 - 다른 터미널 에뮬레이터를 시도해 보세요
+- **Windows PowerShell 5.1:** TUI가 입력 필드를 새 줄에 표시할 수 있습니다. **Windows Terminal** 또는 **VS Code 터미널**을 사용하세요 — raw 모드를 올바르게 처리합니다.
 
 ### TUI에 "no specs found" 표시
 

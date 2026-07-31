@@ -1,8 +1,12 @@
 # Script Auth
 
-## 用途
+## 目的
 
-通过外部脚本进行认证 — 最灵活的方法。你可以用任何语言（bash、Python 等）编写脚本，以任何方式获取令牌并将其返回给 swag2mcp。
+通过外部脚本进行身份验证。swag2mcp 支持两种脚本类型：
+- **`.sh`** — Linux 和 macOS 上的 shell 脚本
+- **`.bat`** — Windows 上的批处理脚本
+
+脚本必须放置在工作区的 `auth_scripts` 目录中，并将 JSON 令牌输出到 stdout。
 
 ## 何时使用
 
@@ -23,14 +27,14 @@ specs:
     auth:
       type: script
       config:
-        domain: "my-auth"
+        domain: "jokes"
 ```
 
 ## 参数
 
 | 参数 | 必需 | 描述 |
 |------|------|------|
-| `domain` | 是 | 脚本文件名（不含扩展名） |
+| `domain` | 是 | 脚本文件名（不含扩展名）。必须与 spec 的 `domain` 匹配 — 例如，如果 `domain: jokes`，脚本文件必须是 `jokes.sh`（Unix）或 `jokes.bat`（Windows）。 |
 
 ## 脚本位置
 
@@ -45,7 +49,7 @@ specs:
 
 ```bash
 #!/bin/bash
-# auth_scripts/my-auth.sh
+# auth_scripts/jokes.sh
 
 TOKEN=$(curl -s -X POST https://auth.example.com/token \
   -d "grant_type=client_credentials" \

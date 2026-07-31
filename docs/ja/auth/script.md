@@ -2,7 +2,11 @@
 
 ## 目的
 
-外部スクリプトによる認証 — 最も柔軟な方法。任意の言語（bash、Python など）でスクリプトを記述し、好きな方法でトークンを取得して swag2mcp に返すことができます。
+外部スクリプトによる認証。swag2mcp は2つのスクリプトタイプをサポートしています：
+- **`.sh`** — Linux と macOS のシェルスクリプト
+- **`.bat`** — Windows のバッチスクリプト
+
+スクリプトはワークスペースの `auth_scripts` ディレクトリに配置し、JSONトークンをstdoutに出力する必要があります。
 
 ## 使用するタイミング
 
@@ -23,14 +27,14 @@ specs:
     auth:
       type: script
       config:
-        domain: "my-auth"
+        domain: "jokes"
 ```
 
 ## パラメーター
 
 | パラメーター | 必須 | 説明 |
 |-----------|------|------|
-| `domain` | はい | スクリプトファイル名（拡張子なし） |
+| `domain` | はい | スクリプトファイル名（拡張子なし）。spec の `domain` と一致する必要があります — 例：`domain: jokes` の場合、スクリプトファイルは `jokes.sh`（Unix）または `jokes.bat`（Windows）である必要があります。 |
 
 ## スクリプトの場所
 
@@ -45,7 +49,7 @@ specs:
 
 ```bash
 #!/bin/bash
-# auth_scripts/my-auth.sh
+# auth_scripts/jokes.sh
 
 TOKEN=$(curl -s -X POST https://auth.example.com/token \
   -d "grant_type=client_credentials" \

@@ -112,15 +112,15 @@ Das Token wird im Speicher zwischengespeichert, bis es abläuft. Bei jedem API-A
 
 #### Stub-Erstellung
 
-Wenn Sie `auth: { type: script, config: { domain: "myapi" } }` konfigurieren, erstellt swag2mcp automatisch ein Stub-Skript:
+Wenn Sie `auth: { type: script, config: { domain: "jokes" } }` konfigurieren, erstellt swag2mcp automatisch ein Stub-Skript:
 
-**Unix (`auth_scripts/myapi.sh`):**
+**Unix (`auth_scripts/jokes.sh`):**
 ```bash
 #!/bin/sh
 echo '{"token": "ihr-token-hier", "expires_in": 3600}'
 ```
 
-**Windows (`auth_scripts/myapi.bat`):**
+**Windows (`auth_scripts/jokes.bat`):**
 ```bat
 @echo off
 echo {"token": "ihr-token-hier", "expires_in": 3600}

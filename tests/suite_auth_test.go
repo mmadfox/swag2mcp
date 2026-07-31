@@ -10,6 +10,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -266,6 +268,44 @@ func (s *AuthSuite) TestHMAC() {
 	s.Equal("test-api-key", authResp.Headers["X-MBX-APIKEY"])
 	s.NotEmpty(authResp.QueryParams["signature"])
 	s.NotEmpty(authResp.QueryParams["timestamp"])
+}
+
+func (s *AuthSuite) TestScript() {
+	scriptDir := filepath.Join(s.Workspace, "auth_scripts")
+	s.Require().NoError(os.MkdirAll(scriptDir, 0750))
+	scriptPath := filepath.Join(scriptDir, "jokes.sh")
+	scriptContent := `#!/bin/sh
+echo '{"token": "script-token-789", "expires_in": 3600}'
+`
+	s.Require().NoError(os.WriteFile(scriptPath, []byte(scriptContent), 0700))
+
+	configContent := `specs:
+  - domain: jokes
+    llm_title: Dad Joke API
+    base_url: https://icanhazdadjoke.com
+    auth:
+      type: script
+      config:
+        domain: "jokes"
+    collections:
+      - title: Jokes
+        location: ./testdata/meteo.yaml
+`
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
+
+	specID := s.GetSpecID(client)
+	result := client.callTool(s.T(), "auth", map[string]interface{}{
+		"specId": specID,
+	})
+
+	var authResp struct {
+		Token   string            `json:"token"`
+		Headers map[string]string `json:"headers"`
+	}
+	s.Require().NoError(json.Unmarshal(result, &authResp))
+	s.Equal("Bearer script-token-789", authResp.Token)
+	s.Equal("Bearer script-token-789", authResp.Headers["Authorization"])
 }
 
 func TestAuthSuite(t *testing.T) {

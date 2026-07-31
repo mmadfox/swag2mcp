@@ -112,15 +112,15 @@ El token se almacena en caché en memoria hasta que expira. En cada llamada a la
 
 #### Creación de Plantillas
 
-Cuando configura `auth: { type: script, config: { domain: "myapi" } }`, swag2mcp crea un script de plantilla automáticamente:
+Cuando configura `auth: { type: script, config: { domain: "jokes" } }`, swag2mcp crea un script de plantilla automáticamente:
 
-**Unix (`auth_scripts/myapi.sh`):**
+**Unix (`auth_scripts/jokes.sh`):**
 ```bash
 #!/bin/sh
 echo '{"token": "your-token-here", "expires_in": 3600}'
 ```
 
-**Windows (`auth_scripts/myapi.bat`):**
+**Windows (`auth_scripts/jokes.bat`):**
 ```bat
 @echo off
 echo {"token": "your-token-here", "expires_in": 3600}

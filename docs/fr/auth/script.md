@@ -2,7 +2,11 @@
 
 ## Objectif
 
-Authentification via un script externe — la méthode la plus flexible. Vous pouvez écrire un script dans n'importe quel langage (bash, Python, etc.) qui obtient un jeton comme vous le souhaitez et le retourne à swag2mcp.
+Authentification via un script externe. swag2mcp prend en charge deux types de scripts :
+- **`.sh`** — scripts shell sur Linux et macOS
+- **`.bat`** — scripts batch sur Windows
+
+Le script doit être placé dans le répertoire `auth_scripts` de votre espace de travail et afficher un jeton JSON sur stdout.
 
 ## Quand l'utiliser
 
@@ -23,14 +27,14 @@ specs:
     auth:
       type: script
       config:
-        domain: "mon-auth"
+        domain: "jokes"
 ```
 
 ## Paramètres
 
 | Paramètre | Requis | Description |
 |-----------|--------|-------------|
-| `domain` | Oui | Nom du fichier de script (sans extension) |
+| `domain` | Oui | Nom du fichier de script (sans extension). Doit correspondre au `domain` de la spec — par ex. si `domain: jokes`, le fichier doit être `jokes.sh` (Unix) ou `jokes.bat` (Windows). |
 
 ## Emplacement du script
 
@@ -45,7 +49,7 @@ Le script doit produire du JSON sur stdout avec le jeton et son temps d'expirati
 
 ```bash
 #!/bin/bash
-# auth_scripts/mon-auth.sh
+# auth_scripts/jokes.sh
 
 JETON=$(curl -s -X POST https://auth.example.com/token \
   -d "grant_type=client_credentials" \
