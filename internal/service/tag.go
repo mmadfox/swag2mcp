@@ -7,7 +7,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"sort"
 )
 
@@ -26,43 +25,22 @@ func (ts *tagService) TagsByCollection(
 	rq TagsByCollectionRequest,
 ) (TagsByCollectionResponse, error) {
 	if err := ts.v.Struct(rq); err != nil {
-		return TagsByCollectionResponse{}, NewValidationError(
-			"The collection ID is invalid. It must be a 32-character hex string.",
-			err,
-		)
+		return TagsByCollectionResponse{}, NewInvalidCollectionIDError(err)
 	}
 
 	coll, err := ts.index.CollectionByID(rq.CollectionID)
 	if err != nil {
-		return TagsByCollectionResponse{}, NewNotFoundError(
-			fmt.Sprintf(
-				"Collection %q was not found. Use collection_by_spec to list collections.",
-				rq.CollectionID,
-			),
-			err,
-		)
+		return TagsByCollectionResponse{}, NewCollectionNotFoundError(rq.CollectionID, err)
 	}
 
 	sp, err := ts.index.SpecByID(coll.SpecID)
 	if err != nil {
-		return TagsByCollectionResponse{}, NewNotFoundError(
-			fmt.Sprintf(
-				"Spec %q was not found. The collection references a spec that no longer exists.",
-				coll.SpecID,
-			),
-			err,
-		)
+		return TagsByCollectionResponse{}, NewSpecNotFoundError(coll.SpecID, err)
 	}
 
 	tgs, err := ts.index.TagsByCollection(rq.CollectionID)
 	if err != nil {
-		return TagsByCollectionResponse{}, NewNotFoundError(
-			fmt.Sprintf(
-				"Collection %q was not found. Use collection_by_spec to list collections.",
-				rq.CollectionID,
-			),
-			err,
-		)
+		return TagsByCollectionResponse{}, NewCollectionNotFoundError(rq.CollectionID, err)
 	}
 
 	r := TagsByCollectionResponse{
@@ -98,21 +76,12 @@ func (ts *tagService) TagByID(
 	rq TagByIDRequest,
 ) (TagByIDResponse, error) {
 	if err := ts.v.Struct(rq); err != nil {
-		return TagByIDResponse{}, NewValidationError(
-			"The tag ID is invalid. It must be a 32-character hex string.",
-			err,
-		)
+		return TagByIDResponse{}, NewInvalidTagIDError(err)
 	}
 
 	tag, err := ts.index.TagByID(rq.ID)
 	if err != nil {
-		return TagByIDResponse{}, NewNotFoundError(
-			fmt.Sprintf(
-				"Tag %q was not found. Use tag_by_collection or tag_by_spec to list tags.",
-				rq.ID,
-			),
-			err,
-		)
+		return TagByIDResponse{}, NewTagNotFoundError(rq.ID, err)
 	}
 
 	r := TagByIDResponse{
@@ -132,22 +101,12 @@ func (ts *tagService) TagsBySpec(
 	rq TagsBySpecRequest,
 ) (TagsBySpecResponse, error) {
 	if err := ts.v.Struct(rq); err != nil {
-		return TagsBySpecResponse{}, NewValidationError(
-			"The spec ID is invalid. It must be a 32-character hex string. "+
-				"Use spec_list to find the correct spec ID.",
-			err,
-		)
+		return TagsBySpecResponse{}, NewInvalidSpecIDError(err)
 	}
 
 	tgs, err := ts.index.TagsBySpec(rq.SpecID)
 	if err != nil {
-		return TagsBySpecResponse{}, NewNotFoundError(
-			fmt.Sprintf(
-				"Spec %q was not found. Use spec_list to see all available specs.",
-				rq.SpecID,
-			),
-			err,
-		)
+		return TagsBySpecResponse{}, NewSpecNotFoundError(rq.SpecID, err)
 	}
 
 	r := TagsBySpecResponse{

@@ -8,7 +8,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sort"
 	"strings"
 
@@ -29,25 +28,15 @@ func newSearchService(index IndexReader, v RequestValidator) *searchService {
 // query string and returns up to the specified limit of matching results.
 func (ss *searchService) Search(ctx context.Context, rq SearchRequest) (SearchResponse, error) {
 	if err := ss.v.Struct(rq); err != nil {
-		return SearchResponse{}, NewValidationError(
-			"A search query is required and the limit must be between 1 and 50.",
-			err,
-		)
+		return SearchResponse{}, NewSearchQueryError(err)
 	}
 
 	eps, err := ss.index.Search(ctx, strings.ToLower(rq.Query), rq.Limit)
 	if err != nil {
 		if errors.Is(err, index.ErrInvalidQuery) {
-			return SearchResponse{}, NewValidationError(
-				"The search query format is invalid. "+
-					"Use simple text search (e.g. 'get pet') or field search (e.g. method:GET, tag:pets).",
-				err,
-			)
+			return SearchResponse{}, NewSearchQueryError(err)
 		}
-		return SearchResponse{}, NewNotFoundError(
-			"The search query did not match any endpoints. Try a different query.",
-			err,
-		)
+		return SearchResponse{}, NewSearchNoResultsError()
 	}
 
 	is, err := mapEndpointsToSearchItems(ss.index, eps)
@@ -80,33 +69,15 @@ func mapEndpointsToSearchItems(
 	for _, e := range eps {
 		sp, err := index.SpecByID(e.SpecID)
 		if err != nil {
-			return nil, NewNotFoundError(
-				fmt.Sprintf(
-					"Spec %q was not found. The endpoint references a spec that no longer exists.",
-					e.SpecID,
-				),
-				err,
-			)
+			return nil, NewSpecNotFoundError(e.SpecID, err)
 		}
 		coll, err := index.CollectionByID(e.CollectionID)
 		if err != nil {
-			return nil, NewNotFoundError(
-				fmt.Sprintf(
-					"Collection %q was not found. The endpoint references a collection that no longer exists.",
-					e.CollectionID,
-				),
-				err,
-			)
+			return nil, NewCollectionNotFoundError(e.CollectionID, err)
 		}
 		tag, err := index.TagByID(e.TagID)
 		if err != nil {
-			return nil, NewNotFoundError(
-				fmt.Sprintf(
-					"Tag %q was not found. The endpoint references a tag that no longer exists.",
-					e.TagID,
-				),
-				err,
-			)
+			return nil, NewTagNotFoundError(e.TagID, err)
 		}
 		items = append(items, EndpointSearchItem{
 			ID:              e.ID,

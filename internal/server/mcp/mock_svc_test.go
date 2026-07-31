@@ -412,6 +412,21 @@ func (mr *MockResponseManagerMockRecorder) ResponseCompress(ctx, req any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResponseCompress", reflect.TypeOf((*MockResponseManager)(nil).ResponseCompress), ctx, req)
 }
 
+// ResponseFilter mocks base method.
+func (m *MockResponseManager) ResponseFilter(ctx context.Context, req service.ResponseFilterRequest) (service.ResponseFilterResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResponseFilter", ctx, req)
+	ret0, _ := ret[0].(service.ResponseFilterResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ResponseFilter indicates an expected call of ResponseFilter.
+func (mr *MockResponseManagerMockRecorder) ResponseFilter(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResponseFilter", reflect.TypeOf((*MockResponseManager)(nil).ResponseFilter), ctx, req)
+}
+
 // ResponseOutline mocks base method.
 func (m *MockResponseManager) ResponseOutline(ctx context.Context, req service.ResponseOutlineRequest) (service.ResponseOutlineResponse, error) {
 	m.ctrl.T.Helper()
@@ -644,6 +659,21 @@ func (m *MockSvc) ResponseCompress(ctx context.Context, req service.ResponseComp
 func (mr *MockSvcMockRecorder) ResponseCompress(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResponseCompress", reflect.TypeOf((*MockSvc)(nil).ResponseCompress), ctx, req)
+}
+
+// ResponseFilter mocks base method.
+func (m *MockSvc) ResponseFilter(ctx context.Context, req service.ResponseFilterRequest) (service.ResponseFilterResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResponseFilter", ctx, req)
+	ret0, _ := ret[0].(service.ResponseFilterResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ResponseFilter indicates an expected call of ResponseFilter.
+func (mr *MockSvcMockRecorder) ResponseFilter(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResponseFilter", reflect.TypeOf((*MockSvc)(nil).ResponseFilter), ctx, req)
 }
 
 // ResponseOutline mocks base method.

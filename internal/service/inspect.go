@@ -7,7 +7,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"strings"
 )
 
@@ -28,34 +27,21 @@ func (is *inspectService) Inspect(
 	rq InspectRequest,
 ) (InspectResponse, error) {
 	if err := is.v.Struct(rq); err != nil {
-		return InspectResponse{}, NewValidationError(
-			"The endpoint ID is invalid. It must be a 32-character hex string. "+
-				"Use the search tool to find the correct endpoint ID.",
-			err,
-		)
+		return InspectResponse{}, NewInvalidEndpointIDError(err)
 	}
 
 	e, err := is.index.EndpointByID(rq.EndpointID)
 	if err != nil {
-		return InspectResponse{}, NewNotFoundError(
-			fmt.Sprintf("Endpoint %q was not found. Use the search tool to find the correct endpoint ID.", rq.EndpointID),
-			err,
-		)
+		return InspectResponse{}, NewEndpointNotFoundError(rq.EndpointID, err)
 	}
 
 	sp, err := is.index.SpecByID(e.SpecID)
 	if err != nil {
-		return InspectResponse{}, NewNotFoundError(
-			fmt.Sprintf("Spec %q was not found. The endpoint references a spec that no longer exists.", e.SpecID),
-			err,
-		)
+		return InspectResponse{}, NewSpecNotFoundError(e.SpecID, err)
 	}
 	coll, err := is.index.CollectionByID(e.CollectionID)
 	if err != nil {
-		return InspectResponse{}, NewNotFoundError(
-			fmt.Sprintf("Collection %q was not found. The endpoint references a collection that no longer exists.", e.CollectionID),
-			err,
-		)
+		return InspectResponse{}, NewCollectionNotFoundError(e.CollectionID, err)
 	}
 	baseURL := sp.BaseURL
 	if len(coll.BaseURL) > 0 {

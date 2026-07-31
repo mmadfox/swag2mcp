@@ -340,6 +340,10 @@ func registerTools(mcpServer *sdkmcp.Server, tools []service.Tool, h handler) {
 			addTool[service.ResponseSliceRequest](mcpServer, h.handleResponseSlice),
 			true,
 		},
+		service.ResponseFilter: {
+			addTool[service.ResponseFilterRequest](mcpServer, h.handleResponseFilter),
+			true,
+		},
 	}
 
 	for _, deftool := range tools {

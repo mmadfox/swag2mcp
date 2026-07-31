@@ -45,7 +45,7 @@ func newInvokeResponse(response *http.Response, body []byte) InvokeResponse {
 }
 
 // resolveMaxResponseSize returns the effective max response size.
-// Default is 1 MB, maximum is 10 MB.
+// Default is 1 MB, minimum is 10 KB, maximum is 10 MB.
 func resolveMaxResponseSize(size *int) int {
 	if size == nil {
 		return config.DefaultMaxResponseSize
@@ -55,6 +55,9 @@ func resolveMaxResponseSize(size *int) int {
 	}
 	if *size <= 0 {
 		return config.DefaultMaxResponseSize
+	}
+	if *size < config.MinResponseSize {
+		return config.MinResponseSize
 	}
 	return *size
 }

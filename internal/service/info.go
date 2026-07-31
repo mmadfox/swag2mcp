@@ -16,10 +16,9 @@ import (
 )
 
 const (
-	defaultMCPTransport = "stdio"
-	devVersion          = "dev"
-	mbInBytes           = 1048576
-	kbInBytes           = 1024
+	devVersion = "dev"
+	mbInBytes  = 1048576
+	kbInBytes  = 1024
 )
 
 type infoService struct {
@@ -137,6 +136,16 @@ func (is *infoService) buildSpecsSummary(c *config.Config) SpecsSummary {
 func (is *infoService) buildHTTPClientInfo(c *config.Config) HTTPClientInfo {
 	inf := HTTPClientInfo{
 		MaxResponseSize: humanizeBytes(is.settings.MaxResponseSize()),
+		RateLimiting: RateLimitInfo{
+			Disabled:    c != nil && c.DisableRateLimiter,
+			PerEndpoint: config.DefaultRateLimitInterval.String(),
+			GlobalLimit: config.DefaultGlobalRateLimit,
+		},
+		ResponseSize: ResponseSizeInfo{
+			Current: humanizeBytes(is.settings.MaxResponseSize()),
+			Min:     humanizeBytes(config.MinResponseSize),
+			Max:     humanizeBytes(config.MaxAllowedResponseSize),
+		},
 	}
 
 	if c == nil || c.HTTPClient == nil {
@@ -157,6 +166,13 @@ func (is *infoService) buildHTTPClientInfo(c *config.Config) HTTPClientInfo {
 	inf.MaxRedirects = gc.MaxRedirects
 	if gc.MaxResponseSize != nil {
 		inf.MaxResponseSize = humanizeBytes(*gc.MaxResponseSize)
+	}
+
+	if c.RateLimitInterval > 0 {
+		inf.RateLimiting.PerEndpoint = c.RateLimitInterval.String()
+	}
+	if c.GlobalRateLimit > 0 {
+		inf.RateLimiting.GlobalLimit = c.GlobalRateLimit
 	}
 
 	if len(gc.Headers) > 0 {
@@ -189,7 +205,7 @@ func (is *infoService) buildHTTPClientInfo(c *config.Config) HTTPClientInfo {
 }
 
 func (is *infoService) buildMCPInfo(c *config.Config) MCPInfo {
-	inf := MCPInfo{Transport: defaultMCPTransport}
+	inf := MCPInfo{Transport: config.DefaultMCPTransport}
 
 	if c == nil || c.MCP == nil {
 		return inf

@@ -371,15 +371,60 @@ Use `fmt.Errorf("context: %w", err)` to wrap errors with context. Use `errors.Is
 
 ### 4.3 LLMError — Project-Specific Error Type
 
-Use `LLMError` for errors returned to the LLM. It has 8 codes:
-- `validation_failed` — invalid input (wrong ID format, missing required fields)
-- `not_found` — entity not found in index
-- `rate_limit` — per-endpoint 10s cooldown exceeded
-- `invoke_error` — HTTP request/response failures
-- `config_error` — configuration loading or validation failure
-- `workspace_error` — workspace directory or file operation failure
-- `parse_error` — spec file parsing failure
-- `auth_error` — authentication token retrieval failure
+Use `LLMError` for errors returned to the LLM. Every error returned from a public service method must be a typed `LLMError` — raw `fmt.Errorf` must never reach the MCP handler.
+
+**Available error codes (40+):**
+
+| Code | Constructor | When to use |
+|------|-------------|-------------|
+| `validation_failed` | `NewValidationError(msg, err)` | Generic validation failure |
+| `invalid_spec_id` | `NewInvalidSpecIDError(err)` | Spec ID format is wrong |
+| `invalid_collection_id` | `NewInvalidCollectionIDError(err)` | Collection ID format is wrong |
+| `invalid_tag_id` | `NewInvalidTagIDError(err)` | Tag ID format is wrong |
+| `invalid_endpoint_id` | `NewInvalidEndpointIDError(err)` | Endpoint ID format is wrong |
+| `parameter_validation_failed` | `NewParameterValidationError(err)` | Invoke parameter validation failed |
+| `request_body_validation_failed` | `NewRequestBodyValidationError(err)` | Invoke request body validation failed |
+| `search_query_error` | `NewSearchQueryError(err)` | Search query format is invalid |
+| `import_source_error` | `NewImportSourceError(err)` | Import missing source/filter/zip |
+| `not_found` | `NewNotFoundError(msg, err)` | Generic not found (reader errors) |
+| `endpoint_not_found` | `NewEndpointNotFoundError(id, err)` | Endpoint not found in index |
+| `spec_not_found` | `NewSpecNotFoundError(id, err)` | Spec not found in index |
+| `collection_not_found` | `NewCollectionNotFoundError(id, err)` | Collection not found in index |
+| `tag_not_found` | `NewTagNotFoundError(id, err)` | Tag not found in index |
+| `search_no_results` | `NewSearchNoResultsError()` | Search returned no results |
+| `export_no_collections` | `NewExportNoCollectionsError()` | No collections to export |
+| `import_no_match` | `NewImportNoMatchError(filter)` | No specs matched import filter |
+| `config_not_found` | `NewConfigNotFoundError()` | No config in workspace |
+| `response_file_not_found` | `NewResponseFileNotFoundError(err)` | Response file missing |
+| `response_path_not_found` | `NewResponsePathNotFoundError(err)` | JSON path not found in file |
+| `rate_limit` | `NewRateLimitError(err)` | Per-endpoint cooldown exceeded |
+| `global_rate_limit` | `NewGlobalRateLimitError(err)` | Global req/s limit exceeded |
+| `invoke_error` | `NewInvokeError(msg, err)` | Generic invoke failure |
+| `http_request_error` | `NewHTTPRequestError(err)` | HTTP client.Do failed |
+| `response_read_error` | `NewResponseReadError(err)` | Response body read failed |
+| `file_write_error` | `NewFileWriteError(err)` | Write response to disk failed |
+| `file_create_error` | `NewFileCreateError(err)` | Create response file failed |
+| `dir_create_error` | `NewDirCreateError(err)` | Create responses dir failed |
+| `stream_error` | `NewStreamError(err)` | Stream response to disk failed |
+| `build_request_error` | `NewBuildRequestError(err)` | Build HTTP request failed |
+| `config_error` | `NewConfigError(msg, err)` | Config loading/validation failure |
+| `workspace_error` | `NewWorkspaceError(msg, err)` | Workspace dir/file operation failure |
+| `parse_error` | `NewParseError(msg, err)` | Spec file parsing failure |
+| `auth_error` | `NewAuthError(msg, err)` | Auth token retrieval failure |
+| `response_request_error` | `NewResponseRequestError(err)` | Response tool request invalid |
+| `response_jsonpath_error` | `NewResponseJSONPathError(err)` | JSON path syntax invalid |
+| `response_line_range_error` | `NewResponseLineRangeError(err)` | Line/range format invalid |
+| `response_not_json` | `NewResponseNotJSONError(err)` | File is not valid JSON |
+| `response_read_failed` | `NewResponseReadFailedError(err)` | Response file read failed |
+| `export_error` | `NewExportError(msg, err)` | Export operation failed |
+| `import_error` | `NewImportError(msg, err)` | Import operation failed |
+| `tool_load_error` | `NewToolLoadError(err)` | MCP tool definitions load failed |
+
+**Rules:**
+- Every error returned from a public service method must be a typed `LLMError` constructor. Raw `fmt.Errorf` must never reach the MCP handler.
+- Prefer the most specific constructor. Never use `NewInvokeError` or `NewValidationError` with a generic message when a typed constructor exists.
+- Each constructor already includes the correct message and hint for the LLM — do not override them.
+- Private helper functions may return `fmt.Errorf` only if every caller wraps it in an `LLMError` before returning to the public API.
 
 **Message format rules:**
 - Each message must be ≤80 characters per line

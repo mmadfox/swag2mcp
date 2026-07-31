@@ -22,6 +22,10 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/model"
 )
 
+// globalRateLimitKey is the fixed key used for the global rate limiter.
+// It caps the total number of invoke requests per second across all endpoints.
+const globalRateLimitKey = "global"
+
 // InvokeRequest represents a request to invoke an API endpoint.
 type InvokeRequest struct {
 	EndpointID  string            `json:"endpointId"            validate:"required,md5" jsonschema:"required,The 32-character MD5 hash ID of the endpoint to invoke"`
@@ -76,14 +80,20 @@ func newInvokeService(
 // Invoke validates the request, builds an HTTP request, sends it, and returns the response.
 func (is *invokeService) Invoke(ctx context.Context, rq InvokeRequest) (InvokeResponse, error) {
 	if err := is.v.Struct(rq); err != nil {
-		return InvokeResponse{}, NewValidationError(
-			"The endpoint ID is invalid. It must be a 32-character hex string. "+
-				"Use the search tool to find the correct endpoint ID.",
-			err,
-		)
+		return InvokeResponse{}, NewInvalidEndpointIDError(err)
 	}
 
 	if !is.ctx.disableRateLimiter.Load() {
+		// Global rate limiter: caps the total number of invoke requests per second
+		// across all endpoints (default 5 req/s). Uses a fixed key.
+		if gl := is.ctx.loadGlobalRateLimiter(); gl != nil {
+			if err := gl.Allow(globalRateLimitKey); err != nil {
+				return InvokeResponse{}, NewGlobalRateLimitError(err)
+			}
+		}
+
+		// Per-endpoint rate limiter: prevents calling the same endpoint more than once
+		// within the configured interval (default 10s). Uses the endpoint ID as the key.
 		if err := is.ctx.loadRateLimiter().Allow(rq.EndpointID); err != nil {
 			return InvokeResponse{}, NewRateLimitError(err)
 		}
@@ -91,17 +101,11 @@ func (is *invokeService) Invoke(ctx context.Context, rq InvokeRequest) (InvokeRe
 
 	ep, err := is.index.EndpointByID(rq.EndpointID)
 	if err != nil {
-		return InvokeResponse{}, NewNotFoundError(
-			fmt.Sprintf(
-				"Endpoint %q was not found. Use the search tool to find the correct endpoint ID.",
-				rq.EndpointID,
-			),
-			err,
-		)
+		return InvokeResponse{}, NewEndpointNotFoundError(rq.EndpointID, err)
 	}
 
 	if ep.Operation == nil {
-		return InvokeResponse{}, NewValidationError(
+		return InvokeResponse{}, NewInvokeError(
 			"This endpoint has no operation definition. It may be malformed or incomplete.",
 			nil,
 		)
@@ -109,48 +113,25 @@ func (is *invokeService) Invoke(ctx context.Context, rq InvokeRequest) (InvokeRe
 
 	sp, err := is.index.SpecByID(ep.SpecID)
 	if err != nil {
-		return InvokeResponse{}, NewNotFoundError(
-			fmt.Sprintf(
-				"Spec %q was not found. The endpoint references a spec that no longer exists.",
-				ep.SpecID,
-			),
-			err,
-		)
+		return InvokeResponse{}, NewSpecNotFoundError(ep.SpecID, err)
 	}
 
 	coll, err := is.index.CollectionByID(ep.CollectionID)
 	if err != nil {
-		return InvokeResponse{}, NewNotFoundError(
-			fmt.Sprintf(
-				"Collection %q was not found. The endpoint references a collection that no longer exists.",
-				ep.CollectionID,
-			),
-			err,
-		)
+		return InvokeResponse{}, NewCollectionNotFoundError(ep.CollectionID, err)
 	}
 
 	if err := validateParameters(ep.Operation, rq.Parameters); err != nil {
-		return InvokeResponse{}, NewValidationError(
-			"Parameter validation failed. Check that all required parameters are provided "+
-				"and match the expected names.",
-			err,
-		)
+		return InvokeResponse{}, NewParameterValidationError(err)
 	}
 
 	if err := validateRequestBody(ep.Operation, rq.RequestBody); err != nil {
-		return InvokeResponse{}, NewValidationError(
-			"Request body validation failed. Check that all required fields are present "+
-				"and no unknown fields are included.",
-			err,
-		)
+		return InvokeResponse{}, NewRequestBodyValidationError(err)
 	}
 
 	req, err := is.buildRequest(ctx, sp, coll, ep, rq)
 	if err != nil {
-		return InvokeResponse{}, NewInvokeError(
-			"Failed to build the HTTP request. Check the endpoint parameters and try again.",
-			err,
-		)
+		return InvokeResponse{}, NewBuildRequestError(err)
 	}
 
 	is.dumpRequest(req, sp.Domain)
@@ -207,34 +188,20 @@ func (is *invokeService) executeRequest(
 
 	response, err := client.Do(req)
 	if err != nil {
-		return InvokeResponse{}, NewInvokeError(
-			"The API request failed.",
-			err,
-		)
+		return InvokeResponse{}, NewHTTPRequestError(err)
 	}
 	defer response.Body.Close()
 
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return InvokeResponse{}, NewInvokeError(
-			"Failed to read the API response.",
-			err,
-		)
-	}
-
 	maxSize := is.ctx.MaxResponseSize()
-	if len(body) > maxSize {
-		return is.saveLargeResponse(response, body, sp.Domain, ep, maxSize)
-	}
 
-	return newInvokeResponse(response, body), nil
+	return is.streamOrBuffer(response, sp.Domain, ep, maxSize)
 }
 
-// saveLargeResponse saves a response body that exceeds the max size to a file
-// and returns an InvokeResponse with a FileReference instead of the full body.
-func (is *invokeService) saveLargeResponse(
+// streamOrBuffer reads the response body into a buffer up to maxSize+1 bytes.
+// If the response fits within maxSize, it returns the body inline.
+// If it exceeds maxSize, it writes the buffer to a file and streams the rest from response.Body.
+func (is *invokeService) streamOrBuffer(
 	r *http.Response,
-	body []byte,
 	domain string,
 	ep *model.Endpoint,
 	maxSize int,
@@ -244,24 +211,40 @@ func (is *invokeService) saveLargeResponse(
 		headers[key] = strings.Join(values, ", ")
 	}
 
-	m := strings.ToLower(ep.Name)
-	p := strings.TrimPrefix(ep.Path, "/")
-	p = strings.ReplaceAll(p, "/", "_")
-	p = strings.ReplaceAll(p, "{", "")
-	p = strings.ReplaceAll(p, "}", "")
-	suf := randomSuffix(config.RandSuffixLen)
-	fname := fmt.Sprintf("%s-%s-%s-%s.json", domain, m, p, suf)
-	fp := filepath.Join(is.ws.ResponsesDir(), fname)
+	buf := make([]byte, maxSize+1)
+	n, readErr := io.ReadFull(r.Body, buf)
+	buf = buf[:n]
 
+	if readErr != nil && readErr != io.ErrUnexpectedEOF && readErr != io.EOF {
+		return InvokeResponse{}, NewResponseReadError(readErr)
+	}
+
+	if n <= maxSize {
+		return newInvokeResponse(r, buf), nil
+	}
+
+	fp := is.responseFilePath(domain, ep)
 	if err := os.MkdirAll(is.ws.ResponsesDir(), 0750); err != nil {
-		return InvokeResponse{}, fmt.Errorf("failed to create responses dir: %w", err)
+		return InvokeResponse{}, NewDirCreateError(err)
 	}
 
-	if err := os.WriteFile(fp, body, 0600); err != nil {
-		return InvokeResponse{}, fmt.Errorf("failed to write response file: %w", err)
+	f, err := os.Create(fp)
+	if err != nil {
+		return InvokeResponse{}, NewFileCreateError(err)
+	}
+	defer f.Close()
+
+	if _, err := f.Write(buf); err != nil {
+		return InvokeResponse{}, NewFileWriteError(err)
 	}
 
-	size := formatSize(len(body))
+	written, err := io.Copy(f, r.Body)
+	if err != nil {
+		return InvokeResponse{}, NewStreamError(err)
+	}
+
+	totalSize := n + int(written)
+	size := formatSize(totalSize)
 	maxSizeStr := formatSize(maxSize)
 	msg := fmt.Sprintf(
 		"Response body (%s) exceeds the maximum size limit (%s). The full response has been saved to disk.",
@@ -276,13 +259,25 @@ func (is *invokeService) saveLargeResponse(
 		},
 		FileRef: &FileReference{
 			Path:        fp,
-			Size:        len(body),
+			Size:        totalSize,
 			SizeHint:    size,
 			MaxSizeHint: maxSizeStr,
 			Message:     msg,
 			OpenCmd:     openCommand(fp),
 		},
 	}, nil
+}
+
+// responseFilePath generates a unique file path for a response file.
+func (is *invokeService) responseFilePath(domain string, ep *model.Endpoint) string {
+	m := strings.ToLower(ep.Name)
+	p := strings.TrimPrefix(ep.Path, "/")
+	p = strings.ReplaceAll(p, "/", "_")
+	p = strings.ReplaceAll(p, "{", "")
+	p = strings.ReplaceAll(p, "}", "")
+	suf := randomSuffix(config.RandSuffixLen)
+	fname := fmt.Sprintf("%s-%s-%s-%s.json", domain, m, p, suf)
+	return filepath.Join(is.ws.ResponsesDir(), fname)
 }
 
 // dumpRequest writes the HTTP request to a file for debugging if dumpDir is configured.

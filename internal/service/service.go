@@ -257,3 +257,8 @@ func (s *Service) ResponseCompress(ctx context.Context, req ResponseCompressRequ
 func (s *Service) ResponseSlice(ctx context.Context, req ResponseSliceRequest) (ResponseSliceResponse, error) {
 	return s.responseSvc.ResponseSlice(ctx, req)
 }
+
+// ResponseFilter filters, searches, and paginates through arrays in saved response files.
+func (s *Service) ResponseFilter(ctx context.Context, req ResponseFilterRequest) (ResponseFilterResponse, error) {
+	return s.responseSvc.ResponseFilter(ctx, req)
+}

@@ -14,14 +14,21 @@ import (
 )
 
 const (
+	DefaultGlobalRateLimit   = 5        // max invoke requests per second
+	MinResponseSize          = 10240    // 10 KB
+	MaxAllowedResponseSize   = 10485760 // 10 MB
+	DefaultMaxResponseSize   = 1048576  // 1 MB
+	DefaultRateLimitInterval = 10 * time.Second
+	RandSuffixLen            = 6
+)
+
+const (
 	defaultUserAgent         = "swag2mcp-global/1.0"
 	defaultTimeout           = 30 * time.Second
 	defaultMaxRedirects      = 10
 	defaultRateLimitInterval = 10 * time.Second
-	MaxAllowedResponseSize   = 10485760 // 10 MB
-	DefaultMaxResponseSize   = 1048576  // 1 MB
 	defaultMaxResponseSize   = DefaultMaxResponseSize
-	RandSuffixLen            = 6
+	DefaultMCPTransport      = "stdio"
 )
 
 // Cookie represents an HTTP cookie for configuration.
@@ -96,6 +103,7 @@ type Config struct {
 	MCP                *MCPConfig              `yaml:"mcp,omitempty"`
 	DisableRateLimiter bool                    `yaml:"disable_ratelimiter,omitempty"`
 	RateLimitInterval  time.Duration           `yaml:"rate_limit_interval,omitempty"`
+	GlobalRateLimit    int                     `yaml:"global_rate_limit,omitempty"`
 	Specs              []Spec                  `yaml:"specs"`
 }
 

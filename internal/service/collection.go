@@ -7,7 +7,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"sort"
 )
 
@@ -26,27 +25,17 @@ func (cs *collectionService) CollectionsBySpec(
 	rq CollectionsRequest,
 ) (CollectionsResponse, error) {
 	if err := cs.v.Struct(rq); err != nil {
-		return CollectionsResponse{}, NewValidationError(
-			"The spec ID is invalid. It must be a 32-character hex string. "+
-				"Use spec_list to find the correct spec ID.",
-			err,
-		)
+		return CollectionsResponse{}, NewInvalidSpecIDError(err)
 	}
 
 	sp, err := cs.index.SpecByID(rq.SpecID)
 	if err != nil {
-		return CollectionsResponse{}, NewNotFoundError(
-			fmt.Sprintf("Spec %q was not found. Use spec_list to see all available specs.", rq.SpecID),
-			err,
-		)
+		return CollectionsResponse{}, NewSpecNotFoundError(rq.SpecID, err)
 	}
 
 	colls, err := cs.index.CollectionsBySpec(rq.SpecID)
 	if err != nil {
-		return CollectionsResponse{}, NewNotFoundError(
-			fmt.Sprintf("Spec %q was not found. Use spec_list to see all available specs.", rq.SpecID),
-			err,
-		)
+		return CollectionsResponse{}, NewSpecNotFoundError(rq.SpecID, err)
 	}
 
 	r := CollectionsResponse{
@@ -79,19 +68,13 @@ func (cs *collectionService) CollectionByID(
 	rq CollectionByIDRequest,
 ) (CollectionByIDResponse, error) {
 	if err := cs.v.Struct(rq); err != nil {
-		return CollectionByIDResponse{}, NewValidationError(
-			"The collection ID is invalid. It must be a 32-character hex string.",
-			err,
-		)
+		return CollectionByIDResponse{}, NewInvalidCollectionIDError(err)
 	}
 
 	var r CollectionByIDResponse
 	coll, err := cs.index.CollectionByID(rq.ID)
 	if err != nil {
-		return CollectionByIDResponse{}, NewNotFoundError(
-			fmt.Sprintf("Collection %q was not found. Use collection_by_spec to list collections.", rq.ID),
-			err,
-		)
+		return CollectionByIDResponse{}, NewCollectionNotFoundError(rq.ID, err)
 	}
 	r.Collection = Collection{
 		ID:           coll.ID,
@@ -101,10 +84,7 @@ func (cs *collectionService) CollectionByID(
 
 	sp, err := cs.index.SpecByID(coll.SpecID)
 	if err != nil {
-		return CollectionByIDResponse{}, NewNotFoundError(
-			fmt.Sprintf("Spec %q was not found. The collection references a spec that no longer exists.", coll.SpecID),
-			err,
-		)
+		return CollectionByIDResponse{}, NewSpecNotFoundError(coll.SpecID, err)
 	}
 	r.Spec = Spec{
 		ID:     sp.ID,

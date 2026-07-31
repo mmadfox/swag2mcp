@@ -7,7 +7,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
@@ -32,10 +31,7 @@ func (as *authService) Auth(ctx context.Context, rq AuthRequest) (AuthResponse, 
 
 	sp, err := as.index.SpecByID(rq.SpecID)
 	if err != nil {
-		return AuthResponse{}, NewNotFoundError(
-			fmt.Sprintf("Spec %q was not found. Use spec_list to find the correct spec ID.", rq.SpecID),
-			err,
-		)
+		return AuthResponse{}, NewSpecNotFoundError(rq.SpecID, err)
 	}
 
 	if sp.Auth == nil {

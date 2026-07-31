@@ -7,7 +7,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"sort"
 )
 
@@ -27,43 +26,27 @@ func (es *endpointService) EndpointsByTag(
 	rq EndpointsByTagRequest,
 ) (EndpointsByTagResponse, error) {
 	if err := es.v.Struct(rq); err != nil {
-		return EndpointsByTagResponse{}, NewValidationError(
-			"The tag ID is invalid. It must be a 32-character hex string. "+
-				"Use tag_by_collection or tag_by_spec to find the correct tag ID.",
-			err,
-		)
+		return EndpointsByTagResponse{}, NewInvalidTagIDError(err)
 	}
 
 	tag, err := es.index.TagByID(rq.TagID)
 	if err != nil {
-		return EndpointsByTagResponse{}, NewNotFoundError(
-			fmt.Sprintf("Tag %q was not found. Use tag_by_collection or tag_by_spec to list tags.", rq.TagID),
-			err,
-		)
+		return EndpointsByTagResponse{}, NewTagNotFoundError(rq.TagID, err)
 	}
 
 	coll, err := es.index.CollectionByID(tag.CollectionID)
 	if err != nil {
-		return EndpointsByTagResponse{}, NewNotFoundError(
-			fmt.Sprintf("Collection %q was not found. The tag references a collection that no longer exists.", tag.CollectionID),
-			err,
-		)
+		return EndpointsByTagResponse{}, NewCollectionNotFoundError(tag.CollectionID, err)
 	}
 
 	sp, err := es.index.SpecByID(coll.SpecID)
 	if err != nil {
-		return EndpointsByTagResponse{}, NewNotFoundError(
-			fmt.Sprintf("Spec %q was not found. The collection references a spec that no longer exists.", coll.SpecID),
-			err,
-		)
+		return EndpointsByTagResponse{}, NewSpecNotFoundError(coll.SpecID, err)
 	}
 
 	eps, err := es.index.EndpointsByTag(rq.TagID)
 	if err != nil {
-		return EndpointsByTagResponse{}, NewNotFoundError(
-			fmt.Sprintf("Tag %q was not found. Use tag_by_collection or tag_by_spec to list tags.", rq.TagID),
-			err,
-		)
+		return EndpointsByTagResponse{}, NewTagNotFoundError(rq.TagID, err)
 	}
 
 	r := EndpointsByTagResponse{
@@ -106,34 +89,22 @@ func (es *endpointService) EndpointsByCollection(
 	rq EndpointsByCollectionRequest,
 ) (EndpointsByCollectionResponse, error) {
 	if err := es.v.Struct(rq); err != nil {
-		return EndpointsByCollectionResponse{}, NewValidationError(
-			"The collection ID is invalid. It must be a 32-character hex string.",
-			err,
-		)
+		return EndpointsByCollectionResponse{}, NewInvalidCollectionIDError(err)
 	}
 
 	coll, err := es.index.CollectionByID(rq.CollectionID)
 	if err != nil {
-		return EndpointsByCollectionResponse{}, NewNotFoundError(
-			fmt.Sprintf("Collection %q was not found. Use collection_by_spec to list collections.", rq.CollectionID),
-			err,
-		)
+		return EndpointsByCollectionResponse{}, NewCollectionNotFoundError(rq.CollectionID, err)
 	}
 
 	sp, err := es.index.SpecByID(coll.SpecID)
 	if err != nil {
-		return EndpointsByCollectionResponse{}, NewNotFoundError(
-			fmt.Sprintf("Spec %q was not found. The collection references a spec that no longer exists.", coll.SpecID),
-			err,
-		)
+		return EndpointsByCollectionResponse{}, NewSpecNotFoundError(coll.SpecID, err)
 	}
 
 	eps, err := es.index.EndpointByCollection(rq.CollectionID)
 	if err != nil {
-		return EndpointsByCollectionResponse{}, NewNotFoundError(
-			fmt.Sprintf("Collection %q was not found. Use collection_by_spec to list collections.", rq.CollectionID),
-			err,
-		)
+		return EndpointsByCollectionResponse{}, NewCollectionNotFoundError(rq.CollectionID, err)
 	}
 
 	r := EndpointsByCollectionResponse{
@@ -151,10 +122,7 @@ func (es *endpointService) EndpointsByCollection(
 	for _, e := range eps {
 		tg, err := es.index.TagByID(e.TagID)
 		if err != nil {
-			return EndpointsByCollectionResponse{}, NewNotFoundError(
-				fmt.Sprintf("Tag %q was not found. The endpoint references a tag that no longer exists.", e.TagID),
-				err,
-			)
+			return EndpointsByCollectionResponse{}, NewTagNotFoundError(e.TagID, err)
 		}
 		r.Endpoints = append(r.Endpoints, EndpointCollectionItem{
 			ID:      e.ID,
@@ -179,19 +147,12 @@ func (es *endpointService) EndpointsBySpec(
 	rq EndpointsBySpecRequest,
 ) (EndpointsBySpecResponse, error) {
 	if err := es.v.Struct(rq); err != nil {
-		return EndpointsBySpecResponse{}, NewValidationError(
-			"The spec ID is invalid. It must be a 32-character hex string. "+
-				"Use spec_list to find the correct spec ID.",
-			err,
-		)
+		return EndpointsBySpecResponse{}, NewInvalidSpecIDError(err)
 	}
 
 	eps, err := es.index.EndpointsBySpec(rq.SpecID)
 	if err != nil {
-		return EndpointsBySpecResponse{}, NewNotFoundError(
-			fmt.Sprintf("Spec %q was not found. Use spec_list to see all available specs.", rq.SpecID),
-			err,
-		)
+		return EndpointsBySpecResponse{}, NewSpecNotFoundError(rq.SpecID, err)
 	}
 
 	is, err := mapEndpointsToSearchItems(es.index, eps)
@@ -223,41 +184,25 @@ func (es *endpointService) EndpointByID(
 	rq EndpointByIDRequest,
 ) (EndpointByIDResponse, error) {
 	if err := es.v.Struct(rq); err != nil {
-		return EndpointByIDResponse{}, NewValidationError(
-			"The endpoint ID is invalid. It must be a 32-character hex string. "+
-				"Use the search tool to find the correct endpoint ID.",
-			err,
-		)
+		return EndpointByIDResponse{}, NewInvalidEndpointIDError(err)
 	}
 
 	e, err := es.index.EndpointByID(rq.ID)
 	if err != nil {
-		return EndpointByIDResponse{}, NewNotFoundError(
-			fmt.Sprintf("Endpoint %q was not found. Use the search tool to find the correct endpoint ID.", rq.ID),
-			err,
-		)
+		return EndpointByIDResponse{}, NewEndpointNotFoundError(rq.ID, err)
 	}
 
 	sp, err := es.index.SpecByID(e.SpecID)
 	if err != nil {
-		return EndpointByIDResponse{}, NewNotFoundError(
-			fmt.Sprintf("Spec %q was not found. The endpoint references a spec that no longer exists.", e.SpecID),
-			err,
-		)
+		return EndpointByIDResponse{}, NewSpecNotFoundError(e.SpecID, err)
 	}
 	coll, err := es.index.CollectionByID(e.CollectionID)
 	if err != nil {
-		return EndpointByIDResponse{}, NewNotFoundError(
-			fmt.Sprintf("Collection %q was not found. The endpoint references a collection that no longer exists.", e.CollectionID),
-			err,
-		)
+		return EndpointByIDResponse{}, NewCollectionNotFoundError(e.CollectionID, err)
 	}
 	tag, err := es.index.TagByID(e.TagID)
 	if err != nil {
-		return EndpointByIDResponse{}, NewNotFoundError(
-			fmt.Sprintf("Tag %q was not found. The endpoint references a tag that no longer exists.", e.TagID),
-			err,
-		)
+		return EndpointByIDResponse{}, NewTagNotFoundError(e.TagID, err)
 	}
 
 	r := EndpointByIDResponse{

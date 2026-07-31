@@ -134,5 +134,5 @@ func TestSearchService_Search_invalidQuery(t *testing.T) {
 
 	var llmErr *LLMError
 	require.ErrorAs(t, err, &llmErr)
-	require.Equal(t, validationFailedErrCode, llmErr.Code)
+	require.Equal(t, searchQueryErrCode, llmErr.Code)
 }

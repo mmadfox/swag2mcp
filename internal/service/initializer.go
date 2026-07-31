@@ -34,6 +34,13 @@ func (init *initializer) storeConfig(cfg *config.Config) {
 	init.s.ctx.storeConfig(cfg)
 	init.s.ctx.disableRateLimiter.Store(cfg.DisableRateLimiter)
 	init.s.ctx.storeRateLimiter(ratelimit.NewWithInterval(cfg.RateLimitInterval))
+
+	globalRate := cfg.GlobalRateLimit
+	if globalRate <= 0 {
+		globalRate = config.DefaultGlobalRateLimit
+	}
+	globalInterval := time.Second / time.Duration(globalRate)
+	init.s.ctx.storeGlobalRateLimiter(ratelimit.NewWithInterval(globalInterval))
 }
 
 func (init *initializer) initWorkspace(wsDir string) error {

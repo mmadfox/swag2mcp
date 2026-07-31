@@ -4,7 +4,7 @@
 
 ### What is swag2mcp and what problem does it solve?
 
-swag2mcp bridges OpenAPI/Swagger/Postman API specifications with LLM agents via the Model Context Protocol (MCP). Instead of writing custom code to connect each API to an AI agent, you configure it once in a YAML file and the LLM gets 19 tools to discover, inspect, and call your APIs.
+swag2mcp is a local-first bridge between OpenAPI/Swagger/Postman API specifications and LLM agents via the Model Context Protocol (MCP). Instead of writing custom code to connect each API to an AI agent, you configure it once in a YAML file and the LLM gets 19 tools to discover, inspect, and call your APIs.
 
 ### How is it different from other API-to-LLM tools?
 

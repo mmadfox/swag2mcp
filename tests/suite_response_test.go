@@ -170,7 +170,7 @@ func (s *ResponseSuite) TestResponseReaderTools() {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		items := ""
-		for i := 1; i <= 20; i++ {
+		for i := 1; i <= 200; i++ {
 			if items != "" {
 				items += ","
 			}
@@ -181,7 +181,7 @@ func (s *ResponseSuite) TestResponseReaderTools() {
 	srv := s.StartHTTPServer(mux)
 
 	configContent := `http_client:
-  max_response_size: 256
+  max_response_size: 10240
 specs:
   - domain: meteo
     llm_title: Open-Meteo API
@@ -258,6 +258,173 @@ specs:
 	s.Require().NoError(json.Unmarshal(sliceResult, &sliceResp))
 	s.Equal("object", sliceResp.Slice.Context)
 	s.Equal(float64(1), sliceResp.Slice.Value["id"])
+}
+
+func (s *ResponseSuite) TestResponseFilterSearch() {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		items := ""
+		for i := 1; i <= 500; i++ {
+			if items != "" {
+				items += ","
+			}
+			items += fmt.Sprintf(`{"id":%d,"name":"Pet-%d","status":"%s"}`, i, i, map[bool]string{true: "active", false: "inactive"}[i%2 == 0])
+		}
+		_, _ = w.Write([]byte(`{"status":"ok","pets":[` + items + `]}`))
+	})
+	srv := s.StartHTTPServer(mux)
+
+	configContent := `http_client:
+  max_response_size: 10240
+specs:
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: ` + srv.URL + `
+    collections:
+      - title: Forecast
+        location: ./testdata/meteo.yaml
+`
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
+
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
+
+	invokeResult := client.callTool(s.T(), "invoke", map[string]interface{}{
+		"endpointId": endpointID,
+		"parameters": map[string]interface{}{
+			"latitude":  0.0,
+			"longitude": 0.0,
+		},
+	})
+
+	var invokeResp struct {
+		StatusCode int `json:"statusCode"`
+		FileRef    *struct {
+			Path string `json:"path"`
+		} `json:"fileRef,omitempty"`
+	}
+	s.Require().NoError(json.Unmarshal(invokeResult, &invokeResp))
+	s.Require().NotNil(invokeResp.FileRef, "expected fileRef for response above max_response_size")
+
+	// Search for "inactive" — matches all odd-numbered items
+	filterResult := client.callTool(s.T(), "response_filter", map[string]interface{}{
+		"path":     invokeResp.FileRef.Path,
+		"jsonPath": "pets",
+		"search":   "inactive",
+	})
+	var filterResp struct {
+		Page       int           `json:"page"`
+		PageSize   int           `json:"pageSize"`
+		Total      int           `json:"total"`
+		TotalPages int           `json:"totalPages"`
+		Items      []interface{} `json:"items"`
+		Strategy   string        `json:"strategy"`
+	}
+	s.Require().NoError(json.Unmarshal(filterResult, &filterResp))
+	s.Equal(250, filterResp.Total)
+	s.Len(filterResp.Items, 10)
+
+	// Filter by exact status match
+	filterResult2 := client.callTool(s.T(), "response_filter", map[string]interface{}{
+		"path":     invokeResp.FileRef.Path,
+		"jsonPath": "pets",
+		"filter":   "status = active",
+	})
+	s.Require().NoError(json.Unmarshal(filterResult2, &filterResp))
+	s.Equal(250, filterResp.Total)
+	s.Len(filterResp.Items, 10)
+
+	// Pagination
+	filterResult3 := client.callTool(s.T(), "response_filter", map[string]interface{}{
+		"path":     invokeResp.FileRef.Path,
+		"jsonPath": "pets",
+		"page":     2,
+		"pageSize": 5,
+	})
+	s.Require().NoError(json.Unmarshal(filterResult3, &filterResp))
+	s.Equal(2, filterResp.Page)
+	s.Equal(5, filterResp.PageSize)
+	s.Equal(500, filterResp.Total)
+	s.Equal(100, filterResp.TotalPages)
+	s.Len(filterResp.Items, 5)
+}
+
+func (s *ResponseSuite) TestResponseFilterRootArray() {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v1/forecast", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		items := ""
+		for i := 1; i <= 500; i++ {
+			if items != "" {
+				items += ","
+			}
+			items += fmt.Sprintf(`{"id":%d,"symbol":"coin-%d","price":%d}`, i, i, i*100)
+		}
+		_, _ = w.Write([]byte(`[` + items + `]`))
+	})
+	srv := s.StartHTTPServer(mux)
+
+	configContent := `http_client:
+  max_response_size: 10240
+specs:
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: ` + srv.URL + `
+    collections:
+      - title: Forecast
+        location: ./testdata/meteo.yaml
+`
+	client := s.StartMCPStdio(configContent, "--disable-llm-auth=false")
+	client.initialize(s.T())
+
+	specID := s.GetSpecID(client)
+	endpointID := s.GetEndpointID(client, specID, "GET", "/v1/forecast")
+
+	invokeResult := client.callTool(s.T(), "invoke", map[string]interface{}{
+		"endpointId": endpointID,
+		"parameters": map[string]interface{}{
+			"latitude":  0.0,
+			"longitude": 0.0,
+		},
+	})
+
+	var invokeResp struct {
+		StatusCode int `json:"statusCode"`
+		FileRef    *struct {
+			Path string `json:"path"`
+		} `json:"fileRef,omitempty"`
+	}
+	s.Require().NoError(json.Unmarshal(invokeResult, &invokeResp))
+	s.Require().NotNil(invokeResp.FileRef, "expected fileRef for response above max_response_size")
+
+	// Search root array with empty jsonPath — use exact filter to avoid substring matches
+	filterResult := client.callTool(s.T(), "response_filter", map[string]interface{}{
+		"path":   invokeResp.FileRef.Path,
+		"filter": "symbol = coin-50",
+	})
+	var filterResp struct {
+		Page       int           `json:"page"`
+		PageSize   int           `json:"pageSize"`
+		Total      int           `json:"total"`
+		TotalPages int           `json:"totalPages"`
+		Items      []interface{} `json:"items"`
+		Strategy   string        `json:"strategy"`
+	}
+	s.Require().NoError(json.Unmarshal(filterResult, &filterResp))
+	s.Equal(1, filterResp.Total)
+	s.Len(filterResp.Items, 1)
+
+	// Filter root array by price
+	filterResult2 := client.callTool(s.T(), "response_filter", map[string]interface{}{
+		"path":   invokeResp.FileRef.Path,
+		"filter": "price > 5000",
+	})
+	s.Require().NoError(json.Unmarshal(filterResult2, &filterResp))
+	s.Equal(450, filterResp.Total)
 }
 
 func TestResponseSuite(t *testing.T) {
