@@ -22,7 +22,7 @@ Use this tool when:
 ## Parameters
 
 - `path` (required): The absolute file path from `fileRef.path` returned by `invoke`.
-- `jsonPath` (required): Path to the array to filter (e.g. `pets`, `data.items`, `results`).
+- `jsonPath` (required): Path to the array to filter (e.g. `pets`, `data.items`, `results`). Leave empty for root-level arrays. Uses [gjson](https://github.com/tidwall/gjson) syntax — recursive descent (`..`) is not supported; use exact paths like `symbols.0.symbol` or use `search`/`filter` instead.
 - `search` (optional): Full-text search across all fields of each item. Case-insensitive substring match (e.g. `"bitcoin"`).
 - `filter` (optional): Structured filter condition. Format: `field operator value`. Supported operators: `=`, `!=`, `contains`, `>`, `<`, `>=`, `<=`. Examples: `status = active`, `price > 100`, `name contains bitcoin`.
 - `page` (optional): Page number starting from 1. Default is 1.
