@@ -20,6 +20,15 @@ paths:
       responses:
         '200':
           description: Price ticker data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  symbol:
+                    type: string
+                  price:
+                    type: string
   /api/v3/ticker/24hr:
     get:
       tags: [market-data]
@@ -33,6 +42,25 @@ paths:
       responses:
         '200':
           description: 24hr ticker statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  symbol:
+                    type: string
+                  priceChange:
+                    type: string
+                  priceChangePercent:
+                    type: string
+                  highPrice:
+                    type: string
+                  lowPrice:
+                    type: string
+                  volume:
+                    type: string
+                  quoteVolume:
+                    type: string
   /api/v3/exchangeInfo:
     get:
       tags: [market-data]
@@ -41,6 +69,24 @@ paths:
       responses:
         '200':
           description: Exchange information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timezone:
+                    type: string
+                  serverTime:
+                    type: integer
+                  symbols:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        symbol:
+                          type: string
+                        status:
+                          type: string
   /api/v3/klines:
     get:
       tags: [market-data]
@@ -66,3 +112,30 @@ paths:
       responses:
         '200':
           description: Kline data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      openTime:
+                        type: integer
+                      open:
+                        type: string
+                      high:
+                        type: string
+                      low:
+                        type: string
+                      close:
+                        type: string
+                      volume:
+                        type: string
+                      closeTime:
+                        type: integer
+                      quoteVolume:
+                        type: string
+                      count:
+                        type: integer

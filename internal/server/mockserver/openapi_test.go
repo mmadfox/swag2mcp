@@ -6,6 +6,7 @@
 package mockserver
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -59,7 +60,31 @@ func TestFindResponseSchema_NilOperation(t *testing.T) {
 
 	server := &apiMockServer{}
 	result := server.findResponseSchema(nil)
-	assert.Nil(t, result, "expected nil")
+	require.NotNil(t, result, "expected fallback object schema")
+	assert.Equal(t, "object", result.Type, "expected object type")
+}
+
+func TestFindResponseSchema_NilResponses(t *testing.T) {
+	t.Parallel()
+
+	server := &apiMockServer{}
+	result := server.findResponseSchema(&spec.Operation{})
+	require.NotNil(t, result, "expected fallback object schema")
+	assert.Equal(t, "object", result.Type, "expected object type")
+}
+
+func TestFindResponseSchema_NoContent(t *testing.T) {
+	t.Parallel()
+
+	server := &apiMockServer{}
+	operation := &spec.Operation{
+		Responses: map[string]*spec.Response{
+			"200": {Description: "OK"},
+		},
+	}
+	result := server.findResponseSchema(operation)
+	require.NotNil(t, result, "expected fallback object schema")
+	assert.Equal(t, "object", result.Type, "expected object type")
 }
 
 func TestFindResponseSchema_Prefers200(t *testing.T) {
@@ -147,4 +172,77 @@ func TestCreateEndpointHandler_WithSchema(t *testing.T) {
 	handler(responseRecorder, request)
 
 	assert.Equal(t, http.StatusOK, responseRecorder.Code, "expected 200")
+}
+
+func TestCreateEndpointHandler_WithExample(t *testing.T) {
+	t.Parallel()
+
+	server := &apiMockServer{
+		doc: &spec.Doc{},
+	}
+	operation := &spec.Operation{
+		Responses: map[string]*spec.Response{
+			"200": {
+				Description: "OK",
+				Example: map[string]any{
+					"id":   float64(1),
+					"name": "Rick",
+				},
+			},
+		},
+	}
+	handler := server.createEndpointHandler(operation)
+	responseRecorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/", nil)
+
+	handler(responseRecorder, request)
+
+	assert.Equal(t, http.StatusOK, responseRecorder.Code, "expected 200")
+
+	var body map[string]any
+	err := json.NewDecoder(responseRecorder.Body).Decode(&body)
+	require.NoError(t, err, "expected valid JSON")
+	assert.Equal(t, "Rick", body["name"])
+}
+
+func TestCreateEndpointHandler_WithExampleAndSchema(t *testing.T) {
+	t.Parallel()
+
+	server := &apiMockServer{
+		doc: &spec.Doc{},
+	}
+	operation := &spec.Operation{
+		Responses: map[string]*spec.Response{
+			"200": {
+				Description: "OK",
+				Example: map[string]any{
+					"id":   float64(1),
+					"name": "Rick",
+				},
+				Content: map[string]*spec.MediaType{
+					"application/json": {
+						Schema: &spec.Schema{
+							Type: "object",
+							Properties: map[string]*spec.Schema{
+								"id":   {Type: "integer"},
+								"name": {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	handler := server.createEndpointHandler(operation)
+	responseRecorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/", nil)
+
+	handler(responseRecorder, request)
+
+	assert.Equal(t, http.StatusOK, responseRecorder.Code, "expected 200")
+
+	var body map[string]any
+	err := json.NewDecoder(responseRecorder.Body).Decode(&body)
+	require.NoError(t, err, "expected valid JSON")
+	assert.Equal(t, "Rick", body["name"])
 }

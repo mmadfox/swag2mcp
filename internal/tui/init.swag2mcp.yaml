@@ -112,6 +112,7 @@ specs:
     collections:
       - llm_title: Frankfurter
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/frankfurter.yaml
+        base_mock_url: "localhost:9014"
 
   - domain: coingecko
     llm_title: CoinGecko API
@@ -128,6 +129,7 @@ specs:
     collections:
       - llm_title: CoinGecko Demo
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/coingecko.yaml
+        base_mock_url: "localhost:9015"
 
   - domain: openweathermap
     llm_title: OpenWeatherMap API
@@ -144,6 +146,7 @@ specs:
     collections:
       - llm_title: OpenWeatherMap
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/openweathermap.yaml
+        base_mock_url: "localhost:9016"
 
   - domain: github
     llm_title: GitHub API
@@ -160,3 +163,4 @@ specs:
     collections:
       - llm_title: GitHub Repositories
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/github/rest-api.yaml
+        base_mock_url: "localhost:9017"

@@ -106,6 +106,7 @@ func parseSpecDocument(location string, ws *workspace.Workspace) (*spec.Doc, err
 // It registers a handler for each path+method combination in the spec document.
 func (m *apiMockServer) start(ctx context.Context) {
 	mux := http.NewServeMux()
+	seen := make(map[string]struct{})
 
 	for _, pathItem := range m.doc.PathItems {
 		if pathItem == nil || pathItem.Operation == nil {
@@ -119,6 +120,10 @@ func (m *apiMockServer) start(ctx context.Context) {
 		handler := m.createEndpointHandler(operation)
 
 		pattern := method + " " + path
+		if _, ok := seen[pattern]; ok {
+			continue
+		}
+		seen[pattern] = struct{}{}
 		mux.HandleFunc(pattern, handler)
 	}
 
@@ -170,21 +175,30 @@ func (m *apiMockServer) shutdown() {
 
 // createEndpointHandler returns an HTTP handler that generates a mock response
 // for the given operation. It finds the response schema and generates random
-// data that conforms to it.
+// data that conforms to it. If a response example is available, it is used instead.
 func (m *apiMockServer) createEndpointHandler(operation *spec.Operation) http.HandlerFunc {
 	return func(responseWriter http.ResponseWriter, _ *http.Request) {
-		responseSchema := m.findResponseSchema(operation)
-		if responseSchema == nil {
-			responseWriter.Header().Set("Content-Type", "application/json")
-			responseWriter.WriteHeader(http.StatusOK)
-			_, _ = responseWriter.Write([]byte(`{}`))
-			return
-		}
-
-		generatedData := GenerateFromSchema(responseSchema)
-
 		responseWriter.Header().Set("Content-Type", "application/json")
 		responseWriter.WriteHeader(http.StatusOK)
+
+		// Prefer example from response if available
+		if operation != nil {
+			for _, resp := range operation.Responses {
+				if resp != nil && resp.Example != nil {
+					encodeError := json.NewEncoder(responseWriter).Encode(resp.Example)
+					if encodeError != nil {
+						m.logger.ErrorContext(context.Background(), "failed to encode response example",
+							"error", encodeError,
+						)
+						http.Error(responseWriter, "Internal Server Error", http.StatusInternalServerError)
+					}
+					return
+				}
+			}
+		}
+
+		responseSchema := m.findResponseSchema(operation)
+		generatedData := GenerateFromSchema(responseSchema)
 
 		encodeError := json.NewEncoder(responseWriter).Encode(generatedData)
 		if encodeError != nil {
@@ -198,10 +212,11 @@ func (m *apiMockServer) createEndpointHandler(operation *spec.Operation) http.Ha
 
 // findResponseSchema finds the first response schema from the operation's
 // responses map. It prefers 200, 201, and default status codes, then falls
-// back to any available response.
+// back to any available response. If no schema is found, returns a generic
+// object schema so the mock server generates a JSON object instead of empty {}.
 func (m *apiMockServer) findResponseSchema(operation *spec.Operation) *spec.Schema {
 	if operation == nil || operation.Responses == nil {
-		return nil
+		return &spec.Schema{Type: schemaTypeObject}
 	}
 
 	preferredStatusCodes := []string{responseStatus200, responseStatus201, responseStatusDef}
@@ -228,7 +243,7 @@ func (m *apiMockServer) findResponseSchema(operation *spec.Operation) *spec.Sche
 		}
 	}
 
-	return nil
+	return &spec.Schema{Type: schemaTypeObject}
 }
 
 // schemaForContentType extracts the JSON schema from a content map,
