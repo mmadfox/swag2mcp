@@ -5,7 +5,7 @@
     <a href="https://coveralls.io/github/mmadfox/swag2mcp?branch=main"><img src="https://coveralls.io/repos/github/mmadfox/swag2mcp/badge.svg?branch=main&v=3" alt="Coverage Status"></a>
 </p>
 
-**swag2mcp** bridges OpenAPI/Swagger/Postman API specifications with LLM agents via the Model Context Protocol (MCP).
+**swag2mcp** is a local-first bridge between OpenAPI/Swagger/Postman API specifications and LLM agents via the Model Context Protocol (MCP).
 
 - **16 MCP tools** for discovering, inspecting, and invoking APIs
 - **Interactive TUI explorer** with full-text search

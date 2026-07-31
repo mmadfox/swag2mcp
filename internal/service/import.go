@@ -52,8 +52,7 @@ func (ims *importService) Import(ctx context.Context, req ImportRequest) (Import
 	}
 
 	if req.Source == "" && len(req.SpecFilter) == 0 {
-		return ImportResponse{}, NewValidationError(
-			"Import requires a source URL with filename, a spec filter, or a zip backup path.",
+		return ImportResponse{}, NewImportSourceError(
 			errors.New("no import source specified"),
 		)
 	}
@@ -61,8 +60,7 @@ func (ims *importService) Import(ctx context.Context, req ImportRequest) (Import
 	if req.Source != "" && req.Name == "" {
 		derived := specFileNameBase(req.Source)
 		if derived == "" || derived == defaultSpecName {
-			return ImportResponse{}, NewValidationError(
-				"Cannot derive filename from URL. Please provide a name explicitly.",
+			return ImportResponse{}, NewImportSourceError(
 				errors.New("filename not found in URL"),
 			)
 		}
@@ -77,7 +75,7 @@ func (ims *importService) Import(ctx context.Context, req ImportRequest) (Import
 
 func (ims *importService) importFromZip(_ context.Context, req ImportRequest) (ImportResponse, error) {
 	if !workspace.IsSwag2mcpZip(req.ZipSource) {
-		return ImportResponse{}, NewValidationError(
+		return ImportResponse{}, NewImportError(
 			fmt.Sprintf("File %q is not a valid swag2mcp backup archive.", req.ZipSource),
 			fmt.Errorf("invalid swag2mcp zip: %s", req.ZipSource),
 		)
@@ -161,7 +159,7 @@ func (ims *importService) importFromZip(_ context.Context, req ImportRequest) (I
 func (ims *importService) importSingle(ctx context.Context, req ImportRequest) (ImportResponse, error) {
 	data, err := ims.ws.DownloadSpec(ctx, req.Source)
 	if err != nil {
-		return ImportResponse{}, NewInvokeError(
+		return ImportResponse{}, NewImportError(
 			fmt.Sprintf("Failed to download spec from %q.", req.Source),
 			err,
 		)
@@ -169,7 +167,7 @@ func (ims *importService) importSingle(ctx context.Context, req ImportRequest) (
 
 	path, err := ims.ws.SaveSpec(req.Name, data)
 	if err != nil {
-		return ImportResponse{}, NewValidationError(
+		return ImportResponse{}, NewImportError(
 			fmt.Sprintf("Failed to save spec as %q. The filename may already exist.", req.Name),
 			err,
 		)
@@ -188,7 +186,7 @@ func (ims *importService) importSingle(ctx context.Context, req ImportRequest) (
 
 func (ims *importService) importSpecs(ctx context.Context, req ImportRequest) (ImportResponse, error) {
 	if req.ConfFilePath == "" {
-		return ImportResponse{}, NewValidationError(
+		return ImportResponse{}, NewImportError(
 			"Configuration file path is required for bulk import.",
 			errors.New("config file path is empty"),
 		)
@@ -223,7 +221,7 @@ func (ims *importService) importSpecs(ctx context.Context, req ImportRequest) (I
 
 			data, err := ims.ws.DownloadSpec(ctx, coll.Location)
 			if err != nil {
-				return ImportResponse{}, NewInvokeError(
+				return ImportResponse{}, NewImportError(
 					fmt.Sprintf("Failed to download spec for collection %q.", coll.Title),
 					err,
 				)
@@ -232,7 +230,7 @@ func (ims *importService) importSpecs(ctx context.Context, req ImportRequest) (I
 			name := specFileName(spec.Domain, coll.Title, coll.Location)
 			sp, err := ims.ws.SaveSpec(name, data)
 			if err != nil {
-				return ImportResponse{}, NewValidationError(
+				return ImportResponse{}, NewImportError(
 					fmt.Sprintf("Failed to save spec as %q. The filename may already exist.", name),
 					err,
 				)
@@ -250,10 +248,7 @@ func (ims *importService) importSpecs(ctx context.Context, req ImportRequest) (I
 	}
 
 	if !updated {
-		return ImportResponse{}, NewNotFoundError(
-			fmt.Sprintf("No matching specs found for filter %v.", req.SpecFilter),
-			fmt.Errorf("no specs matched filter %v", req.SpecFilter),
-		)
+		return ImportResponse{}, NewImportNoMatchError(fmt.Sprintf("%v", req.SpecFilter))
 	}
 
 	if err := config.Save(cfg, req.ConfFilePath); err != nil {

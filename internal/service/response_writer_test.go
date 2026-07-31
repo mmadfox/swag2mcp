@@ -34,11 +34,25 @@ func TestResolveMaxResponseSize_overflow(t *testing.T) {
 	require.Equal(t, config.MaxAllowedResponseSize, resolveMaxResponseSize(&big))
 }
 
+func TestResolveMaxResponseSize_belowMin(t *testing.T) {
+	t.Parallel()
+
+	small := 512
+	require.Equal(t, config.MinResponseSize, resolveMaxResponseSize(&small))
+}
+
+func TestResolveMaxResponseSize_atMin(t *testing.T) {
+	t.Parallel()
+
+	val := config.MinResponseSize
+	require.Equal(t, config.MinResponseSize, resolveMaxResponseSize(&val))
+}
+
 func TestResolveMaxResponseSize_valid(t *testing.T) {
 	t.Parallel()
 
-	val := 2048
-	require.Equal(t, 2048, resolveMaxResponseSize(&val))
+	val := 20480
+	require.Equal(t, 20480, resolveMaxResponseSize(&val))
 }
 
 func TestFormatSize_bytes(t *testing.T) {

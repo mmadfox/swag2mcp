@@ -6,12 +6,15 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/auth"
@@ -244,7 +247,41 @@ func TestInvokeService_executeRequest_withAuth(t *testing.T) {
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
-func TestInvokeService_saveLargeResponse(t *testing.T) {
+func TestInvokeService_streamOrBuffer_small(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestInvokeSvc(t, NewMockIndexReader(gomock.NewController(t)), NewMockWorkspaceOps(gomock.NewController(t)))
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     http.Header{"Content-Type": []string{"application/json"}},
+		Body:       io.NopCloser(strings.NewReader(`{"status":"ok"}`)),
+	}
+	result, err := svc.streamOrBuffer(resp, "test", &model.Endpoint{Name: "GET", Path: "/"}, 100)
+	require.NoError(t, err)
+	require.Nil(t, result.FileRef)
+	require.Equal(t, http.StatusOK, result.StatusCode)
+}
+
+func TestInvokeService_streamOrBuffer_exactMax(t *testing.T) {
+	t.Parallel()
+
+	body := make([]byte, 100)
+	for i := range body {
+		body[i] = 'A'
+	}
+
+	svc := newTestInvokeSvc(t, NewMockIndexReader(gomock.NewController(t)), NewMockWorkspaceOps(gomock.NewController(t)))
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     http.Header{"Content-Type": []string{"application/json"}},
+		Body:       io.NopCloser(bytes.NewReader(body)),
+	}
+	result, err := svc.streamOrBuffer(resp, "test", &model.Endpoint{Name: "GET", Path: "/"}, 100)
+	require.NoError(t, err)
+	require.Nil(t, result.FileRef)
+}
+
+func TestInvokeService_streamOrBuffer_large(t *testing.T) {
 	t.Parallel()
 
 	tmpDir := t.TempDir()
@@ -253,15 +290,72 @@ func TestInvokeService_saveLargeResponse(t *testing.T) {
 	ws.EXPECT().ResponsesDir().Return(filepath.Join(tmpDir, "responses")).AnyTimes()
 
 	svc := newTestInvokeSvc(t, NewMockIndexReader(ctrl), ws)
+
+	body := make([]byte, 200)
+	for i := range body {
+		body[i] = 'B'
+	}
+
 	resp := &http.Response{
 		StatusCode: http.StatusOK,
 		Header:     http.Header{"Content-Type": []string{"application/json"}},
+		Body:       io.NopCloser(bytes.NewReader(body)),
 	}
-	body := []byte(`{"data": "large response content"}`)
-	result, err := svc.saveLargeResponse(resp, body, "test-domain", &model.Endpoint{Name: "GET", Path: "/test"}, 10)
+	result, err := svc.streamOrBuffer(resp, "test", &model.Endpoint{Name: "GET", Path: "/"}, 100)
 	require.NoError(t, err)
 	require.NotNil(t, result.FileRef)
 	require.FileExists(t, result.FileRef.Path)
+
+	data, err := os.ReadFile(result.FileRef.Path)
+	require.NoError(t, err)
+	require.Len(t, data, 200)
+}
+
+func TestInvokeService_streamOrBuffer_noContentLength(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestInvokeSvc(t, NewMockIndexReader(gomock.NewController(t)), NewMockWorkspaceOps(gomock.NewController(t)))
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     http.Header{"Content-Type": []string{"application/json"}},
+		Body:       io.NopCloser(strings.NewReader(`{"status":"ok"}`)),
+	}
+	result, err := svc.streamOrBuffer(resp, "test", &model.Endpoint{Name: "GET", Path: "/"}, 100)
+	require.NoError(t, err)
+	require.Nil(t, result.FileRef)
+	require.Equal(t, http.StatusOK, result.StatusCode)
+}
+
+func TestInvokeService_streamOrBuffer_readError(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestInvokeSvc(t, NewMockIndexReader(gomock.NewController(t)), NewMockWorkspaceOps(gomock.NewController(t)))
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     http.Header{},
+		Body:       io.NopCloser(&errorReader{}),
+	}
+	_, err := svc.streamOrBuffer(resp, "test", &model.Endpoint{Name: "GET", Path: "/"}, 100)
+	require.Error(t, err)
+}
+
+type errorReader struct{}
+
+func (errorReader) Read(_ []byte) (int, error) { return 0, errors.New("read error") }
+
+func TestInvokeService_streamOrBuffer_emptyBody(t *testing.T) {
+	t.Parallel()
+
+	svc := newTestInvokeSvc(t, NewMockIndexReader(gomock.NewController(t)), NewMockWorkspaceOps(gomock.NewController(t)))
+	resp := &http.Response{
+		StatusCode: http.StatusNoContent,
+		Header:     http.Header{},
+		Body:       io.NopCloser(strings.NewReader("")),
+	}
+	result, err := svc.streamOrBuffer(resp, "test", &model.Endpoint{Name: "GET", Path: "/"}, 100)
+	require.NoError(t, err)
+	require.Nil(t, result.FileRef)
+	require.Equal(t, http.StatusNoContent, result.StatusCode)
 }
 
 func TestInvokeService_dumpRequest(t *testing.T) {

@@ -8,7 +8,6 @@ package service
 import (
 	"embed"
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -32,7 +31,7 @@ func newToolsService(index IndexReader, llmAuthDisabled func() bool) *toolsServi
 func (ts *toolsService) MakeToolDefinitions() (ToolDefinitions, error) {
 	entries, err := toolDefsFS.ReadDir("definitions")
 	if err != nil {
-		return ToolDefinitions{}, fmt.Errorf("failed to read tool definitions: %w", err)
+		return ToolDefinitions{}, NewToolLoadError(err)
 	}
 
 	var tools []Tool
@@ -46,14 +45,14 @@ func (ts *toolsService) MakeToolDefinitions() (ToolDefinitions, error) {
 		if entry.Name() == "instruction.md" {
 			instruction, err = loadInstructionFromEmbed()
 			if err != nil {
-				return ToolDefinitions{}, fmt.Errorf("failed to load instruction: %w", err)
+				return ToolDefinitions{}, NewToolLoadError(err)
 			}
 			continue
 		}
 
 		loadedTool, loadErr := loadToolFromEmbed(entry.Name())
 		if loadErr != nil {
-			return ToolDefinitions{}, fmt.Errorf("failed to load tool from %s: %w", entry.Name(), loadErr)
+			return ToolDefinitions{}, NewToolLoadError(loadErr)
 		}
 		if loadedTool.Name == Auth && ts.llmAuthDisabled() {
 			continue
@@ -141,7 +140,7 @@ func (ts *toolsService) makeAvailableSpecs() string {
 func loadInstructionFromEmbed() (string, error) {
 	content, err := toolDefsFS.ReadFile("definitions/instruction.md")
 	if err != nil {
-		return "", fmt.Errorf("failed to read instruction file: %w", err)
+		return "", NewToolLoadError(err)
 	}
 
 	return strings.TrimSpace(string(content)), nil
@@ -151,7 +150,7 @@ func loadInstructionFromEmbed() (string, error) {
 func loadToolFromEmbed(filename string) (Tool, error) {
 	content, err := toolDefsFS.ReadFile("definitions/" + filename)
 	if err != nil {
-		return Tool{}, fmt.Errorf("failed to read file: %w", err)
+		return Tool{}, NewToolLoadError(err)
 	}
 
 	lines := strings.Split(string(content), "\n")

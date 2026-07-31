@@ -8,6 +8,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -256,4 +257,467 @@ func TestResponseService_saveReaderResult_maxSizeHint(t *testing.T) {
 	ref, err := svc.saveReaderResult("", map[string]any{"key": "val"})
 	require.NoError(t, err)
 	require.Contains(t, ref.MaxSizeHint, "KB")
+}
+
+func TestResponseService_ResponseFilter_validationError(t *testing.T) {
+	t.Parallel()
+
+	svc := newResponseService(newServiceContext(), NewMockWorkspaceOps(gomock.NewController(t)), strictValidator{})
+	_, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{})
+	require.Error(t, err)
+}
+
+func TestResponseService_ResponseFilter_fileNotFound(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(t.TempDir()).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	_, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     "/nonexistent/file.json",
+		JSONPath: "items",
+	})
+	require.Error(t, err)
+}
+
+func TestResponseService_ResponseFilter_search(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	data := map[string]any{
+		"items": []any{
+			map[string]any{"name": "bitcoin", "price": 50000},
+			map[string]any{"name": "ethereum", "price": 3000},
+			map[string]any{"name": "litecoin", "price": 100},
+		},
+	}
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "test.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     fp,
+		JSONPath: "items",
+		Search:   "bitcoin",
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, resp.Total)
+	require.Len(t, resp.Items, 1)
+	require.Equal(t, "memory", resp.Strategy)
+}
+
+func TestResponseService_ResponseFilter_filter(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	data := map[string]any{
+		"items": []any{
+			map[string]any{"name": "bitcoin", "price": 50000},
+			map[string]any{"name": "ethereum", "price": 3000},
+			map[string]any{"name": "litecoin", "price": 100},
+		},
+	}
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "test.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     fp,
+		JSONPath: "items",
+		Filter:   "price > 1000",
+	})
+	require.NoError(t, err)
+	require.Equal(t, 2, resp.Total)
+	require.Len(t, resp.Items, 2)
+}
+
+func TestResponseService_ResponseFilter_pagination(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	items := make([]any, 25)
+	for i := range items {
+		items[i] = map[string]any{"id": i + 1, "name": fmt.Sprintf("item-%d", i+1)}
+	}
+	data := map[string]any{"results": items}
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "test.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+
+	// Page 1
+	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     fp,
+		JSONPath: "results",
+		Page:     1,
+		PageSize: 10,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 25, resp.Total)
+	require.Equal(t, 3, resp.TotalPages)
+	require.Len(t, resp.Items, 10)
+
+	// Page 3 (last)
+	resp, err = svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     fp,
+		JSONPath: "results",
+		Page:     3,
+		PageSize: 10,
+	})
+	require.NoError(t, err)
+	require.Len(t, resp.Items, 5)
+}
+
+func TestResponseService_ResponseFilter_emptyArray(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	data := map[string]any{"items": []any{}}
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "empty.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     fp,
+		JSONPath: "items",
+	})
+	require.NoError(t, err)
+	require.Equal(t, 0, resp.Total)
+	require.Empty(t, resp.Items)
+}
+
+func TestResponseService_ResponseFilter_invalidFilter(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	data := map[string]any{"items": []any{map[string]any{"name": "test"}}}
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "test.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	_, err = svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     fp,
+		JSONPath: "items",
+		Filter:   "invalid",
+	})
+	require.Error(t, err)
+}
+
+func TestResponseService_ResponseFilter_nestedJSONPath(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	data := map[string]any{
+		"data": map[string]any{
+			"items": []any{
+				map[string]any{"name": "alpha"},
+				map[string]any{"name": "beta"},
+			},
+		},
+	}
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "nested.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     fp,
+		JSONPath: "data.items",
+		Search:   "alpha",
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, resp.Total)
+}
+
+func TestResponseService_ResponseFilter_containsFilter(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	data := map[string]any{
+		"items": []any{
+			map[string]any{"name": "hello world"},
+			map[string]any{"name": "goodbye world"},
+		},
+	}
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "test.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     fp,
+		JSONPath: "items",
+		Filter:   "name contains hello",
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, resp.Total)
+}
+
+func TestResponseService_ResponseFilter_notEqualFilter(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	data := map[string]any{
+		"items": []any{
+			map[string]any{"status": "active"},
+			map[string]any{"status": "inactive"},
+		},
+	}
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "test.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     fp,
+		JSONPath: "items",
+		Filter:   "status != inactive",
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, resp.Total)
+}
+
+func TestResponseService_ResponseFilter_pageOutOfRange(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	data := map[string]any{
+		"items": []any{
+			map[string]any{"name": "only one"},
+		},
+	}
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "test.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     fp,
+		JSONPath: "items",
+		Page:     100,
+		PageSize: 10,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, resp.Total)
+	require.Empty(t, resp.Items)
+}
+
+func TestResponseService_ResponseFilter_defaultPageSize(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	items := make([]any, 20)
+	for i := range items {
+		items[i] = map[string]any{"id": i + 1}
+	}
+	data := map[string]any{"items": items}
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "test.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     fp,
+		JSONPath: "items",
+	})
+	require.NoError(t, err)
+	require.Equal(t, 10, resp.PageSize)
+	require.Len(t, resp.Items, 10)
+}
+
+func TestResponseService_ResponseFilter_maxPageSize(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	items := make([]any, 100)
+	for i := range items {
+		items[i] = map[string]any{"id": i + 1}
+	}
+	data := map[string]any{"items": items}
+	raw, err := json.Marshal(data)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "test.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     fp,
+		JSONPath: "items",
+		PageSize: 200,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 50, resp.PageSize)
+	require.Len(t, resp.Items, 50)
+}
+
+func TestResponseService_ResponseFilter_rootArray(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	items := []any{
+		map[string]any{"name": "bitcoin", "price": 50000},
+		map[string]any{"name": "ethereum", "price": 3000},
+		map[string]any{"name": "litecoin", "price": 100},
+	}
+	raw, err := json.Marshal(items)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "root.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+
+	// Search with empty jsonPath (root array)
+	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:   fp,
+		Search: "bitcoin",
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, resp.Total)
+	require.Len(t, resp.Items, 1)
+	require.Equal(t, "memory", resp.Strategy)
+
+	// Filter with empty jsonPath
+	resp, err = svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:   fp,
+		Filter: "price > 1000",
+	})
+	require.NoError(t, err)
+	require.Equal(t, 2, resp.Total)
+	require.Len(t, resp.Items, 2)
+
+	// Pagination with empty jsonPath
+	resp, err = svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     fp,
+		Page:     1,
+		PageSize: 2,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 3, resp.Total)
+	require.Len(t, resp.Items, 2)
+}
+
+func TestResponseService_ResponseFilter_rootArrayStreaming(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	items := make([]any, 100)
+	for i := range items {
+		items[i] = map[string]any{"id": i + 1, "name": fmt.Sprintf("item-%d", i+1)}
+	}
+	raw, err := json.Marshal(items)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "root-stream.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	svc := newResponseService(newServiceContext(), NewMockWorkspaceOps(gomock.NewController(t)), fakeValidator{})
+
+	// Call filterArrayStreaming directly to test streaming strategy
+	matched, total, err := svc.filterArrayStreaming(fp, "", "item-50", "", 1, 10)
+	require.NoError(t, err)
+	require.Equal(t, 1, total)
+	require.Len(t, matched, 1)
 }

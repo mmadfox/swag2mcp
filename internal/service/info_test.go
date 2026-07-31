@@ -185,7 +185,7 @@ func TestBuildHTTPClientInfo(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	settings := NewMockSettingsProvider(ctrl)
-	settings.EXPECT().MaxResponseSize().Return(2048)
+	settings.EXPECT().MaxResponseSize().Return(2048).Times(2)
 	settings.EXPECT().HTTPClientConfig().Return(httpclient.Config{
 		UserAgent: "test-agent",
 	})
@@ -221,6 +221,12 @@ func TestBuildHTTPClientInfo(t *testing.T) {
 	require.NotEmpty(t, inf.Headers)
 	require.NotEmpty(t, inf.Cookies)
 	require.NotNil(t, inf.Proxy)
+	require.False(t, inf.RateLimiting.Disabled)
+	require.NotEmpty(t, inf.RateLimiting.PerEndpoint)
+	require.Positive(t, inf.RateLimiting.GlobalLimit)
+	require.NotEmpty(t, inf.ResponseSize.Current)
+	require.NotEmpty(t, inf.ResponseSize.Min)
+	require.NotEmpty(t, inf.ResponseSize.Max)
 }
 
 func TestBuildMCPInfo(t *testing.T) {
@@ -316,7 +322,7 @@ func TestBuildSnapshot(t *testing.T) {
 			UserAgent: "global-agent",
 		},
 	})
-	settings.EXPECT().MaxResponseSize().Return(2048)
+	settings.EXPECT().MaxResponseSize().Return(2048).Times(2)
 	settings.EXPECT().HTTPClientConfig().Return(httpclient.Config{UserAgent: "agent"})
 
 	idx := NewMockIndexReader(ctrl)

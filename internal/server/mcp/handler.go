@@ -53,6 +53,7 @@ type ResponseManager interface {
 	ResponseOutline(ctx context.Context, req service.ResponseOutlineRequest) (service.ResponseOutlineResponse, error)
 	ResponseCompress(ctx context.Context, req service.ResponseCompressRequest) (service.ResponseCompressResponse, error)
 	ResponseSlice(ctx context.Context, req service.ResponseSliceRequest) (service.ResponseSliceResponse, error)
+	ResponseFilter(ctx context.Context, req service.ResponseFilterRequest) (service.ResponseFilterResponse, error)
 }
 
 // Svc is the combined service interface consumed by MCP tool handlers.
@@ -326,6 +327,20 @@ func (h *handler) handleResponseSlice(
 	req service.ResponseSliceRequest,
 ) (*sdkmcp.CallToolResult, any, error) {
 	resp, err := h.service.ResponseSlice(ctx, req)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &sdkmcp.CallToolResult{
+		StructuredContent: resp,
+	}, nil, nil
+}
+
+func (h *handler) handleResponseFilter(
+	ctx context.Context,
+	_ *sdkmcp.CallToolRequest,
+	req service.ResponseFilterRequest,
+) (*sdkmcp.CallToolResult, any, error) {
+	resp, err := h.service.ResponseFilter(ctx, req)
 	if err != nil {
 		return nil, nil, err
 	}

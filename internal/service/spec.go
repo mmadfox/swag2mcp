@@ -7,7 +7,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"sort"
 )
 
@@ -48,20 +47,13 @@ func (ss *specService) SpecByID(
 	rq SpecByIDRequest,
 ) (SpecByIDResponse, error) {
 	if err := ss.v.Struct(rq); err != nil {
-		return SpecByIDResponse{}, NewValidationError(
-			"The spec ID is invalid. It must be a 32-character hex string. "+
-				"Use spec_list to find the correct spec ID.",
-			err,
-		)
+		return SpecByIDResponse{}, NewInvalidSpecIDError(err)
 	}
 
 	var r SpecByIDResponse
 	sp, err := ss.index.SpecByID(rq.ID)
 	if err != nil {
-		return SpecByIDResponse{}, NewNotFoundError(
-			fmt.Sprintf("Spec %q was not found. Use spec_list to see all available specs.", rq.ID),
-			err,
-		)
+		return SpecByIDResponse{}, NewSpecNotFoundError(rq.ID, err)
 	}
 	r.Spec = Spec{
 		ID:     sp.ID,

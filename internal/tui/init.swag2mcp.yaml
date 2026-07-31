@@ -7,7 +7,7 @@ rate_limit_interval: 1s
 mock_enabled: false 
 
 http_client:
-  max_response_size: 30000
+  max_response_size: 150000
   user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
   headers:
     Accept: application/json

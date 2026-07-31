@@ -52,6 +52,8 @@ const (
 	ResponseCompress = "response_compress"
 	// ResponseSlice is the name of the response_slice tool.
 	ResponseSlice = "response_slice"
+	// ResponseFilter is the name of the response_filter tool.
+	ResponseFilter = "response_filter"
 )
 
 // Tool represents a single MCP tool definition.
@@ -353,6 +355,22 @@ type HTTPClientInfo struct {
 	Proxy           *ProxyInfo        `json:"proxy,omitempty"`
 	Headers         map[string]string `json:"headers,omitempty"`
 	Cookies         []CookieInfo      `json:"cookies,omitempty"`
+	RateLimiting    RateLimitInfo     `json:"rate_limiting"`
+	ResponseSize    ResponseSizeInfo  `json:"response_size"`
+}
+
+// RateLimitInfo holds rate limiting configuration.
+type RateLimitInfo struct {
+	Disabled    bool   `json:"disabled"`
+	PerEndpoint string `json:"per_endpoint_interval"`
+	GlobalLimit int    `json:"global_limit"`
+}
+
+// ResponseSizeInfo holds response size limits.
+type ResponseSizeInfo struct {
+	Current string `json:"current"`
+	Min     string `json:"min"`
+	Max     string `json:"max"`
 }
 
 // ProxyInfo holds proxy configuration details.

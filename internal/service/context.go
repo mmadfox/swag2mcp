@@ -26,7 +26,8 @@ type serviceContext struct {
 	globalCookies      atomic.Value // []httpclient.Cookie
 	disableLLMAuth     atomic.Bool
 	disableRateLimiter atomic.Bool
-	rateLimiter        atomic.Value // ratelimit.Limiter
+	rateLimiter        atomic.Value // ratelimit.Limiter (per-endpoint)
+	globalRateLimiter  atomic.Value // ratelimit.Limiter (global invoke limit)
 }
 
 func newServiceContext() *serviceContext {
@@ -134,4 +135,16 @@ func (c *serviceContext) loadRateLimiter() ratelimit.Limiter {
 
 func (c *serviceContext) storeRateLimiter(l ratelimit.Limiter) {
 	c.rateLimiter.Store(l)
+}
+
+func (c *serviceContext) loadGlobalRateLimiter() ratelimit.Limiter {
+	v := c.globalRateLimiter.Load()
+	if v == nil {
+		return nil
+	}
+	return v.(ratelimit.Limiter)
+}
+
+func (c *serviceContext) storeGlobalRateLimiter(l ratelimit.Limiter) {
+	c.globalRateLimiter.Store(l)
 }
