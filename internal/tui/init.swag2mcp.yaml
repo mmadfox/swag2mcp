@@ -159,7 +159,7 @@ specs:
       type: bearer
       config:
         # demo token
-        token: "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"
+        token: "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"
     collections:
       - llm_title: GitHub Repositories
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/github/rest-api.yaml
