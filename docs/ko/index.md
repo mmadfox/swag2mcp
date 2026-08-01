@@ -2,6 +2,8 @@
 
 OpenAPI/Swagger/Postman API 명세를 Model Context Protocol(MCP)을 통해 LLM 에이전트와 연결합니다.
 
+모든 API가 MCP를 지원하는 것은 아닙니다 — 비공개 엔드포인트, 내부 서비스, 레거시 시스템 및 타사 API는 거의 지원하지 않습니다. swag2mcp는 모든 REST API를 MCP 인터페이스로 래핑하여 서버 코드를 한 줄도 수정하지 않고 LLM 에이전트가 전체 API 표면에 즉시 액세스할 수 있도록 합니다. 실시간 API 호출을 통해 LLM은 실제 세계의 지식을 얻어 정보에 기반한 결정을 내리고, 워크플로를 자동화하며, 데이터에 따라 행동합니다 — 단순한 추측이 아닙니다.
+
 <a href="https://www.youtube.com/watch?v=1Da4UmE2f9U" target="_blank">
   <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/docs/cover.jpg" alt="Preview">
 </a>

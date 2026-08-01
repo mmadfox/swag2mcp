@@ -2,6 +2,8 @@
 
 Fait le pont entre les spécifications d'API OpenAPI/Swagger/Postman et les agents LLM via le Model Context Protocol (MCP).
 
+Toutes les API ne parlent pas MCP — les points de terminaison privés, les services internes, les systèmes legacy et les API tierces le font rarement. swag2mcp enveloppe toute API REST dans une interface MCP, donnant aux agents LLM un accès instantané à l'ensemble de votre surface API sans modifier une seule ligne de code serveur. Grâce à des appels API en direct, le LLM acquiert des connaissances concrètes pour prendre des décisions éclairées, automatiser les flux de travail et agir sur vos données — pas seulement deviner.
+
 <a href="https://www.youtube.com/watch?v=1Da4UmE2f9U" target="_blank">
   <img src="https://raw.githubusercontent.com/mmadfox/swag2mcp/main/docs/cover.jpg" alt="Aperçu">
 </a>
