@@ -29,10 +29,10 @@
 
 ```bash
 # С sudo (устанавливается в /usr/local/bin — рекомендуется)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
+curl -fsSL https://swag2mcp.io/install.sh | bash
 
 # Без sudo (устанавливается в ~/.local/bin)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install.sh | bash -s -- --local
 ```
 
 **`--sudo` (по умолчанию):** Устанавливает в `/usr/local/bin/swag2mcp` с помощью `sudo`. Вам будет предложено ввести пароль. Если `sudo` не сработает, используется резервный путь `~/.local/bin/swag2mcp`.
@@ -153,10 +153,10 @@ docker run --rm -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:
 
 ```bash
 # С sudo (устанавливается в /usr/local/bin — рекомендуется)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
+curl -fsSL https://swag2mcp.io/install.sh | bash
 
 # Без sudo (устанавливается в ~/.local/bin)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install.sh | bash -s -- --local
 ```
 
 **`--sudo` (по умолчанию):** Устанавливает в `/usr/local/bin/swag2mcp` с помощью `sudo`. Вам будет предложено ввести пароль. Если `sudo` не сработает, используется резервный путь `~/.local/bin/swag2mcp`.

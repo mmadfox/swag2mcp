@@ -29,10 +29,10 @@
 
 ```bash
 # sudo を使用（/usr/local/bin にインストール — 推奨）
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
+curl -fsSL https://swag2mcp.io/install.sh | bash
 
 # sudo なし（~/.local/bin にインストール）
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install.sh | bash -s -- --local
 ```
 
 **`--sudo`（デフォルト）：** `sudo` を使用して `/usr/local/bin/swag2mcp` にインストールします。パスワードの入力を求められます。`sudo` が失敗した場合は `~/.local/bin/swag2mcp` にフォールバックします。
@@ -153,10 +153,10 @@ docker run --rm -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp:
 
 ```bash
 # sudo を使用（/usr/local/bin にインストール — 推奨）
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
+curl -fsSL https://swag2mcp.io/install.sh | bash
 
 # sudo なし（~/.local/bin にインストール）
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install.sh | bash -s -- --local
 ```
 
 **`--sudo`（デフォルト）：** `sudo` を使用して `/usr/local/bin/swag2mcp` にインストールします。パスワードの入力を求められます。`sudo` が失敗した場合は `~/.local/bin/swag2mcp` にフォールバックします。

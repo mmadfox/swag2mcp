@@ -29,7 +29,7 @@
 
 **macOS / Linux (one-liner):**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
+curl -fsSL https://swag2mcp.io/install.sh | bash
 ```
 
 **Windows (Scoop):**

@@ -24,10 +24,10 @@
 
 ```bash
 # sudo 사용 (/usr/local/bin에 설치 — 권장)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash
 
 # sudo 없이 (~/.local/bin에 설치)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash -s -- --local
 ```
 
 **`--sudo` (기본값):** `sudo`를 사용하여 `/usr/local/bin/swag2mcp-mock`에 설치합니다. 비밀번호를 입력하라는 메시지가 표시됩니다. `sudo`가 실패하면 `~/.local/bin/swag2mcp-mock`으로 대체됩니다.
@@ -139,10 +139,10 @@ docker run --rm -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-
 
 ```bash
 # sudo 사용 (/usr/local/bin에 설치 — 권장)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash
 
 # sudo 없이 (~/.local/bin에 설치)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash -s -- --local
 ```
 
 **`--sudo` (기본값):** `sudo`를 사용하여 `/usr/local/bin/swag2mcp-mock`에 설치합니다. 비밀번호를 입력하라는 메시지가 표시됩니다. `sudo`가 실패하면 `~/.local/bin/swag2mcp-mock`으로 대체됩니다.

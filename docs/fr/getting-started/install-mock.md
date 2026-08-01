@@ -24,10 +24,10 @@ Deux modes d'installation — choisissez celui qui vous convient :
 
 ```bash
 # Avec sudo (installe dans /usr/local/bin — recommandé)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash
 
 # Sans sudo (installe dans ~/.local/bin)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash -s -- --local
 ```
 
 **`--sudo` (par défaut) :** Installe dans `/usr/local/bin/swag2mcp-mock` avec `sudo`. Votre mot de passe vous sera demandé. Si `sudo` échoue, bascule vers `~/.local/bin/swag2mcp-mock`.
@@ -139,10 +139,10 @@ Deux modes d'installation — choisissez celui qui vous convient :
 
 ```bash
 # Avec sudo (installe dans /usr/local/bin — recommandé)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash
 
 # Sans sudo (installe dans ~/.local/bin)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash -s -- --local
 ```
 
 **`--sudo` (par défaut) :** Installe dans `/usr/local/bin/swag2mcp-mock` avec `sudo`. Votre mot de passe vous sera demandé. Si `sudo` échoue, bascule vers `~/.local/bin/swag2mcp-mock`.

@@ -24,10 +24,10 @@
 
 ```bash
 # sudo使用（/usr/local/binにインストール — 推奨）
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash
 
 # sudoなし（~/.local/binにインストール）
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash -s -- --local
 ```
 
 **`--sudo`（デフォルト）：** `sudo` を使用して `/usr/local/bin/swag2mcp-mock` にインストールします。パスワードの入力を求められます。`sudo` が失敗した場合は、`~/.local/bin/swag2mcp-mock` にフォールバックします。
@@ -139,10 +139,10 @@ docker run --rm -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-
 
 ```bash
 # sudo使用（/usr/local/binにインストール — 推奨）
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash
 
 # sudoなし（~/.local/binにインストール）
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash -s -- --local
 ```
 
 **`--sudo`（デフォルト）：** `sudo` を使用して `/usr/local/bin/swag2mcp-mock` にインストールします。パスワードの入力を求められます。`sudo` が失敗した場合は、`~/.local/bin/swag2mcp-mock` にフォールバックします。

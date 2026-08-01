@@ -1,4 +1,9 @@
 import { defineConfig } from 'vitepress'
+import { copyFileSync, mkdirSync } from 'fs'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   title: 'swag2mcp',
@@ -1024,5 +1029,14 @@ export default defineConfig({
         ],
       },
     },
+  },
+  buildEnd: (siteConfig) => {
+    const scripts = ['install.sh', 'install-mock.sh']
+    for (const name of scripts) {
+      const src = resolve(__dirname, '../../scripts', name)
+      const dest = resolve(siteConfig.outDir, name)
+      mkdirSync(dirname(dest), { recursive: true })
+      copyFileSync(src, dest)
+    }
   },
 })

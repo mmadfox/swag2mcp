@@ -24,10 +24,10 @@
 
 ```bash
 # 使用 sudo（安装到 /usr/local/bin — 推荐）
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash
 
 # 不使用 sudo（安装到 ~/.local/bin）
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash -s -- --local
 ```
 
 **`--sudo`（默认）：** 使用 `sudo` 安装到 `/usr/local/bin/swag2mcp-mock`。系统会提示您输入密码。如果 `sudo` 失败，则回退到 `~/.local/bin/swag2mcp-mock`。
@@ -139,10 +139,10 @@ docker run --rm -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-
 
 ```bash
 # 使用 sudo（安装到 /usr/local/bin — 推荐）
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash
 
 # 不使用 sudo（安装到 ~/.local/bin）
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash -s -- --local
 ```
 
 **`--sudo`（默认）：** 使用 `sudo` 安装到 `/usr/local/bin/swag2mcp-mock`。系统会提示您输入密码。如果 `sudo` 失败，则回退到 `~/.local/bin/swag2mcp-mock`。

@@ -24,10 +24,10 @@
 
 ```bash
 # С sudo (устанавливается в /usr/local/bin — рекомендуется)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash
 
 # Без sudo (устанавливается в ~/.local/bin)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash -s -- --local
 ```
 
 **`--sudo` (по умолчанию):** Устанавливает в `/usr/local/bin/swag2mcp-mock` с помощью `sudo`. Будет запрошен пароль. Если `sudo` не сработает, выполняется откат к `~/.local/bin/swag2mcp-mock`.
@@ -139,10 +139,10 @@ docker run --rm -v ~/.swag2mcp:/home/nonroot/.swag2mcp ghcr.io/mmadfox/swag2mcp-
 
 ```bash
 # С sudo (устанавливается в /usr/local/bin — рекомендуется)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash
 
 # Без sudo (устанавливается в ~/.local/bin)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install-mock.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install-mock.sh | bash -s -- --local
 ```
 
 **`--sudo` (по умолчанию):** Устанавливает в `/usr/local/bin/swag2mcp-mock` с помощью `sudo`. Будет запрошен пароль. Если `sudo` не сработает, выполняется откат к `~/.local/bin/swag2mcp-mock`.

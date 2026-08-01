@@ -29,10 +29,10 @@ Deux modes d'installation — choisissez celui qui vous convient :
 
 ```bash
 # Avec sudo (installe dans /usr/local/bin — recommandé)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
+curl -fsSL https://swag2mcp.io/install.sh | bash
 
 # Sans sudo (installe dans ~/.local/bin)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install.sh | bash -s -- --local
 ```
 
 **`--sudo` (par défaut) :** Installe dans `/usr/local/bin/swag2mcp` via `sudo`. Vous serez invité à saisir votre mot de passe. Si `sudo` échoue, il utilise `~/.local/bin/swag2mcp` comme solution de repli.
@@ -153,10 +153,10 @@ Deux modes d'installation — choisissez celui qui vous convient :
 
 ```bash
 # Avec sudo (installe dans /usr/local/bin — recommandé)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash
+curl -fsSL https://swag2mcp.io/install.sh | bash
 
 # Sans sudo (installe dans ~/.local/bin)
-curl -fsSL https://raw.githubusercontent.com/mmadfox/swag2mcp/main/scripts/install.sh | bash -s -- --local
+curl -fsSL https://swag2mcp.io/install.sh | bash -s -- --local
 ```
 
 **`--sudo` (par défaut) :** Installe dans `/usr/local/bin/swag2mcp` via `sudo`. Vous serez invité à saisir votre mot de passe. Si `sudo` échoue, il utilise `~/.local/bin/swag2mcp` comme solution de repli.
