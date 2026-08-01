@@ -10,6 +10,8 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'icon', href: '/icon.svg' }],
+    ['script', { async: '', src: 'https://www.googletagmanager.com/gtag/js?id=G-E6NJKGTW6S' }],
+    ['script', {}, `window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-E6NJKGTW6S');`],
   ],
 
   themeConfig: {
