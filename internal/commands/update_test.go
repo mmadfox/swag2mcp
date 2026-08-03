@@ -14,6 +14,8 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/cache"
 	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
+	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
 
 func TestRunUpdate_NoConfigCreatesIt(t *testing.T) {
@@ -43,6 +45,56 @@ func TestRunUpdate_InvalidConfig(t *testing.T) {
 	if err == nil {
 		t.Fatal("runUpdate() expected error for invalid config, got nil")
 	}
+}
+
+func TestRunUpdate_Output(t *testing.T) {
+	tmpDir := t.TempDir()
+	ws, _ := workspace.New(tmpDir)
+	if err := ws.Init(); err != nil {
+		t.Fatalf("Init() = %v", err)
+	}
+
+	specFile := filepath.Join(tmpDir, "spec.json")
+	if err := os.WriteFile(specFile, []byte(`{"openapi":"3.0.0"}`), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	cfg := &config.Config{
+		Specs: []config.Spec{
+			{
+				Domain:   "nspd",
+				LLMTitle: "NSPD Services",
+				BaseURL:  "https://example.com",
+				Collections: []config.Collection{
+					{LLMTitle: "Actors", Location: specFile},
+					{LLMTitle: "Core", Location: specFile},
+				},
+			},
+			{
+				Domain:   "meteo",
+				LLMTitle: "Meteo API",
+				BaseURL:  "https://meteo.example.com",
+				Collections: []config.Collection{
+					{LLMTitle: "Forecast", Location: specFile},
+				},
+			},
+		},
+	}
+	data, _ := yaml.Marshal(cfg)
+	if err := os.WriteFile(ws.ConfigPath(), data, 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	result, err := runUpdate(tmpDir)
+	if err != nil {
+		t.Fatalf("runUpdate() = %v", err)
+	}
+	require.Equal(t, 2, result.total)
+	require.Len(t, result.specs, 2)
+	require.Equal(t, "nspd", result.specs[0].domain)
+	require.Equal(t, 2, result.specs[0].collections)
+	require.Equal(t, "meteo", result.specs[1].domain)
+	require.Equal(t, 1, result.specs[1].collections)
 }
 
 func TestCacheSpecs(t *testing.T) {

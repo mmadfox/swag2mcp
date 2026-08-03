@@ -31,6 +31,7 @@ specs:
         scopes:
           - openid
           - profile
+        request_format: form
 ```
 
 ## Paramètres
@@ -43,6 +44,7 @@ specs:
 | `token_url` | Oui | URL du point d'accès du jeton |
 | `client_secret` | Non | Secret du client (optionnel, pour les clients publics) |
 | `scopes` | Non | Liste des permissions (optionnel) |
+| `request_format` | Non | Format du corps : `form` (défaut, `application/x-www-form-urlencoded`) ou `json` (`application/json`) |
 
 ## Notes
 
@@ -51,3 +53,4 @@ specs:
 - Le jeton est mis en cache jusqu'à l'expiration
 - `client_id`, `client_secret`, `username` et `password` prennent en charge la syntaxe `$(VAR)` pour les variables d'environnement
 - `token_url` et `scopes` sont utilisés tels quels (pas de résolution de variable d'environnement)
+- `request_format: json` envoie la demande de jeton en corps JSON — à utiliser lorsque le point d'accès du jeton nécessite `Content-Type: application/json`

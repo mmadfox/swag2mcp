@@ -51,10 +51,10 @@ swag2mcp 自动检测来源类型：
 
 ```bash
 # 将规范文件导入工作区
-swag2mcp import https://example.com/api.yaml myspec.yaml
+swag2mcp import https://example.com/api.yaml example-api.yaml
 
 # 导入后，location 变为：
-# specs/myspec.yaml
+# specs/example-api.yaml
 ```
 
 ## 缓存系统

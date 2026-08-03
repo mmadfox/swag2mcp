@@ -101,6 +101,54 @@ func TestParseSingleOrZipArgs_Empty(t *testing.T) {
 	require.Empty(t, got.name)
 }
 
+func TestRunImport_NoSpec_ForceOverwrites(t *testing.T) {
+	tmpDir := t.TempDir()
+	ws, _ := workspace.New(tmpDir)
+	if err := ws.Init(); err != nil {
+		t.Fatalf("Init() = %v", err)
+	}
+
+	specDir := filepath.Join(tmpDir, "specs")
+	existingPath := filepath.Join(specDir, "myspec.yaml")
+	if err := os.WriteFile(existingPath, []byte("old"), 0600); err != nil {
+		t.Fatalf("WriteFile() = %v", err)
+	}
+
+	specContent := "openapi: 3.0.0\ninfo:\n  title: Updated\n"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(specContent))
+	}))
+	t.Cleanup(srv.Close)
+
+	cmd := testCmd()
+	var buf bytes.Buffer
+	cmd.SetOut(&buf)
+
+	parsed := importArgs{
+		mode:     importModeSingle,
+		basePath: tmpDir,
+		source:   srv.URL + "/spec.yaml",
+		name:     "myspec.yaml",
+	}
+	err := runImport(parsed, nil, true, cmd)
+	if err != nil {
+		t.Fatalf("runImport() with force = %v", err)
+	}
+
+	if !strings.Contains(buf.String(), "myspec.yaml") {
+		t.Errorf("output = %q, want success message with filename", buf.String())
+	}
+
+	data, err := os.ReadFile(existingPath)
+	if err != nil {
+		t.Fatalf("ReadFile() = %v", err)
+	}
+	if string(data) != specContent {
+		t.Errorf("file content = %q, want %q", string(data), specContent)
+	}
+}
+
 func TestRunImport_NoSpec_Success(t *testing.T) {
 	tmpDir := t.TempDir()
 	ws, _ := workspace.New(tmpDir)
@@ -122,10 +170,10 @@ func TestRunImport_NoSpec_Success(t *testing.T) {
 	parsed := importArgs{
 		mode:     importModeSingle,
 		basePath: tmpDir,
-		source:   srv.URL,
+		source:   srv.URL + "/spec.yaml",
 		name:     "myspec.yaml",
 	}
-	err := runImport(parsed, nil, cmd)
+	err := runImport(parsed, nil, false, cmd)
 	if err != nil {
 		t.Fatalf("runImport() = %v", err)
 	}
@@ -146,7 +194,7 @@ func TestRunImport_NoSpec_MissingArgs(t *testing.T) {
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)
 	parsed := importArgs{mode: importModeSingle, basePath: tmpDir}
-	err := runImport(parsed, nil, cmd)
+	err := runImport(parsed, nil, false, cmd)
 
 	if err == nil {
 		t.Fatal("runImport() expected error, got nil")
@@ -176,16 +224,16 @@ func TestRunImport_NoSpec_NameDerivedFromURL(t *testing.T) {
 		basePath: tmpDir,
 		source:   srv.URL + "/specs/petstore.yaml",
 	}
-	err := runImport(parsed, nil, cmd)
+	err := runImport(parsed, nil, false, cmd)
 	if err != nil {
 		t.Fatalf("runImport() = %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "petstore.yaml") {
+	if !strings.Contains(buf.String(), "petstore-specs.yaml") {
 		t.Errorf("output = %q, want success message with derived filename", buf.String())
 	}
 
-	specPath := filepath.Join(tmpDir, "specs", "petstore.yaml")
+	specPath := filepath.Join(tmpDir, "specs", "petstore-specs.yaml")
 	if _, err := os.Stat(specPath); os.IsNotExist(err) {
 		t.Errorf("spec file was not created at %s", specPath)
 	}
@@ -207,9 +255,32 @@ func TestRunImport_NoSpec_NameNotDerivedFromURL_NoFilename(t *testing.T) {
 		basePath: tmpDir,
 		source:   "https://example.com/",
 	}
-	err := runImport(parsed, nil, cmd)
+	err := runImport(parsed, nil, false, cmd)
 	if err == nil {
 		t.Fatal("runImport() expected error for URL without filename, got nil")
+	}
+}
+
+func TestRunImport_NoSpec_InvalidExtension(t *testing.T) {
+	tmpDir := t.TempDir()
+	ws, _ := workspace.New(tmpDir)
+	if err := ws.Init(); err != nil {
+		t.Fatalf("Init() = %v", err)
+	}
+
+	cmd := testCmd()
+	var buf bytes.Buffer
+	cmd.SetOut(&buf)
+
+	parsed := importArgs{
+		mode:     importModeSingle,
+		basePath: tmpDir,
+		source:   "https://example.com/spec.html",
+		name:     "spec.yaml",
+	}
+	err := runImport(parsed, nil, false, cmd)
+	if err == nil {
+		t.Fatal("runImport() expected error for invalid extension, got nil")
 	}
 }
 
@@ -244,7 +315,7 @@ func TestRunImport_WithSpec_Success(t *testing.T) {
 	cmd.SetOut(&buf)
 
 	parsed := importArgs{mode: importModeBulk, basePath: tmpDir}
-	err := runImport(parsed, []string{"meteo"}, cmd)
+	err := runImport(parsed, []string{"meteo"}, false, cmd)
 	if err != nil {
 		t.Fatalf("runImport() = %v", err)
 	}
@@ -261,7 +332,7 @@ func TestRunImport_WithSpec_NoConfig(t *testing.T) {
 	cmd.SetOut(&buf)
 
 	parsed := importArgs{mode: importModeBulk, basePath: tmpDir}
-	err := runImport(parsed, []string{"meteo"}, cmd)
+	err := runImport(parsed, []string{"meteo"}, false, cmd)
 	if err == nil {
 		t.Fatal("runImport() expected error, got nil")
 	}
@@ -291,7 +362,7 @@ func TestRunImport_WithSpec_NoMatch(t *testing.T) {
 	cmd.SetOut(&buf)
 
 	parsed := importArgs{mode: importModeBulk, basePath: tmpDir}
-	err := runImport(parsed, []string{"nonexistent"}, cmd)
+	err := runImport(parsed, []string{"nonexistent"}, false, cmd)
 	if err == nil {
 		t.Fatal("runImport() expected error for no matching specs, got nil")
 	}
@@ -342,7 +413,7 @@ func TestRunImport_FromZip(t *testing.T) {
 	cmd.SetOut(&buf)
 
 	parsed := importArgs{mode: importModeZip, basePath: restoreDir, zipFile: zipPath}
-	err := runImport(parsed, nil, cmd)
+	err := runImport(parsed, nil, false, cmd)
 	if err != nil {
 		t.Fatalf("runImport() = %v", err)
 	}
@@ -398,8 +469,8 @@ func TestRunImport_FromZip_DetectByExtension(t *testing.T) {
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)
 
-	parsed := parseImportArgs([]string{restoreDir, zipPath}, nil, "")
-	err := runImport(parsed, nil, cmd)
+	parsed := parseImportArgs([]string{restoreDir, zipPath}, "", false)
+	err := runImport(parsed, nil, false, cmd)
 	if err != nil {
 		t.Fatalf("runImport() = %v", err)
 	}

@@ -51,10 +51,10 @@ swag2mcp автоматически определяет тип источник
 
 ```bash
 # Импорт файла спецификации в рабочую область
-swag2mcp import https://example.com/api.yaml myspec.yaml
+swag2mcp import https://example.com/api.yaml example-api.yaml
 
 # После импорта location становится:
-# specs/myspec.yaml
+# specs/example-api.yaml
 ```
 
 ## Система кэширования

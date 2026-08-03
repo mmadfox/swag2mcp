@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
@@ -23,6 +24,7 @@ type ImportRequest struct {
 	SpecFilter   []string
 	ConfFilePath string
 	ZipSource    string
+	Force        bool
 }
 
 // ImportResponse holds the result of an import operation.
@@ -35,6 +37,7 @@ type ImportedFile struct {
 	Source    string `json:"source"`
 	Name      string `json:"name"`
 	SavedPath string `json:"savedPath"`
+	Skipped   bool   `json:"skipped,omitempty"`
 }
 
 type importService struct {
@@ -51,13 +54,11 @@ func (ims *importService) Import(ctx context.Context, req ImportRequest) (Import
 		return ims.importFromZip(ctx, req)
 	}
 
-	if req.Source == "" && len(req.SpecFilter) == 0 {
-		return ImportResponse{}, NewImportSourceError(
-			errors.New("no import source specified"),
-		)
+	if req.Source == "" {
+		return ims.importSpecs(ctx, req)
 	}
 
-	if req.Source != "" && req.Name == "" {
+	if req.Name == "" {
 		derived := specFileNameBase(req.Source)
 		if derived == "" || derived == defaultSpecName {
 			return ImportResponse{}, NewImportSourceError(
@@ -67,9 +68,6 @@ func (ims *importService) Import(ctx context.Context, req ImportRequest) (Import
 		req.Name = derived
 	}
 
-	if len(req.SpecFilter) > 0 {
-		return ims.importSpecs(ctx, req)
-	}
 	return ims.importSingle(ctx, req)
 }
 
@@ -165,10 +163,29 @@ func (ims *importService) importSingle(ctx context.Context, req ImportRequest) (
 		)
 	}
 
-	path, err := ims.ws.SaveSpec(req.Name, data)
+	name := req.Name
+	pathPart := pathPartFromLocation(req.Source)
+	if pathPart != "" {
+		ext := filepath.Ext(name)
+		base := strings.TrimSuffix(name, ext)
+		name = base + "-" + pathPart + ext
+	}
+
+	if filepath.Ext(name) == "" {
+		if ext := extFromLocation(req.Source); ext != "" {
+			name += ext
+		}
+	}
+
+	var path string
+	if req.Force {
+		path, err = ims.ws.SaveOrUpdateSpec(name, data)
+	} else {
+		path, err = ims.ws.SaveSpec(name, data)
+	}
 	if err != nil {
 		return ImportResponse{}, NewImportError(
-			fmt.Sprintf("Failed to save spec as %q. The filename may already exist.", req.Name),
+			fmt.Sprintf("Failed to save spec as %q. The filename may already exist.", name),
 			err,
 		)
 	}
@@ -177,7 +194,7 @@ func (ims *importService) importSingle(ctx context.Context, req ImportRequest) (
 		Files: []ImportedFile{
 			{
 				Source:    req.Source,
-				Name:      req.Name,
+				Name:      name,
 				SavedPath: path,
 			},
 		},
@@ -204,6 +221,21 @@ func (ims *importService) importSpecs(ctx context.Context, req ImportRequest) (I
 	var imported []ImportedFile
 	updated := false
 
+	if len(req.SpecFilter) > 0 {
+		active := make(map[string]struct{}, len(cfg.Specs))
+		for i := range cfg.Specs {
+			if !cfg.Specs[i].Disable {
+				active[cfg.Specs[i].Domain] = struct{}{}
+			}
+		}
+		for _, d := range req.SpecFilter {
+			d = strings.TrimSpace(d)
+			if _, ok := active[d]; !ok {
+				return ImportResponse{}, NewImportSpecNotFoundError(d)
+			}
+		}
+	}
+
 	for i := range cfg.Specs {
 		spec := &cfg.Specs[i]
 		if spec.Disable {
@@ -218,36 +250,18 @@ func (ims *importService) importSpecs(ctx context.Context, req ImportRequest) (I
 			if coll.Disable {
 				continue
 			}
-
-			data, err := ims.ws.DownloadSpec(ctx, coll.Location)
-			if err != nil {
-				return ImportResponse{}, NewImportError(
-					fmt.Sprintf("Failed to download spec for collection %q.", coll.Title),
-					err,
-				)
+			var importErr error
+			imported, updated, importErr = ims.importCollection(ctx, spec.Domain, coll, req.ConfFilePath, imported, updated, j)
+			if importErr != nil {
+				return ImportResponse{}, importErr
 			}
-
-			name := specFileName(spec.Domain, coll.Title, coll.Location)
-			sp, err := ims.ws.SaveSpec(name, data)
-			if err != nil {
-				return ImportResponse{}, NewImportError(
-					fmt.Sprintf("Failed to save spec as %q. The filename may already exist.", name),
-					err,
-				)
-			}
-
-			coll.Location = filepath.Join("specs", name)
-			updated = true
-
-			imported = append(imported, ImportedFile{
-				Source:    coll.Location,
-				Name:      name,
-				SavedPath: sp,
-			})
 		}
 	}
 
 	if !updated {
+		if len(req.SpecFilter) == 0 {
+			return ImportResponse{}, NewImportNoMatchError("no active specs found in config")
+		}
 		return ImportResponse{}, NewImportNoMatchError(fmt.Sprintf("%v", req.SpecFilter))
 	}
 
@@ -259,4 +273,115 @@ func (ims *importService) importSpecs(ctx context.Context, req ImportRequest) (I
 	}
 
 	return ImportResponse{Files: imported}, nil
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+func (ims *importService) importCollection(
+	ctx context.Context,
+	domain string,
+	coll *config.Collection,
+	confFilePath string,
+	imported []ImportedFile,
+	updated bool,
+	collIndex int,
+) ([]ImportedFile, bool, error) {
+	if isLocalSpecPath(coll.Location, ims.ws.SpecsDir(), filepath.Dir(confFilePath)) {
+		absPath := coll.Location
+		if !filepath.IsAbs(absPath) {
+			absPath = filepath.Join(filepath.Dir(confFilePath), absPath)
+		}
+		if !fileExists(absPath) {
+			return imported, updated, NewImportError(
+				fmt.Sprintf("Spec file %q not found. The location points to a "+
+					"local spec file that does not exist. Make sure the file "+
+					"exists or update the location to a remote URL.", coll.Location),
+				fmt.Errorf("spec file not found: %s", coll.Location),
+			)
+		}
+		imported = append(imported, ImportedFile{
+			Source:    coll.Location,
+			Name:      filepath.Base(coll.Location),
+			SavedPath: coll.Location,
+			Skipped:   true,
+		})
+		return imported, true, nil
+	}
+
+	name := specFileName(domain, collTitle(coll, collIndex), coll.Location, pathPartFromLocation(coll.Location))
+	specPath := ims.ws.SpecPath(name)
+	exists := fileExists(specPath)
+
+	data, err := ims.ws.DownloadSpec(ctx, coll.Location)
+	if err != nil {
+		if exists {
+			coll.Location = filepath.Join("specs", name)
+			imported = append(imported, ImportedFile{
+				Source:    coll.Location,
+				Name:      name,
+				SavedPath: specPath,
+				Skipped:   true,
+			})
+			return imported, true, nil
+		}
+		return imported, updated, NewImportError(
+			fmt.Sprintf("Failed to download spec for collection %q.", coll.Title),
+			err,
+		)
+	}
+
+	sp, err := ims.ws.SaveOrUpdateSpec(name, data)
+	if err != nil {
+		return imported, updated, NewImportError(
+			fmt.Sprintf("Failed to save spec as %q.", name),
+			err,
+		)
+	}
+
+	coll.Location = filepath.Join("specs", name)
+	imported = append(imported, ImportedFile{
+		Source:    coll.Location,
+		Name:      name,
+		SavedPath: sp,
+	})
+	return imported, true, nil
+}
+
+func collTitle(coll *config.Collection, index int) string {
+	if coll.LLMTitle != "" {
+		return coll.LLMTitle
+	}
+	if coll.Title != "" {
+		return coll.Title
+	}
+	return fmt.Sprintf("#%d", index+1)
+}
+
+// isLocalSpecPath checks whether the location points to a file inside the
+// workspace specs/ directory. If so, the collection is already imported
+// and should be skipped during bulk import.
+func isLocalSpecPath(location, specsDir, workspaceRoot string) bool {
+	if strings.HasPrefix(location, "http://") || strings.HasPrefix(location, "https://") {
+		return false
+	}
+	absLoc := location
+	if !filepath.IsAbs(location) {
+		absLoc = filepath.Join(workspaceRoot, location)
+	}
+	absLoc, err := filepath.Abs(absLoc)
+	if err != nil {
+		return false
+	}
+	absSpecs, err := filepath.Abs(specsDir)
+	if err != nil {
+		return false
+	}
+	rel, err := filepath.Rel(absSpecs, absLoc)
+	if err != nil {
+		return false
+	}
+	return !strings.HasPrefix(rel, "..")
 }

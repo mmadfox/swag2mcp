@@ -125,7 +125,7 @@ type Collection struct {
 	LLMTitle       string            `yaml:"llm_title,omitempty"       json:"llm_title" validate:"omitempty,max=120,title_format"`
 	LLMInstruction string            `yaml:"llm_instruction,omitempty"                  validate:"omitempty,max=360,instruction_format"`
 	Title          string            `yaml:"title,omitempty"`
-	Location       string            `yaml:"location"                  json:"location"  validate:"required,min=5,max=250"`
+	Location       string            `yaml:"location"                  json:"location"  validate:"required,min=5,max=250,spec_location"`
 	Disable        bool              `yaml:"disable,omitempty"          json:"disable"`
 	HTTPClient     *HTTPClientConfig `yaml:"http_client,omitempty"`
 	BaseURL        string            `yaml:"base_url,omitempty"                          validate:"omitempty,url"`

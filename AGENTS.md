@@ -36,7 +36,7 @@ Full CLI documentation is in `.agents/skills/swag2mcp-cli/SKILL.md` (763 lines).
 - **`mcp`** prints `"MCP server listening on http://<addr><path>"` on stdout on startup
 - **`validate`** checks that `location` is a valid OpenAPI/Swagger/Postman file (not just any URL)
 - **`info`** shows `max_response_size` in human-readable format (e.g. `"1 KB"`)
-- **`export`/`import --from-zip`** supports full workspace round-trip
+- **`export`/`import`** supports full workspace round-trip: `export` creates a ZIP backup, `import --from-zip` restores it; `import --spec` downloads all collection spec files from the config and updates locations to local paths
 
 ## MCP Tools (16 total)
 

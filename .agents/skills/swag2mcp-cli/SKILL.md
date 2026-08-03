@@ -507,31 +507,43 @@ swag2mcp info path/to
 
 ## 14. `swag2mcp import [path] [source] [name]`
 
-Import spec files into the workspace. Three modes of operation.
+Import spec files into the workspace specs/ directory for local use. Three modes of operation.
 
 | Flag | Shorthand | Type | Default | Description |
 |------|-----------|------|---------|-------------|
-| `--spec` | `-s` | stringSlice | `nil` | Import collections from specified specs (comma-separated) |
+| `--spec` | `-s` | stringSlice | `nil` | Download all collection spec files from the config and update their locations to local paths in specs/ (use without arguments for all specs, or specify domains like `--spec meteo,store`) |
 | `--from-zip` | | string | `""` | Restore workspace from a swag2mcp backup ZIP |
 
-> **`[path]` is the workspace directory** containing `swag2mcp.yaml`. `[source]` is a URL or local path to an OpenAPI/Swagger/Postman spec file. `[name]` is the domain name for the new spec.
+> **`[path]` is the workspace directory** containing `swag2mcp.yaml`. `[source]` is a URL or local path to an OpenAPI/Swagger/Postman spec file. `[name]` is the filename to save as (e.g. `example-api.yaml`).
 
 ### Mode 1 — Single import from URL or file
 
-Import a spec file (URL or local path) and assign it a domain name:
+Download a spec file and save it to `specs/`:
+
 ```sh
-swag2mcp import https://example.com/spec.yaml myspec
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec
-swag2mcp import ./local-spec.yaml myspec
+swag2mcp import https://example.com/spec.yaml example-api.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml example-api.yaml
+swag2mcp import ./local-spec.yaml example-api.yaml
 ```
 
-### Mode 2 — Bulk import from existing config
-
-Import all collections for the specified domains from the configured spec URLs:
+If `[name]` is omitted, it is derived from the URL filename:
 ```sh
-swag2mcp import --spec meteo
-swag2mcp import /path/to/workspace --spec meteo,store
+swag2mcp import https://example.com/specs/petstore.yaml
+# → saved as petstore.yaml
 ```
+
+### Mode 2 — Bulk import from existing config (`--spec`)
+
+Download all collection spec files for the specified domains from their configured `location` URLs, save them to `specs/`, and update the config to point to the local copies:
+
+```sh
+swag2mcp import --spec              (all specs)
+swag2mcp import --spec meteo        (specific spec)
+swag2mcp import --spec meteo,store  (multiple specs)
+swag2mcp import /path/to/workspace --spec meteo
+```
+
+This makes the workspace self-contained — no remote spec URLs are needed after import.
 
 ### Mode 3 — Restore from backup
 

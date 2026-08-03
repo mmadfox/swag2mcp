@@ -51,10 +51,10 @@ swag2mcp は自動的にソースタイプを検出します：
 
 ```bash
 # spec ファイルをワークスペースにインポート
-swag2mcp import https://example.com/api.yaml myspec.yaml
+swag2mcp import https://example.com/api.yaml example-api.yaml
 
 # インポート後、location は次のようになります：
-# specs/myspec.yaml
+# specs/example-api.yaml
 ```
 
 ## キャッシュシステム

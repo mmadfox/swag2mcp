@@ -31,6 +31,7 @@ specs:
         scopes:
           - openid
           - profile
+        request_format: form
 ```
 
 ## Parameter
@@ -43,6 +44,7 @@ specs:
 | `token_url` | Ja | Token-Endpunkt-URL |
 | `client_secret` | Nein | Client-Geheimnis (optional, für öffentliche Clients) |
 | `scopes` | Nein | Liste der Berechtigungen (optional) |
+| `request_format` | Nein | Anfrageformat: `form` (Standard, `application/x-www-form-urlencoded`) oder `json` (`application/json`) |
 
 ## Hinweise
 
@@ -55,3 +57,4 @@ specs:
 - `username` — unterstützt `$(VAR)`-Syntax
 - `password` — unterstützt `$(VAR)`-Syntax
 - `token_url` — unterstützt `$(VAR)`-Syntax
+- `request_format: json` sendet die Token-Anfrage als JSON-Body — verwenden Sie dies, wenn der Token-Endpunkt `Content-Type: application/json` erfordert

@@ -50,23 +50,23 @@ ZIP は `swag2mcp export` で作成されたものである必要があります
 
 ### 単一の spec ファイルをインポート
 
-spec ファイルをダウンロードしてワークスペースに追加します：
+spec ファイルをダウンロードして `specs/` に保存します：
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec.yaml
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
+swag2mcp import https://example.com/spec.yaml example-api.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml example-api.yaml
 ```
 
-### 既存の設定からの一括インポート
+### 既存の設定からの一括インポート（`--spec`）
 
-指定された spec（ドメイン）のすべての collection spec ファイルをダウンロードします：
+指定されたドメインのすべての collection spec ファイルを、設定された `location` URL からダウンロードし、`specs/` に保存し、設定をローカルコピーを指すように更新します：
 
 ```bash
 swag2mcp import --spec meteo
-swag2mcp import /path/to/workspace --spec meteo,store
+swag2mcp import /path/to/workspace --spec meteo,github
 ```
 
-各 collection の spec ファイルをダウンロードし、`specs/` に保存し、設定をローカルコピーを指すように更新します。
+これによりワークスペースが自己完結型になります — インポート後はリモート spec URL は不要です。
 
 ## ユースケース
 

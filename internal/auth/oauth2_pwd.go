@@ -6,8 +6,11 @@
 package auth
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -24,6 +27,9 @@ type OAuth2PasswordAuthClient struct {
 	Scopes   []string `yaml:"scopes,omitempty"`
 
 	ClientSecret string `yaml:"client_secret,omitempty"`
+
+	// RequestFormat specifies the token request body format: "form" (default) or "json".
+	RequestFormat string `yaml:"request_format,omitempty"`
 
 	mu        sync.Mutex
 	token     string
@@ -78,8 +84,8 @@ func (c *OAuth2PasswordAuthClient) writeToken(token string, expiresIn int) {
 }
 
 func (c *OAuth2PasswordAuthClient) fetchToken(ctx context.Context) (string, int, error) {
-	form := c.buildTokenForm()
-	resp, err := doTokenRequest(ctx, c.TokenURL, form)
+	body, contentType := c.buildTokenBody()
+	resp, err := doTokenRequest(ctx, c.TokenURL, contentType, body)
 	if err != nil {
 		return "", 0, err
 	}
@@ -87,21 +93,30 @@ func (c *OAuth2PasswordAuthClient) fetchToken(ctx context.Context) (string, int,
 	return decodeTokenResponse(resp.Body)
 }
 
-func (c *OAuth2PasswordAuthClient) buildTokenForm() url.Values {
-	const grantTypePassword = "password"
-	form := url.Values{
-		"grant_type": {grantTypePassword},
-		"username":   {c.Username},
-		"password":   {c.Password}, //nolint:goconst // Form field name, not the grant type value.
-		"client_id":  {c.ClientID},
+func (c *OAuth2PasswordAuthClient) buildTokenBody() (io.Reader, string) {
+	params := map[string]string{
+		"grant_type": grantTypePassword,
+		"username":   c.Username,
+		"password":   c.Password, //nolint:goconst // Form field name, not the grant type value.
+		"client_id":  c.ClientID,
 	}
 	if c.ClientSecret != "" {
-		form.Set("client_secret", c.ClientSecret)
+		params["client_secret"] = c.ClientSecret
 	}
 	if len(c.Scopes) > 0 {
-		form.Set("scope", strings.Join(c.Scopes, " "))
+		params["scope"] = strings.Join(c.Scopes, " ")
 	}
-	return form
+
+	if c.RequestFormat == RequestFormatJSON {
+		data, _ := json.Marshal(params)
+		return bytes.NewReader(data), contentTypeJSON
+	}
+
+	form := url.Values{}
+	for k, v := range params {
+		form.Set(k, v)
+	}
+	return strings.NewReader(form.Encode()), contentTypeForm
 }
 
 // SetTokenURL sets the token endpoint URL for the password grant flow.

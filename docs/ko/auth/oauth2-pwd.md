@@ -31,6 +31,7 @@ specs:
         scopes:
           - openid
           - profile
+        request_format: form
 ```
 
 ## 매개변수
@@ -43,6 +44,7 @@ specs:
 | `token_url` | 예 | 토큰 엔드포인트 URL |
 | `client_secret` | 아니요 | 클라이언트 시크릿 (선택 사항, 공개 클라이언트용) |
 | `scopes` | 아니요 | 권한 목록 (선택 사항) |
+| `request_format` | 아니요 | 요청 형식: `form` (기본값, `application/x-www-form-urlencoded`) 또는 `json` (`application/json`) |
 
 ## 참고 사항
 
@@ -51,3 +53,4 @@ specs:
 - 토큰은 만료까지 캐시됩니다
 - `client_id`, `client_secret`, `username`, `password`는 `$(VAR)` 구문을 통한 환경 변수를 지원합니다
 - `token_url`과 `scopes`는 그대로 사용됩니다 (환경 변수 해결 없음)
+- `request_format: json`은 토큰 요청을 JSON 본문으로 전송합니다 — 토큰 엔드포인트가 `Content-Type: application/json`을 필요로 할 때 사용하세요

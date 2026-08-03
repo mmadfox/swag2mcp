@@ -6,6 +6,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -94,7 +95,7 @@ func runExport(basePath, outputPath string, specs []string, cmd *cobra.Command) 
 		SpecFilter: specs,
 	})
 	if exportErr != nil {
-		return exportErr
+		return errors.New(formatImportErr(exportErr))
 	}
 
 	cmd.Printf("✅ Exported %d spec files to %s\n", resp.FileCount, resp.OutputPath)

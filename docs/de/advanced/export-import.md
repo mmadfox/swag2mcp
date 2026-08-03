@@ -63,7 +63,7 @@ Laden Sie alle Collection-Spezifikationsdateien für die angegebenen Specs (Doma
 
 ```bash
 swag2mcp import --spec meteo
-swag2mcp import /pfad/zu/arbeitsbereich --spec meteo,store
+swag2mcp import /pfad/zu/arbeitsbereich --spec meteo,github
 ```
 
 Dies lädt die Spezifikationsdatei jeder Collection herunter, speichert sie in `specs/` und aktualisiert die Konfiguration, um auf die lokale Kopie zu verweisen.

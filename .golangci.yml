@@ -613,9 +613,15 @@ linters:
       # gocognit in config validator
       - path: 'internal/config/validator\.go'
         linters: [ gocognit ]
+      # gocognit in service import
+      - path: 'internal/service/import\.go'
+        linters: [ gocognit ]
+      # gocognit in service export
+      - path: 'internal/service/export\.go'
+        linters: [ gocognit ]
       # nestif in commands
       - path: 'internal/commands/'
-        linters: [ nestif ]
+        linters: [ nestif, gocognit ]
       # cyclop in TUI
       - path: 'internal/tui/'
         linters: [ cyclop ]

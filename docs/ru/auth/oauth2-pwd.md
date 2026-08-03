@@ -31,6 +31,7 @@ specs:
         scopes:
           - openid
           - profile
+        request_format: form
 ```
 
 ## Параметры
@@ -43,6 +44,7 @@ specs:
 | `token_url` | Да | URL эндпоинта токена |
 | `client_secret` | Нет | Секрет клиента (опционально, для публичных клиентов) |
 | `scopes` | Нет | Список разрешений (опционально) |
+| `request_format` | Нет | Формат тела запроса: `form` (по умолчанию, `application/x-www-form-urlencoded`) или `json` (`application/json`) |
 
 ## Примечания
 
@@ -50,3 +52,4 @@ specs:
 - swag2mcp автоматически обновляет токен при истечении срока действия
 - Токен кэшируется до истечения срока действия
 - Поля `client_id`, `client_secret`, `username` и `password` поддерживают `$(VAR)` для чтения из переменных окружения. Поля `token_url` и `scopes` не поддерживают `$(VAR)` и должны быть указаны явно
+- `request_format: json` отправляет запрос токена в формате JSON — используйте, если эндпоинт токена требует `Content-Type: application/json`

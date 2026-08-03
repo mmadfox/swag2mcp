@@ -29,6 +29,7 @@ specs:
         scopes:
           - read
           - write
+        request_format: form
 ```
 
 ## Parameters
@@ -39,6 +40,7 @@ specs:
 | `client_secret` | Yes | Client secret |
 | `token_url` | Yes | Token endpoint URL |
 | `scopes` | No | List of permissions (optional) |
+| `request_format` | No | Request body format: `form` (default, `application/x-www-form-urlencoded`) or `json` (`application/json`) |
 
 ## Notes
 
@@ -47,3 +49,4 @@ specs:
 - If the server doesn't provide `expires_in`, the token is considered valid for 1 hour
 - `client_id` and `client_secret` support `$(VAR)` syntax for environment variables
 - `token_url` and `scopes` are used as-is (no environment variable resolution)
+- `request_format: json` sends the token request as JSON body instead of form-urlencoded — use this when the token endpoint requires `Content-Type: application/json`

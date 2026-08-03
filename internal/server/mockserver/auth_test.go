@@ -108,6 +108,46 @@ func TestAuthMockServer_handleOAuth2_InvalidGrantType(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, responseRecorder.Code, "expected 400")
 }
 
+func TestAuthMockServer_handleOAuth2_CC_JSONFormat(t *testing.T) {
+	t.Parallel()
+
+	server := newAuthMockServer(authServerOAuth2, "127.0.0.1:0", nil, nil)
+	responseRecorder := httptest.NewRecorder()
+
+	jsonBody := `{"grant_type":"client_credentials","client_id":"test-client","client_secret":"test-secret"}`
+	request := httptest.NewRequest(http.MethodPost, "/token", strings.NewReader(jsonBody))
+	request.Header.Set("Content-Type", "application/json")
+
+	server.handleOAuth2(responseRecorder, request)
+
+	assert.Equal(t, http.StatusOK, responseRecorder.Code, "expected 200")
+
+	var response map[string]any
+	err := json.NewDecoder(responseRecorder.Body).Decode(&response)
+	require.NoError(t, err, "failed to decode response")
+	assert.NotEmpty(t, response["access_token"], "expected access_token to be non-empty")
+}
+
+func TestAuthMockServer_handleOAuth2_Password_JSONFormat(t *testing.T) {
+	t.Parallel()
+
+	server := newAuthMockServer(authServerOAuth2, "127.0.0.1:0", nil, nil)
+	responseRecorder := httptest.NewRecorder()
+
+	jsonBody := `{"grant_type":"password","username":"alice","password":"secret","client_id":"test-client"}`
+	request := httptest.NewRequest(http.MethodPost, "/token", strings.NewReader(jsonBody))
+	request.Header.Set("Content-Type", "application/json")
+
+	server.handleOAuth2(responseRecorder, request)
+
+	assert.Equal(t, http.StatusOK, responseRecorder.Code, "expected 200")
+
+	var response map[string]any
+	err := json.NewDecoder(responseRecorder.Body).Decode(&response)
+	require.NoError(t, err, "failed to decode response")
+	assert.NotEmpty(t, response["access_token"], "expected access_token to be non-empty")
+}
+
 func TestParseDigestAuthorization(t *testing.T) {
 	t.Parallel()
 

@@ -29,6 +29,7 @@ specs:
         scopes:
           - read
           - write
+        request_format: form
 ```
 
 ## Parámetros
@@ -39,6 +40,7 @@ specs:
 | `client_secret` | Sí | Secreto del cliente |
 | `token_url` | Sí | URL del endpoint de token |
 | `scopes` | No | Lista de permisos (opcional) |
+| `request_format` | No | Formato del cuerpo: `form` (predeterminado, `application/x-www-form-urlencoded`) o `json` (`application/json`) |
 
 ## Notas
 
@@ -46,3 +48,4 @@ specs:
 - El token se almacena en caché hasta su tiempo de expiración (`expires_in`)
 - Si el servidor no proporciona `expires_in`, el token se considera válido por 1 hora
 - Los campos `client_id`, `client_secret` y `token_url` admiten variables de entorno mediante `$(VAR)`
+- `request_format: json` envía la solicitud de token como cuerpo JSON — úselo cuando el endpoint de token requiera `Content-Type: application/json`

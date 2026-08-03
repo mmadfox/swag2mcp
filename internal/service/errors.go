@@ -215,6 +215,15 @@ func NewImportNoMatchError(filter string) *LLMError {
 	}
 }
 
+// NewImportSpecNotFoundError creates an LLMError with code "import_no_match"
+// for a spec domain that does not exist in the config.
+func NewImportSpecNotFoundError(domain string) *LLMError {
+	return &LLMError{
+		Code:    importNoMatchErrCode,
+		Message: fmt.Sprintf("Spec %q not found in config.", domain),
+	}
+}
+
 // NewConfigNotFoundError creates an LLMError with code "config_not_found".
 func NewConfigNotFoundError() *LLMError {
 	return &LLMError{

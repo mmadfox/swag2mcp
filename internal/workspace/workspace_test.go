@@ -704,6 +704,64 @@ func TestSaveSpec_EmptyData(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestSaveOrUpdateSpec_Success(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	data := []byte("openapi: 3.0.0")
+	path, err := ws.SaveOrUpdateSpec("myspec.yaml", data)
+	require.NoError(t, err)
+
+	saved, err := os.ReadFile(path)
+	require.NoError(t, err)
+	require.Equal(t, string(data), string(saved))
+}
+
+func TestSaveOrUpdateSpec_OverwritesExisting(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+	require.NoError(t, ws.Init())
+
+	_, err = ws.SaveSpec("myspec.yaml", []byte("v1"))
+	require.NoError(t, err)
+
+	path, err := ws.SaveOrUpdateSpec("myspec.yaml", []byte("v2"))
+	require.NoError(t, err)
+
+	saved, err := os.ReadFile(path)
+	require.NoError(t, err)
+	require.Equal(t, "v2", string(saved))
+}
+
+func TestSaveOrUpdateSpec_EmptyName(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+
+	_, err = ws.SaveOrUpdateSpec("", []byte("data"))
+	require.Error(t, err)
+}
+
+func TestSaveOrUpdateSpec_EmptyData(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	ws, err := New(tmpDir)
+	require.NoError(t, err)
+
+	_, err = ws.SaveOrUpdateSpec("spec.yaml", nil)
+	require.Error(t, err)
+}
+
 func TestCreateExportDir(t *testing.T) {
 	t.Parallel()
 
@@ -1281,7 +1339,7 @@ func TestCopySpecsToWorkspace_NoDir(t *testing.T) {
 	require.NoError(t, ws.CopySpecsToWorkspace(exportDir))
 }
 
-func TestCopySpecsToWorkspace_SaveSpecError(t *testing.T) {
+func TestCopySpecsToWorkspace_OverwritesExisting(t *testing.T) {
 	t.Parallel()
 
 	tmpDir := t.TempDir()
@@ -1297,7 +1355,11 @@ func TestCopySpecsToWorkspace_SaveSpecError(t *testing.T) {
 	require.NoError(t, os.WriteFile(filepath.Join(ws.SpecsDir(), "test.yaml"), []byte("existing"), 0600))
 
 	err = ws.CopySpecsToWorkspace(exportDir)
-	require.Error(t, err)
+	require.NoError(t, err)
+
+	saved, err := os.ReadFile(filepath.Join(ws.SpecsDir(), "test.yaml"))
+	require.NoError(t, err)
+	require.Equal(t, "openapi: 3.0.0", string(saved))
 }
 
 func TestCopySpecsToWorkspace_ReadFileError(t *testing.T) {

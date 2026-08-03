@@ -29,6 +29,11 @@ Not every API speaks MCP — private endpoints, internal services, legacy system
 
 ### Install
 
+**macOS (Homebrew):**
+```bash
+brew install mmadfox/tap/swag2mcp
+```
+
 **macOS / Linux (one-liner):**
 ```bash
 curl -fsSL https://swag2mcp.io/install.sh | bash

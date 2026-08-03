@@ -31,6 +31,7 @@ specs:
         scopes:
           - openid
           - profile
+        request_format: form
 ```
 
 ## 参数
@@ -43,6 +44,7 @@ specs:
 | `token_url` | 是 | 令牌端点 URL |
 | `client_secret` | 否 | 客户端密钥（可选，用于公共客户端） |
 | `scopes` | 否 | 权限列表（可选） |
+| `request_format` | 否 | 请求体格式：`form`（默认，`application/x-www-form-urlencoded`）或 `json`（`application/json`） |
 
 ## 说明
 
@@ -51,3 +53,4 @@ specs:
 - 令牌被缓存直到过期
 - `client_id`、`client_secret`、`username` 和 `password` 支持 `$(VAR)` 语法用于环境变量
 - `token_url` 和 `scopes` 按原样使用（不解析环境变量）
+- `request_format: json` 以 JSON 正文发送令牌请求 — 当令牌端点需要 `Content-Type: application/json` 时使用

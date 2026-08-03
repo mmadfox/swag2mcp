@@ -18,6 +18,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var specExts = []string{".yaml", ".yml", ".json", ".swagger", ".postman"} //nolint:gochecknoglobals // Allowed spec file extensions.
+
+func isValidSpecLocation(location string) bool {
+	lower := strings.ToLower(location)
+	for _, ext := range specExts {
+		if strings.HasSuffix(lower, ext) {
+			return true
+		}
+	}
+	return false
+}
+
 func resolveConfigPath(configPath string) string {
 	if configPath == "" {
 		configPath = workspace.DefaultConfigPath()
@@ -54,7 +66,7 @@ func AddSpecFromYAML(configPath string, data []byte) error {
 			}
 		}
 		cfg.Specs = append(cfg.Specs, input.Spec)
-		return nil
+		return cfg.Validate(config.NewFilter(nil))
 	}); err != nil {
 		return fmt.Errorf("write config: %w", err)
 	}
@@ -81,6 +93,9 @@ func AddCollectionFromYAML(configPath string, data []byte) error {
 	if input.Location == "" {
 		return fmt.Errorf("location is required")
 	}
+	if !isValidSpecLocation(input.Location) {
+		return fmt.Errorf("location must end with one of: .yaml, .yml, .json, .swagger, .postman")
+	}
 
 	if err := AtomicWriteConfig(configPath, func(cfg *config.Config) error {
 		for i := range cfg.Specs {
@@ -91,7 +106,7 @@ func AddCollectionFromYAML(configPath string, data []byte) error {
 					}
 				}
 				cfg.Specs[i].Collections = append(cfg.Specs[i].Collections, input.Collection)
-				return nil
+				return cfg.Validate(config.NewFilter(nil))
 			}
 		}
 		return fmt.Errorf("spec with domain %q not found", input.SpecDomain)
@@ -267,7 +282,7 @@ func AddCollectionTUI(configPath string) error {
 			LLMTitle: col.Title,
 			Location: col.Location,
 		})
-		return nil
+		return cfg.Validate(config.NewFilter(nil))
 	}); err != nil {
 		return fmt.Errorf("write config: %w", err)
 	}

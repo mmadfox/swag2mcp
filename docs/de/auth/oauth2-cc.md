@@ -29,6 +29,7 @@ specs:
         scopes:
           - read
           - write
+        request_format: form
 ```
 
 ## Parameter
@@ -39,6 +40,7 @@ specs:
 | `client_secret` | Ja | Client-Geheimnis |
 | `token_url` | Ja | Token-Endpunkt-URL |
 | `scopes` | Nein | Liste der Berechtigungen (optional) |
+| `request_format` | Nein | Anfrageformat: `form` (Standard, `application/x-www-form-urlencoded`) oder `json` (`application/json`) |
 
 ## Hinweise
 
@@ -49,3 +51,4 @@ specs:
 - `client_id` — unterstützt `$(VAR)`-Syntax
 - `client_secret` — unterstützt `$(VAR)`-Syntax
 - `token_url` — unterstützt `$(VAR)`-Syntax
+- `request_format: json` sendet die Token-Anfrage als JSON-Body — verwenden Sie dies, wenn der Token-Endpunkt `Content-Type: application/json` erfordert

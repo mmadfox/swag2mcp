@@ -35,12 +35,16 @@ func newUpdateCmd() *cobra.Command {
 				basePath = args[0]
 			}
 
-			total, err := runUpdate(basePath)
+			result, err := runUpdate(basePath)
 			if err != nil {
 				return err
 			}
 
-			cmd.Printf("✅ %d specs processed\n", total)
+			for _, s := range result.specs {
+				cmd.Printf("  %s (collections: %d)\n", s.domain, s.collections)
+			}
+			cmd.Println("  ------------------------------")
+			cmd.Printf("✅ %d specs processed\n", result.total)
 			return nil
 		},
 	}
@@ -51,10 +55,20 @@ func newUpdateCmd() *cobra.Command {
 	return cmd
 }
 
-func runUpdate(basePath string) (int, error) {
+type specSummary struct {
+	domain      string
+	collections int
+}
+
+type updateResult struct {
+	total int
+	specs []specSummary
+}
+
+func runUpdate(basePath string) (updateResult, error) {
 	ws, err := workspace.NewFromBase(basePath)
 	if err != nil {
-		return 0, fmt.Errorf("workspace: %w", err)
+		return updateResult{}, fmt.Errorf("workspace: %w", err)
 	}
 
 	configPath := ws.ConfigPath()
@@ -63,13 +77,13 @@ func runUpdate(basePath string) (int, error) {
 		var err error
 		configPath, err = ensureConfigExists(basePath)
 		if err != nil {
-			return 0, fmt.Errorf("configuration not found at %s: %w", configPath, err)
+			return updateResult{}, fmt.Errorf("configuration not found at %s: %w", configPath, err)
 		}
 	}
 
 	cfg, err := config.Load(configPath)
 	if err != nil {
-		return 0, fmt.Errorf("load config: %w", err)
+		return updateResult{}, fmt.Errorf("load config: %w", err)
 	}
 
 	wsDir := filepath.Dir(configPath)
@@ -79,23 +93,33 @@ func runUpdate(basePath string) (int, error) {
 		Cache: ca,
 	}
 	if err := config.ValidateConfig(cfg, validateOpts); err != nil {
-		return 0, fmt.Errorf("config validation failed:\n  %w", err)
+		return updateResult{}, fmt.Errorf("config validation failed:\n  %w", err)
 	}
 
 	if err := ws.Clean(); err != nil {
-		return 0, fmt.Errorf("clean cache: %w", err)
+		return updateResult{}, fmt.Errorf("clean cache: %w", err)
 	}
 
-	remote, local, err := cacheSpecs(cfg, ca, ws)
-	if err != nil {
-		return 0, err
+	if _, _, err := cacheSpecs(cfg, ca, ws); err != nil {
+		return updateResult{}, err
 	}
 
 	if err := cleanOrphanAuthScripts(cfg, ws); err != nil {
-		return 0, err
+		return updateResult{}, err
 	}
 
-	return remote + local, nil
+	var specs []specSummary
+	for s := range cfg.Iterate(nil) {
+		count := 0
+		for _, c := range s.Collections {
+			if !c.Disable {
+				count++
+			}
+		}
+		specs = append(specs, specSummary{domain: s.Domain, collections: count})
+	}
+
+	return updateResult{total: len(specs), specs: specs}, nil
 }
 
 func cacheSpecs(cfg *config.Config, ca *cache.Cache, ws *workspace.Workspace) (int, int, error) {

@@ -31,6 +31,7 @@ specs:
         scopes:
           - openid
           - profile
+        request_format: form
 ```
 
 ## Parameters
@@ -43,6 +44,7 @@ specs:
 | `token_url` | Yes | Token endpoint URL |
 | `client_secret` | No | Client secret (optional, for public clients) |
 | `scopes` | No | List of permissions (optional) |
+| `request_format` | No | Request body format: `form` (default, `application/x-www-form-urlencoded`) or `json` (`application/json`) |
 
 ## Notes
 
@@ -51,3 +53,4 @@ specs:
 - The token is cached until expiry
 - `client_id`, `client_secret`, `username`, and `password` support `$(VAR)` syntax for environment variables
 - `token_url` and `scopes` are used as-is (no environment variable resolution)
+- `request_format: json` sends the token request as JSON body instead of form-urlencoded — use this when the token endpoint requires `Content-Type: application/json`
