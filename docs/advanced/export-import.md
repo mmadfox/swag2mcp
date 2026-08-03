@@ -50,23 +50,23 @@ The ZIP must be created by `swag2mcp export` — arbitrary ZIP files will not wo
 
 ### Import a single spec file
 
-Download a spec file and add it to the workspace:
+Download a spec file and save it to `specs/`:
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec.yaml
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
+swag2mcp import https://example.com/spec.yaml example-api.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml example-api.yaml
 ```
 
-### Bulk import from existing config
+### Bulk import from existing config (`--spec`)
 
-Download all collection spec files for the specified specs (domains):
+Download all collection spec files for the specified domains from their configured `location` URLs, save them to `specs/`, and update the config to point to the local copies:
 
 ```bash
 swag2mcp import --spec meteo
-swag2mcp import /path/to/workspace --spec meteo,store
+swag2mcp import /path/to/workspace --spec meteo,github
 ```
 
-This downloads each collection's spec file, saves it to `specs/`, and updates the config to point to the local copy.
+This makes the workspace self-contained — no remote spec URLs are needed after import.
 
 ## Use cases
 

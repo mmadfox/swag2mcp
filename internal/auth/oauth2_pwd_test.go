@@ -421,3 +421,46 @@ func TestOAuth2PasswordAuthClient_SetTokenURL(t *testing.T) {
 	client.SetTokenURL("http://localhost:9090/token")
 	assert.Equal(t, "http://localhost:9090/token", client.TokenURL)
 }
+
+func TestOAuth2PasswordAuthClient_Apply_JSONFormat(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Content-Type") != "application/json" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		var body map[string]string
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if body["grant_type"] != "password" || body["username"] != "testuser" || body["password"] != "testpass" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if body["client_id"] != "test-client" || body["client_secret"] != "test-secret" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		resp := oauth2TokenResponse{AccessToken: "json-pwd-token", TokenType: "Bearer", ExpiresIn: 3600}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	t.Cleanup(srv.Close)
+
+	client := &OAuth2PasswordAuthClient{
+		Username:      "testuser",
+		Password:      "testpass",
+		ClientID:      "test-client",
+		ClientSecret:  "test-secret",
+		TokenURL:      srv.URL + "/token",
+		RequestFormat: RequestFormatJSON,
+	}
+	require.NoError(t, client.New(), "New()")
+
+	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
+	var info Info
+	require.NoError(t, client.Apply(req, &info), "Apply()")
+	assert.Equal(t, "Bearer json-pwd-token", req.Header.Get(headerAuthorization))
+}

@@ -345,9 +345,9 @@ func (s *ConfigSuite) TestCleanRemovesCache() {
 	dummyResp := filepath.Join(responsesDir, "test.json")
 	s.Require().NoError(os.WriteFile(dummyResp, []byte("{}"), 0644))
 
-	stdout, _, code := s.RunCommandInWS("clean", ".")
+	stdout, stderr, code := s.RunCommandInWS("clean", ".")
 	s.Equal(0, code)
-	s.Contains(stdout, "Removed")
+	s.Contains(stdout+stderr, "Clean completed")
 
 	_, err := os.Stat(dummyFile)
 	s.True(os.IsNotExist(err), "cache file was not removed")

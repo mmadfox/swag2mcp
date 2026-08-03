@@ -29,6 +29,7 @@ specs:
         scopes:
           - read
           - write
+        request_format: form
 ```
 
 ## Параметры
@@ -39,6 +40,7 @@ specs:
 | `client_secret` | Да | Секрет клиента |
 | `token_url` | Да | URL эндпоинта токена |
 | `scopes` | Нет | Список разрешений (опционально) |
+| `request_format` | Нет | Формат тела запроса: `form` (по умолчанию, `application/x-www-form-urlencoded`) или `json` (`application/json`) |
 
 ## Примечания
 
@@ -46,3 +48,4 @@ specs:
 - Токен кэшируется до истечения срока действия (`expires_in`)
 - Если сервер не предоставляет `expires_in`, токен считается действительным в течение 1 часа
 - Поля `client_id` и `client_secret` поддерживают `$(VAR)` для чтения из переменных окружения. Поля `token_url` и `scopes` не поддерживают `$(VAR)` и должны быть указаны явно
+- `request_format: json` отправляет запрос токена в формате JSON — используйте, если эндпоинт токена требует `Content-Type: application/json`

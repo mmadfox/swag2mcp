@@ -15,6 +15,8 @@ import (
 
 // AtomicWriteConfig reads the config from configPath, calls fn to modify it,
 // then writes the result atomically via a temporary file and [os.Rename].
+// Validation is the caller's responsibility — call cfg.Validate() before
+// AtomicWriteConfig if the result must be a valid config.
 func AtomicWriteConfig(configPath string, fn func(*config.Config) error) error {
 	cfg, loadErr := config.Load(configPath)
 	if loadErr != nil {
@@ -23,10 +25,6 @@ func AtomicWriteConfig(configPath string, fn func(*config.Config) error) error {
 
 	if fnErr := fn(cfg); fnErr != nil {
 		return fnErr
-	}
-
-	if valErr := cfg.Validate(config.NewFilter(nil)); valErr != nil {
-		return fmt.Errorf("config validation failed:\n  %w\n  File: %s", valErr, configPath)
 	}
 
 	data, marshalErr := yaml.Marshal(cfg)

@@ -961,6 +961,45 @@ func (c *MockWorkspaceOpsRootCall) DoAndReturn(f func() string) *MockWorkspaceOp
 	return c
 }
 
+// SaveOrUpdateSpec mocks base method.
+func (m *MockWorkspaceOps) SaveOrUpdateSpec(name string, data []byte) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveOrUpdateSpec", name, data)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SaveOrUpdateSpec indicates an expected call of SaveOrUpdateSpec.
+func (mr *MockWorkspaceOpsMockRecorder) SaveOrUpdateSpec(name, data any) *MockWorkspaceOpsSaveOrUpdateSpecCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveOrUpdateSpec", reflect.TypeOf((*MockWorkspaceOps)(nil).SaveOrUpdateSpec), name, data)
+	return &MockWorkspaceOpsSaveOrUpdateSpecCall{Call: call}
+}
+
+// MockWorkspaceOpsSaveOrUpdateSpecCall wrap *gomock.Call
+type MockWorkspaceOpsSaveOrUpdateSpecCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockWorkspaceOpsSaveOrUpdateSpecCall) Return(arg0 string, arg1 error) *MockWorkspaceOpsSaveOrUpdateSpecCall {
+	c.Call = c.Call.Return(arg0, arg1)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockWorkspaceOpsSaveOrUpdateSpecCall) Do(f func(string, []byte) (string, error)) *MockWorkspaceOpsSaveOrUpdateSpecCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockWorkspaceOpsSaveOrUpdateSpecCall) DoAndReturn(f func(string, []byte) (string, error)) *MockWorkspaceOpsSaveOrUpdateSpecCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
 // SaveSpec mocks base method.
 func (m *MockWorkspaceOps) SaveSpec(name string, data []byte) (string, error) {
 	m.ctrl.T.Helper()
@@ -1034,6 +1073,44 @@ func (c *MockWorkspaceOpsSpecPathCall) Do(f func(string) string) *MockWorkspaceO
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
 func (c *MockWorkspaceOpsSpecPathCall) DoAndReturn(f func(string) string) *MockWorkspaceOpsSpecPathCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// SpecsDir mocks base method.
+func (m *MockWorkspaceOps) SpecsDir() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SpecsDir")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// SpecsDir indicates an expected call of SpecsDir.
+func (mr *MockWorkspaceOpsMockRecorder) SpecsDir() *MockWorkspaceOpsSpecsDirCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpecsDir", reflect.TypeOf((*MockWorkspaceOps)(nil).SpecsDir))
+	return &MockWorkspaceOpsSpecsDirCall{Call: call}
+}
+
+// MockWorkspaceOpsSpecsDirCall wrap *gomock.Call
+type MockWorkspaceOpsSpecsDirCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockWorkspaceOpsSpecsDirCall) Return(arg0 string) *MockWorkspaceOpsSpecsDirCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockWorkspaceOpsSpecsDirCall) Do(f func() string) *MockWorkspaceOpsSpecsDirCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockWorkspaceOpsSpecsDirCall) DoAndReturn(f func() string) *MockWorkspaceOpsSpecsDirCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }

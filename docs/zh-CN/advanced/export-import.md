@@ -50,23 +50,23 @@ ZIP 必须由 `swag2mcp export` 创建 — 任意 ZIP 文件将无法工作。
 
 ### 导入单个规范文件
 
-下载规范文件并添加到工作区：
+下载规范文件并保存到 `specs/`：
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec.yaml
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
+swag2mcp import https://example.com/spec.yaml example-api.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml example-api.yaml
 ```
 
-### 从现有配置批量导入
+### 从现有配置批量导入（`--spec`）
 
-下载指定 spec（域）的所有 collection 规范文件：
+从配置的 `location` URL 下载指定域的所有 collection 规范文件，保存到 `specs/`，并更新配置以指向本地副本：
 
 ```bash
 swag2mcp import --spec meteo
-swag2mcp import /path/to/workspace --spec meteo,store
+swag2mcp import /path/to/workspace --spec meteo,github
 ```
 
-这会下载每个 collection 的规范文件，保存到 `specs/`，并更新配置以指向本地副本。
+这使工作区自包含 — 导入后不再需要远程规范 URL。
 
 ## 使用场景
 

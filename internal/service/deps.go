@@ -34,11 +34,13 @@ type IndexReader interface {
 type WorkspaceOps interface {
 	Root() string
 	ResponsesDir() string
+	SpecsDir() string
 	ConfigPath() string
 	ConfigNotExists() bool
 	CreateExportDir() (string, error)
 	DownloadSpec(ctx context.Context, location string) ([]byte, error)
 	SaveSpec(name string, data []byte) (string, error)
+	SaveOrUpdateSpec(name string, data []byte) (string, error)
 	ListSpecs() ([]string, error)
 	SpecPath(name string) string
 	Init() error

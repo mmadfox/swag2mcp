@@ -53,23 +53,23 @@ El ZIP debe ser creado por `swag2mcp export` — los archivos ZIP arbitrarios no
 
 ### Importar un solo archivo de especificación
 
-Descargue un archivo de especificación y agréguelo al espacio de trabajo:
+Descargue un archivo de especificación y guárdelo en `specs/`:
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec.yaml
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
+swag2mcp import https://example.com/spec.yaml example-api.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml example-api.yaml
 ```
 
-### Importación masiva desde configuración existente
+### Importación masiva desde configuración existente (`--spec`)
 
-Descargue todos los archivos de especificación de colección para las especificaciones (dominios) indicadas:
+Descargue todos los archivos de especificación de colecciones para los dominios especificados desde sus URL `location` configuradas, guárdelos en `specs/` y actualice la configuración para que apunte a las copias locales:
 
 ```bash
 swag2mcp import --spec meteo
-swag2mcp import /path/to/workspace --spec meteo,store
+swag2mcp import /path/to/workspace --spec meteo,github
 ```
 
-Esto descarga el archivo de especificación de cada colección, lo guarda en `specs/` y actualiza la configuración para que apunte a la copia local.
+Esto hace que el espacio de trabajo sea autónomo — no se necesitan URL de especificación remotas después de la importación.
 
 ## Casos de uso
 

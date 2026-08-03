@@ -53,23 +53,23 @@ ZIP должен быть создан командой `swag2mcp export` — п
 
 ### Импорт одного файла спецификации
 
-Скачайте файл спецификации и добавьте его в рабочую область:
+Скачайте файл спецификации и сохраните его в `specs/`:
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec.yaml
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
+swag2mcp import https://example.com/spec.yaml example-api.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml example-api.yaml
 ```
 
-### Пакетный импорт из существующего конфига
+### Пакетный импорт из существующего конфига (`--spec`)
 
-Скачайте все файлы спецификаций коллекций для указанных спецификаций (доменов):
+Скачайте все файлы спецификаций коллекций для указанных доменов из их настроенных URL `location`, сохраните в `specs/` и обновите конфиг, чтобы он указывал на локальные копии:
 
 ```bash
 swag2mcp import --spec meteo
-swag2mcp import /path/to/workspace --spec meteo,store
+swag2mcp import /path/to/workspace --spec meteo,github
 ```
 
-Это скачивает файл спецификации каждой коллекции, сохраняет его в `specs/` и обновляет конфиг, чтобы указывать на локальную копию.
+После этого рабочая область становится самодостаточной — удалённые URL спецификаций больше не нужны.
 
 ## Варианты использования
 

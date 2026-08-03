@@ -7,7 +7,8 @@ package commands
 
 import (
 	"fmt"
-	"io"
+	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -30,7 +31,18 @@ func newCleanCmd() *cobra.Command {
 			if len(args) > 0 {
 				basePath = args[0]
 			}
-			return runClean(basePath, cmd.OutOrStdout())
+			result, err := runClean(basePath)
+			if err != nil {
+				return err
+			}
+			cmd.Printf("  cache: %s (%d files)\n", result.cache, result.cacheFiles)
+			cmd.Printf("  responses: %s (%d files)\n", result.responses, result.responsesFiles)
+			if result.orphanScripts > 0 {
+				cmd.Printf("  orphan auth scripts: %d removed\n", result.orphanScripts)
+			}
+			cmd.Println("  ------------------------------")
+			cmd.Println("✅ Clean completed")
+			return nil
 		},
 	}
 
@@ -40,14 +52,34 @@ func newCleanCmd() *cobra.Command {
 	return cmd
 }
 
-func runClean(basePath string, w io.Writer) error {
+const cleanStatusCleared = "cleared"
+
+type cleanResult struct {
+	cache          string
+	cacheFiles     int
+	responses      string
+	responsesFiles int
+	orphanScripts  int
+}
+
+func runClean(basePath string) (cleanResult, error) {
 	ws, err := workspace.NewFromBase(basePath)
 	if err != nil {
-		return fmt.Errorf("workspace: %w", err)
+		return cleanResult{}, fmt.Errorf("workspace: %w", err)
 	}
 
+	cacheFiles := countFiles(ws.CacheDir())
+	responsesFiles := countFiles(ws.ResponsesDir())
+
 	if err := ws.Clean(); err != nil {
-		return fmt.Errorf("clean: %w", err)
+		return cleanResult{}, fmt.Errorf("clean: %w", err)
+	}
+
+	result := cleanResult{
+		cache:          cleanStatusCleared,
+		cacheFiles:     cacheFiles,
+		responses:      cleanStatusCleared,
+		responsesFiles: responsesFiles,
 	}
 
 	if ws.ConfigExists() {
@@ -57,12 +89,46 @@ func runClean(basePath string, w io.Writer) error {
 			for spec := range cfg.Iterate(nil) {
 				activeDomains = append(activeDomains, spec.Domain)
 			}
+			before := countScripts(ws.AuthScriptsDir())
 			if oErr := ws.RemoveOrphanAuthScripts(activeDomains); oErr != nil {
-				return fmt.Errorf("remove orphan auth scripts: %w", oErr)
+				return cleanResult{}, fmt.Errorf("remove orphan auth scripts: %w", oErr)
 			}
+			after := countScripts(ws.AuthScriptsDir())
+			result.orphanScripts = before - after
 		}
 	}
 
-	fmt.Fprintln(w, "✅ Removed contents")
-	return nil
+	return result, nil
+}
+
+func countFiles(dir string) int {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return 0
+	}
+	count := 0
+	for _, e := range entries {
+		if !e.IsDir() {
+			count++
+		}
+	}
+	return count
+}
+
+func countScripts(dir string) int {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return 0
+	}
+	count := 0
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		if strings.HasSuffix(name, ".sh") || strings.HasSuffix(name, ".bat") {
+			count++
+		}
+	}
+	return count
 }

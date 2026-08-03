@@ -19,7 +19,7 @@ Los 13 comandos CLI:
 | `mcp` | Iniciar el servidor MCP |
 | `version` | Mostrar información de versión |
 | `info` | Mostrar información de ejecución |
-| `import` | Importar un espacio de trabajo desde un archivo ZIP |
+| `import` | Importar archivos de especificación o restaurar espacio de trabajo desde copia de seguridad |
 | `export` | Exportar el espacio de trabajo a un archivo ZIP |
 
 Más todas las banderas, estructura del archivo de configuración, métodos de autenticación y opciones avanzadas.

@@ -19,7 +19,7 @@ All 13 CLI commands:
 | `mcp` | Start the MCP server |
 | `version` | Show version information |
 | `info` | Show runtime information |
-| `import` | Import a workspace from a ZIP file |
+| `import` | Import spec files or restore workspace from backup |
 | `export` | Export the workspace to a ZIP file |
 
 Plus all flags, config file structure, auth methods, and advanced options.

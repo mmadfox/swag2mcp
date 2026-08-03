@@ -53,23 +53,23 @@ ZIP은 `swag2mcp export`로 생성된 것이어야 합니다 — 임의의 ZIP �
 
 ### 단일 명세 파일 가져오기
 
-명세 파일을 다운로드하여 워크스페이스에 추가:
+명세 파일을 다운로드하여 `specs/`에 저장:
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec.yaml
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
+swag2mcp import https://example.com/spec.yaml example-api.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml example-api.yaml
 ```
 
-### 기존 설정에서 대량 가져오기
+### 기존 설정에서 대량 가져오기 (`--spec`)
 
-지정된 spec(도메인)의 모든 collection 명세 파일을 다운로드:
+지정된 도메인의 모든 collection 명세 파일을 설정된 `location` URL에서 다운로드하여 `specs/`에 저장하고 설정을 로컬 복사본을 가리키도록 업데이트:
 
 ```bash
 swag2mcp import --spec meteo
-swag2mcp import /path/to/workspace --spec meteo,store
+swag2mcp import /path/to/workspace --spec meteo,github
 ```
 
-각 collection의 명세 파일을 다운로드하여 `specs/`에 저장하고 설정을 로컬 복사본을 가리키도록 업데이트합니다.
+이렇게 하면 워크스페이스가 자체 포함형이 됩니다 — 가져오기 후에는 원격 명세 URL이 필요하지 않습니다.
 
 ## 사용 사례
 

@@ -31,6 +31,7 @@ specs:
         scopes:
           - openid
           - profile
+        request_format: form
 ```
 
 ## パラメーター
@@ -43,6 +44,7 @@ specs:
 | `token_url` | はい | トークンエンドポイント URL |
 | `client_secret` | いいえ | クライアントシークレット（オプション、パブリッククライアント用） |
 | `scopes` | いいえ | 権限のリスト（オプション） |
+| `request_format` | いいえ | リクエスト形式: `form`（デフォルト、`application/x-www-form-urlencoded`）または `json`（`application/json`） |
 
 ## 注意点
 
@@ -50,3 +52,4 @@ specs:
 - swag2mcp はトークンが期限切れになると自動的に更新します
 - トークンは期限までキャッシュされます
 - `client_id`、`client_secret`、`username`、`password` は環境変数に `$(VAR)` 構文をサポートしています
+- `request_format: json` はトークンリクエストを JSON ボディで送信します — トークンエンドポイントが `Content-Type: application/json` を必要とする場合に使用します

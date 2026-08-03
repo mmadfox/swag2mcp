@@ -2,12 +2,12 @@
 
 ## 목적
 
-명세 파일을 워크스페이스로 가져오거나 ZIP 백업에서 전체 워크스페이스를 복원합니다. 세 가지 모드가 다양한 시나리오를 다룹니다: 단일 명세 추가, 기존 설정에서 대량 가져오기, 또는 전체 워크스페이스 복원.
+명세 파일을 워크스페이스의 `specs/` 디렉토리에 로컬로 저장하거나 ZIP 백업에서 전체 워크스페이스를 복원합니다. 세 가지 모드가 다양한 시나리오를 다룹니다: 단일 명세 추가, 기존 설정에서 대량 가져오기, 또는 전체 워크스페이스 복원.
 
 ## 사용 시기
 
-- 명세 URL이나 파일이 있고 워크스페이스에 추가하려고 할 때
-- 설정에 참조된 모든 명세 파일을 다운로드하려고 할 때
+- 명세 URL이나 파일이 있고 워크스페이스에 로컬로 저장하려고 할 때
+- 설정의 모든 collection 명세 파일을 다운로드하여 워크스페이스를 자체 포함형으로 만들고 싶을 때
 - `export`로 생성된 ZIP 백업에서 워크스페이스를 복원해야 할 때
 - swag2mcp를 다른 머신으로 마이그레이션할 때
 
@@ -23,39 +23,70 @@ swag2mcp import [path] [source] [name] [flags]
 |------|------|------|------|
 | `path` | 1 | 아니요 | 워크스페이스 디렉토리. 생략 시 경로 해결 규칙에 따라 결정됩니다. |
 | `source` | 2 | 다양 | 명세 파일의 URL 또는 로컬 경로, 또는 ZIP 아카이브 경로 |
-| `name` | 3 | 다양 | 새 spec의 도메인 이름 |
+| `name` | 3 | 다양 | 저장할 파일 이름 (예: `example-api.yaml`). 생략 시 URL에서 자동 생성됩니다. |
 
 ## 플래그
 
 | 플래그 | 약어 | 타입 | 기본값 | 설명 |
 |-------|------|------|--------|------|
-| `--spec` | `-s` | `stringSlice` | `nil` | 지정된 spec에서 collection 가져오기 (쉼표로 구분) |
+| `--spec` | `-s` | `string` | `""` | 설정에서 collection 명세 파일을 다운로드. 값 없이 모든 spec, 또는 `--spec meteo,github`처럼 도메인 지정 |
+| `--force` | `-f` | `bool` | `false` | 기존 명세 파일을 오류 없이 덮어쓰기 |
 | `--from-zip` | | `string` | `""` | swag2mcp 백업 ZIP에서 워크스페이스 복원 |
 
 ## 작동 방식
 
 ### 모드 1 — URL 또는 파일에서 단일 가져오기
 
-명세 파일을 다운로드하여 도메인 이름으로 워크스페이스에 추가:
+명세 파일을 다운로드하여 `specs/`에 저장:
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec.yaml
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
-swag2mcp import ./local-spec.yaml myspec.yaml
+swag2mcp import https://example.com/spec.yaml example-api.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml example-api.yaml
+swag2mcp import ./local-spec.yaml example-api.yaml
 ```
 
-명세 파일은 `specs/`에 저장되고 설정이 새 spec 항목으로 업데이트됩니다.
+`name`을 생략하면 URL의 파일 이름에서 자동 생성됩니다:
+```bash
+swag2mcp import https://example.com/specs/petstore.yaml
+# → petstore.yaml로 저장
+```
 
-### 모드 2 — 기존 설정에서 대량 가져오기
+기존 파일을 `--force`로 덮어쓰기:
+```bash
+swag2mcp import --force https://example.com/spec.yaml example-api.yaml
+```
 
-설정된 URL에서 지정된 도메인의 모든 collection을 다운로드:
+가져오기 후 출력에는 워크스페이스 경로, 저장된 파일 및 `swag2mcp.yaml`에 추가할 YAML 템플릿이 표시됩니다:
+
+```
+✅ Imported to /path/to/workspace
+   specs/example-api.yaml
+
+   Add to swag2mcp.yaml:
+     specs:
+       - domain: <your-domain>
+         collections:
+           - location: specs/example-api.yaml
+```
+
+### 모드 2 — 기존 설정에서 대량 가져오기 (`--spec`)
+
+지정된 도메인의 모든 collection 명세 파일을 설정된 `location` URL에서 다운로드하여 `specs/`에 저장하고 설정을 로컬 복사본을 가리키도록 업데이트:
 
 ```bash
-swag2mcp import --spec meteo
-swag2mcp import /path/to/workspace --spec meteo,store
+swag2mcp import --spec                # 모든 spec
+swag2mcp import --spec meteo           # 특정 spec
+swag2mcp import --spec meteo,github    # 여러 spec
+swag2mcp import /path/to/workspace --spec meteo
 ```
 
-각 collection의 명세 파일이 다운로드되어 `specs/`에 저장됩니다. 설정이 로컬 복사본을 가리키도록 업데이트됩니다.
+지정된 도메인이 설정에 존재하지 않으면 명령이 오류를 반환합니다:
+```
+Error: import_no_match
+  Spec "nonexistent" not found in config.
+```
+
+이렇게 하면 워크스페이스가 자체 포함형이 됩니다 — 가져오기 후에는 원격 명세 URL이 필요하지 않습니다.
 
 ### 모드 3 — ZIP 백업에서 복원
 

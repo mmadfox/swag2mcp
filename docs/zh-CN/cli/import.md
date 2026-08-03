@@ -2,12 +2,12 @@
 
 ## 用途
 
-将规范文件导入工作区，或从 ZIP 备份恢复完整工作区。三种模式涵盖不同场景：添加单个规范、从现有配置批量导入，或恢复完整工作区。
+将规范文件导入工作区的 `specs/` 目录以供本地使用，或从 ZIP 备份恢复完整工作区。三种模式涵盖不同场景：添加单个规范、从现有配置批量导入，或恢复完整工作区。
 
 ## 何时使用
 
-- 你有规范 URL 或文件，想将其添加到工作区
-- 你想下载配置中引用的所有规范文件
+- 你有规范 URL 或文件，想将其本地保存到工作区
+- 你想下载配置中的所有 collection 规范文件，使工作区自包含
 - 你需要从 `export` 创建的 ZIP 备份恢复工作区
 - 你正在将 swag2mcp 迁移到另一台机器
 
@@ -23,39 +23,70 @@ swag2mcp import [path] [source] [name] [flags]
 |------|------|------|------|
 | `path` | 1 | 否 | 工作区目录。如果省略，通过路径解析规则解析。 |
 | `source` | 2 | 视情况 | 规范文件的 URL 或本地路径，或 ZIP 归档的路径 |
-| `name` | 3 | 视情况 | 新 spec 的域名 |
+| `name` | 3 | 视情况 | 保存的文件名（例如 `example-api.yaml`）。如果省略，从 URL 自动生成。 |
 
 ## 标志
 
 | 标志 | 简写 | 类型 | 默认值 | 描述 |
 |------|------|------|--------|------|
-| `--spec` | `-s` | `stringSlice` | `nil` | 从指定 spec 导入 collection（逗号分隔） |
+| `--spec` | `-s` | `string` | `""` | 从配置下载 collection 规范文件。无值时导入所有 specs，或指定域名如 `--spec meteo,github` |
+| `--force` | `-f` | `bool` | `false` | 覆盖现有规范文件而不报错 |
 | `--from-zip` | | `string` | `""` | 从 swag2mcp 备份 ZIP 恢复工作区 |
 
 ## 工作原理
 
 ### 模式 1 — 从 URL 或文件单个导入
 
-下载规范文件并添加域名到工作区：
+下载规范文件并保存到 `specs/`：
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec.yaml
-swag2mcp import /path/to/workspace https://example.com/spec.yaml myspec.yaml
-swag2mcp import ./local-spec.yaml myspec.yaml
+swag2mcp import https://example.com/spec.yaml example-api.yaml
+swag2mcp import /path/to/workspace https://example.com/spec.yaml example-api.yaml
+swag2mcp import ./local-spec.yaml example-api.yaml
 ```
 
-规范文件保存到 `specs/`，配置更新为新的 spec 条目。
+如果省略 `name`，则从 URL 的文件名自动生成：
+```bash
+swag2mcp import https://example.com/specs/petstore.yaml
+# → 保存为 petstore.yaml
+```
 
-### 模式 2 — 从现有配置批量导入
+使用 `--force` 覆盖现有文件：
+```bash
+swag2mcp import --force https://example.com/spec.yaml example-api.yaml
+```
 
-从配置的 URL 下载指定域的所有 collection：
+导入后，输出显示工作区路径、保存的文件以及要添加到 `swag2mcp.yaml` 的 YAML 模板：
+
+```
+✅ Imported to /path/to/workspace
+   specs/example-api.yaml
+
+   Add to swag2mcp.yaml:
+     specs:
+       - domain: <your-domain>
+         collections:
+           - location: specs/example-api.yaml
+```
+
+### 模式 2 — 从现有配置批量导入（`--spec`）
+
+从配置的 `location` URL 下载指定域的所有 collection 规范文件，保存到 `specs/`，并更新配置以指向本地副本：
 
 ```bash
-swag2mcp import --spec meteo
-swag2mcp import /path/to/workspace --spec meteo,store
+swag2mcp import --spec                # 所有 specs
+swag2mcp import --spec meteo           # 特定 spec
+swag2mcp import --spec meteo,github    # 多个 specs
+swag2mcp import /path/to/workspace --spec meteo
 ```
 
-每个 collection 的规范文件被下载并保存到 `specs/`。配置更新为指向本地副本。
+如果指定的域在配置中不存在，命令将返回错误：
+```
+Error: import_no_match
+  Spec "nonexistent" not found in config.
+```
+
+这使工作区自包含 — 导入后不再需要远程规范 URL。
 
 ### 模式 3 — 从 ZIP 备份恢复
 

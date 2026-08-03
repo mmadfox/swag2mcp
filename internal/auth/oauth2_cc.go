@@ -6,8 +6,11 @@
 package auth
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -21,6 +24,9 @@ type OAuth2ClientCredentialsAuthClient struct {
 	ClientSecret string   `yaml:"client_secret"    validate:"required"`
 	TokenURL     string   `yaml:"token_url"        validate:"required,url"`
 	Scopes       []string `yaml:"scopes,omitempty"`
+
+	// RequestFormat specifies the token request body format: "form" (default) or "json".
+	RequestFormat string `yaml:"request_format,omitempty"`
 
 	mu        sync.Mutex
 	token     string
@@ -73,8 +79,8 @@ func (c *OAuth2ClientCredentialsAuthClient) writeToken(token string, expiresIn i
 }
 
 func (c *OAuth2ClientCredentialsAuthClient) fetchToken(ctx context.Context) (string, int, error) {
-	form := c.buildTokenForm()
-	resp, err := doTokenRequest(ctx, c.TokenURL, form)
+	body, contentType := c.buildTokenBody()
+	resp, err := doTokenRequest(ctx, c.TokenURL, contentType, body)
 	if err != nil {
 		return "", 0, err
 	}
@@ -82,16 +88,26 @@ func (c *OAuth2ClientCredentialsAuthClient) fetchToken(ctx context.Context) (str
 	return decodeTokenResponse(resp.Body)
 }
 
-func (c *OAuth2ClientCredentialsAuthClient) buildTokenForm() url.Values {
-	form := url.Values{
-		"grant_type":    {"client_credentials"},
-		"client_id":     {c.ClientID},
-		"client_secret": {c.ClientSecret},
+func (c *OAuth2ClientCredentialsAuthClient) buildTokenBody() (io.Reader, string) {
+	params := map[string]string{
+		"grant_type":    grantTypeClientCredentials,
+		"client_id":     c.ClientID,
+		"client_secret": c.ClientSecret,
 	}
 	if len(c.Scopes) > 0 {
-		form.Set("scope", strings.Join(c.Scopes, " "))
+		params["scope"] = strings.Join(c.Scopes, " ")
 	}
-	return form
+
+	if c.RequestFormat == RequestFormatJSON {
+		data, _ := json.Marshal(params)
+		return bytes.NewReader(data), contentTypeJSON
+	}
+
+	form := url.Values{}
+	for k, v := range params {
+		form.Set(k, v)
+	}
+	return strings.NewReader(form.Encode()), contentTypeForm
 }
 
 // SetTokenURL sets the token endpoint URL for the client credentials flow.

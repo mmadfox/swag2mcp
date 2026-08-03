@@ -27,6 +27,7 @@ var (
 	domainRegex       = regexp.MustCompile(`^[a-z0-9_-]{1,60}$`)
 	titleRegex        = regexp.MustCompile(`^[\p{L}\p{N} #*_` + "`" + `~>\[\]()|.,!?;:'"\\–—\-]+$`)
 	instructionRegex  = regexp.MustCompile(`^[\p{L}\p{N}\s#*_` + "`" + `~>\[\]()|.,!?;:'"\\–—\-]+$`)
+	specExts          = []string{".yaml", ".yml", ".json", ".swagger", ".postman"} //nolint:gochecknoglobals // Allowed spec file extensions.
 )
 
 // validationError describes a single validation issue.
@@ -301,6 +302,9 @@ func getValidator() (*validator.Validate, error) {
 	if err := configValidator.RegisterValidation("proxy_url_format", proxyURLFormatValidation); err != nil {
 		return nil, fmt.Errorf("register proxy_url_format validation: %w", err)
 	}
+	if err := configValidator.RegisterValidation("spec_location", specLocationValidation); err != nil {
+		return nil, fmt.Errorf("register spec_location validation: %w", err)
+	}
 	return configValidator, nil
 }
 
@@ -381,6 +385,18 @@ func instructionFormatValidation(fl validator.FieldLevel) bool {
 	return instructionRegex.MatchString(fl.Field().String())
 }
 
+// specLocationValidation validates that the location ends with a known spec file extension.
+func specLocationValidation(fl validator.FieldLevel) bool {
+	loc := fl.Field().String()
+	lower := strings.ToLower(loc)
+	for _, ext := range specExts {
+		if strings.HasSuffix(lower, ext) {
+			return true
+		}
+	}
+	return false
+}
+
 // humanReadableError converts a validator field error into a human-readable message.
 func humanReadableError(fe validator.FieldError) string {
 	switch fe.Tag() {
@@ -404,6 +420,8 @@ func humanReadableError(fe validator.FieldError) string {
 		return fmt.Sprintf("%s must be in format 'host:port' or 'host:port/path' where host is localhost, 127.0.0.1, or 0.0.0.0 (e.g. 'localhost:8080' or '127.0.0.1:9000/v1/api')", fe.Field())
 	case "proxy_url_format":
 		return "Proxy URL must use a supported scheme: http, https, socks5, or socks5h (e.g. 'socks5h://127.0.0.1:1080')"
+	case "spec_location":
+		return "Location must end with one of: .yaml, .yml, .json, .swagger, .postman (e.g. 'location: https://example.com/openapi.json')"
 	default:
 		return fe.Error()
 	}

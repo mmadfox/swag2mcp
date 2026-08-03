@@ -103,6 +103,7 @@ func (es *exportService) exportCollections(ctx context.Context, cfg *config.Conf
 	filter := makeFilter(specFilter)
 	locationMap := make(map[string]string)
 	fileCount := 0
+	confDir := filepath.Dir(es.ws.ConfigPath())
 
 	for i := range cfg.Specs {
 		spec := &cfg.Specs[i]
@@ -122,7 +123,19 @@ func (es *exportService) exportCollections(ctx context.Context, cfg *config.Conf
 				continue
 			}
 
-			data, dlErr := es.ws.DownloadSpec(ctx, coll.Location)
+			var data []byte
+			var dlErr error
+
+			if isLocalSpecPath(coll.Location, es.ws.SpecsDir(), confDir) {
+				absPath := coll.Location
+				if !filepath.IsAbs(absPath) {
+					absPath = filepath.Join(confDir, absPath)
+				}
+				data, dlErr = os.ReadFile(absPath)
+			} else {
+				data, dlErr = es.ws.DownloadSpec(ctx, coll.Location)
+			}
+
 			if dlErr != nil {
 				return 0, NewExportError(
 					fmt.Sprintf("Failed to download spec for collection %q.", coll.Title),
@@ -130,7 +143,7 @@ func (es *exportService) exportCollections(ctx context.Context, cfg *config.Conf
 				)
 			}
 
-			name := specFileName(spec.Domain, coll.Title, coll.Location)
+			name := specFileName(spec.Domain, coll.Title, coll.Location, pathPartFromLocation(coll.Location))
 			if writeErr := workspace.WriteSpecToExport(exportDir, name, data); writeErr != nil {
 				return 0, NewExportError(
 					fmt.Sprintf("Failed to write spec %q to export.", name),

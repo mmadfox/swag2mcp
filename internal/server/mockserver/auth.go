@@ -140,28 +140,28 @@ func (m *authMockServer) handleOAuth2(responseWriter http.ResponseWriter, reques
 		return
 	}
 
-	parseError := request.ParseForm()
+	params, parseError := parseOAuth2Body(request)
 	if parseError != nil {
-		m.logger.WarnContext(request.Context(), "oauth2 mock: failed to parse form",
+		m.logger.WarnContext(request.Context(), "oauth2 mock: failed to parse body",
 			"error", parseError,
 		)
 		http.Error(responseWriter, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
-	grantType := request.FormValue("grant_type")
+	grantType := params["grant_type"]
 
 	m.logger.InfoContext(request.Context(), "oauth2 mock: token requested",
 		"grant_type", grantType,
-		"client_id", request.FormValue("client_id"),
-		"username", request.FormValue("username"),
+		"client_id", params["client_id"],
+		"username", params["username"],
 	)
 
 	switch grantType {
 	case "client_credentials":
-		m.handleOAuth2CC(responseWriter, request)
+		m.handleOAuth2CC(request.Context(), responseWriter, params)
 	case grantTypePassword:
-		m.handleOAuth2Password(responseWriter, request)
+		m.handleOAuth2Password(request.Context(), responseWriter, params)
 	default:
 		m.logger.WarnContext(request.Context(), "oauth2 mock: invalid grant_type",
 			"grant_type", grantType,
@@ -170,17 +170,41 @@ func (m *authMockServer) handleOAuth2(responseWriter http.ResponseWriter, reques
 	}
 }
 
+// parseOAuth2Body parses the request body as form-urlencoded or JSON based on Content-Type.
+func parseOAuth2Body(r *http.Request) (map[string]string, error) {
+	ct := r.Header.Get("Content-Type")
+	if strings.HasPrefix(ct, "application/json") {
+		var body map[string]string
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			return nil, err
+		}
+		return body, nil
+	}
+	if err := r.ParseForm(); err != nil {
+		return nil, err
+	}
+	params := make(map[string]string, len(r.Form))
+	for k, v := range r.Form {
+		params[k] = v[0]
+	}
+	return params, nil
+}
+
 // handleOAuth2CC handles client_credentials grant type requests.
-func (m *authMockServer) handleOAuth2CC(responseWriter http.ResponseWriter, request *http.Request) {
-	clientID := request.FormValue("client_id")
+func (m *authMockServer) handleOAuth2CC(
+	ctx context.Context,
+	responseWriter http.ResponseWriter,
+	params map[string]string,
+) {
+	clientID := params["client_id"]
 	if clientID == "" {
-		m.logger.WarnContext(request.Context(), "oauth2 mock: missing client_id")
+		m.logger.WarnContext(ctx, "oauth2 mock: missing client_id")
 		http.Error(responseWriter, "Missing client_id", http.StatusBadRequest)
 		return
 	}
 
 	token := generateRandomToken()
-	m.logger.InfoContext(request.Context(), "oauth2 mock: token issued",
+	m.logger.InfoContext(ctx, "oauth2 mock: token issued",
 		"grant_type", "client_credentials",
 		"client_id", clientID,
 		"token_prefix", token[:8],
@@ -190,22 +214,26 @@ func (m *authMockServer) handleOAuth2CC(responseWriter http.ResponseWriter, requ
 		"access_token":   token,
 		"token_type":     "Bearer",
 		authExpiresInKey: authTokenExpiresIn,
-		"scope":          request.FormValue("scope"),
+		"scope":          params["scope"],
 	}
 
 	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(responseWriter).Encode(tokenResponse); err != nil {
-		m.logger.WarnContext(request.Context(), "failed to encode oauth2 cc token response", "error", err)
+		m.logger.WarnContext(ctx, "failed to encode oauth2 cc token response", "error", err)
 	}
 }
 
 // handleOAuth2Password handles password grant type requests.
-func (m *authMockServer) handleOAuth2Password(responseWriter http.ResponseWriter, request *http.Request) {
-	username := request.FormValue("username")
-	password := request.FormValue("password")
+func (m *authMockServer) handleOAuth2Password(
+	ctx context.Context,
+	responseWriter http.ResponseWriter,
+	params map[string]string,
+) {
+	username := params["username"]
+	password := params["password"]
 	if username == "" || password == "" {
-		m.logger.WarnContext(request.Context(), "oauth2 mock: missing username or password",
+		m.logger.WarnContext(ctx, "oauth2 mock: missing username or password",
 			"username", username,
 		)
 		http.Error(responseWriter, "Missing username or password", http.StatusBadRequest)
@@ -213,7 +241,7 @@ func (m *authMockServer) handleOAuth2Password(responseWriter http.ResponseWriter
 	}
 
 	token := generateRandomToken()
-	m.logger.InfoContext(request.Context(), "oauth2 mock: token issued",
+	m.logger.InfoContext(ctx, "oauth2 mock: token issued",
 		"grant_type", "password",
 		"username", username,
 		"token_prefix", token[:8],
@@ -223,13 +251,13 @@ func (m *authMockServer) handleOAuth2Password(responseWriter http.ResponseWriter
 		"access_token":   token,
 		"token_type":     "Bearer",
 		authExpiresInKey: authTokenExpiresIn,
-		"scope":          request.FormValue("scope"),
+		"scope":          params["scope"],
 	}
 
 	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(responseWriter).Encode(tokenResponse); err != nil {
-		m.logger.WarnContext(request.Context(), "failed to encode oauth2 password token response", "error", err)
+		m.logger.WarnContext(ctx, "failed to encode oauth2 password token response", "error", err)
 	}
 }
 

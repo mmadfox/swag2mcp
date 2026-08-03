@@ -12,8 +12,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
-	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -51,6 +49,18 @@ const (
 	tokenRequestTimeout = 30 * time.Second
 	// defaultExpiresIn is the fallback token expiry when the server omits expires_in.
 	defaultExpiresIn = 3600
+	// RequestFormatForm is the default form-encoded request format.
+	RequestFormatForm = "form"
+	// RequestFormatJSON is the JSON request format.
+	RequestFormatJSON = "json"
+	// contentTypeForm is the Content-Type for form-encoded requests.
+	contentTypeForm = "application/x-www-form-urlencoded"
+	// contentTypeJSON is the Content-Type for JSON requests.
+	contentTypeJSON = "application/json"
+	// grantTypePassword is the OAuth2 password grant type value.
+	grantTypePassword = "password"
+	// grantTypeClientCredentials is the OAuth2 client credentials grant type value.
+	grantTypeClientCredentials = "client_credentials"
 )
 
 // Sentinel errors for common auth failure modes.
@@ -140,16 +150,16 @@ type oauth2TokenResponse struct {
 	ExpiresIn   int    `json:"expires_in"`
 }
 
-// doTokenRequest sends a form-encoded POST to the token URL and returns the response.
-func doTokenRequest(ctx context.Context, tokenURL string, form url.Values) (*http.Response, error) {
+// doTokenRequest sends a POST to the token URL with the given body and content type.
+func doTokenRequest(ctx context.Context, tokenURL, contentType string, body io.Reader) (*http.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, tokenRequestTimeout)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, strings.NewReader(form.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, body)
 	if err != nil {
 		return nil, fmt.Errorf("create token request: %w", err)
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", contentType)
 
 	client, err := httpclient.NewDefault()
 	if err != nil {
@@ -161,9 +171,9 @@ func doTokenRequest(ctx context.Context, tokenURL string, form url.Values) (*htt
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
+		respBody, _ := io.ReadAll(resp.Body)
 		_ = resp.Body.Close()
-		return nil, fmt.Errorf("token endpoint returned %d: %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("token endpoint returned %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	return resp, nil

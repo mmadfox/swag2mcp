@@ -638,6 +638,59 @@ func TestHumanReadableError_CollectionLLMInstructionMax(t *testing.T) {
 	require.Error(t, err, "expected error for too long Collection LLMInstruction")
 }
 
+func TestHumanReadableError_SpecLocation(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		Specs: []Spec{
+			{
+				Domain:   "test-api",
+				LLMTitle: "Test API v1",
+				BaseURL:  "https://api.example.com",
+				Collections: []Collection{
+					{
+						LLMTitle: "Main Collection",
+						Location: "https://example.com/spec.html",
+					},
+				},
+			},
+		},
+	}
+
+	err := cfg.Validate(nil)
+	require.Error(t, err, "expected error for invalid spec location extension")
+}
+
+func TestHumanReadableError_SpecLocationValid(t *testing.T) {
+	t.Parallel()
+
+	exts := []string{".yaml", ".yml", ".json", ".swagger", ".postman"}
+	for _, ext := range exts {
+		t.Run(ext, func(t *testing.T) {
+			t.Parallel()
+
+			cfg := &Config{
+				Specs: []Spec{
+					{
+						Domain:   "test-api",
+						LLMTitle: "Test API v1",
+						BaseURL:  "https://api.example.com",
+						Collections: []Collection{
+							{
+								LLMTitle: "Main Collection",
+								Location: "https://example.com/spec" + ext,
+							},
+						},
+					},
+				},
+			}
+
+			err := cfg.Validate(nil)
+			require.NoError(t, err, "expected no error for valid extension %s", ext)
+		})
+	}
+}
+
 func TestConfig_Iterate_EarlyBreak(t *testing.T) {
 	t.Parallel()
 

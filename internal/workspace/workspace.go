@@ -420,6 +420,27 @@ func (w *Workspace) SaveSpec(name string, data []byte) (string, error) {
 	return path, nil
 }
 
+// SaveOrUpdateSpec saves spec data to the specs/ directory with the given name.
+// Unlike SaveSpec, it overwrites the file if it already exists.
+func (w *Workspace) SaveOrUpdateSpec(name string, data []byte) (string, error) {
+	if name == "" {
+		return "", errors.New("name is empty")
+	}
+	if len(data) == 0 {
+		return "", errors.New("data is empty")
+	}
+
+	if err := os.MkdirAll(w.SpecsDir(), 0750); err != nil {
+		return "", fmt.Errorf("create specs dir: %w", err)
+	}
+
+	path := w.SpecPath(name)
+	if writeErr := os.WriteFile(filepath.Clean(path), data, 0600); writeErr != nil {
+		return "", fmt.Errorf("write spec file %q: %w", path, writeErr)
+	}
+	return path, nil
+}
+
 // RemoveOrphanAuthScripts removes auth script files for domains not in the active list.
 func (w *Workspace) RemoveOrphanAuthScripts(activeDomains []string) error {
 	active := make(map[string]bool, len(activeDomains))

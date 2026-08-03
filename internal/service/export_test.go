@@ -44,7 +44,11 @@ func TestExportService_Export_success(t *testing.T) {
 func TestExportService_exportCollections_disabledSpec(t *testing.T) {
 	t.Parallel()
 
-	svc := newExportService(NewMockWorkspaceOps(gomock.NewController(t)), "1.0")
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ConfigPath().Return("/tmp/.swag2mcp/swag2mcp.yaml")
+
+	svc := newExportService(ws, "1.0")
 	cfg := &config.Config{
 		Specs: []config.Spec{
 			{Domain: "api", Disable: true},
@@ -58,7 +62,11 @@ func TestExportService_exportCollections_disabledSpec(t *testing.T) {
 func TestExportService_exportCollections_filtered(t *testing.T) {
 	t.Parallel()
 
-	svc := newExportService(NewMockWorkspaceOps(gomock.NewController(t)), "1.0")
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ConfigPath().Return("/tmp/.swag2mcp/swag2mcp.yaml")
+
+	svc := newExportService(ws, "1.0")
 	cfg := &config.Config{
 		Specs: []config.Spec{
 			{Domain: "api", Collections: []config.Collection{{Location: "http://example.com/spec.yaml", Title: "spec1"}}},

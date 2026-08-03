@@ -2,12 +2,12 @@
 
 ## Objectif
 
-Importer des fichiers de spécification dans l'espace de travail ou restaurer un espace de travail complet à partir d'une sauvegarde ZIP. Trois modes couvrent différents scénarios : ajout d'une seule spec, importation en masse depuis une configuration existante ou restauration d'un espace de travail complet.
+Importer des fichiers de spécification dans le répertoire `specs/` de l'espace de travail pour une utilisation locale, ou restaurer un espace de travail complet à partir d'une sauvegarde ZIP. Trois modes couvrent différents scénarios : ajout d'une seule spec, importation en masse depuis une configuration existante ou restauration d'un espace de travail complet.
 
 ## Quand l'utiliser
 
-- Vous avez une URL ou un fichier de spécification et voulez l'ajouter à l'espace de travail
-- Vous voulez télécharger tous les fichiers de spécification référencés dans la configuration
+- Vous avez une URL ou un fichier de spécification et voulez le sauvegarder localement dans l'espace de travail
+- Vous voulez télécharger tous les fichiers de spécification de collection depuis la configuration et rendre l'espace de travail autonome
 - Vous devez restaurer un espace de travail à partir d'une sauvegarde ZIP créée par `export`
 - Vous migrez swag2mcp vers une autre machine
 
@@ -23,39 +23,70 @@ swag2mcp import [chemin] [source] [nom] [drapeaux]
 |----------|----------|--------|-------------|
 | `chemin` | 1 | Non | Répertoire de l'espace de travail. S'il est omis, résolution via les règles de résolution de chemin. |
 | `source` | 2 | Variable | URL ou chemin local vers un fichier de spécification, ou chemin vers une archive ZIP |
-| `nom` | 3 | Variable | Nom de domaine pour la nouvelle spec |
+| `nom` | 3 | Variable | Nom de fichier pour l'enregistrement (ex. `example-api.yaml`). Dérivé de l'URL si omis. |
 
 ## Drapeaux
 
 | Drapeau | Raccourci | Type | Défaut | Description |
 |---------|-----------|------|--------|-------------|
-| `--spec` | `-s` | `stringSlice` | `nil` | Importer les collections des specs spécifiées (séparées par des virgules) |
+| `--spec` | `-s` | `string` | `""` | Télécharger les fichiers de spécification de collection depuis la configuration. Sans valeur pour toutes les specs, ou spécifier des domaines comme `--spec meteo,github` |
+| `--force` | `-f` | `bool` | `false` | Écraser les fichiers de spécification existants sans erreur |
 | `--from-zip` | | `string` | `""` | Restaurer l'espace de travail à partir d'un ZIP de sauvegarde swag2mcp |
 
 ## Comment cela fonctionne
 
 ### Mode 1 — Importation unique depuis une URL ou un fichier
 
-Téléchargez un fichier de spécification et ajoutez-le à l'espace de travail avec un nom de domaine :
+Téléchargez un fichier de spécification et sauvegardez-le dans `specs/` :
 
 ```bash
-swag2mcp import https://example.com/spec.yaml maspec
-swag2mcp import /chemin/vers/espace-travail https://example.com/spec.yaml maspec
-swag2mcp import ./spec-locale.yaml maspec
+swag2mcp import https://example.com/spec.yaml example-api.yaml
+swag2mcp import /chemin/vers/espace-travail https://example.com/spec.yaml example-api.yaml
+swag2mcp import ./spec-locale.yaml example-api.yaml
 ```
 
-Le fichier de spécification est sauvegardé dans `specs/` et la configuration est mise à jour avec la nouvelle entrée de spec.
+Si `nom` est omis, il est dérivé du nom du fichier dans l'URL :
+```bash
+swag2mcp import https://example.com/specs/petstore.yaml
+# → sauvegardé comme petstore.yaml
+```
 
-### Mode 2 — Importation en masse depuis une configuration existante
+Écraser un fichier existant avec `--force` :
+```bash
+swag2mcp import --force https://example.com/spec.yaml example-api.yaml
+```
 
-Téléchargez toutes les collections pour les domaines spécifiés à partir de leurs URL configurées :
+Après l'importation, la sortie montre le chemin de l'espace de travail, le fichier sauvegardé et un modèle YAML à ajouter à `swag2mcp.yaml` :
+
+```
+✅ Imported to /chemin/vers/espace-travail
+   specs/example-api.yaml
+
+   Add to swag2mcp.yaml:
+     specs:
+       - domain: <your-domain>
+         collections:
+           - location: specs/example-api.yaml
+```
+
+### Mode 2 — Importation en masse depuis une configuration existante (`--spec`)
+
+Téléchargez tous les fichiers de spécification de collection pour les domaines spécifiés depuis leurs URL `location` configurées, sauvegardez-les dans `specs/` et mettez à jour la configuration pour pointer vers les copies locales :
 
 ```bash
-swag2mcp import --spec meteo
-swag2mcp import /chemin/vers/espace-travail --spec meteo,store
+swag2mcp import --spec                # toutes les specs
+swag2mcp import --spec meteo           # spec spécifique
+swag2mcp import --spec meteo,github    # plusieurs specs
+swag2mcp import /chemin/vers/espace-travail --spec meteo
 ```
 
-Le fichier de spécification de chaque collection est téléchargé et sauvegardé dans `specs/`. La configuration est mise à jour pour pointer vers les copies locales.
+Si un domaine spécifié n'existe pas dans la configuration, la commande renvoie une erreur :
+```
+Error: import_no_match
+  Spec "nonexistent" not found in config.
+```
+
+Cela rend l'espace de travail autonome — aucune URL de spécification distante n'est nécessaire après l'importation.
 
 ### Mode 3 — Restauration depuis une sauvegarde ZIP
 

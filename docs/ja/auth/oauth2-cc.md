@@ -29,6 +29,7 @@ specs:
         scopes:
           - read
           - write
+        request_format: form
 ```
 
 ## パラメーター
@@ -39,6 +40,7 @@ specs:
 | `client_secret` | はい | クライアントシークレット |
 | `token_url` | はい | トークンエンドポイント URL |
 | `scopes` | いいえ | 権限のリスト（オプション） |
+| `request_format` | いいえ | リクエスト形式: `form`（デフォルト、`application/x-www-form-urlencoded`）または `json`（`application/json`） |
 
 ## 注意点
 
@@ -46,3 +48,4 @@ specs:
 - トークンは有効期限（`expires_in`）までキャッシュされます
 - サーバーが `expires_in` を提供しない場合、トークンは 1 時間有効と見なされます
 - `client_id` と `client_secret` は環境変数に `$(VAR)` 構文をサポートしています
+- `request_format: json` はトークンリクエストを JSON ボディで送信します — トークンエンドポイントが `Content-Type: application/json` を必要とする場合に使用します

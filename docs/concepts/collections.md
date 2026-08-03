@@ -51,10 +51,10 @@ The `specs/` directory inside the workspace (`~/.swag2mcp/specs/`) is the recomm
 
 ```bash
 # Import a spec file into the workspace
-swag2mcp import https://example.com/api.yaml myspec.yaml
+swag2mcp import https://example.com/api.yaml example-api.yaml
 
 # After import, the location becomes:
-# specs/myspec.yaml
+# specs/example-api.yaml
 ```
 
 ## Cache System

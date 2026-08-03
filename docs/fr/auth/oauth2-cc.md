@@ -29,6 +29,7 @@ specs:
         scopes:
           - read
           - write
+        request_format: form
 ```
 
 ## Paramètres
@@ -39,6 +40,7 @@ specs:
 | `client_secret` | Oui | Secret du client |
 | `token_url` | Oui | URL du point d'accès du jeton |
 | `scopes` | Non | Liste des permissions (optionnel) |
+| `request_format` | Non | Format du corps : `form` (défaut, `application/x-www-form-urlencoded`) ou `json` (`application/json`) |
 
 ## Notes
 
@@ -47,3 +49,4 @@ specs:
 - Si le serveur ne fournit pas `expires_in`, le jeton est considéré comme valide pendant 1 heure
 - `client_id` et `client_secret` prennent en charge la syntaxe `$(VAR)` pour les variables d'environnement
 - `token_url` et `scopes` sont utilisés tels quels (pas de résolution de variable d'environnement)
+- `request_format: json` envoie la demande de jeton en corps JSON — à utiliser lorsque le point d'accès du jeton nécessite `Content-Type: application/json`

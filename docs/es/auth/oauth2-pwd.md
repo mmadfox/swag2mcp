@@ -31,6 +31,7 @@ specs:
         scopes:
           - openid
           - profile
+        request_format: form
 ```
 
 ## Parámetros
@@ -43,6 +44,7 @@ specs:
 | `token_url` | Sí | URL del endpoint de token |
 | `client_secret` | No | Secreto del cliente (opcional, para clientes públicos) |
 | `scopes` | No | Lista de permisos (opcional) |
+| `request_format` | No | Formato del cuerpo: `form` (predeterminado, `application/x-www-form-urlencoded`) o `json` (`application/json`) |
 
 ## Notas
 
@@ -50,3 +52,4 @@ specs:
 - swag2mcp renueva automáticamente el token cuando expira
 - El token se almacena en caché hasta su expiración
 - Los campos `client_id`, `client_secret`, `username`, `password` y `token_url` admiten variables de entorno mediante `$(VAR)`
+- `request_format: json` envía la solicitud de token como cuerpo JSON — úselo cuando el endpoint de token requiera `Content-Type: application/json`

@@ -346,7 +346,7 @@ func (w *Workspace) CopySpecsToWorkspace(exportDir string) error {
 		if err != nil {
 			return fmt.Errorf("read spec %s: %w", entry.Name(), err)
 		}
-		if _, err := w.SaveSpec(entry.Name(), data); err != nil {
+		if _, err := w.SaveOrUpdateSpec(entry.Name(), data); err != nil {
 			return fmt.Errorf("save spec %s: %w", entry.Name(), err)
 		}
 	}

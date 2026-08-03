@@ -29,6 +29,7 @@ specs:
         scopes:
           - read
           - write
+        request_format: form
 ```
 
 ## 参数
@@ -39,6 +40,7 @@ specs:
 | `client_secret` | 是 | 客户端密钥 |
 | `token_url` | 是 | 令牌端点 URL |
 | `scopes` | 否 | 权限列表（可选） |
+| `request_format` | 否 | 请求体格式：`form`（默认，`application/x-www-form-urlencoded`）或 `json`（`application/json`） |
 
 ## 说明
 
@@ -47,3 +49,4 @@ specs:
 - 如果服务器未提供 `expires_in`，令牌被视为有效 1 小时
 - `client_id` 和 `client_secret` 支持 `$(VAR)` 语法用于环境变量
 - `token_url` 和 `scopes` 按原样使用（不解析环境变量）
+- `request_format: json` 以 JSON 正文发送令牌请求 — 当令牌端点需要 `Content-Type: application/json` 时使用

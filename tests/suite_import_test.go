@@ -38,11 +38,15 @@ paths:
 	return srv, specContent
 }
 
+func (s *ImportSuite) specURL() string {
+	srv, _ := s.specServer()
+	return srv.URL + "/spec.yaml"
+}
+
 func (s *ImportSuite) TestSingleFile() {
 	s.InitWorkspace()
-	srv, _ := s.specServer()
 
-	stdout, stderr, code := s.RunCommand("import", s.Workspace, srv.URL, "meteo.yaml")
+	stdout, stderr, code := s.RunCommand("import", s.Workspace, s.specURL(), "meteo.yaml")
 	s.Equal(0, code)
 	s.Contains(stdout+stderr, "meteo.yaml")
 
@@ -57,21 +61,29 @@ func (s *ImportSuite) TestSingleFileDuplicate() {
 	specDir := filepath.Join(s.Workspace, "specs")
 	s.Require().NoError(os.WriteFile(filepath.Join(specDir, "meteo.yaml"), []byte("existing"), 0600))
 
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("openapi: 3.0.0"))
-	}))
-	s.T().Cleanup(srv.Close)
-
-	_, _, code := s.RunCommand("import", s.Workspace, srv.URL, "meteo.yaml")
+	_, _, code := s.RunCommand("import", s.Workspace, s.specURL(), "meteo.yaml")
 	s.NotEqual(0, code)
+}
+
+func (s *ImportSuite) TestSingleFileForceOverwrites() {
+	s.InitWorkspace()
+
+	specDir := filepath.Join(s.Workspace, "specs")
+	s.Require().NoError(os.WriteFile(filepath.Join(specDir, "meteo.yaml"), []byte("old"), 0600))
+
+	stdout, stderr, code := s.RunCommand("import", s.Workspace, "--force", s.specURL(), "meteo.yaml")
+	s.Equal(0, code)
+	s.Contains(stdout+stderr, "meteo.yaml")
+
+	data, err := os.ReadFile(filepath.Join(specDir, "meteo.yaml"))
+	s.Require().NoError(err)
+	s.Contains(string(data), "Test API")
 }
 
 func (s *ImportSuite) TestWithPath() {
 	s.InitWorkspace()
-	srv, _ := s.specServer()
 
-	stdout, stderr, code := s.RunCommand("import", s.Workspace, srv.URL, "meteo.yaml")
+	stdout, stderr, code := s.RunCommand("import", s.Workspace, s.specURL(), "meteo.yaml")
 	s.Equal(0, code)
 	s.Contains(stdout+stderr, "meteo.yaml")
 }
@@ -103,7 +115,6 @@ paths:
 
 func (s *ImportSuite) TestWithSpec() {
 	s.InitWorkspace()
-	srv, _ := s.specServer()
 
 	configContent := `specs:
   - domain: meteo
@@ -111,7 +122,7 @@ func (s *ImportSuite) TestWithSpec() {
     base_url: https://api.meteo.com
     collections:
       - title: Pets
-        location: ` + srv.URL + `
+        location: ` + s.specURL() + `
 `
 	s.WriteConfig(configContent)
 
@@ -127,7 +138,6 @@ func (s *ImportSuite) TestWithSpec() {
 
 func (s *ImportSuite) TestWithPathAndSpec() {
 	s.InitWorkspace()
-	srv, _ := s.specServer()
 
 	configContent := `specs:
   - domain: meteo
@@ -135,7 +145,7 @@ func (s *ImportSuite) TestWithPathAndSpec() {
     base_url: https://api.meteo.com
     collections:
       - title: Pets
-        location: ` + srv.URL + `
+        location: ` + s.specURL() + `
 `
 	s.WriteConfig(configContent)
 
@@ -146,7 +156,6 @@ func (s *ImportSuite) TestWithPathAndSpec() {
 
 func (s *ImportSuite) TestWithMultipleSpecs() {
 	s.InitWorkspace()
-	srv, _ := s.specServer()
 
 	configContent := `specs:
   - domain: meteo
@@ -154,13 +163,13 @@ func (s *ImportSuite) TestWithMultipleSpecs() {
     base_url: https://api.meteo.com
     collections:
       - title: Pets
-        location: ` + srv.URL + `
+        location: ` + s.specURL() + `
   - domain: store
     llm_title: Store API
     base_url: https://api.store.com
     collections:
       - title: Products
-        location: ` + srv.URL + `
+        location: ` + s.specURL() + `
 `
 	s.WriteConfig(configContent)
 
@@ -188,6 +197,96 @@ func (s *ImportSuite) TestWithSpecNoMatch() {
 
 func (s *ImportSuite) TestWithSpecNoConfig() {
 	_, _, code := s.RunCommand("import", s.Workspace, "--spec", "meteo")
+	s.NotEqual(0, code)
+}
+
+func (s *ImportSuite) TestWithSpecAll() {
+	s.InitWorkspace()
+
+	configContent := `specs:
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
+    collections:
+      - title: Pets
+        location: ` + s.specURL() + `
+  - domain: store
+    llm_title: Store API
+    base_url: https://api.store.com
+    collections:
+      - title: Products
+        location: ` + s.specURL() + `
+`
+	s.WriteConfig(configContent)
+
+	stdout, stderr, code := s.RunCommand("import", s.Workspace, "--spec")
+	s.Equal(0, code)
+	s.Contains(stdout+stderr, "Imported")
+}
+
+func (s *ImportSuite) TestWithSpecSkipUnreachable() {
+	s.InitWorkspace()
+
+	specDir := filepath.Join(s.Workspace, "specs")
+	s.Require().NoError(os.WriteFile(filepath.Join(specDir, "meteo-pets.yaml"), []byte("existing"), 0600))
+
+	configContent := `specs:
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
+    collections:
+      - title: Pets
+        location: https://unreachable.example.com/spec.yaml
+`
+	s.WriteConfig(configContent)
+
+	stdout, stderr, code := s.RunCommand("import", s.Workspace, "--spec", "meteo")
+	s.Equal(0, code)
+	s.Contains(stdout+stderr, "Imported")
+}
+
+func (s *ImportSuite) TestWithSpecAlreadyLocal() {
+	s.InitWorkspace()
+
+	specDir := filepath.Join(s.Workspace, "specs")
+	s.Require().NoError(os.WriteFile(filepath.Join(specDir, "meteo-pets.yaml"), []byte("existing"), 0600))
+
+	configContent := `specs:
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
+    collections:
+      - title: Pets
+        location: specs/meteo-pets.yaml
+`
+	s.WriteConfig(configContent)
+
+	stdout, stderr, code := s.RunCommand("import", s.Workspace, "--spec", "meteo")
+	s.Equal(0, code)
+	s.Contains(stdout+stderr, "Imported")
+}
+
+func (s *ImportSuite) TestWithSpecLocalPathMissing() {
+	s.InitWorkspace()
+
+	configContent := `specs:
+  - domain: meteo
+    llm_title: Open-Meteo API
+    base_url: https://api.meteo.com
+    collections:
+      - title: Pets
+        location: specs/nonexistent.yaml
+`
+	s.WriteConfig(configContent)
+
+	_, _, code := s.RunCommand("import", s.Workspace, "--spec", "meteo")
+	s.NotEqual(0, code)
+}
+
+func (s *ImportSuite) TestSingleFileInvalidExtension() {
+	s.InitWorkspace()
+
+	_, _, code := s.RunCommand("import", s.Workspace, "https://example.com/spec.html", "spec.yaml")
 	s.NotEqual(0, code)
 }
 

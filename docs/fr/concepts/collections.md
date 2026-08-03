@@ -51,10 +51,10 @@ Le répertoire `specs/` dans l'espace de travail (`~/.swag2mcp/specs/`) est l'em
 
 ```bash
 # Importer un fichier de spécification dans l'espace de travail
-swag2mcp import https://example.com/api.yaml maspec
+swag2mcp import https://example.com/api.yaml example-api.yaml
 
 # Après l'importation, l'emplacement devient :
-# specs/maspec.yaml
+# specs/example-api.yaml
 ```
 
 ## Système de cache

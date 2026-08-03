@@ -29,30 +29,61 @@ swag2mcp import [path] [source] [name] [flags]
 
 | Flag | Kurzform | Typ | Standard | Beschreibung |
 |------|----------|-----|----------|--------------|
-| `--spec` | `-s` | `stringSlice` | `nil` | Collections aus angegebenen Specs importieren (kommagetrennt) |
+| `--spec` | `-s` | `string` | `""` | Collection-Spezifikationsdateien aus der Konfiguration herunterladen. Ohne Wert für alle Specs, oder Domains angeben wie `--spec meteo,github` |
+| `--force` | `-f` | `bool` | `false` | Vorhandene Spezifikationsdateien ohne Fehler überschreiben |
 | `--from-zip` | | `string` | `""` | Arbeitsbereich aus einem swag2mcp-Backup-ZIP wiederherstellen |
 
 ## Wie es funktioniert
 
 ### Modus 1 — Einzelimport von URL oder Datei
 
-Laden Sie eine Spezifikationsdatei herunter und fügen Sie sie mit einem Domain-Namen zum Arbeitsbereich hinzu:
+Laden Sie eine Spezifikationsdatei herunter und speichern Sie sie in `specs/`:
 
 ```bash
-swag2mcp import https://example.com/spec.yaml myspec.yaml
-swag2mcp import /pfad/zu/arbeitsbereich https://example.com/spec.yaml myspec.yaml
-swag2mcp import ./local-spec.yaml myspec.yaml
+swag2mcp import https://example.com/spec.yaml example-api.yaml
+swag2mcp import /pfad/zu/arbeitsbereich https://example.com/spec.yaml example-api.yaml
+swag2mcp import ./local-spec.yaml example-api.yaml
 ```
 
-Die Spezifikationsdatei wird in `specs/` gespeichert und die Konfiguration wird mit dem neuen Spec-Eintrag aktualisiert.
+Wenn `name` weggelassen wird, wird er aus dem URL-Dateinamen abgeleitet:
+```bash
+swag2mcp import https://example.com/specs/petstore.yaml
+# → gespeichert als petstore.yaml
+```
+
+Vorhandene Datei mit `--force` überschreiben:
+```bash
+swag2mcp import --force https://example.com/spec.yaml example-api.yaml
+```
+
+Nach dem Import zeigt die Ausgabe den Arbeitsbereichspfad, die gespeicherte Datei und eine YAML-Vorlage zum Hinzufügen zu `swag2mcp.yaml`:
+
+```
+✅ Imported to /pfad/zu/arbeitsbereich
+   specs/example-api.yaml
+
+   Add to swag2mcp.yaml:
+     specs:
+       - domain: <your-domain>
+         collections:
+           - location: specs/example-api.yaml
+```
 
 ### Modus 2 — Massenimport aus bestehender Konfiguration
 
 Laden Sie alle Collections für die angegebenen Domains von ihren konfigurierten URLs herunter:
 
 ```bash
-swag2mcp import --spec meteo
-swag2mcp import /pfad/zu/arbeitsbereich --spec meteo,store
+swag2mcp import --spec                # alle Specs
+swag2mcp import --spec meteo           # bestimmte Spec
+swag2mcp import --spec meteo,github    # mehrere Specs
+swag2mcp import /pfad/zu/arbeitsbereich --spec meteo
+```
+
+Wenn eine angegebene Domain nicht in der Konfiguration existiert, gibt der Befehl einen Fehler zurück:
+```
+Error: import_no_match
+  Spec "nonexistent" not found in config.
 ```
 
 Die Spezifikationsdatei jeder Collection wird heruntergeladen und in `specs/` gespeichert. Die Konfiguration wird aktualisiert, um auf die lokalen Kopien zu verweisen.
