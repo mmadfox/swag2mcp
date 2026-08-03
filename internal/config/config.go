@@ -252,12 +252,17 @@ func (c *Config) Validate(f *Filter) error {
 		}
 
 		specPrefix := fmt.Sprintf("specs[%d]", i)
-		errs = append(errs, collectStructErrors(specPrefix, spec)...)
+		specErrs := collectStructErrors(specPrefix, spec)
+		for k := range specErrs {
+			specErrs[k].spec = spec.Domain
+		}
+		errs = append(errs, specErrs...)
 
 		if spec.Auth.Client != nil {
 			if verr := spec.Auth.Client.Validate(); verr != nil {
 				errs = append(errs, validationError{
 					field:   specPrefix + ".auth",
+					spec:    spec.Domain,
 					message: fmt.Sprintf("auth client validation failed: %s", verr),
 				})
 			}
@@ -268,7 +273,16 @@ func (c *Config) Validate(f *Filter) error {
 				continue
 			}
 			collPrefix := fmt.Sprintf("%s.collections[%d]", specPrefix, j)
-			errs = append(errs, collectStructErrors(collPrefix, collection)...)
+			collErrs := collectStructErrors(collPrefix, collection)
+			collTitle := collection.LLMTitle
+			if collTitle == "" {
+				collTitle = fmt.Sprintf("#%d", j)
+			}
+			for k := range collErrs {
+				collErrs[k].spec = spec.Domain
+				collErrs[k].collection = collTitle
+			}
+			errs = append(errs, collErrs...)
 
 			if c.MockEnabled && collection.BaseMockURL == "" {
 				errs = append(errs, validationError{

@@ -28,6 +28,7 @@ func (s *Service) processSpec(ctx context.Context, sc *config.Spec, mockEnabled 
 	colls := make(map[string]*model.Collection)
 	eps := make(map[string]*model.Endpoint)
 
+	activeIdx := 0
 	for i := range sc.Collections {
 		cc := &sc.Collections[i]
 		if cc.Disable {
@@ -36,7 +37,7 @@ func (s *Service) processSpec(ctx context.Context, sc *config.Spec, mockEnabled 
 
 		coll, err := s.processCollection(
 			ctx, sp, sc, cc,
-			tags, eps,
+			tags, eps, activeIdx,
 		)
 		if err != nil {
 			return err
@@ -44,6 +45,7 @@ func (s *Service) processSpec(ctx context.Context, sc *config.Spec, mockEnabled 
 
 		colls[coll.ID] = coll
 		sp.Stats.Collections++
+		activeIdx++
 	}
 
 	sp.Stats.Tags = len(tags)
@@ -59,6 +61,7 @@ func (s *Service) processCollection(
 	cc *config.Collection,
 	tags map[string]*model.Tag,
 	eps map[string]*model.Endpoint,
+	collIndex int,
 ) (*model.Collection, error) {
 	coll := &model.Collection{
 		ID:             id.Collection(sp.ID, cc.Location),
@@ -78,7 +81,7 @@ func (s *Service) processCollection(
 		return nil, err
 	}
 
-	applySpecMetadata(coll, doc)
+	applySpecMetadata(coll, doc, sp.Domain, collIndex)
 
 	for _, pi := range doc.PathItems {
 		op := pi.Operation
@@ -195,9 +198,12 @@ func resolveTagName(tags []string) string {
 	return "default"
 }
 
-func applySpecMetadata(collection *model.Collection, specDocument *spec.Doc) {
+func applySpecMetadata(collection *model.Collection, specDocument *spec.Doc, specDomain string, collIndex int) {
 	if len(collection.LLMTitle) == 0 && len(specDocument.Title) > 0 {
 		collection.LLMTitle = specDocument.Title
+	}
+	if len(collection.LLMTitle) == 0 {
+		collection.LLMTitle = fmt.Sprintf("%s#%d", specDomain, collIndex+1)
 	}
 	if len(collection.LLMInstruction) == 0 && len(specDocument.Description) > 0 {
 		collection.LLMInstruction = specDocument.Description

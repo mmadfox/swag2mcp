@@ -49,11 +49,20 @@ func ListConfig(configPath string, tags []string) (string, error) {
 
 		if len(spec.Collections) > 0 {
 			fmt.Fprintf(w, "    Collections (%d):\n", len(spec.Collections))
+			activeIdx := 0
 			for _, col := range spec.Collections {
 				if col.Disable {
 					continue
 				}
-				fmt.Fprintf(w, "      %s\t%s\n", col.LLMTitle, col.Location)
+				title := col.LLMTitle
+				if title == "" {
+					title = col.Title
+				}
+				if title == "" {
+					title = fmt.Sprintf("%s#%d", spec.Domain, activeIdx+1)
+				}
+				fmt.Fprintf(w, "      %s\t%s\n", title, col.Location)
+				activeIdx++
 			}
 		}
 
