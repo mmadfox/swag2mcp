@@ -34,7 +34,7 @@ func TestApplySpecMetadata_setsTitle(t *testing.T) {
 
 	coll := &model.Collection{}
 	doc := &spec.Doc{Title: "Pet Store API", Description: "A pet store"}
-	applySpecMetadata(coll, doc)
+	applySpecMetadata(coll, doc, "test-api", 0)
 	require.Equal(t, "Pet Store API", coll.Title)
 	require.Equal(t, "Pet Store API", coll.LLMTitle)
 	require.Equal(t, "A pet store", coll.LLMInstruction)
@@ -48,10 +48,29 @@ func TestApplySpecMetadata_preservesExisting(t *testing.T) {
 		LLMInstruction: "Custom instruction",
 	}
 	doc := &spec.Doc{Title: "Doc Title", Description: "Doc description"}
-	applySpecMetadata(coll, doc)
+	applySpecMetadata(coll, doc, "test-api", 0)
 	require.Equal(t, "Custom Title", coll.LLMTitle)
 	require.Equal(t, "Custom instruction", coll.LLMInstruction)
 	require.Equal(t, "Doc Title", coll.Title)
+}
+
+func TestApplySpecMetadata_fallbackToSpecDomain(t *testing.T) {
+	t.Parallel()
+
+	coll := &model.Collection{}
+	doc := &spec.Doc{}
+	applySpecMetadata(coll, doc, "nspd", 0)
+	require.Equal(t, "nspd#1", coll.LLMTitle)
+	require.Empty(t, coll.Title)
+}
+
+func TestApplySpecMetadata_fallbackToSpecDomainIndex(t *testing.T) {
+	t.Parallel()
+
+	coll := &model.Collection{}
+	doc := &spec.Doc{}
+	applySpecMetadata(coll, doc, "nspd", 2)
+	require.Equal(t, "nspd#3", coll.LLMTitle)
 }
 
 func TestBuildSpecInfo_basic(t *testing.T) {

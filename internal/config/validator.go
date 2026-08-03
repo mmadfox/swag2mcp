@@ -84,10 +84,15 @@ func ValidateConfig(cfg *Config, opts ValidateOptions) error {
 	filter := NewFilter(opts.Tags)
 
 	if err := cfg.Validate(filter); err != nil {
-		errs = append(errs, validationError{
-			errType: "config",
-			message: err.Error(),
-		})
+		var ves validationErrors
+		if errors.As(err, &ves) {
+			errs = append(errs, ves...)
+		} else {
+			errs = append(errs, validationError{
+				errType: "config",
+				message: err.Error(),
+			})
+		}
 	}
 
 	errs = append(errs, validateDuplicateDomains(cfg)...)
@@ -386,15 +391,15 @@ func humanReadableError(fe validator.FieldError) string {
 	case "max":
 		return maxFieldError(fe.Field(), fe.Param())
 	case "url":
-		return fmt.Sprintf("%s must be a valid URL — provide a full URL starting with http:// or https://", fe.Field())
+		return fmt.Sprintf("%s must be a valid URL — provide a full URL starting with http:// or https:// (e.g. 'base_url: https://api.example.com/v1')", fe.Field())
 	case "oneof":
-		return fmt.Sprintf("%s must be one of: %s", fe.Field(), fe.Param())
+		return fmt.Sprintf("%s must be one of: %s (e.g. 'transport: stdio')", fe.Field(), fe.Param())
 	case "domain_format":
-		return "Domain must be 1-60 lowercase characters using only letters, digits, hyphens, and underscores"
+		return "Domain must be 1-60 lowercase characters using only letters, digits, hyphens, and underscores (e.g. 'domain: my-api')"
 	case "title_format":
-		return "LLMTitle contains invalid characters — use letters, digits, spaces, and basic punctuation only"
+		return "LLMTitle contains invalid characters — use letters, digits, spaces, and basic punctuation only (e.g. 'llm_title: My API v2')"
 	case "instruction_format":
-		return "LLMInstruction contains invalid characters — use letters, digits, spaces, and basic punctuation only"
+		return "LLMInstruction contains invalid characters — use letters, digits, spaces, and basic punctuation only (e.g. 'llm_instruction: Use this API to manage pets')"
 	case "mock_addr_format":
 		return fmt.Sprintf("%s must be in format 'host:port' or 'host:port/path' where host is localhost, 127.0.0.1, or 0.0.0.0 (e.g. 'localhost:8080' or '127.0.0.1:9000/v1/api')", fe.Field())
 	case "proxy_url_format":
@@ -408,15 +413,15 @@ func humanReadableError(fe validator.FieldError) string {
 func requiredFieldError(field string) string {
 	switch field {
 	case "Domain":
-		return "Domain is required — provide a unique identifier for this API (e.g. 'meteo', 'github-api')"
+		return "Domain is required — add 'domain: <name>' to your spec (e.g. 'domain: meteo')"
 	case "LLMTitle":
-		return "LLMTitle is required — provide a human-readable name the LLM will use to reference this API"
+		return "LLMTitle is required — add 'llm_title: <name>' to your spec (e.g. 'llm_title: Open-Meteo API')"
 	case "BaseURL":
-		return "BaseURL is required — provide the base URL for all API requests (e.g. 'https://api.example.com/v1')"
+		return "BaseURL is required — add 'base_url: <url>' to your spec (e.g. 'base_url: https://api.example.com/v1')"
 	case "Location":
-		return "Location is required — provide a path or URL to the Swagger/OpenAPI spec file"
+		return "Location is required — add 'location: <path>' to your collection (e.g. 'location: https://example.com/openapi.json')"
 	default:
-		return fmt.Sprintf("%s is required", field)
+		return fmt.Sprintf("%s is required — add this field to your configuration", field)
 	}
 }
 
@@ -424,15 +429,15 @@ func requiredFieldError(field string) string {
 func minFieldError(field, param string) string {
 	switch field {
 	case "LLMTitle":
-		return fmt.Sprintf("LLMTitle must be at least %s characters — provide a more descriptive name", param)
+		return fmt.Sprintf("LLMTitle must be at least %s characters — provide a more descriptive name (e.g. 'llm_title: My API Service')", param)
 	case "Location":
-		return fmt.Sprintf("Location must be at least %s characters — the path or URL is too short", param)
+		return fmt.Sprintf("Location must be at least %s characters — the path or URL is too short (e.g. 'location: https://example.com/api.json')", param)
 	case "Timeout":
-		return "Timeout must be at least 1 second — set a reasonable timeout for HTTP requests"
+		return "Timeout must be at least 1 second — set a reasonable timeout (e.g. 'timeout: 30s')"
 	case "MaxRedirects":
-		return "MaxRedirects must be at least 0 — set to 0 to disable redirects"
+		return "MaxRedirects must be at least 0 — set to 0 to disable redirects (e.g. 'max_redirects: 10')"
 	case "MaxResponseSize":
-		return "MaxResponseSize must be at least 256 bytes — the minimum response size limit"
+		return "MaxResponseSize must be at least 256 bytes — the minimum response size limit (e.g. 'max_response_size: 1048576')"
 	default:
 		return fmt.Sprintf("%s must be at least %s", field, param)
 	}
@@ -442,17 +447,17 @@ func minFieldError(field, param string) string {
 func maxFieldError(field, param string) string {
 	switch field {
 	case "LLMTitle":
-		return fmt.Sprintf("LLMTitle must be at most %s characters — the name is too long", param)
+		return fmt.Sprintf("LLMTitle must be at most %s characters — the name is too long (e.g. 'llm_title: My API')", param)
 	case "LLMInstruction":
-		return fmt.Sprintf("LLMInstruction must be at most %s characters — the instruction is too long", param)
+		return fmt.Sprintf("LLMInstruction must be at most %s characters — the instruction is too long (e.g. 'llm_instruction: Use this API for...')", param)
 	case "Location":
-		return fmt.Sprintf("Location must be at most %s characters — the path or URL is too long", param)
+		return fmt.Sprintf("Location must be at most %s characters — the path or URL is too long (e.g. 'location: https://example.com/spec.yaml')", param)
 	case "Timeout":
-		return "Timeout must be at most 5 minutes (300 seconds) — set a reasonable timeout for HTTP requests"
+		return "Timeout must be at most 5 minutes (300 seconds) — set a reasonable timeout (e.g. 'timeout: 30s')"
 	case "MaxRedirects":
-		return "MaxRedirects must be at most 50 — too many redirects may cause infinite loops"
+		return "MaxRedirects must be at most 50 — too many redirects may cause infinite loops (e.g. 'max_redirects: 10')"
 	case "MaxResponseSize":
-		return "MaxResponseSize must be at most 10 MB (10485760 bytes) — the maximum response size limit"
+		return "MaxResponseSize must be at most 10 MB (10485760 bytes) — the maximum response size limit (e.g. 'max_response_size: 1048576')"
 	default:
 		return fmt.Sprintf("%s must be at most %s", field, param)
 	}
