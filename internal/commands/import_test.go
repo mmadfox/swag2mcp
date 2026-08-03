@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 
 	"github.com/mmadfox/swag2mcp/internal/service"
 	"github.com/mmadfox/swag2mcp/internal/workspace"
@@ -25,6 +26,79 @@ func testCmd() *cobra.Command {
 	cmd := &cobra.Command{}
 	cmd.SetContext(context.Background())
 	return cmd
+}
+
+func TestIsURL(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want bool
+	}{
+		{name: "https URL", s: "https://example.com/spec.yaml", want: true},
+		{name: "http URL", s: "http://example.com/spec.yaml", want: true},
+		{name: "local path", s: "./local-spec.yaml", want: false},
+		{name: "absolute path", s: "/home/user/spec.yaml", want: false},
+		{name: "filename only", s: "myspec.yaml", want: false},
+		{name: "empty string", s: "", want: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isURL(tt.s)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestParseSingleOrZipArgs_PathSourceURL(t *testing.T) {
+	args := []string{"/path/to/ws", "https://example.com/spec.yaml"}
+	got := parseSingleOrZipArgs(args)
+	require.Equal(t, importModeSingle, got.mode)
+	require.Equal(t, "/path/to/ws", got.basePath)
+	require.Equal(t, "https://example.com/spec.yaml", got.source)
+	require.Empty(t, got.name)
+}
+
+func TestParseSingleOrZipArgs_SourceName(t *testing.T) {
+	args := []string{"./local-spec.yaml", "myspec"}
+	got := parseSingleOrZipArgs(args)
+	require.Equal(t, importModeSingle, got.mode)
+	require.Empty(t, got.basePath)
+	require.Equal(t, "./local-spec.yaml", got.source)
+	require.Equal(t, "myspec", got.name)
+}
+
+func TestParseSingleOrZipArgs_SourceOnly(t *testing.T) {
+	args := []string{"https://example.com/spec.yaml"}
+	got := parseSingleOrZipArgs(args)
+	require.Equal(t, importModeSingle, got.mode)
+	require.Empty(t, got.basePath)
+	require.Equal(t, "https://example.com/spec.yaml", got.source)
+	require.Empty(t, got.name)
+}
+
+func TestParseSingleOrZipArgs_FullPathSourceName(t *testing.T) {
+	args := []string{"/path/to/ws", "./local-spec.yaml", "myspec"}
+	got := parseSingleOrZipArgs(args)
+	require.Equal(t, importModeSingle, got.mode)
+	require.Equal(t, "/path/to/ws", got.basePath)
+	require.Equal(t, "./local-spec.yaml", got.source)
+	require.Equal(t, "myspec", got.name)
+}
+
+func TestParseSingleOrZipArgs_PathZip(t *testing.T) {
+	args := []string{"/path/to/ws", "/path/to/backup.zip"}
+	got := parseSingleOrZipArgs(args)
+	require.Equal(t, importModeZip, got.mode)
+	require.Equal(t, "/path/to/ws", got.basePath)
+	require.Equal(t, "/path/to/backup.zip", got.zipFile)
+}
+
+func TestParseSingleOrZipArgs_Empty(t *testing.T) {
+	got := parseSingleOrZipArgs(nil)
+	require.Equal(t, importModeSingle, got.mode)
+	require.Empty(t, got.basePath)
+	require.Empty(t, got.source)
+	require.Empty(t, got.name)
 }
 
 func TestRunImport_NoSpec_Success(t *testing.T) {
