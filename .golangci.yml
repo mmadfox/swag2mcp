@@ -633,6 +633,9 @@ linters:
         linters: [ gosec ]
       - path: 'internal/workspace/workspace\.go'
         linters: [ gosec ]
+      # gosec for import arg parsing (indices guarded by length checks)
+      - path: 'internal/commands/import\.go'
+        linters: [ gosec ]
       # canonicalheader for X-MBX-APIKEY in HMAC auth (Binance requires exact header name)
       - path: 'internal/auth/hmac\.go'
         linters: [ canonicalheader ]

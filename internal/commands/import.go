@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -125,9 +126,17 @@ func parseSingleOrZipArgs(args []string) importArgs {
 		return importArgs{mode: importModeSingle, basePath: args[0], source: args[1], name: args[2]}
 	}
 	if l == importArgsSourceName {
-		return importArgs{mode: importModeSingle, source: args[0], name: args[1]}
+		src, name := args[0], args[1]
+		if isURL(name) {
+			return importArgs{mode: importModeSingle, basePath: src, source: name}
+		}
+		return importArgs{mode: importModeSingle, source: src, name: name}
 	}
 	return importArgs{mode: importModeSingle, source: args[0]}
+}
+
+func isURL(s string) bool {
+	return strings.HasPrefix(s, "https://") || strings.HasPrefix(s, "http://")
 }
 
 func isZipFile(path string) bool {
