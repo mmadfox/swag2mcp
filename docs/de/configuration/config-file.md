@@ -108,6 +108,13 @@ mcp:
 `$(VAR)` wird aufgelöst in:
 - Auth-Konfigurationsfeldern: `token`, `username`, `password`, `client_id`, `client_secret`, `api_key`, `secret_key`, `domain`
 - MCP-Server-Auth-Token: `mcp.auth.token`
+- MCP server JWT auth type: `mcp.auth.type`
+- MCP server JWKS URL: `mcp.auth.jwks_url`
+- MCP server JWT issuer: `mcp.auth.issuer`
+- MCP server JWT audience: `mcp.auth.audience`
+- MCP server introspection URL: `mcp.auth.introspection_url`
+- MCP server introspection client ID: `mcp.auth.client_id`
+- MCP server introspection client secret: `mcp.auth.client_secret`
 - HTTP-Client-Headern und Cookie-Werten
 
 `$(VAR)` wird **nicht** in Basis-URLs oder Collection-Speicherorten aufgelöst.

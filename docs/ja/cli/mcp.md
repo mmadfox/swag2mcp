@@ -35,6 +35,13 @@ swag2mcp mcp [path] [flags]
 | `--disable-llm-auth` | | `bool` | `true` | MCP ツールリストから `auth` ツールを削除 |
 | `--dump-dir` | | `string` | `""` | デバッグ用に HTTP リクエストをダンプするディレクトリ |
 | `--tags` | `-t` | `string` | `""` | タグで spec をフィルタリング（カンマ区切り） |
+| `--auth-type` | | `string` | `""` | JWT auth type: `jwks`, `oidc`, `introspection` |
+| `--auth-jwks-url` | | `string` | `""` | JWKS URL for JWT auth |
+| `--auth-issuer` | | `string` | `""` | JWT issuer for token validation |
+| `--auth-audience` | | `string` | `""` | JWT audience for token validation |
+| `--auth-introspection-url` | | `string` | `""` | Token introspection URL |
+| `--auth-client-id` | | `string` | `""` | Client ID for introspection auth |
+| `--auth-client-secret` | | `string` | `""` | Client secret for introspection auth |
 
 ## 仕組み
 
@@ -70,6 +77,17 @@ HTTP エンドポイントを Bearer トークンで保護します：
 swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "my-secret"
 ```
 
+### With JWT authentication
+
+Protect the HTTP endpoint with JWT verification:
+
+```bash
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 \
+  --auth-type jwks \
+  --auth-jwks-url "https://auth.example.com/.well-known/jwks.json" \
+  --auth-issuer "https://auth.example.com/" \
+  --auth-audience "swag2mcp"
+```
 ### タグフィルタリング付き
 
 特定のタグを持つ spec のみを読み込みます：

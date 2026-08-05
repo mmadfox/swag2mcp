@@ -92,6 +92,49 @@ swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 - **描述：** HTTP 传输认证的 Bearer 令牌。设置后，LLM 客户端必须在每个请求中包含 `Authorization: Bearer &lt;token&gt;`。
 - **注意：** 支持 `$(ENV_VAR)` 解析。
 
+### auth.type
+
+- **Type:** `string`
+- **Default:** `""` (no JWT auth)
+- **Options:** `jwks`, `oidc`, `introspection`
+- **Description:** JWT authentication type for HTTP transport. When set, enables dynamic token verification using JWKS, OIDC Discovery, or token introspection.
+
+### auth.jwks_url
+
+- **Type:** `string`
+- **Default:** `""`
+- **Description:** URL of the JWKS (JSON Web Key Set) endpoint. Required when `auth.type` is `jwks` or resolved via OIDC discovery.
+
+### auth.issuer
+
+- **Type:** `string`
+- **Default:** `""`
+- **Description:** Expected JWT issuer (`iss` claim). If set, tokens with a different issuer are rejected.
+
+### auth.audience
+
+- **Type:** `string`
+- **Default:** `""`
+- **Description:** Expected JWT audience (`aud` claim). If set, tokens without this audience are rejected.
+
+### auth.introspection_url
+
+- **Type:** `string`
+- **Default:** `""`
+- **Description:** Token introspection endpoint URL. Required when `auth.type` is `introspection`.
+
+### auth.client_id
+
+- **Type:** `string`
+- **Default:** `""`
+- **Description:** Client ID for introspection auth. Required when `auth.type` is `introspection`.
+
+### auth.client_secret
+
+- **Type:** `string`
+- **Default:** `""`
+- **Description:** Client secret for introspection auth. Supports `$(ENV_VAR)` resolution.
+
 ## HTTP 认证
 
 使用 bearer 令牌保护 MCP HTTP 端点：
@@ -106,6 +149,56 @@ mcp:
 
 ```bash
 swag2mcp mcp --auth-token "my-secret-token"
+```
+
+### With JWT authentication (JWKS)
+
+Protect the MCP HTTP endpoint with JWT verification via a JWKS endpoint:
+
+```yaml
+mcp:
+  auth:
+    type: jwks
+    jwks_url: "https://auth.example.com/.well-known/jwks.json"
+    issuer: "https://auth.example.com/"
+    audience: "swag2mcp"
+```
+
+```bash
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 \
+  --auth-type jwks \
+  --auth-jwks-url "https://auth.example.com/.well-known/jwks.json" \
+  --auth-issuer "https://auth.example.com/" \
+  --auth-audience "swag2mcp"
+```
+
+### With JWT authentication (OIDC Discovery)
+
+```yaml
+mcp:
+  auth:
+    type: oidc
+    issuer: "https://auth.example.com/"
+    audience: "swag2mcp"
+```
+
+### With JWT authentication (Token Introspection)
+
+```yaml
+mcp:
+  auth:
+    type: introspection
+    introspection_url: "https://auth.example.com/introspect"
+    client_id: "my-client"
+    client_secret: "$(MCP_CLIENT_SECRET)"
+```
+
+```bash
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 \
+  --auth-type introspection \
+  --auth-introspection-url "https://auth.example.com/introspect" \
+  --auth-client-id "my-client" \
+  --auth-client-secret "$(MCP_CLIENT_SECRET)"
 ```
 
 ## 健康检查
@@ -131,3 +224,10 @@ CLI 标志覆盖 YAML 配置。如果未设置标志，则使用 YAML 中 `mcp` 
 | `--disable-llm-auth` | bool | `true` | 从 MCP 工具列表中移除 `auth` 工具 |
 | `--dump-dir` | string | `""` | 用于调试的 HTTP 请求转储目录 |
 | `--tags` | string | `""` | 按标签过滤 spec（逗号分隔） |
+| `--auth-type` | string | `""` | JWT auth type: `jwks`, `oidc`, `introspection` |
+| `--auth-jwks-url` | string | `""` | JWKS URL for JWT auth |
+| `--auth-issuer` | string | `""` | JWT issuer for token validation |
+| `--auth-audience` | string | `""` | JWT audience for token validation |
+| `--auth-introspection-url` | string | `""` | Token introspection URL |
+| `--auth-client-id` | string | `""` | Client ID for introspection auth |
+| `--auth-client-secret` | string | `""` | Client secret for introspection auth |

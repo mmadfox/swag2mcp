@@ -108,6 +108,13 @@ mcp:
 `$(VAR)`은 다음에서 해결됩니다:
 - 인증 설정 필드: `token`, `username`, `password`, `client_id`, `client_secret`, `api_key`, `secret_key`, `domain`
 - MCP 서버 인증 토큰: `mcp.auth.token`
+- MCP server JWT auth type: `mcp.auth.type`
+- MCP server JWKS URL: `mcp.auth.jwks_url`
+- MCP server JWT issuer: `mcp.auth.issuer`
+- MCP server JWT audience: `mcp.auth.audience`
+- MCP server introspection URL: `mcp.auth.introspection_url`
+- MCP server introspection client ID: `mcp.auth.client_id`
+- MCP server introspection client secret: `mcp.auth.client_secret`
 - HTTP 클라이언트 헤더 및 쿠키 값
 
 `$(VAR)`은 base URL 또는 collection location에서 **해결되지 않습니다**.

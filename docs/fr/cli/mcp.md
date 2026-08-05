@@ -35,6 +35,13 @@ swag2mcp mcp [chemin] [drapeaux]
 | `--disable-llm-auth` | | `bool` | `true` | Supprimer l'outil `auth` de la liste des outils MCP |
 | `--dump-dir` | | `string` | `""` | Répertoire pour vider les requêtes HTTP pour le débogage |
 | `--tags` | `-t` | `string` | `""` | Filtrer les specs par étiquettes (séparées par des virgules) |
+| `--auth-type` | | `string` | `""` | JWT auth type: `jwks`, `oidc`, `introspection` |
+| `--auth-jwks-url` | | `string` | `""` | JWKS URL for JWT auth |
+| `--auth-issuer` | | `string` | `""` | JWT issuer for token validation |
+| `--auth-audience` | | `string` | `""` | JWT audience for token validation |
+| `--auth-introspection-url` | | `string` | `""` | Token introspection URL |
+| `--auth-client-id` | | `string` | `""` | Client ID for introspection auth |
+| `--auth-client-secret` | | `string` | `""` | Client secret for introspection auth |
 
 ## Comment cela fonctionne
 
@@ -68,6 +75,18 @@ Protégez le point d'accès HTTP avec un jeton Bearer :
 
 ```bash
 swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "mon-secret"
+```
+
+### Avec authentification JWT
+
+Protégez le point d'accès HTTP avec vérification JWT :
+
+```bash
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 \
+  --auth-type jwks \
+  --auth-jwks-url "https://auth.example.com/.well-known/jwks.json" \
+  --auth-issuer "https://auth.example.com/" \
+  --auth-audience "swag2mcp"
 ```
 
 ### Avec filtrage par étiquettes

@@ -35,6 +35,13 @@ swag2mcp mcp [path] [flags]
 | `--disable-llm-auth` | | `bool` | `true` | 从 MCP 工具列表中移除 `auth` 工具 |
 | `--dump-dir` | | `string` | `""` | 用于调试的 HTTP 请求转储目录 |
 | `--tags` | `-t` | `string` | `""` | 按标签过滤 spec（逗号分隔） |
+| `--auth-type` | | `string` | `""` | JWT auth type: `jwks`, `oidc`, `introspection` |
+| `--auth-jwks-url` | | `string` | `""` | JWKS URL for JWT auth |
+| `--auth-issuer` | | `string` | `""` | JWT issuer for token validation |
+| `--auth-audience` | | `string` | `""` | JWT audience for token validation |
+| `--auth-introspection-url` | | `string` | `""` | Token introspection URL |
+| `--auth-client-id` | | `string` | `""` | Client ID for introspection auth |
+| `--auth-client-secret` | | `string` | `""` | Client secret for introspection auth |
 
 ## 工作原理
 
@@ -70,6 +77,17 @@ swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "my-secret"
 ```
 
+### With JWT authentication
+
+Protect the HTTP endpoint with JWT verification:
+
+```bash
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 \
+  --auth-type jwks \
+  --auth-jwks-url "https://auth.example.com/.well-known/jwks.json" \
+  --auth-issuer "https://auth.example.com/" \
+  --auth-audience "swag2mcp"
+```
 ### 带标签过滤
 
 仅加载具有特定标签的 spec：
