@@ -270,7 +270,7 @@ type EndpointByIDResponse struct {
 
 // SearchRequest contains the search query and result limit.
 type SearchRequest struct {
-	Query string `json:"query" jsonschema:"required,"                                    validate:"required"`
+	Query string `json:"query" jsonschema:"required,Search query. Supports field filters (method:GET tag:pets path:/v1/...). Queries containing '/' use AND between tokens for precise path matching."                                    validate:"required"`
 	Limit int    `json:"limit" jsonschema:"required,Maximum number of results to return" validate:"required,min=1,max=50"`
 }
 

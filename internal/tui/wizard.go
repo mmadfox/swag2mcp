@@ -203,7 +203,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			}
 
-		case "b", "B":
+		case "b":
+			break
+		case "B":
 			if m.state == stateAskAddSpec ||
 				m.state == stateAskAddCollection ||
 				m.state == stateAskAddAnotherSpec ||

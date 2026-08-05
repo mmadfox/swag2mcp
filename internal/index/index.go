@@ -540,7 +540,11 @@ func (idx *Index) buildQuery(q string) (bluge.Query, error) {
 		)
 	}
 
-	return bluge.NewMatchQuery(q).SetField("_all").SetAnalyzer(idx.analyzer), nil
+	mq := bluge.NewMatchQuery(q).SetField("_all").SetAnalyzer(idx.analyzer)
+	if strings.Contains(q, "/") {
+		mq.SetOperator(bluge.MatchQueryOperatorAnd)
+	}
+	return mq, nil
 }
 
 // normalizeFieldValues normalizes field:value patterns in a query string so
