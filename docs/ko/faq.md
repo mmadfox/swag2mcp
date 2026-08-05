@@ -219,7 +219,7 @@ OAuth2 Client Credentials 및 Password Grant 토큰은 만료 시 자동으로 �
 swag2mcp mcp
 
 # HTTP 전송 사용
-swag2mcp mcp --transport sse --http-addr :8080
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080
 ```
 
 ### 포트를 어떻게 변경하나요?
@@ -233,7 +233,7 @@ swag2mcp mcp --transport sse --http-addr 0.0.0.0:9090
 Bearer 토큰을 설정하세요:
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080 --auth-token "my-secret"
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "my-secret"
 ```
 
 LLM 클라이언트는 모든 요청에 `Authorization: Bearer my-secret`을 포함해야 합니다.

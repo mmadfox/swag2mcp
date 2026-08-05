@@ -219,7 +219,7 @@ OAuth2 Client Credentials and Password Grant tokens are automatically refreshed 
 swag2mcp mcp
 
 # With HTTP transport
-swag2mcp mcp --transport sse --http-addr :8080
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080
 ```
 
 ### How do I change the port?
@@ -233,7 +233,7 @@ swag2mcp mcp --transport sse --http-addr 0.0.0.0:9090
 Set a bearer token:
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080 --auth-token "my-secret"
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "my-secret"
 ```
 
 The LLM client must include `Authorization: Bearer my-secret` in every request.

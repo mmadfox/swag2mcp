@@ -51,7 +51,7 @@ swag2mcp mcp
 Transporte de Eventos Enviados por el Servidor para comunicación basada en HTTP. Requiere la secuencia de protocolo de enlace MCP.
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080
 ```
 
 ### Transporte HTTP Streamable
@@ -67,7 +67,7 @@ swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 Proteger el endpoint HTTP con un token bearer:
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080 --auth-token "my-secret"
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "my-secret"
 ```
 
 ### Con filtrado por etiquetas

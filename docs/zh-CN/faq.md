@@ -219,7 +219,7 @@ OAuth2 客户端凭证和密码授权令牌在过期时会自动刷新。Bearer 
 swag2mcp mcp
 
 # 使用 HTTP 传输
-swag2mcp mcp --transport sse --http-addr :8080
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080
 ```
 
 ### 如何更改端口？
@@ -233,7 +233,7 @@ swag2mcp mcp --transport sse --http-addr 0.0.0.0:9090
 设置 bearer 令牌：
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080 --auth-token "my-secret"
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "my-secret"
 ```
 
 LLM 客户端必须在每个请求中包含 `Authorization: Bearer my-secret`。

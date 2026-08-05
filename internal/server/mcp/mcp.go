@@ -55,6 +55,7 @@ type Options struct {
 
 	AuthToken    string
 	AuthVerifier TokenVerifier
+	AuthJWT      *JWTConfig
 }
 
 // httpAddr returns the HTTP address, defaulting to ":8080".
@@ -137,10 +138,13 @@ func serveHTTP(ctx context.Context, defs service.ToolDefinitions, opts Options) 
 	var handler http.Handler
 	switch opts.Transport {
 	case TransportSSE:
-		handler = sdkmcp.NewSSEHandler(getServer, &sdkmcp.SSEOptions{})
+		handler = sdkmcp.NewSSEHandler(getServer, &sdkmcp.SSEOptions{
+			DisableLocalhostProtection: true,
+		})
 	case TransportStreamableHTTP:
 		handler = sdkmcp.NewStreamableHTTPHandler(getServer, &sdkmcp.StreamableHTTPOptions{
-			Logger: opts.Logger,
+			Logger:                     opts.Logger,
+			DisableLocalhostProtection: true,
 		})
 	case TransportStdio:
 		return errors.New("stdio transport is not supported for HTTP server")
@@ -198,6 +202,10 @@ func applyAuthMiddleware(next http.Handler, opts Options) http.Handler {
 				return opts.AuthVerifier(ctx, token, req)
 			}, nil,
 		)(next)
+	}
+	if opts.AuthJWT != nil {
+		verifier := newJWTVerifier(opts.AuthJWT)
+		return auth.RequireBearerToken(verifier, nil)(next)
 	}
 	if opts.AuthToken != "" {
 		verifier := func(_ context.Context, token string, _ *http.Request) (*auth.TokenInfo, error) {

@@ -125,7 +125,7 @@ swag2mcp mcp
 ### SSE / Streamable HTTP — リモートアクセス用
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080
 ```
 
 > **注意：** `auth` MCP ツールは、本番環境のセキュリティのため**デフォルトで無効**です（`--disable-llm-auth=true`）。有効にするには：`swag2mcp mcp --disable-llm-auth=false`
@@ -135,7 +135,7 @@ swag2mcp mcp --transport sse --http-addr :8080
 ```yaml
 mcp:
   transport: sse
-  addr: ":8080"
+  addr: "0.0.0.0:8080"
   path: "/mcp"
 ```
 

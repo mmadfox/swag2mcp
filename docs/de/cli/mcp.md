@@ -51,7 +51,7 @@ swag2mcp mcp
 Server-Sent-Events-Transport für HTTP-basierte Kommunikation. Erfordert die MCP-Handshake-Sequenz.
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080
 ```
 
 ### Streamable-HTTP-Transport
@@ -67,7 +67,7 @@ swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 Schützen Sie den HTTP-Endpunkt mit einem Bearer-Token:
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080 --auth-token "my-secret"
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "my-secret"
 ```
 
 ### Mit Tag-Filterung

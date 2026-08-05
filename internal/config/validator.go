@@ -102,6 +102,7 @@ func ValidateConfig(cfg *Config, opts ValidateOptions) error {
 	}
 	errs = append(errs, validateSpecLocations(cfg, filter, opts.Cache)...)
 	errs = append(errs, validateGlobalHTTPClient(cfg)...)
+	errs = append(errs, validateMCPAuth(cfg)...)
 
 	if len(errs) == 0 {
 		return nil
@@ -247,6 +248,7 @@ func validateSpecLocations(cfg *Config, filter *Filter, cacheInstance *cache.Cac
 // validateGlobalHTTPClient validates the global HTTP client configuration.
 func validateGlobalHTTPClient(cfg *Config) []validationError {
 	var errs []validationError
+
 	if cfg.HTTPClient == nil {
 		return nil
 	}
@@ -255,6 +257,53 @@ func validateGlobalHTTPClient(cfg *Config) []validationError {
 
 	if cfg.HTTPClient.Proxy != nil {
 		errs = append(errs, collectStructErrors("http_client.proxy", *cfg.HTTPClient.Proxy)...)
+	}
+
+	return errs
+}
+
+// validateMCPAuth validates the MCP auth configuration.
+func validateMCPAuth(cfg *Config) []validationError {
+	var errs []validationError
+
+	if cfg.MCP == nil || cfg.MCP.Auth == nil {
+		return nil
+	}
+
+	auth := cfg.MCP.Auth
+
+	if auth.Type == "" {
+		return nil
+	}
+
+	switch auth.Type {
+	case "jwks":
+		if auth.JWKSUrl == "" {
+			errs = append(errs, validationError{
+				field:   "mcp.auth.jwks_url",
+				message: "JWKS URL is required when auth type is 'jwks' — add 'jwks_url: https://auth.example.com/.well-known/jwks.json'",
+			})
+		}
+	case "oidc":
+		if auth.Issuer == "" {
+			errs = append(errs, validationError{
+				field:   "mcp.auth.issuer",
+				message: "Issuer is required when auth type is 'oidc' — add 'issuer: https://auth.example.com/'",
+			})
+		}
+	case "introspection":
+		if auth.IntrospectionURL == "" {
+			errs = append(errs, validationError{
+				field:   "mcp.auth.introspection_url",
+				message: "Introspection URL is required when auth type is 'introspection' — add 'introspection_url: https://auth.example.com/introspect'",
+			})
+		}
+		if auth.ClientID == "" {
+			errs = append(errs, validationError{
+				field:   "mcp.auth.client_id",
+				message: "Client ID is required when auth type is 'introspection' — add 'client_id: <your-client-id>'",
+			})
+		}
 	}
 
 	return errs

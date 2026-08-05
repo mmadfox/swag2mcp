@@ -8,6 +8,7 @@ package mockserver
 import (
 	"context"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
@@ -17,6 +18,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/MicahParks/jwkset"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 const (
@@ -27,6 +31,24 @@ const (
 	authTokenExpiresIn  = 3600
 	authExpiresInKey    = "expires_in"
 	grantTypePassword   = "password"
+	// jwtKeySize is the RSA key size in bits for the JWT mock server.
+	// Used by newAuthMockServer when generating the signing key.
+	jwtKeySize = 2048
+	// jwtTokenExpiry is the token lifetime in seconds for the JWT mock server.
+	// Used by handleJWTToken when building the token response.
+	jwtTokenExpiry = 3600
+	// accessTokenKey is the JSON key for the access token in OAuth2 and JWT
+	// token responses. Used by handleOAuth2CC, handleOAuth2Password, and
+	// handleJWTToken.
+	accessTokenKey = "access_token"
+	// tokenTypeKey is the JSON key for the token type in OAuth2 and JWT
+	// token responses. Used by handleOAuth2CC, handleOAuth2Password, and
+	// handleJWTToken.
+	tokenTypeKey = "token_type"
+	// tokenTypeBearer is the Bearer token type value used in OAuth2 and JWT
+	// token responses. Used by handleOAuth2CC, handleOAuth2Password, and
+	// handleJWTToken.
+	tokenTypeBearer = "Bearer"
 )
 
 type authServerType string
@@ -35,6 +57,7 @@ const (
 	authServerOAuth2 authServerType = "oauth2"
 	authServerDigest authServerType = "digest"
 	authServerHMAC   authServerType = "hmac"
+	authServerJWT    authServerType = "jwt"
 )
 
 type authMockServer struct {
@@ -47,6 +70,8 @@ type authMockServer struct {
 	nonce      string
 	opaque     string
 	nonceTime  time.Time
+	jwtKey     *rsa.PrivateKey
+	jwkSet     jwkset.JWKSMarshal
 }
 
 // newAuthMockServer creates a new auth mock server of the given type.
@@ -59,12 +84,22 @@ func newAuthMockServer(
 	if logger == nil {
 		logger = slog.New(slog.DiscardHandler)
 	}
-	return &authMockServer{
+	s := &authMockServer{
 		serverType: serverType,
 		addr:       addr,
 		tlsConfig:  tlsConfig,
 		logger:     logger,
 	}
+	if serverType == authServerJWT {
+		key, err := rsa.GenerateKey(rand.Reader, jwtKeySize)
+		if err != nil {
+			logger.ErrorContext(context.Background(), "failed to generate JWT key", "error", err)
+		} else {
+			s.jwtKey = key
+			s.jwkSet = jwksMarshalFromKey(key)
+		}
+	}
+	return s
 }
 
 // start begins listening for HTTP requests on the configured address.
@@ -78,6 +113,9 @@ func (m *authMockServer) start(ctx context.Context) {
 		mux.HandleFunc("/", m.handleDigest)
 	case authServerHMAC:
 		mux.HandleFunc("/", m.handleHMAC)
+	case authServerJWT:
+		mux.HandleFunc("/token", m.handleJWTToken)
+		mux.HandleFunc("/.well-known/jwks.json", m.handleJWKS)
 	default:
 		m.logger.ErrorContext(ctx, "unsupported auth server type",
 			"type", m.serverType,
@@ -211,8 +249,8 @@ func (m *authMockServer) handleOAuth2CC(
 	)
 
 	tokenResponse := map[string]any{
-		"access_token":   token,
-		"token_type":     "Bearer",
+		accessTokenKey:   token,
+		tokenTypeKey:     tokenTypeBearer,
 		authExpiresInKey: authTokenExpiresIn,
 		"scope":          params["scope"],
 	}
@@ -248,8 +286,8 @@ func (m *authMockServer) handleOAuth2Password(
 	)
 
 	tokenResponse := map[string]any{
-		"access_token":   token,
-		"token_type":     "Bearer",
+		accessTokenKey:   token,
+		tokenTypeKey:     tokenTypeBearer,
 		authExpiresInKey: authTokenExpiresIn,
 		"scope":          params["scope"],
 	}
@@ -379,4 +417,82 @@ func generateRandomToken() string {
 		slog.Default().Warn("failed to generate random token", "error", err)
 	}
 	return hex.EncodeToString(tokenBytes)
+}
+
+// handleJWTToken generates a signed JWT access token.
+func (m *authMockServer) handleJWTToken(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if m.jwtKey == nil {
+		http.Error(w, "JWT key not initialized", http.StatusInternalServerError)
+		return
+	}
+
+	now := time.Now()
+	claims := jwt.MapClaims{
+		"iss": fmt.Sprintf("http://%s", m.addr),
+		"sub": "mock-user",
+		"aud": []string{"swag2mcp"},
+		"exp": now.Add(time.Hour).Unix(),
+		"iat": now.Unix(),
+		"jti": generateRandomToken()[:16],
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	token.Header["kid"] = "mock-kid"
+
+	signed, err := token.SignedString(m.jwtKey)
+	if err != nil {
+		m.logger.ErrorContext(r.Context(), "failed to sign JWT", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(map[string]any{
+		accessTokenKey: signed,
+		tokenTypeKey:   tokenTypeBearer,
+		"expires_in":   jwtTokenExpiry,
+	}); err != nil {
+		m.logger.ErrorContext(r.Context(), "failed to encode JWT token response", "error", err)
+	}
+}
+
+// handleJWKS serves the JWKS public key set.
+func (m *authMockServer) handleJWKS(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(m.jwkSet); err != nil {
+		slog.Default().WarnContext(context.Background(), "failed to encode JWKS response", "error", err)
+	}
+}
+
+// jwksMarshalFromKey creates a JWKSMarshal from an RSA public key.
+func jwksMarshalFromKey(key *rsa.PrivateKey) jwkset.JWKSMarshal {
+	jwk, err := jwkset.NewJWKFromKey(&key.PublicKey, jwkset.JWKOptions{
+		Metadata: jwkset.JWKMetadataOptions{
+			KID: "mock-kid",
+			ALG: jwkset.AlgRS256,
+		},
+	})
+	if err != nil {
+		slog.Default().Error("failed to create JWK", "error", err)
+		return jwkset.JWKSMarshal{}
+	}
+
+	storage := jwkset.NewMemoryStorage()
+	if err := storage.KeyWrite(context.Background(), jwk); err != nil {
+		slog.Default().Error("failed to write JWK to storage", "error", err)
+		return jwkset.JWKSMarshal{}
+	}
+
+	marshal, err := storage.Marshal(context.Background())
+	if err != nil {
+		slog.Default().Error("failed to marshal JWK set", "error", err)
+		return jwkset.JWKSMarshal{}
+	}
+
+	return marshal
 }

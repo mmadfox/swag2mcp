@@ -125,7 +125,7 @@ swag2mcp mcp
 ### SSE / HTTP Streamable — para acceso remoto
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080
 ```
 
 O configure en `swag2mcp.yaml`:
@@ -133,7 +133,7 @@ O configure en `swag2mcp.yaml`:
 ```yaml
 mcp:
   transport: sse
-  addr: ":8080"
+  addr: "0.0.0.0:8080"
   path: "/mcp"
 ```
 

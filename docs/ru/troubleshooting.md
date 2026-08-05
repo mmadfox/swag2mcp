@@ -152,7 +152,7 @@ lsof -i :8080
 kill <PID>
 
 # Или используйте другой порт
-swag2mcp mcp --transport sse --http-addr :9090
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:9090
 ```
 
 ### Connection refused
