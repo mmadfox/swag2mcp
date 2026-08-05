@@ -2,7 +2,20 @@
 
 ## stdio
 
-Cursor の設定で MCP サーバーを追加：
+### Via Settings UI
+
+1. Cursor設定を開く (Cmd+, / Ctrl+,)
+2. Go to **MCPサーバー**
+3. Click **新規サーバーを追加**
+4. Fill in:
+   - **名前:** `swag2mcp`
+   - **タイプ:** `command`
+   - **コマンド:** `swag2mcp mcp`
+5. Click **保存**
+
+### 設定ファイル経由
+
+In `~/.cursor/mcp.json`:
 
 ```json
 {
@@ -17,7 +30,7 @@ Cursor の設定で MCP サーバーを追加：
 
 ## 使用方法
 
-接続後、Cursor AI エージェントは以下のことが可能です：
+After connecting, Cursor AI Agent can:
 
 - API を探索する
 - 関連するエンドポイントを見つける

@@ -2,7 +2,20 @@
 
 ## stdio
 
-In Cursor settings, add the MCP server:
+### Via Settings UI
+
+1. Open Cursor Settings (Cmd+, / Ctrl+,)
+2. Go to **MCP Servers**
+3. Click **Add new server**
+4. Fill in:
+   - **Name:** `swag2mcp`
+   - **Type:** `command`
+   - **Command:** `swag2mcp mcp`
+5. Click **Save**
+
+### Via config file
+
+In `~/.cursor/mcp.json`:
 
 ```json
 {

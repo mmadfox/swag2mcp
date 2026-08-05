@@ -1,27 +1,33 @@
 # VS Code Integration
 
-## Via VS Code Settings
+## Via .vscode/mcp.json
 
-In `.vscode/settings.json`:
+1. Install the MCP extension for VS Code (e.g., MCP Client by org.mcp or similar).
+2. Create `.vscode/mcp.json` in your project root:
 
 ```json
 {
   "mcpServers": {
     "swag2mcp": {
       "command": "swag2mcp",
-      "args": ["mcp"]
+      "args": ["mcp", "${workspaceFolder}"]
     }
   }
 }
 ```
 
-## Via Extension
+> // "${{workspaceFolder}}" will be passed as the workspace path
 
-Install the MCP extension for VS Code and add:
+3. Reload the VS Code window (Ctrl+Shift+P → "Reload Window").
+4. Use the AI assistant — it will now know about your APIs.
+
+## Alternative: Via VS Code Settings
+
+You can also configure in `.vscode/settings.json`:
 
 ```json
 {
-  "mcp.servers": {
+  "mcpServers": {
     "swag2mcp": {
       "command": "swag2mcp",
       "args": ["mcp"]

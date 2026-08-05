@@ -1,27 +1,33 @@
 # VS Code-Integration
 
-## Über VS Code-Einstellungen
+## Via .vscode/mcp.json
 
-In `.vscode/settings.json`:
+1. Installieren Sie die MCP-Erweiterung für VS Code (z.B. MCP Client von org.mcp oder ähnlich).
+2. Erstellen Sie `.vscode/mcp.json` im Projektstamm:
 
 ```json
 {
   "mcpServers": {
     "swag2mcp": {
       "command": "swag2mcp",
-      "args": ["mcp"]
+      "args": ["mcp", "${workspaceFolder}"]
     }
   }
 }
 ```
 
-## Über Erweiterung
+> // "${{workspaceFolder}}" wird als Arbeitsbereichspfad übergeben
 
-Installieren Sie die MCP-Erweiterung für VS Code und fügen Sie hinzu:
+3. Laden Sie das VS Code-Fenster neu (Strg+Umschalt+P → "Reload Window").
+4. Nutzen Sie den KI-Assistenten — er kennt jetzt Ihre APIs.
+
+## Alternative: Über VS Code-Einstellungen
+
+Sie können auch in `.vscode/settings.json` konfigurieren:
 
 ```json
 {
-  "mcp.servers": {
+  "mcpServers": {
     "swag2mcp": {
       "command": "swag2mcp",
       "args": ["mcp"]

@@ -1,27 +1,33 @@
 # Интеграция с VS Code
 
-## Через настройки VS Code
+## Via .vscode/mcp.json
 
-В `.vscode/settings.json`:
+1. Установите MCP-расширение для VS Code (например, MCP Client от org.mcp или аналогичное).
+2. Создайте `.vscode/mcp.json` в корне проекта:
 
 ```json
 {
   "mcpServers": {
     "swag2mcp": {
       "command": "swag2mcp",
-      "args": ["mcp"]
+      "args": ["mcp", "${workspaceFolder}"]
     }
   }
 }
 ```
 
-## Через расширение
+> // "${{workspaceFolder}}" будет передан как путь к рабочей области
 
-Установите MCP-расширение для VS Code и добавьте:
+3. Перезагрузите окно VS Code (Ctrl+Shift+P → "Reload Window").
+4. Используйте AI-ассистента — теперь он будет знать о ваших API.
+
+## Альтернатива: через настройки VS Code
+
+Также можно настроить в `.vscode/settings.json`:
 
 ```json
 {
-  "mcp.servers": {
+  "mcpServers": {
     "swag2mcp": {
       "command": "swag2mcp",
       "args": ["mcp"]
