@@ -21,6 +21,8 @@ const (
 	defaultMockDigestPort = 9091
 )
 
+// BuildGlobalHTTPConfig converts a GlobalHTTPClientConfig into an httpclient.Config,
+// applying defaults for nil fields.
 func BuildGlobalHTTPConfig(global *config.GlobalHTTPClientConfig) httpclient.Config {
 	if global == nil {
 		return httpclient.Config{

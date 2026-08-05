@@ -35,7 +35,7 @@ type mcpCmdOpts struct {
 	HTTPPath       string
 	AuthToken      string
 	AuthType       string
-	AuthJWKSUrl    string
+	AuthJWKSURL    string
 	AuthIssuer     string
 	AuthAudience   string
 	AuthIntroURL   string
@@ -68,7 +68,7 @@ func newMCPCmd(version string) *cobra.Command {
 	cmd.Flags().StringVar(&opts.HTTPPath, "http-path", "/mcp", "HTTP path for MCP handler")
 	cmd.Flags().StringVar(&opts.AuthToken, "auth-token", "", "Bearer token for HTTP transport auth")
 	cmd.Flags().StringVar(&opts.AuthType, "auth-type", "", "JWT auth type: jwks, oidc, introspection")
-	cmd.Flags().StringVar(&opts.AuthJWKSUrl, "auth-jwks-url", "", "JWKS URL for JWT auth")
+	cmd.Flags().StringVar(&opts.AuthJWKSURL, "auth-jwks-url", "", "JWKS URL for JWT auth")
 	cmd.Flags().StringVar(&opts.AuthIssuer, "auth-issuer", "", "JWT issuer for token validation")
 	cmd.Flags().StringVar(&opts.AuthAudience, "auth-audience", "", "JWT audience for token validation")
 	cmd.Flags().StringVar(&opts.AuthIntroURL, "auth-introspection-url", "", "Token introspection URL")
@@ -158,7 +158,7 @@ func runMCP(basePath, version string, opts *mcpCmdOpts, cmd *cobra.Command) erro
 	if opts.AuthType != "" {
 		authJWT = &mcp.JWTConfig{
 			Type:             opts.AuthType,
-			JWKSUrl:          opts.AuthJWKSUrl,
+			JWKSURL:          opts.AuthJWKSURL,
 			Issuer:           opts.AuthIssuer,
 			Audience:         opts.AuthAudience,
 			IntrospectionURL: opts.AuthIntroURL,
@@ -208,8 +208,8 @@ func applyMCPConfig(cmd *cobra.Command, cfg *config.Config, opts *mcpCmdOpts) {
 	if !cmd.Flags().Changed("auth-type") && cfg.MCP.Auth.Type != "" {
 		opts.AuthType = cfg.MCP.Auth.Type
 	}
-	if !cmd.Flags().Changed("auth-jwks-url") && cfg.MCP.Auth.JWKSUrl != "" {
-		opts.AuthJWKSUrl = cfg.MCP.Auth.JWKSUrl
+	if !cmd.Flags().Changed("auth-jwks-url") && cfg.MCP.Auth.JWKSURL != "" {
+		opts.AuthJWKSURL = cfg.MCP.Auth.JWKSURL
 	}
 	if !cmd.Flags().Changed("auth-issuer") && cfg.MCP.Auth.Issuer != "" {
 		opts.AuthIssuer = cfg.MCP.Auth.Issuer
