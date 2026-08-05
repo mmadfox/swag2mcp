@@ -35,6 +35,13 @@ swag2mcp mcp [path] [flags]
 | `--disable-llm-auth` | | `bool` | `true` | MCP 도구 목록에서 `auth` 도구 제거 |
 | `--dump-dir` | | `string` | `""` | 디버깅용 HTTP 요청 덤프 디렉토리 |
 | `--tags` | `-t` | `string` | `""` | 태그로 spec 필터링 (쉼표로 구분) |
+| `--auth-type` | | `string` | `""` | JWT auth type: `jwks`, `oidc`, `introspection` |
+| `--auth-jwks-url` | | `string` | `""` | JWKS URL for JWT auth |
+| `--auth-issuer` | | `string` | `""` | JWT issuer for token validation |
+| `--auth-audience` | | `string` | `""` | JWT audience for token validation |
+| `--auth-introspection-url` | | `string` | `""` | Token introspection URL |
+| `--auth-client-id` | | `string` | `""` | Client ID for introspection auth |
+| `--auth-client-secret` | | `string` | `""` | Client secret for introspection auth |
 
 ## 작동 방식
 
@@ -70,6 +77,17 @@ Bearer 토큰으로 HTTP 엔드포인트 보호:
 swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "my-secret"
 ```
 
+### With JWT authentication
+
+Protect the HTTP endpoint with JWT verification:
+
+```bash
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 \
+  --auth-type jwks \
+  --auth-jwks-url "https://auth.example.com/.well-known/jwks.json" \
+  --auth-issuer "https://auth.example.com/" \
+  --auth-audience "swag2mcp"
+```
 ### 태그 필터링 사용
 
 특정 태그가 있는 spec만 로드:

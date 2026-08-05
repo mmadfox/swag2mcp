@@ -108,6 +108,13 @@ mcp:
 `$(VAR)` se resuelve en:
 - Campos de configuración de autenticación: `token`, `username`, `password`, `client_id`, `client_secret`, `api_key`, `secret_key`, `domain`
 - Token de autenticación del servidor MCP: `mcp.auth.token`
+- MCP server JWT auth type: `mcp.auth.type`
+- MCP server JWKS URL: `mcp.auth.jwks_url`
+- MCP server JWT issuer: `mcp.auth.issuer`
+- MCP server JWT audience: `mcp.auth.audience`
+- MCP server introspection URL: `mcp.auth.introspection_url`
+- MCP server introspection client ID: `mcp.auth.client_id`
+- MCP server introspection client secret: `mcp.auth.client_secret`
 - Encabezados del cliente HTTP y valores de cookies
 
 `$(VAR)` **no** se resuelve en URL base ni ubicaciones de colecciones.

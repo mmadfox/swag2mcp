@@ -92,6 +92,49 @@ swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 - **설명:** HTTP 전송 인증용 Bearer 토큰입니다. 설정되면 LLM 클라이언트가 모든 요청에 `Authorization: Bearer &lt;token&gt;`을 포함해야 합니다.
 - **참고:** `$(ENV_VAR)` 해결을 지원합니다.
 
+### auth.type
+
+- **Type:** `string`
+- **Default:** `""` (no JWT auth)
+- **Options:** `jwks`, `oidc`, `introspection`
+- **Description:** JWT authentication type for HTTP transport. When set, enables dynamic token verification using JWKS, OIDC Discovery, or token introspection.
+
+### auth.jwks_url
+
+- **Type:** `string`
+- **Default:** `""`
+- **Description:** URL of the JWKS (JSON Web Key Set) endpoint. Required when `auth.type` is `jwks` or resolved via OIDC discovery.
+
+### auth.issuer
+
+- **Type:** `string`
+- **Default:** `""`
+- **Description:** Expected JWT issuer (`iss` claim). If set, tokens with a different issuer are rejected.
+
+### auth.audience
+
+- **Type:** `string`
+- **Default:** `""`
+- **Description:** Expected JWT audience (`aud` claim). If set, tokens without this audience are rejected.
+
+### auth.introspection_url
+
+- **Type:** `string`
+- **Default:** `""`
+- **Description:** Token introspection endpoint URL. Required when `auth.type` is `introspection`.
+
+### auth.client_id
+
+- **Type:** `string`
+- **Default:** `""`
+- **Description:** Client ID for introspection auth. Required when `auth.type` is `introspection`.
+
+### auth.client_secret
+
+- **Type:** `string`
+- **Default:** `""`
+- **Description:** Client secret for introspection auth. Supports `$(ENV_VAR)` resolution.
+
 ## HTTP 인증
 
 Bearer 토큰으로 MCP HTTP 엔드포인트를 보호하세요:
@@ -106,6 +149,56 @@ mcp:
 
 ```bash
 swag2mcp mcp --auth-token "my-secret-token"
+```
+
+### With JWT authentication (JWKS)
+
+Protect the MCP HTTP endpoint with JWT verification via a JWKS endpoint:
+
+```yaml
+mcp:
+  auth:
+    type: jwks
+    jwks_url: "https://auth.example.com/.well-known/jwks.json"
+    issuer: "https://auth.example.com/"
+    audience: "swag2mcp"
+```
+
+```bash
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 \
+  --auth-type jwks \
+  --auth-jwks-url "https://auth.example.com/.well-known/jwks.json" \
+  --auth-issuer "https://auth.example.com/" \
+  --auth-audience "swag2mcp"
+```
+
+### With JWT authentication (OIDC Discovery)
+
+```yaml
+mcp:
+  auth:
+    type: oidc
+    issuer: "https://auth.example.com/"
+    audience: "swag2mcp"
+```
+
+### With JWT authentication (Token Introspection)
+
+```yaml
+mcp:
+  auth:
+    type: introspection
+    introspection_url: "https://auth.example.com/introspect"
+    client_id: "my-client"
+    client_secret: "$(MCP_CLIENT_SECRET)"
+```
+
+```bash
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 \
+  --auth-type introspection \
+  --auth-introspection-url "https://auth.example.com/introspect" \
+  --auth-client-id "my-client" \
+  --auth-client-secret "$(MCP_CLIENT_SECRET)"
 ```
 
 ## Health Check
@@ -131,3 +224,10 @@ CLI 플래그는 YAML 설정을 재정의합니다. 플래그가 설정되지 �
 | `--disable-llm-auth` | bool | `true` | MCP 도구 목록에서 `auth` 도구 제거 |
 | `--dump-dir` | string | `""` | 디버깅용 HTTP 요청 덤프 디렉토리 |
 | `--tags` | string | `""` | 태그로 spec 필터링 (쉼표로 구분) |
+| `--auth-type` | string | `""` | JWT auth type: `jwks`, `oidc`, `introspection` |
+| `--auth-jwks-url` | string | `""` | JWKS URL for JWT auth |
+| `--auth-issuer` | string | `""` | JWT issuer for token validation |
+| `--auth-audience` | string | `""` | JWT audience for token validation |
+| `--auth-introspection-url` | string | `""` | Token introspection URL |
+| `--auth-client-id` | string | `""` | Client ID for introspection auth |
+| `--auth-client-secret` | string | `""` | Client secret for introspection auth |

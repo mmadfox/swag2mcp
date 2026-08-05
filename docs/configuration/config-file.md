@@ -108,6 +108,13 @@ mcp:
 `$(VAR)` is resolved in:
 - Auth config fields: `token`, `username`, `password`, `client_id`, `client_secret`, `api_key`, `secret_key`, `domain`
 - MCP server auth token: `mcp.auth.token`
+- MCP server JWT auth type: `mcp.auth.type`
+- MCP server JWKS URL: `mcp.auth.jwks_url`
+- MCP server JWT issuer: `mcp.auth.issuer`
+- MCP server JWT audience: `mcp.auth.audience`
+- MCP server introspection URL: `mcp.auth.introspection_url`
+- MCP server introspection client ID: `mcp.auth.client_id`
+- MCP server introspection client secret: `mcp.auth.client_secret`
 - HTTP client headers and cookie values
 
 `$(VAR)` is **not** resolved in base URLs or collection locations.

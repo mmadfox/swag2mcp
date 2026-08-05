@@ -236,6 +236,26 @@ Setzen Sie ein Bearer-Token:
 swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "my-secret"
 ```
 
+### How do I use JWT authentication?
+
+```bash
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 \
+  --auth-type jwks \
+  --auth-jwks-url "https://auth.example.com/.well-known/jwks.json" \
+  --auth-issuer "https://auth.example.com/" \
+  --auth-audience "swag2mcp"
+```
+
+Or in YAML:
+
+```yaml
+mcp:
+  auth:
+    type: jwks
+    jwks_url: "https://auth.example.com/.well-known/jwks.json"
+    issuer: "https://auth.example.com/"
+    audience: "swag2mcp"
+```
 Der LLM-Client muss bei jeder Anfrage `Authorization: Bearer my-secret` mitsenden.
 
 ### Was ist der MCP-Handshake für den HTTP-Transport?

@@ -108,6 +108,13 @@ mcp:
 `$(VAR)` 在以下位置被解析：
 - 认证配置字段：`token`、`username`、`password`、`client_id`、`client_secret`、`api_key`、`secret_key`、`domain`
 - MCP 服务器认证令牌：`mcp.auth.token`
+- MCP server JWT auth type: `mcp.auth.type`
+- MCP server JWKS URL: `mcp.auth.jwks_url`
+- MCP server JWT issuer: `mcp.auth.issuer`
+- MCP server JWT audience: `mcp.auth.audience`
+- MCP server introspection URL: `mcp.auth.introspection_url`
+- MCP server introspection client ID: `mcp.auth.client_id`
+- MCP server introspection client secret: `mcp.auth.client_secret`
 - HTTP 客户端头和 cookie 值
 
 `$(VAR)` **不会**在基础 URL 或 collection 位置中被解析。

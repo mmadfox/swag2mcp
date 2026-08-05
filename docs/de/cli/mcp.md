@@ -35,6 +35,13 @@ swag2mcp mcp [path] [flags]
 | `--disable-llm-auth` | | `bool` | `true` | Entfernt das `auth`-Tool aus der MCP-Tool-Liste |
 | `--dump-dir` | | `string` | `""` | Verzeichnis zum Speichern von HTTP-Anfragen zum Debuggen |
 | `--tags` | `-t` | `string` | `""` | Specs nach Tags filtern (kommagetrennt) |
+| `--auth-type` | | `string` | `""` | JWT auth type: `jwks`, `oidc`, `introspection` |
+| `--auth-jwks-url` | | `string` | `""` | JWKS URL for JWT auth |
+| `--auth-issuer` | | `string` | `""` | JWT issuer for token validation |
+| `--auth-audience` | | `string` | `""` | JWT audience for token validation |
+| `--auth-introspection-url` | | `string` | `""` | Token introspection URL |
+| `--auth-client-id` | | `string` | `""` | Client ID for introspection auth |
+| `--auth-client-secret` | | `string` | `""` | Client secret for introspection auth |
 
 ## Wie es funktioniert
 
@@ -70,6 +77,17 @@ Schützen Sie den HTTP-Endpunkt mit einem Bearer-Token:
 swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "my-secret"
 ```
 
+### With JWT authentication
+
+Protect the HTTP endpoint with JWT verification:
+
+```bash
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 \
+  --auth-type jwks \
+  --auth-jwks-url "https://auth.example.com/.well-known/jwks.json" \
+  --auth-issuer "https://auth.example.com/" \
+  --auth-audience "swag2mcp"
+```
 ### Mit Tag-Filterung
 
 Nur Specs mit bestimmten Tags laden:
