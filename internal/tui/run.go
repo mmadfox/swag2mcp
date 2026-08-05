@@ -172,8 +172,12 @@ func (m runModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "enter":
 			return m.handleEnter()
-		case "b", "B":
+		case "b":
+			break
+		case "B":
 			return m.handleBack()
+		case "m":
+			break
 		case "M":
 			return m.handleMenu()
 		case "s", "S":
@@ -361,7 +365,7 @@ func (m runModel) doSearch(query string) (tea.Model, tea.Cmd) {
 		m.totalPages = 1
 	}
 	m.input.SetValue("")
-	m.input.Placeholder = "Endpoint #"
+	m.input.Placeholder = "Enter endpoint number:"
 	m.input.Focus()
 	m.state = runSearchResults
 	return m, nil
@@ -383,6 +387,7 @@ func (m runModel) loadSpecs() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.specs = specs.Specs
+	m.input.Placeholder = "Enter spec number:"
 	return m.transitionTo(runBrowseSpecs)
 }
 
@@ -402,6 +407,7 @@ func (m runModel) loadCollections(specID string) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.collections = collections.Collections
+	m.input.Placeholder = "Enter collection number:"
 	return m.transitionTo(runBrowseCollections)
 }
 
@@ -424,6 +430,7 @@ func (m runModel) loadTags(collectionID string) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.tags = tags.Tags
+	m.input.Placeholder = "Enter tag number:"
 	return m.transitionTo(runBrowseTags)
 }
 
@@ -443,6 +450,7 @@ func (m runModel) loadEndpoints(tagID string) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.endpoints = endpoints.Endpoints
+	m.input.Placeholder = "Enter endpoint number:"
 	return m.transitionTo(runBrowseEndpoints)
 }
 
@@ -477,6 +485,7 @@ func (m runModel) loadAuthSpecs() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.specs = specs.Specs
+	m.input.Placeholder = "Enter spec number:"
 	return m.transitionTo(runAuthSpecs)
 }
 
