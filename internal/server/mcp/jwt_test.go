@@ -36,7 +36,7 @@ func TestNewJWTVerifier_JWKS_InvalidURL(t *testing.T) {
 
 	verifier := newJWTVerifier(&JWTConfig{
 		Type:    "jwks",
-		JWKSUrl: "http://127.0.0.1:1/nonexistent",
+		JWKSURL: "http://127.0.0.1:1/nonexistent",
 	})
 	_, err := verifier(context.Background(), "token", nil)
 	assert.Error(t, err)
@@ -53,7 +53,7 @@ func TestNewJWTVerifier_JWKS_Valid(t *testing.T) {
 
 	verifier := newJWTVerifier(&JWTConfig{
 		Type:     "jwks",
-		JWKSUrl:  jwksServer.URL + "/.well-known/jwks.json",
+		JWKSURL:  jwksServer.URL + "/.well-known/jwks.json",
 		Issuer:   "test-issuer",
 		Audience: "test-audience",
 	})
@@ -82,7 +82,7 @@ func TestNewJWTVerifier_JWKS_InvalidIssuer(t *testing.T) {
 
 	verifier := newJWTVerifier(&JWTConfig{
 		Type:    "jwks",
-		JWKSUrl: jwksServer.URL + "/.well-known/jwks.json",
+		JWKSURL: jwksServer.URL + "/.well-known/jwks.json",
 		Issuer:  "expected-issuer",
 	})
 
@@ -107,7 +107,7 @@ func TestNewJWTVerifier_JWKS_InvalidAudience(t *testing.T) {
 
 	verifier := newJWTVerifier(&JWTConfig{
 		Type:     "jwks",
-		JWKSUrl:  jwksServer.URL + "/.well-known/jwks.json",
+		JWKSURL:  jwksServer.URL + "/.well-known/jwks.json",
 		Audience: "expected-audience",
 	})
 
@@ -133,7 +133,7 @@ func TestNewJWTVerifier_JWKS_ExpiredToken(t *testing.T) {
 
 	verifier := newJWTVerifier(&JWTConfig{
 		Type:    "jwks",
-		JWKSUrl: jwksServer.URL + "/.well-known/jwks.json",
+		JWKSURL: jwksServer.URL + "/.well-known/jwks.json",
 	})
 
 	token := signJWT(t, key, jwt.MapClaims{

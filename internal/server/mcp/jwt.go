@@ -38,7 +38,7 @@ const (
 // JWTConfig holds configuration for JWT-based MCP auth.
 type JWTConfig struct {
 	Type             string
-	JWKSUrl          string
+	JWKSURL          string
 	Issuer           string
 	Audience         string
 	IntrospectionURL string
@@ -80,7 +80,7 @@ func newJWTVerifier(config *JWTConfig) auth.TokenVerifier {
 // goroutine that periodically refreshes the JWK Set from the remote URL.
 // The goroutine lives until the process exits.
 func newJWKSVerifier(config *JWTConfig) auth.TokenVerifier {
-	k, err := keyfunc.NewDefault([]string{config.JWKSUrl})
+	k, err := keyfunc.NewDefault([]string{config.JWKSURL})
 	if err != nil {
 		return func(_ context.Context, _ string, _ *http.Request) (*auth.TokenInfo, error) {
 			return nil, fmt.Errorf("failed to create JWKS keyfunc: %w", err)
@@ -172,7 +172,7 @@ func newOIDCVerifier(config *JWTConfig) auth.TokenVerifier {
 	}
 
 	jwksConfig := *config
-	jwksConfig.JWKSUrl = oidc.JWKSURI
+	jwksConfig.JWKSURL = oidc.JWKSURI
 	return newJWKSVerifier(&jwksConfig)
 }
 

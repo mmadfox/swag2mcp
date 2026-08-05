@@ -9,99 +9,7 @@ import (
 	"fmt"
 	"iter"
 	"time"
-
-	"github.com/mmadfox/swag2mcp/internal/env"
 )
-
-const (
-	DefaultGlobalRateLimit   = 5        // max invoke requests per second
-	MinResponseSize          = 10240    // 10 KB
-	MaxAllowedResponseSize   = 10485760 // 10 MB
-	DefaultMaxResponseSize   = 1048576  // 1 MB
-	DefaultRateLimitInterval = 10 * time.Second
-	RandSuffixLen            = 6
-)
-
-const (
-	defaultUserAgent         = "swag2mcp-global/1.0"
-	defaultTimeout           = 30 * time.Second
-	defaultMaxRedirects      = 10
-	defaultRateLimitInterval = 10 * time.Second
-	defaultMaxResponseSize   = DefaultMaxResponseSize
-	DefaultMCPTransport      = "stdio"
-)
-
-// Cookie represents an HTTP cookie for configuration.
-type Cookie struct {
-	Name     string `yaml:"name"     validate:"required"`
-	Value    string `yaml:"value"    validate:"required"`
-	Domain   string `yaml:"domain,omitempty"`
-	Path     string `yaml:"path,omitempty"`
-	Secure   bool   `yaml:"secure,omitempty"`
-	HTTPOnly bool   `yaml:"http_only,omitempty"`
-}
-
-// ProxyConfig holds proxy connection settings.
-type ProxyConfig struct {
-	URL      string   `yaml:"url"                  validate:"omitempty,proxy_url_format"`
-	Username string   `yaml:"username,omitempty"`
-	Password string   `yaml:"password,omitempty"`
-	Bypass   []string `yaml:"bypass,omitempty"`
-}
-
-// HTTPClientConfig holds per-request HTTP settings for a spec or collection.
-type HTTPClientConfig struct {
-	Randomize       bool              `yaml:"random,omitempty"`
-	Proxy           *ProxyConfig      `yaml:"proxy,omitempty"              validate:"omitempty"`
-	Headers         map[string]string `yaml:"headers,omitempty"`
-	Cookies         []Cookie          `yaml:"cookies,omitempty"            validate:"omitempty,dive"`
-	UserAgent       string            `yaml:"user_agent,omitempty"`
-	Timeout         time.Duration     `yaml:"timeout,omitempty"            validate:"omitempty,min=1000000000,max=300000000000"`
-	FollowRedirects *bool             `yaml:"follow_redirects,omitempty"`
-	MaxRedirects    *int              `yaml:"max_redirects,omitempty"      validate:"omitempty,min=0,max=50"`
-	MaxResponseSize *int              `yaml:"max_response_size,omitempty"   validate:"omitempty,min=256,max=10485760"`
-}
-
-// GlobalHTTPClientConfig holds global HTTP client settings.
-type GlobalHTTPClientConfig struct {
-	Randomize       bool              `yaml:"random,omitempty"`
-	Proxy           *ProxyConfig      `yaml:"proxy,omitempty"              validate:"omitempty"`
-	Headers         map[string]string `yaml:"headers,omitempty"`
-	Cookies         []Cookie          `yaml:"cookies,omitempty"            validate:"omitempty,dive"`
-	UserAgent       string            `yaml:"user_agent,omitempty"`
-	Timeout         time.Duration     `yaml:"timeout,omitempty"            validate:"omitempty,min=1000000000,max=300000000000"`
-	FollowRedirects *bool             `yaml:"follow_redirects,omitempty"`
-	MaxRedirects    *int              `yaml:"max_redirects,omitempty"      validate:"omitempty,min=0,max=50"`
-	MaxResponseSize *int              `yaml:"max_response_size,omitempty"   validate:"omitempty,min=256,max=10485760"`
-}
-
-// MockAuthConfig holds port configuration for mock auth servers.
-type MockAuthConfig struct {
-	OAuth2Port int `yaml:"oauth2_port,omitempty" validate:"omitempty,min=1024,max=65535"`
-	DigestPort int `yaml:"digest_port,omitempty" validate:"omitempty,min=1024,max=65535"`
-	HMACPort   int `yaml:"hmac_port,omitempty"   validate:"omitempty,min=1024,max=65535"`
-	JWTPort    int `yaml:"jwt_port,omitempty"    validate:"omitempty,min=1024,max=65535"`
-}
-
-// MCPConfig holds the MCP server configuration.
-type MCPConfig struct {
-	Transport string         `yaml:"transport,omitempty" validate:"omitempty,oneof=stdio sse streamable-http"`
-	Addr      string         `yaml:"addr,omitempty"`
-	Path      string         `yaml:"path,omitempty"`
-	Auth      *MCPAuthConfig `yaml:"auth,omitempty"`
-}
-
-// MCPAuthConfig holds the MCP server authentication configuration.
-type MCPAuthConfig struct {
-	Token            string `yaml:"token,omitempty"`
-	Type             string `yaml:"type,omitempty"              validate:"omitempty,oneof=jwks introspection oidc"`
-	JWKSUrl          string `yaml:"jwks_url,omitempty"`
-	Issuer           string `yaml:"issuer,omitempty"`
-	Audience         string `yaml:"audience,omitempty"`
-	IntrospectionURL string `yaml:"introspection_url,omitempty"`
-	ClientID         string `yaml:"client_id,omitempty"`
-	ClientSecret     string `yaml:"client_secret,omitempty"`
-}
 
 // Config is the top-level swag2mcp configuration.
 type Config struct {
@@ -140,31 +48,6 @@ type Collection struct {
 	BaseMockURL    string            `yaml:"base_mock_url,omitempty"                      validate:"omitempty,mock_addr_format"`
 }
 
-// SetDefaults fills nil/zero fields with sensible defaults.
-func (c *GlobalHTTPClientConfig) SetDefaults() {
-	if c == nil {
-		return
-	}
-	if c.UserAgent == "" && !c.Randomize {
-		c.UserAgent = defaultUserAgent
-	}
-	if c.Timeout <= 0 {
-		c.Timeout = defaultTimeout
-	}
-	if c.FollowRedirects == nil {
-		v := true
-		c.FollowRedirects = &v
-	}
-	if c.MaxRedirects == nil {
-		v := defaultMaxRedirects
-		c.MaxRedirects = &v
-	}
-	if c.MaxResponseSize == nil {
-		v := defaultMaxResponseSize
-		c.MaxResponseSize = &v
-	}
-}
-
 // SetDefaults fills zero fields with sensible defaults.
 func (c *Config) SetDefaults() {
 	if c == nil {
@@ -172,58 +55,6 @@ func (c *Config) SetDefaults() {
 	}
 	if c.RateLimitInterval <= 0 {
 		c.RateLimitInterval = defaultRateLimitInterval
-	}
-}
-
-// Resolve resolves environment variable references in the token and JWT fields.
-func (c *MCPAuthConfig) Resolve() {
-	if c == nil {
-		return
-	}
-	c.Token = env.Parse(c.Token)
-	c.JWKSUrl = env.Parse(c.JWKSUrl)
-	c.Issuer = env.Parse(c.Issuer)
-	c.Audience = env.Parse(c.Audience)
-	c.IntrospectionURL = env.Parse(c.IntrospectionURL)
-	c.ClientID = env.Parse(c.ClientID)
-	c.ClientSecret = env.Parse(c.ClientSecret)
-}
-
-// Resolve resolves environment variable references in proxy fields.
-func (c *ProxyConfig) Resolve() {
-	if c == nil {
-		return
-	}
-	c.URL = env.Parse(c.URL)
-	c.Username = env.Parse(c.Username)
-	c.Password = env.Parse(c.Password)
-}
-
-// Resolve resolves environment variable references in headers and cookie values.
-func (c *HTTPClientConfig) Resolve() {
-	if c == nil {
-		return
-	}
-	c.Proxy.Resolve()
-	for k, v := range c.Headers {
-		c.Headers[k] = env.Parse(v)
-	}
-	for i := range c.Cookies {
-		c.Cookies[i].Value = env.Parse(c.Cookies[i].Value)
-	}
-}
-
-// Resolve resolves environment variable references in headers and cookie values.
-func (c *GlobalHTTPClientConfig) Resolve() {
-	if c == nil {
-		return
-	}
-	c.Proxy.Resolve()
-	for k, v := range c.Headers {
-		c.Headers[k] = env.Parse(v)
-	}
-	for i := range c.Cookies {
-		c.Cookies[i].Value = env.Parse(c.Cookies[i].Value)
 	}
 }
 
@@ -246,7 +77,8 @@ func (c *Config) Iterate(f *Filter) iter.Seq[*Spec] {
 	}
 }
 
-//nolint:gocognit // Validation requires many checks for different field model.
+// Validate validates the configuration against struct tags and business rules.
+// It skips disabled specs and applies the optional filter. Returns nil if valid.
 func (c *Config) Validate(f *Filter) error {
 	var errs validationErrors
 
@@ -257,56 +89,16 @@ func (c *Config) Validate(f *Filter) error {
 		})
 	}
 
-	for i, spec := range c.Specs {
+	for i := range c.Specs {
+		spec := &c.Specs[i]
 		if spec.Disable {
 			continue
 		}
 		if f != nil && !f.MatchSpec(spec.Tags...) {
 			continue
 		}
-
 		specPrefix := fmt.Sprintf("specs[%d]", i)
-		specErrs := collectStructErrors(specPrefix, spec)
-		for k := range specErrs {
-			specErrs[k].spec = spec.Domain
-		}
-		errs = append(errs, specErrs...)
-
-		if spec.Auth.Client != nil {
-			if verr := spec.Auth.Client.Validate(); verr != nil {
-				errs = append(errs, validationError{
-					field:   specPrefix + ".auth",
-					spec:    spec.Domain,
-					message: fmt.Sprintf("auth client validation failed: %s", verr),
-				})
-			}
-		}
-
-		for j, collection := range spec.Collections {
-			if collection.Disable {
-				continue
-			}
-			collPrefix := fmt.Sprintf("%s.collections[%d]", specPrefix, j)
-			collErrs := collectStructErrors(collPrefix, collection)
-			collTitle := collection.LLMTitle
-			if collTitle == "" {
-				collTitle = fmt.Sprintf("#%d", j)
-			}
-			for k := range collErrs {
-				collErrs[k].spec = spec.Domain
-				collErrs[k].collection = collTitle
-			}
-			errs = append(errs, collErrs...)
-
-			if c.MockEnabled && collection.BaseMockURL == "" {
-				errs = append(errs, validationError{
-					field:      collPrefix + ".base_mock_url",
-					spec:       spec.Domain,
-					collection: collection.LLMTitle,
-					message:    "BaseMockURL is required when mock_enabled is true",
-				})
-			}
-		}
+		errs = append(errs, c.validateSpec(specPrefix, spec)...)
 	}
 
 	errs = append(errs, collectStructErrors("config", c)...)
@@ -314,5 +106,62 @@ func (c *Config) Validate(f *Filter) error {
 	if len(errs) == 0 {
 		return nil
 	}
+	return errs
+}
+
+func (c *Config) validateSpec(prefix string, spec *Spec) []validationError {
+	var errs validationErrors
+
+	specErrs := collectStructErrors(prefix, *spec)
+	for k := range specErrs {
+		specErrs[k].spec = spec.Domain
+	}
+	errs = append(errs, specErrs...)
+
+	if spec.Auth.Client != nil {
+		if verr := spec.Auth.Client.Validate(); verr != nil {
+			errs = append(errs, validationError{
+				field:   prefix + ".auth",
+				spec:    spec.Domain,
+				message: fmt.Sprintf("auth client validation failed: %s", verr),
+			})
+		}
+	}
+
+	for j := range spec.Collections {
+		coll := &spec.Collections[j]
+		if coll.Disable {
+			continue
+		}
+		collPrefix := fmt.Sprintf("%s.collections[%d]", prefix, j)
+		errs = append(errs, c.validateCollection(collPrefix, spec.Domain, j, coll)...)
+	}
+
+	return errs
+}
+
+func (c *Config) validateCollection(prefix, specDomain string, collIdx int, coll *Collection) []validationError {
+	var errs validationErrors
+
+	collErrs := collectStructErrors(prefix, *coll)
+	collTitle := coll.LLMTitle
+	if collTitle == "" {
+		collTitle = fmt.Sprintf("#%d", collIdx)
+	}
+	for k := range collErrs {
+		collErrs[k].spec = specDomain
+		collErrs[k].collection = collTitle
+	}
+	errs = append(errs, collErrs...)
+
+	if c.MockEnabled && coll.BaseMockURL == "" {
+		errs = append(errs, validationError{
+			field:      prefix + ".base_mock_url",
+			spec:       specDomain,
+			collection: collTitle,
+			message:    "BaseMockURL is required when mock_enabled is true",
+		})
+	}
+
 	return errs
 }

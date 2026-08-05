@@ -308,7 +308,7 @@ func TestApplyAuthMiddleware_JWT_Valid(t *testing.T) {
 	}), Options{
 		AuthJWT: &JWTConfig{
 			Type:    "jwks",
-			JWKSUrl: jwksServer.URL + "/.well-known/jwks.json",
+			JWKSURL: jwksServer.URL + "/.well-known/jwks.json",
 		},
 	})
 
@@ -338,7 +338,7 @@ func TestApplyAuthMiddleware_JWT_Invalid(t *testing.T) {
 	}), Options{
 		AuthJWT: &JWTConfig{
 			Type:    "jwks",
-			JWKSUrl: jwksServer.URL + "/.well-known/jwks.json",
+			JWKSURL: jwksServer.URL + "/.well-known/jwks.json",
 		},
 	})
 

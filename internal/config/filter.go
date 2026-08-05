@@ -11,9 +11,7 @@ type Filter struct {
 }
 
 // NewFilter creates a new Filter from the given tags.
-func NewFilter(
-	tags []string,
-) *Filter {
+func NewFilter(tags []string) *Filter {
 	bySpec := make(map[string]struct{}, len(tags))
 	for _, tag := range tags {
 		bySpec[tag] = struct{}{}

@@ -278,7 +278,7 @@ func validateMCPAuth(cfg *Config) []validationError {
 
 	switch auth.Type {
 	case "jwks":
-		if auth.JWKSUrl == "" {
+		if auth.JWKSURL == "" {
 			errs = append(errs, validationError{
 				field:   "mcp.auth.jwks_url",
 				message: "JWKS URL is required when auth type is 'jwks' — add 'jwks_url: https://auth.example.com/.well-known/jwks.json'",

@@ -8,13 +8,13 @@ package commands
 import (
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewVersionCmd(t *testing.T) {
 	cmd := newVersionCmd()
-	if cmd == nil {
-		t.Fatal("newVersionCmd() returned nil")
-	}
+	require.NotNil(t, cmd)
 	if cmd.Use != "version" {
 		t.Errorf("Use = %q, want %q", cmd.Use, "version")
 	}

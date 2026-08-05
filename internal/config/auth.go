@@ -81,10 +81,12 @@ func (a *Auth) UnmarshalYAML(value *yaml.Node) error {
 	return nil
 }
 
+// decodeNoAuth returns a no-auth client. The config node is ignored.
 func decodeNoAuth(_ *yaml.Node) (auth.Authenticator, error) {
 	return auth.NewNoAuthClient(), nil
 }
 
+// decodeBasicAuth decodes a basic auth config block into a BasicAuthClient.
 func decodeBasicAuth(node *yaml.Node) (auth.Authenticator, error) {
 	var client auth.BasicAuthClient
 	if err := decodeConfig(node, &client); err != nil {
@@ -93,6 +95,7 @@ func decodeBasicAuth(node *yaml.Node) (auth.Authenticator, error) {
 	return &client, nil
 }
 
+// decodeBearerAuth decodes a bearer token auth config block into a BearerTokenAuthClient.
 func decodeBearerAuth(node *yaml.Node) (auth.Authenticator, error) {
 	var client auth.BearerTokenAuthClient
 	if err := decodeConfig(node, &client); err != nil {
@@ -101,6 +104,7 @@ func decodeBearerAuth(node *yaml.Node) (auth.Authenticator, error) {
 	return &client, nil
 }
 
+// decodeDigestAuth decodes a digest auth config block into a DigestAuthClient.
 func decodeDigestAuth(node *yaml.Node) (auth.Authenticator, error) {
 	var client auth.DigestAuthClient
 	if err := decodeConfig(node, &client); err != nil {
@@ -109,6 +113,8 @@ func decodeDigestAuth(node *yaml.Node) (auth.Authenticator, error) {
 	return &client, nil
 }
 
+// decodeOAuth2CC decodes an OAuth2 client credentials config block
+// into an OAuth2ClientCredentialsAuthClient.
 func decodeOAuth2CC(node *yaml.Node) (auth.Authenticator, error) {
 	var client auth.OAuth2ClientCredentialsAuthClient
 	if err := decodeConfig(node, &client); err != nil {
@@ -117,6 +123,8 @@ func decodeOAuth2CC(node *yaml.Node) (auth.Authenticator, error) {
 	return &client, nil
 }
 
+// decodeOAuth2Pwd decodes an OAuth2 password grant config block
+// into an OAuth2PasswordAuthClient.
 func decodeOAuth2Pwd(node *yaml.Node) (auth.Authenticator, error) {
 	var client auth.OAuth2PasswordAuthClient
 	if err := decodeConfig(node, &client); err != nil {
@@ -125,6 +133,7 @@ func decodeOAuth2Pwd(node *yaml.Node) (auth.Authenticator, error) {
 	return &client, nil
 }
 
+// decodeAPIKeyAuth decodes an API key auth config block into an APIKeyAuthClient.
 func decodeAPIKeyAuth(node *yaml.Node) (auth.Authenticator, error) {
 	var client auth.APIKeyAuthClient
 	if err := decodeConfig(node, &client); err != nil {
@@ -133,6 +142,7 @@ func decodeAPIKeyAuth(node *yaml.Node) (auth.Authenticator, error) {
 	return &client, nil
 }
 
+// decodeScriptAuth decodes a script auth config block into a ScriptAuthClient.
 func decodeScriptAuth(node *yaml.Node) (auth.Authenticator, error) {
 	var client auth.ScriptAuthClient
 	if err := decodeConfig(node, &client); err != nil {
@@ -141,6 +151,7 @@ func decodeScriptAuth(node *yaml.Node) (auth.Authenticator, error) {
 	return &client, nil
 }
 
+// decodeHMACAuth decodes an HMAC auth config block into an HMACAuthClient.
 func decodeHMACAuth(node *yaml.Node) (auth.Authenticator, error) {
 	var client auth.HMACAuthClient
 	if err := decodeConfig(node, &client); err != nil {
