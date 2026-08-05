@@ -2,7 +2,20 @@
 
 ## stdio
 
-En la configuración de Cursor, agregue el servidor MCP:
+### Via Settings UI
+
+1. Abrir configuración de Cursor (Cmd+, / Ctrl+,)
+2. Go to **Servidores MCP**
+3. Click **Añadir nuevo servidor**
+4. Fill in:
+   - **Nombre:** `swag2mcp`
+   - **Tipo:** `command`
+   - **Comando:** `swag2mcp mcp`
+5. Click **Guardar**
+
+### Mediante archivo de configuración
+
+In `~/.cursor/mcp.json`:
 
 ```json
 {
@@ -17,7 +30,7 @@ En la configuración de Cursor, agregue el servidor MCP:
 
 ## Uso
 
-Después de conectarse, el Agente IA de Cursor puede:
+After connecting, Cursor AI Agent can:
 
 - Explorar sus APIs
 - Encontrar endpoints relevantes

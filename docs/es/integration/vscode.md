@@ -1,8 +1,29 @@
 # Integración con VS Code
 
-## Mediante Configuración de VS Code
+## Via .vscode/mcp.json
 
-En `.vscode/settings.json`:
+1. Instale la extensión MCP para VS Code (por ejemplo, MCP Client de org.mcp o similar).
+2. Cree `.vscode/mcp.json` en la raíz del proyecto:
+
+```json
+{
+  "mcpServers": {
+    "swag2mcp": {
+      "command": "swag2mcp",
+      "args": ["mcp", "${workspaceFolder}"]
+    }
+  }
+}
+```
+
+> // "${{workspaceFolder}}" se pasará como ruta del espacio de trabajo
+
+3. Recargue la ventana de VS Code (Ctrl+Mayús+P → "Reload Window").
+4. Use el asistente de IA — ahora conocerá sus APIs.
+
+## Alternativa: Mediante configuración de VS Code
+
+También puede configurar en `.vscode/settings.json`:
 
 ```json
 {
@@ -15,24 +36,9 @@ En `.vscode/settings.json`:
 }
 ```
 
-## Mediante Extensión
-
-Instale la extensión MCP para VS Code y agregue:
-
-```json
-{
-  "mcp.servers": {
-    "swag2mcp": {
-      "command": "swag2mcp",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
 ## Uso
 
-Después de la configuración, el Asistente de IA de VS Code puede trabajar con sus APIs a través de swag2mcp.
+Después de la configuración, el asistente de IA de VS Code puede trabajar con sus APIs a través de swag2mcp.
 
 ## Otros
 

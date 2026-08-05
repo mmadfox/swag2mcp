@@ -2,7 +2,20 @@
 
 ## stdio
 
-В настройках Cursor добавьте MCP-сервер:
+### Via Settings UI
+
+1. Открыть настройки Cursor (Cmd+, / Ctrl+,)
+2. Go to **MCP-серверы**
+3. Click **Добавить новый сервер**
+4. Fill in:
+   - **Имя:** `swag2mcp`
+   - **Тип:** `command`
+   - **Команда:** `swag2mcp mcp`
+5. Click **Сохранить**
+
+### Через файл конфигурации
+
+In `~/.cursor/mcp.json`:
 
 ```json
 {
@@ -17,7 +30,7 @@
 
 ## Использование
 
-После подключения AI-агент Cursor сможет:
+After connecting, Cursor AI Agent can:
 
 - Исследовать ваши API
 - Находить нужные эндпоинты

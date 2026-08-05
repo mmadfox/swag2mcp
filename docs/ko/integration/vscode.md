@@ -1,8 +1,29 @@
 # VS Code 통합
 
-## VS Code 설정을 통해
+## Via .vscode/mcp.json
 
-`.vscode/settings.json`:
+1. VS Code용 MCP 확장을 설치하세요 (예: org.mcp의 MCP Client 등).
+2. 프로젝트 루트에 `.vscode/mcp.json`을 생성:
+
+```json
+{
+  "mcpServers": {
+    "swag2mcp": {
+      "command": "swag2mcp",
+      "args": ["mcp", "${workspaceFolder}"]
+    }
+  }
+}
+```
+
+> // "${{workspaceFolder}}"는 워크스페이스 경로로 전달됩니다
+
+3. VS Code 창을 다시 로드하세요 (Ctrl+Shift+P → "Reload Window").
+4. AI 어시스턴트를 사용하세요 — 이제 API를 인식합니다.
+
+## 대안: VS Code 설정을 통해
+
+`.vscode/settings.json`에서도 설정할 수 있습니다:
 
 ```json
 {
@@ -15,24 +36,9 @@
 }
 ```
 
-## 확장을 통해
-
-VS Code용 MCP 확장을 설치하고 추가:
-
-```json
-{
-  "mcp.servers": {
-    "swag2mcp": {
-      "command": "swag2mcp",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
 ## 사용법
 
-설정 후 VS Code AI Assistant가 swag2mcp를 통해 API와 작업할 수 있습니다.
+설정 후 VS Code AI 어시스턴트가 swag2mcp를 통해 API를 사용할 수 있습니다.
 
 ## 기타
 

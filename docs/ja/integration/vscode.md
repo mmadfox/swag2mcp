@@ -1,8 +1,29 @@
 # VS Code 統合
 
-## VS Code 設定経由
+## Via .vscode/mcp.json
 
-`.vscode/settings.json` に設定：
+1. VS Code 用の MCP 拡張機能をインストールします（例：org.mcp の MCP Client など）。
+2. プロジェクトルートに `.vscode/mcp.json` を作成：
+
+```json
+{
+  "mcpServers": {
+    "swag2mcp": {
+      "command": "swag2mcp",
+      "args": ["mcp", "${workspaceFolder}"]
+    }
+  }
+}
+```
+
+> // "${{workspaceFolder}}" はワークスペースパスとして渡されます
+
+3. VS Code ウィンドウを再読み込みします（Ctrl+Shift+P → "Reload Window"）。
+4. AI アシスタントを使用 — これで API を認識します。
+
+## 代替：VS Code 設定経由
+
+`.vscode/settings.json` で設定することもできます：
 
 ```json
 {
@@ -15,24 +36,9 @@
 }
 ```
 
-## 拡張機能経由
-
-VS Code 用の MCP 拡張機能をインストールし、以下を追加：
-
-```json
-{
-  "mcp.servers": {
-    "swag2mcp": {
-      "command": "swag2mcp",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
 ## 使用方法
 
-セットアップ後、VS Code AI アシスタントが swag2mcp を通じて API を操作できるようになります。
+設定後、VS Code AI アシスタントは swag2mcp を通じて API を操作できます。
 
 ## その他
 

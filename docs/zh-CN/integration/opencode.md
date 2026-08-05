@@ -28,6 +28,21 @@
 }
 ```
 
+## Remote
+
+```json
+{
+  "mcp": {
+    "swag2mcp": {
+      "type": "remote",
+      "url": "http://0.0.0.0:8080/mcp",
+      "enabled": true
+    }
+  }
+}
+```
+
+
 ## 示例查询
 
 连接后，你可以询问：

@@ -1,8 +1,29 @@
 # VS Code 集成
 
-## 通过 VS Code 设置
+## Via .vscode/mcp.json
 
-在 `.vscode/settings.json` 中：
+1. 安装 VS Code 的 MCP 扩展（例如 org.mcp 的 MCP Client 或类似扩展）。
+2. 在项目根目录创建 `.vscode/mcp.json`：
+
+```json
+{
+  "mcpServers": {
+    "swag2mcp": {
+      "command": "swag2mcp",
+      "args": ["mcp", "${workspaceFolder}"]
+    }
+  }
+}
+```
+
+> // "${{workspaceFolder}}" 将作为工作区路径传递
+
+3. 重新加载 VS Code 窗口（Ctrl+Shift+P → "Reload Window"）。
+4. 使用 AI 助手 — 现在它将了解你的 API。
+
+## 替代方案：通过 VS Code 设置
+
+也可以在 `.vscode/settings.json` 中配置：
 
 ```json
 {
@@ -15,24 +36,9 @@
 }
 ```
 
-## 通过扩展
-
-安装 VS Code 的 MCP 扩展并添加：
-
-```json
-{
-  "mcp.servers": {
-    "swag2mcp": {
-      "command": "swag2mcp",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
 ## 使用
 
-设置完成后，VS Code AI 助手可以通过 swag2mcp 与你的 API 一起工作。
+设置后，VS Code AI 助手可以通过 swag2mcp 与你的 API 一起工作。
 
 ## 其他
 
