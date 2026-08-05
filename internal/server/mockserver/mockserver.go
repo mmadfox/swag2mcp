@@ -39,6 +39,7 @@ const (
 	defaultOAuth2Port = 9090
 	defaultDigestPort = 9091
 	defaultHMACPort   = 9092
+	defaultJWTPort    = 9093
 )
 
 // Options holds configuration for the MockServer.
@@ -148,11 +149,12 @@ func (m *MockServer) Start(ctx context.Context) error {
 	return nil
 }
 
-// startAuthServers creates and registers auth mock servers (OAuth2, Digest, HMAC).
+// startAuthServers creates and registers auth mock servers (OAuth2, Digest, HMAC, JWT).
 func (m *MockServer) startAuthServers() {
 	oauth2Port := defaultOAuth2Port
 	digestPort := defaultDigestPort
 	hmacPort := defaultHMACPort
+	jwtPort := defaultJWTPort
 	if m.options.Config.MockAuth != nil {
 		if m.options.Config.MockAuth.OAuth2Port > 0 {
 			oauth2Port = m.options.Config.MockAuth.OAuth2Port
@@ -163,6 +165,9 @@ func (m *MockServer) startAuthServers() {
 		if m.options.Config.MockAuth.HMACPort > 0 {
 			hmacPort = m.options.Config.MockAuth.HMACPort
 		}
+		if m.options.Config.MockAuth.JWTPort > 0 {
+			jwtPort = m.options.Config.MockAuth.JWTPort
+		}
 	}
 
 	m.mu.Lock()
@@ -170,6 +175,7 @@ func (m *MockServer) startAuthServers() {
 		newAuthMockServer(authServerOAuth2, fmt.Sprintf("127.0.0.1:%d", oauth2Port), m.tlsConfig, m.logger),
 		newAuthMockServer(authServerDigest, fmt.Sprintf("127.0.0.1:%d", digestPort), m.tlsConfig, m.logger),
 		newAuthMockServer(authServerHMAC, fmt.Sprintf("127.0.0.1:%d", hmacPort), m.tlsConfig, m.logger),
+		newAuthMockServer(authServerJWT, fmt.Sprintf("127.0.0.1:%d", jwtPort), m.tlsConfig, m.logger),
 	)
 	m.mu.Unlock()
 }

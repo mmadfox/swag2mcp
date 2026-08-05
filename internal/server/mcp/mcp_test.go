@@ -8,6 +8,8 @@ package mcp
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -16,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/mmadfox/swag2mcp/internal/reader"
 	"github.com/mmadfox/swag2mcp/internal/service"
 	"github.com/modelcontextprotocol/go-sdk/auth"
@@ -286,6 +289,61 @@ func TestApplyAuthMiddleware_CustomVerifier_Invalid(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set("Authorization", "Bearer any-token")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestApplyAuthMiddleware_JWT_Valid(t *testing.T) {
+	t.Parallel()
+
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+
+	jwksServer := newJWKSServer(t, &key.PublicKey)
+	defer jwksServer.Close()
+
+	handler := applyAuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}), Options{
+		AuthJWT: &JWTConfig{
+			Type:    "jwks",
+			JWKSUrl: jwksServer.URL + "/.well-known/jwks.json",
+		},
+	})
+
+	token := signJWT(t, key, jwt.MapClaims{
+		"sub": "user-123",
+		"exp": time.Now().Add(time.Hour).Unix(),
+	})
+
+	req, _ := http.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestApplyAuthMiddleware_JWT_Invalid(t *testing.T) {
+	t.Parallel()
+
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+
+	jwksServer := newJWKSServer(t, &key.PublicKey)
+	defer jwksServer.Close()
+
+	handler := applyAuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}), Options{
+		AuthJWT: &JWTConfig{
+			Type:    "jwks",
+			JWKSUrl: jwksServer.URL + "/.well-known/jwks.json",
+		},
+	})
+
+	req, _ := http.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "Bearer invalid-token")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusUnauthorized, w.Code)

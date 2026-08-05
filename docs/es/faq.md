@@ -219,7 +219,7 @@ Los tokens de OAuth2 de Credenciales de Cliente y Concesión de Contraseña se r
 swag2mcp mcp
 
 # Con transporte HTTP
-swag2mcp mcp --transport sse --http-addr :8080
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080
 ```
 
 ### ¿Cómo cambio el puerto?
@@ -233,7 +233,7 @@ swag2mcp mcp --transport sse --http-addr 0.0.0.0:9090
 Establezca un token bearer:
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080 --auth-token "my-secret"
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "my-secret"
 ```
 
 El cliente LLM debe incluir `Authorization: Bearer my-secret` en cada solicitud.

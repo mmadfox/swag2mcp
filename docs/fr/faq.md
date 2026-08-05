@@ -219,7 +219,7 @@ Les jetons OAuth2 Client Credentials et Password Grant sont automatiquement reno
 swag2mcp mcp
 
 # Avec transport HTTP
-swag2mcp mcp --transport sse --http-addr :8080
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080
 ```
 
 ### Comment changer le port ?
@@ -233,7 +233,7 @@ swag2mcp mcp --transport sse --http-addr 0.0.0.0:9090
 Définissez un jeton Bearer :
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080 --auth-token "mon-secret"
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "mon-secret"
 ```
 
 Le client LLM doit inclure `Authorization: Bearer mon-secret` dans chaque requête.

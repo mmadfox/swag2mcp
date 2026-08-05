@@ -219,7 +219,7 @@ auth:
 swag2mcp mcp
 
 # С HTTP-транспортом
-swag2mcp mcp --transport sse --http-addr :8080
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080
 ```
 
 ### Как изменить порт?
@@ -233,7 +233,7 @@ swag2mcp mcp --transport sse --http-addr 0.0.0.0:9090
 Установите bearer-токен:
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080 --auth-token "my-secret"
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "my-secret"
 ```
 
 LLM-клиент должен включать `Authorization: Bearer my-secret` в каждый запрос.

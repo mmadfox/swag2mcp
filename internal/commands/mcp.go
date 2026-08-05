@@ -34,6 +34,13 @@ type mcpCmdOpts struct {
 	HTTPAddr       string
 	HTTPPath       string
 	AuthToken      string
+	AuthType       string
+	AuthJWKSUrl    string
+	AuthIssuer     string
+	AuthAudience   string
+	AuthIntroURL   string
+	AuthClientID   string
+	AuthClientSec  string
 }
 
 func newMCPCmd(version string) *cobra.Command {
@@ -60,6 +67,13 @@ func newMCPCmd(version string) *cobra.Command {
 	cmd.Flags().StringVar(&opts.HTTPAddr, "http-addr", ":8080", "HTTP server address (for sse/streamable-http)")
 	cmd.Flags().StringVar(&opts.HTTPPath, "http-path", "/mcp", "HTTP path for MCP handler")
 	cmd.Flags().StringVar(&opts.AuthToken, "auth-token", "", "Bearer token for HTTP transport auth")
+	cmd.Flags().StringVar(&opts.AuthType, "auth-type", "", "JWT auth type: jwks, oidc, introspection")
+	cmd.Flags().StringVar(&opts.AuthJWKSUrl, "auth-jwks-url", "", "JWKS URL for JWT auth")
+	cmd.Flags().StringVar(&opts.AuthIssuer, "auth-issuer", "", "JWT issuer for token validation")
+	cmd.Flags().StringVar(&opts.AuthAudience, "auth-audience", "", "JWT audience for token validation")
+	cmd.Flags().StringVar(&opts.AuthIntroURL, "auth-introspection-url", "", "Token introspection URL")
+	cmd.Flags().StringVar(&opts.AuthClientID, "auth-client-id", "", "Client ID for introspection auth")
+	cmd.Flags().StringVar(&opts.AuthClientSec, "auth-client-secret", "", "Client secret for introspection auth")
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
 
@@ -140,6 +154,19 @@ func runMCP(basePath, version string, opts *mcpCmdOpts, cmd *cobra.Command) erro
 		transportType = mcp.TransportStreamableHTTP
 	}
 
+	var authJWT *mcp.JWTConfig
+	if opts.AuthType != "" {
+		authJWT = &mcp.JWTConfig{
+			Type:             opts.AuthType,
+			JWKSUrl:          opts.AuthJWKSUrl,
+			Issuer:           opts.AuthIssuer,
+			Audience:         opts.AuthAudience,
+			IntrospectionURL: opts.AuthIntroURL,
+			ClientID:         opts.AuthClientID,
+			ClientSecret:     opts.AuthClientSec,
+		}
+	}
+
 	mcpOpts := mcp.Options{
 		Version:   version,
 		Logger:    logger,
@@ -148,6 +175,7 @@ func runMCP(basePath, version string, opts *mcpCmdOpts, cmd *cobra.Command) erro
 		HTTPAddr:  opts.HTTPAddr,
 		HTTPPath:  opts.HTTPPath,
 		AuthToken: opts.AuthToken,
+		AuthJWT:   authJWT,
 	}
 
 	ctx, cancel := context.WithCancel(cmd.Context())
@@ -171,7 +199,31 @@ func applyMCPConfig(cmd *cobra.Command, cfg *config.Config, opts *mcpCmdOpts) {
 	if !cmd.Flags().Changed("http-path") && cfg.MCP.Path != "" {
 		opts.HTTPPath = cfg.MCP.Path
 	}
-	if !cmd.Flags().Changed("auth-token") && cfg.MCP.Auth != nil && cfg.MCP.Auth.Token != "" {
+	if cfg.MCP.Auth == nil {
+		return
+	}
+	if !cmd.Flags().Changed("auth-token") && cfg.MCP.Auth.Token != "" {
 		opts.AuthToken = cfg.MCP.Auth.Token
+	}
+	if !cmd.Flags().Changed("auth-type") && cfg.MCP.Auth.Type != "" {
+		opts.AuthType = cfg.MCP.Auth.Type
+	}
+	if !cmd.Flags().Changed("auth-jwks-url") && cfg.MCP.Auth.JWKSUrl != "" {
+		opts.AuthJWKSUrl = cfg.MCP.Auth.JWKSUrl
+	}
+	if !cmd.Flags().Changed("auth-issuer") && cfg.MCP.Auth.Issuer != "" {
+		opts.AuthIssuer = cfg.MCP.Auth.Issuer
+	}
+	if !cmd.Flags().Changed("auth-audience") && cfg.MCP.Auth.Audience != "" {
+		opts.AuthAudience = cfg.MCP.Auth.Audience
+	}
+	if !cmd.Flags().Changed("auth-introspection-url") && cfg.MCP.Auth.IntrospectionURL != "" {
+		opts.AuthIntroURL = cfg.MCP.Auth.IntrospectionURL
+	}
+	if !cmd.Flags().Changed("auth-client-id") && cfg.MCP.Auth.ClientID != "" {
+		opts.AuthClientID = cfg.MCP.Auth.ClientID
+	}
+	if !cmd.Flags().Changed("auth-client-secret") && cfg.MCP.Auth.ClientSecret != "" {
+		opts.AuthClientSec = cfg.MCP.Auth.ClientSecret
 	}
 }

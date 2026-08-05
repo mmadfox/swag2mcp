@@ -51,7 +51,7 @@ swag2mcp mcp
 用于基于 HTTP 通信的服务器发送事件传输。需要 MCP 握手序列。
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080
 ```
 
 ### Streamable HTTP 传输
@@ -67,7 +67,7 @@ swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 使用 bearer 令牌保护 HTTP 端点：
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080 --auth-token "my-secret"
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "my-secret"
 ```
 
 ### 带标签过滤

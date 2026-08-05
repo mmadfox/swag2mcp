@@ -152,7 +152,7 @@ lsof -i :8080
 kill <PID>
 
 # 或使用不同的端口
-swag2mcp mcp --transport sse --http-addr :9090
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:9090
 ```
 
 ### 连接被拒绝

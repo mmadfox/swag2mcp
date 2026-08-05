@@ -51,7 +51,7 @@ swag2mcp mcp
 Server-Sent Events транспорт для HTTP-взаимодействия. Требует последовательности рукопожатия MCP.
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080
 ```
 
 ### Streamable HTTP транспорт
@@ -67,7 +67,7 @@ swag2mcp mcp --transport streamable-http --http-addr 0.0.0.0:8080
 Защитите HTTP-эндпоинт с помощью bearer-токена:
 
 ```bash
-swag2mcp mcp --transport sse --http-addr :8080 --auth-token "my-secret"
+swag2mcp mcp --transport sse --http-addr 0.0.0.0:8080 --auth-token "my-secret"
 ```
 
 ### С фильтрацией по тегам

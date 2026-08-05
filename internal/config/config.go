@@ -80,6 +80,7 @@ type MockAuthConfig struct {
 	OAuth2Port int `yaml:"oauth2_port,omitempty" validate:"omitempty,min=1024,max=65535"`
 	DigestPort int `yaml:"digest_port,omitempty" validate:"omitempty,min=1024,max=65535"`
 	HMACPort   int `yaml:"hmac_port,omitempty"   validate:"omitempty,min=1024,max=65535"`
+	JWTPort    int `yaml:"jwt_port,omitempty"    validate:"omitempty,min=1024,max=65535"`
 }
 
 // MCPConfig holds the MCP server configuration.
@@ -92,7 +93,14 @@ type MCPConfig struct {
 
 // MCPAuthConfig holds the MCP server authentication configuration.
 type MCPAuthConfig struct {
-	Token string `yaml:"token,omitempty"`
+	Token            string `yaml:"token,omitempty"`
+	Type             string `yaml:"type,omitempty"              validate:"omitempty,oneof=jwks introspection oidc"`
+	JWKSUrl          string `yaml:"jwks_url,omitempty"`
+	Issuer           string `yaml:"issuer,omitempty"`
+	Audience         string `yaml:"audience,omitempty"`
+	IntrospectionURL string `yaml:"introspection_url,omitempty"`
+	ClientID         string `yaml:"client_id,omitempty"`
+	ClientSecret     string `yaml:"client_secret,omitempty"`
 }
 
 // Config is the top-level swag2mcp configuration.
@@ -167,12 +175,18 @@ func (c *Config) SetDefaults() {
 	}
 }
 
-// Resolve resolves environment variable references in the token.
+// Resolve resolves environment variable references in the token and JWT fields.
 func (c *MCPAuthConfig) Resolve() {
 	if c == nil {
 		return
 	}
 	c.Token = env.Parse(c.Token)
+	c.JWKSUrl = env.Parse(c.JWKSUrl)
+	c.Issuer = env.Parse(c.Issuer)
+	c.Audience = env.Parse(c.Audience)
+	c.IntrospectionURL = env.Parse(c.IntrospectionURL)
+	c.ClientID = env.Parse(c.ClientID)
+	c.ClientSecret = env.Parse(c.ClientSecret)
 }
 
 // Resolve resolves environment variable references in proxy fields.
