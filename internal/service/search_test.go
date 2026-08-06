@@ -8,6 +8,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/index"
@@ -56,7 +57,7 @@ func TestSearchService_Search(t *testing.T) {
 				idx.EXPECT().Search(gomock.Any(), gomock.Any(), tt.limit).Return(nil, errNotFound("search", ""))
 			}
 
-			svc := newSearchService(idx, fakeValidator{})
+			svc := newSearchService(idx, fakeValidator{}, slog.Default())
 			resp, err := svc.Search(context.Background(), SearchRequest{Query: tt.query, Limit: tt.limit})
 			if tt.wantErr {
 				require.Error(t, err)
@@ -71,7 +72,7 @@ func TestSearchService_Search(t *testing.T) {
 func TestSearchService_Search_validationError(t *testing.T) {
 	t.Parallel()
 
-	svc := newSearchService(NewMockIndexReader(gomock.NewController(t)), strictValidator{})
+	svc := newSearchService(NewMockIndexReader(gomock.NewController(t)), strictValidator{}, slog.Default())
 	_, err := svc.Search(context.Background(), SearchRequest{})
 	require.Error(t, err)
 }
@@ -85,7 +86,7 @@ func TestSearchService_Search_specNotFound(t *testing.T) {
 		[]*model.Endpoint{{ID: "ep1", SpecID: "s1", CollectionID: "c1", TagID: "t1", Name: "GET", Path: "/pet", Operation: &spec.Operation{}}}, nil)
 	idx.EXPECT().SpecByID("s1").Return(nil, errNotFound("spec", "s1"))
 
-	svc := newSearchService(idx, fakeValidator{})
+	svc := newSearchService(idx, fakeValidator{}, slog.Default())
 	_, err := svc.Search(context.Background(), SearchRequest{Query: "pet", Limit: 10})
 	require.Error(t, err)
 }
@@ -100,7 +101,7 @@ func TestSearchService_Search_collectionNotFound(t *testing.T) {
 	idx.EXPECT().SpecByID("s1").Return(&model.Spec{ID: "s1", Domain: "pets"}, nil)
 	idx.EXPECT().CollectionByID("c1").Return(nil, errNotFound("collection", "c1"))
 
-	svc := newSearchService(idx, fakeValidator{})
+	svc := newSearchService(idx, fakeValidator{}, slog.Default())
 	_, err := svc.Search(context.Background(), SearchRequest{Query: "pet", Limit: 10})
 	require.Error(t, err)
 }
@@ -116,7 +117,7 @@ func TestSearchService_Search_tagNotFound(t *testing.T) {
 	idx.EXPECT().CollectionByID("c1").Return(&model.Collection{ID: "c1", Title: "Pet Store"}, nil)
 	idx.EXPECT().TagByID("t1").Return(nil, errNotFound("tag", "t1"))
 
-	svc := newSearchService(idx, fakeValidator{})
+	svc := newSearchService(idx, fakeValidator{}, slog.Default())
 	_, err := svc.Search(context.Background(), SearchRequest{Query: "pet", Limit: 10})
 	require.Error(t, err)
 }
@@ -128,7 +129,7 @@ func TestSearchService_Search_invalidQuery(t *testing.T) {
 	idx := NewMockIndexReader(ctrl)
 	idx.EXPECT().Search(gomock.Any(), gomock.Any(), 10).Return(nil, fmt.Errorf("%w: bad syntax", index.ErrInvalidQuery))
 
-	svc := newSearchService(idx, fakeValidator{})
+	svc := newSearchService(idx, fakeValidator{}, slog.Default())
 	_, err := svc.Search(context.Background(), SearchRequest{Query: "invalid:field:value", Limit: 10})
 	require.Error(t, err)
 

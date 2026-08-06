@@ -8,6 +8,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/config"
@@ -23,7 +24,7 @@ func TestExportService_Export_noConfig(t *testing.T) {
 	ws.EXPECT().ConfigPath().Return("/tmp/.swag2mcp/swag2mcp.yaml")
 	ws.EXPECT().ConfigNotExists().Return(true)
 
-	svc := newExportService(ws, "1.0")
+	svc := newExportService(ws, "1.0", slog.Default())
 	_, err := svc.Export(context.Background(), ExportRequest{})
 	require.Error(t, err)
 }
@@ -36,7 +37,7 @@ func TestExportService_Export_success(t *testing.T) {
 	ws.EXPECT().ConfigPath().Return("/tmp/.swag2mcp/swag2mcp.yaml")
 	ws.EXPECT().ConfigNotExists().Return(false)
 
-	svc := newExportService(ws, "1.0")
+	svc := newExportService(ws, "1.0", slog.Default())
 	_, err := svc.Export(context.Background(), ExportRequest{OutputPath: "/tmp/out.zip"})
 	require.Error(t, err) // config load will fail since we don't have a real config file
 }
@@ -48,7 +49,7 @@ func TestExportService_exportCollections_disabledSpec(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ConfigPath().Return("/tmp/.swag2mcp/swag2mcp.yaml")
 
-	svc := newExportService(ws, "1.0")
+	svc := newExportService(ws, "1.0", slog.Default())
 	cfg := &config.Config{
 		Specs: []config.Spec{
 			{Domain: "api", Disable: true},
@@ -66,7 +67,7 @@ func TestExportService_exportCollections_filtered(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ConfigPath().Return("/tmp/.swag2mcp/swag2mcp.yaml")
 
-	svc := newExportService(ws, "1.0")
+	svc := newExportService(ws, "1.0", slog.Default())
 	cfg := &config.Config{
 		Specs: []config.Spec{
 			{Domain: "api", Collections: []config.Collection{{Location: "http://example.com/spec.yaml", Title: "spec1"}}},
@@ -85,7 +86,7 @@ func TestExportService_loadExportConfig_notFound(t *testing.T) {
 	ws.EXPECT().ConfigPath().Return("/tmp/.swag2mcp/swag2mcp.yaml")
 	ws.EXPECT().ConfigNotExists().Return(true)
 
-	svc := newExportService(ws, "1.0")
+	svc := newExportService(ws, "1.0", slog.Default())
 	_, err := svc.loadExportConfig()
 	require.Error(t, err)
 }
@@ -93,7 +94,7 @@ func TestExportService_loadExportConfig_notFound(t *testing.T) {
 func TestExportService_updateConfigLocations(t *testing.T) {
 	t.Parallel()
 
-	svc := newExportService(NewMockWorkspaceOps(gomock.NewController(t)), "1.0")
+	svc := newExportService(NewMockWorkspaceOps(gomock.NewController(t)), "1.0", slog.Default())
 	cfg := &config.Config{
 		Specs: []config.Spec{
 			{
@@ -114,7 +115,7 @@ func TestExportService_updateConfigLocations(t *testing.T) {
 func TestExportService_updateConfigLocations_disabled(t *testing.T) {
 	t.Parallel()
 
-	svc := newExportService(NewMockWorkspaceOps(gomock.NewController(t)), "1.0")
+	svc := newExportService(NewMockWorkspaceOps(gomock.NewController(t)), "1.0", slog.Default())
 	cfg := &config.Config{
 		Specs: []config.Spec{
 			{
@@ -141,7 +142,7 @@ func TestExportService_finalizeExport(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().CopyAuthScriptsToExport(tmpDir).Return(nil)
 
-	svc := newExportService(ws, "1.0")
+	svc := newExportService(ws, "1.0", slog.Default())
 	err := svc.finalizeExport(&config.Config{}, tmpDir)
 	require.NoError(t, err)
 }
@@ -154,7 +155,7 @@ func TestExportService_finalizeExport_copyError(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().CopyAuthScriptsToExport(tmpDir).Return(errors.New("copy failed"))
 
-	svc := newExportService(ws, "1.0")
+	svc := newExportService(ws, "1.0", slog.Default())
 	err := svc.finalizeExport(&config.Config{}, tmpDir)
 	require.Error(t, err)
 }

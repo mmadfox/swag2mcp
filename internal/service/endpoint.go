@@ -7,22 +7,24 @@ package service
 
 import (
 	"context"
+	"log/slog"
 	"sort"
 )
 
 type endpointService struct {
 	index IndexReader
 	v     RequestValidator
+	log   *slog.Logger
 }
 
-func newEndpointService(index IndexReader, v RequestValidator) *endpointService {
-	return &endpointService{index: index, v: v}
+func newEndpointService(index IndexReader, v RequestValidator, log *slog.Logger) *endpointService {
+	return &endpointService{index: index, v: v, log: log}
 }
 
 // EndpointsByTag returns all endpoints associated with the given tag,
 // along with the parent spec, collection, and tag metadata.
 func (es *endpointService) EndpointsByTag(
-	_ context.Context,
+	ctx context.Context,
 	rq EndpointsByTagRequest,
 ) (EndpointsByTagResponse, error) {
 	if err := es.v.Struct(rq); err != nil {
@@ -31,21 +33,25 @@ func (es *endpointService) EndpointsByTag(
 
 	tag, err := es.index.TagByID(rq.TagID)
 	if err != nil {
+		es.log.ErrorContext(ctx, "endpoints_by_tag failed: tag not found", "tag_id", rq.TagID, "error", err)
 		return EndpointsByTagResponse{}, NewTagNotFoundError(rq.TagID, err)
 	}
 
 	coll, err := es.index.CollectionByID(tag.CollectionID)
 	if err != nil {
+		es.log.ErrorContext(ctx, "endpoints_by_tag failed: collection not found", "collection_id", tag.CollectionID, "error", err)
 		return EndpointsByTagResponse{}, NewCollectionNotFoundError(tag.CollectionID, err)
 	}
 
 	sp, err := es.index.SpecByID(coll.SpecID)
 	if err != nil {
+		es.log.ErrorContext(ctx, "endpoints_by_tag failed: spec not found", "spec_id", coll.SpecID, "error", err)
 		return EndpointsByTagResponse{}, NewSpecNotFoundError(coll.SpecID, err)
 	}
 
 	eps, err := es.index.EndpointsByTag(rq.TagID)
 	if err != nil {
+		es.log.ErrorContext(ctx, "endpoints_by_tag failed: endpoints not found", "tag_id", rq.TagID, "error", err)
 		return EndpointsByTagResponse{}, NewTagNotFoundError(rq.TagID, err)
 	}
 
@@ -85,7 +91,7 @@ func (es *endpointService) EndpointsByTag(
 // EndpointsByCollection returns all endpoints within the given collection,
 // along with the parent spec and collection metadata.
 func (es *endpointService) EndpointsByCollection(
-	_ context.Context,
+	ctx context.Context,
 	rq EndpointsByCollectionRequest,
 ) (EndpointsByCollectionResponse, error) {
 	if err := es.v.Struct(rq); err != nil {
@@ -94,16 +100,19 @@ func (es *endpointService) EndpointsByCollection(
 
 	coll, err := es.index.CollectionByID(rq.CollectionID)
 	if err != nil {
+		es.log.ErrorContext(ctx, "endpoints_by_collection failed: collection not found", "collection_id", rq.CollectionID, "error", err)
 		return EndpointsByCollectionResponse{}, NewCollectionNotFoundError(rq.CollectionID, err)
 	}
 
 	sp, err := es.index.SpecByID(coll.SpecID)
 	if err != nil {
+		es.log.ErrorContext(ctx, "endpoints_by_collection failed: spec not found", "spec_id", coll.SpecID, "error", err)
 		return EndpointsByCollectionResponse{}, NewSpecNotFoundError(coll.SpecID, err)
 	}
 
 	eps, err := es.index.EndpointByCollection(rq.CollectionID)
 	if err != nil {
+		es.log.ErrorContext(ctx, "endpoints_by_collection failed: endpoints not found", "collection_id", rq.CollectionID, "error", err)
 		return EndpointsByCollectionResponse{}, NewCollectionNotFoundError(rq.CollectionID, err)
 	}
 
@@ -122,6 +131,7 @@ func (es *endpointService) EndpointsByCollection(
 	for _, e := range eps {
 		tg, err := es.index.TagByID(e.TagID)
 		if err != nil {
+			es.log.ErrorContext(ctx, "endpoints_by_collection failed: tag not found", "tag_id", e.TagID, "error", err)
 			return EndpointsByCollectionResponse{}, NewTagNotFoundError(e.TagID, err)
 		}
 		r.Endpoints = append(r.Endpoints, EndpointCollectionItem{
@@ -143,7 +153,7 @@ func (es *endpointService) EndpointsByCollection(
 
 // EndpointsBySpec returns all endpoints belonging to the given spec.
 func (es *endpointService) EndpointsBySpec(
-	_ context.Context,
+	ctx context.Context,
 	rq EndpointsBySpecRequest,
 ) (EndpointsBySpecResponse, error) {
 	if err := es.v.Struct(rq); err != nil {
@@ -152,10 +162,11 @@ func (es *endpointService) EndpointsBySpec(
 
 	eps, err := es.index.EndpointsBySpec(rq.SpecID)
 	if err != nil {
+		es.log.ErrorContext(ctx, "endpoints_by_spec failed: spec not found", "spec_id", rq.SpecID, "error", err)
 		return EndpointsBySpecResponse{}, NewSpecNotFoundError(rq.SpecID, err)
 	}
 
-	is, err := mapEndpointsToSearchItems(es.index, eps)
+	is, err := mapEndpointsToSearchItems(es.index, eps, es.log)
 	if err != nil {
 		return EndpointsBySpecResponse{}, err
 	}
@@ -180,7 +191,7 @@ func (es *endpointService) EndpointsBySpec(
 // EndpointByID returns the full details for a single endpoint identified by
 // its unique endpoint ID, including the parent spec, collection, and tag.
 func (es *endpointService) EndpointByID(
-	_ context.Context,
+	ctx context.Context,
 	rq EndpointByIDRequest,
 ) (EndpointByIDResponse, error) {
 	if err := es.v.Struct(rq); err != nil {
@@ -189,19 +200,23 @@ func (es *endpointService) EndpointByID(
 
 	e, err := es.index.EndpointByID(rq.ID)
 	if err != nil {
+		es.log.ErrorContext(ctx, "endpoint_by_id failed: endpoint not found", "endpoint_id", rq.ID, "error", err)
 		return EndpointByIDResponse{}, NewEndpointNotFoundError(rq.ID, err)
 	}
 
 	sp, err := es.index.SpecByID(e.SpecID)
 	if err != nil {
+		es.log.ErrorContext(ctx, "endpoint_by_id failed: spec not found", "spec_id", e.SpecID, "error", err)
 		return EndpointByIDResponse{}, NewSpecNotFoundError(e.SpecID, err)
 	}
 	coll, err := es.index.CollectionByID(e.CollectionID)
 	if err != nil {
+		es.log.ErrorContext(ctx, "endpoint_by_id failed: collection not found", "collection_id", e.CollectionID, "error", err)
 		return EndpointByIDResponse{}, NewCollectionNotFoundError(e.CollectionID, err)
 	}
 	tag, err := es.index.TagByID(e.TagID)
 	if err != nil {
+		es.log.ErrorContext(ctx, "endpoint_by_id failed: tag not found", "tag_id", e.TagID, "error", err)
 		return EndpointByIDResponse{}, NewTagNotFoundError(e.TagID, err)
 	}
 

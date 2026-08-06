@@ -103,10 +103,11 @@ func runMCP(basePath, version string, opts *mcpCmdOpts, cmd *cobra.Command) erro
 			return fmt.Errorf("opening logfile: %w", logErr)
 		}
 		defer f.Close()
-		logger = slog.New(slog.NewTextHandler(f, nil))
+		logger = slog.New(slog.NewTextHandler(f, &slog.HandlerOptions{AddSource: true}))
 	} else {
-		logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
+		logger = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{AddSource: true}))
 	}
+	slog.SetDefault(logger)
 
 	cfg, loadErr := config.Load(configFile)
 	if loadErr == nil && cfg.MCP != nil {
@@ -125,6 +126,7 @@ func runMCP(basePath, version string, opts *mcpCmdOpts, cmd *cobra.Command) erro
 	svcOpts := []service.Option{
 		service.WithDisableLLMAuth(opts.DisableLLMAuth),
 		service.WithVersion(version),
+		service.WithLogger(logger),
 	}
 	if opts.DumpDir != "" {
 		svcOpts = append(svcOpts, service.WithDumpDir(opts.DumpDir))

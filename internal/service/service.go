@@ -8,6 +8,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync/atomic"
 
 	"github.com/go-playground/validator/v10"
@@ -27,6 +28,7 @@ type Service struct {
 	version         string
 	indexNoFullText bool
 	snapshot        atomic.Value // stores *InfoSnapshot
+	log             *slog.Logger
 
 	specSvc       *specService
 	collectionSvc *collectionService
@@ -82,11 +84,19 @@ func WithWorkspace(ws *workspace.Workspace) Option {
 	}
 }
 
+// WithLogger sets a custom logger for the service.
+func WithLogger(log *slog.Logger) Option {
+	return func(s *Service) {
+		s.log = log
+	}
+}
+
 // New creates a new Service with the given options.
 func New(opts ...Option) (*Service, error) {
 	s := &Service{
 		ctx: newServiceContext(),
 		v:   validator.New(validator.WithRequiredStructEnabled()),
+		log: slog.Default(),
 	}
 
 	for _, opt := range opts {
@@ -116,19 +126,19 @@ func New(opts ...Option) (*Service, error) {
 
 	llmAuthDisabled := func() bool { return s.ctx.disableLLMAuth.Load() }
 
-	s.specSvc = newSpecService(s.index, s.v)
-	s.collectionSvc = newCollectionService(s.index, s.v)
-	s.tagSvc = newTagService(s.index, s.v)
-	s.endpointSvc = newEndpointService(s.index, s.v)
-	s.searchSvc = newSearchService(s.index, s.v)
-	s.inspectSvc = newInspectService(s.index, s.v)
-	s.authSvc = newAuthService(s.index, llmAuthDisabled)
-	s.toolsSvc = newToolsService(s.index, llmAuthDisabled)
-	s.invokeSvc = newInvokeService(s.ctx, s.index, s.ws, s.v, s.dumpDir)
+	s.specSvc = newSpecService(s.index, s.v, s.log)
+	s.collectionSvc = newCollectionService(s.index, s.v, s.log)
+	s.tagSvc = newTagService(s.index, s.v, s.log)
+	s.endpointSvc = newEndpointService(s.index, s.v, s.log)
+	s.searchSvc = newSearchService(s.index, s.v, s.log)
+	s.inspectSvc = newInspectService(s.index, s.v, s.log)
+	s.authSvc = newAuthService(s.index, llmAuthDisabled, s.log)
+	s.toolsSvc = newToolsService(s.index, llmAuthDisabled, s.log)
+	s.invokeSvc = newInvokeService(s.ctx, s.index, s.ws, s.v, s.dumpDir, s.log)
 	s.infoSvc = newInfoService(s.ctx, realClock{}, s.index, s.ws, s.version, &s.snapshot, s.ctx.startedAt.Load())
-	s.exportSvc = newExportService(s.ws, s.version)
-	s.importSvc = newImportService(s.ws)
-	s.responseSvc = newResponseService(s.ctx, s.ws, s.v)
+	s.exportSvc = newExportService(s.ws, s.version, s.log)
+	s.importSvc = newImportService(s.ws, s.log)
+	s.responseSvc = newResponseService(s.ctx, s.ws, s.v, s.log)
 
 	return s, nil
 }

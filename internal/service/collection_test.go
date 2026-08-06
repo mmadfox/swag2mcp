@@ -7,6 +7,7 @@ package service
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/model"
@@ -41,7 +42,7 @@ func TestCollectionService_CollectionsBySpec(t *testing.T) {
 				idx.EXPECT().SpecByID(tt.specID).Return(nil, errNotFound("spec", tt.specID))
 			}
 
-			svc := newCollectionService(idx, fakeValidator{})
+			svc := newCollectionService(idx, fakeValidator{}, slog.Default())
 			resp, err := svc.CollectionsBySpec(context.Background(), CollectionsRequest{SpecID: tt.specID})
 			if tt.wantErr {
 				require.Error(t, err)
@@ -82,7 +83,7 @@ func TestCollectionService_CollectionByID(t *testing.T) {
 				idx.EXPECT().CollectionByID(tt.collID).Return(nil, errNotFound("collection", tt.collID))
 			}
 
-			svc := newCollectionService(idx, fakeValidator{})
+			svc := newCollectionService(idx, fakeValidator{}, slog.Default())
 			resp, err := svc.CollectionByID(context.Background(), CollectionByIDRequest{ID: tt.collID})
 			if tt.wantErr {
 				require.Error(t, err)

@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -35,7 +36,7 @@ func newTestInvokeSvc(t *testing.T, idx IndexReader, ws WorkspaceOps) *invokeSer
 	ctx.storeHTTPClient(&http.Client{Transport: http.DefaultTransport})
 	ctx.maxResponseSize.Store(config.DefaultMaxResponseSize)
 	ctx.storeRateLimiter(fakeRateLimiter{})
-	return newInvokeService(ctx, idx, ws, fakeValidator{}, "")
+	return newInvokeService(ctx, idx, ws, fakeValidator{}, "", slog.Default())
 }
 
 func TestInvokeService_Invoke_validationError(t *testing.T) {
@@ -44,7 +45,7 @@ func TestInvokeService_Invoke_validationError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	ctx := newServiceContext()
 	ctx.storeRateLimiter(fakeRateLimiter{})
-	svc := newInvokeService(ctx, NewMockIndexReader(ctrl), NewMockWorkspaceOps(ctrl), strictValidator{}, "")
+	svc := newInvokeService(ctx, NewMockIndexReader(ctrl), NewMockWorkspaceOps(ctrl), strictValidator{}, "", slog.Default())
 	_, err := svc.Invoke(context.Background(), InvokeRequest{EndpointID: "bad"})
 	require.Error(t, err)
 }
@@ -60,7 +61,7 @@ func TestInvokeService_Invoke_rateLimiterDisabled(t *testing.T) {
 
 	ctx := newServiceContext()
 	ctx.disableRateLimiter.Store(true)
-	svc := newInvokeService(ctx, idx, NewMockWorkspaceOps(ctrl), fakeValidator{}, "")
+	svc := newInvokeService(ctx, idx, NewMockWorkspaceOps(ctrl), fakeValidator{}, "", slog.Default())
 	_, err := svc.Invoke(context.Background(), InvokeRequest{EndpointID: "ep1"})
 	require.Error(t, err) // buildRequest will fail due to missing base URL, but rate limiter was skipped
 }
@@ -77,7 +78,7 @@ func TestInvokeService_Invoke_rateLimitError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	ctx := newServiceContext()
 	ctx.storeRateLimiter(rateLimitReached{})
-	svc := newInvokeService(ctx, NewMockIndexReader(ctrl), NewMockWorkspaceOps(ctrl), fakeValidator{}, "")
+	svc := newInvokeService(ctx, NewMockIndexReader(ctrl), NewMockWorkspaceOps(ctrl), fakeValidator{}, "", slog.Default())
 	_, err := svc.Invoke(context.Background(), InvokeRequest{EndpointID: "ep1"})
 	require.Error(t, err)
 

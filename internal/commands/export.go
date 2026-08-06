@@ -8,6 +8,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -70,7 +71,7 @@ func runExport(basePath, outputPath string, specs []string, cmd *cobra.Command) 
 		return fmt.Errorf("workspace: %w", wsErr)
 	}
 
-	svc, svcErr := service.New(service.WithWorkspace(ws))
+	svc, svcErr := service.New(service.WithWorkspace(ws), service.WithLogger(slog.Default()))
 	if svcErr != nil {
 		return fmt.Errorf("service: %w", svcErr)
 	}

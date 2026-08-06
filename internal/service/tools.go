@@ -8,6 +8,7 @@ package service
 import (
 	"embed"
 	"errors"
+	"log/slog"
 	"strings"
 )
 
@@ -17,12 +18,14 @@ var toolDefsFS embed.FS
 type toolsService struct {
 	index           IndexReader
 	llmAuthDisabled func() bool
+	log             *slog.Logger
 }
 
-func newToolsService(index IndexReader, llmAuthDisabled func() bool) *toolsService {
+func newToolsService(index IndexReader, llmAuthDisabled func() bool, log *slog.Logger) *toolsService {
 	return &toolsService{
 		index:           index,
 		llmAuthDisabled: llmAuthDisabled,
+		log:             log,
 	}
 }
 
@@ -31,6 +34,7 @@ func newToolsService(index IndexReader, llmAuthDisabled func() bool) *toolsServi
 func (ts *toolsService) MakeToolDefinitions() (ToolDefinitions, error) {
 	entries, err := toolDefsFS.ReadDir("definitions")
 	if err != nil {
+		ts.log.Error("make_tool_definitions failed: read dir", "error", err)
 		return ToolDefinitions{}, NewToolLoadError(err)
 	}
 
@@ -45,6 +49,7 @@ func (ts *toolsService) MakeToolDefinitions() (ToolDefinitions, error) {
 		if entry.Name() == "instruction.md" {
 			instruction, err = loadInstructionFromEmbed()
 			if err != nil {
+				ts.log.Error("make_tool_definitions failed: load instruction", "error", err)
 				return ToolDefinitions{}, NewToolLoadError(err)
 			}
 			continue
@@ -52,6 +57,7 @@ func (ts *toolsService) MakeToolDefinitions() (ToolDefinitions, error) {
 
 		loadedTool, loadErr := loadToolFromEmbed(entry.Name())
 		if loadErr != nil {
+			ts.log.Error("make_tool_definitions failed: load tool", "file", entry.Name(), "error", loadErr)
 			return ToolDefinitions{}, NewToolLoadError(loadErr)
 		}
 		if loadedTool.Name == Auth && ts.llmAuthDisabled() {

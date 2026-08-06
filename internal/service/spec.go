@@ -7,16 +7,18 @@ package service
 
 import (
 	"context"
+	"log/slog"
 	"sort"
 )
 
 type specService struct {
 	index IndexReader
 	v     RequestValidator
+	log   *slog.Logger
 }
 
-func newSpecService(index IndexReader, v RequestValidator) *specService {
-	return &specService{index: index, v: v}
+func newSpecService(index IndexReader, v RequestValidator, log *slog.Logger) *specService {
+	return &specService{index: index, v: v, log: log}
 }
 
 // Specs returns a list of all available specifications.
@@ -43,7 +45,7 @@ func (ss *specService) Specs(_ context.Context) (SpecsResponse, error) {
 // SpecByID returns the specification identified by the given spec ID,
 // along with its associated collections.
 func (ss *specService) SpecByID(
-	_ context.Context,
+	ctx context.Context,
 	rq SpecByIDRequest,
 ) (SpecByIDResponse, error) {
 	if err := ss.v.Struct(rq); err != nil {
@@ -53,6 +55,7 @@ func (ss *specService) SpecByID(
 	var r SpecByIDResponse
 	sp, err := ss.index.SpecByID(rq.ID)
 	if err != nil {
+		ss.log.ErrorContext(ctx, "spec_by_id failed: spec not found", "spec_id", rq.ID, "error", err)
 		return SpecByIDResponse{}, NewSpecNotFoundError(rq.ID, err)
 	}
 	r.Spec = Spec{

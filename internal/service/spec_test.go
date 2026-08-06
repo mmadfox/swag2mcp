@@ -7,6 +7,7 @@ package service
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/model"
@@ -33,7 +34,7 @@ func TestSpecService_Specs(t *testing.T) {
 			idx := NewMockIndexReader(ctrl)
 			idx.EXPECT().AllSpecs().Return(tt.specs)
 
-			svc := newSpecService(idx, fakeValidator{})
+			svc := newSpecService(idx, fakeValidator{}, slog.Default())
 			resp, err := svc.Specs(context.Background())
 			require.NoError(t, err)
 			require.Len(t, resp.Specs, tt.wantLen)
@@ -73,7 +74,7 @@ func TestSpecService_SpecByID(t *testing.T) {
 				idx.EXPECT().SpecByID(tt.specID).Return(nil, errNotFound("spec", tt.specID))
 			}
 
-			svc := newSpecService(idx, fakeValidator{})
+			svc := newSpecService(idx, fakeValidator{}, slog.Default())
 			resp, err := svc.SpecByID(context.Background(), SpecByIDRequest{ID: tt.specID})
 			if tt.wantErr {
 				require.Error(t, err)

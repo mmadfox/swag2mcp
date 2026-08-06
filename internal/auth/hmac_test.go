@@ -280,6 +280,79 @@ func TestHMACAuthClient_Apply_NoPanicOnNilOut(t *testing.T) {
 	require.NoError(t, client.Apply(req, nil), "Apply()")
 }
 
+func TestHMACAuthClient_Apply_RecvWindow_Default(t *testing.T) {
+	t.Parallel()
+
+	client := &HMACAuthClient{APIKey: "key", SecretKey: "secret"}
+	require.NoError(t, client.New(), "New()")
+
+	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
+	require.NoError(t, client.Apply(req, nil), "Apply()")
+
+	q := req.URL.Query()
+	assert.Empty(t, q.Get("recvWindow"), "recvWindow should not be present by default")
+}
+
+func TestHMACAuthClient_Apply_RecvWindow_Custom(t *testing.T) {
+	t.Parallel()
+
+	client := &HMACAuthClient{
+		APIKey:    "key",
+		SecretKey: "secret",
+		Options:   &HMACOptions{RecvWindow: 5000},
+	}
+	require.NoError(t, client.New(), "New()")
+
+	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
+	require.NoError(t, client.Apply(req, nil), "Apply()")
+
+	q := req.URL.Query()
+	assert.Equal(t, "5000", q.Get("recvWindow"), "recvWindow should be 5000")
+}
+
+func TestHMACAuthClient_Apply_RecvWindow_Zero(t *testing.T) {
+	t.Parallel()
+
+	client := &HMACAuthClient{
+		APIKey:    "key",
+		SecretKey: "secret",
+		Options:   &HMACOptions{RecvWindow: 0},
+	}
+	require.NoError(t, client.New(), "New()")
+
+	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api", nil)
+	require.NoError(t, client.Apply(req, nil), "Apply()")
+
+	q := req.URL.Query()
+	assert.Empty(t, q.Get("recvWindow"), "recvWindow should not be present when zero")
+}
+
+func TestHMACAuthClient_Apply_RecvWindow_IncludedInSignature(t *testing.T) {
+	t.Parallel()
+
+	client := &HMACAuthClient{
+		APIKey:    "key",
+		SecretKey: "secret",
+		Options:   &HMACOptions{RecvWindow: 5000},
+	}
+	require.NoError(t, client.New(), "New()")
+
+	req, _ := http.NewRequest(http.MethodGet, "http://example.com/api?symbol=BTCUSDT", nil)
+	require.NoError(t, client.Apply(req, nil), "Apply()")
+
+	q := req.URL.Query()
+	sig := q.Get("signature")
+	q.Del("signature")
+
+	expectedQuery := q.Encode()
+	mac := hmac.New(sha256.New, []byte("secret"))
+	mac.Write([]byte(expectedQuery))
+	expectedSig := hex.EncodeToString(mac.Sum(nil))
+
+	assert.Equal(t, expectedSig, sig, "signature should include recvWindow")
+	assert.Equal(t, "5000", q.Get("recvWindow"))
+}
+
 func TestHMACAuthClient_Apply_InfoQueryParamsPopulated(t *testing.T) {
 	t.Parallel()
 

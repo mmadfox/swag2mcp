@@ -130,6 +130,19 @@ func TestAuth_UnmarshalYAML_hmac(t *testing.T) {
 	require.True(t, ok, "expected *auth.HMACAuthClient")
 	assert.Equal(t, "my-api-key", c.APIKey)
 	assert.Equal(t, "my-secret-key", c.SecretKey)
+	assert.Nil(t, c.Options, "Options should be nil when not specified")
+}
+
+func TestAuth_UnmarshalYAML_hmac_with_options(t *testing.T) {
+	t.Parallel()
+
+	var a Auth
+	y := "type: hmac\nconfig:\n  api_key: my-api-key\n  secret_key: my-secret-key\n  options:\n    recv_window: 5000"
+	require.NoError(t, yaml.Unmarshal([]byte(y), &a))
+	c, ok := a.Client.(*auth.HMACAuthClient)
+	require.True(t, ok, "expected *auth.HMACAuthClient")
+	require.NotNil(t, c.Options, "Options should not be nil")
+	assert.Equal(t, 5000, c.Options.RecvWindow)
 }
 
 func TestAuth_UnmarshalYAML_underscore_type(t *testing.T) {

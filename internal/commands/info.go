@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 
 	"github.com/spf13/cobra"
 
@@ -62,6 +63,7 @@ func runInfo(basePath string, w io.Writer, ctx context.Context) error {
 	svc, svcErr := service.New(
 		service.WithVersion(Version),
 		service.WithIndexNoFullText(),
+		service.WithLogger(slog.Default()),
 	)
 	if svcErr != nil {
 		return fmt.Errorf("failed to create service: %w", svcErr)

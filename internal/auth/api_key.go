@@ -32,7 +32,16 @@ func (c *APIKeyAuthClient) Type() Type {
 func (c *APIKeyAuthClient) Apply(req *http.Request, out *Info) error {
 	switch c.In {
 	case paramInQuery:
-		setAuthQuery(req, out, c.Key, c.Value)
+		q := req.URL.Query()
+		q.Del(c.Key)
+		q.Set(c.Key, c.Value)
+		req.URL.RawQuery = q.Encode()
+		if out != nil {
+			if out.QueryParams == nil {
+				out.QueryParams = make(map[string]string)
+			}
+			out.QueryParams[c.Key] = c.Value
+		}
 	default:
 		setAuthHeader(req, out, c.Key, c.Value)
 	}

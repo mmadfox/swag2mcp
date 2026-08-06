@@ -8,6 +8,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -30,10 +31,11 @@ type ExportResponse struct {
 type exportService struct {
 	ws      WorkspaceOps
 	version string
+	log     *slog.Logger
 }
 
-func newExportService(ws WorkspaceOps, version string) *exportService {
-	return &exportService{ws: ws, version: version}
+func newExportService(ws WorkspaceOps, version string, log *slog.Logger) *exportService {
+	return &exportService{ws: ws, version: version, log: log}
 }
 
 // Export creates a portable ZIP backup of the workspace.
@@ -45,24 +47,29 @@ func (es *exportService) Export(ctx context.Context, req ExportRequest) (ExportR
 
 	exportDir, dirErr := es.ws.CreateExportDir()
 	if dirErr != nil {
+		es.log.ErrorContext(ctx, "export failed: create export dir", "error", dirErr)
 		return ExportResponse{}, NewExportError("Failed to create temporary export directory.", dirErr)
 	}
 	defer os.RemoveAll(exportDir)
 
 	if err := workspace.CreateEmptyDirsInExport(exportDir); err != nil {
+		es.log.ErrorContext(ctx, "export failed: create export dir structure", "error", err)
 		return ExportResponse{}, NewExportError("Failed to create export directory structure.", err)
 	}
 
 	fileCount, exportErr := es.exportCollections(ctx, cfg, req.SpecFilter, exportDir)
 	if exportErr != nil {
+		es.log.ErrorContext(ctx, "export failed: export collections", "filter", req.SpecFilter, "error", exportErr)
 		return ExportResponse{}, exportErr
 	}
 
 	if fileCount == 0 {
+		es.log.ErrorContext(ctx, "export failed: no collections to export", "filter", req.SpecFilter)
 		return ExportResponse{}, NewExportNoCollectionsError()
 	}
 
 	if err := es.finalizeExport(cfg, exportDir); err != nil {
+		es.log.ErrorContext(ctx, "export failed: finalize", "error", err)
 		return ExportResponse{}, err
 	}
 
@@ -72,6 +79,7 @@ func (es *exportService) Export(ctx context.Context, req ExportRequest) (ExportR
 	}
 
 	if err := workspace.CreateZip(exportDir, outputPath); err != nil {
+		es.log.ErrorContext(ctx, "export failed: create zip", "output", outputPath, "error", err)
 		return ExportResponse{}, NewExportError(
 			fmt.Sprintf("Failed to create ZIP archive at %q.", outputPath),
 			err,
@@ -87,10 +95,12 @@ func (es *exportService) Export(ctx context.Context, req ExportRequest) (ExportR
 func (es *exportService) loadExportConfig() (*config.Config, error) {
 	cfgPath := es.ws.ConfigPath()
 	if es.ws.ConfigNotExists() {
+		es.log.ErrorContext(context.Background(), "export failed: config not found", "path", cfgPath)
 		return nil, NewConfigNotFoundError()
 	}
 	cfg, loadErr := config.Load(cfgPath)
 	if loadErr != nil {
+		es.log.ErrorContext(context.Background(), "export failed: load config", "path", cfgPath, "error", loadErr)
 		return nil, NewExportError(
 			fmt.Sprintf("Failed to load configuration from %q.", cfgPath),
 			loadErr,
@@ -137,6 +147,7 @@ func (es *exportService) exportCollections(ctx context.Context, cfg *config.Conf
 			}
 
 			if dlErr != nil {
+				es.log.ErrorContext(ctx, "export failed: download spec", "spec", spec.Domain, "collection", coll.Title, "error", dlErr)
 				return 0, NewExportError(
 					fmt.Sprintf("Failed to download spec for collection %q.", coll.Title),
 					dlErr,
@@ -145,6 +156,7 @@ func (es *exportService) exportCollections(ctx context.Context, cfg *config.Conf
 
 			name := specFileName(spec.Domain, coll.Title, coll.Location, pathPartFromLocation(coll.Location))
 			if writeErr := workspace.WriteSpecToExport(exportDir, name, data); writeErr != nil {
+				es.log.ErrorContext(ctx, "export failed: write spec to export", "name", name, "error", writeErr)
 				return 0, NewExportError(
 					fmt.Sprintf("Failed to write spec %q to export.", name),
 					writeErr,
@@ -185,18 +197,21 @@ func (es *exportService) updateConfigLocations(cfg *config.Config, specFilter []
 
 func (es *exportService) finalizeExport(cfg *config.Config, exportDir string) error {
 	if err := config.Save(cfg, filepath.Join(exportDir, "swag2mcp.yaml")); err != nil {
+		es.log.ErrorContext(context.Background(), "export failed: save config", "error", err)
 		return NewExportError(
 			"Failed to save updated configuration to export.",
 			err,
 		)
 	}
 	if err := es.ws.CopyAuthScriptsToExport(exportDir); err != nil {
+		es.log.ErrorContext(context.Background(), "export failed: copy auth scripts", "error", err)
 		return NewExportError(
 			"Failed to copy auth scripts to export.",
 			err,
 		)
 	}
 	if err := workspace.CreateMetaFile(exportDir, es.version); err != nil {
+		es.log.ErrorContext(context.Background(), "export failed: create meta file", "error", err)
 		return NewExportError(
 			"Failed to create backup metadata.",
 			err,

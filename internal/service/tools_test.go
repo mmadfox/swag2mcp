@@ -6,6 +6,7 @@
 package service
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/model"
@@ -20,7 +21,7 @@ func TestToolsService_MakeToolDefinitions(t *testing.T) {
 	idx := NewMockIndexReader(ctrl)
 	idx.EXPECT().AllSpecs().Return(nil)
 
-	svc := newToolsService(idx, func() bool { return false })
+	svc := newToolsService(idx, func() bool { return false }, slog.Default())
 	defs, err := svc.MakeToolDefinitions()
 	require.NoError(t, err)
 	require.NotEmpty(t, defs.Instruction)
@@ -34,7 +35,7 @@ func TestToolsService_MakeToolDefinitions_authDisabled(t *testing.T) {
 	idx := NewMockIndexReader(ctrl)
 	idx.EXPECT().AllSpecs().Return(nil)
 
-	svc := newToolsService(idx, func() bool { return true })
+	svc := newToolsService(idx, func() bool { return true }, slog.Default())
 	defs, err := svc.MakeToolDefinitions()
 	require.NoError(t, err)
 
@@ -73,7 +74,7 @@ func TestMakeAvailableSpecs_withSpecs(t *testing.T) {
 		{ID: "c2", LLMTitle: "Orders"},
 	}, nil)
 
-	svc := newToolsService(idx, func() bool { return false })
+	svc := newToolsService(idx, func() bool { return false }, slog.Default())
 	result := svc.makeAvailableSpecs()
 	require.Contains(t, result, "api.example.com")
 	require.Contains(t, result, "Users")
@@ -90,7 +91,7 @@ func TestMakeAvailableSpecs_withInstruction(t *testing.T) {
 	})
 	idx.EXPECT().CollectionsBySpec("s1").Return(nil, errNotFound("collections", "s1"))
 
-	svc := newToolsService(idx, func() bool { return false })
+	svc := newToolsService(idx, func() bool { return false }, slog.Default())
 	result := svc.makeAvailableSpecs()
 	require.Contains(t, result, "Use with care")
 	require.Contains(t, result, "No available collections")
@@ -108,7 +109,7 @@ func TestMakeAvailableSpecs_withCollectionInstruction(t *testing.T) {
 		{ID: "c1", LLMTitle: "Users", LLMInstruction: "User management"},
 	}, nil)
 
-	svc := newToolsService(idx, func() bool { return false })
+	svc := newToolsService(idx, func() bool { return false }, slog.Default())
 	result := svc.makeAvailableSpecs()
 	require.Contains(t, result, "User management")
 }
@@ -127,7 +128,7 @@ func TestMakeAvailableSpecs_moreThan10Collections(t *testing.T) {
 	}
 	idx.EXPECT().CollectionsBySpec("s1").Return(colls, nil)
 
-	svc := newToolsService(idx, func() bool { return false })
+	svc := newToolsService(idx, func() bool { return false }, slog.Default())
 	result := svc.makeAvailableSpecs()
 	require.Contains(t, result, "more than 10 collections")
 }
