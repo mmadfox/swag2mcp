@@ -30,7 +30,7 @@ const (
 	// MaxTTL is the maximum time-to-live for cached spec files.
 	MaxTTL = 48 * time.Hour
 	// MinTTL is the minimum time-to-live for cached spec files.
-	MinTTL = 1 * time.Hour
+	MinTTL = 10 * time.Hour
 
 	sourceURL   sourceType = "url"
 	sourceLocal sourceType = "local"
