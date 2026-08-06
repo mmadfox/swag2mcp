@@ -28,8 +28,6 @@ type requestBuilder struct {
 	parameters      map[string]any
 	body            map[string]any
 	httpConfig      *model.HTTPClientConfig
-	invokeHeaders   map[string]string
-	invokeCookies   map[string]string
 	globalHeaders   map[string]string
 	globalUserAgent string
 	globalCookies   []httpclient.Cookie
@@ -81,18 +79,6 @@ func withBody(body map[string]any) requestOption {
 func withHTTPConfig(config *model.HTTPClientConfig) requestOption {
 	return func(builder *requestBuilder) {
 		builder.httpConfig = config
-	}
-}
-
-func withInvokeHeaders(headers map[string]string) requestOption {
-	return func(builder *requestBuilder) {
-		builder.invokeHeaders = headers
-	}
-}
-
-func withInvokeCookies(cookies map[string]string) requestOption {
-	return func(builder *requestBuilder) {
-		builder.invokeCookies = cookies
 	}
 }
 
@@ -192,9 +178,38 @@ func (builder *requestBuilder) filterParametersByLocation(location string) map[s
 		if !exists {
 			continue
 		}
+		if isEmptyParam(value) {
+			continue
+		}
 		result[parameter.Name] = formatParamValue(value)
 	}
 	return result
+}
+
+// isEmptyParam returns true for empty/zero parameter values that should not
+// be included in the request URL. This prevents LLM-provided empty defaults
+// (e.g. signature: "", timestamp: 0) from being sent to the API.
+func isEmptyParam(v any) bool {
+	switch val := v.(type) {
+	case string:
+		return val == ""
+	case int:
+		return val == 0
+	case int8:
+		return val == 0
+	case int16:
+		return val == 0
+	case int32:
+		return val == 0
+	case int64:
+		return val == 0
+	case float32:
+		return val == 0
+	case float64:
+		return val == 0
+	default:
+		return false
+	}
 }
 
 // formatParamValue converts a parameter value to its string representation,
@@ -255,7 +270,6 @@ func (builder *requestBuilder) applyHTTPClientConfig(req *http.Request) {
 	builder.applyGlobalConfig(req)
 	builder.applySpecConfig(req)
 	builder.applyDefaultAccept(req)
-	builder.applyInvokeOverrides(req)
 }
 
 func (builder *requestBuilder) applyGlobalConfig(req *http.Request) {
@@ -309,15 +323,5 @@ func (builder *requestBuilder) applyDefaultAccept(req *http.Request) {
 		req.Header.Set("Accept", acceptHeaderJSON)
 	} else {
 		req.Header.Set("Accept", acceptHeaderOther)
-	}
-}
-
-func (builder *requestBuilder) applyInvokeOverrides(req *http.Request) {
-	for name, val := range builder.invokeHeaders {
-		req.Header.Set(name, val)
-	}
-
-	for name, val := range builder.invokeCookies {
-		req.AddCookie(&http.Cookie{Name: name, Value: val})
 	}
 }

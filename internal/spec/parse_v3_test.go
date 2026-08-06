@@ -206,3 +206,43 @@ func TestOpenapi3PathItemToOps_OpLevelOverridesPathLevel(t *testing.T) {
 	require.NotNil(t, getOp.Operation.Parameters[0].Schema)
 	assert.Equal(t, "integer", getOp.Operation.Parameters[0].Schema.Type)
 }
+
+func TestOpenapi3OpToOp_Security(t *testing.T) {
+	t.Parallel()
+
+	sec := openapi3.SecurityRequirements{
+		{"bearerAuth": {}},
+	}
+	op := openapi3OpToOp(&openapi3.Operation{
+		OperationID: "secureOp",
+		Security:    &sec,
+	})
+
+	require.NotNil(t, op)
+	require.Len(t, op.Security, 1)
+	assert.Contains(t, op.Security[0], "bearerAuth")
+}
+
+func TestOpenapi3OpToOp_Security_Nil(t *testing.T) {
+	t.Parallel()
+
+	op := openapi3OpToOp(&openapi3.Operation{
+		OperationID: "publicOp",
+	})
+
+	require.NotNil(t, op)
+	assert.Empty(t, op.Security)
+}
+
+func TestOpenapi3OpToOp_Security_Empty(t *testing.T) {
+	t.Parallel()
+
+	sec := openapi3.SecurityRequirements{}
+	op := openapi3OpToOp(&openapi3.Operation{
+		OperationID: "noSecurityOp",
+		Security:    &sec,
+	})
+
+	require.NotNil(t, op)
+	assert.Empty(t, op.Security)
+}

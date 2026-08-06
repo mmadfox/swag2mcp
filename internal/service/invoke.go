@@ -28,11 +28,9 @@ const globalRateLimitKey = "global"
 
 // InvokeRequest represents a request to invoke an API endpoint.
 type InvokeRequest struct {
-	EndpointID  string            `json:"endpointId"            validate:"required,md5" jsonschema:"required,The 32-character MD5 hash ID of the endpoint to invoke"`
-	Parameters  map[string]any    `json:"parameters,omitempty"                          jsonschema:"optional,Path, query, and header parameters as key-value pairs"`
-	RequestBody map[string]any    `json:"requestBody,omitempty"                         jsonschema:"optional,Request body for POST/PUT/PATCH requests"`
-	Headers     map[string]string `json:"headers,omitempty"                             jsonschema:"optional,Additional HTTP headers to send with the request"`
-	Cookies     map[string]string `json:"cookies,omitempty"                             jsonschema:"optional,Additional HTTP cookies to send with the request"`
+	EndpointID  string         `json:"endpointId"            validate:"required,md5" jsonschema:"required,The 32-character MD5 hash ID of the endpoint to invoke"`
+	Parameters  map[string]any `json:"parameters,omitempty"                          jsonschema:"optional,Path, query, and header parameters as key-value pairs"`
+	RequestBody map[string]any `json:"requestBody,omitempty"                         jsonschema:"optional,Request body for POST/PUT/PATCH requests"`
 }
 
 // FileReference holds information about a response saved to disk.
@@ -161,8 +159,6 @@ func (is *invokeService) buildRequest(
 		withParameters(rq.Parameters),
 		withBody(rq.RequestBody),
 		withHTTPConfig(mergeHTTPClientConfigs(sp.HTTPClient, coll.HTTPClient)),
-		withInvokeHeaders(rq.Headers),
-		withInvokeCookies(rq.Cookies),
 		withGlobalHeaders(is.ctx.loadGlobalHeaders()),
 		withGlobalUserAgent(is.ctx.loadGlobalUserAgent()),
 		withGlobalCookies(is.ctx.loadGlobalCookies()),
@@ -177,7 +173,8 @@ func (is *invokeService) executeRequest(
 	ep *model.Endpoint,
 ) (InvokeResponse, error) {
 	client := is.ctx.loadHTTPClient()
-	if sp.Auth != nil {
+	needsAuth := sp.Auth != nil && (!sp.HasSecureEndpoints || ep.RequiresAuth)
+	if needsAuth {
 		base := client.Transport
 		if base == nil {
 			base = http.DefaultTransport

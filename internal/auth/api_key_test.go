@@ -27,7 +27,12 @@ func TestAPIKeyAuthClient_Apply(t *testing.T) {
 		}
 		require.NoError(t, client.New(), "New()")
 
-		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
+		req, _ := http.NewRequestWithContext(
+			context.Background(),
+			http.MethodGet,
+			"http://example.com/api",
+			nil,
+		)
 		var info Info
 		require.NoError(t, client.Apply(req, &info), "Apply()")
 
@@ -45,7 +50,12 @@ func TestAPIKeyAuthClient_Apply(t *testing.T) {
 		}
 		require.NoError(t, client.New(), "New()")
 
-		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
+		req, _ := http.NewRequestWithContext(
+			context.Background(),
+			http.MethodGet,
+			"http://example.com/api",
+			nil,
+		)
 		var info Info
 		require.NoError(t, client.Apply(req, &info), "Apply()")
 
@@ -63,7 +73,12 @@ func TestAPIKeyAuthClient_Apply(t *testing.T) {
 		}
 		require.NoError(t, client.New(), "New()")
 
-		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
+		req, _ := http.NewRequestWithContext(
+			context.Background(),
+			http.MethodGet,
+			"http://example.com/api",
+			nil,
+		)
 		require.NoError(t, client.Apply(req, nil), "Apply()")
 
 		assert.Equal(t, "fallback-value", req.Header.Get("X-Auth"))
@@ -79,7 +94,12 @@ func TestAPIKeyAuthClient_Apply(t *testing.T) {
 		}
 		require.NoError(t, client.New(), "New()")
 
-		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
+		req, _ := http.NewRequestWithContext(
+			context.Background(),
+			http.MethodGet,
+			"http://example.com/api",
+			nil,
+		)
 		var info Info
 		require.NoError(t, client.Apply(req, &info), "Apply()")
 
@@ -99,7 +119,12 @@ func TestAPIKeyAuthClient_Apply_EnvVars(t *testing.T) {
 		}
 		require.NoError(t, client.New(), "New()")
 
-		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
+		req, _ := http.NewRequestWithContext(
+			context.Background(),
+			http.MethodGet,
+			"http://example.com/api",
+			nil,
+		)
 		var info Info
 		require.NoError(t, client.Apply(req, &info), "Apply()")
 
@@ -117,7 +142,12 @@ func TestAPIKeyAuthClient_Apply_EnvVars(t *testing.T) {
 		}
 		require.NoError(t, client.New(), "New()")
 
-		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
+		req, _ := http.NewRequestWithContext(
+			context.Background(),
+			http.MethodGet,
+			"http://example.com/api",
+			nil,
+		)
 		var info Info
 		require.NoError(t, client.Apply(req, &info), "Apply()")
 
@@ -136,7 +166,12 @@ func TestAPIKeyAuthClient_Apply_EnvVars(t *testing.T) {
 		}
 		require.NoError(t, client.New(), "New()")
 
-		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/api", nil)
+		req, _ := http.NewRequestWithContext(
+			context.Background(),
+			http.MethodGet,
+			"http://example.com/api",
+			nil,
+		)
 		var info Info
 		require.NoError(t, client.Apply(req, &info), "Apply()")
 
@@ -160,7 +195,11 @@ func TestAPIKeyAuthClient_Validate(t *testing.T) {
 		client  *APIKeyAuthClient
 		wantErr bool
 	}{
-		{name: "valid", client: &APIKeyAuthClient{Key: "X-Key", Value: "val", In: "header"}, wantErr: false},
+		{
+			name:    "valid",
+			client:  &APIKeyAuthClient{Key: "X-Key", Value: "val", In: "header"},
+			wantErr: false,
+		},
 		{name: "empty", client: &APIKeyAuthClient{}, wantErr: true},
 	}
 
@@ -175,6 +214,29 @@ func TestAPIKeyAuthClient_Validate(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+}
+
+func TestAPIKeyAuthClient_Apply_ClearsExistingQueryParam(t *testing.T) {
+	t.Parallel()
+
+	client := &APIKeyAuthClient{
+		Key:   "api_key",
+		Value: "new-value",
+		In:    "query",
+	}
+	require.NoError(t, client.New(), "New()")
+
+	req, _ := http.NewRequestWithContext(
+		context.Background(),
+		http.MethodGet,
+		"http://example.com/api?api_key=old-value",
+		nil,
+	)
+	require.NoError(t, client.Apply(req, nil), "Apply()")
+
+	q := req.URL.Query()
+	assert.Equal(t, "new-value", q.Get("api_key"))
+	assert.Len(t, q["api_key"], 1, "should have exactly one api_key param")
 }
 
 func TestAPIKeyAuthClient_Type(t *testing.T) {

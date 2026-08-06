@@ -172,17 +172,26 @@ func TestSpec_Fields(t *testing.T) {
 	t.Parallel()
 
 	s := &Spec{
-		ID:             "spec-1",
-		Domain:         "test-api",
-		LLMTitle:       "Test API",
-		LLMInstruction: "Test instruction",
-		BaseURL:        "https://api.example.com",
+		ID:                 "spec-1",
+		Domain:             "test-api",
+		LLMTitle:           "Test API",
+		LLMInstruction:     "Test instruction",
+		BaseURL:            "https://api.example.com",
+		HasSecureEndpoints: true,
 	}
 	assert.Equal(t, "spec-1", s.ID)
 	assert.Equal(t, "test-api", s.Domain)
 	assert.Equal(t, "Test API", s.LLMTitle)
 	assert.Equal(t, "Test instruction", s.LLMInstruction)
 	assert.Equal(t, "https://api.example.com", s.BaseURL)
+	assert.True(t, s.HasSecureEndpoints)
+}
+
+func TestSpec_HasSecureEndpoints_Default(t *testing.T) {
+	t.Parallel()
+
+	s := &Spec{}
+	assert.False(t, s.HasSecureEndpoints)
 }
 
 func TestSpec_Stats(t *testing.T) {
@@ -263,6 +272,7 @@ func TestEndpoint_Fields(t *testing.T) {
 		Path:            "/users",
 		Tag:             "users-tag",
 		Operation:       &spec.Operation{ID: "getUsers"},
+		RequiresAuth:    true,
 	}
 	assert.Equal(t, "ep-1", e.ID)
 	assert.Equal(t, "tag-1", e.TagID)
@@ -275,4 +285,12 @@ func TestEndpoint_Fields(t *testing.T) {
 	assert.Equal(t, "users-tag", e.Tag)
 	require.NotNil(t, e.Operation)
 	assert.Equal(t, "getUsers", e.Operation.ID)
+	assert.True(t, e.RequiresAuth)
+}
+
+func TestEndpoint_RequiresAuth_Default(t *testing.T) {
+	t.Parallel()
+
+	e := &Endpoint{}
+	assert.False(t, e.RequiresAuth)
 }

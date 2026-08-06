@@ -36,14 +36,15 @@ type PathItem struct {
 
 // Operation represents a single API operation (method) with its parameters, request body, and responses.
 type Operation struct {
-	ID          string               `json:"id,omitempty"`
-	Tags        []string             `json:"tags,omitempty"`
-	Summary     string               `json:"summary,omitempty"`
-	Description string               `json:"description,omitempty"`
-	Deprecated  bool                 `json:"deprecated,omitempty"`
-	Parameters  []*Parameter         `json:"parameters,omitempty"`
-	RequestBody *RequestBody         `json:"requestBody,omitempty"`
-	Responses   map[string]*Response `json:"responses,omitempty"`
+	ID          string                `json:"id,omitempty"`
+	Tags        []string              `json:"tags,omitempty"`
+	Summary     string                `json:"summary,omitempty"`
+	Description string                `json:"description,omitempty"`
+	Deprecated  bool                  `json:"deprecated,omitempty"`
+	Parameters  []*Parameter          `json:"parameters,omitempty"`
+	RequestBody *RequestBody          `json:"requestBody,omitempty"`
+	Responses   map[string]*Response  `json:"responses,omitempty"`
+	Security    []map[string][]string `json:"security,omitempty"`
 }
 
 // Parameter represents a request parameter with name, location, schema, and required status.

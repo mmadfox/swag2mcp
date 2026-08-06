@@ -169,34 +169,6 @@ func TestRequestBuilder_withHTTPConfig(t *testing.T) {
 	require.Equal(t, "spec-val", req.Header.Get("X-Spec"))
 }
 
-func TestRequestBuilder_withInvokeHeaders(t *testing.T) {
-	t.Parallel()
-
-	req, err := newRequestBuilder(
-		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
-		withCollection(&model.Collection{}),
-		withEndpoint(&model.Endpoint{Name: "GET", Path: "/test", Operation: &spec.Operation{}}),
-		withInvokeHeaders(map[string]string{"X-Override": "override-val"}),
-	).build(context.Background())
-	require.NoError(t, err)
-	require.Equal(t, "override-val", req.Header.Get("X-Override"))
-}
-
-func TestRequestBuilder_withInvokeCookies(t *testing.T) {
-	t.Parallel()
-
-	req, err := newRequestBuilder(
-		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
-		withCollection(&model.Collection{}),
-		withEndpoint(&model.Endpoint{Name: "GET", Path: "/test", Operation: &spec.Operation{}}),
-		withInvokeCookies(map[string]string{"session": "abc"}),
-	).build(context.Background())
-	require.NoError(t, err)
-	cookie, _ := req.Cookie("session")
-	require.NotNil(t, cookie)
-	require.Equal(t, "abc", cookie.Value)
-}
-
 func TestRequestBuilder_withGlobalUserAgent(t *testing.T) {
 	t.Parallel()
 
@@ -244,7 +216,7 @@ func TestRequestBuilder_applyDefaultAccept_preservesExisting(t *testing.T) {
 		withSpec(&model.Spec{BaseURL: "https://api.example.com"}),
 		withCollection(&model.Collection{}),
 		withEndpoint(&model.Endpoint{Name: "GET", Path: "/test", Operation: &spec.Operation{}}),
-		withInvokeHeaders(map[string]string{"Accept": "text/plain"}),
+		withGlobalHeaders(map[string]string{"Accept": "text/plain"}),
 	).build(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "text/plain", req.Header.Get("Accept"))
@@ -284,24 +256,6 @@ func TestRequestBuilder_applySpecConfig_nil(t *testing.T) {
 	require.NotNil(t, req)
 }
 
-func TestRequestBuilder_applyInvokeOverrides(t *testing.T) {
-	t.Parallel()
-
-	b := &requestBuilder{
-		spec:          &model.Spec{BaseURL: "https://api.example.com"},
-		collection:    &model.Collection{},
-		endpoint:      &model.Endpoint{Name: "GET", Path: "/test", Operation: &spec.Operation{}},
-		invokeHeaders: map[string]string{"X-Override": "override-val"},
-		invokeCookies: map[string]string{"override-cookie": "override-val"},
-	}
-	req, err := b.build(context.Background())
-	require.NoError(t, err)
-	require.Equal(t, "override-val", req.Header.Get("X-Override"))
-	cookie, _ := req.Cookie("override-cookie")
-	require.NotNil(t, cookie)
-	require.Equal(t, "override-val", cookie.Value)
-}
-
 func TestRequestBuilder_filterParametersByLocation(t *testing.T) {
 	t.Parallel()
 
@@ -323,6 +277,69 @@ func TestRequestBuilder_filterParametersByLocation(t *testing.T) {
 	queryParams := b.filterParametersByLocation("query")
 	require.Equal(t, "test", queryParams["name"])
 	require.NotContains(t, queryParams, "id")
+}
+
+func TestRequestBuilder_filterParametersByLocation_skipsEmpty(t *testing.T) {
+	t.Parallel()
+
+	b := &requestBuilder{
+		parameters: map[string]any{
+			"id":         "42",
+			"signature":  "",
+			"timestamp":  0,
+			"recvWindow": float64(0),
+		},
+		endpoint: &model.Endpoint{
+			Operation: &spec.Operation{
+				Parameters: []*spec.Parameter{
+					{Name: "id", In: "path"},
+					{Name: "signature", In: "query"},
+					{Name: "timestamp", In: "query"},
+					{Name: "recvWindow", In: "query"},
+				},
+			},
+		},
+	}
+
+	pathParams := b.filterParametersByLocation("path")
+	require.Equal(t, "42", pathParams["id"])
+
+	queryParams := b.filterParametersByLocation("query")
+	require.NotContains(t, queryParams, "signature", "empty string should be skipped")
+	require.NotContains(t, queryParams, "timestamp", "zero int should be skipped")
+	require.NotContains(t, queryParams, "recvWindow", "zero float64 should be skipped")
+}
+
+func TestIsEmptyParam(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		value any
+		want  bool
+	}{
+		{name: "empty string", value: "", want: true},
+		{name: "non-empty string", value: "hello", want: false},
+		{name: "zero int", value: 0, want: true},
+		{name: "non-zero int", value: 42, want: false},
+		{name: "zero int64", value: int64(0), want: true},
+		{name: "non-zero int64", value: int64(7314340), want: false},
+		{name: "zero float64", value: float64(0), want: true},
+		{name: "non-zero float64", value: float64(3.14), want: false},
+		{name: "zero float32", value: float32(0), want: true},
+		{name: "non-zero float32", value: float32(100), want: false},
+		{name: "bool false", value: false, want: false},
+		{name: "bool true", value: true, want: false},
+		{name: "nil", value: nil, want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := isEmptyParam(tt.value)
+			require.Equal(t, tt.want, got)
+		})
+	}
 }
 
 func TestRequestBuilder_applyHeaders(t *testing.T) {

@@ -28,14 +28,15 @@ type HTTPClientConfig struct {
 
 // Spec represents an API specification with its domain, metadata, authentication, and HTTP client config.
 type Spec struct {
-	ID             string             `json:"id"`
-	Domain         string             `json:"domain"`
-	LLMTitle       string             `json:"llmtitle"`
-	LLMInstruction string             `json:"llminstruction"`
-	BaseURL        string             `json:"baseurl"`
-	HTTPClient     *HTTPClientConfig  `json:"httpClient,omitempty"`
-	Auth           auth.Authenticator `json:"auth"`
-	Stats          struct {
+	ID                 string             `json:"id"`
+	Domain             string             `json:"domain"`
+	LLMTitle           string             `json:"llmtitle"`
+	LLMInstruction     string             `json:"llminstruction"`
+	BaseURL            string             `json:"baseurl"`
+	HTTPClient         *HTTPClientConfig  `json:"httpClient,omitempty"`
+	Auth               auth.Authenticator `json:"auth"`
+	HasSecureEndpoints bool               `json:"hasSecureEndpoints,omitempty"`
+	Stats              struct {
 		Collections int `json:"collections"`
 		Tags        int `json:"tags"`
 		Methods     int `json:"methods"`
@@ -89,6 +90,7 @@ type Endpoint struct {
 	Path            string          `json:"path"`
 	Tag             string          `json:"tag"`
 	Operation       *spec.Operation `json:"operation"`
+	RequiresAuth    bool            `json:"requiresAuth,omitempty"`
 }
 
 // SummaryOrFallback returns the endpoint summary, falling back to description, then "Method /path".

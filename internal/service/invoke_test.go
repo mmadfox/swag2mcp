@@ -22,6 +22,7 @@ import (
 	"github.com/mmadfox/swag2mcp/internal/config"
 	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/mmadfox/swag2mcp/internal/spec"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -248,6 +249,111 @@ func TestInvokeService_executeRequest_withAuth(t *testing.T) {
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
+func TestInvokeService_executeRequest_needsAuth_secureSpec_requiresAuth(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "applied", r.Header.Get("X-Auth"))
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	}))
+	defer srv.Close()
+
+	svc := newTestInvokeSvc(t, NewMockIndexReader(gomock.NewController(t)), NewMockWorkspaceOps(gomock.NewController(t)))
+	req, err := http.NewRequest(http.MethodGet, srv.URL, nil)
+	require.NoError(t, err)
+
+	resp, err := svc.executeRequest(context.Background(), req, &model.Spec{
+		Auth:               &headerAuth{key: "X-Auth", value: "applied"},
+		HasSecureEndpoints: true,
+	}, &model.Endpoint{Name: "GET", Path: "/", RequiresAuth: true})
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestInvokeService_executeRequest_needsAuth_secureSpec_publicEndpoint(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Empty(t, r.Header.Get("X-Auth"))
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	}))
+	defer srv.Close()
+
+	svc := newTestInvokeSvc(t, NewMockIndexReader(gomock.NewController(t)), NewMockWorkspaceOps(gomock.NewController(t)))
+	req, err := http.NewRequest(http.MethodGet, srv.URL, nil)
+	require.NoError(t, err)
+
+	resp, err := svc.executeRequest(context.Background(), req, &model.Spec{
+		Auth:               &headerAuth{key: "X-Auth", value: "applied"},
+		HasSecureEndpoints: true,
+	}, &model.Endpoint{Name: "GET", Path: "/", RequiresAuth: false})
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestInvokeService_executeRequest_needsAuth_noSecureEndpoints_requiresAuth(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "applied", r.Header.Get("X-Auth"))
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	}))
+	defer srv.Close()
+
+	svc := newTestInvokeSvc(t, NewMockIndexReader(gomock.NewController(t)), NewMockWorkspaceOps(gomock.NewController(t)))
+	req, err := http.NewRequest(http.MethodGet, srv.URL, nil)
+	require.NoError(t, err)
+
+	resp, err := svc.executeRequest(context.Background(), req, &model.Spec{
+		Auth: &headerAuth{key: "X-Auth", value: "applied"},
+	}, &model.Endpoint{Name: "GET", Path: "/", RequiresAuth: true})
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestInvokeService_executeRequest_needsAuth_noSecureEndpoints_publicEndpoint(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "applied", r.Header.Get("X-Auth"))
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	}))
+	defer srv.Close()
+
+	svc := newTestInvokeSvc(t, NewMockIndexReader(gomock.NewController(t)), NewMockWorkspaceOps(gomock.NewController(t)))
+	req, err := http.NewRequest(http.MethodGet, srv.URL, nil)
+	require.NoError(t, err)
+
+	resp, err := svc.executeRequest(context.Background(), req, &model.Spec{
+		Auth: &headerAuth{key: "X-Auth", value: "applied"},
+	}, &model.Endpoint{Name: "GET", Path: "/", RequiresAuth: false})
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestInvokeService_executeRequest_needsAuth_noAuth(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Empty(t, r.Header.Get("X-Auth"))
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	}))
+	defer srv.Close()
+
+	svc := newTestInvokeSvc(t, NewMockIndexReader(gomock.NewController(t)), NewMockWorkspaceOps(gomock.NewController(t)))
+	req, err := http.NewRequest(http.MethodGet, srv.URL, nil)
+	require.NoError(t, err)
+
+	resp, err := svc.executeRequest(context.Background(), req, &model.Spec{}, &model.Endpoint{Name: "GET", Path: "/", RequiresAuth: true})
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
 func TestInvokeService_streamOrBuffer_small(t *testing.T) {
 	t.Parallel()
 
@@ -396,3 +502,19 @@ func (noopAuth) Type() auth.Type { return auth.NoAuth }
 func (noopAuth) Apply(_ *http.Request, _ *auth.Info) error { return nil }
 
 func (noopAuth) Validate() error { return nil }
+
+type headerAuth struct {
+	key   string
+	value string
+}
+
+func (h *headerAuth) New() error { return nil }
+
+func (h *headerAuth) Type() auth.Type { return auth.NoAuth }
+
+func (h *headerAuth) Apply(req *http.Request, _ *auth.Info) error {
+	req.Header.Set(h.key, h.value)
+	return nil
+}
+
+func (h *headerAuth) Validate() error { return nil }

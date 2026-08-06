@@ -160,6 +160,11 @@ func swaggerOpToOp(op *spec.Operation) *Operation {
 		}
 	}
 
+	if len(op.Security) > 0 {
+		o.Security = make([]map[string][]string, len(op.Security))
+		copy(o.Security, op.Security)
+	}
+
 	if op.Responses != nil {
 		for code, resp := range op.Responses.StatusCodeResponses {
 			r := &Response{

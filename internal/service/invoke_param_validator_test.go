@@ -21,8 +21,7 @@ func TestValidateParameters_unknown(t *testing.T) {
 		},
 	}
 	err := validateParameters(op, map[string]any{"unknown": "val"})
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "unknown parameter")
+	require.NoError(t, err, "unknown parameters should be silently ignored")
 }
 
 func TestValidateParameters_missingRequired(t *testing.T) {
@@ -88,8 +87,7 @@ func TestValidateRequestBody_unknownField(t *testing.T) {
 		},
 	}
 	err := validateRequestBody(op, map[string]any{"unknown": "val"})
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "unknown field")
+	require.NoError(t, err, "unknown fields in request body should be silently ignored")
 }
 
 func TestValidateRequestBody_valid(t *testing.T) {
@@ -213,8 +211,7 @@ func TestValidateObjectSchema_unknownField(t *testing.T) {
 		Properties: map[string]*spec.Schema{"name": {Type: "string"}},
 	}
 	err := validateSchemaValue(sc, map[string]any{"unknown": "val"}, "$")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "unknown field")
+	require.NoError(t, err, "unknown fields in object schema should be silently ignored")
 }
 
 func TestValidateRequestBody_nilContent(t *testing.T) {

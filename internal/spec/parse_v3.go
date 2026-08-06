@@ -144,6 +144,13 @@ func openapi3OpToOp(op *openapi3.Operation) *Operation {
 		}
 	}
 
+	if op.Security != nil && len(*op.Security) > 0 {
+		o.Security = make([]map[string][]string, len(*op.Security))
+		for i, sec := range *op.Security {
+			o.Security[i] = sec
+		}
+	}
+
 	for code, rref := range op.Responses.Map() {
 		if rref == nil || rref.Value == nil {
 			continue
