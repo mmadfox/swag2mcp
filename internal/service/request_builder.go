@@ -13,6 +13,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/mmadfox/swag2mcp/internal/httpclient"
@@ -191,9 +192,52 @@ func (builder *requestBuilder) filterParametersByLocation(location string) map[s
 		if !exists {
 			continue
 		}
-		result[parameter.Name] = fmt.Sprintf("%v", value)
+		result[parameter.Name] = formatParamValue(value)
 	}
 	return result
+}
+
+// formatParamValue converts a parameter value to its string representation,
+// handling numeric types correctly to avoid scientific notation (e.g. 7.31434e+06).
+func formatParamValue(value any) string {
+	switch v := value.(type) {
+	case float64:
+		if v == float64(int64(v)) {
+			return strconv.FormatInt(int64(v), 10)
+		}
+		return strconv.FormatFloat(v, 'f', -1, 64)
+	case float32:
+		if v == float32(int64(v)) {
+			return strconv.FormatInt(int64(v), 10)
+		}
+		return strconv.FormatFloat(float64(v), 'f', -1, 32)
+	case int:
+		return strconv.Itoa(v)
+	case int8:
+		return strconv.FormatInt(int64(v), 10)
+	case int16:
+		return strconv.FormatInt(int64(v), 10)
+	case int32:
+		return strconv.FormatInt(int64(v), 10)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	case uint:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint8:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint16:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint32:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint64:
+		return strconv.FormatUint(v, 10)
+	case bool:
+		return strconv.FormatBool(v)
+	case string:
+		return v
+	default:
+		return fmt.Sprintf("%v", value)
+	}
 }
 
 func (builder *requestBuilder) applyHeaders(req *http.Request) {

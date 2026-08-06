@@ -134,8 +134,6 @@ func (is *invokeService) Invoke(ctx context.Context, rq InvokeRequest) (InvokeRe
 		return InvokeResponse{}, NewBuildRequestError(err)
 	}
 
-	is.dumpRequest(req, sp.Domain)
-
 	return is.executeRequest(ctx, req, sp, ep)
 }
 
@@ -184,7 +182,12 @@ func (is *invokeService) executeRequest(
 			Timeout:       client.Timeout,
 			CheckRedirect: client.CheckRedirect,
 		}
+		if err := sp.Auth.Apply(req, nil); err != nil {
+			return InvokeResponse{}, NewAuthError("failed to apply auth", err)
+		}
 	}
+
+	is.dumpRequest(req, sp.Domain)
 
 	response, err := client.Do(req)
 	if err != nil {

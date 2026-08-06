@@ -387,3 +387,43 @@ func TestRequestBuilder_applyGlobalConfig_doesNotOverride(t *testing.T) {
 	b.applyGlobalConfig(req)
 	require.Equal(t, "application/json", req.Header.Get("Accept"))
 }
+
+func TestFormatParamValue(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		value any
+		want  string
+	}{
+		{name: "float64 whole number", value: float64(7314340), want: "7314340"},
+		{name: "float64 zero", value: float64(0), want: "0"},
+		{name: "float64 negative whole", value: float64(-42), want: "-42"},
+		{name: "float64 fractional", value: float64(3.14), want: "3.14"},
+		{name: "float64 large whole", value: float64(9999999999), want: "9999999999"},
+		{name: "float32 whole number", value: float32(100), want: "100"},
+		{name: "float32 fractional", value: float32(3.14), want: "3.14"},
+		{name: "int", value: 42, want: "42"},
+		{name: "int8", value: int8(8), want: "8"},
+		{name: "int16", value: int16(16), want: "16"},
+		{name: "int32", value: int32(32), want: "32"},
+		{name: "int64", value: int64(7314340), want: "7314340"},
+		{name: "uint", value: uint(42), want: "42"},
+		{name: "uint8", value: uint8(8), want: "8"},
+		{name: "uint16", value: uint16(16), want: "16"},
+		{name: "uint32", value: uint32(32), want: "32"},
+		{name: "uint64", value: uint64(64), want: "64"},
+		{name: "string", value: "hello", want: "hello"},
+		{name: "bool true", value: true, want: "true"},
+		{name: "bool false", value: false, want: "false"},
+		{name: "default fallback", value: struct{}{}, want: "{}"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := formatParamValue(tt.value)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
