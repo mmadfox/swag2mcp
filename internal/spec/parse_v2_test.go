@@ -68,6 +68,10 @@ func TestParse_requestBody(t *testing.T) {
 			require.NotNil(t, op.RequestBody, "expected request body")
 			assert.True(t, op.RequestBody.Required, "expected required request body")
 			require.NotNil(t, op.RequestBody.Content, "expected request body content")
+
+			for _, p := range op.Parameters {
+				assert.NotEqual(t, "body", p.In, "body param should not appear in parameters list")
+			}
 			break
 		}
 	}
@@ -406,4 +410,69 @@ func TestSwaggerParamsToParams_NilSchema(t *testing.T) {
 	assert.Equal(t, "x-api-key", result[0].Name)
 	assert.Equal(t, "header", result[0].In)
 	assert.Nil(t, result[0].Schema)
+}
+
+func TestSwaggerOpToOp_FiltersBodyParam(t *testing.T) {
+	t.Parallel()
+
+	op := swaggerOpToOp(&spec.Operation{
+		OperationProps: spec.OperationProps{
+			ID: "createUser",
+			Parameters: []spec.Parameter{
+				{
+					ParamProps: spec.ParamProps{
+						Name:     "userId",
+						In:       "path",
+						Required: true,
+					},
+					SimpleSchema: spec.SimpleSchema{Type: "string"},
+				},
+				{
+					ParamProps: spec.ParamProps{
+						Name:     "body",
+						In:       "body",
+						Required: true,
+					},
+					SimpleSchema: spec.SimpleSchema{Type: "object"},
+				},
+			},
+		},
+	})
+
+	require.NotNil(t, op.RequestBody, "expected request body")
+	assert.True(t, op.RequestBody.Required)
+
+	for _, p := range op.Parameters {
+		assert.NotEqual(t, "body", p.In, "body param should not appear in parameters")
+	}
+	assert.Len(t, op.Parameters, 1, "expected only non-body params")
+	assert.Equal(t, "userId", op.Parameters[0].Name)
+}
+
+func TestSwaggerParamsToParams_FiltersBodyParam(t *testing.T) {
+	t.Parallel()
+
+	params := []spec.Parameter{
+		{
+			ParamProps: spec.ParamProps{
+				Name: "id",
+				In:   "path",
+			},
+			SimpleSchema: spec.SimpleSchema{Type: "string"},
+		},
+		{
+			ParamProps: spec.ParamProps{
+				Name:     "body",
+				In:       "body",
+				Required: true,
+			},
+		},
+	}
+
+	result := swaggerParamsToParams(params)
+	for _, p := range result {
+		assert.NotEqual(t, "body", p.In, "body param should not appear in result")
+	}
+	assert.Len(t, result, 1, "expected only non-body params")
+	assert.Equal(t, "id", result[0].Name)
 }

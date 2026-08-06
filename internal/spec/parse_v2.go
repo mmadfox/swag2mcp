@@ -13,6 +13,9 @@ import (
 	"github.com/go-openapi/spec"
 )
 
+// paramInBody is the value of the In field for Swagger 2.0 body parameters.
+const paramInBody = "body"
+
 // parseV2 parses a Swagger 2.0 document into a unified Doc.
 func parseV2(data []byte) (*Doc, error) {
 	var swag spec.Swagger
@@ -90,6 +93,9 @@ func pathItemToOps(path string, item spec.PathItem) []*PathItem {
 func swaggerParamsToParams(params []spec.Parameter) []*Parameter {
 	out := make([]*Parameter, 0, len(params))
 	for _, p := range params {
+		if p.In == paramInBody {
+			continue
+		}
 		param := &Parameter{
 			Name:        p.Name,
 			In:          p.In,
@@ -122,6 +128,9 @@ func swaggerOpToOp(op *spec.Operation) *Operation {
 	}
 
 	for _, p := range op.Parameters {
+		if p.In == paramInBody {
+			continue
+		}
 		param := &Parameter{
 			Name:        p.Name,
 			In:          p.In,
@@ -178,7 +187,7 @@ func swaggerOpToOp(op *spec.Operation) *Operation {
 // findBodyParam finds the body parameter from a Swagger parameter list.
 func findBodyParam(params []spec.Parameter) *spec.Parameter {
 	for i := range params {
-		if params[i].In == "body" {
+		if params[i].In == paramInBody {
 			return &params[i]
 		}
 	}
