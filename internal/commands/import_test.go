@@ -8,6 +8,7 @@ package commands
 import (
 	"bytes"
 	"context"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -398,7 +399,7 @@ func TestRunImport_FromZip(t *testing.T) {
 	}
 
 	zipPath := filepath.Join(tmpDir, "backup.zip")
-	exportSvc, _ := service.New(service.WithWorkspace(exportWs))
+	exportSvc, _ := service.New(service.WithWorkspace(exportWs), service.WithLogger(slog.Default()))
 	_, exportErr := exportSvc.Export(context.Background(), service.ExportRequest{
 		OutputPath: zipPath,
 	})
@@ -453,7 +454,7 @@ func TestRunImport_FromZip_DetectByExtension(t *testing.T) {
 	}
 
 	zipPath := filepath.Join(tmpDir, "backup.zip")
-	exportSvc, _ := service.New(service.WithWorkspace(exportWs))
+	exportSvc, _ := service.New(service.WithWorkspace(exportWs), service.WithLogger(slog.Default()))
 	_, exportErr := exportSvc.Export(context.Background(), service.ExportRequest{
 		OutputPath: zipPath,
 	})

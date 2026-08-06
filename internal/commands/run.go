@@ -7,6 +7,7 @@ package commands
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/spf13/cobra"
 
@@ -55,7 +56,7 @@ func runRun(basePath string, ctx context.Context) error {
 		}
 	}
 
-	svc, svcErr := service.New()
+	svc, svcErr := service.New(service.WithLogger(slog.Default()))
 	if svcErr != nil {
 		return svcErr
 	}

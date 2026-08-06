@@ -7,6 +7,7 @@ package service
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/model"
@@ -39,7 +40,7 @@ func TestTagService_TagByID(t *testing.T) {
 				idx.EXPECT().TagByID(tt.tagID).Return(nil, errNotFound("tag", tt.tagID))
 			}
 
-			svc := newTagService(idx, fakeValidator{})
+			svc := newTagService(idx, fakeValidator{}, slog.Default())
 			resp, err := svc.TagByID(context.Background(), TagByIDRequest{ID: tt.tagID})
 			if tt.wantErr {
 				require.Error(t, err)
@@ -76,7 +77,7 @@ func TestTagService_TagsBySpec(t *testing.T) {
 				idx.EXPECT().TagsBySpec(tt.specID).Return(nil, errNotFound("spec", tt.specID))
 			}
 
-			svc := newTagService(idx, fakeValidator{})
+			svc := newTagService(idx, fakeValidator{}, slog.Default())
 			resp, err := svc.TagsBySpec(context.Background(), TagsBySpecRequest{SpecID: tt.specID})
 			if tt.wantErr {
 				require.Error(t, err)
@@ -117,7 +118,7 @@ func TestTagService_TagsByCollection(t *testing.T) {
 				idx.EXPECT().CollectionByID(tt.collectionID).Return(nil, errNotFound("collection", tt.collectionID))
 			}
 
-			svc := newTagService(idx, fakeValidator{})
+			svc := newTagService(idx, fakeValidator{}, slog.Default())
 			resp, err := svc.TagsByCollection(context.Background(), TagsByCollectionRequest{CollectionID: tt.collectionID})
 			if tt.wantErr {
 				require.Error(t, err)

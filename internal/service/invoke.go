@@ -59,6 +59,7 @@ type invokeService struct {
 	ws      WorkspaceOps
 	v       RequestValidator
 	dumpDir string
+	log     *slog.Logger
 }
 
 func newInvokeService(
@@ -67,6 +68,7 @@ func newInvokeService(
 	ws WorkspaceOps,
 	v RequestValidator,
 	dumpDir string,
+	log *slog.Logger,
 ) *invokeService {
 	return &invokeService{
 		ctx:     ctx,
@@ -74,6 +76,7 @@ func newInvokeService(
 		ws:      ws,
 		v:       v,
 		dumpDir: dumpDir,
+		log:     log,
 	}
 }
 
@@ -84,27 +87,27 @@ func (is *invokeService) Invoke(ctx context.Context, rq InvokeRequest) (InvokeRe
 	}
 
 	if !is.ctx.disableRateLimiter.Load() {
-		// Global rate limiter: caps the total number of invoke requests per second
-		// across all endpoints (default 5 req/s). Uses a fixed key.
 		if gl := is.ctx.loadGlobalRateLimiter(); gl != nil {
 			if err := gl.Allow(globalRateLimitKey); err != nil {
+				is.log.ErrorContext(ctx, "invoke failed: global rate limit", "endpoint_id", rq.EndpointID, "error", err)
 				return InvokeResponse{}, NewGlobalRateLimitError(err)
 			}
 		}
 
-		// Per-endpoint rate limiter: prevents calling the same endpoint more than once
-		// within the configured interval (default 10s). Uses the endpoint ID as the key.
 		if err := is.ctx.loadRateLimiter().Allow(rq.EndpointID); err != nil {
+			is.log.ErrorContext(ctx, "invoke failed: rate limit", "endpoint_id", rq.EndpointID, "error", err)
 			return InvokeResponse{}, NewRateLimitError(err)
 		}
 	}
 
 	ep, err := is.index.EndpointByID(rq.EndpointID)
 	if err != nil {
+		is.log.ErrorContext(ctx, "invoke failed: endpoint not found", "endpoint_id", rq.EndpointID, "error", err)
 		return InvokeResponse{}, NewEndpointNotFoundError(rq.EndpointID, err)
 	}
 
 	if ep.Operation == nil {
+		is.log.ErrorContext(ctx, "invoke failed: no operation", "endpoint_id", rq.EndpointID)
 		return InvokeResponse{}, NewInvokeError(
 			"This endpoint has no operation definition. It may be malformed or incomplete.",
 			nil,
@@ -113,24 +116,29 @@ func (is *invokeService) Invoke(ctx context.Context, rq InvokeRequest) (InvokeRe
 
 	sp, err := is.index.SpecByID(ep.SpecID)
 	if err != nil {
+		is.log.ErrorContext(ctx, "invoke failed: spec not found", "spec_id", ep.SpecID, "error", err)
 		return InvokeResponse{}, NewSpecNotFoundError(ep.SpecID, err)
 	}
 
 	coll, err := is.index.CollectionByID(ep.CollectionID)
 	if err != nil {
+		is.log.ErrorContext(ctx, "invoke failed: collection not found", "collection_id", ep.CollectionID, "error", err)
 		return InvokeResponse{}, NewCollectionNotFoundError(ep.CollectionID, err)
 	}
 
 	if err := validateParameters(ep.Operation, rq.Parameters); err != nil {
+		is.log.ErrorContext(ctx, "invoke failed: parameter validation", "endpoint_id", rq.EndpointID, "error", err)
 		return InvokeResponse{}, NewParameterValidationError(err)
 	}
 
 	if err := validateRequestBody(ep.Operation, rq.RequestBody); err != nil {
+		is.log.ErrorContext(ctx, "invoke failed: request body validation", "endpoint_id", rq.EndpointID, "error", err)
 		return InvokeResponse{}, NewRequestBodyValidationError(err)
 	}
 
 	req, err := is.buildRequest(ctx, sp, coll, ep, rq)
 	if err != nil {
+		is.log.ErrorContext(ctx, "invoke failed: build request", "endpoint_id", rq.EndpointID, "spec", sp.Domain, "error", err)
 		return InvokeResponse{}, NewBuildRequestError(err)
 	}
 
@@ -183,6 +191,7 @@ func (is *invokeService) executeRequest(
 			CheckRedirect: client.CheckRedirect,
 		}
 		if err := sp.Auth.Apply(req, nil); err != nil {
+			is.log.ErrorContext(req.Context(), "invoke failed: apply auth", "spec", sp.Domain, "error", err)
 			return InvokeResponse{}, NewAuthError("failed to apply auth", err)
 		}
 	}
@@ -191,6 +200,7 @@ func (is *invokeService) executeRequest(
 
 	response, err := client.Do(req)
 	if err != nil {
+		is.log.ErrorContext(req.Context(), "invoke failed: http request", "spec", sp.Domain, "error", err)
 		return InvokeResponse{}, NewHTTPRequestError(err)
 	}
 	defer response.Body.Close()
@@ -214,11 +224,17 @@ func (is *invokeService) streamOrBuffer(
 		headers[key] = strings.Join(values, ", ")
 	}
 
+	reqCtx := context.Background()
+	if r.Request != nil {
+		reqCtx = r.Request.Context()
+	}
+
 	buf := make([]byte, maxSize+1)
 	n, readErr := io.ReadFull(r.Body, buf)
 	buf = buf[:n]
 
 	if readErr != nil && readErr != io.ErrUnexpectedEOF && readErr != io.EOF {
+		is.log.ErrorContext(reqCtx, "invoke failed: read response", "spec", domain, "error", readErr)
 		return InvokeResponse{}, NewResponseReadError(readErr)
 	}
 
@@ -228,21 +244,25 @@ func (is *invokeService) streamOrBuffer(
 
 	fp := is.responseFilePath(domain, ep)
 	if err := os.MkdirAll(is.ws.ResponsesDir(), 0750); err != nil {
+		is.log.ErrorContext(reqCtx, "invoke failed: create responses dir", "error", err)
 		return InvokeResponse{}, NewDirCreateError(err)
 	}
 
 	f, err := os.Create(fp)
 	if err != nil {
+		is.log.ErrorContext(reqCtx, "invoke failed: create response file", "path", fp, "error", err)
 		return InvokeResponse{}, NewFileCreateError(err)
 	}
 	defer f.Close()
 
 	if _, err := f.Write(buf); err != nil {
+		is.log.ErrorContext(reqCtx, "invoke failed: write response file", "path", fp, "error", err)
 		return InvokeResponse{}, NewFileWriteError(err)
 	}
 
 	written, err := io.Copy(f, r.Body)
 	if err != nil {
+		is.log.ErrorContext(reqCtx, "invoke failed: stream response", "path", fp, "error", err)
 		return InvokeResponse{}, NewStreamError(err)
 	}
 
@@ -299,10 +319,10 @@ func (is *invokeService) dumpRequest(req *http.Request, domain string) {
 	fp := filepath.Join(is.dumpDir, fname)
 
 	if err := os.MkdirAll(is.dumpDir, 0750); err != nil {
-		slog.Default().WarnContext(req.Context(), "failed to create dump dir", "error", err)
+		is.log.WarnContext(req.Context(), "failed to create dump dir", "error", err)
 		return
 	}
 	if err := os.WriteFile(fp, d, 0600); err != nil {
-		slog.Default().WarnContext(req.Context(), "failed to write dump file", "error", err)
+		is.log.WarnContext(req.Context(), "failed to write dump file", "error", err)
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -41,11 +42,12 @@ type ImportedFile struct {
 }
 
 type importService struct {
-	ws WorkspaceOps
+	ws  WorkspaceOps
+	log *slog.Logger
 }
 
-func newImportService(ws WorkspaceOps) *importService {
-	return &importService{ws: ws}
+func newImportService(ws WorkspaceOps, log *slog.Logger) *importService {
+	return &importService{ws: ws, log: log}
 }
 
 // Import imports spec files into the workspace specs/ directory.
@@ -61,6 +63,7 @@ func (ims *importService) Import(ctx context.Context, req ImportRequest) (Import
 	if req.Name == "" {
 		derived := specFileNameBase(req.Source)
 		if derived == "" || derived == defaultSpecName {
+			ims.log.ErrorContext(ctx, "import failed: filename not found in URL", "source", req.Source)
 			return ImportResponse{}, NewImportSourceError(
 				errors.New("filename not found in URL"),
 			)
@@ -71,8 +74,9 @@ func (ims *importService) Import(ctx context.Context, req ImportRequest) (Import
 	return ims.importSingle(ctx, req)
 }
 
-func (ims *importService) importFromZip(_ context.Context, req ImportRequest) (ImportResponse, error) {
+func (ims *importService) importFromZip(ctx context.Context, req ImportRequest) (ImportResponse, error) {
 	if !workspace.IsSwag2mcpZip(req.ZipSource) {
+		ims.log.ErrorContext(ctx, "import failed: invalid zip", "source", req.ZipSource)
 		return ImportResponse{}, NewImportError(
 			fmt.Sprintf("File %q is not a valid swag2mcp backup archive.", req.ZipSource),
 			fmt.Errorf("invalid swag2mcp zip: %s", req.ZipSource),
@@ -81,6 +85,7 @@ func (ims *importService) importFromZip(_ context.Context, req ImportRequest) (I
 
 	extractDir, dirErr := os.MkdirTemp("", "swag2mcp-restore-*")
 	if dirErr != nil {
+		ims.log.ErrorContext(ctx, "import failed: create temp dir", "error", dirErr)
 		return ImportResponse{}, NewWorkspaceError(
 			"Failed to create temporary directory for extraction.",
 			dirErr,
@@ -89,6 +94,7 @@ func (ims *importService) importFromZip(_ context.Context, req ImportRequest) (I
 	defer os.RemoveAll(extractDir)
 
 	if extractErr := workspace.ExtractZip(req.ZipSource, extractDir); extractErr != nil {
+		ims.log.ErrorContext(ctx, "import failed: extract zip", "source", req.ZipSource, "error", extractErr)
 		return ImportResponse{}, NewWorkspaceError(
 			fmt.Sprintf("Failed to extract archive %q.", req.ZipSource),
 			extractErr,
@@ -96,6 +102,7 @@ func (ims *importService) importFromZip(_ context.Context, req ImportRequest) (I
 	}
 
 	if initErr := ims.ws.Init(); initErr != nil {
+		ims.log.ErrorContext(ctx, "import failed: init workspace", "error", initErr)
 		return ImportResponse{}, NewWorkspaceError(
 			"Failed to initialize workspace directories.",
 			initErr,
@@ -103,6 +110,7 @@ func (ims *importService) importFromZip(_ context.Context, req ImportRequest) (I
 	}
 
 	if copyErr := ims.ws.CopySpecsToWorkspace(extractDir); copyErr != nil {
+		ims.log.ErrorContext(ctx, "import failed: copy specs", "error", copyErr)
 		return ImportResponse{}, NewWorkspaceError(
 			"Failed to copy spec files from backup to workspace.",
 			copyErr,
@@ -110,6 +118,7 @@ func (ims *importService) importFromZip(_ context.Context, req ImportRequest) (I
 	}
 
 	if copyErr := ims.ws.CopyAuthScriptsToWorkspace(extractDir); copyErr != nil {
+		ims.log.ErrorContext(ctx, "import failed: copy auth scripts", "error", copyErr)
 		return ImportResponse{}, NewWorkspaceError(
 			"Failed to copy auth scripts from backup to workspace.",
 			copyErr,
@@ -118,6 +127,7 @@ func (ims *importService) importFromZip(_ context.Context, req ImportRequest) (I
 
 	cfgData, cfgReadErr := workspace.ReadConfigFromExport(extractDir)
 	if cfgReadErr != nil {
+		ims.log.ErrorContext(ctx, "import failed: read config from export", "error", cfgReadErr)
 		return ImportResponse{}, NewConfigError(
 			"Failed to read configuration from backup.",
 			cfgReadErr,
@@ -126,6 +136,7 @@ func (ims *importService) importFromZip(_ context.Context, req ImportRequest) (I
 
 	cfgPath := ims.ws.ConfigPath()
 	if writeErr := os.WriteFile(cfgPath, cfgData, 0600); writeErr != nil {
+		ims.log.ErrorContext(ctx, "import failed: write config", "path", cfgPath, "error", writeErr)
 		return ImportResponse{}, NewConfigError(
 			fmt.Sprintf("Failed to write configuration to %q.", cfgPath),
 			writeErr,
@@ -134,6 +145,7 @@ func (ims *importService) importFromZip(_ context.Context, req ImportRequest) (I
 
 	specs, listErr := ims.ws.ListSpecs()
 	if listErr != nil {
+		ims.log.ErrorContext(ctx, "import failed: list specs", "error", listErr)
 		return ImportResponse{}, NewWorkspaceError(
 			"Failed to list imported spec files.",
 			listErr,
@@ -157,6 +169,7 @@ func (ims *importService) importFromZip(_ context.Context, req ImportRequest) (I
 func (ims *importService) importSingle(ctx context.Context, req ImportRequest) (ImportResponse, error) {
 	data, err := ims.ws.DownloadSpec(ctx, req.Source)
 	if err != nil {
+		ims.log.ErrorContext(ctx, "import failed: download spec", "source", req.Source, "error", err)
 		return ImportResponse{}, NewImportError(
 			fmt.Sprintf("Failed to download spec from %q.", req.Source),
 			err,
@@ -184,6 +197,7 @@ func (ims *importService) importSingle(ctx context.Context, req ImportRequest) (
 		path, err = ims.ws.SaveSpec(name, data)
 	}
 	if err != nil {
+		ims.log.ErrorContext(ctx, "import failed: save spec", "name", name, "error", err)
 		return ImportResponse{}, NewImportError(
 			fmt.Sprintf("Failed to save spec as %q. The filename may already exist.", name),
 			err,
@@ -203,6 +217,7 @@ func (ims *importService) importSingle(ctx context.Context, req ImportRequest) (
 
 func (ims *importService) importSpecs(ctx context.Context, req ImportRequest) (ImportResponse, error) {
 	if req.ConfFilePath == "" {
+		ims.log.ErrorContext(ctx, "import failed: config file path required")
 		return ImportResponse{}, NewImportError(
 			"Configuration file path is required for bulk import.",
 			errors.New("config file path is empty"),
@@ -211,6 +226,7 @@ func (ims *importService) importSpecs(ctx context.Context, req ImportRequest) (I
 
 	cfg, err := config.Load(req.ConfFilePath)
 	if err != nil {
+		ims.log.ErrorContext(ctx, "import failed: load config", "path", req.ConfFilePath, "error", err)
 		return ImportResponse{}, NewConfigError(
 			fmt.Sprintf("Failed to load configuration from %q.", req.ConfFilePath),
 			err,
@@ -231,6 +247,7 @@ func (ims *importService) importSpecs(ctx context.Context, req ImportRequest) (I
 		for _, d := range req.SpecFilter {
 			d = strings.TrimSpace(d)
 			if _, ok := active[d]; !ok {
+				ims.log.ErrorContext(ctx, "import failed: spec not found in filter", "spec", d)
 				return ImportResponse{}, NewImportSpecNotFoundError(d)
 			}
 		}
@@ -253,6 +270,7 @@ func (ims *importService) importSpecs(ctx context.Context, req ImportRequest) (I
 			var importErr error
 			imported, updated, importErr = ims.importCollection(ctx, spec.Domain, coll, req.ConfFilePath, imported, updated, j)
 			if importErr != nil {
+				ims.log.ErrorContext(ctx, "import failed: import collection", "spec", spec.Domain, "collection", coll.Title, "error", importErr)
 				return ImportResponse{}, importErr
 			}
 		}
@@ -260,12 +278,15 @@ func (ims *importService) importSpecs(ctx context.Context, req ImportRequest) (I
 
 	if !updated {
 		if len(req.SpecFilter) == 0 {
+			ims.log.ErrorContext(ctx, "import failed: no active specs found")
 			return ImportResponse{}, NewImportNoMatchError("no active specs found in config")
 		}
+		ims.log.ErrorContext(ctx, "import failed: no match for filter", "filter", req.SpecFilter)
 		return ImportResponse{}, NewImportNoMatchError(fmt.Sprintf("%v", req.SpecFilter))
 	}
 
 	if err := config.Save(cfg, req.ConfFilePath); err != nil {
+		ims.log.ErrorContext(ctx, "import failed: save config", "path", req.ConfFilePath, "error", err)
 		return ImportResponse{}, NewConfigError(
 			fmt.Sprintf("Failed to save updated configuration to %q.", req.ConfFilePath),
 			err,
@@ -295,6 +316,7 @@ func (ims *importService) importCollection(
 			absPath = filepath.Join(filepath.Dir(confFilePath), absPath)
 		}
 		if !fileExists(absPath) {
+			ims.log.ErrorContext(ctx, "import failed: local spec not found", "path", coll.Location)
 			return imported, updated, NewImportError(
 				fmt.Sprintf("Spec file %q not found. The location points to a "+
 					"local spec file that does not exist. Make sure the file "+
@@ -327,6 +349,7 @@ func (ims *importService) importCollection(
 			})
 			return imported, true, nil
 		}
+		ims.log.ErrorContext(ctx, "import failed: download spec", "location", coll.Location, "error", err)
 		return imported, updated, NewImportError(
 			fmt.Sprintf("Failed to download spec for collection %q.", coll.Title),
 			err,
@@ -335,6 +358,7 @@ func (ims *importService) importCollection(
 
 	sp, err := ims.ws.SaveOrUpdateSpec(name, data)
 	if err != nil {
+		ims.log.ErrorContext(ctx, "import failed: save spec", "name", name, "error", err)
 		return imported, updated, NewImportError(
 			fmt.Sprintf("Failed to save spec as %q.", name),
 			err,

@@ -7,21 +7,23 @@ package service
 
 import (
 	"context"
+	"log/slog"
 	"sort"
 )
 
 type collectionService struct {
 	index IndexReader
 	v     RequestValidator
+	log   *slog.Logger
 }
 
-func newCollectionService(index IndexReader, v RequestValidator) *collectionService {
-	return &collectionService{index: index, v: v}
+func newCollectionService(index IndexReader, v RequestValidator, log *slog.Logger) *collectionService {
+	return &collectionService{index: index, v: v, log: log}
 }
 
 // CollectionsBySpec returns a list of all available collections for a given spec.
 func (cs *collectionService) CollectionsBySpec(
-	_ context.Context,
+	ctx context.Context,
 	rq CollectionsRequest,
 ) (CollectionsResponse, error) {
 	if err := cs.v.Struct(rq); err != nil {
@@ -30,11 +32,13 @@ func (cs *collectionService) CollectionsBySpec(
 
 	sp, err := cs.index.SpecByID(rq.SpecID)
 	if err != nil {
+		cs.log.ErrorContext(ctx, "collections_by_spec failed: spec not found", "spec_id", rq.SpecID, "error", err)
 		return CollectionsResponse{}, NewSpecNotFoundError(rq.SpecID, err)
 	}
 
 	colls, err := cs.index.CollectionsBySpec(rq.SpecID)
 	if err != nil {
+		cs.log.ErrorContext(ctx, "collections_by_spec failed: collections not found", "spec_id", rq.SpecID, "error", err)
 		return CollectionsResponse{}, NewSpecNotFoundError(rq.SpecID, err)
 	}
 
@@ -64,7 +68,7 @@ func (cs *collectionService) CollectionsBySpec(
 
 // CollectionByID returns a collection by its ID, including its spec and tags.
 func (cs *collectionService) CollectionByID(
-	_ context.Context,
+	ctx context.Context,
 	rq CollectionByIDRequest,
 ) (CollectionByIDResponse, error) {
 	if err := cs.v.Struct(rq); err != nil {
@@ -74,6 +78,7 @@ func (cs *collectionService) CollectionByID(
 	var r CollectionByIDResponse
 	coll, err := cs.index.CollectionByID(rq.ID)
 	if err != nil {
+		cs.log.ErrorContext(ctx, "collection_by_id failed: collection not found", "collection_id", rq.ID, "error", err)
 		return CollectionByIDResponse{}, NewCollectionNotFoundError(rq.ID, err)
 	}
 	r.Collection = Collection{
@@ -84,6 +89,7 @@ func (cs *collectionService) CollectionByID(
 
 	sp, err := cs.index.SpecByID(coll.SpecID)
 	if err != nil {
+		cs.log.ErrorContext(ctx, "collection_by_id failed: spec not found", "spec_id", coll.SpecID, "error", err)
 		return CollectionByIDResponse{}, NewSpecNotFoundError(coll.SpecID, err)
 	}
 	r.Spec = Spec{

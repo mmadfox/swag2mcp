@@ -8,6 +8,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"testing"
@@ -32,7 +33,7 @@ func writeTestConfig(t *testing.T, dir string, spec config.Spec) string {
 func TestImportService_Import_noSource(t *testing.T) {
 	t.Parallel()
 
-	svc := newImportService(NewMockWorkspaceOps(gomock.NewController(t)))
+	svc := newImportService(NewMockWorkspaceOps(gomock.NewController(t)), slog.Default())
 	_, err := svc.Import(context.Background(), ImportRequest{})
 	require.Error(t, err)
 }
@@ -45,7 +46,7 @@ func TestImportService_Import_sourceWithoutName_withFilename(t *testing.T) {
 	ws.EXPECT().DownloadSpec(gomock.Any(), "https://example.com/spec.yaml").Return([]byte("data"), nil)
 	ws.EXPECT().SaveSpec("spec.yaml", []byte("data")).Return("/specs/spec.yaml", nil)
 
-	svc := newImportService(ws)
+	svc := newImportService(ws, slog.Default())
 	resp, err := svc.Import(context.Background(), ImportRequest{Source: "https://example.com/spec.yaml"})
 	require.NoError(t, err)
 	require.Len(t, resp.Files, 1)
@@ -75,7 +76,7 @@ func TestImportService_importSpecs_errorWhenLocalSpecPathMissing(t *testing.T) {
 	ws.EXPECT().DownloadSpec(gomock.Any(), gomock.Any()).Times(0)
 	ws.EXPECT().SaveOrUpdateSpec(gomock.Any(), gomock.Any()).Times(0)
 
-	svc := newImportService(ws)
+	svc := newImportService(ws, slog.Default())
 	_, err := svc.Import(context.Background(), ImportRequest{
 		SpecFilter:   []string{"meteo"},
 		ConfFilePath: cfgPath,
@@ -86,7 +87,7 @@ func TestImportService_importSpecs_errorWhenLocalSpecPathMissing(t *testing.T) {
 func TestImportService_Import_sourceWithoutName_noFilename(t *testing.T) {
 	t.Parallel()
 
-	svc := newImportService(NewMockWorkspaceOps(gomock.NewController(t)))
+	svc := newImportService(NewMockWorkspaceOps(gomock.NewController(t)), slog.Default())
 	_, err := svc.Import(context.Background(), ImportRequest{Source: "https://example.com/"})
 	require.Error(t, err)
 }
@@ -99,7 +100,7 @@ func TestImportService_importSingle_success(t *testing.T) {
 	ws.EXPECT().DownloadSpec(gomock.Any(), "https://example.com/spec.yaml").Return([]byte("data"), nil)
 	ws.EXPECT().SaveSpec("test.yaml", []byte("data")).Return("/specs/test.yaml", nil)
 
-	svc := newImportService(ws)
+	svc := newImportService(ws, slog.Default())
 	resp, err := svc.Import(context.Background(), ImportRequest{
 		Source: "https://example.com/spec.yaml",
 		Name:   "test.yaml",
@@ -117,7 +118,7 @@ func TestImportService_importSingle_force(t *testing.T) {
 	ws.EXPECT().DownloadSpec(gomock.Any(), "https://example.com/spec.yaml").Return([]byte("data"), nil)
 	ws.EXPECT().SaveOrUpdateSpec("test.yaml", []byte("data")).Return("/specs/test.yaml", nil)
 
-	svc := newImportService(ws)
+	svc := newImportService(ws, slog.Default())
 	resp, err := svc.Import(context.Background(), ImportRequest{
 		Source: "https://example.com/spec.yaml",
 		Name:   "test.yaml",
@@ -135,7 +136,7 @@ func TestImportService_importSingle_downloadError(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().DownloadSpec(gomock.Any(), gomock.Any()).Return(nil, errors.New("download failed"))
 
-	svc := newImportService(ws)
+	svc := newImportService(ws, slog.Default())
 	_, err := svc.Import(context.Background(), ImportRequest{
 		Source: "https://example.com/spec.yaml",
 		Name:   "test.yaml",
@@ -146,7 +147,7 @@ func TestImportService_importSingle_downloadError(t *testing.T) {
 func TestImportService_importSpecs_noConfigPath(t *testing.T) {
 	t.Parallel()
 
-	svc := newImportService(NewMockWorkspaceOps(gomock.NewController(t)))
+	svc := newImportService(NewMockWorkspaceOps(gomock.NewController(t)), slog.Default())
 	_, err := svc.Import(context.Background(), ImportRequest{
 		SpecFilter: []string{"api"},
 	})
@@ -159,7 +160,7 @@ func TestImportService_importSpecs_noMatch(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	ws := NewMockWorkspaceOps(ctrl)
 
-	svc := newImportService(ws)
+	svc := newImportService(ws, slog.Default())
 	_, err := svc.Import(context.Background(), ImportRequest{
 		SpecFilter:   []string{"nonexistent"},
 		ConfFilePath: "testdata/swag2mcp.yaml",
@@ -192,7 +193,7 @@ func TestImportService_importSpecs_skipWhenExistsAndUnreachable(t *testing.T) {
 	ws.EXPECT().DownloadSpec(gomock.Any(), gomock.Any()).Return(nil, errors.New("unreachable"))
 	ws.EXPECT().SaveOrUpdateSpec(gomock.Any(), gomock.Any()).Times(0)
 
-	svc := newImportService(ws)
+	svc := newImportService(ws, slog.Default())
 	resp, err := svc.Import(context.Background(), ImportRequest{
 		SpecFilter:   []string{"meteo"},
 		ConfFilePath: cfgPath,
@@ -227,7 +228,7 @@ func TestImportService_importSpecs_updateWhenExistsAndReachable(t *testing.T) {
 	ws.EXPECT().DownloadSpec(gomock.Any(), gomock.Any()).Return([]byte("updated"), nil)
 	ws.EXPECT().SaveOrUpdateSpec("meteo-pet-store.yaml", []byte("updated")).Return(specPath, nil)
 
-	svc := newImportService(ws)
+	svc := newImportService(ws, slog.Default())
 	resp, err := svc.Import(context.Background(), ImportRequest{
 		SpecFilter:   []string{"meteo"},
 		ConfFilePath: cfgPath,
@@ -257,7 +258,7 @@ func TestImportService_importSpecs_errorWhenNotExistsAndUnreachable(t *testing.T
 	ws.EXPECT().SpecPath("meteo-pet-store.yaml").Return(filepath.Join(tmpDir, "nonexistent", "meteo-pet-store.yaml"))
 	ws.EXPECT().DownloadSpec(gomock.Any(), gomock.Any()).Return(nil, errors.New("unreachable"))
 
-	svc := newImportService(ws)
+	svc := newImportService(ws, slog.Default())
 	_, err := svc.Import(context.Background(), ImportRequest{
 		SpecFilter:   []string{"meteo"},
 		ConfFilePath: cfgPath,
@@ -268,7 +269,7 @@ func TestImportService_importSpecs_errorWhenNotExistsAndUnreachable(t *testing.T
 func TestImportService_importFromZip_invalid(t *testing.T) {
 	t.Parallel()
 
-	svc := newImportService(NewMockWorkspaceOps(gomock.NewController(t)))
+	svc := newImportService(NewMockWorkspaceOps(gomock.NewController(t)), slog.Default())
 	_, err := svc.Import(context.Background(), ImportRequest{
 		ZipSource: "/nonexistent/backup.zip",
 	})
@@ -347,7 +348,7 @@ func TestImportService_importSpecs_skipsLocalSpecPath(t *testing.T) {
 	ws.EXPECT().DownloadSpec(gomock.Any(), gomock.Any()).Times(0)
 	ws.EXPECT().SaveOrUpdateSpec(gomock.Any(), gomock.Any()).Times(0)
 
-	svc := newImportService(ws)
+	svc := newImportService(ws, slog.Default())
 	resp, err := svc.Import(context.Background(), ImportRequest{
 		SpecFilter:   []string{"meteo"},
 		ConfFilePath: cfgPath,

@@ -8,6 +8,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"testing"
 
@@ -54,7 +55,7 @@ func TestAuthService_Auth(t *testing.T) {
 				idx.EXPECT().SpecByID(tt.specID).Return(nil, errNotFound("spec", tt.specID))
 			}
 
-			svc := newAuthService(idx, func() bool { return tt.disabled })
+			svc := newAuthService(idx, func() bool { return tt.disabled }, slog.Default())
 			resp, err := svc.Auth(context.Background(), AuthRequest{SpecID: tt.specID})
 			if tt.wantErr {
 				require.Error(t, err)
@@ -75,7 +76,7 @@ func TestAuthService_Auth_nilAuth(t *testing.T) {
 	idx := NewMockIndexReader(ctrl)
 	idx.EXPECT().SpecByID("s1").Return(&model.Spec{ID: "s1"}, nil)
 
-	svc := newAuthService(idx, func() bool { return false })
+	svc := newAuthService(idx, func() bool { return false }, slog.Default())
 	resp, err := svc.Auth(context.Background(), AuthRequest{SpecID: "s1"})
 	require.NoError(t, err)
 	require.Empty(t, resp.Token)
@@ -88,7 +89,7 @@ func TestAuthService_Auth_applyError(t *testing.T) {
 	idx := NewMockIndexReader(ctrl)
 	idx.EXPECT().SpecByID("s1").Return(&model.Spec{ID: "s1", Auth: errAuthClient{}}, nil)
 
-	svc := newAuthService(idx, func() bool { return false })
+	svc := newAuthService(idx, func() bool { return false }, slog.Default())
 	_, err := svc.Auth(context.Background(), AuthRequest{SpecID: "s1"})
 	require.Error(t, err)
 }

@@ -7,21 +7,23 @@ package service
 
 import (
 	"context"
+	"log/slog"
 	"sort"
 )
 
 type tagService struct {
 	index IndexReader
 	v     RequestValidator
+	log   *slog.Logger
 }
 
-func newTagService(index IndexReader, v RequestValidator) *tagService {
-	return &tagService{index: index, v: v}
+func newTagService(index IndexReader, v RequestValidator, log *slog.Logger) *tagService {
+	return &tagService{index: index, v: v, log: log}
 }
 
 // TagsByCollection returns a list of all available tags for a given collection.
 func (ts *tagService) TagsByCollection(
-	_ context.Context,
+	ctx context.Context,
 	rq TagsByCollectionRequest,
 ) (TagsByCollectionResponse, error) {
 	if err := ts.v.Struct(rq); err != nil {
@@ -30,16 +32,19 @@ func (ts *tagService) TagsByCollection(
 
 	coll, err := ts.index.CollectionByID(rq.CollectionID)
 	if err != nil {
+		ts.log.ErrorContext(ctx, "tags_by_collection failed: collection not found", "collection_id", rq.CollectionID, "error", err)
 		return TagsByCollectionResponse{}, NewCollectionNotFoundError(rq.CollectionID, err)
 	}
 
 	sp, err := ts.index.SpecByID(coll.SpecID)
 	if err != nil {
+		ts.log.ErrorContext(ctx, "tags_by_collection failed: spec not found", "spec_id", coll.SpecID, "error", err)
 		return TagsByCollectionResponse{}, NewSpecNotFoundError(coll.SpecID, err)
 	}
 
 	tgs, err := ts.index.TagsByCollection(rq.CollectionID)
 	if err != nil {
+		ts.log.ErrorContext(ctx, "tags_by_collection failed: tags not found", "collection_id", rq.CollectionID, "error", err)
 		return TagsByCollectionResponse{}, NewCollectionNotFoundError(rq.CollectionID, err)
 	}
 
@@ -72,7 +77,7 @@ func (ts *tagService) TagsByCollection(
 
 // TagByID returns a tag by its ID.
 func (ts *tagService) TagByID(
-	_ context.Context,
+	ctx context.Context,
 	rq TagByIDRequest,
 ) (TagByIDResponse, error) {
 	if err := ts.v.Struct(rq); err != nil {
@@ -81,6 +86,7 @@ func (ts *tagService) TagByID(
 
 	tag, err := ts.index.TagByID(rq.ID)
 	if err != nil {
+		ts.log.ErrorContext(ctx, "tag_by_id failed: tag not found", "tag_id", rq.ID, "error", err)
 		return TagByIDResponse{}, NewTagNotFoundError(rq.ID, err)
 	}
 
@@ -97,7 +103,7 @@ func (ts *tagService) TagByID(
 
 // TagsBySpec returns a list of all available tags for a given spec.
 func (ts *tagService) TagsBySpec(
-	_ context.Context,
+	ctx context.Context,
 	rq TagsBySpecRequest,
 ) (TagsBySpecResponse, error) {
 	if err := ts.v.Struct(rq); err != nil {
@@ -106,6 +112,7 @@ func (ts *tagService) TagsBySpec(
 
 	tgs, err := ts.index.TagsBySpec(rq.SpecID)
 	if err != nil {
+		ts.log.ErrorContext(ctx, "tags_by_spec failed: spec not found", "spec_id", rq.SpecID, "error", err)
 		return TagsBySpecResponse{}, NewSpecNotFoundError(rq.SpecID, err)
 	}
 

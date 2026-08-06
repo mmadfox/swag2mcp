@@ -7,6 +7,7 @@ package service
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/model"
@@ -50,7 +51,7 @@ func TestInspectService_Inspect(t *testing.T) {
 				idx.EXPECT().EndpointByID(tt.epID).Return(nil, errNotFound("endpoint", tt.epID))
 			}
 
-			svc := newInspectService(idx, fakeValidator{})
+			svc := newInspectService(idx, fakeValidator{}, slog.Default())
 			resp, err := svc.Inspect(context.Background(), InspectRequest{EndpointID: tt.epID})
 			if tt.wantErr {
 				require.Error(t, err)

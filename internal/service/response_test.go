@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"testing"
@@ -21,7 +22,7 @@ import (
 func TestResponseService_ResponseOutline_validationError(t *testing.T) {
 	t.Parallel()
 
-	svc := newResponseService(newServiceContext(), NewMockWorkspaceOps(gomock.NewController(t)), strictValidator{})
+	svc := newResponseService(newServiceContext(), NewMockWorkspaceOps(gomock.NewController(t)), strictValidator{}, slog.Default())
 	_, err := svc.ResponseOutline(context.Background(), ResponseOutlineRequest{})
 	require.Error(t, err)
 }
@@ -29,7 +30,7 @@ func TestResponseService_ResponseOutline_validationError(t *testing.T) {
 func TestResponseService_ResponseCompress_validationError(t *testing.T) {
 	t.Parallel()
 
-	svc := newResponseService(newServiceContext(), NewMockWorkspaceOps(gomock.NewController(t)), strictValidator{})
+	svc := newResponseService(newServiceContext(), NewMockWorkspaceOps(gomock.NewController(t)), strictValidator{}, slog.Default())
 	_, err := svc.ResponseCompress(context.Background(), ResponseCompressRequest{})
 	require.Error(t, err)
 }
@@ -37,7 +38,7 @@ func TestResponseService_ResponseCompress_validationError(t *testing.T) {
 func TestResponseService_ResponseSlice_validationError(t *testing.T) {
 	t.Parallel()
 
-	svc := newResponseService(newServiceContext(), NewMockWorkspaceOps(gomock.NewController(t)), strictValidator{})
+	svc := newResponseService(newServiceContext(), NewMockWorkspaceOps(gomock.NewController(t)), strictValidator{}, slog.Default())
 	_, err := svc.ResponseSlice(context.Background(), ResponseSliceRequest{})
 	require.Error(t, err)
 }
@@ -59,7 +60,7 @@ func TestResponseService_ResponseOutline_success(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	resp, err := svc.ResponseOutline(context.Background(), ResponseOutlineRequest{Path: fp})
 	require.NoError(t, err)
 	require.Equal(t, "object", resp.Outline.Type)
@@ -72,7 +73,7 @@ func TestResponseService_ResponseOutline_fileNotFound(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(t.TempDir()).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	_, err := svc.ResponseOutline(context.Background(), ResponseOutlineRequest{Path: "/nonexistent/file.json"})
 	require.Error(t, err)
 }
@@ -94,7 +95,7 @@ func TestResponseService_ResponseCompress_success(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	resp, err := svc.ResponseCompress(context.Background(), ResponseCompressRequest{
 		Path: fp,
 		Mode: reader.CompressKeysOnly,
@@ -127,7 +128,7 @@ func TestResponseService_ResponseCompress_tooLarge(t *testing.T) {
 	ctx := newServiceContext()
 	ctx.maxResponseSize.Store(10)
 
-	svc := newResponseService(ctx, ws, fakeValidator{})
+	svc := newResponseService(ctx, ws, fakeValidator{}, slog.Default())
 	resp, err := svc.ResponseCompress(context.Background(), ResponseCompressRequest{
 		Path: fp,
 		Mode: reader.CompressKeysOnly,
@@ -154,7 +155,7 @@ func TestResponseService_ResponseSlice_success(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	resp, err := svc.ResponseSlice(context.Background(), ResponseSliceRequest{
 		Path:     fp,
 		JSONPath: "name",
@@ -183,7 +184,7 @@ func TestResponseService_ResponseSlice_tooLarge(t *testing.T) {
 	ctx := newServiceContext()
 	ctx.maxResponseSize.Store(10)
 
-	svc := newResponseService(ctx, ws, fakeValidator{})
+	svc := newResponseService(ctx, ws, fakeValidator{}, slog.Default())
 	_, err = svc.ResponseSlice(context.Background(), ResponseSliceRequest{
 		Path:     fp,
 		JSONPath: "items",
@@ -201,7 +202,7 @@ func TestResponseService_saveReaderResult(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	ref, err := svc.saveReaderResult("", map[string]any{"key": "val"})
 	require.NoError(t, err)
 	require.FileExists(t, ref.Path)
@@ -218,7 +219,7 @@ func TestResponseService_saveReaderResult_string(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	ref, err := svc.saveReaderResult("", "raw string data")
 	require.NoError(t, err)
 	require.FileExists(t, ref.Path)
@@ -234,7 +235,7 @@ func TestResponseService_saveReaderResult_bytes(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	ref, err := svc.saveReaderResult("", []byte(`{"raw": true}`))
 	require.NoError(t, err)
 	require.FileExists(t, ref.Path)
@@ -253,7 +254,7 @@ func TestResponseService_saveReaderResult_maxSizeHint(t *testing.T) {
 	ctx := newServiceContext()
 	ctx.maxResponseSize.Store(2048)
 
-	svc := newResponseService(ctx, ws, fakeValidator{})
+	svc := newResponseService(ctx, ws, fakeValidator{}, slog.Default())
 	ref, err := svc.saveReaderResult("", map[string]any{"key": "val"})
 	require.NoError(t, err)
 	require.Contains(t, ref.MaxSizeHint, "KB")
@@ -262,7 +263,7 @@ func TestResponseService_saveReaderResult_maxSizeHint(t *testing.T) {
 func TestResponseService_ResponseFilter_validationError(t *testing.T) {
 	t.Parallel()
 
-	svc := newResponseService(newServiceContext(), NewMockWorkspaceOps(gomock.NewController(t)), strictValidator{})
+	svc := newResponseService(newServiceContext(), NewMockWorkspaceOps(gomock.NewController(t)), strictValidator{}, slog.Default())
 	_, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{})
 	require.Error(t, err)
 }
@@ -274,7 +275,7 @@ func TestResponseService_ResponseFilter_fileNotFound(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(t.TempDir()).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	_, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
 		Path:     "/nonexistent/file.json",
 		JSONPath: "items",
@@ -305,7 +306,7 @@ func TestResponseService_ResponseFilter_search(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
 		Path:     fp,
 		JSONPath: "items",
@@ -340,7 +341,7 @@ func TestResponseService_ResponseFilter_filter(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
 		Path:     fp,
 		JSONPath: "items",
@@ -372,7 +373,7 @@ func TestResponseService_ResponseFilter_pagination(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 
 	// Page 1
 	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
@@ -414,7 +415,7 @@ func TestResponseService_ResponseFilter_emptyArray(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
 		Path:     fp,
 		JSONPath: "items",
@@ -441,7 +442,7 @@ func TestResponseService_ResponseFilter_invalidFilter(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	_, err = svc.ResponseFilter(context.Background(), ResponseFilterRequest{
 		Path:     fp,
 		JSONPath: "items",
@@ -474,7 +475,7 @@ func TestResponseService_ResponseFilter_nestedJSONPath(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
 		Path:     fp,
 		JSONPath: "data.items",
@@ -506,7 +507,7 @@ func TestResponseService_ResponseFilter_containsFilter(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
 		Path:     fp,
 		JSONPath: "items",
@@ -538,7 +539,7 @@ func TestResponseService_ResponseFilter_notEqualFilter(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
 		Path:     fp,
 		JSONPath: "items",
@@ -569,7 +570,7 @@ func TestResponseService_ResponseFilter_pageOutOfRange(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
 		Path:     fp,
 		JSONPath: "items",
@@ -602,7 +603,7 @@ func TestResponseService_ResponseFilter_defaultPageSize(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
 		Path:     fp,
 		JSONPath: "items",
@@ -633,7 +634,7 @@ func TestResponseService_ResponseFilter_maxPageSize(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
 		Path:     fp,
 		JSONPath: "items",
@@ -665,7 +666,7 @@ func TestResponseService_ResponseFilter_rootArray(t *testing.T) {
 	ws := NewMockWorkspaceOps(ctrl)
 	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
 
-	svc := newResponseService(newServiceContext(), ws, fakeValidator{})
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
 
 	// Search with empty jsonPath (root array)
 	resp, err := svc.ResponseFilter(context.Background(), ResponseFilterRequest{
@@ -713,7 +714,7 @@ func TestResponseService_ResponseFilter_rootArrayStreaming(t *testing.T) {
 	fp := filepath.Join(respDir, "root-stream.json")
 	require.NoError(t, os.WriteFile(fp, raw, 0o600))
 
-	svc := newResponseService(newServiceContext(), NewMockWorkspaceOps(gomock.NewController(t)), fakeValidator{})
+	svc := newResponseService(newServiceContext(), NewMockWorkspaceOps(gomock.NewController(t)), fakeValidator{}, slog.Default())
 
 	// Call filterArrayStreaming directly to test streaming strategy
 	matched, total, err := svc.filterArrayStreaming(fp, "", "item-50", "", 1, 10)

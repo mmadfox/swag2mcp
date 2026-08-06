@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
@@ -96,18 +97,20 @@ type responseService struct {
 	ctx *serviceContext
 	ws  WorkspaceOps
 	v   RequestValidator
+	log *slog.Logger
 }
 
 func newResponseService(
 	ctx *serviceContext,
 	ws WorkspaceOps,
 	v RequestValidator,
+	log *slog.Logger,
 ) *responseService {
-	return &responseService{ctx: ctx, ws: ws, v: v}
+	return &responseService{ctx: ctx, ws: ws, v: v, log: log}
 }
 
 // ResponseOutline returns a high-level structural summary of a saved response.
-func (rs *responseService) ResponseOutline(_ context.Context, req ResponseOutlineRequest) (ResponseOutlineResponse, error) {
+func (rs *responseService) ResponseOutline(ctx context.Context, req ResponseOutlineRequest) (ResponseOutlineResponse, error) {
 	if err := rs.v.Struct(req); err != nil {
 		return ResponseOutlineResponse{}, NewResponseRequestError(err)
 	}
@@ -118,6 +121,7 @@ func (rs *responseService) ResponseOutline(_ context.Context, req ResponseOutlin
 		MaxArrayItems: req.MaxArrayItems,
 	})
 	if err != nil {
+		rs.log.ErrorContext(ctx, "response_outline failed", "path", req.Path, "error", err)
 		return ResponseOutlineResponse{}, mapReaderError(err)
 	}
 
@@ -125,7 +129,7 @@ func (rs *responseService) ResponseOutline(_ context.Context, req ResponseOutlin
 }
 
 // ResponseCompress reduces a JSON value in a saved response file.
-func (rs *responseService) ResponseCompress(_ context.Context, req ResponseCompressRequest) (ResponseCompressResponse, error) {
+func (rs *responseService) ResponseCompress(ctx context.Context, req ResponseCompressRequest) (ResponseCompressResponse, error) {
 	if err := rs.v.Struct(req); err != nil {
 		return ResponseCompressResponse{}, NewResponseRequestError(err)
 	}
@@ -141,12 +145,14 @@ func (rs *responseService) ResponseCompress(_ context.Context, req ResponseCompr
 		Limit:      rs.ctx.MaxResponseSize(),
 	})
 	if err != nil {
+		rs.log.ErrorContext(ctx, "response_compress failed", "path", req.Path, "json_path", req.JSONPath, "error", err)
 		return ResponseCompressResponse{}, mapReaderError(err)
 	}
 
 	if result.TooLarge {
 		ref, saveErr := rs.saveReaderResult(req.Path, result.Body)
 		if saveErr != nil {
+			rs.log.ErrorContext(ctx, "response_compress failed: save result", "path", req.Path, "error", saveErr)
 			return ResponseCompressResponse{}, NewResponseReadFailedError(saveErr)
 		}
 		return ResponseCompressResponse{FileRef: &ref, Hint: result.Hint}, nil
@@ -156,7 +162,7 @@ func (rs *responseService) ResponseCompress(_ context.Context, req ResponseCompr
 }
 
 // ResponseSlice extracts a fragment of a saved response file.
-func (rs *responseService) ResponseSlice(_ context.Context, req ResponseSliceRequest) (ResponseSliceResponse, error) {
+func (rs *responseService) ResponseSlice(ctx context.Context, req ResponseSliceRequest) (ResponseSliceResponse, error) {
 	if err := rs.v.Struct(req); err != nil {
 		return ResponseSliceResponse{}, NewResponseRequestError(err)
 	}
@@ -170,6 +176,7 @@ func (rs *responseService) ResponseSlice(_ context.Context, req ResponseSliceReq
 		Limit:    rs.ctx.MaxResponseSize(),
 	})
 	if err != nil {
+		rs.log.ErrorContext(ctx, "response_slice failed", "path", req.Path, "json_path", req.JSONPath, "error", err)
 		return ResponseSliceResponse{}, mapReaderError(err)
 	}
 
@@ -178,6 +185,7 @@ func (rs *responseService) ResponseSlice(_ context.Context, req ResponseSliceReq
 	if maxSize > 0 && len(fragmentBytes) > maxSize {
 		ref, saveErr := rs.saveReaderResult(req.Path, fragmentBytes)
 		if saveErr != nil {
+			rs.log.ErrorContext(ctx, "response_slice failed: save result", "path", req.Path, "error", saveErr)
 			return ResponseSliceResponse{}, NewResponseReadFailedError(saveErr)
 		}
 		return ResponseSliceResponse{Slice: slice, FileRef: &ref}, nil
@@ -187,7 +195,7 @@ func (rs *responseService) ResponseSlice(_ context.Context, req ResponseSliceReq
 }
 
 // ResponseFilter filters, searches, and paginates through arrays in saved response files.
-func (rs *responseService) ResponseFilter(_ context.Context, req ResponseFilterRequest) (ResponseFilterResponse, error) {
+func (rs *responseService) ResponseFilter(ctx context.Context, req ResponseFilterRequest) (ResponseFilterResponse, error) {
 	if err := rs.v.Struct(req); err != nil {
 		return ResponseFilterResponse{}, NewResponseRequestError(err)
 	}
@@ -202,6 +210,7 @@ func (rs *responseService) ResponseFilter(_ context.Context, req ResponseFilterR
 
 	info, err := os.Stat(req.Path)
 	if err != nil {
+		rs.log.ErrorContext(ctx, "response_filter failed: file not found", "path", req.Path, "error", err)
 		return ResponseFilterResponse{}, NewResponseFileNotFoundError(err)
 	}
 
@@ -219,6 +228,7 @@ func (rs *responseService) ResponseFilter(_ context.Context, req ResponseFilterR
 		items, total, err = rs.filterArrayInMemory(req.Path, req.JSONPath, req.Search, req.Filter, page, pageSize)
 	}
 	if err != nil {
+		rs.log.ErrorContext(ctx, "response_filter failed", "path", req.Path, "json_path", req.JSONPath, "error", err)
 		return ResponseFilterResponse{}, mapReaderError(err)
 	}
 
