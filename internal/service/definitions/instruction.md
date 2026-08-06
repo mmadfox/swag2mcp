@@ -65,8 +65,9 @@ User asks to "do" something → inspect → invoke
 4. **Destructive actions**: Never POST/PUT/PATCH/DELETE without explicit user request
 5. **`endpoint_by_id` vs `inspect`**: `endpoint_by_id` = quick summary (method, path); `inspect` = full technical spec (schemas, params)
 6. **Search, don't navigate**: When the user asks to find an endpoint by description, name, path, tag, or functionality — use `search`. Do NOT manually traverse spec → collection → tag → endpoint.
-7. **Auth is automatic**: `invoke` handles authentication automatically. Do NOT call `auth` before `invoke` or `inspect`. Only use `auth` when the user asks for a curl command or needs the raw token.
+7. **Auth is automatic**: `invoke` handles authentication automatically. Do NOT pass `headers` or `cookies` to `invoke` — swag2mcp applies auth under the hood. Only use `auth` when the user asks for a curl command or needs the raw token.
 8. **Response files are tool-only**: When `invoke` returns a `fileRef`, only `response_outline`, `response_compress`, and `response_slice` may read it. Do NOT use bash or external commands on `fileRef.path`. Do NOT ask the user to open the file manually.
+9. **Respect rate limits**: Before calling `invoke` in a loop or batch, call `info` to check `rate_limiting` (per_endpoint_interval, global_limit). Wait the required interval between calls to avoid throttling.
 
 ## The `search` Tool - Complete Guide
 

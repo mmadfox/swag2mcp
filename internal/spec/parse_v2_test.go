@@ -476,3 +476,33 @@ func TestSwaggerParamsToParams_FiltersBodyParam(t *testing.T) {
 	assert.Len(t, result, 1, "expected only non-body params")
 	assert.Equal(t, "id", result[0].Name)
 }
+
+func TestSwaggerOpToOp_Security(t *testing.T) {
+	t.Parallel()
+
+	op := swaggerOpToOp(&spec.Operation{
+		OperationProps: spec.OperationProps{
+			ID: "secureOp",
+			Security: []map[string][]string{
+				{"ApiKeyAuth": {}},
+			},
+		},
+	})
+
+	require.NotNil(t, op)
+	require.Len(t, op.Security, 1)
+	assert.Contains(t, op.Security[0], "ApiKeyAuth")
+}
+
+func TestSwaggerOpToOp_Security_Empty(t *testing.T) {
+	t.Parallel()
+
+	op := swaggerOpToOp(&spec.Operation{
+		OperationProps: spec.OperationProps{
+			ID: "publicOp",
+		},
+	})
+
+	require.NotNil(t, op)
+	assert.Empty(t, op.Security)
+}

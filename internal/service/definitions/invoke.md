@@ -22,11 +22,14 @@ Always use `inspect` first to understand the required parameters, headers, and r
 - `endpointId` (required): The 32-character MD5 hash ID of the endpoint to invoke
 - `parameters` (optional): Object containing path, query, and header parameters as key-value pairs
 - `requestBody` (optional): The request body for POST/PUT/PATCH requests. Provide as a JSON object matching the schema from `inspect`
-- `headers` (optional): Additional HTTP headers to send with the request. These override any headers from the config or operation spec
-- `cookies` (optional): Additional HTTP cookies to send with the request. These are added on top of any cookies from the config
 
 ## Returns
 
 The API response data, HTTP status code, and response headers.
 
 **Large responses** (over ~50 KB) are automatically saved to disk. You will receive a file path — use it to reference the result rather than displaying the full content inline.
+
+## Important
+
+- **Auth is automatic**: `invoke` handles authentication automatically. Do NOT pass `headers` or `cookies` — swag2mcp applies auth under the hood.
+- **Rate limits**: Before calling `invoke` in a loop, call `info` to check `rate_limiting` (per_endpoint_interval, global_limit). Respect these limits to avoid throttling.

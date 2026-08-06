@@ -51,6 +51,13 @@ func (s *Service) processSpec(ctx context.Context, sc *config.Spec, mockEnabled 
 	sp.Stats.Tags = len(tags)
 	sp.Stats.Methods = len(eps)
 
+	for _, ep := range eps {
+		if ep.RequiresAuth {
+			sp.HasSecureEndpoints = true
+			break
+		}
+	}
+
 	return s.indexSpec(sp, colls, tags, eps)
 }
 
@@ -125,6 +132,7 @@ func (s *Service) processCollection(
 			Name:            pi.Method,
 			Path:            pi.Path,
 			Operation:       op,
+			RequiresAuth:    len(op.Security) > 0,
 		}
 		eps[ep.ID] = &ep
 	}

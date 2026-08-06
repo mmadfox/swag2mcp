@@ -21,21 +21,11 @@ const (
 	acceptHeaderOther = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
 )
 
-// validateParameters checks that all required parameters are present and that no
-// unknown parameters are passed.
+// validateParameters checks that all required parameters are present.
 func validateParameters(op *spec.Operation, params map[string]any) error {
 	paramNames := make(map[string]struct{}, len(op.Parameters))
 	for _, p := range op.Parameters {
 		paramNames[p.Name] = struct{}{}
-	}
-
-	for name := range params {
-		if _, exists := paramNames[name]; !exists {
-			return fmt.Errorf(
-				"unknown parameter %q, all parameters must match the operation schema",
-				name,
-			)
-		}
 	}
 
 	var missing []string
@@ -122,24 +112,15 @@ func validateObjectSchema(sc *spec.Schema, value any, path string) error {
 	}
 
 	if len(sc.Properties) > 0 {
-		for key := range obj {
-			if _, defined := sc.Properties[key]; !defined {
-				return fmt.Errorf(
-					"unknown field %q at %s, all fields must match the schema",
-					key, path,
-				)
+		for key, ps := range sc.Properties {
+			cv, exists := obj[key]
+			if !exists {
+				continue
 			}
-		}
-	}
-
-	for key, ps := range sc.Properties {
-		cv, exists := obj[key]
-		if !exists {
-			continue
-		}
-		cp := path + "." + key
-		if err := validateSchemaValue(ps, cv, cp); err != nil {
-			return err
+			cp := path + "." + key
+			if err := validateSchemaValue(ps, cv, cp); err != nil {
+				return err
+			}
 		}
 	}
 
