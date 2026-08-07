@@ -23,6 +23,7 @@ specs:
       climate, flood, elevation, and historical weather data. Most endpoints
       require latitude and longitude. Help the user build the right query.
     base_url: https://api.open-meteo.com
+    tags: [public, weather]
     collections:
       - llm_title: Forecast
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/meteo/forecast.yml
@@ -66,6 +67,7 @@ specs:
       episodes from the show. Help the user paginate results and filter by
       name, status, species, etc.
     base_url: https://rickandmortyapi.com/api
+    tags: [public, entertainment]
     collections:
       - llm_title: Rick and Morty Collection
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/rick-and-morty.json
@@ -77,6 +79,12 @@ specs:
       Use the Binance Spot API to get market data, exchange info, order books,
       recent trades, and klines. This is read-only public market data.
     base_url: https://api.binance.com
+    auth:
+      type: hmac
+      config:
+        api_key: $(BINANCE_API_KEY)
+        secret_key: $(BINANCE_API_SECRET)
+    tags: [public, crypto, exchange]
     collections:
       - llm_title: Spot Market Data
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/binance.yaml
@@ -87,6 +95,7 @@ specs:
     llm_instruction: |
       Use this API to fetch random dad jokes. Great for lightening the mood.
     base_url: https://icanhazdadjoke.com
+    tags: [public, entertainment]
     collections:
       - llm_title: Dad Jokes
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/dadjoke.yaml
@@ -98,6 +107,7 @@ specs:
       Use PokéAPI to look up Pokémon, abilities, types, moves, and other
       game data. Help the user navigate by name or id.
     base_url: https://pokeapi.co
+    tags: [public, entertainment, games]
     collections:
       - llm_title: Pokémon Data
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/pokeapi.yaml
@@ -109,6 +119,7 @@ specs:
       Use Frankfurter to get current and historical exchange rates from
       central banks. Query by currency pair, date range, or provider.
     base_url: https://api.frankfurter.dev/v2
+    tags: [public, finance]
     collections:
       - llm_title: Frankfurter
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/frankfurter.yaml
@@ -126,6 +137,7 @@ specs:
         key: x_cg_demo_api_key
         value: "CG-9NuxR56dEAEVna1Bss9ZkZXy"
         in: query
+    tags: [public, crypto, finance]
     collections:
       - llm_title: CoinGecko Demo
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/coingecko.yaml
@@ -143,6 +155,7 @@ specs:
         key: appid
         value: 067b1e290aa677ceac48f9055e4a71cf
         in: query
+    tags: [public, weather]
     collections:
       - llm_title: OpenWeatherMap
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/openweathermap.yaml
@@ -160,6 +173,7 @@ specs:
       config:
         # demo token
         token: "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"
+    tags: [public, development]
     collections:
       - llm_title: GitHub Repositories
         location: https://raw.githubusercontent.com/mmadfox/swag2mcp/main/specs/github/rest-api.yaml
