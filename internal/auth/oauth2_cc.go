@@ -119,3 +119,8 @@ func (c *OAuth2ClientCredentialsAuthClient) SetTokenURL(url string) {
 func (c *OAuth2ClientCredentialsAuthClient) Validate() error {
 	return authValidator.Struct(c)
 }
+
+// QueryParamNames returns nil since OAuth2 client credentials auth only sets a header.
+func (c *OAuth2ClientCredentialsAuthClient) QueryParamNames() []string {
+	return nil
+}

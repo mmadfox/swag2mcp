@@ -30,6 +30,8 @@ func (errAuthClient) Apply(_ *http.Request, _ *auth.Info) error {
 
 func (errAuthClient) Validate() error { return nil }
 
+func (errAuthClient) QueryParamNames() []string { return nil }
+
 func TestAuthService_Auth(t *testing.T) {
 	t.Parallel()
 

@@ -6,6 +6,7 @@
 package reader_test
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -37,6 +38,114 @@ func TestReader_SliceByJSONPath(t *testing.T) {
 	val, ok := slice.Value.(map[string]any)
 	require.True(t, ok)
 	require.Equal(t, float64(2), val["id"])
+}
+
+func TestReader_SliceByJSONPath_RootArrayIndex(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "sample.json")
+	data := []byte(`[{"id":1},{"id":2},{"id":3}]`)
+	require.NoError(t, os.WriteFile(path, data, 0o600))
+
+	r := reader.New(dir)
+	slice, err := r.Slice(path, reader.SliceOptions{JSONPath: "0"})
+	require.NoError(t, err)
+	val, ok := slice.Value.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, float64(1), val["id"])
+}
+
+func TestReader_SliceByJSONPath_RootArrayLast(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "sample.json")
+	data := []byte(`[{"id":1},{"id":2},{"id":3}]`)
+	require.NoError(t, os.WriteFile(path, data, 0o600))
+
+	r := reader.New(dir)
+	slice, err := r.Slice(path, reader.SliceOptions{JSONPath: "-"})
+	require.NoError(t, err)
+	val, ok := slice.Value.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, float64(3), val["id"])
+}
+
+func TestReader_SliceByJSONPath_NestedArrayLast(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "sample.json")
+	data := []byte(`{"data":[10,20,30]}`)
+	require.NoError(t, os.WriteFile(path, data, 0o600))
+
+	r := reader.New(dir)
+	slice, err := r.Slice(path, reader.SliceOptions{JSONPath: "data.-"})
+	require.NoError(t, err)
+	require.Equal(t, float64(30), slice.Value)
+}
+
+func TestReader_SliceByJSONPath_MiddleSegmentLast(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "sample.json")
+	data := []byte(`{"items":[{"name":"a"},{"name":"b"}]}`)
+	require.NoError(t, os.WriteFile(path, data, 0o600))
+
+	r := reader.New(dir)
+	slice, err := r.Slice(path, reader.SliceOptions{JSONPath: "items.-.name"})
+	require.NoError(t, err)
+	require.Equal(t, "b", slice.Value)
+}
+
+func TestReader_Slice_EmptyJSONPath_RootArray(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "sample.json")
+	data := []byte(`[{"id":1},{"id":2}]`)
+	require.NoError(t, os.WriteFile(path, data, 0o600))
+
+	r := reader.New(dir)
+	slice, err := r.Slice(path, reader.SliceOptions{})
+	require.NoError(t, err)
+	require.Equal(t, "object", slice.Context)
+	require.True(t, slice.IsComplete)
+	val, ok := slice.Value.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, float64(1), val["id"])
+}
+
+func TestReader_Slice_AtThisJSONPath_RootArray(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "sample.json")
+	data := []byte(`[{"id":1},{"id":2}]`)
+	require.NoError(t, os.WriteFile(path, data, 0o600))
+
+	r := reader.New(dir)
+	slice, err := r.Slice(path, reader.SliceOptions{JSONPath: "@this"})
+	require.NoError(t, err)
+	require.Equal(t, "object", slice.Context)
+	require.True(t, slice.IsComplete)
+	val, ok := slice.Value.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, float64(1), val["id"])
+}
+
+func TestReader_Slice_EmptyJSONPath_RootObject(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "sample.json")
+	data := []byte(`{"a":1,"b":2}`)
+	require.NoError(t, os.WriteFile(path, data, 0o600))
+
+	r := reader.New(dir)
+	slice, err := r.Slice(path, reader.SliceOptions{})
+	require.NoError(t, err)
+	require.Equal(t, "object", slice.Context)
+	require.True(t, slice.IsComplete)
+	val, ok := slice.Value.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, float64(1), val["a"])
+	require.Equal(t, float64(2), val["b"])
 }
 
 func TestReader_SliceByJSONPath_LimitExceeded(t *testing.T) {
@@ -156,8 +265,11 @@ func TestReader_Slice_NoSelector(t *testing.T) {
 	require.NoError(t, os.WriteFile(path, []byte(`{"a":1}`), 0o600))
 
 	r := reader.New(dir)
-	_, err := r.Slice(path, reader.SliceOptions{})
-	require.ErrorIs(t, err, reader.ErrInvalidLineRange)
+	// Empty jsonPath targets the whole root value (matching compress/filter).
+	slice, err := r.Slice(path, reader.SliceOptions{})
+	require.NoError(t, err)
+	require.Equal(t, "object", slice.Context)
+	require.True(t, slice.IsComplete)
 }
 
 func TestReader_Slice_OutOfRange(t *testing.T) {
@@ -304,4 +416,28 @@ func TestReader_SliceByLine_OpenFileError(t *testing.T) {
 	r := reader.New(dir)
 	_, err := r.Slice(filepath.Join(dir, "missing.json"), reader.SliceOptions{Range: "1-1"})
 	require.ErrorIs(t, err, reader.ErrFileNotFound)
+}
+
+func TestReader_Slice_EmptyJSONPath_LargeRootArray(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "sample.json")
+	// A large root array that would exceed a small limit if returned whole.
+	items := make([]any, 1000)
+	for i := range items {
+		items[i] = map[string]any{"id": i, "name": "item"}
+	}
+	data, err := json.Marshal(items)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(path, data, 0o600))
+
+	r := reader.New(dir)
+	// Empty jsonPath on a large root array must return the first element,
+	// not fail with a limit-exceeded path-not-found error.
+	slice, err := r.Slice(path, reader.SliceOptions{Limit: 100})
+	require.NoError(t, err)
+	require.Equal(t, "object", slice.Context)
+	val, ok := slice.Value.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, float64(0), val["id"])
 }

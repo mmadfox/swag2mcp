@@ -512,3 +512,17 @@ func TestHMACAuthClient_Apply_DoesNotModifyBody(t *testing.T) {
 	assert.Equal(t, "key", req.Header.Get("X-MBX-APIKEY"))
 	assert.NotEmpty(t, req.URL.Query().Get("signature"), "signature should be present")
 }
+
+func TestHMACAuthClient_QueryParamNames(t *testing.T) {
+	t.Parallel()
+
+	client := &HMACAuthClient{Options: &HMACOptions{RecvWindow: 5000}}
+	assert.Equal(t, []string{"timestamp", "signature", "recvWindow"}, client.QueryParamNames())
+}
+
+func TestHMACAuthClient_QueryParamNames_NoRecvWindow(t *testing.T) {
+	t.Parallel()
+
+	client := &HMACAuthClient{}
+	assert.Equal(t, []string{"timestamp", "signature"}, client.QueryParamNames())
+}

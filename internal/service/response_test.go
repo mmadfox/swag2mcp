@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/reader"
@@ -721,4 +722,189 @@ func TestResponseService_ResponseFilter_rootArrayStreaming(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, total)
 	require.Len(t, matched, 1)
+}
+
+func TestResponseService_ResponseFilter_rootArrayIndex(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	items := []any{
+		map[string]any{"id": 1, "name": "alpha"},
+		map[string]any{"id": 2, "name": "beta"},
+		map[string]any{"id": 3, "name": "gamma"},
+	}
+	raw, err := json.Marshal(items)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "root.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
+
+	// jsonPath "0" on a root array resolves to an element (object), which is
+	// not an array — filter must fail with an informative path-not-found error.
+	_, err = svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     fp,
+		JSONPath: "0",
+		Search:   "alpha",
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "response_path_not_found")
+}
+
+func TestResponseService_ResponseFilter_rootArrayLast(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	items := []any{
+		map[string]any{"id": 1, "name": "alpha"},
+		map[string]any{"id": 2, "name": "beta"},
+		map[string]any{"id": 3, "name": "gamma"},
+	}
+	raw, err := json.Marshal(items)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "root.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
+
+	// jsonPath "-" on a root array resolves to the last element (object), which
+	// is not an array — filter must fail with an informative path-not-found error.
+	_, err = svc.ResponseFilter(context.Background(), ResponseFilterRequest{
+		Path:     fp,
+		JSONPath: "-",
+		Search:   "gamma",
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "response_path_not_found")
+}
+
+func TestResponseService_ResponseSlice_rootArrayLast(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	items := []any{
+		map[string]any{"id": 1, "name": "alpha"},
+		map[string]any{"id": 2, "name": "beta"},
+		map[string]any{"id": 3, "name": "gamma"},
+	}
+	raw, err := json.Marshal(items)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "root.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
+	resp, err := svc.ResponseSlice(context.Background(), ResponseSliceRequest{
+		Path:     fp,
+		JSONPath: "-",
+	})
+	require.NoError(t, err)
+	val, ok := resp.Slice.Value.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, float64(3), val["id"])
+}
+
+func TestResponseService_ResponseOutline_rootArrayHint(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	items := []any{map[string]any{"id": 1}, map[string]any{"id": 2}}
+	raw, err := json.Marshal(items)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "root.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
+	resp, err := svc.ResponseOutline(context.Background(), ResponseOutlineRequest{Path: fp})
+	require.NoError(t, err)
+	require.Equal(t, "array", resp.Outline.Type)
+	var found bool
+	for _, h := range resp.Outline.CompressionHints {
+		if strings.Contains(h, "root-level array") {
+			found = true
+			break
+		}
+	}
+	require.True(t, found, "expected a root-level array hint, got %v", resp.Outline.CompressionHints)
+}
+
+func TestResponseService_ResponseSlice_emptyJSONPathRootArray(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	items := []any{map[string]any{"id": 1}, map[string]any{"id": 2}}
+	raw, err := json.Marshal(items)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "root.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
+	resp, err := svc.ResponseSlice(context.Background(), ResponseSliceRequest{Path: fp})
+	require.NoError(t, err)
+	require.Equal(t, "object", resp.Slice.Context)
+	require.True(t, resp.Slice.IsComplete)
+	val, ok := resp.Slice.Value.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, float64(1), val["id"])
+}
+
+func TestResponseService_ResponseSlice_atThisJSONPathRootArray(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	respDir := filepath.Join(tmpDir, "responses")
+	require.NoError(t, os.MkdirAll(respDir, 0o750))
+
+	items := []any{map[string]any{"id": 1}, map[string]any{"id": 2}}
+	raw, err := json.Marshal(items)
+	require.NoError(t, err)
+	fp := filepath.Join(respDir, "root.json")
+	require.NoError(t, os.WriteFile(fp, raw, 0o600))
+
+	ctrl := gomock.NewController(t)
+	ws := NewMockWorkspaceOps(ctrl)
+	ws.EXPECT().ResponsesDir().Return(respDir).AnyTimes()
+
+	svc := newResponseService(newServiceContext(), ws, fakeValidator{}, slog.Default())
+	resp, err := svc.ResponseSlice(context.Background(), ResponseSliceRequest{Path: fp, JSONPath: "@this"})
+	require.NoError(t, err)
+	require.Equal(t, "object", resp.Slice.Context)
+	require.True(t, resp.Slice.IsComplete)
+	val, ok := resp.Slice.Value.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, float64(1), val["id"])
 }

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/spec"
 )
 
@@ -22,15 +23,15 @@ const (
 )
 
 // validateParameters checks that all required parameters are present.
-func validateParameters(op *spec.Operation, params map[string]any) error {
-	paramNames := make(map[string]struct{}, len(op.Parameters))
-	for _, p := range op.Parameters {
-		paramNames[p.Name] = struct{}{}
-	}
-
+// Parameters whose names are covered by authQueryParams are considered
+// satisfied by the configured authenticator and are not required from the caller.
+func validateParameters(op *spec.Operation, params map[string]any, authQueryParams map[string]struct{}) error {
 	var missing []string
 	for _, p := range op.Parameters {
 		if !p.Required {
+			continue
+		}
+		if _, covered := authQueryParams[p.Name]; covered {
 			continue
 		}
 		if _, exists := params[p.Name]; !exists {
@@ -142,4 +143,23 @@ func validateArraySchema(sc *spec.Schema, value any, path string) error {
 	}
 
 	return nil
+}
+
+// authQueryParamNames returns the set of query parameter names that the given
+// authenticator injects into the request itself. These parameters are excluded
+// from required-parameter validation. It returns an empty set when auth is nil
+// or when the authenticator only sets headers.
+func authQueryParamNames(a auth.Authenticator) map[string]struct{} {
+	if a == nil {
+		return nil
+	}
+	names := a.QueryParamNames()
+	if len(names) == 0 {
+		return nil
+	}
+	out := make(map[string]struct{}, len(names))
+	for _, n := range names {
+		out[n] = struct{}{}
+	}
+	return out
 }

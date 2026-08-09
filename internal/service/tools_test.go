@@ -61,6 +61,56 @@ func TestLoadInstructionFromEmbed(t *testing.T) {
 	require.NotEmpty(t, instruction)
 }
 
+func TestInstructionMentionsAuthInjectedParameters(t *testing.T) {
+	t.Parallel()
+
+	instruction, err := loadInstructionFromEmbed()
+	require.NoError(t, err)
+	require.Contains(t, instruction, "Auth-injected parameters are automatic")
+	require.Contains(t, instruction, "api_key")
+	require.Contains(t, instruction, "timestamp")
+	require.Contains(t, instruction, "signature")
+}
+
+func TestInvokeToolMentionsAuthInjectedParameters(t *testing.T) {
+	t.Parallel()
+
+	tool, err := loadToolFromEmbed("invoke.md")
+	require.NoError(t, err)
+	require.Contains(t, tool.Description, "Auth-injected parameters are automatic")
+	require.Contains(t, tool.Description, "api_key")
+}
+
+func TestInspectToolMentionsAuthInjectedParameters(t *testing.T) {
+	t.Parallel()
+
+	tool, err := loadToolFromEmbed("inspect.md")
+	require.NoError(t, err)
+	require.Contains(t, tool.Description, "auth-injected parameters")
+	require.Contains(t, tool.Description, "api_key")
+}
+
+func TestInstructionMentionsInvokePacingAndRetry(t *testing.T) {
+	t.Parallel()
+
+	instruction, err := loadInstructionFromEmbed()
+	require.NoError(t, err)
+	require.Contains(t, instruction, "Invoke one at a time, with bounded retries")
+	require.Contains(t, instruction, "one outstanding invoke")
+	require.Contains(t, instruction, "rate limited")
+	require.Contains(t, instruction, "at most")
+}
+
+func TestInvokeToolMentionsPacingAndRetry(t *testing.T) {
+	t.Parallel()
+
+	tool, err := loadToolFromEmbed("invoke.md")
+	require.NoError(t, err)
+	require.Contains(t, tool.Description, "One at a time, bounded retries")
+	require.Contains(t, tool.Description, "one outstanding invoke")
+	require.Contains(t, tool.Description, "rate limited")
+}
+
 func TestMakeAvailableSpecs_withSpecs(t *testing.T) {
 	t.Parallel()
 

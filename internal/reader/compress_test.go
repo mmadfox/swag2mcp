@@ -226,7 +226,12 @@ func TestReader_CompressKeysOnly_RootArray(t *testing.T) {
 		Mode: reader.CompressKeysOnly,
 	})
 	require.NoError(t, err)
-	require.Equal(t, "array", result.Body)
+	// A root array of objects is summarized by a representative object with
+	// type names, so the element keys remain visible.
+	obj, ok := result.Body.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, "number", obj["id"])
+	require.Equal(t, "string", obj["name"])
 }
 
 func TestReader_CompressKeysOnly_NonStringKeyError(t *testing.T) {
@@ -376,7 +381,12 @@ func TestReader_CompressKeysOnly_Array(t *testing.T) {
 		Mode: reader.CompressKeysOnly,
 	})
 	require.NoError(t, err)
-	require.Equal(t, "array", result.Body)
+	// A root array of objects is summarized by a representative object with
+	// type names, so the element keys remain visible.
+	obj, ok := result.Body.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, "number", obj["id"])
+	require.Equal(t, "string", obj["name"])
 }
 
 func TestReader_CompressKeysOnly_ScalarValues(t *testing.T) {
@@ -503,4 +513,23 @@ func TestReader_CompressTruncateStrings_EmptyObjectArray(t *testing.T) {
 	arr, ok := result.Body.([]any)
 	require.True(t, ok)
 	require.Empty(t, arr)
+}
+
+func TestReader_Compress_RootArrayLast(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "sample.json")
+	data := []byte(`[{"id":1},{"id":2},{"id":3}]`)
+	require.NoError(t, os.WriteFile(path, data, 0o600))
+
+	r := reader.New(dir)
+	result, err := r.Compress(path, reader.CompressOptions{
+		JSONPath: "-",
+		Mode:     reader.CompressTruncateStrings,
+	})
+	require.NoError(t, err)
+	require.False(t, result.TooLarge)
+	body, ok := result.Body.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, float64(3), body["id"])
 }

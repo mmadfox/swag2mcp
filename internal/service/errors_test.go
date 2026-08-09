@@ -6,6 +6,7 @@
 package service
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/reader"
@@ -111,8 +112,9 @@ func TestNewRateLimitError_Hint(t *testing.T) {
 	err := NewRateLimitError(newTestError("rate limit exceeded for endpoint \"ep1\": try again in 8 seconds"))
 	require.Equal(t, "rate_limit", err.Code)
 	require.Contains(t, err.Message, "try again in 8 seconds")
-	require.Contains(t, err.Hint, "Wait for the cooldown period")
-	require.Contains(t, err.Hint, "different endpoint")
+	require.Contains(t, err.Hint, "Do not retry immediately")
+	require.Contains(t, err.Hint, "do not batch retries")
+	require.Contains(t, err.Hint, "rate-limited and move on")
 }
 
 func TestNewGlobalRateLimitError(t *testing.T) {
@@ -122,7 +124,7 @@ func TestNewGlobalRateLimitError(t *testing.T) {
 	require.Equal(t, "global_rate_limit", err.Code)
 	require.Equal(t, "global rate limit exceeded", err.Message)
 	require.Contains(t, err.Hint, "Too many API requests")
-	require.Contains(t, err.Hint, "Wait a few seconds")
+	require.Contains(t, err.Hint, "Do not retry in a batch")
 }
 
 func TestNewInvokeError(t *testing.T) {
@@ -193,6 +195,25 @@ func TestMapReaderError_pathNotFound(t *testing.T) {
 
 	err := mapReaderError(reader.ErrPathNotFound)
 	require.Contains(t, err.Error(), "response_path_not_found")
+}
+
+func TestResponsePathNotFoundHint_includesPathAndGuidance(t *testing.T) {
+	t.Parallel()
+
+	err := NewResponsePathNotFoundError(fmt.Errorf("%w: data.0", reader.ErrPathNotFound))
+	require.Equal(t, "response_path_not_found", err.Code)
+	require.Contains(t, err.Hint, "data.0")
+	require.Contains(t, err.Hint, "root-level array")
+	require.Contains(t, err.Hint, "leave jsonPath empty")
+	require.Contains(t, err.Hint, "data.0.name")
+	require.Contains(t, err.Hint, "response_outline")
+}
+
+func TestResponsePathNotFoundHint_emptyDetail(t *testing.T) {
+	t.Parallel()
+
+	err := NewResponsePathNotFoundError(reader.ErrPathNotFound)
+	require.Contains(t, err.Hint, "the given jsonPath")
 }
 
 func TestMapReaderError_invalidLineRange(t *testing.T) {

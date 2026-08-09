@@ -34,3 +34,8 @@ func (c *NoAuthClient) Apply(_ *http.Request, _ *Info) error {
 func (c *NoAuthClient) Validate() error {
 	return nil
 }
+
+// QueryParamNames returns nil since no-auth injects no query parameters.
+func (c *NoAuthClient) QueryParamNames() []string {
+	return nil
+}

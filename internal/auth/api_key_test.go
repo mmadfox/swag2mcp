@@ -245,3 +245,17 @@ func TestAPIKeyAuthClient_Type(t *testing.T) {
 	client := &APIKeyAuthClient{}
 	assert.Equal(t, APIKeyAuth, client.Type())
 }
+
+func TestAPIKeyAuthClient_QueryParamNames_query(t *testing.T) {
+	t.Parallel()
+
+	client := &APIKeyAuthClient{Key: "api_key", In: "query"}
+	assert.Equal(t, []string{"api_key"}, client.QueryParamNames())
+}
+
+func TestAPIKeyAuthClient_QueryParamNames_header(t *testing.T) {
+	t.Parallel()
+
+	client := &APIKeyAuthClient{Key: "api_key", In: "header"}
+	assert.Nil(t, client.QueryParamNames())
+}

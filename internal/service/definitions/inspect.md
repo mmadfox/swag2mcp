@@ -26,3 +26,7 @@ Use this tool when:
 ## Returns
 
 The full OpenAPI operation object including parameters (with schemas), request body, responses, and all referenced schema definitions.
+
+## Note on auth-injected parameters
+
+Some required parameters shown by `inspect` may be **auth credentials** (e.g. `api_key`, `timestamp`, `signature`, `recvWindow`). These are injected automatically by swag2mcp during `invoke` — do **NOT** pass them in `parameters`. Only pass genuine business parameters.

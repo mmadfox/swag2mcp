@@ -52,3 +52,12 @@ func (c *APIKeyAuthClient) Apply(req *http.Request, out *Info) error {
 func (c *APIKeyAuthClient) Validate() error {
 	return authValidator.Struct(c)
 }
+
+// QueryParamNames returns the API key name when the key is sent as a query
+// parameter. It returns nil when the key is sent as a header.
+func (c *APIKeyAuthClient) QueryParamNames() []string {
+	if c.In == paramInQuery {
+		return []string{c.Key}
+	}
+	return nil
+}

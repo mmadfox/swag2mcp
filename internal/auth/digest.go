@@ -235,3 +235,8 @@ func md5hex(s string) string {
 func (c *DigestAuthClient) Validate() error {
 	return authValidator.Struct(c)
 }
+
+// QueryParamNames returns nil since digest auth only sets a header.
+func (c *DigestAuthClient) QueryParamNames() []string {
+	return nil
+}

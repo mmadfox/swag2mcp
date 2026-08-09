@@ -18,7 +18,7 @@ Use this tool when you know which object, array, or field you want to inspect in
 ## Parameters
 
 - `path` (required): The absolute file path from `fileRef.path` returned by `invoke`.
-- `jsonPath` (optional): Logical path such as `data.0`, `users.3.name`, or `company.departments.engineering.employees.0`. Use gjson dotted syntax.
+- `jsonPath` (optional): Logical path such as `data.0`, `users.3.name`, or `company.departments.engineering.employees.0`. Use gjson dotted syntax. Leave empty (or use `@this`) to target the root value — for a root array this returns its first element.
 - `line` (optional): 1-based line number to center the fragment on. The tool returns `around` lines above and below.
 - `range` (optional): Exact line range as `start-end` (for example `120-240`).
 - `around` (optional): Number of lines to include around `line`. Default is 20.

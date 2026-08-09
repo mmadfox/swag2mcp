@@ -362,6 +362,11 @@ func buildCompressionHints(path string, node outlineNode) []string {
 			hints = append(hints, fmt.Sprintf(
 				"Use response_compress with mode 'sample_array' and jsonPath '%s' to inspect head/tail items.", path))
 		}
+		if path == "" {
+			hints = append(hints,
+				"This is a root-level array. Leave jsonPath empty (or use @this) to target the whole array, "+
+					"or use an index like '0' / '-' for a specific item.")
+		}
 	case jsonTypeObject:
 		for _, key := range node.Keys {
 			hints = append(hints, fmt.Sprintf(
@@ -369,8 +374,8 @@ func buildCompressionHints(path string, node outlineNode) []string {
 		}
 	}
 
-	for _, child := range node.SampleItems {
-		hints = append(hints, buildCompressionHints(pathForChild(path, child.Key), child)...)
+	for i, child := range node.SampleItems {
+		hints = append(hints, buildCompressionHints(pathForArrayItem(path, i), child)...)
 	}
 
 	if node.Structure != nil {
@@ -380,6 +385,15 @@ func buildCompressionHints(path string, node outlineNode) []string {
 	}
 
 	return hints
+}
+
+// pathForArrayItem builds a dotted path to an array element at the given index.
+// Array items have no key, so the index is used instead (e.g. "items.0").
+func pathForArrayItem(parent string, index int) string {
+	if parent == "" {
+		return strconv.Itoa(index)
+	}
+	return parent + "." + strconv.Itoa(index)
 }
 
 // buildNavigationHints collects top-level paths and arrays for LLM navigation.
@@ -402,10 +416,10 @@ func buildNavigationHints(path string, node outlineNode) navigation {
 			})
 		}
 	}
-	for _, child := range node.SampleItems {
+	for i, child := range node.SampleItems {
 		if child.Type == jsonTypeArray {
 			nav.ArrayPaths = append(nav.ArrayPaths, arrayPath{
-				Path:     pathForChild(path, child.Key),
+				Path:     pathForArrayItem(path, i),
 				Length:   child.ItemCount,
 				ItemType: child.ItemType,
 			})

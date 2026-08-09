@@ -27,11 +27,34 @@ func (r *reader) Slice(path string, opts SliceOptions) (Slice, error) {
 
 	opts = normalizeSliceOptions(opts)
 
+	// An empty or "@this" jsonPath with no line/range selector targets the root
+	// value. For a root array this resolves to its first element (so large
+	// responses stay within the size limit and navigation works), matching the
+	// behavior of response_compress with first_of_array.
+	if (opts.JSONPath == "" || opts.JSONPath == rootPath) && opts.Line == 0 && opts.Range == "" {
+		opts.JSONPath = rootSlicePath(path)
+		return r.sliceByJSONPath(path, opts)
+	}
+
 	if opts.JSONPath != "" {
 		return r.sliceByJSONPath(path, opts)
 	}
 
 	return r.sliceByLines(path, opts)
+}
+
+// rootSlicePath returns the jsonPath that addresses the root value for slicing.
+// For a root array it returns the first element ("@this.0"); otherwise it
+// returns "@this" (the whole root value).
+func rootSlicePath(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return rootPath
+	}
+	if gjson.GetBytes(data, rootPath).IsArray() {
+		return rootPath + ".0"
+	}
+	return rootPath
 }
 
 // sliceByJSONPath extracts the value at a gjson path and its surrounding context.
@@ -41,7 +64,7 @@ func (r *reader) sliceByJSONPath(path string, opts SliceOptions) (Slice, error) 
 		return Slice{}, fmt.Errorf("read file: %w", err)
 	}
 
-	result := gjson.GetBytes(data, opts.JSONPath)
+	result := gjson.GetBytes(data, NormalizeJSONPath(data, opts.JSONPath))
 	if !result.Exists() {
 		return Slice{}, fmt.Errorf("%w: %s", ErrPathNotFound, opts.JSONPath)
 	}

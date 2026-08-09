@@ -124,7 +124,7 @@ func (is *invokeService) Invoke(ctx context.Context, rq InvokeRequest) (InvokeRe
 		return InvokeResponse{}, NewCollectionNotFoundError(ep.CollectionID, err)
 	}
 
-	if err := validateParameters(ep.Operation, rq.Parameters); err != nil {
+	if err := validateParameters(ep.Operation, rq.Parameters, authQueryParamNames(sp.Auth)); err != nil {
 		is.log.ErrorContext(ctx, "invoke failed: parameter validation", "endpoint_id", rq.EndpointID, "error", err)
 		return InvokeResponse{}, NewParameterValidationError(err)
 	}
