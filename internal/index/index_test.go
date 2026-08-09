@@ -7,8 +7,11 @@ package index
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/blugelabs/bluge"
 	"github.com/mmadfox/swag2mcp/internal/id"
 	"github.com/mmadfox/swag2mcp/internal/model"
 	"github.com/mmadfox/swag2mcp/internal/spec"
@@ -532,6 +535,93 @@ func TestSearch_ByPathNoResults(t *testing.T) {
 	assert.Len(t, results, 0)
 }
 
+// seedMultiPathData indexes several endpoints with distinct paths under one spec.
+func seedMultiPathData(t *testing.T, idx *Index, domain string) {
+	t.Helper()
+
+	specID := id.Domain(domain)
+	specInfo := &model.Spec{ID: specID, Domain: domain, BaseURL: "https://api.example.com"}
+	collectionID := id.Collection(specID, domain+"/collection")
+	collectionInfo := &model.Collection{ID: collectionID, SpecID: specID, Title: "Test Collection"}
+	tagID := id.Tag(specID, collectionID, "test-tag")
+	tagInfo := &model.Tag{ID: tagID, SpecID: specID, CollectionID: collectionID, Name: "test-tag"}
+
+	paths := []string{
+		"/api/v3/users",
+		"/api/v3/orders",
+		"/sapi/v1/account",
+		"/sapi/v1/trades",
+		"/users/me",
+	}
+	endpoints := make([]*model.Endpoint, 0, len(paths))
+	for i, p := range paths {
+		endpoints = append(endpoints, &model.Endpoint{
+			ID:              id.Method(specID, collectionID, tagID, "GET", p, fmt.Sprintf("op%d", i)),
+			SpecID:          specID,
+			SpecDomain:      domain,
+			CollectionID:    collectionID,
+			CollectionTitle: "Test Collection",
+			TagID:           tagID,
+			Tag:             "test-tag",
+			Name:            "GET",
+			Path:            p,
+			Operation:       &spec.Operation{ID: fmt.Sprintf("op%d", i), Summary: "Test endpoint"},
+		})
+	}
+
+	require.NoError(t, idx.EnsureIndex(specInfo, []*model.Collection{collectionInfo}, []*model.Tag{tagInfo}, endpoints))
+	idx.RefreshSearchReader()
+}
+
+func TestSearch_ByPathPrefix(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedMultiPathData(t, idx, t.Name())
+
+	results, err := idx.Search(context.Background(), "path:/api/v3/*", 10)
+	require.NoError(t, err)
+	require.Len(t, results, 2, "expected only /api/v3 endpoints")
+	for _, ep := range results {
+		require.True(t, strings.HasPrefix(ep.Path, "/api/v3/"), "unexpected path %s", ep.Path)
+	}
+}
+
+func TestSearch_ByPathPrefix_users(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedMultiPathData(t, idx, t.Name())
+
+	results, err := idx.Search(context.Background(), "path:/users/*", 10)
+	require.NoError(t, err)
+	require.Len(t, results, 1, "expected only /users endpoints")
+	require.Equal(t, "/users/me", results[0].Path)
+}
+
+func TestSearch_ByPathExact(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedMultiPathData(t, idx, t.Name())
+
+	results, err := idx.Search(context.Background(), "path:/api/v3/users", 10)
+	require.NoError(t, err)
+	require.Len(t, results, 1, "expected exactly one exact match")
+	require.Equal(t, "/api/v3/users", results[0].Path)
+}
+
+func TestSearch_ByPathPrefixNoResults(t *testing.T) {
+	t.Parallel()
+
+	idx := newTestIndex(t)
+	seedMultiPathData(t, idx, t.Name())
+
+	results, err := idx.Search(context.Background(), "path:/nonexistent/*", 10)
+	require.NoError(t, err)
+	assert.Len(t, results, 0)
+}
+
 func TestSearch_BySummary(t *testing.T) {
 	t.Parallel()
 
@@ -1050,4 +1140,48 @@ func TestAddCollection_Duplicate(t *testing.T) {
 	got, err := idx.CollectionByID(collectionInfo.ID)
 	require.NoError(t, err)
 	assert.Equal(t, "Duplicate", got.Title)
+}
+
+func TestParsePathQuery(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		query    string
+		wantOK   bool
+		wantPre  string
+		wantTerm string
+	}{
+		{name: "prefix", query: "path:/api/v3/*", wantOK: true, wantPre: "/api/v3/"},
+		{name: "prefix quoted", query: `path:"/users/*"`, wantOK: true, wantPre: "/users/"},
+		{name: "exact", query: "path:/api/v3/users", wantOK: true, wantTerm: "/api/v3/users"},
+		{name: "exact quoted", query: `path:"/test"`, wantOK: true, wantTerm: "/test"},
+		{name: "plus prefix", query: "+path:/api/*", wantOK: true, wantPre: "/api/"},
+		{name: "not path", query: "method:GET", wantOK: false},
+		{name: "empty value", query: "path:", wantOK: false},
+		{name: "plain text", query: "get pet", wantOK: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			q, ok := parsePathQuery(tt.query)
+			require.Equal(t, tt.wantOK, ok)
+			if !ok {
+				return
+			}
+			switch {
+			case tt.wantPre != "":
+				pq, isPrefix := q.(*bluge.PrefixQuery)
+				require.True(t, isPrefix, "expected PrefixQuery")
+				require.Equal(t, tt.wantPre, pq.Prefix())
+				require.Equal(t, "path_kw", pq.Field())
+			case tt.wantTerm != "":
+				tq, isTerm := q.(*bluge.TermQuery)
+				require.True(t, isTerm, "expected TermQuery")
+				require.Equal(t, tt.wantTerm, tq.Term())
+				require.Equal(t, "path_kw", tq.Field())
+			}
+		})
+	}
 }

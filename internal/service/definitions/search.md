@@ -38,7 +38,7 @@ Use this tool when:
 
 ## Parameters
 
-- `query` (required): Natural language or structured search query. Supports field filters (`method:POST`, `tag:pet`, `path:/api/v1/*`), boolean operators (`+` must, `-` exclude), fuzzy (`term~`), wildcards (`*`, `?`), and phrases (`"exact phrase"`). **Queries containing `/` use AND between tokens** — e.g. `/v1/seasonal` matches only endpoints with both `v1` AND `seasonal`, not all `/v1/*` endpoints.
+- `query` (required): Natural language or structured search query. Supports field filters (`method:POST`, `tag:pet`, `path:/api/v1/*`), boolean operators (`+` must, `-` exclude), fuzzy (`term~`), wildcards (`*`, `?`), and phrases (`"exact phrase"`). **`path:` filters match the full path prefix** — e.g. `path:/api/v3/*` returns only endpoints whose path starts with `/api/v3/`; `path:/api/v3/users` matches that exact path. **Queries containing `/` use AND between tokens** — e.g. `/v1/seasonal` matches only endpoints with both `v1` AND `seasonal`, not all `/v1/*` endpoints.
 - `limit` (required): Maximum number of results to return (min: 1, max: 50)
 
 ## Returns
