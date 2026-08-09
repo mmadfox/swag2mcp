@@ -66,8 +66,11 @@ User asks to "do" something → inspect → invoke
 5. **`endpoint_by_id` vs `inspect`**: `endpoint_by_id` = quick summary (method, path); `inspect` = full technical spec (schemas, params)
 6. **Search, don't navigate**: When the user asks to find an endpoint by description, name, path, tag, or functionality — use `search`. Do NOT manually traverse spec → collection → tag → endpoint.
 7. **Auth is automatic**: `invoke` handles authentication automatically. Do NOT pass `headers` or `cookies` to `invoke` — swag2mcp applies auth under the hood. Only use `auth` when the user asks for a curl command or needs the raw token.
-8. **Response files are tool-only**: When `invoke` returns a `fileRef`, only `response_outline`, `response_compress`, and `response_slice` may read it. Do NOT use bash or external commands on `fileRef.path`. Do NOT ask the user to open the file manually.
-9. **Respect rate limits**: Before calling `invoke` in a loop or batch, call `info` to check `rate_limiting` (per_endpoint_interval, global_limit). Wait the required interval between calls to avoid throttling.
+8. **Auth-injected parameters are automatic**: When `inspect` shows a required parameter that is an **auth credential** (e.g. `api_key`, `timestamp`, `signature`, `recvWindow`), do **NOT** pass it to `invoke`. swag2mcp injects these automatically from the spec's auth config. Passing them manually is unnecessary and may be overwritten. Only pass genuine business parameters (e.g. `ip_address`, `symbol`, `id`).
+9. **Invoke one at a time, with bounded retries**: Never launch multiple `invoke` calls at once — make at most **one outstanding invoke** at a time. If a call fails with `rate_limit`/`global_rate_limit`, do NOT retry immediately and do NOT retry in a batch. Back off (wait ~15s, then ~30s) and retry that endpoint at most **twice more**. After 3 total attempts, mark it as **"rate limited"** and move on — do not return to it in this session. Non-rate-limit errors (4xx/5xx, validation) are **final** — do not retry.
+10. **Test one representative per endpoint**: Test only a single representative call for each unique endpoint (method + path). Do not iterate over every parameter value, and do not invoke the same endpoint twice.
+11. **Response files are tool-only**: When `invoke` returns a `fileRef`, only `response_outline`, `response_compress`, and `response_slice` may read it. Do NOT use bash or external commands on `fileRef.path`. Do NOT ask the user to open the file manually.
+12. **Respect rate limits**: Before calling `invoke` in a loop or batch, call `info` to check `rate_limiting` (per_endpoint_interval, global_limit). Wait the required interval between calls to avoid throttling.
 
 ## The `search` Tool - Complete Guide
 

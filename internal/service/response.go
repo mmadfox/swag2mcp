@@ -260,6 +260,8 @@ func (rs *responseService) filterArrayInMemory(
 	gp := jsonPath
 	if gp == "" {
 		gp = "@this"
+	} else {
+		gp = reader.NormalizeJSONPath(data, gp)
 	}
 
 	result := gjson.GetBytes(data, gp)

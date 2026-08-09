@@ -87,7 +87,8 @@ func TestInvokeService_Invoke_rateLimitError(t *testing.T) {
 	require.ErrorAs(t, err, &llmErr)
 	require.Equal(t, "rate_limit", llmErr.Code)
 	require.Contains(t, llmErr.Message, "try again in 8 seconds")
-	require.Contains(t, llmErr.Hint, "Wait for the cooldown period")
+	require.Contains(t, llmErr.Hint, "Do not retry immediately")
+	require.Contains(t, llmErr.Hint, "rate-limited and move on")
 }
 
 func TestInvokeService_Invoke_paramValidationError(t *testing.T) {
@@ -493,6 +494,143 @@ func TestInvokeService_dumpRequest_emptyDir(t *testing.T) {
 	svc.dumpRequest(req, "test-domain")
 }
 
+// TestInvokeService_Invoke_apiKeyQueryAuthCoversRequiredParam reproduces the
+// AbstractAPI scenario: the spec declares api_key as a required query parameter
+// but has no security scheme. The configured api-key auth (in=query) must
+// satisfy the required parameter and inject the key into the request.
+func TestInvokeService_Invoke_apiKeyQueryAuthCoversRequiredParam(t *testing.T) {
+	t.Parallel()
+
+	var gotAPIKey string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotAPIKey = r.URL.Query().Get("api_key")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	}))
+	defer srv.Close()
+
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().EndpointByID("ep1").Return(&model.Endpoint{
+		ID: "ep1", SpecID: "s1", CollectionID: "c1",
+		Operation: &spec.Operation{
+			Parameters: []*spec.Parameter{
+				{Name: "api_key", In: "query", Required: true},
+				{Name: "ip_address", In: "query", Required: false},
+			},
+		},
+	}, nil)
+	idx.EXPECT().SpecByID("s1").Return(&model.Spec{
+		ID: "s1", BaseURL: srv.URL,
+		Auth: &auth.APIKeyAuthClient{Key: "api_key", Value: "secret-key", In: "query"},
+	}, nil)
+	idx.EXPECT().CollectionByID("c1").Return(&model.Collection{ID: "c1"}, nil)
+
+	svc := newTestInvokeSvc(t, idx, NewMockWorkspaceOps(ctrl))
+	resp, err := svc.Invoke(context.Background(), InvokeRequest{
+		EndpointID: "ep1",
+		Parameters: map[string]any{"ip_address": "45.114.60.121"},
+	})
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	require.Equal(t, "secret-key", gotAPIKey, "api_key must be injected by auth")
+}
+
+// TestInvokeService_Invoke_apiKeyQueryAuthMissingOtherRequired ensures that
+// auth only covers its own query parameter and other required params still fail.
+func TestInvokeService_Invoke_apiKeyQueryAuthMissingOtherRequired(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().EndpointByID("ep1").Return(&model.Endpoint{
+		ID: "ep1", SpecID: "s1", CollectionID: "c1",
+		Operation: &spec.Operation{
+			Parameters: []*spec.Parameter{
+				{Name: "api_key", In: "query", Required: true},
+				{Name: "ip_address", In: "query", Required: true},
+			},
+		},
+	}, nil)
+	idx.EXPECT().SpecByID("s1").Return(&model.Spec{
+		ID: "s1", BaseURL: "https://api.example.com",
+		Auth: &auth.APIKeyAuthClient{Key: "api_key", Value: "secret-key", In: "query"},
+	}, nil)
+	idx.EXPECT().CollectionByID("c1").Return(&model.Collection{ID: "c1"}, nil)
+
+	svc := newTestInvokeSvc(t, idx, NewMockWorkspaceOps(ctrl))
+	_, err := svc.Invoke(context.Background(), InvokeRequest{EndpointID: "ep1"})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "ip_address")
+	require.NotContains(t, err.Error(), "api_key")
+}
+
+// TestInvokeService_Invoke_apiKeyHeaderAuthDoesNotCoverQueryParam ensures that
+// api-key auth in header mode does not satisfy a required query parameter.
+func TestInvokeService_Invoke_apiKeyHeaderAuthDoesNotCoverQueryParam(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().EndpointByID("ep1").Return(&model.Endpoint{
+		ID: "ep1", SpecID: "s1", CollectionID: "c1",
+		Operation: &spec.Operation{
+			Parameters: []*spec.Parameter{
+				{Name: "api_key", In: "query", Required: true},
+			},
+		},
+	}, nil)
+	idx.EXPECT().SpecByID("s1").Return(&model.Spec{
+		ID: "s1", BaseURL: "https://api.example.com",
+		Auth: &auth.APIKeyAuthClient{Key: "X-API-Key", Value: "secret-key", In: "header"},
+	}, nil)
+	idx.EXPECT().CollectionByID("c1").Return(&model.Collection{ID: "c1"}, nil)
+
+	svc := newTestInvokeSvc(t, idx, NewMockWorkspaceOps(ctrl))
+	_, err := svc.Invoke(context.Background(), InvokeRequest{EndpointID: "ep1"})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "api_key")
+}
+
+// TestInvokeService_Invoke_hmacAuthCoversRequiredParams reproduces the Binance
+// scenario: timestamp and signature are required query params covered by HMAC auth.
+func TestInvokeService_Invoke_hmacAuthCoversRequiredParams(t *testing.T) {
+	t.Parallel()
+
+	var gotSignature, gotTimestamp string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotSignature = r.URL.Query().Get("signature")
+		gotTimestamp = r.URL.Query().Get("timestamp")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	}))
+	defer srv.Close()
+
+	ctrl := gomock.NewController(t)
+	idx := NewMockIndexReader(ctrl)
+	idx.EXPECT().EndpointByID("ep1").Return(&model.Endpoint{
+		ID: "ep1", SpecID: "s1", CollectionID: "c1",
+		Operation: &spec.Operation{
+			Parameters: []*spec.Parameter{
+				{Name: "timestamp", In: "query", Required: true},
+				{Name: "signature", In: "query", Required: true},
+			},
+		},
+	}, nil)
+	idx.EXPECT().SpecByID("s1").Return(&model.Spec{
+		ID: "s1", BaseURL: srv.URL,
+		Auth: &auth.HMACAuthClient{APIKey: "key", SecretKey: "secret"},
+	}, nil)
+	idx.EXPECT().CollectionByID("c1").Return(&model.Collection{ID: "c1"}, nil)
+
+	svc := newTestInvokeSvc(t, idx, NewMockWorkspaceOps(ctrl))
+	resp, err := svc.Invoke(context.Background(), InvokeRequest{EndpointID: "ep1"})
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	require.NotEmpty(t, gotSignature, "signature must be injected by HMAC auth")
+	require.NotEmpty(t, gotTimestamp, "timestamp must be injected by HMAC auth")
+}
+
 type noopAuth struct{}
 
 func (noopAuth) New() error { return nil }
@@ -502,6 +640,8 @@ func (noopAuth) Type() auth.Type { return auth.NoAuth }
 func (noopAuth) Apply(_ *http.Request, _ *auth.Info) error { return nil }
 
 func (noopAuth) Validate() error { return nil }
+
+func (noopAuth) QueryParamNames() []string { return nil }
 
 type headerAuth struct {
 	key   string
@@ -518,3 +658,5 @@ func (h *headerAuth) Apply(req *http.Request, _ *auth.Info) error {
 }
 
 func (h *headerAuth) Validate() error { return nil }
+
+func (h *headerAuth) QueryParamNames() []string { return nil }

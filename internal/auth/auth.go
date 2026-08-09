@@ -92,6 +92,11 @@ type Authenticator interface {
 	Type() Type
 	Apply(req *http.Request, out *Info) error
 	Validate() error
+	// QueryParamNames returns the names of query parameters that this
+	// authenticator injects into the request itself. These parameters are
+	// considered satisfied by auth and must not be required from the caller.
+	// It returns nil for authenticators that only set headers.
+	QueryParamNames() []string
 }
 
 // TokenURLSetter is an optional interface for auth clients that have a configurable token URL.

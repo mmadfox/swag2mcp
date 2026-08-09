@@ -46,3 +46,8 @@ func (c *BasicAuthClient) Apply(req *http.Request, out *Info) error {
 func (c *BasicAuthClient) Validate() error {
 	return authValidator.Struct(c)
 }
+
+// QueryParamNames returns nil since basic auth only sets a header.
+func (c *BasicAuthClient) QueryParamNames() []string {
+	return nil
+}

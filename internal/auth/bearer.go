@@ -36,3 +36,8 @@ func (c *BearerTokenAuthClient) Apply(req *http.Request, out *Info) error {
 func (c *BearerTokenAuthClient) Validate() error {
 	return authValidator.Struct(c)
 }
+
+// QueryParamNames returns nil since bearer auth only sets a header.
+func (c *BearerTokenAuthClient) QueryParamNames() []string {
+	return nil
+}

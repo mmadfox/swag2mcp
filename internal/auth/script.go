@@ -121,3 +121,8 @@ func (c *ScriptAuthClient) execute() (string, int, error) {
 func (c *ScriptAuthClient) Validate() error {
 	return authValidator.Struct(c)
 }
+
+// QueryParamNames returns nil since script auth only sets a header.
+func (c *ScriptAuthClient) QueryParamNames() []string {
+	return nil
+}

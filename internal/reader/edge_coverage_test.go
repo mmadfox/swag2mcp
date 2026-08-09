@@ -51,7 +51,11 @@ func TestReader_CompressKeysOnly_DeepArray(t *testing.T) {
 		Mode:     reader.CompressKeysOnly,
 	})
 	require.NoError(t, err)
-	require.Equal(t, "array", result.Body)
+	// The outer array's first element is itself an array of objects; keys_only
+	// summarizes it with a representative object so the keys remain visible.
+	obj, ok := result.Body.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, "number", obj["id"])
 }
 
 func TestReader_CompressSelectKeys_DeepObject(t *testing.T) {

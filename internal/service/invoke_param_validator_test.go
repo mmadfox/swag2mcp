@@ -8,6 +8,7 @@ package service
 import (
 	"testing"
 
+	"github.com/mmadfox/swag2mcp/internal/auth"
 	"github.com/mmadfox/swag2mcp/internal/spec"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +21,7 @@ func TestValidateParameters_unknown(t *testing.T) {
 			{Name: "id", In: "path"},
 		},
 	}
-	err := validateParameters(op, map[string]any{"unknown": "val"})
+	err := validateParameters(op, map[string]any{"unknown": "val"}, nil)
 	require.NoError(t, err, "unknown parameters should be silently ignored")
 }
 
@@ -32,7 +33,7 @@ func TestValidateParameters_missingRequired(t *testing.T) {
 			{Name: "id", In: "path", Required: true},
 		},
 	}
-	err := validateParameters(op, nil)
+	err := validateParameters(op, nil, nil)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "missing required")
 }
@@ -45,8 +46,107 @@ func TestValidateParameters_valid(t *testing.T) {
 			{Name: "id", In: "path", Required: true},
 		},
 	}
-	err := validateParameters(op, map[string]any{"id": "123"})
+	err := validateParameters(op, map[string]any{"id": "123"}, nil)
 	require.NoError(t, err)
+}
+
+func TestValidateParameters_authCoversRequired(t *testing.T) {
+	t.Parallel()
+
+	op := &spec.Operation{
+		Parameters: []*spec.Parameter{
+			{Name: "api_key", In: "query", Required: true},
+			{Name: "ip_address", In: "query", Required: false},
+		},
+	}
+	err := validateParameters(op, nil, map[string]struct{}{"api_key": {}})
+	require.NoError(t, err, "api_key is covered by auth and must not be required")
+}
+
+func TestValidateParameters_authCoversOnlySome(t *testing.T) {
+	t.Parallel()
+
+	op := &spec.Operation{
+		Parameters: []*spec.Parameter{
+			{Name: "api_key", In: "query", Required: true},
+			{Name: "ip_address", In: "query", Required: true},
+		},
+	}
+	err := validateParameters(op, nil, map[string]struct{}{"api_key": {}})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "ip_address")
+	require.NotContains(t, err.Error(), "api_key")
+}
+
+func TestValidateParameters_authCoversNonRequired(t *testing.T) {
+	t.Parallel()
+
+	op := &spec.Operation{
+		Parameters: []*spec.Parameter{
+			{Name: "api_key", In: "query", Required: false},
+		},
+	}
+	err := validateParameters(op, nil, map[string]struct{}{"api_key": {}})
+	require.NoError(t, err)
+}
+
+func TestAuthQueryParamNames_nil(t *testing.T) {
+	t.Parallel()
+
+	require.Nil(t, authQueryParamNames(nil))
+}
+
+func TestAuthQueryParamNames_apiKeyQuery(t *testing.T) {
+	t.Parallel()
+
+	a := &auth.APIKeyAuthClient{Key: "api_key", In: "query"}
+	require.Equal(t, map[string]struct{}{"api_key": {}}, authQueryParamNames(a))
+}
+
+func TestAuthQueryParamNames_apiKeyHeader(t *testing.T) {
+	t.Parallel()
+
+	a := &auth.APIKeyAuthClient{Key: "api_key", In: "header"}
+	require.Nil(t, authQueryParamNames(a))
+}
+
+func TestAuthQueryParamNames_hmac(t *testing.T) {
+	t.Parallel()
+
+	a := &auth.HMACAuthClient{Options: &auth.HMACOptions{RecvWindow: 5000}}
+	got := authQueryParamNames(a)
+	require.Equal(t, map[string]struct{}{
+		"timestamp":  {},
+		"signature":  {},
+		"recvWindow": {},
+	}, got)
+}
+
+func TestAuthQueryParamNames_hmacNoRecvWindow(t *testing.T) {
+	t.Parallel()
+
+	a := &auth.HMACAuthClient{}
+	got := authQueryParamNames(a)
+	require.Equal(t, map[string]struct{}{
+		"timestamp": {},
+		"signature": {},
+	}, got)
+}
+
+func TestAuthQueryParamNames_headerOnly(t *testing.T) {
+	t.Parallel()
+
+	for _, a := range []auth.Authenticator{
+		&auth.BasicAuthClient{},
+		&auth.BearerTokenAuthClient{},
+		&auth.DigestAuthClient{},
+		&auth.OAuth2ClientCredentialsAuthClient{},
+		&auth.OAuth2PasswordAuthClient{},
+		&auth.ScriptAuthClient{},
+		auth.NewNoAuthClient(),
+	} {
+		require.Nil(t, authQueryParamNames(a), "auth type %s must not inject query params", a.Type())
+	}
 }
 
 func TestValidateRequestBody_notRequired(t *testing.T) {

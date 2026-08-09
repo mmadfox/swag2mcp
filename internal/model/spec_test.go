@@ -38,6 +38,10 @@ func (m *mockAuth) Validate() error {
 	return nil
 }
 
+func (m *mockAuth) QueryParamNames() []string {
+	return nil
+}
+
 func TestInitAuthenticator_Nil(t *testing.T) {
 	t.Parallel()
 

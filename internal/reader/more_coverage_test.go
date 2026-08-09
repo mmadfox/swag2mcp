@@ -26,7 +26,11 @@ func TestReader_CompressKeysOnly_NonEmptyArray(t *testing.T) {
 		Mode:     reader.CompressKeysOnly,
 	})
 	require.NoError(t, err)
-	require.Equal(t, "array", result.Body)
+	// An array of objects is summarized by a representative object with type
+	// names, so the element keys remain visible.
+	obj, ok := result.Body.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, "number", obj["id"])
 }
 
 func TestReader_SliceByJSONPath_LocateNotFound(t *testing.T) {

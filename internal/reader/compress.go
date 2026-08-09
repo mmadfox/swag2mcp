@@ -38,7 +38,8 @@ func (r *reader) Compress(path string, opts CompressOptions) (CompressResult, er
 
 	selected := data
 	if opts.JSONPath != "" {
-		result := gjson.GetBytes(data, opts.JSONPath)
+		path := NormalizeJSONPath(data, opts.JSONPath)
+		result := gjson.GetBytes(data, path)
 		if !result.Exists() {
 			return CompressResult{}, fmt.Errorf("%w: %s", ErrPathNotFound, opts.JSONPath)
 		}
@@ -327,15 +328,27 @@ func decodeKeysOnlyObject(decoder *json.Decoder) (map[string]any, error) {
 	return obj, nil
 }
 
-// decodeKeysOnlyArray decodes an array discarding values.
-func decodeKeysOnlyArray(decoder *json.Decoder) (string, error) {
+// decodeKeysOnlyArray decodes an array. For an array of objects it returns a
+// single representative object with type names (so the keys are visible);
+// otherwise it returns the array type name.
+func decodeKeysOnlyArray(decoder *json.Decoder) (any, error) {
+	var first map[string]any
 	for decoder.More() {
-		if _, err := decodeKeysOnly(decoder); err != nil {
+		val, err := decodeKeysOnly(decoder)
+		if err != nil {
 			return "", err
+		}
+		if first == nil {
+			if obj, ok := val.(map[string]any); ok {
+				first = obj
+			}
 		}
 	}
 	if _, err := decoder.Token(); err != nil {
 		return "", err
+	}
+	if first != nil {
+		return first, nil
 	}
 	return compressedTypeArray, nil
 }

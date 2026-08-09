@@ -94,3 +94,13 @@ func (c *HMACAuthClient) Apply(req *http.Request, out *Info) error {
 func (c *HMACAuthClient) Validate() error {
 	return authValidator.Struct(c)
 }
+
+// QueryParamNames returns the query parameters that HMAC auth injects into
+// the request: timestamp, signature, and optionally recvWindow.
+func (c *HMACAuthClient) QueryParamNames() []string {
+	names := []string{hmacTimestampKey, hmacSignatureKey}
+	if c.Options != nil && c.Options.RecvWindow > 0 {
+		names = append(names, hmacRecvWindowKey)
+	}
+	return names
+}

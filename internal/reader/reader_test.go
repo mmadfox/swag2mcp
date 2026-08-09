@@ -8,6 +8,7 @@ package reader_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/mmadfox/swag2mcp/internal/reader"
@@ -154,6 +155,32 @@ func TestReader_Outline_TopLevelArray(t *testing.T) {
 	require.NotEmpty(t, outline.CompressionHints)
 	require.NotEmpty(t, outline.NavigationHints.ArrayPaths)
 	require.Equal(t, "employees", outline.NavigationHints.ArrayPaths[0].Path)
+}
+
+func TestReader_Outline_HintsNoRecursiveDescent(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "sample.json")
+	data := []byte(`{"items":[{"name":"a","tags":[1,2]},{"name":"b"}]}`)
+	require.NoError(t, os.WriteFile(path, data, 0o600))
+
+	r := reader.New(dir)
+	outline, err := r.Outline(path, reader.OutlineOptions{MaxDepth: 4, MaxArrayItems: 2})
+	require.NoError(t, err)
+
+	// Hints must not suggest unsupported recursive-descent ".." paths.
+	for _, h := range outline.CompressionHints {
+		require.NotContains(t, h, "..", "hint must not use recursive descent: %s", h)
+	}
+	// Array item paths should use an index (e.g. items.0.name).
+	var foundIndexed bool
+	for _, h := range outline.CompressionHints {
+		if strings.Contains(h, "items.0") {
+			foundIndexed = true
+			break
+		}
+	}
+	require.True(t, foundIndexed, "expected an indexed array-item hint, got %v", outline.CompressionHints)
 }
 
 func TestReader_Outline_HomogeneousArray(t *testing.T) {

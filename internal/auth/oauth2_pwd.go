@@ -128,3 +128,8 @@ func (c *OAuth2PasswordAuthClient) SetTokenURL(url string) {
 func (c *OAuth2PasswordAuthClient) Validate() error {
 	return authValidator.Struct(c)
 }
+
+// QueryParamNames returns nil since OAuth2 password auth only sets a header.
+func (c *OAuth2PasswordAuthClient) QueryParamNames() []string {
+	return nil
+}

@@ -246,8 +246,23 @@ func NewResponsePathNotFoundError(err error) *LLMError {
 	return &LLMError{
 		Code:    responsePathNotFoundErrCode,
 		Message: "jsonPath did not match any value in the file.",
-		Hint:    formatError(err),
+		Hint:    responsePathNotFoundHint(err),
 	}
+}
+
+// responsePathNotFoundHint builds a helpful hint for a failed jsonPath lookup.
+// It surfaces the offending path and explains the root-array convention.
+func responsePathNotFoundHint(err error) string {
+	detail := formatError(err)
+	if detail == "" || errors.Is(err, reader.ErrPathNotFound) {
+		detail = "the given jsonPath"
+	}
+	return fmt.Sprintf(
+		"%s did not resolve to a value. For a root-level array, leave jsonPath empty (or use @this) to target its first element. "+
+			"Use dotted paths like data.0.name, and '-' for the last element of an array (e.g. data.-). "+
+			"Run response_outline to see the file structure.",
+		detail,
+	)
 }
 
 // NewResponseRequestError creates an LLMError with code "response_request_error".
@@ -378,23 +393,24 @@ func NewImportError(msg string, err error) *LLMError {
 
 // NewRateLimitError creates an LLMError with code "rate_limit".
 // This is returned when a specific endpoint is called too frequently.
-// The LLM should wait for the cooldown or try a different endpoint.
+// The LLM should back off (not retry immediately or in a batch) and retry
+// the endpoint at most a couple more times before marking it as rate-limited.
 func NewRateLimitError(err error) *LLMError {
 	return &LLMError{
 		Code:    rateLimitErrCode,
 		Message: err.Error(),
-		Hint:    "This endpoint was called too recently. Wait for the cooldown period to expire, then try again. You can call a different endpoint in the meantime.",
+		Hint:    "This endpoint was rate-limited. Do not retry immediately and do not batch retries. Wait ~15s, then retry at most twice more; otherwise mark it as rate-limited and move on. You can call a different endpoint in the meantime.",
 	}
 }
 
 // NewGlobalRateLimitError creates an LLMError with code "global_rate_limit".
 // This is returned when the total number of invoke requests per second exceeds the limit.
-// The LLM should wait before making any further requests.
+// The LLM should pause before any further requests and not retry in a batch.
 func NewGlobalRateLimitError(err error) *LLMError {
 	return &LLMError{
 		Code:    globalRateLimitErrCode,
 		Message: err.Error(),
-		Hint:    "Too many API requests were made in a short time. Wait a few seconds before making any new invoke calls.",
+		Hint:    "Too many API requests were made in a short time. Do not retry in a batch. Wait a few seconds before making a single new invoke call.",
 	}
 }
 
