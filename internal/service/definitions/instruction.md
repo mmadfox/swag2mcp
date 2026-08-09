@@ -135,7 +135,8 @@ Escape with `\`: `marty\ couch`, `name\:marty`, `\+marty`, `\-marty`
 - **Find endpoints with "user" in the URL path:** `path:user`
 
 ### Exact Matches & Phrases
-- **Find exact path (phrase search on text field):** `path:"/api/v1/users"`
+- **Find exact path:** `path:"/api/v1/users"`
+- **Find all endpoints under a path prefix:** `path:/api/v1/*`
 - **Find exact summary phrase:** `summary:"add a new pet"`
 
 ### Complex Combinations (Boolean)

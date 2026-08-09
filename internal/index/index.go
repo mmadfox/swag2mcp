@@ -280,6 +280,8 @@ func (idx *Index) index(endpoints []*model.Endpoint) error {
 			AddField(bluge.NewKeywordField("tag", normalizeTag(strings.ToLower(ep.Tag))).StoreValue()).
 			AddField(bluge.NewTextField("path",
 				strings.ToLower(ep.Path)).WithAnalyzer(idx.analyzer).StoreValue().SearchTermPositions()).
+			AddField(bluge.NewKeywordField("path_kw",
+				strings.ToLower(ep.Path)).StoreValue()).
 			AddField(bluge.NewKeywordField("spec_domain", strings.ToLower(ep.SpecDomain)).StoreValue()).
 			AddField(bluge.NewTextField("collection_title",
 				strings.ToLower(ep.CollectionTitle)).WithAnalyzer(idx.analyzer).StoreValue()).
@@ -522,6 +524,12 @@ func (idx *Index) buildQuery(q string) (bluge.Query, error) {
 		return bluge.NewMatchAllQuery(), nil
 	}
 
+	// A path: filter is handled specially against the keyword path_kw field so
+	// that prefix/wildcard filtering works on the full path (e.g. path:/api/v3/*).
+	if pathQuery, ok := parsePathQuery(q); ok {
+		return pathQuery, nil
+	}
+
 	q = normalizeFieldValues(q)
 
 	qsOpts := querystring.DefaultOptions().
@@ -545,6 +553,30 @@ func (idx *Index) buildQuery(q string) (bluge.Query, error) {
 		mq.SetOperator(bluge.MatchQueryOperatorAnd)
 	}
 	return mq, nil
+}
+
+// parsePathQuery detects a path: filter and builds a query against the keyword
+// path_kw field. A trailing "*" becomes a prefix query; otherwise an exact
+// term query is used. It returns ok=false when the query is not a path filter.
+func parsePathQuery(q string) (bluge.Query, bool) {
+	trimmed := strings.TrimSpace(q)
+	// Optional leading "+" (must) is accepted; "-" (must not) is not supported
+	// for path filters here.
+	rest := strings.TrimPrefix(trimmed, "+")
+	if !strings.HasPrefix(rest, "path:") {
+		return nil, false
+	}
+	value := strings.TrimPrefix(rest, "path:")
+	value = strings.Trim(value, `"`)
+	if value == "" {
+		return nil, false
+	}
+	value = strings.ToLower(value)
+
+	if prefix, ok := strings.CutSuffix(value, "*"); ok {
+		return bluge.NewPrefixQuery(prefix).SetField("path_kw"), true
+	}
+	return bluge.NewTermQuery(value).SetField("path_kw"), true
 }
 
 // normalizeFieldValues normalizes field:value patterns in a query string so
