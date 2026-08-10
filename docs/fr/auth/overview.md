@@ -2,7 +2,7 @@
 
 ## Aperçu
 
-swag2mcp prend en charge **9 méthodes d'authentification** pour travailler avec des API qui nécessitent une autorisation. Vous la configurez une fois dans le fichier de configuration — après cela, chaque appel API via `invoke` inclut automatiquement les bons jetons et en-têtes.
+swag2mcp prend en charge **10 méthodes d'authentification** pour travailler avec des API qui nécessitent une autorisation. Vous la configurez une fois dans le fichier de configuration — après cela, chaque appel API via `invoke` inclut automatiquement les bons jetons et en-têtes.
 
 ### Où configurer
 
@@ -60,4 +60,5 @@ En **production**, cet outil doit être désactivé avec `--disable-llm-auth` (a
 | [`hmac`](/auth/hmac) | Signature HMAC-SHA256 (style Binance) | Échanges de cryptomonnaies |
 | [`oauth2-cc`](/auth/oauth2-cc) | OAuth2 Client Credentials | Serveur à serveur, microservices |
 | [`oauth2-pwd`](/auth/oauth2-pwd) | OAuth2 Password Grant | Applications avec connexion utilisateur |
+| [`openid-connect`](/auth/openid-connect) | OIDC Discovery (client credentials) | API compatibles OIDC |
 | [`script`](/auth/script) | Script externe pour obtenir un jeton | Tout schéma d'authentification personnalisé |

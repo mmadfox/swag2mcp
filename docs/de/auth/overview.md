@@ -2,7 +2,7 @@
 
 ## Übersicht
 
-swag2mcp unterstützt **9 Authentifizierungsmethoden** für die Arbeit mit APIs, die eine Autorisierung erfordern. Sie konfigurieren es einmal in der Konfigurationsdatei — danach fügt jeder API-Aufruf über `invoke` automatisch die richtigen Tokens und Header hinzu.
+swag2mcp unterstützt **10 Authentifizierungsmethoden** für die Arbeit mit APIs, die eine Autorisierung erfordern. Sie konfigurieren es einmal in der Konfigurationsdatei — danach fügt jeder API-Aufruf über `invoke` automatisch die richtigen Tokens und Header hinzu.
 
 ### Wo konfigurieren
 
@@ -60,4 +60,5 @@ In der **Produktion** sollte dieses Tool mit `--disable-llm-auth` deaktiviert we
 | [`hmac`](/auth/hmac) | HMAC-SHA256-Signatur (Binance-Stil) | Kryptowährungsbörsen |
 | [`oauth2-cc`](/auth/oauth2-cc) | OAuth2 Client Credentials | Server-zu-Server, Microservices |
 | [`oauth2-pwd`](/auth/oauth2-pwd) | OAuth2 Password Grant | Apps mit Benutzeranmeldung |
+| [`openid-connect`](/auth/openid-connect) | OIDC Discovery (Client Credentials) | OIDC-fähige APIs |
 | [`script`](/auth/script) | Externes Skript zum Abrufen eines Tokens | Jedes benutzerdefinierte Auth-Schema |

@@ -145,6 +145,20 @@ func TestAuth_UnmarshalYAML_hmac_with_options(t *testing.T) {
 	assert.Equal(t, 5000, c.Options.RecvWindow)
 }
 
+func TestAuth_UnmarshalYAML_openid_connect(t *testing.T) {
+	t.Parallel()
+
+	var a Auth
+	y := "type: openid-connect\nconfig:\n  issuer: https://issuer.example.com\n  client_id: my-client\n  client_secret: my-secret\n  scopes:\n    - openid\n    - profile"
+	require.NoError(t, yaml.Unmarshal([]byte(y), &a))
+	c, ok := a.Client.(*auth.OIDCAuthClient)
+	require.True(t, ok, "expected *auth.OIDCAuthClient")
+	assert.Equal(t, "https://issuer.example.com", c.Issuer)
+	assert.Equal(t, "my-client", c.ClientID)
+	assert.Equal(t, "my-secret", c.ClientSecret)
+	assert.Equal(t, []string{"openid", "profile"}, c.Scopes)
+}
+
 func TestAuth_UnmarshalYAML_underscore_type(t *testing.T) {
 	t.Parallel()
 

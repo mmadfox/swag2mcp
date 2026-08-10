@@ -2,7 +2,7 @@
 
 ## 개요
 
-swag2mcp는 인증이 필요한 API 작업을 위한 **9가지 인증 방법**을 지원합니다. 설정 파일에 한 번 구성하면 `invoke`를 통한 모든 API 호출에 올바른 토큰과 헤더가 자동으로 포함됩니다.
+swag2mcp는 인증이 필요한 API 작업을 위한 **10가지 인증 방법**을 지원합니다. 설정 파일에 한 번 구성하면 `invoke`를 통한 모든 API 호출에 올바른 토큰과 헤더가 자동으로 포함됩니다.
 
 ### 설정 위치
 
@@ -60,4 +60,5 @@ LLM 에이전트는 `auth` MCP 도구를 통해 토큰이나 헤더를 검색할
 | [`hmac`](/auth/hmac) | HMAC-SHA256 서명 (Binance 스타일) | 암호화폐 거래소 |
 | [`oauth2-cc`](/auth/oauth2-cc) | OAuth2 Client Credentials | 서버 간, 마이크로서비스 |
 | [`oauth2-pwd`](/auth/oauth2-pwd) | OAuth2 Password Grant | 사용자 로그인이 있는 앱 |
+| [`openid-connect`](/auth/openid-connect) | OIDC Discovery(client credentials) | OIDC 지원 API |
 | [`script`](/auth/script) | 토큰 획득을 위한 외부 스크립트 | 모든 커스텀 인증 체계 |
