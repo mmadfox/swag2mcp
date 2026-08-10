@@ -49,7 +49,39 @@ func parseV2(data []byte) (*Doc, error) {
 		doc.PathItems = append(doc.PathItems, pathItemToOps(path, pathItem)...)
 	}
 
+	// Propagate top-level security to operations that do not define their own.
+	// Swagger 2.0 allows a global "security" that applies to all operations.
+	applyTopLevelSecurity(doc.PathItems, swag.Security)
+
 	return doc, nil
+}
+
+// applyTopLevelSecurity sets the given security requirements on every operation
+// that does not define its own security. An empty top-level security (e.g. [])
+// means "no auth" and is not propagated.
+func applyTopLevelSecurity(pathItems []*PathItem, security []map[string][]string) {
+	if len(security) == 0 {
+		return
+	}
+	for _, pi := range pathItems {
+		if pi.Operation == nil || pi.Operation.securityDeclared {
+			continue
+		}
+		pi.Operation.Security = cloneSecurity(security)
+	}
+}
+
+// cloneSecurity returns a deep copy of a security requirements slice.
+func cloneSecurity(security []map[string][]string) []map[string][]string {
+	out := make([]map[string][]string, len(security))
+	for i, req := range security {
+		m := make(map[string][]string, len(req))
+		for k, v := range req {
+			m[k] = append([]string(nil), v...)
+		}
+		out[i] = m
+	}
+	return out
 }
 
 // pathItemToOps converts a Swagger path item into a slice of PathItems (one per method).
@@ -160,9 +192,12 @@ func swaggerOpToOp(op *spec.Operation) *Operation {
 		}
 	}
 
-	if len(op.Security) > 0 {
-		o.Security = make([]map[string][]string, len(op.Security))
-		copy(o.Security, op.Security)
+	if op.Security != nil {
+		o.securityDeclared = true
+		if len(op.Security) > 0 {
+			o.Security = make([]map[string][]string, len(op.Security))
+			copy(o.Security, op.Security)
+		}
 	}
 
 	if op.Responses != nil {

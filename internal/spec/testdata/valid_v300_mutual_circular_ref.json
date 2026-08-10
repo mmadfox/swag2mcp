@@ -1,0 +1,37 @@
+{
+  "openapi": "3.0.0",
+  "info": {"title": "Mutual", "version": "1.0.0"},
+  "paths": {
+    "/a": {
+      "get": {
+        "operationId": "getA",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/A"}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "A": {
+        "type": "object",
+        "properties": {
+          "b": {"$ref": "#/components/schemas/B"}
+        }
+      },
+      "B": {
+        "type": "object",
+        "properties": {
+          "a": {"$ref": "#/components/schemas/A"}
+        }
+      }
+    }
+  }
+}

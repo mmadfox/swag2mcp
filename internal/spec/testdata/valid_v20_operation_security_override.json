@@ -1,0 +1,26 @@
+{
+  "swagger": "2.0",
+  "info": {"title": "Mixed", "version": "1.0.0"},
+  "host": "example.com",
+  "basePath": "/",
+  "schemes": ["https"],
+  "securityDefinitions": {
+    "UserSecurity": {"type": "basic"}
+  },
+  "security": [{"UserSecurity": []}],
+  "paths": {
+    "/public": {
+      "get": {
+        "operationId": "public",
+        "security": [],
+        "responses": {"200": {"description": "ok"}}
+      }
+    },
+    "/secure": {
+      "get": {
+        "operationId": "secure",
+        "responses": {"200": {"description": "ok"}}
+      }
+    }
+  }
+}
