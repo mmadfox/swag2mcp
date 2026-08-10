@@ -38,6 +38,8 @@ const (
 	ScriptAuth Type = "script"
 	// HMACAuth represents HMAC-SHA256 signature authentication (Binance-style).
 	HMACAuth Type = "hmac"
+	// OpenIDConnect represents OIDC Discovery-based authentication.
+	OpenIDConnect Type = "openid-connect"
 )
 
 const (

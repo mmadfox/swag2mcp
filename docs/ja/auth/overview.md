@@ -2,7 +2,7 @@
 
 ## 概要
 
-swag2mcp は認証が必要な API を扱うための **9 つの認証方式** をサポートしています。設定ファイルに一度設定するだけで、以降 `invoke` によるすべての API 呼び出しに自動的に適切なトークンとヘッダーが含まれます。
+swag2mcp は認証が必要な API を扱うための **10 の認証方式** をサポートしています。設定ファイルに一度設定するだけで、以降 `invoke` によるすべての API 呼び出しに自動的に適切なトークンとヘッダーが含まれます。
 
 ### 設定場所
 
@@ -60,4 +60,5 @@ LLM エージェントは `auth` MCP ツールを介してトークンやヘッ�
 | [`hmac`](/auth/hmac) | HMAC-SHA256 署名（Binance スタイル） | 暗号通貨取引所 |
 | [`oauth2-cc`](/auth/oauth2-cc) | OAuth2 Client Credentials | サーバー間、マイクロサービス |
 | [`oauth2-pwd`](/auth/oauth2-pwd) | OAuth2 Password Grant | ユーザーログイン付きアプリ |
+| [`openid-connect`](/auth/openid-connect) | OIDC Discovery（client credentials） | OIDC 対応 API |
 | [`script`](/auth/script) | トークン取得用の外部スクリプト | 任意のカスタム認証スキーム |

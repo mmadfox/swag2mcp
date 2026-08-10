@@ -30,6 +30,7 @@ var authDecoders = map[string]authDecoder{ //nolint:gochecknoglobals // Static r
 	auth.APIKeyAuth.String():              decodeAPIKeyAuth,
 	auth.ScriptAuth.String():              decodeScriptAuth,
 	auth.HMACAuth.String():                decodeHMACAuth,
+	auth.OpenIDConnect.String():           decodeOIDC,
 }
 
 // Auth holds the parsed authentication configuration for a spec.
@@ -154,6 +155,15 @@ func decodeScriptAuth(node *yaml.Node) (auth.Authenticator, error) {
 // decodeHMACAuth decodes an HMAC auth config block into an HMACAuthClient.
 func decodeHMACAuth(node *yaml.Node) (auth.Authenticator, error) {
 	var client auth.HMACAuthClient
+	if err := decodeConfig(node, &client); err != nil {
+		return nil, err
+	}
+	return &client, nil
+}
+
+// decodeOIDC decodes an OIDC Discovery auth config block into an OIDCAuthClient.
+func decodeOIDC(node *yaml.Node) (auth.Authenticator, error) {
+	var client auth.OIDCAuthClient
 	if err := decodeConfig(node, &client); err != nil {
 		return nil, err
 	}

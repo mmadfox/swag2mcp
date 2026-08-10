@@ -2,7 +2,7 @@
 
 ## 概述
 
-swag2mcp 支持 **9 种认证方法**，用于处理需要授权的 API。你在配置文件中配置一次 — 之后，通过 `invoke` 的每个 API 调用都会自动包含正确的令牌和头。
+swag2mcp 支持 **10 种认证方法**，用于处理需要授权的 API。你在配置文件中配置一次 — 之后，通过 `invoke` 的每个 API 调用都会自动包含正确的令牌和头。
 
 ### 在哪里配置
 
@@ -60,4 +60,5 @@ LLM 智能体可以通过 `auth` MCP 工具检索令牌或头 — 例如，用�
 | [`hmac`](/auth/hmac) | HMAC-SHA256 签名（Binance 风格） | 加密货币交易所 |
 | [`oauth2-cc`](/auth/oauth2-cc) | OAuth2 客户端凭证 | 服务器到服务器、微服务 |
 | [`oauth2-pwd`](/auth/oauth2-pwd) | OAuth2 密码授权 | 带用户登录的应用程序 |
+| [`openid-connect`](/auth/openid-connect) | OIDC Discovery（client credentials） | 支持 OIDC 的 API |
 | [`script`](/auth/script) | 用于获取令牌的外部脚本 | 任何自定义认证方案 |
