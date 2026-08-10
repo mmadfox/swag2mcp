@@ -48,6 +48,23 @@ func openapi3DocToDoc(doc *openapi3.T) *Doc {
 		out.PathItems = append(out.PathItems, ops...)
 	}
 
+	// Propagate top-level security to operations that do not define their own.
+	// OpenAPI 3.x allows a global "security" that applies to all operations.
+	applyTopLevelSecurity(out.PathItems, securityRequirementsToMaps(doc.Security))
+
+	return out
+}
+
+// securityRequirementsToMaps converts kin-openapi SecurityRequirements to the
+// unified []map[string][]string representation.
+func securityRequirementsToMaps(reqs openapi3.SecurityRequirements) []map[string][]string {
+	if len(reqs) == 0 {
+		return nil
+	}
+	out := make([]map[string][]string, len(reqs))
+	for i, req := range reqs {
+		out[i] = req
+	}
 	return out
 }
 
@@ -144,10 +161,13 @@ func openapi3OpToOp(op *openapi3.Operation) *Operation {
 		}
 	}
 
-	if op.Security != nil && len(*op.Security) > 0 {
-		o.Security = make([]map[string][]string, len(*op.Security))
-		for i, sec := range *op.Security {
-			o.Security[i] = sec
+	if op.Security != nil {
+		o.securityDeclared = true
+		if len(*op.Security) > 0 {
+			o.Security = make([]map[string][]string, len(*op.Security))
+			for i, sec := range *op.Security {
+				o.Security[i] = sec
+			}
 		}
 	}
 
@@ -185,16 +205,35 @@ func openapi3ContentToContent(content openapi3.Content) map[string]*MediaType {
 
 // schemaRefToSchema converts a kin-openapi SchemaRef to the unified Schema type.
 func schemaRefToSchema(sref *openapi3.SchemaRef) *Schema {
+	return schemaRefToSchemaVisited(sref, make(map[*openapi3.Schema]struct{}))
+}
+
+// schemaRefToSchemaVisited converts a SchemaRef to the unified Schema type,
+// tracking visited schema pointers to break circular $ref cycles. kin-openapi
+// inlines references, so a self-referencing schema yields the same pointer
+// repeatedly; without cycle detection this recurses until stack overflow.
+func schemaRefToSchemaVisited(sref *openapi3.SchemaRef, visited map[*openapi3.Schema]struct{}) *Schema {
 	if sref == nil || sref.Value == nil {
 		return nil
 	}
 	s := sref.Value
+	if _, ok := visited[s]; ok {
+		// Circular reference: emit a schema carrying only the ref so the
+		// structure is preserved without recursing further.
+		return &Schema{Ref: sref.Ref}
+	}
+	// Mark the schema as in-progress for the duration of this subtree, then
+	// unmark it on the way out (DFS backtracking). This detects cycles along
+	// the current path while still allowing the same schema to be expanded
+	// again from a different, non-cyclic branch.
+	visited[s] = struct{}{}
+	defer delete(visited, s)
 
 	return &Schema{
 		Type:        extractSchemaType(s),
 		Format:      s.Format,
-		Properties:  extractSchemaProperties(s),
-		Items:       schemaRefToSchema(s.Items),
+		Properties:  extractSchemaProperties(s, visited),
+		Items:       schemaRefToSchemaVisited(s.Items, visited),
 		Required:    s.Required,
 		Ref:         sref.Ref,
 		Description: s.Description,
@@ -203,9 +242,9 @@ func schemaRefToSchema(sref *openapi3.SchemaRef) *Schema {
 		ReadOnly:    s.ReadOnly,
 		WriteOnly:   s.WriteOnly,
 		Example:     s.Example,
-		OneOf:       extractSchemaComposition(s.OneOf),
-		AnyOf:       extractSchemaComposition(s.AnyOf),
-		AllOf:       extractSchemaComposition(s.AllOf),
+		OneOf:       extractSchemaComposition(s.OneOf, visited),
+		AnyOf:       extractSchemaComposition(s.AnyOf, visited),
+		AllOf:       extractSchemaComposition(s.AllOf, visited),
 	}
 }
 
@@ -223,19 +262,19 @@ func extractSchemaType(s *openapi3.Schema) string {
 }
 
 // extractSchemaProperties converts a schema's property map to the unified Schema map.
-func extractSchemaProperties(s *openapi3.Schema) map[string]*Schema {
+func extractSchemaProperties(s *openapi3.Schema, visited map[*openapi3.Schema]struct{}) map[string]*Schema {
 	props := make(map[string]*Schema, len(s.Properties))
 	for k, vref := range s.Properties {
-		props[k] = schemaRefToSchema(vref)
+		props[k] = schemaRefToSchemaVisited(vref, visited)
 	}
 	return props
 }
 
 // extractSchemaComposition converts a slice of SchemaRefs to a slice of unified Schemas.
-func extractSchemaComposition(refs []*openapi3.SchemaRef) []*Schema {
+func extractSchemaComposition(refs []*openapi3.SchemaRef, visited map[*openapi3.Schema]struct{}) []*Schema {
 	out := make([]*Schema, 0, len(refs))
 	for _, ss := range refs {
-		if s := schemaRefToSchema(ss); s != nil {
+		if s := schemaRefToSchemaVisited(ss, visited); s != nil {
 			out = append(out, s)
 		}
 	}

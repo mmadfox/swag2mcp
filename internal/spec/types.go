@@ -45,6 +45,10 @@ type Operation struct {
 	RequestBody *RequestBody          `json:"requestBody,omitempty"`
 	Responses   map[string]*Response  `json:"responses,omitempty"`
 	Security    []map[string][]string `json:"security,omitempty"`
+	// securityDeclared records whether the operation explicitly declared a
+	// security requirement (even an empty one), so top-level security is not
+	// propagated to it. It is not serialized.
+	securityDeclared bool
 }
 
 // Parameter represents a request parameter with name, location, schema, and required status.

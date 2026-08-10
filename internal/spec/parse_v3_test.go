@@ -6,6 +6,8 @@
 package spec
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -245,4 +247,84 @@ func TestOpenapi3OpToOp_Security_Empty(t *testing.T) {
 
 	require.NotNil(t, op)
 	assert.Empty(t, op.Security)
+}
+
+func TestParseV3_TopLevelSecurityPropagates(t *testing.T) {
+	t.Parallel()
+
+	data, err := os.ReadFile(filepath.Join("testdata", "valid_v300_top_level_security.json"))
+	require.NoError(t, err)
+
+	doc, err := Parse(data)
+	require.NoError(t, err)
+	require.Len(t, doc.PathItems, 1)
+	op := doc.PathItems[0].Operation
+	require.NotNil(t, op)
+	require.Len(t, op.Security, 1, "top-level security must propagate to operation")
+	assert.Contains(t, op.Security[0], "bearerAuth")
+}
+
+func TestParseV3_OperationSecurityOverridesTopLevel(t *testing.T) {
+	t.Parallel()
+
+	data, err := os.ReadFile(filepath.Join("testdata", "valid_v300_operation_security_override.json"))
+	require.NoError(t, err)
+
+	doc, err := Parse(data)
+	require.NoError(t, err)
+	require.Len(t, doc.PathItems, 2)
+
+	var publicOp, secureOp *Operation
+	for _, pi := range doc.PathItems {
+		switch pi.Path {
+		case "/public":
+			publicOp = pi.Operation
+		case "/secure":
+			secureOp = pi.Operation
+		}
+	}
+	require.NotNil(t, publicOp)
+	require.NotNil(t, secureOp)
+	assert.Empty(t, publicOp.Security, "operation-level empty security must win")
+	assert.Len(t, secureOp.Security, 1, "operation without security inherits top-level")
+}
+
+func TestParseV3_CircularRefNoStackOverflow(t *testing.T) {
+	t.Parallel()
+
+	// A schema that references itself directly (kin-openapi inlines refs, so
+	// the same *openapi3.Schema pointer recurses). This must not stack overflow.
+	data, err := os.ReadFile(filepath.Join("testdata", "valid_v300_circular_ref.json"))
+	require.NoError(t, err)
+
+	doc, err := Parse(data)
+	require.NoError(t, err)
+	require.Len(t, doc.PathItems, 1)
+	op := doc.PathItems[0].Operation
+	require.NotNil(t, op)
+	require.NotNil(t, op.Responses["200"])
+	mt := op.Responses["200"].Content["application/json"]
+	require.NotNil(t, mt)
+	require.NotNil(t, mt.Schema)
+	// The circular "next" property must be present but not infinitely nested.
+	require.Contains(t, mt.Schema.Properties, "next")
+	require.Contains(t, mt.Schema.Properties, "name")
+}
+
+func TestParseV3_MutualCircularRefNoStackOverflow(t *testing.T) {
+	t.Parallel()
+
+	// Two schemas referencing each other (A -> B -> A).
+	data, err := os.ReadFile(filepath.Join("testdata", "valid_v300_mutual_circular_ref.json"))
+	require.NoError(t, err)
+
+	doc, err := Parse(data)
+	require.NoError(t, err)
+	require.Len(t, doc.PathItems, 1)
+	op := doc.PathItems[0].Operation
+	require.NotNil(t, op)
+	mt := op.Responses["200"].Content["application/json"]
+	require.NotNil(t, mt)
+	require.NotNil(t, mt.Schema)
+	require.Contains(t, mt.Schema.Properties, "b")
 }

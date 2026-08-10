@@ -1,0 +1,16 @@
+{
+  "swagger": "2.0",
+  "info": {"title": "Public", "version": "1.0.0"},
+  "host": "example.com",
+  "basePath": "/",
+  "schemes": ["https"],
+  "security": [],
+  "paths": {
+    "/ping": {
+      "get": {
+        "operationId": "ping",
+        "responses": {"200": {"description": "ok"}}
+      }
+    }
+  }
+}

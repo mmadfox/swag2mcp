@@ -506,3 +506,55 @@ func TestSwaggerOpToOp_Security_Empty(t *testing.T) {
 	require.NotNil(t, op)
 	assert.Empty(t, op.Security)
 }
+
+func TestParseV2_TopLevelSecurityPropagates(t *testing.T) {
+	t.Parallel()
+
+	data, err := os.ReadFile(filepath.Join("testdata", "valid_v20_top_level_security.json"))
+	require.NoError(t, err)
+
+	doc, err := Parse(data)
+	require.NoError(t, err)
+	require.Len(t, doc.PathItems, 1)
+	op := doc.PathItems[0].Operation
+	require.NotNil(t, op)
+	require.Len(t, op.Security, 1, "top-level security must propagate to operation")
+	assert.Contains(t, op.Security[0], "UserSecurity")
+}
+
+func TestParseV2_TopLevelSecurityEmptyNotPropagated(t *testing.T) {
+	t.Parallel()
+
+	data, err := os.ReadFile(filepath.Join("testdata", "valid_v20_empty_security.json"))
+	require.NoError(t, err)
+
+	doc, err := Parse(data)
+	require.NoError(t, err)
+	require.Len(t, doc.PathItems, 1)
+	assert.Empty(t, doc.PathItems[0].Operation.Security, "empty top-level security must not propagate")
+}
+
+func TestParseV2_OperationSecurityOverridesTopLevel(t *testing.T) {
+	t.Parallel()
+
+	data, err := os.ReadFile(filepath.Join("testdata", "valid_v20_operation_security_override.json"))
+	require.NoError(t, err)
+
+	doc, err := Parse(data)
+	require.NoError(t, err)
+	require.Len(t, doc.PathItems, 2)
+
+	var publicOp, secureOp *Operation
+	for _, pi := range doc.PathItems {
+		switch pi.Path {
+		case "/public":
+			publicOp = pi.Operation
+		case "/secure":
+			secureOp = pi.Operation
+		}
+	}
+	require.NotNil(t, publicOp)
+	require.NotNil(t, secureOp)
+	assert.Empty(t, publicOp.Security, "operation-level empty security must win")
+	assert.Len(t, secureOp.Security, 1, "operation without security inherits top-level")
+}
