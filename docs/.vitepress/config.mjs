@@ -150,6 +150,7 @@ export default defineConfig({
           {
             text: 'Integration',
             items: [
+              { text: 'Any MCP Client', link: '/integration/overview' },
               { text: 'OpenCode', link: '/integration/opencode' },
               { text: 'Cursor', link: '/integration/cursor' },
               { text: 'Claude Desktop', link: '/integration/claude' },
@@ -172,7 +173,7 @@ export default defineConfig({
           { text: 'Главная', link: '/ru/' },
           { text: 'Быстрый старт', link: '/ru/getting-started/quickstart' },
           { text: 'Установка', link: '/ru/getting-started/installation' },
-          { text: 'Интеграция', link: '/ru/integration/opencode' },
+          { text: 'Интеграция', link: '/ru/integration/overview' },
         ],
         sidebar: [
           {
@@ -275,6 +276,7 @@ export default defineConfig({
           {
             text: 'Интеграция',
             items: [
+              { text: 'Любой MCP-клиент', link: '/ru/integration/overview' },
               { text: 'OpenCode', link: '/ru/integration/opencode' },
               { text: 'Cursor', link: '/ru/integration/cursor' },
               { text: 'Claude Desktop', link: '/ru/integration/claude' },
@@ -297,7 +299,7 @@ export default defineConfig({
           { text: 'Start', link: '/de/' },
           { text: 'Schnellstart', link: '/de/getting-started/quickstart' },
           { text: 'Installation', link: '/de/getting-started/installation' },
-          { text: 'Integration', link: '/de/integration/opencode' },
+          { text: 'Integration', link: '/de/integration/overview' },
         ],
         sidebar: [
           {
@@ -400,6 +402,7 @@ export default defineConfig({
           {
             text: 'Integration',
             items: [
+              { text: 'Jeder MCP-Client', link: '/de/integration/overview' },
               { text: 'OpenCode', link: '/de/integration/opencode' },
               { text: 'Cursor', link: '/de/integration/cursor' },
               { text: 'Claude Desktop', link: '/de/integration/claude' },
@@ -422,7 +425,7 @@ export default defineConfig({
           { text: 'Accueil', link: '/fr/' },
           { text: 'Démarrage rapide', link: '/fr/getting-started/quickstart' },
           { text: 'Installation', link: '/fr/getting-started/installation' },
-          { text: 'Intégration', link: '/fr/integration/opencode' },
+          { text: 'Intégration', link: '/fr/integration/overview' },
         ],
         sidebar: [
           {
@@ -525,6 +528,7 @@ export default defineConfig({
           {
             text: 'Intégration',
             items: [
+              { text: 'Tout client MCP', link: '/fr/integration/overview' },
               { text: 'OpenCode', link: '/fr/integration/opencode' },
               { text: 'Cursor', link: '/fr/integration/cursor' },
               { text: 'Claude Desktop', link: '/fr/integration/claude' },
@@ -547,7 +551,7 @@ export default defineConfig({
           { text: 'Inicio', link: '/es/' },
           { text: 'Inicio rápido', link: '/es/getting-started/quickstart' },
           { text: 'Instalación', link: '/es/getting-started/installation' },
-          { text: 'Integración', link: '/es/integration/opencode' },
+          { text: 'Integración', link: '/es/integration/overview' },
         ],
         sidebar: [
           {
@@ -650,6 +654,7 @@ export default defineConfig({
           {
             text: 'Integración',
             items: [
+              { text: 'Cualquier cliente MCP', link: '/es/integration/overview' },
               { text: 'OpenCode', link: '/es/integration/opencode' },
               { text: 'Cursor', link: '/es/integration/cursor' },
               { text: 'Claude Desktop', link: '/es/integration/claude' },
@@ -672,7 +677,7 @@ export default defineConfig({
           { text: '首页', link: '/zh-CN/' },
           { text: '快速开始', link: '/zh-CN/getting-started/quickstart' },
           { text: '安装', link: '/zh-CN/getting-started/installation' },
-          { text: '集成', link: '/zh-CN/integration/opencode' },
+          { text: '集成', link: '/zh-CN/integration/overview' },
         ],
         sidebar: [
           {
@@ -775,6 +780,7 @@ export default defineConfig({
           {
             text: '集成',
             items: [
+              { text: '任意 MCP 客户端', link: '/zh-CN/integration/overview' },
               { text: 'OpenCode', link: '/zh-CN/integration/opencode' },
               { text: 'Cursor', link: '/zh-CN/integration/cursor' },
               { text: 'Claude Desktop', link: '/zh-CN/integration/claude' },
@@ -797,7 +803,7 @@ export default defineConfig({
           { text: 'ホーム', link: '/ja/' },
           { text: 'クイックスタート', link: '/ja/getting-started/quickstart' },
           { text: 'インストール', link: '/ja/getting-started/installation' },
-          { text: '統合', link: '/ja/integration/opencode' },
+          { text: '統合', link: '/ja/integration/overview' },
         ],
         sidebar: [
           {
@@ -900,6 +906,7 @@ export default defineConfig({
           {
             text: '統合',
             items: [
+              { text: '任意の MCP クライアント', link: '/ja/integration/overview' },
               { text: 'OpenCode', link: '/ja/integration/opencode' },
               { text: 'Cursor', link: '/ja/integration/cursor' },
               { text: 'Claude Desktop', link: '/ja/integration/claude' },
@@ -922,7 +929,7 @@ export default defineConfig({
           { text: '홈', link: '/ko/' },
           { text: '빠른 시작', link: '/ko/getting-started/quickstart' },
           { text: '설치', link: '/ko/getting-started/installation' },
-          { text: '통합', link: '/ko/integration/opencode' },
+          { text: '통합', link: '/ko/integration/overview' },
         ],
         sidebar: [
           {
@@ -1025,6 +1032,7 @@ export default defineConfig({
           {
             text: '통합',
             items: [
+              { text: '모든 MCP 클라이언트', link: '/ko/integration/overview' },
               { text: 'OpenCode', link: '/ko/integration/opencode' },
               { text: 'Cursor', link: '/ko/integration/cursor' },
               { text: 'Claude Desktop', link: '/ko/integration/claude' },
