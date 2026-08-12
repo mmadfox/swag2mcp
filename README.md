@@ -3,6 +3,7 @@
 <p>
     <a href="https://github.com/mmadfox/swag2mcp/releases"><img src="https://img.shields.io/github/release/mmadfox/swag2mcp.svg" alt="Latest Release"></a>
     <a href="https://coveralls.io/github/mmadfox/swag2mcp?branch=main"><img src="https://coveralls.io/repos/github/mmadfox/swag2mcp/badge.svg?branch=main&v=3" alt="Coverage Status"></a>
+    <a href="https://glama.ai/mcp/servers/mmadfox/swag2mcp"><img src="https://glama.ai/mcp/servers/mmadfox/swag2mcp/badges/score.svg" alt="swag2mcp MCP server"></a>
 </p>
 
 **swag2mcp** is a local-first bridge between OpenAPI/Swagger/Postman API specifications and LLM agents via the Model Context Protocol (MCP).
